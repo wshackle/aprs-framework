@@ -23,7 +23,6 @@
 package aprs.learninggoals;
 
 import aprs.misc.ActiveWinEnum;
-import aprs.system.AprsSystem;
 import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.KitTray;
@@ -47,6 +46,7 @@ import javax.swing.JFrame;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.util.Map.Entry;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -55,6 +55,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("guieffect")
 public class GoalLearnerTest {
 
     /**
@@ -150,7 +151,7 @@ public class GoalLearnerTest {
         javax.swing.SwingUtilities.invokeLater(() -> {
             createSimpleSimViewer(sop, testData)
                     .thenAccept((AprsSystem aprsSystem) -> {
-                        aprsSystem.startActionsList(actions);
+                        aprsSystem.startActionsList("goalLearnerTest", actions, false);
                     });
         });
     }
@@ -256,17 +257,16 @@ public class GoalLearnerTest {
 
     private static XFuture<AprsSystem> createSimpleSimViewer(SlotOffsetProvider sop, List<PhysicalItem> testData) {
         return AprsSystem.createEmptySystem()
-                .thenApply((AprsSystem aprsSystem) -> {
-                    completeCreateSimpleViewer(aprsSystem, sop, testData);
-                    return aprsSystem;
+                .thenCompose((AprsSystem aprsSystem) -> {
+                    return completeCreateSimpleViewer(aprsSystem, sop, testData)
+                           .thenApply(x -> aprsSystem);
                 });
     }
 
-    private static void completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
+    private static XFutureVoid completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
         aprsSystem.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aprsSystem.setExternalSlotOffsetProvider(sop);
-        aprsSystem.startActionListExecutor();
-        aprsSystem.startObject2DJinternalFrame();
+        
         PoseProvider poseProvider = new PoseProvider() {
 
             private @Nullable List<PhysicalItem> rawList;
@@ -330,17 +330,23 @@ public class GoalLearnerTest {
         };
 
         aprsSystem.setPddlExecExternalPoseProvider(poseProvider);
-        aprsSystem.startSimServerJInternalFrame();
-        aprsSystem.startCrclClientJInternalFrame();
-        aprsSystem.setRobotName("SimulatedRobot");
-        aprsSystem.setTaskName("GoalLearnerTest");
-        aprsSystem.setSimItemsData(testData);
-        aprsSystem.setViewLimits(-100, -100, +500, +500);
-        aprsSystem.setLookForXYZ(-80, -80, 0);
-        aprsSystem.simViewSimulateAndDisconnect();
-        aprsSystem.setSimViewTrackCurrentPos(true);
-        aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
-        aprsSystem.setVisible(true);
+        XFutureVoid xfv1 = aprsSystem.startActionListExecutor();
+        XFutureVoid xfv2 = aprsSystem.startObject2DJinternalFrame();
+        XFutureVoid xfv3 = aprsSystem.startSimServerJInternalFrame();
+        XFutureVoid xfv4 = aprsSystem.startCrclClientJInternalFrame();
+        return XFutureVoid.allOf(xfv1, xfv2, xfv3, xfv4)
+                .thenComposeToVoid(() -> {
+                    aprsSystem.setRobotName("SimulatedRobot");
+                    aprsSystem.setTaskName("GoalLearnerTest");
+                    aprsSystem.setSimItemsData(testData);
+                    aprsSystem.setViewLimits(-100, -100, +500, +500);
+                    
+                    aprsSystem.simViewSimulateAndDisconnect();
+                    aprsSystem.setSimViewTrackCurrentPos(true);
+                    aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
+                    aprsSystem.setVisible(true);
+                    return aprsSystem.setLookForXYZ(-80, -80, 0);
+                });
     }
 
 }

@@ -1,5 +1,5 @@
 ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg),Comment
-ToolName,X (mm),Y (mm),Z (mm),Rx (deg),Ry (deg),Rz (deg),Comment
 big_gripper,0.0,0.0,0.0,0.0,0.0,0.0,
 big_vacuum,0.0,0.0,0.0,0.0,0.0,0.0,
 small_vacuum,0.0,0.0,60.0,0.0,0.0,0.0,
+pincher,0.0,0.0,0.0,0.0,0.0,0.0,

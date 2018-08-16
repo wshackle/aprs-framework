@@ -1,7 +1,9 @@
 package javax.swing;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.guieffect.qual.UIType;
 
+@UIType
 class JOptionPane extends JComponent implements Accessible {
     static final Object UNINITIALIZED_VALUE;
     static final int DEFAULT_OPTION;

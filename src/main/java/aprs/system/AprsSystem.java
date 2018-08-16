@@ -45,6 +45,7 @@ import aprs.actions.executor.CrclGenerator;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
+import aprs.cachedcomponents.CachedCheckBox;
 import aprs.pddl_planner.PddlPlannerJInternalFrame;
 import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
@@ -129,14 +130,20 @@ import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.swing.DesktopManager;
 import javax.swing.JDesktopPane;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UI;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -149,7 +156,125 @@ import org.apache.commons.csv.CSVPrinter;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings("SameReturnValue")
-public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
+public class AprsSystem implements SlotOffsetProvider {
+
+    /**
+     * Creates new AprsSystem using a default properties file.
+     */
+    @SuppressWarnings({"initialization", "guieffect"})
+    private AprsSystem(boolean immediate) {
+        this(null);
+        if (immediate) {
+            headlessEmptyInit();
+        }
+    }
+
+    /**
+     * Creates new AprsSystem using a default properties file.
+     */
+    @SuppressWarnings({"initialization", "guieffect"})
+    private AprsSystem() {
+        this(null);
+    }
+
+    /**
+     * Creates new AprsSystem using a default properties file.
+     *
+     * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
+     */
+    @SuppressWarnings("initialization")
+    @UIEffect
+    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1) {
+        this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
+        try {
+            initPropertiesFileInfo();
+            this.asString = getTitle();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+        }
+        if (null != propertiesFile) {
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + ", propertiesFile=" + propertiesFile.getName() + " complete.");
+        } else {
+            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + " complete.");
+        }
+        if (null != aprsSystemDisplayJFrame1) {
+            connectDatabaseCheckBox = aprsSystemDisplayJFrame1.connectDatabaseCheckBox();
+            connectedRobotCheckBox = aprsSystemDisplayJFrame1.connectedRobotCheckBox();
+            connectVisionOnStartupCheckBox = aprsSystemDisplayJFrame1.connectVisionOnStartupCheckBox();
+            continousDemoCheckBox = aprsSystemDisplayJFrame1.continousDemoCheckBox();
+            executorStartupCheckBox = aprsSystemDisplayJFrame1.executorStartupCheckBox();
+            exploreGraphDBStartupCheckBox = aprsSystemDisplayJFrame1.exploreGraphDBStartupCheckBox();
+            kitInspectionStartupCheckBox = aprsSystemDisplayJFrame1.kitInspectionStartupCheckBox();
+            logCrclProgramsCheckBox = aprsSystemDisplayJFrame1.logCrclProgramsCheckBox();
+            object2DViewStartupCheckBox = aprsSystemDisplayJFrame1.object2DViewStartupCheckBox();
+            objectSpStartupCheckBox = aprsSystemDisplayJFrame1.objectSpStartupCheckBox();
+            onStartupConnectDatabaseCheckBox = aprsSystemDisplayJFrame1.onStartupConnectDatabaseCheckBox();
+            pauseCheckBox = aprsSystemDisplayJFrame1.pauseCheckBox();
+            pddlPlannerStartupCheckBox = aprsSystemDisplayJFrame1.pddlPlannerStartupCheckBox();
+            reloadSimFilesOnReverseCheckBox = aprsSystemDisplayJFrame1.reloadSimFilesOnReverseCheckBox();
+            reverseCheckBox = aprsSystemDisplayJFrame1.reverseCheckBox();
+            robotCrclFanucServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclFanucServerStartupCheckBox();
+            robotCrclGUIStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclGUIStartupCheckBox();
+            robotCrclMotomanServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclMotomanServerStartupCheckBox();
+            robotCrclSimServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclSimServerStartupCheckBox();
+            showDatabaseSetupOnStartupCheckBox = aprsSystemDisplayJFrame1.showDatabaseSetupOnStartupCheckBox();
+            snapshotsCheckBox = aprsSystemDisplayJFrame1.snapshotsCheckBox();
+            steppingCheckBox = aprsSystemDisplayJFrame1.steppingCheckBox();
+            useTeachTableCheckBox = aprsSystemDisplayJFrame1.useTeachTableCheckBox();
+            connectVisionCheckBox = aprsSystemDisplayJFrame1.connectVisionCheckBox();
+
+        } else {
+            connectDatabaseCheckBox = new CachedCheckBox();
+            connectedRobotCheckBox = new CachedCheckBox();
+            connectVisionOnStartupCheckBox = new CachedCheckBox();
+            continousDemoCheckBox = new CachedCheckBox();
+            executorStartupCheckBox = new CachedCheckBox();
+            exploreGraphDBStartupCheckBox = new CachedCheckBox();
+            kitInspectionStartupCheckBox = new CachedCheckBox();
+            logCrclProgramsCheckBox = new CachedCheckBox();
+            object2DViewStartupCheckBox = new CachedCheckBox();
+            objectSpStartupCheckBox = new CachedCheckBox();
+            onStartupConnectDatabaseCheckBox = new CachedCheckBox();
+            pauseCheckBox = new CachedCheckBox();
+            pddlPlannerStartupCheckBox = new CachedCheckBox();
+            reloadSimFilesOnReverseCheckBox = new CachedCheckBox();
+            reverseCheckBox = new CachedCheckBox();
+            robotCrclFanucServerStartupCheckBox = new CachedCheckBox();
+            robotCrclGUIStartupCheckBox = new CachedCheckBox();
+            robotCrclMotomanServerStartupCheckBox = new CachedCheckBox();
+            robotCrclSimServerStartupCheckBox = new CachedCheckBox();
+            showDatabaseSetupOnStartupCheckBox = new CachedCheckBox();
+            snapshotsCheckBox = new CachedCheckBox();
+            steppingCheckBox = new CachedCheckBox();
+            useTeachTableCheckBox = new CachedCheckBox();
+            connectVisionCheckBox = new CachedCheckBox();
+        }
+    }
+
+    private final CachedCheckBox connectDatabaseCheckBox;
+    private final CachedCheckBox connectedRobotCheckBox;
+    private final CachedCheckBox connectVisionOnStartupCheckBox;
+    private final CachedCheckBox continousDemoCheckBox;
+    private final CachedCheckBox executorStartupCheckBox;
+    private final CachedCheckBox exploreGraphDBStartupCheckBox;
+    private final CachedCheckBox kitInspectionStartupCheckBox;
+    private final CachedCheckBox logCrclProgramsCheckBox;
+    private final CachedCheckBox object2DViewStartupCheckBox;
+    private final CachedCheckBox objectSpStartupCheckBox;
+    private final CachedCheckBox onStartupConnectDatabaseCheckBox;
+    private final CachedCheckBox pauseCheckBox;
+    private final CachedCheckBox pddlPlannerStartupCheckBox;
+    private final CachedCheckBox reloadSimFilesOnReverseCheckBox;
+    private final CachedCheckBox reverseCheckBox;
+    private final CachedCheckBox robotCrclFanucServerStartupCheckBox;
+    private final CachedCheckBox robotCrclGUIStartupCheckBox;
+    private final CachedCheckBox robotCrclMotomanServerStartupCheckBox;
+    private final CachedCheckBox robotCrclSimServerStartupCheckBox;
+    private final CachedCheckBox showDatabaseSetupOnStartupCheckBox;
+    private final CachedCheckBox snapshotsCheckBox;
+    private final CachedCheckBox steppingCheckBox;
+    private final CachedCheckBox useTeachTableCheckBox;
+    private final CachedCheckBox connectVisionCheckBox;
 
     @MonotonicNonNull
     private final AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
@@ -190,11 +315,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private final AtomicLong effectiveStartRunTime = new AtomicLong(-1);
     private final AtomicLong effectiveStopRunTime = new AtomicLong(-1);
     private final AtomicBoolean running = new AtomicBoolean(false);
-    private volatile boolean snapshotsEnabled = false;
 
     private final AtomicReference<@Nullable Runnable> onCloseRunnable = new AtomicReference<>();
 
-    @Override
     public void setOnCloseRunnable(@Nullable Runnable r) {
         onCloseRunnable.set(r);
     }
@@ -205,22 +328,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return Has user enabled snapshots?
      */
-    @Override
-    public boolean isSnapshotsEnabled() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isSnapshotsEnabled();
-            this.snapshotsEnabled = ret;
-            return ret;
-        }
-        return snapshotsEnabled;
+    public boolean isSnapshotsSelected() {
+        return snapshotsCheckBox.isSelected();
     }
 
-    @Override
-    public void setSnapshotsEnabled(boolean enable) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setSnapshotsEnabled(enable);
-        }
-        this.snapshotsEnabled = enable;
+    public void setSnapshotsSelected(boolean selected) {
+        snapshotsCheckBox.setSelected(selected);
     }
 
     private void setStartRunTime() {
@@ -257,7 +370,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return image of most recent scan
      */
-    @Override
     public Image getScanImage() {
         return scanImage;
     }
@@ -268,7 +380,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return the value of externalGetPoseFunction
      */
     @Nullable
-    @Override
     public PoseProvider getPddlExecExternalPoseProvider() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.getExternalPoseProvider();
@@ -279,7 +390,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param externalPoseProvider new value of externalGetPoseFunction
      */
-    @Override
     public void setPddlExecExternalPoseProvider(PoseProvider externalPoseProvider) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1  ";
         this.pddlExecutorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
@@ -303,7 +413,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return duration in milliseconds or 0 if it has not been started and
      * stopped at least once.
      */
-    @Override
     public long getRunDuration() {
         long t = effectiveStartRunTime.get();
         if (t < 0) {
@@ -326,7 +435,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return duration in milliseconds or 0 if it has not been started and
      * stopped at least once.
      */
-    @Override
     public long getStopDuration() {
         long t = effectiveStopRunTime.get();
         if (t < 0) {
@@ -373,7 +481,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future with list of items updated in the next frame from the
      * vision
      */
-    @Override
     public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         long startTime = logEvent("start getSingleVisionToDbUpdate", null);
@@ -388,33 +495,22 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         });
     }
 
-    @Override
     public long getLastSingleVisionToDbUpdateTime() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getLastUpdateTime();
     }
 
-    @Override
     public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
     }
 
-    private volatile boolean stepMode = false;
-
     public void setStepMode(boolean stepMode) {
-        if (null == crclClientJInternalFrame) {
-            throw new IllegalStateException("null == crclClientJInternalFrame");
-        }
-        crclClientJInternalFrame.setStepMode(stepMode);
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setStepping(stepMode);
-        }
-        this.stepMode = stepMode;
+        steppingCheckBox.setSelected(stepMode);
     }
 
     public boolean isStepMode() {
-        return this.stepMode;
+        return steppingCheckBox.isSelected();
 //        if(null == crclClientJInternalFrame) {
 //            throw new IllegalStateException("null == crclClientJInternalFrame");
 //        }
@@ -429,7 +525,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return list of trays
      */
-    @Override
     public List<PartsTray> getPartsTrayList() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getPartsTrayList();
@@ -439,14 +534,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * Force the Object 2D Simulation View to refresh, this method has no effect
      * if the view is not visible or is not in simulation mode.
      */
-    @Override
     public void refreshSimView() {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
     }
 
-    @Override
     public long getLastSimViewRefreshTime() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -454,7 +547,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return object2DViewJInternalFrame.getLastRefreshTime();
     }
 
-    @Override
     public long getLastSimViewPublishTime() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -462,7 +554,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return object2DViewJInternalFrame.getLastPublishTime();
     }
 
-    @Override
     public int getSimViewRefreshCount() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -470,7 +561,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return object2DViewJInternalFrame.getRefreshCount();
     }
 
-    @Override
     public long getSimViewLastPublishTime() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -478,7 +568,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return object2DViewJInternalFrame.getLastPublishTime();
     }
 
-    @Override
     public int getSimViewPublishCount() {
         if (null == object2DViewJInternalFrame) {
             return -1;
@@ -495,7 +584,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return the value of externalSlotOffsetProvider
      */
     @Nullable
-    @Override
     public SlotOffsetProvider getExternalSlotOffsetProvider() {
         return externalSlotOffsetProvider;
     }
@@ -505,7 +593,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param externalSlotOffsetProvider new value of externalSlotOffsetProvider
      */
-    @Override
     public void setExternalSlotOffsetProvider(SlotOffsetProvider externalSlotOffsetProvider) {
         this.externalSlotOffsetProvider = externalSlotOffsetProvider;
     }
@@ -521,7 +608,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * checked.
      * @return list of slots with relative position offsets.
      */
-    @Override
     public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(name, ignoreEmpty);
@@ -537,7 +623,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param f file to save
      * @return future with information on when the operation is complete.
      */
-    @Override
     public XFutureVoid startVisionToDbNewItemsImageSave(File f) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
@@ -549,7 +634,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param tray tray to obtain list of slots
      * @return list of slots
      */
-    @Override
     public List<Slot> getSlots(Tray tray, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
@@ -564,7 +648,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param v should the position be displayed.
      */
-    @Override
     public void setSimViewTrackCurrentPos(boolean v) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         this.object2DViewJInternalFrame.setTrackCurrentPos(v);
@@ -574,7 +657,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * Set the simulation view to simulation mode and disconnect from any vision
      * data socket.
      */
-    @Override
     public void simViewSimulateAndDisconnect() {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setSimulatedAndDisconnect();
@@ -587,7 +669,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return rotational offset in radians
      */
-    @Override
     public double getVisionToDBRotationOffset() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return this.visionToDbJInternalFrame.getRotationOffset();
@@ -599,7 +680,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * No action is taken if the CRCL Client has not been started and connected
      * or not program was currently running.
      */
-    @Override
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.pauseCrclProgram();
@@ -613,7 +693,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return Kit Inspection InternalJFrame
      */
     @Nullable
-    @Override
     public KitInspectionJInternalFrame getKitInspectionJInternalFrame() {
         return kitInspectionJInternalFrame;
     }
@@ -626,7 +705,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return current setting of menu item
      */
-    @Override
     public boolean isEnableDebugDumpStacks() {
         return debug;
     }
@@ -640,7 +718,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return current run name.
      */
-    @Override
     public String getRunName() {
         String rn = this.runName;
         if (null != rn) {
@@ -658,7 +735,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return whether a program is paused
      */
-    @Override
     public boolean isCrclProgramPaused() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isPaused();
@@ -673,7 +749,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return thread
      */
     @Nullable
-    @Override
     public Thread getCrclRunProgramThread() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getRunProgramThread();
@@ -688,7 +763,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no program is running
      */
     @Nullable
-    @Override
     public XFuture<Boolean> getCrclRunProgramFuture() {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         return crclClientJInternalFrame.getRunProgramFuture();
@@ -699,7 +773,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return whether a CRCL program is running.
      */
-    @Override
     public boolean isRunningCrclProgram() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isRunningProgram();
@@ -713,7 +786,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return count to pass to stopBlockingCrclProgram when running crcl
      * programs should again be allowed.
      */
-    @Override
     public int startBlockingCrclPrograms() {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("pendantClientJInternalFrame is null");
@@ -744,7 +816,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return current CRCL program or null if no program is loaded.
      */
     @Nullable
-    @Override
     public CRCLProgramType getCrclProgram() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getProgram();
@@ -757,7 +828,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return the current executor options.
      */
-    @Override
     public Map<String, String> getExecutorOptions() {
         if (null == pddlExecutorJInternalFrame1) {
             return Collections.emptyMap();
@@ -771,7 +841,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param key name of option to set
      * @param value value option should be set to
      */
-    @Override
     public void setExecutorOption(String key, String value) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setOption(key, value);
@@ -803,7 +872,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param pm position map to be added
      */
-    @Override
     public void addPositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.addPositionMap(pm);
@@ -816,7 +884,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param pm position map to be removed.
      */
-    @Override
     public void removePositionMap(PositionMap pm) {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.removePositionMap(pm);
@@ -829,7 +896,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return current pose of the robot.
      */
     @Nullable
-    @Override
     public PoseType getCurrentPose() {
 
         if (null != crclClientJInternalFrame) {
@@ -838,12 +904,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     crclClientJInternalFrame.connectCurrent();
                 }
             } catch (Exception e) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
             }
             if (!crclClientJInternalFrame.isConnected()) {
                 return null;
             }
-            return crclClientJInternalFrame.getCurrentPose();
+            return crclClientJInternalFrame.currentStatusPose();
         }
         return null;
     }
@@ -854,7 +920,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return current point(translation only) from current pose of the robot.
      */
     @Nullable
-    @Override
     public PointType getCurrentPosePoint() {
         PoseType pose = getCurrentPose();
         if (null != pose) {
@@ -869,7 +934,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return if the CRCL client is connected to the server.
      */
-    @Override
     public boolean isConnected() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.isConnected();
@@ -889,7 +953,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param connected the new desired connected state.
      */
-    @Override
     public void setConnected(boolean connected) {
         logEvent("setConnected", connected);
         if (!connected || robotName == null || !isConnected()) {
@@ -934,9 +997,44 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return the value of taskName
      */
-    @Override
     public String getTaskName() {
         return taskName;
+    }
+
+    @Nullable
+    public String getSelectedToolName() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getSelectedToolName();
+    }
+
+    public Set<String> getPossibleToolNames() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getPossibleToolNames();
+    }
+
+    public Map<String, String> getCurrentToolHolderContentsMap() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getCurrentToolHolderContentsMap();
+    }
+
+    public void putInToolHolderContentsMap(String holder, String contents) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.putInToolHolderContentsMap(holder, contents);
+    }
+
+    public Map<String, Set<String>> getPossibleToolHolderContentsMap() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getPossibleToolHolderContentsMap();
     }
 
     /**
@@ -946,7 +1044,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no safe abort requested
      */
     @Nullable
-    @Override
     public XFutureVoid getSafeAbortFuture() {
         return safeAbortFuture;
     }
@@ -969,7 +1066,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no safe abort requested
      */
     @Nullable
-    @Override
     public XFuture<Boolean> getLastRunProgramFuture() {
         return lastRunProgramFuture;
     }
@@ -981,7 +1077,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no resume requested
      */
     @Nullable
-    @Override
     public XFuture<Boolean> getLastResumeFuture() {
         return lastResumeFuture;
     }
@@ -1007,7 +1102,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return a future that can be tested or used to wait until the abort is
      * completed.
      */
-    @Override
     public XFutureVoid startSafeAbort(String comment) {
 
         if (isAborting()) {
@@ -1061,7 +1155,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * future was created by which caller and to improve log messages
      * @return future providing info on when complete
      */
-    @Override
     public XFutureVoid startSafeAbortAndDisconnect(String comment) {
 
         startingCheckEnabledCheck();
@@ -1130,7 +1223,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return map of results
      */
-    @Override
     public Map<String, UpdateResults> getDbUpdatesResultMap() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.getUpdatesResultMap();
@@ -1174,7 +1266,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private final AtomicInteger disconnectRobotCount = new AtomicInteger();
 
-    @Override
     public boolean isClosing() {
         return closing;
     }
@@ -1207,11 +1298,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 + ", host=" + startingCrclHost + ":" + startingCrclPort
                 + ", disconnectRobotCount=" + disconnectRobotCount
                 + ",startingIsConnected=" + startingIsConnected);
+
         AprsSystemDisplayJFrame displayFrame = this.aprsSystemDisplayJFrame;
-        if (null != displayFrame) {
-            final AprsSystemDisplayJFrame displayFrameFinal = displayFrame;
-            Utils.runOnDispatchThread(() -> displayFrameFinal.setConnectedRobotCheckBox(false));
-        }
+        connectedRobotCheckBox.setSelected(false);
     }
 
     private void startingCheckEnabledCheck() throws IllegalStateException {
@@ -1408,7 +1497,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return closest distance
      */
-    @Override
     public double getClosestRobotPartDistance() {
         assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
         return this.object2DViewJInternalFrame.getClosestRobotPartDistance();
@@ -1419,7 +1507,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return if object view is simulated
      */
-    @Override
     public boolean isObjectViewSimulated() {
         assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
         return this.object2DViewJInternalFrame.isSimulated();
@@ -1501,24 +1588,18 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
-    private volatile boolean useTeachTable = false;
+    private volatile boolean useTeachTableChecked = false;
 
-    @Override
-    public boolean getUseTeachTable() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.getUseTeachTable();
-            this.useTeachTable = ret;
-            return ret;
-        }
-        return useTeachTable;
+    void setUseTeachTableChecked(boolean useTeachTableChecked) {
+        this.useTeachTableChecked = useTeachTableChecked;
     }
 
-    @Override
+    public boolean getUseTeachTable() {
+        return useTeachTableCheckBox.isSelected();
+    }
+
     public void setUseTeachTable(boolean useTeachTable) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setUseTeachTable(useTeachTable);
-        }
-        this.useTeachTable = useTeachTable;
+        useTeachTableCheckBox.setSelected(useTeachTable);
     }
 
     @SuppressWarnings("unused")
@@ -1546,7 +1627,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param l listener to be registered
      */
-    @Override
     public void addProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.addProgramLineListener(l);
@@ -1558,7 +1638,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param l listener to be removed
      */
-    @Override
     public void removeProgramLineListener(PendantClientJPanel.ProgramLineListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.removeProgramLineListener(l);
@@ -1572,7 +1651,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param poseIn the pose to correct or transform
      * @return pose after being corrected by all currently added position maps
      */
-    @Override
     public PoseType correctPose(PoseType poseIn) {
         if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.correctPose(poseIn);
@@ -1586,7 +1664,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param ptIn pose to reverse correction
      * @return pose in original vision/database coordinates
      */
-    @Override
     public PointType reverseCorrectPoint(PointType ptIn) {
         if (null != pddlExecutorJInternalFrame1) {
             return pddlExecutorJInternalFrame1.reverseCorrectPoint(ptIn);
@@ -1601,7 +1678,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param l listener to register
      */
-    @Override
     public void addCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.addCurrentPoseListener(l);
@@ -1615,7 +1691,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param l listener to be removed
      */
-    @Override
     public void removeCurrentPoseListener(PendantClientJPanel.CurrentPoseListener l) {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.removeCurrentPoseListener(l);
@@ -1627,7 +1702,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param program CRCL program to load. in the schema
      */
-    @Override
     public synchronized void setCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (null != crclClientJInternalFrame) {
             setProgram(program);
@@ -1650,7 +1724,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future that can be used to monitor, cancel or extend the
      * underlying task
      */
-    @Override
     public XFuture<Boolean> startCRCLProgram(CRCLProgramType program) {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
@@ -1675,7 +1748,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         takeSnapshots("startCRCLProgram(" + program.getName() + ")");
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        return crclClientJInternalFrame.runCurrentProgram(stepMode);
+        return crclClientJInternalFrame.runCurrentProgram(isStepMode());
     }
 
     @SuppressWarnings("RedundantIfStatement")
@@ -1715,7 +1788,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         processWrapperCommands(cmds);
     }
 
-    @Override
     public void processWrapperCommands(List<MiddleCommandType> cmds) {
         for (MiddleCommandType cmd : cmds) {
             if (cmd instanceof CrclCommandWrapper) {
@@ -1733,7 +1805,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return whether the program completed successfully
      * @throws JAXBException the program did not meet schema requirements
      */
-    @Override
     public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
         if (enableCheckedAlready && checkNoMoves(program)) {
             logEvent("skipping runCrclProgram", programToString(program));
@@ -1743,7 +1814,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         long startTime = logEvent("start runCrclProgram", programToString(program));
         setProgram(program);
         assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        boolean ret = crclClientJInternalFrame.runCurrentProgram(stepMode);
+        boolean ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
         logEvent("end runCrclProgram",
                 "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + program.getMiddleCommand().size() + ")"
                 + "\n started at" + startTime
@@ -1810,9 +1881,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             lastStartCheckEnabledFuture2.cancelAll(true);
             lastStartCheckEnabledFuture2 = null;
         }
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setContinuousDemoCheckbox(false);
-        }
+        continousDemoCheckBox.setSelected(false);
     }
 
     /**
@@ -1820,100 +1889,107 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return details string
      */
-    @Override
     public String getDetailsString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(this.toString()).append("\r\n");
-        if (null != crclClientJInternalFrame) {
-            CRCLCommandType cmd = crclClientJInternalFrame.getCurrentProgramCommand();
-            if (null != cmd) {
-                sb.append("crcl_cmd=").append(CRCLSocket.commandToSimpleString(cmd)).append("\r\n");
-            } else {
-                sb.append("crcl_cmd= \r\n");
-            }
-            CRCLProgramType prog = getCrclProgram();
-            if (null != prog) {
-                sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
-                sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
-            } else {
-                sb.append("crcl_program_index=").append(getCrclProgramLine()).append(", ");
-                sb.append("crcl_program_name=\r\n");
-            }
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append(this.toString()).append("\r\n");
             if (null != crclClientJInternalFrame) {
-                crclClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
-                    CommandStatusType commandStatus = status.getCommandStatus();
-                    if (null != commandStatus) {
-                        String stateDescrition = commandStatus.getStateDescription();
-                        if (null != stateDescrition
-                                && stateDescrition.length() > 0) {
-                            sb.append("state description = ").append(stateDescrition).append("\r\n");
-                        }
-                    }
-                });
-            }
-        }
-        ExecutorJInternalFrame execFrame = this.pddlExecutorJInternalFrame1;
-        if (null != execFrame) {
-            List<Action> actions = execFrame.getActionsList();
-            int curActionIndex = execFrame.getCurrentActionIndex();
-            if (null != actions) {
-                sb.append("PDDL curActionIndex= ").append(curActionIndex);
-                sb.append(" out of ").append(actions.size()).append(", ");
-                if (curActionIndex >= 0 && curActionIndex < actions.size()) {
-                    sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
+                CRCLCommandType cmd = crclClientJInternalFrame.currentProgramCommand();
+                if (null != cmd) {
+                    sb.append("crcl_cmd=").append(CRCLSocket.commandToSimpleString(cmd)).append("\r\n");
                 } else {
-                    sb.append("PDDL action = \r\n");
+                    sb.append("crcl_cmd= \r\n");
+                }
+                CRCLProgramType prog = getCrclProgram();
+                if (null != prog) {
+                    sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
+                    sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
+                } else {
+                    sb.append("crcl_program_index=").append(getCrclProgramLine()).append(", ");
+                    sb.append("crcl_program_name=\r\n");
+                }
+                if (null != crclClientJInternalFrame) {
+                    crclClientJInternalFrame.getCurrentStatus().ifPresent(status -> {
+                        CommandStatusType commandStatus = status.getCommandStatus();
+                        if (null != commandStatus) {
+                            String stateDescrition = commandStatus.getStateDescription();
+                            if (null != stateDescrition
+                                    && stateDescrition.length() > 0) {
+                                sb.append("state description = ").append(stateDescrition).append("\r\n");
+                            }
+                        }
+                    });
                 }
             }
-            String pddlErrorString = execFrame.getErrorString();
-            if (null != pddlErrorString && pddlErrorString.length() > 0) {
-                sb.append("pddlExecutorError=").append(pddlErrorString).append("\r\n");
+            ExecutorJInternalFrame execFrame = this.pddlExecutorJInternalFrame1;
+            if (null != execFrame) {
+                List<Action> actions = execFrame.getActionsList();
+                int curActionIndex = execFrame.getCurrentActionIndex();
+                if (null != actions) {
+                    sb.append("PDDL curActionIndex= ").append(curActionIndex);
+                    sb.append(" out of ").append(actions.size()).append(", ");
+                    if (curActionIndex >= 0 && curActionIndex < actions.size()) {
+                        sb.append("PDDL action =").append(actions.get(curActionIndex)).append("\r\n");
+                    } else {
+                        sb.append("PDDL action = \r\n");
+                    }
+                }
+                String pddlErrorString = execFrame.getErrorString();
+                if (null != pddlErrorString && pddlErrorString.length() > 0) {
+                    sb.append("pddlExecutorError=").append(pddlErrorString).append("\r\n");
+                }
+                sb.append("actionSetsCompleted=").append(execFrame.getActionSetsCompleted()).append(", ");
             }
-            sb.append("actionSetsCompleted=").append(execFrame.getActionSetsCompleted()).append(", ");
-        }
-        sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
-        boolean connected = (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected());
-        sb.append("connected=").append(connected).append(", ");
-        sb.append("reverseFlag=").append(isReverseFlag()).append(", ");
-        sb.append("paused=").append(isPaused()).append("\r\n");
-        sb.append("run_name=").append(this.getRunName()).append("\r\n");
-        CRCLProgramType crclProgram = this.getCrclProgram();
+            sb.append("robotCrclPort=").append(this.getRobotCrclPort()).append(", ");
+            boolean connected = (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected());
+            sb.append("connected=").append(connected).append(", ");
+            sb.append("reverseFlag=").append(isReverseFlag()).append(", ");
+            sb.append("paused=").append(isPaused()).append("\r\n");
+            sb.append("run_name=").append(this.getRunName()).append("\r\n");
+            CRCLProgramType crclProgram = this.getCrclProgram();
 
-        sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
-        sb.append("isDoingActions=").append(isDoingActions()).append(", ");
-        if (null != crclProgram) {
-            sb.append("crclProgramName=").append(crclProgram.getName()).append(", ");
-        }
-        sb.append("isRunning=").append(running.get()).append("\r\n");
-        long runDuration = getRunDuration();
-        long stopDuration = getStopDuration();
-        long totalTime = runDuration + stopDuration;
-        sb.append("runDuration=").append(Utils.runTimeToString(runDuration)).append(", ");
-        sb.append("stopDuration=").append(Utils.runTimeToString(stopDuration)).append(", ");
-        sb.append("totalDuration=").append(Utils.runTimeToString(totalTime)).append("\r\n");
-        String crclClientErrString = getCrclClientErrorString();
-        if (null != crclClientErrString && crclClientErrString.length() > 0
-                && !Objects.equals(titleErrorString, crclClientErrString)) {
-            sb.append("crclClientErrString=").append(crclClientErrString).append("\r\n");
-            if (!isPaused()) {
-                pause();
+            sb.append("crclRunning=").append(this.isRunningCrclProgram()).append(", ");
+            sb.append("isDoingActions=").append(isDoingActions()).append(", ");
+            if (null != crclProgram) {
+                sb.append("crclProgramName=").append(crclProgram.getName()).append(", ");
             }
-        }
+            sb.append("isRunning=").append(running.get()).append("\r\n");
+            long runDuration = getRunDuration();
+            long stopDuration = getStopDuration();
+            long totalTime = runDuration + stopDuration;
+            sb.append("runDuration=").append(Utils.runTimeToString(runDuration)).append(", ");
+            sb.append("stopDuration=").append(Utils.runTimeToString(stopDuration)).append(", ");
+            sb.append("totalDuration=").append(Utils.runTimeToString(totalTime)).append("\r\n");
+            String crclClientErrString = getCrclClientErrorString();
+            if (null != crclClientErrString && crclClientErrString.length() > 0
+                    && !Objects.equals(titleErrorString, crclClientErrString)) {
+                sb.append("crclClientErrString=").append(crclClientErrString).append("\r\n");
+                if (!isPaused()) {
+                    pause();
+                }
+            }
 //        sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
-        String currentTitleErrorString = this.titleErrorString;
-        if (null != currentTitleErrorString && currentTitleErrorString.length() > 0) {
-            sb.append("titleErrorString=").append(currentTitleErrorString).append("\r\n");
-        }
+            String currentTitleErrorString = this.titleErrorString;
+            if (null != currentTitleErrorString && currentTitleErrorString.length() > 0) {
+                sb.append("titleErrorString=").append(currentTitleErrorString).append("\r\n");
+            }
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
-        return sb.toString().trim();
+            return sb.toString().trim();
+        } catch (Exception e) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+            String ret = e.getMessage();
+            if (null == ret) {
+                throw e;
+            }
+            return ret;
+        }
     }
 
     /**
      * Abort the current CRCL program.
      */
-    @Override
     public void abortCrclProgram() {
         if (null != crclClientJInternalFrame && crclClientJInternalFrame.isConnected()) {
             crclClientJInternalFrame.abortProgram();
@@ -1925,21 +2001,32 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     @Nullable
     private PrintStream origErr = null;
 
-    @Override
     public void setVisible(boolean visible) {
+        if (null != aprsSystemDisplayJFrame) {
+            Utils.runOnDispatchThread(() -> setVisibleOnDisplay(visible));
+        }
+    }
+
+    @UIEffect
+    private void setVisibleOnDisplay(boolean visible) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setVisible(visible);
         }
     }
 
-    @Override
     public void setDefaultCloseOperation(int operation) {
+        if (null != aprsSystemDisplayJFrame) {
+            Utils.runOnDispatchThread(() -> setDefaultCloseOperationOnDisplay(operation));
+        }
+    }
+
+    @UIEffect
+    public void setDefaultCloseOperationOnDisplay(int operation) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setDefaultCloseOperation(operation);
         }
     }
 
-    @Override
     public List<PhysicalItem> getAvailableToolHolders() {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("null == pddlExecutorJInternalFrame");
@@ -1947,7 +2034,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return pddlExecutorJInternalFrame1.getAvailableToolHolders();
     }
 
-    @Override
     public List<PhysicalItem> getToolsInHolders() {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("null == pddlExecutorJInternalFrame");
@@ -1974,7 +2060,13 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
         private StringBuffer sb = new StringBuffer();
 
-        @Override
+        @UIEffect
+        private void appendLogDisplayOnDisplay(String text) {
+            if (null != logDisplayJInternalFrame) {
+                logDisplayJInternalFrame.appendText(text);
+            }
+        }
+
         public void write(byte[] buf, int off, int len) {
             super.write(buf, off, len);
             if (null != logDisplayJInternalFrame) {
@@ -1982,18 +2074,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 sb.append(s);
                 if (s.contains("\n")) {
                     String fullString = sb.toString();
-                    if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-                        logDisplayJInternalFrame.appendText(fullString);
-                    } else {
-
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                logDisplayJInternalFrame.appendText(fullString);
-                            }
-                        });
-                    }
+                    Utils.runOnDispatchThread(() -> appendLogDisplayOnDisplay(fullString));
                     sb = new StringBuffer();
                 }
             }
@@ -2009,20 +2090,27 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     public XFutureVoid startFanucCrclServer() {
         try {
             FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
-            if (null == fanucCRCLServerJInternalFrame) {
-                fanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
-                addInternalFrame(fanucCRCLServerJInternalFrame);
-            }
-            newFanucCrclMain.setDisplayInterface(fanucCRCLServerJInternalFrame);
-            return newFanucCrclMain.startDisplayInterface()
-                    .thenCompose(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
+            return Utils.runOnDispatchThread(() -> newFanuCRCLServerJInternalFrame(newFanucCrclMain))
+                    .thenComposeToVoid(() -> newFanucCrclMain.startDisplayInterface())
+                    .thenComposeToVoid(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
                     .thenRun(() -> {
                         this.fanucCRCLMain = newFanucCrclMain;
                     });
         } catch (CRCLException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    @UIEffect
+    private void newFanuCRCLServerJInternalFrame(FanucCRCLMain newFanucCrclMain) {
+        FanucCRCLServerJInternalFrame newFanucCRCLServerJInternalFrame = this.fanucCRCLServerJInternalFrame;
+        if (null == newFanucCRCLServerJInternalFrame) {
+            newFanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
+            this.fanucCRCLServerJInternalFrame = newFanucCRCLServerJInternalFrame;
+            addInternalFrame(newFanucCRCLServerJInternalFrame);
+        }
+        newFanucCrclMain.setDisplayInterface(newFanucCRCLServerJInternalFrame);
     }
 
     @Nullable
@@ -2036,7 +2124,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return title error string
      */
     @Nullable
-    @Override
     public String getTitleErrorString() {
         return titleErrorString;
     }
@@ -2054,7 +2141,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return stack trace or null if no error has been set.
      */
-    @Override
     public StackTraceElement @Nullable [] getSetTitleErrorStringTrace() {
         return setTitleErrorStringTrace;
     }
@@ -2087,20 +2173,20 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 updateTitle();
                 if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                     setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
+                    boolean snapshotsEnabled = this.isSnapshotsSelected();
                     if (!closing) {
                         System.err.println("RunName=" + getRunName());
                         System.err.println(newTitleErrorString);
                         Thread.dumpStack();
                         LauncherAprsJFrame.PlayAlert2();
-                        boolean snapshotsEnabled = this.isSnapshotsEnabled();
                         if (!snapshotsEnabled) {
-                            setSnapshotsEnabled(true);
+                            snapshotsCheckBox.setSelected(true);
                         }
                         takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     }
                     pause();
                     if (!snapshotsEnabled) {
-                        setSnapshotsEnabled(false);
+                        snapshotsCheckBox.setSelected(false);
                     }
                 }
             }
@@ -2109,35 +2195,49 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         this.asString = getTitle();
     }
 
-    public void startMotomanCrclServer() {
+    public XFutureVoid startMotomanCrclServer() {
+        return Utils.runOnDispatchThread(this::startMotomanCrclServerOnDisplay);
+    }
+
+    @UIEffect
+    private void startMotomanCrclServerOnDisplay() {
         try {
             if (null == motomanCrclServerJInternalFrame) {
                 MotomanCrclServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
                 this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
-                updateSubPropertiesFiles();
+                newMotomanCrclServerJInternalFrame.setPropertiesFile(motomanPropertiesFile());
                 newMotomanCrclServerJInternalFrame.loadProperties();
                 newMotomanCrclServerJInternalFrame.connectCrclMotoplus();
                 newMotomanCrclServerJInternalFrame.setVisible(true);
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
             if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setVisible(true);
                 addInternalFrame(motomanCrclServerJInternalFrame);
             }
+            throw new RuntimeException(ex);
         }
     }
 
-    private void addInternalFrame(JInternalFrame internalFrame) {
-        internalFrame.pack();
-        internalFrame.setVisible(true);
-        addToDesktopPane(internalFrame);
-        maximizeJInteralFrame(internalFrame);
-        setupWindowsMenu();
+    private File motomanPropertiesFile() {
+        return motomanPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
+    @UIEffect
+    private void addInternalFrame(JInternalFrame internalFrame) {
+        if (null != aprsSystemDisplayJFrame) {
+            internalFrame.pack();
+            internalFrame.setVisible(true);
+            addToDesktopPane(internalFrame);
+            maximizeJInteralFrame(internalFrame);
+            setupWindowsMenuOnDisplay();
+        }
+    }
+
+    @UIEffect
     private void addToDesktopPane(JInternalFrame internalFrame) {
         try {
             if (null != aprsSystemDisplayJFrame) {
@@ -2146,7 +2246,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         } catch (Exception e) {
             System.out.println("Thread.currentThread() = " + Thread.currentThread());
             System.out.println("internalFrame = " + internalFrame);
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
             throw new RuntimeException(e);
         }
     }
@@ -2202,7 +2302,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             if (closing) {
                 return -1;
             }
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             return -1;
         }
     }
@@ -2225,7 +2325,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return thread id
      */
-    @Override
     public int getMyThreadId() {
         return myThreadId;
     }
@@ -2234,8 +2333,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return "AprsJframe." + myThreadId + "." + getRunName();
     }
 
+    @SuppressWarnings("guieffect")
     private void setThreadName() {
-        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (!SwingUtilities.isEventDispatchThread()) {
             Thread.currentThread().setName(getThreadName());
         }
     }
@@ -2243,7 +2343,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private final ExecutorService defaultRunProgramService
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
-                @Override
                 public Thread newThread(Runnable r) {
                     Thread thread = new Thread(r, getThreadName());
                     thread.setDaemon(true);
@@ -2261,7 +2360,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return run program service
      */
-    @Override
     public ExecutorService getRunProgramService() {
         return runProgramService;
     }
@@ -2286,8 +2384,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private XFutureVoid connectDatabase() {
         List<XFutureVoid> futures = null;
         try {
-//            if (!isConnectDatabaseCheckboxSelected()) {
-//                XFutureVoid xf = new XFutureVoid("connectDatabase!isConnectDatabaseCheckboxSelected()");
+//            if (!isConnectDatabaseCheckBoxSelected()) {
+//                XFutureVoid xf = new XFutureVoid("connectDatabase!isConnectDatabaseCheckBoxSelected()");
 //                xf.cancelAll(false);
 //                return xf;
 //            }
@@ -2323,12 +2421,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             XFutureVoid futuresArray[] = futures.toArray(new XFutureVoid[0]);
             XFutureVoid xfAll = XFutureVoid.allOf(futuresArray);
             return xfAll.thenRun(() -> {
-                setConnectDatabaseCheckboxSelected(true);
-                setConnectDatabaseCheckboxEnabled(true);
+                setConnectDatabaseCheckBoxSelected(true);
+                setConnectDatabaseCheckBoxEnabled(true);
                 System.out.println("Finished connect to database.");
             });
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             if (null != futures) {
                 for (Future<?> f : futures) {
                     f.cancel(true);
@@ -2342,10 +2440,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return propertiesDirectory;
     }
 
-    private void setConnectDatabaseCheckboxEnabled(boolean enable) {
-        if (null != this.aprsSystemDisplayJFrame) {
-            this.aprsSystemDisplayJFrame.setConnectDatabaseCheckboxEnabled(enable);
-        }
+    private void setConnectDatabaseCheckBoxEnabled(boolean enable) {
+        connectDatabaseCheckBox.setEnabled(enable);
     }
 
     public void stopSimUpdateTimer() {
@@ -2354,22 +2450,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
-    private volatile boolean connectDatabaseCheckboxSelected = false;
-
-    private boolean isConnectDatabaseCheckboxSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isConnectDatabaseCheckboxSelected();
-            this.connectDatabaseCheckboxSelected = ret;
-            return ret;
-        }
-        return connectDatabaseCheckboxSelected;
-    }
-
-    private void setConnectDatabaseCheckboxSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setConnectDatabaseCheckboxSelected(selected);
-        }
-        this.connectDatabaseCheckboxSelected = selected;
+    private void setConnectDatabaseCheckBoxSelected(boolean selected) {
+        connectDatabaseCheckBox.setSelected(selected);
     }
 
     public XFutureVoid connectVision() {
@@ -2378,9 +2460,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("null == visionToDbJInternalFrame");
-
         }
-        return Utils.runOnDispatchThread(visionToDbJInternalFrame::connectVision);
+        return Utils.supplyOnDispatchThread(visionToDbJInternalFrame::connectVision)
+                .thenComposeToVoid(x -> x);
     }
 
     public void disconnectVision() {
@@ -2389,84 +2471,71 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
-    /**
-     * Creates new AprsSystem using a default properties file.
-     */
-    @SuppressWarnings("initialization")
-    private AprsSystem() {
-        this(null);
-    }
-
-    /**
-     * Creates new AprsSystem using a default properties file.
-     *
-     * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
-     */
-    @SuppressWarnings("initialization")
-    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1) {
-        this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
-        try {
-            initPropertiesFileInfo();
-            this.asString = getTitle();
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (null != propertiesFile) {
-            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + ", propertiesFile=" + propertiesFile.getName() + " complete.");
-        } else {
-            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + " complete.");
-        }
-    }
+    private volatile String title = "";
 
     private void setTitle(String newTitle) {
+        this.title = newTitle;
+        if (null != aprsSystemDisplayJFrame) {
+            Utils.runOnDispatchThread(() -> setTitleOnDisplay(newTitle));
+        }
+    }
+
+    @UIEffect
+    private void setTitleOnDisplay(String newTitle) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setTitle(newTitle);
         }
     }
 
     private String getTitle() {
-        if (null != aprsSystemDisplayJFrame) {
-            return aprsSystemDisplayJFrame.getTitle();
-        }
-        return "";
+        return title;
     }
 
     /**
      * Initialize the frame with the previously saved settings if available.
      */
     private XFutureVoid defaultInit() {
-        initLoggerWindow();
-        try {
-//            initPropertiesFile();
-            if (propertiesFile.exists()) {
-                loadProperties();
-            } else {
-                saveProperties();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return commonInit();
+        return initLoggerWindow()
+                .thenComposeToVoid(this::commonInit);
     }
 
     private void clearStartCheckBoxes() {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.clearStartCheckBoxes();
-        }
+        onStartupConnectDatabaseCheckBox.setSelected(false);
+        connectDatabaseCheckBox.setSelected(false);
+//        if (null != aprsSystemDisplayJFrame) {
+//            Utils.runOnDispatchThread(this::clearStartCheckBoxesOnDisplay);
+//        }
     }
 
+//    @UIEffect
+//    private void clearStartCheckBoxesOnDisplay() {
+//        if (null != aprsSystemDisplayJFrame) {
+//            aprsSystemDisplayJFrame.clearStartCheckBoxes();
+//        }
+//    }
     /**
      * Initialize the frame ignoring any previously saved settings.
      */
     private XFutureVoid emptyInit() {
         skipCreateDbSetupFrame = true;
         clearStartCheckBoxes();
-        initLoggerWindow();
-        return commonInit();
+        return initLoggerWindow()
+                .thenComposeToVoid(this::commonInit);
+    }
+
+    private void headlessEmptyInit() {
+        skipCreateDbSetupFrame = true;
+        clearStartCheckBoxes();
+        headlessEmptyCommonInit();
+    }
+
+    @SuppressWarnings("guieffect")
+    private static boolean isHeadless() {
+        return GraphicsEnvironment.isHeadless();
     }
 
     public static XFuture<AprsSystem> createSystem(File propertiesFile) {
-        if (GraphicsEnvironment.isHeadless()) {
+        if (isHeadless()) {
             return createAprsSystemHeadless(propertiesFile);
         } else {
             return createAprsSystemWithSwingDisplay(propertiesFile);
@@ -2474,7 +2543,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     public static XFuture<AprsSystem> createPrevSystem() {
-        if (GraphicsEnvironment.isHeadless()) {
+        if (isHeadless()) {
             return createPrevAprsSystemHeadless();
         } else {
             return createPrevAprsSystemWithSwingDisplay();
@@ -2482,7 +2551,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     public static XFuture<AprsSystem> createEmptySystem() {
-        if (GraphicsEnvironment.isHeadless()) {
+        if (isHeadless()) {
             return createEmptyAprsSystemHeadless();
         } else {
             return createEmptyAprsSystemWithSwingDisplay();
@@ -2507,6 +2576,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private static XFuture<AprsSystem> createEmptyAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
+        aprsSystemDisplayJFrame1.setAprsSystem(system);
+        system.setVisible(true);
         return system.emptyInit().
                 thenSupply(() -> {
                     aprsSystemDisplayJFrame1.setAprsSystem(system);
@@ -2526,7 +2597,18 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private static XFuture<AprsSystem> createAprsSystemWithSwingDisplay2(File propertiesFile) {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, propertiesFile);
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
+        aprsSystemDisplayJFrame1.setAprsSystem(system);
+        system.setVisible(true);
+        if (null != propertiesFile) {
+            system.setPropertiesFile(propertiesFile);
+            return system.loadProperties()
+                    .thenComposeToVoid(() -> system.defaultInit())
+                    .thenApply(x -> {
+                        aprsSystemDisplayJFrame1.setAprsSystem(system);
+                        return system;
+                    });
+        }
         return system.defaultInit().
                 thenApply(x -> {
                     aprsSystemDisplayJFrame1.setAprsSystem(system);
@@ -2542,6 +2624,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 });
     }
 
+    public static AprsSystem emptyHeadlessAprsSystem() {
+        return new AprsSystem(true);
+    }
+
     private static XFuture<AprsSystem> createPrevAprsSystemHeadless() {
         AprsSystem system = new AprsSystem();
         return system.defaultInit().
@@ -2551,38 +2637,19 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     private static XFuture<AprsSystem> createAprsSystemHeadless(File propertiesFile) {
-        AprsSystem system = new AprsSystem(null, propertiesFile);
-        return system.defaultInit().
-                thenSupply(() -> {
+        AprsSystem system = new AprsSystem(null);
+        if (null != propertiesFile) {
+            system.setPropertiesFile(propertiesFile);
+            return system.loadProperties()
+                    .thenComposeToVoid(() -> system.defaultInit())
+                    .thenSupply(() -> {
+                        return system;
+                    });
+        }
+        return system.defaultInit()
+                .thenSupply(() -> {
                     return system;
                 });
-    }
-
-    /**
-     * Creates new AprsSystem using a specified properties file.
-     *
-     * @param propertiesFile properties file to be read for initial settings
-     */
-    @SuppressWarnings("initialization")
-    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1, File propertiesFile) {
-        this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
-        initLoggerWindow();
-        try {
-            setPropertiesFile(propertiesFile);
-//            initPropertiesFile();
-            if (propertiesFile.exists()) {
-                loadProperties();
-            } else {
-                saveProperties();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (null != propertiesFile) {
-            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + ", propertiesFile=" + propertiesFile.getName() + " complete.");
-        } else {
-            System.out.println("Constructor for AprsSystem with taskName=" + taskName + ", robotName=" + robotName + " complete.");
-        }
     }
 
     private boolean skipCreateDbSetupFrame = false;
@@ -2591,307 +2658,268 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private XFutureVoid commonInit() {
         System.out.println("commonInitCount = " + commonInitCount.incrementAndGet());
-        return startWindowsFromMenuCheckboxes()
+        return startWindowsFromMenuCheckBoxes()
                 .thenRun(this::completeCommonInit);
+    }
+
+    private void headlessEmptyCommonInit() {
+        System.out.println("commonInitCount = " + commonInitCount.incrementAndGet());
+        this.completeCommonInit();
     }
 
     private final AtomicInteger completeCommonInitCount = new AtomicInteger();
 
-    private void completeCommonInit() {
+    @UIEffect
+    private void setIconImageURL(URL url) {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                setIconImage(ImageIO.read(url));
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            }
+        }
+    }
+
+    @UIEffect
+    private void completeCommonInitOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             try {
                 URL aprsPngUrl = AprsSystem.class.getResource("aprs.png");
                 if (null != aprsPngUrl) {
-                    setIconImage(ImageIO.read(aprsPngUrl));
+                    setIconImageURL(aprsPngUrl);
                 } else {
                     Logger.getLogger(AprsSystem.class.getName()).log(Level.WARNING, "getResource(\"aprs.png\") returned null");
                 }
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             }
+            setupWindowsMenuOnDisplay();
+            showActiveWinOnDisplay();
         }
-//        if (null != logDisplayJInternalFrame) {
-//            activateFrame(logDisplayJInternalFrame);
-//        }
-        setupWindowsMenu();
+
+    }
+
+    private void completeCommonInit() {
+        if (null != aprsSystemDisplayJFrame) {
+            Utils.runOnDispatchThread(this::completeCommonInitOnDisplay);
+        }
         updateTitle("", "");
         this.asString = getTitle();
     }
 
+    @UIEffect
     private void setIconImage(Image image) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setIconImage(image);
         }
     }
 
-    private volatile boolean kitInspectionStartupSelected = false;
-
     private boolean isKitInspectionStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isKitInspectionStartupSelected();
-            kitInspectionStartupSelected = ret;
-            return ret;
-        }
-        return kitInspectionStartupSelected;
+        return kitInspectionStartupCheckBox.isSelected();
     }
 
     private void setKitInspectionStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setKitInspectionStartupSelected(selected);
-        }
-        this.kitInspectionStartupSelected = selected;
+        kitInspectionStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean pddlPlannerStartupSelected = false;
-
     private boolean isPddlPlannerStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isPddlPlannerStartupSelected();
-            pddlPlannerStartupSelected = ret;
-            return ret;
-        }
-        return pddlPlannerStartupSelected;
+        return pddlPlannerStartupCheckBox.isSelected();
     }
 
     private void setPddlPlannerStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setPddlPlannerStartupSelected(selected);
-        }
-        this.pddlPlannerStartupSelected = selected;
+        pddlPlannerStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean pddlExecutorStartupSelected = false;
-
     private boolean isExecutorStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isExecutorStartupSelected();
-            pddlExecutorStartupSelected = ret;
-            return ret;
-        }
-        return pddlExecutorStartupSelected;
+        return executorStartupCheckBox.isSelected();
     }
 
     private void setExecutorStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setExecutorStartupSelected(selected);
-        }
-        this.pddlExecutorStartupSelected = selected;
+        executorStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean objectSpStartupSelected = false;
-
     private boolean isObjectSpStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isObjectSpStartupSelected();
-            objectSpStartupSelected = ret;
-            return ret;
-        }
-        return objectSpStartupSelected;
+        return objectSpStartupCheckBox.isSelected();
     }
 
     private void setObjectSpStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setObjectSpStartupSelected(selected);
-        }
-        this.objectSpStartupSelected = selected;
+        objectSpStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean object2DViewStartupSelected = false;
-
     private boolean isObject2DViewStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isObject2DViewStartupSelected();
-            object2DViewStartupSelected = ret;
-            return ret;
-        }
-        return object2DViewStartupSelected;
+        return object2DViewStartupCheckBox.isSelected();
     }
 
     private void setObject2DViewStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setObject2DViewStartupSelected(selected);
-        }
-        this.object2DViewStartupSelected = selected;
+        object2DViewStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean robotCrclGUIStartupSelected = false;
-
     private boolean isRobotCrclGUIStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclGUIStartupSelected();
-            robotCrclGUIStartupSelected = ret;
-            return ret;
-        }
-        return robotCrclGUIStartupSelected;
+        return robotCrclGUIStartupCheckBox.isSelected();
     }
 
     private void setRobotCrclGUIStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setRobotCrclGUIStartupSelected(selected);
-        }
-        this.robotCrclGUIStartupSelected = selected;
+        robotCrclGUIStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean robotCrclSimServerStartupSelected = false;
-
     private boolean isRobotCrclSimServerStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclSimServerStartupSelected();
-            robotCrclSimServerStartupSelected = ret;
-            return ret;
-        }
-        return robotCrclSimServerStartupSelected;
+        return robotCrclSimServerStartupCheckBox.isSelected();
     }
 
     private void setRobotCrclSimServerStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setRobotCrclSimServerStartupSelected(selected);
-        }
-        this.robotCrclSimServerStartupSelected = selected;
+        robotCrclSimServerStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean robotCrclFanucServerStartupSelected = false;
-
     private boolean isRobotCrclFanucServerStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclFanucServerStartupSelected();
-            robotCrclFanucServerStartupSelected = ret;
-            return ret;
-        }
-        return robotCrclFanucServerStartupSelected;
+        return robotCrclFanucServerStartupCheckBox.isSelected();
     }
 
     private void setRobotCrclFanucServerStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setRobotCrclFanucServerStartupSelected(selected);
-        }
-        this.robotCrclFanucServerStartupSelected = selected;
+        robotCrclFanucServerStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean robotCrclMotomanServerStartupSelected = false;
-
     private boolean isRobotCrclMotomanServerStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isRobotCrclMotomanServerStartupSelected();
-            robotCrclMotomanServerStartupSelected = ret;
-            return ret;
-        }
-        return robotCrclMotomanServerStartupSelected;
+        return robotCrclMotomanServerStartupCheckBox.isSelected();
     }
 
     private void setRobotCrclMotomanServerStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setRobotCrclMotomanServerStartupSelected(selected);
-        }
-        this.robotCrclMotomanServerStartupSelected = selected;
+        robotCrclMotomanServerStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean exploreGraphDBStartupSelected = false;
-
     private boolean isExploreGraphDBStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isExploreGraphDBStartupSelected();
-            exploreGraphDBStartupSelected = ret;
-            return ret;
-        }
-        return exploreGraphDBStartupSelected;
+        return exploreGraphDBStartupCheckBox.isSelected();
     }
 
     private void setExploreGraphDBStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setExploreGraphDBStartupSelected(selected);
-        }
-        this.exploreGraphDBStartupSelected = selected;
+        exploreGraphDBStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean showDatabaseSetupStartupSelected = false;
-
     private boolean isShowDatabaseSetupStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isShowDatabaseSetupSelected();
-            showDatabaseSetupStartupSelected = ret;
-            return ret;
-        }
-        return showDatabaseSetupStartupSelected;
+        return showDatabaseSetupOnStartupCheckBox.isSelected();
     }
 
     private void setShowDatabaseSetupStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setShowDatabaseSetupSelected(selected);
-        }
-        this.showDatabaseSetupStartupSelected = selected;
+        showDatabaseSetupOnStartupCheckBox.setSelected(selected);
     }
 
-    private volatile boolean connectDatabaseOnSetupStartupSelected = false;
+    @UI
+    private static interface UISupplier<R> {
+
+        public R get();
+    }
+
+    @SuppressWarnings("guieffect")
+    private static boolean isEventDispatchThread() {
+        return SwingUtilities.isEventDispatchThread();
+    }
+
+    /**
+     * Call a method that returns a value on the dispatch thread.
+     *
+     * @param <R> type of return of the caller
+     * @param s supplier object with get method to be called.
+     * @return future that will make the return value accessible when the call
+     * is complete.
+     */
+    @SuppressWarnings("guieffect")
+    private static <R> R supplyAndWaitOnDispatchThread(final UISupplier<R> s) {
+
+        try {
+            if (isEventDispatchThread()) {
+                return s.get();
+            } else {
+                AtomicReference<R> ret = new AtomicReference<>();
+                javax.swing.SwingUtilities.invokeAndWait(() -> ret.set(s.get()));
+                return ret.get();
+            }
+        } catch (InterruptedException | InvocationTargetException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
 
     private boolean isConnectDatabaseOnSetupStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isConnectDatabaseOnStartupSelected();
-            connectDatabaseOnSetupStartupSelected = ret;
-            return ret;
-        }
-        return connectDatabaseOnSetupStartupSelected;
+        return onStartupConnectDatabaseCheckBox.isSelected();
     }
 
     private void setConnectDatabaseOnStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setConnectDatabaseOnStartupSelected(selected);
-        }
-        this.connectDatabaseOnSetupStartupSelected = selected;
+        onStartupConnectDatabaseCheckBox.setSelected(selected);
     }
 
-    private volatile boolean connectVisionOnSetupStartupSelected = false;
-
     private boolean isConnectVisionOnStartupSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = this.aprsSystemDisplayJFrame.isConnectVisionOnStartupSelected();
-            connectVisionOnSetupStartupSelected = ret;
-            return ret;
-        }
-        return connectVisionOnSetupStartupSelected;
+        return connectVisionOnStartupCheckBox.isSelected();
     }
 
     private void setConnectVisionOnStartupSelected(boolean selected) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setConnectVisionOnStartupSelected(selected);
-        }
-        this.connectVisionOnSetupStartupSelected = selected;
+        connectVisionOnStartupCheckBox.setSelected(selected);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private XFutureVoid startWindowsFromMenuCheckboxes() {
+    private XFutureVoid startWindowsFromMenuCheckBoxes() {
+        if (null == aprsSystemDisplayJFrame || isEventDispatchThread()) {
+            return startWindowsFromMenuCheckBoxesInternal();
+        } else {
+            return Utils.supplyOnDispatchThread(this::startWindowsFromMenuCheckBoxesInternal)
+                    .thenComposeToVoid(x -> x);
+        }
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private XFutureVoid startWindowsFromMenuCheckBoxesInternal() {
         try {
             List<XFuture<?>> futures = new ArrayList<>();
             if (isKitInspectionStartupSelected()) {
-                startKitInspection();
+                XFutureVoid startKitInspectionFuture = startKitInspection();
+                futures.add(startKitInspectionFuture);
             }
             if (isPddlPlannerStartupSelected()) {
-                startPddlPlanner();
+                XFutureVoid startPddlPlannerFuture = startPddlPlanner();
+                futures.add(startPddlPlannerFuture);
             }
             if (isExecutorStartupSelected()) {
-                startActionListExecutor();
+                XFutureVoid startExecutorFuture = startActionListExecutor();
+                futures.add(startExecutorFuture);
             }
+            XFutureVoid startVisionToDbFuture = null;
             if (isObjectSpStartupSelected()) {
-                startVisionToDbJinternalFrame();
+                startVisionToDbFuture = startVisionToDbJinternalFrame();
+                futures.add(startVisionToDbFuture);
             }
+            XFutureVoid object2DViewFuture = null;
             if (isObject2DViewStartupSelected()) {
-                startObject2DJinternalFrame();
+                object2DViewFuture = startObject2DJinternalFrame();
+                futures.add(object2DViewFuture);
             }
-            if (isRobotCrclGUIStartupSelected()) {
-                startCrclClientJInternalFrame();
-            }
+            XFutureVoid serverFuture = null;
             if (isRobotCrclSimServerStartupSelected()) {
-                startSimServerJInternalFrame();
+                XFutureVoid startSimServerFuture = startSimServerJInternalFrame();
+                serverFuture = startSimServerFuture;
+                futures.add(startSimServerFuture);
             }
+
             if (isExploreGraphDBStartupSelected()) {
-                startExploreGraphDb();
+                XFutureVoid startExploreGraphDbFuture = startExploreGraphDb();
+                futures.add(startExploreGraphDbFuture);
             }
             if (isRobotCrclFanucServerStartupSelected()) {
                 XFutureVoid startFanucFuture = startFanucCrclServer();
+                serverFuture = startFanucFuture;
                 futures.add(startFanucFuture);
             }
             if (isRobotCrclMotomanServerStartupSelected()) {
-                startMotomanCrclServer();
+                XFutureVoid startMotomanFuture = startMotomanCrclServer();
+                serverFuture = startMotomanFuture;
+                futures.add(startMotomanFuture);
+            }
+            if (isRobotCrclGUIStartupSelected()) {
+                if (null != serverFuture) {
+                    XFutureVoid startCrclClientFuture
+                            = serverFuture.thenComposeToVoid(x -> startCrclClientJInternalFrame());
+                    futures.add(startCrclClientFuture);
+                } else {
+                    XFutureVoid startCrclClientFuture = startCrclClientJInternalFrame();
+                    futures.add(startCrclClientFuture);
+                }
             }
             if (!skipCreateDbSetupFrame || isShowDatabaseSetupStartupSelected()) {
                 createDbSetupFrame();
@@ -2902,24 +2930,34 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 setConnectDatabaseOnStartupSelected(false);
             }
             updateSubPropertiesFiles();
-            setupWindowsMenu();
+            XFutureVoid setupWindowsFuture = setupWindowsMenu();
+            futures.add(setupWindowsFuture);
             boolean startConnectDatabaseSelected = isConnectDatabaseOnSetupStartupSelected();
             if (startConnectDatabaseSelected) {
                 XFuture<Boolean> startConnectDatabaseFuture = startConnectDatabase();
                 futures.add(startConnectDatabaseFuture);
             }
-            if (isConnectVisionOnStartupSelected()) {
-                XFutureVoid connectVisionFuture = connectVision();
-                futures.add(connectVisionFuture);
+            if (isConnectVisionOnStartupSelected() && null != startVisionToDbFuture) {
+                if (null != object2DViewFuture) {
+                    XFutureVoid connectVisionFuture
+                            = XFutureVoid.allOf(object2DViewFuture, startVisionToDbFuture)
+                                    .thenComposeToVoid(this::connectVision);
+                    futures.add(connectVisionFuture);
+                } else {
+                    XFutureVoid connectVisionFuture
+                            = startVisionToDbFuture
+                                    .thenComposeToVoid(this::connectVision);
+                    futures.add(connectVisionFuture);
+                }
             }
             if (futures.isEmpty()) {
-                return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckboxes");
+                return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckBoxes");
             } else {
                 XFuture<?> futuresArray[] = futures.toArray(new XFuture[0]);
-                return XFutureVoid.allOfWithName("startWindowsFromMenuCheckboxes", futuresArray);
+                return XFutureVoid.allOfWithName("startWindowsFromMenuCheckBoxes", futuresArray);
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -2929,38 +2967,64 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     @MonotonicNonNull
     private volatile MyPrintStream errLogStream = null;
 
-    public final void initLoggerWindow() {
-        try {
-            synchronized (this) {
-                if (null == logDisplayJInternalFrame) {
-                    LogDisplayJInternalFrame logFrame = new LogDisplayJInternalFrame();
-                    logFrame.pack();
-                    logFrame.setVisible(true);
-                    addToDesktopPane(logFrame);
-                    if (null == outLogStream) {
-                        outLogStream = new MyPrintStream(System.out, logFrame);
-                    }
-                    if (null == errLogStream) {
-                        errLogStream = new MyPrintStream(System.err, logFrame);
-                    }
-                    this.logDisplayJInternalFrame = logFrame;
-                }
+    public final XFutureVoid initLoggerWindow() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                return Utils.runOnDispatchThread("initLoggerWindowOnDisplay", this::initLoggerWindowOnDisplay);
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
-            LogDisplayJInternalFrame logFrame = this.logDisplayJInternalFrame;
-            if (null != logFrame) {
-                if (null != outLogStream) {
-                    System.setOut(outLogStream);
+        }
+        return XFutureVoid.completedFuture();
+    }
+
+    @UIEffect
+    private void initLoggerWindowOnDisplay() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                synchronized (this) {
+                    if (null == logDisplayJInternalFrame) {
+                        LogDisplayJInternalFrame logFrame = new LogDisplayJInternalFrame();
+                        addInternalFrame(logFrame);
+                        if (null == outLogStream) {
+                            outLogStream = new MyPrintStream(System.out, logFrame);
+                        }
+                        if (null == errLogStream) {
+                            errLogStream = new MyPrintStream(System.err, logFrame);
+                        }
+                        this.logDisplayJInternalFrame = logFrame;
+                    }
                 }
-                if (null != errLogStream) {
-                    System.setErr(errLogStream);
+                LogDisplayJInternalFrame logFrame = this.logDisplayJInternalFrame;
+                if (null != logFrame) {
+                    if (null != outLogStream) {
+                        System.setOut(outLogStream);
+                    }
+                    if (null != errLogStream) {
+                        System.setErr(errLogStream);
+                    }
                 }
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             }
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void closeAllInternalFrames() {
+    private XFutureVoid closeAllInternalFrames() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                return Utils.runOnDispatchThread("closeAllInternalFramesOnDisplay", this::closeAllInternalFramesOnDisplay);
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        }
+        return XFutureVoid.completedFuture();
+    }
+
+    @UIEffect
+    private void closeAllInternalFramesOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.closeAllInternalFrames();
         }
@@ -2975,21 +3039,15 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             closePddlPlanner();
         } catch (Exception exception) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, exception);
+                    .getName()).log(Level.SEVERE, "", exception);
         }
         try {
             closeActionsListExcecutor();
 
         } catch (Exception exception) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, exception);
+                    .getName()).log(Level.SEVERE, "", exception);
         }
-//        try {
-//            stopCrclWebApp();
-//        } catch (Exception exception) {
-//            Logger.getLogger(AprsSystem.class
-//                    .getName()).log(Level.SEVERE, null, exception);
-//        }
         if (null != connectDatabaseFuture) {
             connectDatabaseFuture.cancel(true);
             connectDatabaseFuture = null;
@@ -2997,11 +3055,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         if (null != disconnectDatabaseFuture) {
             disconnectDatabaseFuture.cancel(true);
             disconnectDatabaseFuture = null;
-        }
-
-        if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.setVisible(false);
-            object2DViewJInternalFrame.dispose();
         }
 
         try {
@@ -3015,7 +3068,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             ex.printStackTrace();
         }
         try {
-            setConnectDatabaseCheckboxEnabled(false);
+            setConnectDatabaseCheckBoxEnabled(false);
             if (null != connectDatabaseFuture) {
                 connectDatabaseFuture.cancel(true);
                 connectDatabaseFuture = null;
@@ -3040,22 +3093,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             disconnectRobot();
             disconnectVision();
             disconnectDatabase();
-            DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
-            if (null != dbSetupFrame) {
-                dbSetupFrame.getDbSetupPublisher().removeAllDbSetupListeners();
-                dbSetupFrame.setVisible(false);
-//                dbSetupFrame.shutDownNotifyService();
-                dbSetupFrame.dispose();
-            }
-            closeAllInternalFrames();
-            if (null != this.exploreGraphDbJInternalFrame) {
-                this.exploreGraphDbJInternalFrame.setVisible(false);
-                this.exploreGraphDbJInternalFrame.dispose();
-            }
-            if (null != this.logDisplayJInternalFrame) {
-                this.logDisplayJInternalFrame.setVisible(false);
-                this.logDisplayJInternalFrame.dispose();
-            }
+            closeDbSetupFrame();
+
+            disposeInternalFrame(exploreGraphDbJInternalFrame);
+            disposeInternalFrame(logDisplayJInternalFrame);
             SimServerJInternalFrame simServerFrame = this.simServerJInternalFrame;
             if (null != simServerFrame) {
                 try {
@@ -3063,11 +3104,32 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                simServerFrame.setVisible(false);
-                simServerFrame = null;
             }
+            closeAllInternalFrames();
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private void closeDbSetupFrame() {
+        DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
+        if (null != dbSetupFrame) {
+            dbSetupFrame.getDbSetupPublisher().removeAllDbSetupListeners();
+            disposeInternalFrame(dbSetupFrame);
+        }
+    }
+
+    private void disposeInternalFrame(@Nullable JInternalFrame frame) {
+        if (null != frame) {
+            Utils.runOnDispatchThread(() -> disposeInternalFrameOnDisplay(frame));
+        }
+    }
+
+    @UIEffect
+    private void disposeInternalFrameOnDisplay(@Nullable JInternalFrame frame) {
+        if (null != frame) {
+            frame.setVisible(false);
+            frame.dispose();
         }
     }
 
@@ -3086,22 +3148,28 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 //        }
 //    }
     public void showDatabaseSetupWindow() {
+        Utils.runOnDispatchThread(this::showDatabaseSetupWindowOnDisplay);
+    }
+
+    @UIEffect
+    private void showDatabaseSetupWindowOnDisplay() {
         createDbSetupFrame();
         DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
         if (null != dbSetupFrame) {
             dbSetupFrame.setPropertiesFile(propertiesFile);
-            checkDeiconifyActivateAndMaximize(dbSetupFrame);
+            checkDeiconifyActivateAndMaximizeOnDisplay(dbSetupFrame);
         }
-
-        setupWindowsMenu();
+        setupWindowsMenuOnDisplay();
     }
 
-    private void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
+    @UIEffect
+    private void checkDeiconifyActivateAndMaximizeOnDisplay(JInternalFrame internalFrame) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.checkDeiconifyActivateAndMaximize(internalFrame);
         }
     }
 
+    @UIEffect
     private boolean checkInternalFrame(JInternalFrame frm) {
         if (null != aprsSystemDisplayJFrame) {
             return aprsSystemDisplayJFrame.checkInternalFrame(frm);
@@ -3111,23 +3179,33 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     public void hideDatabaseSetupWindow() {
         if (null != dbSetupJInternalFrame) {
+            Utils.runOnDispatchThread(this::hideDatabaseSetupWindowOnDisplay);
+        }
+    }
+
+    @UIEffect
+    public void hideDatabaseSetupWindowOnDisplay() {
+        if (null != dbSetupJInternalFrame) {
             dbSetupJInternalFrame.setVisible(false);
             checkIconifyAndDeactivate(dbSetupJInternalFrame);
         }
     }
 
+    @UIEffect
     private void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.checkIconifyAndDeactivate(internalFrame);
         }
     }
 
+    @UIEffect
     private void deiconifyAndActivate(final JInternalFrame frameToShow) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.deiconifyAndActivate(frameToShow);
         }
     }
 
+    @UIEffect
     private void activateFrame(final JInternalFrame frameToShow) {
         frameToShow.setVisible(true);
         if (checkInternalFrame(frameToShow)) {
@@ -3135,11 +3213,24 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             frameToShow.moveToFront();
             activeWin = stringToWin(frameToShow.getTitle());
         } else {
-            setupWindowsMenu();
+            setupWindowsMenuOnDisplay();
         }
     }
 
-    private void setupWindowsMenu() {
+    private XFutureVoid setupWindowsMenu() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                return Utils.runOnDispatchThread("setupWindowsMenuOnDisplay", this::setupWindowsMenuOnDisplay);
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        }
+        return XFutureVoid.completedFuture();
+    }
+
+    @UIEffect
+    private void setupWindowsMenuOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setupWindowsMenu();
         }
@@ -3184,7 +3275,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return list of items as generated by the simulation
      * @throws IllegalStateException Object 2D view was not opened.
      */
-    @Override
     public List<PhysicalItem> getSimItemsData() throws IllegalStateException {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("null == object2DViewJInternalFrame)");
@@ -3200,7 +3290,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param items list of items to use
      */
-    @Override
     public void setSimItemsData(List<PhysicalItem> items) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setItems(items);
@@ -3215,11 +3304,11 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param y y coordinate
      * @param z z coordinate
      */
-    @Override
-    public void setLookForXYZ(double x, double y, double z) {
+    public XFutureVoid setLookForXYZ(double x, double y, double z) {
         if (null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.setLookForXYZ(x, y, z);
+            return pddlExecutorJInternalFrame1.setLookForXYZ(x, y, z);
         }
+        return XFutureVoid.completedFuture();
     }
 
     /**
@@ -3230,39 +3319,47 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param maxX maximum X
      * @param maxY maximum Y
      */
-    @Override
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.setViewLimits(minX, minY, maxX, maxY);
         }
     }
 
+    private final AtomicInteger so2dCount = new AtomicInteger();
+
     /**
      * Make the Object 2D view visible and create underlying components.
      */
-    public void startObject2DJinternalFrame() {
+    public XFutureVoid startObject2DJinternalFrame() {
+        return Utils.composeToVoidOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
+    }
+
+    @UIEffect
+    private XFutureVoid startObject2DJinternalFrameOnDisplay() {
         try {
+            
             boolean alreadySelected = isObject2DViewStartupSelected();
             if (!alreadySelected) {
                 setObject2DViewStartupSelected(true);
             }
-            object2DViewJInternalFrame = new Object2DViewJInternalFrame();
-            updateSubPropertiesFiles();
-            object2DViewJInternalFrame.setAprsSystem(this);
+            Object2DViewJInternalFrame newObject2DViewJInternalFrame = new Object2DViewJInternalFrame();
+            newObject2DViewJInternalFrame.setAprsSystem(this);
             if (null != externalSlotOffsetProvider) {
-                object2DViewJInternalFrame.setSlotOffsetProvider(externalSlotOffsetProvider);
+                newObject2DViewJInternalFrame.setSlotOffsetProvider(externalSlotOffsetProvider);
             }
-            object2DViewJInternalFrame.loadProperties();
-            object2DViewJInternalFrame.pack();
-            object2DViewJInternalFrame.setVisible(true);
-            addToDesktopPane(object2DViewJInternalFrame);
-            maximizeJInteralFrame(object2DViewJInternalFrame);
-            if (!alreadySelected) {
-                setupWindowsMenu();
-            }
+            newObject2DViewJInternalFrame.setPropertiesFile(object2DViewPropertiesFile());
+
+            addInternalFrame(newObject2DViewJInternalFrame);
+            this.object2DViewJInternalFrame = newObject2DViewJInternalFrame;
+           return  newObject2DViewJInternalFrame.loadProperties();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
+    }
+
+    private File object2DViewPropertiesFile() {
+        return object2DViewPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
     final private List<Runnable> titleUpdateRunnables = Collections.synchronizedList(new ArrayList<>());
@@ -3282,7 +3379,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return error string or null if no error has occurred.
      */
     @Nullable
-    @Override
     public String getCrclClientErrorString() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCrclClientErrorMessage();
@@ -3295,7 +3391,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return aborting status
      */
-    @Override
     public boolean isAborting() {
         return (null != safeAbortAndDisconnectFuture && !safeAbortAndDisconnectFuture.isDone())
                 || (null != safeAbortFuture && !safeAbortFuture.isDone());
@@ -3309,7 +3404,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         if (null != crclClientError && crclClientError.length() > 0
                 && (null == titleErrorString || titleErrorString.length() < 1)) {
             this.titleErrorString = crclClientError;
-            pauseInternal();
+            pauseOnDisplay();
         }
         if (isPaused()) {
             stateString = "PAUSED";
@@ -3365,7 +3460,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return current status or null
      */
     @Nullable
-    @Override
     public CRCLStatusType getCurrentStatus() {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus().orElse(null);
@@ -3376,9 +3470,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     /**
      * Update the title based on the current state.
      */
-    @Override
     public void updateTitle() {
-        Utils.runOnDispatchThread(this::updateTitleInternal);
+        Utils.runOnDispatchThread(this::updateTitleOnDisplay);
     }
 
     @Nullable
@@ -3392,7 +3485,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return null;
     }
 
-    private void updateTitleInternal() {
+    private void updateTitleOnDisplay() {
         if (null != crclClientJInternalFrame) {
             CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
                     .map(CRCLStatusType::getCommandStatus)
@@ -3408,7 +3501,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                         titleErrorString = null;
                     }
                 }
-                String description = Objects.toString(cs.getStateDescription(),"");
+                String description = Objects.toString(cs.getStateDescription(), "");
                 updateTitle(cs.getCommandState().toString(), description);
             }
         } else {
@@ -3419,24 +3512,25 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     /**
      * Create and display the CRCL client frame (aka pendant client)
      */
-    public void startCrclClientJInternalFrame() {
+    public XFutureVoid startCrclClientJInternalFrame() {
+        return Utils.runOnDispatchThread(this::startCrclClientJInternalFrameOnDisplay);
+    }
+
+    @UIEffect
+    private void startCrclClientJInternalFrameOnDisplay() {
         try {
             boolean alreadySelected = isRobotCrclGUIStartupSelected();
             if (!alreadySelected) {
                 setRobotCrclGUIStartupSelected(true);
             }
-            crclClientJInternalFrame = new PendantClientJInternalFrame(this.aprsSystemDisplayJFrame);
-            crclClientJInternalFrame.setRunProgramService(runProgramService);
-            crclClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
-            updateSubPropertiesFiles();
-            crclClientJInternalFrame.loadProperties();
-            crclClientJInternalFrame.pack();
-            crclClientJInternalFrame.setVisible(true);
-            addToDesktopPane(crclClientJInternalFrame);
-            maximizeJInteralFrame(crclClientJInternalFrame);
-            crclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
+            PendantClientJInternalFrame newCrclClientJInternalFrame = new PendantClientJInternalFrame(this.aprsSystemDisplayJFrame);
+            newCrclClientJInternalFrame.setRunProgramService(runProgramService);
+            newCrclClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
+            newCrclClientJInternalFrame.setPropertiesFile(crclClientPropertiesFile());
+            newCrclClientJInternalFrame.loadProperties();
+            addInternalFrame(newCrclClientJInternalFrame);
+            newCrclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
 
-                @Override
                 public void titleChanged(CommandStatusType ccst, @Nullable Container container, String stateString, String stateDescription) {
                     updateTitle(stateString, stateDescription);
                 }
@@ -3445,44 +3539,62 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 List<PendantClientJPanel.CurrentPoseListener> tempList = new ArrayList<>(unaddedPoseListeners);
                 unaddedPoseListeners.clear();
                 for (PendantClientJPanel.CurrentPoseListener l : tempList) {
-                    crclClientJInternalFrame.addCurrentPoseListener(l);
+                    newCrclClientJInternalFrame.addCurrentPoseListener(l);
                 }
             }
+            this.crclClientJInternalFrame = newCrclClientJInternalFrame;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
+    }
+
+    private File crclClientPropertiesFile() {
+        return crclClientPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
     /**
      * Create and display the simulation server window and start the simulation
      * server thread.
      */
-    public void startSimServerJInternalFrame() {
+    public XFutureVoid startSimServerJInternalFrame() {
+        return Utils.runOnDispatchThread(this::startSimServerJInternalFrameOnDisplay);
+    }
+
+    /**
+     * Create and display the simulation server window and start the simulation
+     * server thread.
+     */
+    @UIEffect
+    private void startSimServerJInternalFrameOnDisplay() {
+        File propsFile = crclSimServerPropertiesFile();
         try {
             if (null == simServerJInternalFrame) {
                 boolean alreadySelected = isRobotCrclSimServerStartupSelected();
                 if (!alreadySelected) {
                     setRobotCrclSimServerStartupSelected(true);
                 }
-                simServerJInternalFrame = new SimServerJInternalFrame(false);
-                updateSubPropertiesFiles();
-                simServerJInternalFrame.loadProperties();
-                simServerJInternalFrame.pack();
-                simServerJInternalFrame.setVisible(true);
-                simServerJInternalFrame.restartServer();
-                addToDesktopPane(simServerJInternalFrame);
-                maximizeJInteralFrame(simServerJInternalFrame);
-
+                SimServerJInternalFrame newSimServerJInternalFrame = new SimServerJInternalFrame(false);
+                newSimServerJInternalFrame.setPropertiesFile(propsFile);
+                newSimServerJInternalFrame.loadProperties();
+                addInternalFrame(newSimServerJInternalFrame);
+                newSimServerJInternalFrame.restartServer();
+                this.simServerJInternalFrame = newSimServerJInternalFrame;
             }
         } catch (Exception ex) {
+            System.err.println("propsFile=" + propsFile);
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
+    }
+
+    private File crclSimServerPropertiesFile() {
+        return crclSimServerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
 
-        @Override
         public DbSetupPublisher call() {
             createDbSetupFrame();
             assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
@@ -3494,7 +3606,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private void updateDbConnectedCheckBox(DbSetup setup) {
         dbConnected = setup.isConnected();
-        setConnectDatabaseCheckboxEnabled(true);
+        setConnectDatabaseCheckBoxEnabled(true);
         XFuture<Boolean> f = dbConnectedWaiters.poll();
         while (f != null) {
             f.complete(dbConnected);
@@ -3503,7 +3615,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     private final DbSetupListener dbSetupListener = new DbSetupListener() {
-        @Override
+
         public void accept(DbSetup setup) {
             updateDbConnectedCheckBox(setup);
         }
@@ -3511,23 +3623,28 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private void createDbSetupFrame() {
         if (null == dbSetupJInternalFrame) {
-            dbSetupJInternalFrame = new DbSetupJInternalFrame();
-            dbSetupJInternalFrame.setAprsSystem(this);
-            dbSetupJInternalFrame.pack();
-            dbSetupJInternalFrame.loadRecentSettings();
-            addToDesktopPane(dbSetupJInternalFrame);
-            dbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
+            Utils.runOnDispatchThread(this::createDbSetupFrameOnDisplay);
+        }
+    }
+
+    @UIEffect
+    private void createDbSetupFrameOnDisplay() {
+        if (null == dbSetupJInternalFrame) {
+            DbSetupJInternalFrame newDbSetupJInternalFrame = new DbSetupJInternalFrame();
+            newDbSetupJInternalFrame.setAprsSystem(this);
+            addInternalFrame(newDbSetupJInternalFrame);
+            newDbSetupJInternalFrame.loadRecentSettings();
+            newDbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
             DbSetup dbs = this.dbSetup;
             if (null != dbs) {
-                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+                DbSetupPublisher pub = newDbSetupJInternalFrame.getDbSetupPublisher();
                 if (null != pub) {
                     pub.setDbSetup(dbs);
                 }
             }
+            this.dbSetupJInternalFrame = newDbSetupJInternalFrame;
         }
     }
-
-    private volatile boolean showVisionConnected;
 
     /**
      * Set the menu checkbox item to reflect the val of the whether the vision
@@ -3536,159 +3653,167 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param val of vision systems connected status to show
      */
-    @Override
     public void setShowVisionConnected(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setShowVisionConnected(val);
-        }
-        this.showVisionConnected = val;
+        connectVisionCheckBox.setSelected(val);
     }
 
-    public void startVisionToDbJinternalFrame() {
+    public XFutureVoid startVisionToDbJinternalFrame() {
+        return Utils.runOnDispatchThread(this::startVisionToDbJinternalFrameOnDisplay);
+    }
+
+    @UIEffect
+    private void startVisionToDbJinternalFrameOnDisplay() {
         try {
-            visionToDbJInternalFrame = new VisionToDbJInternalFrame();
-            visionToDbJInternalFrame.setAprsSystem(this);
-            updateSubPropertiesFiles();
-            visionToDbJInternalFrame.loadProperties();
-            visionToDbJInternalFrame.pack();
-            visionToDbJInternalFrame.setVisible(true);
-            visionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-            addToDesktopPane(visionToDbJInternalFrame);
-            maximizeJInteralFrame(visionToDbJInternalFrame);
-        } catch (IOException ex) {
+            VisionToDbJInternalFrame newVisionToDbJInternalFrame = new VisionToDbJInternalFrame();
+            newVisionToDbJInternalFrame.setAprsSystem(this);
+            newVisionToDbJInternalFrame.setPropertiesFile(visionToDbPropertiesFile());
+            newVisionToDbJInternalFrame.loadProperties();
+            addInternalFrame(newVisionToDbJInternalFrame);
+            newVisionToDbJInternalFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
+            this.visionToDbJInternalFrame = newVisionToDbJInternalFrame;
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
+    private File visionToDbPropertiesFile() {
+        return visionToDbPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+    }
+
     @Nullable
-    private volatile XFuture<?> xf1 = null;
+    private volatile XFutureVoid xf1 = null;
     @Nullable
-    private volatile XFuture<?> xf2 = null;
-    @Nullable
-    private volatile XFutureVoid xf3 = null;
+    private volatile XFutureVoid xf2 = null;
 
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
      */
-    public void startActionListExecutor() {
+    public XFutureVoid startActionListExecutor() {
         try {
-            Utils.runAndWaitOnDispatchThread("startActionsToCrclJInternalFrame",
-                    () -> {
-                        try {
-                            boolean alreadySelected = isExecutorStartupSelected();
-                            if (!alreadySelected) {
-                                setExecutorStartupSelected(true);
-                            }
-                            if (null == pddlExecutorJInternalFrame1) {
-                                pddlExecutorJInternalFrame1 = new ExecutorJInternalFrame();
-                                this.pddlExecutorJInternalFrame1.pack();
-                            }
-                            ExecutorJInternalFrame execFrame = this.pddlExecutorJInternalFrame1;
-                            assert (null != execFrame) : "";
-                            execFrame.setAprsSystem(this);
-                            execFrame.setVisible(true);
-                            addToDesktopPane(execFrame);
-                            maximizeJInteralFrame(execFrame);
-                            updateSubPropertiesFiles();
-                            execFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-                            if (null != pddlPlannerJInternalFrame) {
-                                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(execFrame);
-                            }
-                            xf1 = XFuture.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
-                                try {
-                                    execFrame.loadProperties();
-                                } catch (IOException ex) {
-                                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-                                }
-                            }, runProgramService);
-                            xf2 = xf1
-                                    .thenRun(() -> {
-                                        xf3 = Utils.runOnDispatchThread(() -> {
-                                            if (!alreadySelected) {
-                                                setupWindowsMenu();
-
-                                            }
-                                            if (null != aprsSystemDisplayJFrame) {
-                                                aprsSystemDisplayJFrame.addMenu(execFrame.getToolMenu());
-                                            }
-                                        });
-                                    });
-
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsSystem.class
-                                    .getName()).log(Level.SEVERE, null, ex);
-                        }
-                    });
+            return Utils.supplyOnDispatchThread(
+                    this::startActionsToCrclJInternalFrame)
+                    .thenComposeToVoid(x -> x);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
-    public void startPddlPlanner() {
+    @UIEffect
+    private XFutureVoid startActionsToCrclJInternalFrame() {
         try {
-            //        jDesktopPane1.setDesktopManager(d);
-            if (pddlPlannerJInternalFrame == null) {
-                pddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
-                pddlPlannerJInternalFrame.pack();
+            boolean alreadySelected = isExecutorStartupSelected();
+            if (!alreadySelected) {
+                setExecutorStartupSelected(true);
             }
-            updateSubPropertiesFiles();
-            pddlPlannerJInternalFrame.setVisible(true);
-            addToDesktopPane(pddlPlannerJInternalFrame);
-            maximizePddlPlannerJInternalFrame();
-//            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
-            pddlPlannerJInternalFrame.loadProperties();
-            pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+            ExecutorJInternalFrame newExecFrame = this.pddlExecutorJInternalFrame1;
+            if (null == newExecFrame) {
+                newExecFrame = new ExecutorJInternalFrame(this);
+                this.pddlExecutorJInternalFrame1 = newExecFrame;
+            }
 
+            assert (null != newExecFrame) : "";
+//                            execFrame.setAprsSystem(this);
+            addInternalFrame(newExecFrame);
+            newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
+            newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
+            if (null != pddlPlannerJInternalFrame) {
+                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(newExecFrame);
+            }
+            this.pddlExecutorJInternalFrame1 = newExecFrame;
+            ExecutorJInternalFrame newExecFrameCopy = newExecFrame;
+            XFutureVoid loadPropertiesFuture = XFutureVoid.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
+                try {
+                    newExecFrameCopy.loadProperties();
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                    throw new RuntimeException(ex);
+                }
+            }, runProgramService);
+            this.xf1 = loadPropertiesFuture;
+            XFutureVoid setupWindowsFuture
+                    = loadPropertiesFuture
+                            .thenComposeToVoid(() -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    if (!alreadySelected) {
+                                        setupWindowsMenuOnDisplay();
+                                    }
+                                    if (null != aprsSystemDisplayJFrame) {
+                                        aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
+                                    }
+                                });
+                            });
+            this.xf2 = setupWindowsFuture;
+            return setupWindowsFuture;
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private File actionsToCrclPropertiesFile() {
+        return actionsToCrclPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+    }
+
+    public XFutureVoid startPddlPlanner() {
+        return Utils.runOnDispatchThread(this::startPddlPlannerOnDisplay);
+    }
+
+    @UIEffect
+    private void startPddlPlannerOnDisplay() {
+        try {
+            PddlPlannerJInternalFrame newPddlPlannerJInternalFrame = this.pddlPlannerJInternalFrame;
+            if (newPddlPlannerJInternalFrame == null) {
+                newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
+            }
+            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropetiesFile());
+            newPddlPlannerJInternalFrame.loadProperties();
+            newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+            addInternalFrame(newPddlPlannerJInternalFrame);
+            this.pddlPlannerJInternalFrame = newPddlPlannerJInternalFrame;
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
-    private void maximizePddlPlannerJInternalFrame() {
-        if (null != pddlPlannerJInternalFrame) {
-            JInternalFrame internalFrame = pddlPlannerJInternalFrame;
-            maximizeJInteralFrame(internalFrame);
-        }
+    private File pddlPlannerPropetiesFile() {
+        return pddlPlannerPropetiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
+    @UIEffect
     private void maximizeJInteralFrame(JInternalFrame internalFrame) {
-        try {
-            if (null != internalFrame && !GraphicsEnvironment.isHeadless()) {
-                JDesktopPane desktopPane = internalFrame.getDesktopPane();
-                if (null != desktopPane) {
-                    DesktopManager desktopManager = desktopPane.getDesktopManager();
-                    if (null != desktopManager) {
-                        desktopManager.maximizeFrame(internalFrame);
-                    }
+        if (null != internalFrame && !isHeadless()) {
+            JDesktopPane desktopPane = internalFrame.getDesktopPane();
+            if (null != desktopPane) {
+                DesktopManager desktopManager = desktopPane.getDesktopManager();
+                if (null != desktopManager) {
+                    desktopManager.maximizeFrame(internalFrame);
                 }
             }
-        } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, e);
         }
     }
 
-    public void startKitInspection() {
+    public XFutureVoid startKitInspection() {
+        return Utils.runOnDispatchThread(this::startKitInspectionOnDisplay);
+    }
+
+    @UIEffect
+    private void startKitInspectionOnDisplay() {
         try {
-            //        jDesktopPane1.setDesktopManager(d);
             if (kitInspectionJInternalFrame == null) {
                 kitInspectionJInternalFrame = new KitInspectionJInternalFrame();
-                kitInspectionJInternalFrame.pack();
             }
             updateSubPropertiesFiles();
-            kitInspectionJInternalFrame.setVisible(true);
-            addToDesktopPane(kitInspectionJInternalFrame);
-            maximizeJInteralFrame(kitInspectionJInternalFrame);
-//            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, "pddlPlanner.txt"));
             kitInspectionJInternalFrame.loadProperties();
-            //kitInspectionJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
-
+            addInternalFrame(kitInspectionJInternalFrame);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -3711,7 +3836,23 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     /**
      * Query the user to select a properties file to open.
      */
-    public void browseOpenPropertiesFile() {
+    public XFutureVoid browseOpenPropertiesFile() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                return Utils.runOnDispatchThread(
+                        "browseOpenPropertiesFileOnDisplay",
+                        this::browseOpenPropertiesFileOnDisplay);
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
+        }
+    }
+
+    @UIEffect
+    private void browseOpenPropertiesFileOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             File selectedFile = aprsSystemDisplayJFrame.choosePropertiesFileToOpen();
             if (null != selectedFile) {
@@ -3720,9 +3861,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                            .getName()).log(Level.SEVERE, "", ex);
                 }
-                this.initLoggerWindow();
+                this.initLoggerWindowOnDisplay();
                 this.commonInit();
             }
         } else {
@@ -3741,7 +3882,23 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     /**
      * Query the user to select a properties file to save.
      */
-    public void browseSavePropertiesFileAs() {
+    public XFutureVoid browseSavePropertiesFileAs() {
+        if (null != aprsSystemDisplayJFrame) {
+            try {
+                return Utils.runOnDispatchThread(
+                        "browseSavePropertiesFileAsOnDisplay",
+                        this::browseSavePropertiesFileAsOnDisplay);
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
+        }
+    }
+
+    @UIEffect
+    private void browseSavePropertiesFileAsOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             File selectedFile = aprsSystemDisplayJFrame.choosePropertiesFileToOpen();
             if (null != selectedFile) {
@@ -3750,7 +3907,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     this.saveProperties();
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                            .getName()).log(Level.SEVERE, "", ex);
                 }
             }
         } else {
@@ -3758,6 +3915,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
+    @UIEffect
     private void windowClosed() {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setVisible(false);
@@ -3815,7 +3973,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
-    @Override
+    @SuppressWarnings("guieffect")
     public void forceClose() {
         try {
             windowClosing();
@@ -3845,7 +4003,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return waitForPause()
                 .thenCompose("startLookForParts.checkDbConnected", x -> checkDBConnected())
                 .thenApplyAsync("startLookForParts.lookForPartsInternal",
-                        x -> lookForPartsInternal(),
+                        x -> lookForPartsOnDisplay(),
                         runProgramService)
                 .always(() -> logEvent("finished startLookForParts", (System.currentTimeMillis() - t0)));
     }
@@ -3858,7 +4016,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return XFuture.completedFuture(true);
     }
 
-    private boolean lookForPartsInternal() {
+    private boolean lookForPartsOnDisplay() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         try {
             CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
@@ -3868,14 +4026,21 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             }
             return ret;
         } catch (JAXBException jAXBException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, jAXBException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", jAXBException);
             throw new RuntimeException(jAXBException);
         }
     }
 
     private void setImageSizeMenuText() {
         if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setImageSizeMenuText(snapShotWidth, snapShotHeight);
+            Utils.runOnDispatchThread(() -> setImageSizeMenuTextOnDisplay(snapShotWidth, snapShotHeight));
+        }
+    }
+
+    @UIEffect
+    private void setImageSizeMenuTextOnDisplay(int w, int h) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setImageSizeMenuText(w, h);
         }
     }
 
@@ -3954,7 +4119,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * tray
      * @return slot with absolute position
      */
-    @Override
     @Nullable
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         if (null != externalSlotOffsetProvider) {
@@ -3972,7 +4136,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * tray
      * @return slot with absolute position
      */
-    @Override
     @Nullable
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
         if (null != externalSlotOffsetProvider) {
@@ -3987,7 +4150,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * Object2D view and create a set of actions that will fill empty trays to
      * match. Load this list into the PDDL executor.
      */
-    @Override
     public void createActionListFromVision() {
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
@@ -3996,26 +4158,26 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
             createActionListFromVision(requiredItems, teachItems, false, 0);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
     private void updateScanImage(List<PhysicalItem> requiredItems, boolean autoScale) {
         Utils.runOnDispatchThread(() -> {
-            updateScanImageInternal(requiredItems, autoScale);
+            updateScanImageOnDisplay(requiredItems, autoScale);
         });
     }
 
     @SuppressWarnings("SameParameterValue")
     private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         Utils.runOnDispatchThread(() -> {
-            updateScanImageWithRotationOffsetInternal(requiredItems, autoScale, rotationOffset);
+            updateScanImageWithRotationOffsetOnDisplay(requiredItems, autoScale, rotationOffset);
         });
     }
 
     @Nullable
-    @Override
     public BufferedImage getLiveImage() {
         if (!isConnected()) {
             return null;
@@ -4033,7 +4195,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return object2DViewJInternalFrame.createSnapshotImage(opts);
     }
 
-    private void updateScanImageInternal(List<PhysicalItem> requiredItems, boolean autoScale) {
+    private void updateScanImageOnDisplay(List<PhysicalItem> requiredItems, boolean autoScale) {
         assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
@@ -4045,7 +4207,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
-    private void updateScanImageWithRotationOffsetInternal(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
+    private void updateScanImageWithRotationOffsetOnDisplay(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         if (requiredItems.isEmpty()) {
             return;
         }
@@ -4069,7 +4231,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return the value of goalLearner
      */
-    @Override
     public GoalLearner getGoalLearner() {
         return goalLearner;
     }
@@ -4079,9 +4240,31 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param goalLearner new value of goalLearner
      */
-    @Override
     public void setGoalLearner(GoalLearner goalLearner) {
         this.goalLearner = goalLearner;
+    }
+
+    @SuppressWarnings("guieffect")
+    private int queryUser(String message) {
+        try {
+            if (null == aprsSystemDisplayJFrame) {
+                return JOptionPane.CANCEL_OPTION;
+            }
+            AtomicInteger ai = new AtomicInteger();
+            SwingUtilities.invokeAndWait(() -> ai.set(queryUserOnDisplay(message)));
+            return ai.get();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @UIEffect
+    private int queryUserOnDisplay(String message) {
+        if (null == aprsSystemDisplayJFrame) {
+            return JOptionPane.CANCEL_OPTION;
+        }
+        return JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, message);
     }
 
     @SuppressWarnings("SameReturnValue")
@@ -4089,8 +4272,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         if (kitTrays.isEmpty()) {
             Thread.dumpStack();
             if (null == aprsSystemDisplayJFrame
-                    || JOptionPane.YES_OPTION
-                    != JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, "Create action list with no kit trays?")) {
+                    || JOptionPane.YES_OPTION != queryUser("Create action list with no kit trays?")) {
                 setTitleErrorString("createActionListFromVision: No kit trays");
                 throw new IllegalStateException("No kit trays");
             }
@@ -4098,7 +4280,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return true;
     }
 
-    @Override
     public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
         if (null == goalLearner) {
             return Collections.emptyList();
@@ -4106,7 +4287,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
     }
 
-    @Override
     public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
         if (null == goalLearner) {
             goalLearner = new GoalLearner();
@@ -4119,7 +4299,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return the value of correctionMode
      */
-    @Override
     public boolean isCorrectionMode() {
         return (null != goalLearner && goalLearner.isCorrectionMode());
     }
@@ -4129,7 +4308,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param correctionMode new value of correctionMode
      */
-    @Override
     public void setCorrectionMode(boolean correctionMode) {
         if (goalLearner == null) {
             goalLearner = new GoalLearner();
@@ -4178,8 +4356,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     System.out.println("teachItems = " + teachItems);
                     Thread.dumpStack();
                     if (null == aprsSystemDisplayJFrame
-                            || JOptionPane.YES_OPTION
-                            != JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, "Load action list with all trays empty?")) {
+                            || JOptionPane.YES_OPTION != queryUser("Load action list with all trays empty?")) {
                         setTitleErrorString("createActionListFromVision: All kit trays empty");
                         throw new IllegalStateException("All kit trays empty");
                     }
@@ -4196,9 +4373,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
             if (null != pddlExecutorJInternalFrame1 && (!equal || !goalLearner.isCorrectionMode())) {
                 boolean startingReverseFlag = isReverseFlag();
-                pddlExecutorJInternalFrame1.setReverseFlag(false);
-                pddlExecutorJInternalFrame1.loadActionsFile(f);
-                pddlExecutorJInternalFrame1.setReverseFlag(startingReverseFlag);
+                pddlExecutorJInternalFrame1.loadActionsFile(f, startingReverseFlag);
             }
             if (requiredItems != teachItems) {
                 if (overrideRotation) {
@@ -4216,7 +4391,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                                 .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
         long t2 = System.currentTimeMillis();
@@ -4230,7 +4405,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return list of items displayed in the Object 2D view
      */
-    @Override
     public List<PhysicalItem> getObjectViewItems() {
         if (null != object2DViewJInternalFrame) {
             return object2DViewJInternalFrame.getItems();
@@ -4238,7 +4412,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         throw new IllegalStateException("object2DViewJInternalFrame is null");
     }
 
-    public boolean getForceFakeTakeFlag() {
+    public boolean getExcutorForceFakeTakeFlag() {
         if (pddlExecutorJInternalFrame1 != null) {
             return pddlExecutorJInternalFrame1.getForceFakeTakeFlag();
         }
@@ -4251,10 +4425,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param val true if take operations should be faked
      */
-    public void setForceFakeTakeFlag(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setForceFakeTakeFlag(val);
-        }
+    public void setExecutorForceFakeTakeFlag(boolean val) {
         if (pddlExecutorJInternalFrame1 != null) {
             if (pddlExecutorJInternalFrame1.getForceFakeTakeFlag() != val) {
                 pddlExecutorJInternalFrame1.setForceFakeTakeFlag(val);
@@ -4270,31 +4441,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private volatile StackTraceElement resumingTrace@Nullable []  = null;
     private volatile boolean resuming = false;
 
-    private volatile boolean pauseCheckboxSelected = false;
-
-    private boolean isPauseCheckboxSelected() {
-        if (null != crclClientJInternalFrame) {
-            if (crclClientJInternalFrame.isPaused()) {
-                setPauseCheckboxSelected(true);
-                return true;
-            }
-        }
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isPauseCheckboxSelected();
-            this.pauseCheckboxSelected = ret;
-            return ret;
-        }
-        return pauseCheckboxSelected;
+    private boolean isPauseCheckBoxSelected() {
+        return pauseCheckBox.isSelected();
     }
 
-    private void setPauseCheckboxSelected(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setPauseCheckboxSelected(val);
-        }
-        if (null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.showPaused(val);
-        }
-        this.pauseCheckboxSelected = val;
+    private void setPauseCheckBoxSelected(boolean val) {
+        pauseCheckBox.setSelected(val);
     }
 
     private boolean isCrclClientJInternalFramePaused() {
@@ -4327,15 +4479,15 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             if (crclClientErrString != null && crclClientErrString.length() > 0) {
                 throw new IllegalStateException("Can't resume when crclClientErrString set to " + crclClientErrString);
             }
-            if (isPauseCheckboxSelected()) {
-                setPauseCheckboxSelected(false);
+            if (isPauseCheckBoxSelected()) {
+                setPauseCheckBoxSelected(false);
             }
             badState = badState || pausing;
             clearErrors();
             badState = badState || pausing;
-            setPauseCheckboxSelected(false);
+            setPauseCheckBoxSelected(false);
             crclClientJInternalFrame.unpauseCrclProgram();
-            setPauseCheckboxSelected(false);
+            setPauseCheckBoxSelected(false);
             notifyPauseFutures();
             badState = badState || pausing;
             clearErrors();
@@ -4343,9 +4495,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             String methodName = "resume";
             takeSnapshots(methodName);
             badState = badState || pausing;
-            setPauseCheckboxSelected(false);
+            setPauseCheckBoxSelected(false);
             crclClientJInternalFrame.unpauseCrclProgram();
-            setPauseCheckboxSelected(false);
+            setPauseCheckBoxSelected(false);
             badState = badState || pausing;
             updateTitle("", "");
             badState = badState || pausing;
@@ -4359,7 +4511,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 System.err.println("startPauseInfo = " + startPauseInfo);
                 System.err.println("currentPauseString = " + currentPauseString);
                 System.err.println("runName=" + getRunName());
-                setPauseCheckboxSelected(currentPaused);
+                setPauseCheckBoxSelected(currentPaused);
                 throw new IllegalStateException("Still paused after resume. crclClientJInternalFrame.isPaused()="
                         + isCrclClientJInternalFramePaused());
             }
@@ -4380,32 +4532,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return is vision to database system currently connected to the database
      */
-    @Override
     public boolean isVisionToDbConnected() {
         return null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected();
     }
 
-    private volatile boolean snapshotCheckboxSelected = false;
-
-    private boolean isSnapshotCheckboxSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isSnapshotCheckboxSelected();
-            this.snapshotCheckboxSelected = ret;
-            return ret;
-        }
-        return snapshotCheckboxSelected;
-    }
-
-    private void setSnapshotCheckboxSelected(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setSnapshotCheckboxSelected(val);
-        }
-        this.snapshotCheckboxSelected = val;
-    }
-
-    @Override
     public boolean snapshotsEnabled() {
-        return null != object2DViewJInternalFrame && isSnapshotCheckboxSelected();
+        return null != object2DViewJInternalFrame && isSnapshotsSelected();
     }
 
     /**
@@ -4415,7 +4547,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param comment comment name to include in filename for later analysis
      */
-    @Override
     public void takeSnapshots(String comment) {
         try {
             if (snapshotsEnabled()) {
@@ -4425,7 +4556,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -4551,10 +4682,9 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 = XFuture.supplyAsync("startContinuousDemo(task=" + getTaskName() + ") comment=" + comment,
                         new Callable<Boolean>() {
 
-                    @Override
                     public Boolean call() {
                         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                        AprsSystem.this.setReverseFlag(reverseFirst, true);
+                        AprsSystem.this.setReverseFlag(reverseFirst, true, true);
                         boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r0) {
                             System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart);
@@ -4590,7 +4720,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     @Nullable
-    private volatile  Consumer<String> supervisorEventLogger = null;
+    private volatile Consumer<String> supervisorEventLogger = null;
 
     /**
      * Get the value of supervisorEventLogger
@@ -4598,7 +4728,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return the value of supervisorEventLogger
      */
     @Nullable
-    @Override
     public Consumer<String> getSupervisorEventLogger() {
         return supervisorEventLogger;
     }
@@ -4665,7 +4794,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     && !isAborting()
                     && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
                     && startDisconnectCount == disconnectRobotCount.get()) {
-                setReverseFlag(!reverseFirst, true);
+                setReverseFlag(!reverseFirst, true, true);
                 logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
                 long doActions2TimeStart = System.currentTimeMillis();
                 boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount);
@@ -4692,7 +4821,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future that can be used to add actions if the demo is canceled or
      * fails.
      */
-    @Override
     public XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
@@ -4719,7 +4847,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
                 () -> {
                     assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                    this.setReverseFlag(reverseFirst, true);
+                    this.setReverseFlag(reverseFirst, true, true);
                     if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
                         return false;
                     }
@@ -4736,22 +4864,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return continuousDemoFuture;
     }
 
-    private volatile boolean reverseCheckboxSelected = false;
-
-    private boolean isReverseCheckboxSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isReverseCheckboxSelected();
-            this.reverseCheckboxSelected = ret;
-            return ret;
-        }
-        return this.reverseCheckboxSelected;
+    private boolean isReverseCheckBoxSelected() {
+        return reverseCheckBox.isSelected();
     }
 
-    private void setReverseCheckboxSelected(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setReverseCheckboxSelected(val);
-        }
-        this.reverseCheckboxSelected = val;
+    private void setReverseCheckBoxSelected(boolean val) {
+        reverseCheckBox.setSelected(val);
     }
 
     /**
@@ -4761,87 +4879,81 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return reverse flag
      */
-    @Override
     public boolean isReverseFlag() {
-        return isReverseCheckboxSelected();
+        return isReverseCheckBoxSelected();
     }
 
-    /**
-     * Set the state of the reverse flag. It is set to indicate that an
-     * alternative set of actions that empty rather than fill the kit trays is
-     * in use. Reload the simulated object positions.
-     *
-     * @param reverseFlag new value for reverse flag
-     * @return a future object that can be used to determine when setting the
-     * reverse flag and all related actions is complete.
-     */
-    public XFutureVoid startSetReverseFlag(boolean reverseFlag) {
+    //    /**
+//     * Set the state of the reverse flag. It is set to indicate that an
+//     * alternative set of actions that empty rather than fill the kit trays is
+//     * in use. Reload the simulated object positions.
+//     *
+//     * @param reverseFlag new value for reverse flag
+//     * @return a future object that can be used to determine when setting the
+//     * reverse flag and all related actions is complete.
+//     */
+//    public XFutureVoid startSetReverseFlag(boolean reverseFlag) {
+//        clearLogDirCache();
+//        return startSetReverseFlag(reverseFlag, true);
+//    }
+//    /**
+//     * Set the state of the reverse flag. It is set to indicate that an
+//     * alternative set of actions that empty rather than fill the kit trays is
+//     * in use. Optionally reload the simulated object positions.
+//     *
+//     * @param reverseFlag new value for reverse flag
+//     * @param reloadSimFiles whether to load simulated object position files
+//     * first
+//     * @return a future object that can be used to determine when setting the
+//     * reverse flag and all related actions is complete.
+//     */
+//    
+//    public XFutureVoid startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
+//        logEvent("startSetReverseFlag", reverseFlag);
+//        if (isDoingActions()) {
+//            throw new IllegalStateException("setting reverse flag while doing actions");
+//        }
+//        return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
+//                () -> {
+//                    if (isDoingActions()) {
+//                        throw new IllegalStateException("setting reverse flag while doing actions");
+//                    }
+//                    setReverseFlag(reverseFlag, reloadSimFiles,false);
+//                },
+//                runProgramService).always(() -> logEvent("finished startSetReverseFlag", reverseFlag));
+//    }
+    private boolean isReloadSimFilesOnReverseCheckBoxSelected() {
+        return reloadSimFilesOnReverseCheckBox.isSelected();
+    }
+
+    private void setReloadSimFilesOnReverseCheckBoxSelected(boolean val) {
+        reloadSimFilesOnReverseCheckBox.setSelected(val);
+    }
+
+    private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles, boolean reloadActionsFile) {
         clearLogDirCache();
-        return startSetReverseFlag(reverseFlag, true);
-    }
-
-    /**
-     * Set the state of the reverse flag. It is set to indicate that an
-     * alternative set of actions that empty rather than fill the kit trays is
-     * in use. Optionally reload the simulated object positions.
-     *
-     * @param reverseFlag new value for reverse flag
-     * @param reloadSimFiles whether to load simulated object position files
-     * first
-     * @return a future object that can be used to determine when setting the
-     * reverse flag and all related actions is complete.
-     */
-    @Override
-    public XFutureVoid startSetReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
-        logEvent("startSetReverseFlag", reverseFlag);
-        return XFuture.runAsync("startSetReverseFlag(" + reverseFlag + "," + reloadSimFiles + ")",
-                () -> {
-                    setReverseFlag(reverseFlag, reloadSimFiles);
-                },
-                runProgramService).always(() -> logEvent("finished startSetReverseFlag", reverseFlag));
-    }
-
-    private volatile boolean reloadSimFilesOnReverse = false;
-
-    private boolean isReloadSimFilesOnReverseCheckboxSelected() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isReloadSimFilesOnReverseCheckboxSelected();
-            this.reloadSimFilesOnReverse = ret;
-            return ret;
-        }
-        return this.reloadSimFilesOnReverse;
-    }
-
-    private void setReloadSimFilesOnReverseCheckboxSelected(boolean val) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setReloadSimFilesOnReverseCheckboxSelected(val);
-        }
-        this.reloadSimFilesOnReverse = val;
-    }
-
-    private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles) {
-        clearLogDirCache();
-        if (isReverseCheckboxSelected() != reverseFlag) {
-            setReverseCheckboxSelected(reverseFlag);
+        if (isReverseCheckBoxSelected() != reverseFlag) {
+            setReverseCheckBoxSelected(reverseFlag);
         }
         if (null != object2DViewJInternalFrame) {
             try {
                 object2DViewJInternalFrame.setReverseFlag(reverseFlag);
-                if (reloadSimFiles && isReloadSimFilesOnReverseCheckboxSelected()) {
+                if (reloadSimFiles && isReloadSimFilesOnReverseCheckBoxSelected()) {
                     if (object2DViewJInternalFrame.isSimulated() || !object2DViewJInternalFrame.isConnected()) {
                         object2DViewJInternalFrame.reloadDataFile();
                     }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
         }
-        if (null != pddlExecutorJInternalFrame1) {
+        if (null != pddlExecutorJInternalFrame1 && reloadActionsFile) {
             try {
-                pddlExecutorJInternalFrame1.setReverseFlag(reverseFlag);
-                pddlExecutorJInternalFrame1.reloadActionsFile();
+                pddlExecutorJInternalFrame1.reloadActionsFile(reverseFlag);
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
         }
         clearLogDirCache();
@@ -4852,9 +4964,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return paused state
      */
-    @Override
     public boolean isPaused() {
-        return isPauseCheckboxSelected();
+        return isPauseCheckBoxSelected();
     }
 
     /**
@@ -4864,7 +4975,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     public void pause() {
         LauncherAprsJFrame.PlayAlert2();
         boolean badState = resuming;
-        pauseInternal();
+        pauseOnDisplay();
         badState = badState || resuming;
         updateTitle("", "");
         badState = badState || resuming;
@@ -4880,21 +4991,21 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private volatile Thread pauseThread = null;
     private volatile StackTraceElement pauseTrace@Nullable []  = null;
 
-    private void pauseInternal() {
+    private void pauseOnDisplay() {
         logEvent("pause", null);
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
         pausing = true;
         boolean badState = resuming;
         try {
-            if (!isPauseCheckboxSelected()) {
-                setPauseCheckboxSelected(true);
+            if (!isPauseCheckBoxSelected()) {
+                setPauseCheckBoxSelected(true);
             }
             badState = badState || resuming;
             if (null != crclClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
                 String lastMessage = crclClientJInternalFrame.getLastMessage();
                 System.out.println("lastMessage = " + lastMessage);
-                MiddleCommandType cmd = crclClientJInternalFrame.getCurrentProgramCommand();
+                MiddleCommandType cmd = crclClientJInternalFrame.currentProgramCommand();
                 if (null != cmd) {
                     String cmdString = CRCLSocket.cmdToString(cmd);
                     System.out.println("cmdString = " + cmdString);
@@ -4943,16 +5054,15 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return a future object that can be used to determine when setting the
      * reset and all related actions is complete.
      */
-    @Override
     public XFutureVoid reset(boolean reloadSimFiles) {
         return XFuture.runAsync("reset",
                 () -> {
-                    resetInternal(reloadSimFiles);
+                    resetOnDisplay(reloadSimFiles);
                 }, runProgramService);
 
     }
 
-    private void resetInternal(boolean reloadSimFiles) {
+    private void resetOnDisplay(boolean reloadSimFiles) {
         clearErrors();
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(reloadSimFiles);
@@ -5097,33 +5207,23 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
             setProgram(emptyProgram);
-            boolean progRunRet = crclClientJInternalFrame.runCurrentProgram(stepMode);
+            boolean progRunRet = crclClientJInternalFrame.runCurrentProgram(isStepMode());
 
 //            System.out.println("startCheckEnabled finishing with " + progRunRet);
             enableCheckedAlready = progRunRet;
             return progRunRet;
         } catch (JAXBException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
 
-    private volatile boolean logCrclProgramsEnabled = true;
-
-    public boolean isLogCrclProgramsEnabled() {
-        if (null != aprsSystemDisplayJFrame) {
-            boolean ret = aprsSystemDisplayJFrame.isLogCrclProgramsEnabled();
-            this.logCrclProgramsEnabled = ret;
-            return ret;
-        }
-        return logCrclProgramsEnabled;
+    public boolean isLogCrclProgramsSelected() {
+        return logCrclProgramsCheckBox.isSelected();
     }
 
-    public void setLogCrclProgramsEnabled(boolean logCrclProgramsEnabled) {
-        if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setLogCrclProgramsEnabled(logCrclProgramsEnabled);
-        }
-        this.logCrclProgramsEnabled = logCrclProgramsEnabled;
+    public void setLogCrclProgramsSelected(boolean selected) {
+        logCrclProgramsCheckBox.setSelected(selected);
     }
 
     private final AtomicInteger emptyProgramCount = new AtomicInteger();
@@ -5150,7 +5250,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     }
 
     public void logCrclProgFile(CRCLProgramType program) {
-        if (isLogCrclProgramsEnabled()) {
+        if (isLogCrclProgramsSelected()) {
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
@@ -5158,7 +5258,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -5181,7 +5281,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no startActions request has been made.
      */
     @Nullable
-    @Override
     public XFuture<Boolean> getLastStartActionsFuture() {
         return lastStartActionsFuture;
     }
@@ -5193,7 +5292,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return future or null if no continueActions request has been made.
      */
     @Nullable
-    @Override
     public XFuture<Boolean> getContinueActionListFuture() {
         return lastContinueActionListFuture;
     }
@@ -5216,10 +5314,13 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param actions list of actions to execute
      * @return future of the underlying task to execute the actions.
      */
-    public XFuture<Boolean> startActionsList(Iterable<Action> actions) {
+    public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, boolean newReverseFlag) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-        this.pddlExecutorJInternalFrame1.loadActionsList(actions);
-        return startActions("");
+        List<Action> actionsCopy = new ArrayList<>();
+        for (Action action : actions) {
+            actionsCopy.add(action);
+        }
+        return startActions(comment, newReverseFlag, actionsCopy);
     }
 
     /**
@@ -5228,7 +5329,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return is executor ready for new actions.
      */
-    @Override
     public boolean readyForNewActionsList() {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         return pddlExecutorJInternalFrame1.readyForNewActionsList();
@@ -5247,34 +5347,22 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * actions
      * @return future of the underlying task to execute the actions.
      */
-    public XFuture<Boolean> startActions(String comment) {
+    public XFuture<Boolean> startActions(String comment, boolean reverseFlag) {
+        return startActions(comment, reverseFlag, null);
+    }
 
+    private XFuture<Boolean> startActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
         assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
         setStartRunTime();
+
         long startRunNumber = runNumber.incrementAndGet();
         clearLogDirCache();
         startActionsStartComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + runNumber);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
+        boolean reloadSimFiles = isReloadSimFilesOnReverseCheckBoxSelected();
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh(isReloadSimFilesOnReverseCheckboxSelected());
-        }
-        if (null != motomanCrclServerJInternalFrame) {
-            String robotName = getRobotName();
-            if (null != robotName) {
-                if (robotName.toUpperCase().contains("MOTOMAN")) {
-                    if (!motomanCrclServerJInternalFrame.isCrclMotoplusConnected()) {
-                        try {
-                            motomanCrclServerJInternalFrame.connectCrclMotoplus();
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    if (!motomanCrclServerJInternalFrame.isCrclMotoplusConnected()) {
-                        setTitleErrorString("Motoman CRCL Server not connected.");
-                    }
-                }
-            }
+            object2DViewJInternalFrame.refresh(reloadSimFiles);
         }
         lastStartActionsFuture = XFuture.runAsync("AprsSystem.startActions",
                 () -> {
@@ -5283,26 +5371,60 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 }, runProgramService)
                 .thenCompose("startActions.pauseCheck.comment=" + comment + ", startRunNumber" + startRunNumber, x -> waitForPause())
                 .thenApplyAsync(taskName, x -> {
-                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
-                    long currentRunNumber = runNumber.get();
-                    if (currentRunNumber != startRunNumber) {
-                        throw new IllegalStateException("runNumbeChanged");
-                    }
-                    if (currentRunNumber != startRunNumber
-                            || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
-                        return false;
-                    }
-                    boolean ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount);
-                    startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
-                    if (currentRunNumber != startRunNumber) {
-                        System.err.println("startActionsStartComments=" + startActionsStartComments);
-                        System.err.println("startActionsFinishComments=" + startActionsFinishComments);
-                        throw new IllegalStateException("runNumbeChanged");
-                    }
-                    return ret;
+                    return startActionsInternal(comment, startRunNumber, startAbortCount, reverseFlag, reloadSimFiles, actionsToLoad);
                 }, runProgramService
                 );
         return lastStartActionsFuture;
+    }
+
+    private boolean startActionsInternal(String comment,
+            long startRunNumber,
+            int startAbortCount,
+            boolean newReverseFlag,
+            boolean reloadSimFiles,
+            @Nullable List<Action> actionsToLoad) throws IllegalStateException {
+        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        long currentRunNumber = runNumber.get();
+        if (currentRunNumber != startRunNumber) {
+            throw new IllegalStateException("runNumbeChanged");
+        }
+        if (currentRunNumber != startRunNumber
+                || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+            return false;
+        }
+        this.setReverseFlag(newReverseFlag, reloadSimFiles, false);
+        List<Action> reloadedActions = null;
+        boolean ret;
+        try {
+            if (null != actionsToLoad) {
+                pddlExecutorJInternalFrame1.loadActionsList(actionsToLoad, newReverseFlag);
+            } else {
+                try {
+                    reloadedActions = pddlExecutorJInternalFrame1.reloadActionsFile(newReverseFlag);
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                    throw new RuntimeException(ex);
+                }
+            }
+            ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount);
+            startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
+            if (currentRunNumber != startRunNumber) {
+                System.err.println("startActionsStartComments=" + startActionsStartComments);
+                System.err.println("startActionsFinishComments=" + startActionsFinishComments);
+                System.err.println("reloadedActions = " + reloadedActions);
+                System.err.println("actionsToLoad = " + actionsToLoad);
+                System.err.println("newReverseFlag = " + newReverseFlag);
+                throw new IllegalStateException("runNumbeChanged from " + startRunNumber + " to " + currentRunNumber);
+            }
+        } catch (Exception ex) {
+            System.err.println("reloadedActions = " + reloadedActions);
+            System.err.println("actionsToLoad = " + actionsToLoad);
+            System.err.println("newReverseFlag = " + newReverseFlag);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+        return ret;
     }
 
     private void checkReadyToRun() throws IllegalStateException {
@@ -5323,7 +5445,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return current state
      */
-    @Override
     public boolean isDoingActions() {
         if (null == pddlExecutorJInternalFrame1) {
             return false;
@@ -5331,7 +5452,12 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
-    public void startExploreGraphDb() {
+    public XFutureVoid startExploreGraphDb() {
+        return Utils.runOnDispatchThread(this::startExploreGraphDbOnDisplay);
+    }
+
+    @UIEffect
+    private void startExploreGraphDbOnDisplay() {
         assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
@@ -5345,7 +5471,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 //            activateInternalFrame(this.exploreGraphDbJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -5358,7 +5485,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -5367,7 +5494,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return current line
      */
-    @Override
     public int getCrclProgramLine() {
         assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
         return this.crclClientJInternalFrame.getCurrentProgramLine();
@@ -5377,6 +5503,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private File propertiesDirectory;
     private static final String APRS_DEFAULT_PROPERTIES_FILENAME = "aprs_properties.txt";
     private File lastAprsPropertiesFileFile;
+
+    void reloadForReverse(boolean reverseFlag) {
+        setReverseFlag(reverseFlag, true, true);
+    }
 
     private static class AprsSystemPropDefaults {
 
@@ -5426,7 +5556,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     }
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                            .getName()).log(Level.SEVERE, "", ex);
                 }
             }
             if (null == tempPropFile || !tempPropFile.exists()) {
@@ -5486,7 +5616,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param label optional label for pose or null
      */
     public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5500,7 +5630,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param label optional label for pose or null
      */
     public void takeSimViewSnapshot(File f, PointType point, String label) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5513,9 +5643,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param point optional point to mark or null
      * @param label optional label for pose or null
      */
-    @Override
     public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         }
     }
@@ -5530,7 +5659,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5545,7 +5674,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5560,7 +5689,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         }
     }
@@ -5572,7 +5701,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param itemsToPaint list of items to paint
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
@@ -5585,9 +5714,8 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param itemsToPaint list of items to paint
      * @throws java.io.IOException problem writing to the file
      */
-    @Override
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
         }
     }
@@ -5603,7 +5731,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param h height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         }
     }
@@ -5619,7 +5747,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param h height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
@@ -5635,7 +5763,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param h height of snapshot image
      */
     public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         }
     }
@@ -5652,7 +5780,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, w, h);
         }
     }
@@ -5669,7 +5797,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
         }
     }
@@ -5686,7 +5814,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws IOException if writing the file fails
      */
     public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
-        if (null != object2DViewJInternalFrame && isSnapshotCheckboxSelected()) {
+        if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
         }
     }
@@ -5724,25 +5852,53 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     @MonotonicNonNull
     private DbSetup dbSetup = null;
 
-    @Override
-    public final void loadProperties() throws IOException {
+    private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesTraces = new ConcurrentLinkedDeque<>();
 
+    public final XFutureVoid loadProperties() {
+
+        List<StackTraceElement[]> loadPropertiesTracesCopy
+                = new ArrayList<>(loadPropertiesTraces);
+        if (loadPropertiesTracesCopy.size() > 1) {
+            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
+                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
+            }
+            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
+        }
+        loadPropertiesTraces.add(Thread.currentThread().getStackTrace());
         IOException exA[] = new IOException[1];
         try {
-            Utils.runAndWaitOnDispatchThread("loadProperties",
+            Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
                     () -> {
-                        loadPropertiesInternal(exA);
+                        return loadPropertiesOnDisplay(exA);
                     });
-        } catch (InterruptedException | InvocationTargetException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        if (null != exA[0]) {
-            throw new IOException(exA[0]);
+            return ret.thenComposeToVoid(x -> x);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
-    private void loadPropertiesInternal(IOException exA[]) {
+    private static void propertyToCheckBox(Properties props, String propertyName, CachedCheckBox checkbox) {
+        String valueString = props.getProperty(propertyName);
+        if (null != valueString && valueString.trim().length() > 0) {
+            checkbox.setSelected(Boolean.parseBoolean(valueString));
+        }
+    }
+
+    private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesOnDisplayTraces = new ConcurrentLinkedDeque<>();
+
+    private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
+        List<StackTraceElement[]> loadPropertiesTracesCopy
+                = new ArrayList<>(loadPropertiesOnDisplayTraces);
+        if (loadPropertiesTracesCopy.size() > 1) {
+            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
+                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
+            }
+            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
+        }
+        loadPropertiesOnDisplayTraces.add(Thread.currentThread().getStackTrace());
         try {
+            List<XFuture<?>> futures = new ArrayList<>();
             Properties props = new Properties();
             System.out.println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
             try (FileReader fr = new FileReader(propertiesFile)) {
@@ -5834,10 +5990,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                                             this.pddlExecutorJInternalFrame1.loadProperties();
                                         }
                                     } catch (IOException ex) {
-                                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
                                     }
                                 }, runProgramService);
-                loadPropertiesFuture.join();
+                futures.add(loadPropertiesFuture);
             }
 
             if (null != this.object2DViewJInternalFrame) {
@@ -5893,16 +6049,13 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
             String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
             if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
-                setReloadSimFilesOnReverseCheckboxSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
+                setReloadSimFilesOnReverseCheckBoxSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
             }
             String logCrclProgramsEnabledString = props.getProperty(LOG_CRCL_PROGRAMS_ENABLED);
             if (null != logCrclProgramsEnabledString && logCrclProgramsEnabledString.trim().length() > 0) {
-                setLogCrclProgramsEnabled(Boolean.valueOf(logCrclProgramsEnabledString));
+                setLogCrclProgramsSelected(Boolean.valueOf(logCrclProgramsEnabledString));
             }
-            String snapShotEnableString = props.getProperty(SNAP_SHOT_ENABLE_PROP);
-            if (null != snapShotEnableString && snapShotEnableString.trim().length() > 0) {
-                setSnapshotCheckboxSelected(Boolean.valueOf(snapShotEnableString));
-            }
+            propertyToCheckBox(props, SNAP_SHOT_ENABLE_PROP, snapshotsCheckBox);
             String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
             if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
                 snapShotWidth = Integer.parseInt(snapShotWidthString);
@@ -5921,15 +6074,31 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 activeWin = ActiveWinEnum.valueOf(startupActiveWinString);
                 showActiveWin();
             }
+            if (futures.isEmpty()) {
+                return XFutureVoid.completedFutureWithName("loadPropertiesOnDisplay_allComplete");
+            } else {
+                return XFutureVoid.allOf(futures);
+            }
         } catch (IOException exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, exception);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
             exA[0] = exception;
+            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay IOException");
+            xfv.completeExceptionally(exception);
+            return xfv;
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, exception);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
+            xfv.completeExceptionally(exception);
+            return xfv;
         }
     }
 
     private void showActiveWin() {
+        Utils.runOnDispatchThread(this::showActiveWinOnDisplay);
+    }
+
+    @UIEffect
+    private void showActiveWinOnDisplay() {
         switch (activeWin) {
             case SIMVIEW_WINDOW:
                 if (null != object2DViewJInternalFrame) {
@@ -5986,7 +6155,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return active window
      */
-    @Override
     public ActiveWinEnum getActiveWin() {
         return activeWin;
     }
@@ -5996,18 +6164,17 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @param activeWin enumerated window to make active
      */
-    @Override
     public void setActiveWin(ActiveWinEnum activeWin) {
         this.activeWin = activeWin;
         showActiveWin();
     }
 
-    @Override
-    public void saveProperties() throws IOException {
+    public XFutureVoid saveProperties() throws IOException {
         File propsParent = propertiesFile.getParentFile();
+        List<XFutureVoid> futures = new ArrayList<>();
         if (propsParent == null) {
             System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFile);
-            return;
+            return XFutureVoid.completedFuture();
         }
         if (!propsParent.exists()) {
             System.out.println("Directory " + propsParent + " does not exist. (Creating it now.)");
@@ -6024,7 +6191,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(isRobotCrclSimServerStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(isRobotCrclFanucServerStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLMOTOMANSERVER, Boolean.toString(isRobotCrclMotomanServerStartupSelected()));
-        propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(isConnectDatabaseCheckboxSelected()));
+        propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(isConnectDatabaseOnSetupStartupSelected()));
         propsMap.put(STARTUPCONNECTVISION, Boolean.toString(isConnectVisionOnStartupSelected()));
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(isExploreGraphDBStartupSelected()));
 //        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
@@ -6033,11 +6200,11 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         propsMap.put(STARTUPKITINSPECTION, Boolean.toString(isKitInspectionStartupSelected()));
         propsMap.put(MAX_LIMIT_PROP, maxLimit.toString());
         propsMap.put(MIN_LIMIT_PROP, minLimit.toString());
-        propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(isSnapshotCheckboxSelected()));
+        propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(isSnapshotsSelected()));
         propsMap.put(SNAP_SHOT_WIDTH_PROP, Integer.toString(snapShotWidth));
         propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
-        propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckboxSelected()));
-        propsMap.put(LOG_CRCL_PROGRAMS_ENABLED, Boolean.toString(isLogCrclProgramsEnabled()));
+        propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckBoxSelected()));
+        propsMap.put(LOG_CRCL_PROGRAMS_ENABLED, Boolean.toString(isLogCrclProgramsSelected()));
         setDefaultRobotName();
         if (null != robotName) {
             propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
@@ -6077,7 +6244,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             this.visionToDbJInternalFrame.saveProperties();
         }
         if (null != this.object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.saveProperties();
+            futures.add(this.object2DViewJInternalFrame.saveProperties());
         }
         if (null != this.crclClientJInternalFrame) {
             crclClientJInternalFrame.saveProperties();
@@ -6098,15 +6265,16 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             }
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
+        return XFutureVoid.allOf(futures);
     }
-    
-   public boolean checkPose(PoseType goalPose) {
+
+    public boolean checkPose(PoseType goalPose) {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
         }
         return crclClientJInternalFrame.checkPose(goalPose);
     }
-   
+
     private static final String LOG_CRCL_PROGRAMS_ENABLED = "LogCrclProgramsEnabled";
 
     private static final String USETEACHTABLE = "USETEACHTABLE";
@@ -6158,6 +6326,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     /**
      * @param args the command line arguments
      */
+    @SuppressWarnings("guieffect")
     public static void main(String args[]) {
 
         String prefLaf = "Nimbus"; // "GTK+"; // Nimbus, Metal ...
@@ -6178,7 +6347,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 }
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
                 java.util.logging.Logger.getLogger(AprsSystem.class
-                        .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                        .getName()).log(java.util.logging.Level.SEVERE, "", ex);
 
             }
         }
@@ -6198,12 +6367,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return properties file
      */
-    @Override
     public File getPropertiesFile() {
         return propertiesFile;
     }
 
-    @Override
     public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
         if (null == propertiesFile) {
@@ -6227,7 +6394,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
         try {
@@ -6235,7 +6402,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         updateTitle("", "");
     }
@@ -6243,26 +6410,26 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     private String propertiesFileBaseString = "";
 
     private void updateSubPropertiesFiles() throws IOException {
-        String base = propertiesFile.getName();
-        int pindex = base.indexOf('.');
-        if (pindex > 0) {
-            base = base.substring(0, pindex);
-        }
+        String base = propertiesFileBaseString();
+        updateSubPropertiesFiles(base);
+    }
+
+    private void updateSubPropertiesFiles(String base) throws IOException {
         propertiesFileBaseString = base;
         if (null != this.pddlPlannerJInternalFrame) {
-            this.pddlPlannerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_pddlPlanner.txt"));
+            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropetiesFile(propertiesDirectory, base));
         }
         if (null != this.kitInspectionJInternalFrame) {
             this.kitInspectionJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_kitInspection.txt"));
         }
         if (null != this.pddlExecutorJInternalFrame1) {
-            this.pddlExecutorJInternalFrame1.setPropertiesFile(new File(propertiesDirectory, base + "_actionsToCrclProperties.txt"));
+            this.pddlExecutorJInternalFrame1.setPropertiesFile(actionsToCrclPropertiesFile(propertiesDirectory, base));
         }
         if (null != this.visionToDbJInternalFrame) {
-            visionToDbJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_visionToDBProperties.txt"));
+            visionToDbJInternalFrame.setPropertiesFile(visionToDbPropertiesFile(propertiesDirectory, base));
         }
         if (null != this.object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_object2DViewProperties.txt"));
+            object2DViewJInternalFrame.setPropertiesFile(object2DViewPropertiesFile(propertiesDirectory, base));
         }
         if (null != lastAprsPropertiesFileFile) {
             Properties props = new Properties();
@@ -6273,14 +6440,14 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
             Utils.saveProperties(lastAprsPropertiesFileFile, props);
         }
         if (null != crclClientJInternalFrame) {
-            crclClientJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclPendantClientProperties.txt"));
+            crclClientJInternalFrame.setPropertiesFile(crclClientPropertiesFile(propertiesDirectory, base));
         }
 
         if (null != simServerJInternalFrame) {
-            simServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_crclSimServerProperties.txt"));
+            simServerJInternalFrame.setPropertiesFile(crclSimServerPropertiesFile(propertiesDirectory, base));
         }
         if (null != motomanCrclServerJInternalFrame) {
-            motomanCrclServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt"));
+            motomanCrclServerJInternalFrame.setPropertiesFile(motomanPropertiesFile(propertiesDirectory, base));
         }
         if (null != dbSetupJInternalFrame) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
@@ -6291,11 +6458,48 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
+    private static File actionsToCrclPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_actionsToCrclProperties.txt");
+    }
+
+    private static File visionToDbPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_visionToDBProperties.txt");
+    }
+
+    private static File crclSimServerPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_crclSimServerProperties.txt");
+    }
+
+    private static File crclClientPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_crclPendantClientProperties.txt");
+    }
+
+    private static File object2DViewPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_object2DViewProperties.txt");
+    }
+
+    private static File motomanPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt");
+    }
+
+    private static File pddlPlannerPropetiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_pddlPlanner.txt");
+    }
+
+    private String propertiesFileBaseString() {
+        String base = propertiesFile.getName();
+        int pindex = base.indexOf('.');
+        if (pindex > 0) {
+            base = base.substring(0, pindex);
+        }
+        return base;
+    }
+
     @Nullable
     private volatile XFuture<?> disconnectDatabaseFuture = null;
 
     public XFuture<?> startDisconnectDatabase() {
-        setConnectDatabaseCheckboxEnabled(false);
+        setConnectDatabaseCheckBoxEnabled(false);
         if (null != connectDatabaseFuture) {
             connectDatabaseFuture.cancel(true);
             connectDatabaseFuture = null;
@@ -6333,11 +6537,11 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                     }
                 }
             }
-            setConnectDatabaseCheckboxSelected(false);
+            setConnectDatabaseCheckBoxSelected(false);
             System.out.println("Finished disconnect from database.");
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -6348,7 +6552,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return the value of priority
      */
-    @Override
     public int getPriority() {
         return priority;
     }
@@ -6364,14 +6567,16 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private volatile boolean closing = false;
 
-    @Override
     public void close() {
         closing = true;
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.stopSimUpdateTimer();
+        }
         if (null != eventLogPrinter) {
             try {
                 eventLogPrinter.close();
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             }
             eventLogPrinter = null;
         }
@@ -6379,8 +6584,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         closeAllWindows();
         connectService.shutdownNow();
         if (null != aprsSystemDisplayJFrame) {
-            aprsSystemDisplayJFrame.setVisible(false);
-            aprsSystemDisplayJFrame.dispose();
+            Utils.runOnDispatchThread(this::closeAprsSystemDisplayJFrame);
         }
         Runnable r = onCloseRunnable.getAndSet(null);
         if (null != r) {
@@ -6388,12 +6592,19 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         }
     }
 
+    @UIEffect
+    private void closeAprsSystemDisplayJFrame() {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setVisible(false);
+            aprsSystemDisplayJFrame.dispose();
+        }
+    }
+
     public void closeActionsListExcecutor() {
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.close();
-            pddlExecutorJInternalFrame1.setVisible(false);
             if (null != pddlPlannerJInternalFrame) {
-                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(pddlExecutorJInternalFrame1);
+                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(null);
             }
         }
     }
@@ -6401,7 +6612,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
     public void closePddlPlanner() {
         if (null != pddlPlannerJInternalFrame) {
             pddlPlannerJInternalFrame.close();
-            pddlPlannerJInternalFrame.setVisible(false);
         }
     }
 
@@ -6416,11 +6626,10 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return a future that can be used to monitor, extend or cancel the
      * underlying task.
      */
-    @Override
     public XFuture<Boolean> continueCrclProgram() {
         setStartRunTime();
         if (null != crclClientJInternalFrame) {
-            return crclClientJInternalFrame.continueCurrentProgram(stepMode);
+            return crclClientJInternalFrame.continueCurrentProgram(isStepMode());
         } else {
             return XFuture.completedFuture(false);
         }
@@ -6431,7 +6640,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return current setting for enableDatabaseUpdates
      */
-    @Override
     public boolean isEnableVisionToDatabaseUpdates() {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.isEnableDatabaseUpdates();
@@ -6444,7 +6652,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param requiredParts map of part names to required number of each part
      * type
      */
-    @Override
     public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
@@ -6462,7 +6669,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @throws java.io.IOException file can not be created ie default log
      * directory does not exist.
      */
-    @Override
     public File getLogDir() throws IOException {
         File f = this.logDir;
         if (f != null) {
@@ -6535,7 +6741,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 printer.print(xmlString);
             }
         } catch (JAXBException | CRCLException | IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         return f;
     }
@@ -6549,7 +6755,7 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         return f;
     }
@@ -6578,7 +6784,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return reference to created file
      * @throws IOException directory doesn't exist etc.
      */
-    @Override
     public File createTempFile(String prefix, String suffix) throws IOException {
         if (suffix.endsWith(".PNG")) {
             System.out.println("suffix = " + suffix);
@@ -6597,7 +6802,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @return reference to created file
      * @throws IOException directory doesn't exist etc.
      */
-    @Override
     public File createTempFile(String prefix, String suffix, File dir) throws IOException {
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, dir);
     }
@@ -6608,9 +6812,14 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
 
     private volatile String asString = "";
 
-    @Override
     public String toString() {
         return asString;
+    }
+
+    public void showException(Exception ex) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.showException(ex);
+        }
     }
 
     /**
@@ -6619,7 +6828,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      *
      * @return run data for last program
      */
-    @Override
     @Nullable
     public List<ProgramRunData> getLastProgRunDataList() {
         if (null == crclClientJInternalFrame) {
@@ -6636,7 +6844,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param list data to write to file
      * @throws IOException file does not exist or not writeable etc
      */
-    @Override
     public void saveProgramRunDataListToCsv(File f, List<ProgramRunData> list) throws IOException {
         if (null == crclClientJInternalFrame) {
             return;
@@ -6651,7 +6858,6 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
      * @param f file to save
      * @throws IOException file does not exist or not writeable etc
      */
-    @Override
     public void saveLastProgramRunDataListToCsv(File f) throws IOException {
         if (null == crclClientJInternalFrame) {
             return;
@@ -6659,4 +6865,33 @@ public class AprsSystem implements SlotOffsetProvider, AprsSystemInterface {
         logEvent("saveLastProgramRunDataListToCsv", f.getCanonicalPath());
         crclClientJInternalFrame.saveLastProgramRunDataListToCsv(f);
     }
+
+    public void addSelectedToolNameListener(Consumer<String> listener) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.addSelectedToolNameListener(listener);
+    }
+
+    public void removeSelectedToolNameListener(Consumer<String> listener) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.removeSelectedToolNameListener(listener);
+    }
+
+    public void addToolHolderContentsListener(BiConsumer<String, String> listener) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.addToolHolderContentsListener(listener);
+    }
+
+    public void removeToolHolderContentsListener(BiConsumer<String, String> listener) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
+        }
+        pddlExecutorJInternalFrame1.removeToolHolderContentsListener(listener);
+    }
+
 }

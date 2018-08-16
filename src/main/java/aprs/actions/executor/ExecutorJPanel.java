@@ -2,43 +2,52 @@
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
  * Software Copyright/Warranty Disclaimer
- * 
+ *
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
  * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
- * 
- * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
- * We would appreciate acknowledgement if the software is used. 
- * This software can be redistributed and/or modified freely provided 
- * that any derivative works bear some notice that they are derived from it, 
+ *
+ * This software is experimental. NIST assumes no responsibility whatsoever
+ * for its use by other parties, and makes no guarantees, expressed or
+ * implied, about its quality, reliability, or any other characteristic.
+ * We would appreciate acknowledgement if the software is used.
+ * This software can be redistributed and/or modified freely provided
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.actions.executor;
 
 import static aprs.actions.executor.ActionType.DROP_TOOL_ANY;
+
+import aprs.cachedcomponents.CachedCheckBox;
+import aprs.cachedcomponents.CachedComboBox;
+import aprs.cachedcomponents.CachedTable;
+import aprs.cachedcomponents.CachedTextField;
 import aprs.misc.Utils;
 import aprs.misc.Utils.RunnableWithThrow;
+
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.autoResizeTableRowHeights;
+
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
 import aprs.database.DbSetupListener;
 import aprs.database.DbSetupPublisher;
 import aprs.database.PhysicalItem;
 import aprs.database.ToolHolder;
+
 import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_APPROACH;
 import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_POSE;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TEST_PART_POSITION;
+
 import aprs.actions.optaplanner.display.OpDisplayJPanel;
 import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
@@ -73,7 +82,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import static java.lang.Integer.max;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,13 +108,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBException;
-import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Date;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.Objects;
@@ -123,13 +128,14 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import javax.swing.table.TableColumn;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.impl.block.factory.Comparators;
@@ -139,40 +145,41 @@ import org.optaplanner.core.api.solver.SolverFactory;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmException;
 import rcs.posemath.PmRpy;
+
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+
 import java.util.Map.Entry;
 import javax.swing.JMenu;
+
 import static aprs.actions.executor.ActionType.DROP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_HOLDER;
 import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
 import static aprs.actions.executor.ActionType.SWITCH_TOOL;
+
 import aprs.database.Tool;
+
 import javax.swing.JRadioButtonMenuItem;
+
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
+
 import crcl.base.JointStatusesType;
+
 import java.util.HashSet;
+
 import static java.util.Objects.requireNonNull;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 /**
- *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, PendantClientJPanel.ProgramLineListener {
-
-    public static List<Action> showActionsList(List<Action> actionsIn) {
-        JDialog diag = new JDialog();
-        diag.setModal(true);
-        ExecutorJPanel panel = new ExecutorJPanel();
-        panel.loadActionsList(actionsIn);
-        diag.add(panel);
-        diag.pack();
-        diag.setVisible(true);
-        return panel.getActionsList();
-    }
 
     private final JMenu toolMenu;
     private final JMenu toolDropByHolderMenu;
@@ -183,68 +190,95 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final JMenu toolSwitchToolMenu;
 
     /**
+     * Create an empty ExecutorJPanel. This should only be used by Netbeans GUI
+     * builder. All other users should use constructor with AprsSystem argument.
+     *
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    @SuppressWarnings({"initialization", "nullness"})
+    @UIEffect
+    public ExecutorJPanel() throws InterruptedException, ExecutionException {
+        this(null);
+    }
+
+    @UIType
+    @SuppressWarnings({"guieffect", "nullness"})
+    private class PddlOutputTableCellRendererer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (row == currentActionIndex && isSelected) {
+                c.setBackground(Color.YELLOW);
+                c.setForeground(Color.BLACK);
+            } else if (!isSelected) {
+                c.setBackground(Color.GRAY);
+            } else {
+                c.setBackground(Color.BLUE);
+            }
+            return c;
+        }
+    }
+
+    @UIType
+    @SuppressWarnings("guieffect")
+    private class PddlOutputTableMouseListener implements MouseListener {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            showPopup(e);
+        }
+
+        private void showPopup(MouseEvent e) {
+            if (e.isPopupTrigger()) {
+                JPopupMenu jpmenu = new JPopupMenu("PDDL Action Menu ");
+                JMenuItem menuItem = new JMenuItem("Run Single");
+                menuItem.addActionListener(x -> runSingleRow());
+                jpmenu.add(menuItem);
+                jpmenu.setLocation(e.getPoint());
+                jpmenu.setVisible(true);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            showPopup(e);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            showPopup(e);
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            showPopup(e);
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            showPopup(e);
+        }
+    }
+
+    /**
      * Creates new form ActionsToCrclJPanel
+     *
+     * @param aprsSystem1 AprsSystem that this will be a part of.
      */
     @SuppressWarnings("initialization")
-    public ExecutorJPanel() {
+    @UIEffect
+    public ExecutorJPanel(AprsSystem aprsSystem1) {
+        this.aprsSystem = aprsSystem1;
         initComponents();
         jCheckBoxDebug.setSelected(debug);
         progColor = jTableCrclProgram.getBackground();
+        this.crclGenerator = new CrclGenerator(this);
         crclGenerator.addPlacePartConsumer(this::handlePlacePartCompleted);
         crclGenerator.addActionCompletedListener(this::handleActionCompleted);
-        jTablePddlOutput.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (row == currentActionIndex && isSelected) {
-                    c.setBackground(Color.YELLOW);
-                    c.setForeground(Color.BLACK);
-                } else if (!isSelected) {
-                    c.setBackground(Color.GRAY);
-                } else {
-                    c.setBackground(Color.BLUE);
-                }
-                return c;
-            }
-        });
-        jTablePddlOutput.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                showPopup(e);
-            }
-
-            private void showPopup(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    JPopupMenu jpmenu = new JPopupMenu("PDDL Action Menu ");
-                    JMenuItem menuItem = new JMenuItem("Run Single");
-                    menuItem.addActionListener(x -> runSingleRow());
-                    jpmenu.add(menuItem);
-                    jpmenu.setLocation(e.getPoint());
-                    jpmenu.setVisible(true);
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                showPopup(e);
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                showPopup(e);
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                showPopup(e);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                showPopup(e);
-            }
-        });
-        this.crclGenerator.setParentExecutorJPanel(this);
+        jTablePddlOutput.setDefaultRenderer(Object.class, new PddlOutputTableCellRendererer());
+        jTablePddlOutput.addMouseListener(new PddlOutputTableMouseListener());
         setToolOffsetTableModelListener();
         setTrayAttachOffsetTableModelListener();
         toolMenu = new JMenu("Tools");
@@ -264,15 +298,33 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolMenu.add(toolPickupByToolMenu);
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
+        optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
+        enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
+        pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);
+        pddlOutputCachedTableModel = new CachedTable((DefaultTableModel) jTablePddlOutput.getModel(), jTablePddlOutput);
+        replanCachedCheckBox = new CachedCheckBox(jCheckBoxReplan);
+        forceFakeTakeFlagCachedCheckBox = new CachedCheckBox(jCheckBoxForceFakeTake);
+        crclProgramCachedTable = new CachedTable((DefaultTableModel) jTableCrclProgram.getModel(), jTableCrclProgram);
+        manualObjectCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualObjectName);
+        manualSlotCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualSlotName);
+        toolHolderPositionsCachedTable = new CachedTable(jTableToolHolderPositions);
+        holderContentsCachedTable = new CachedTable(jTableHolderContents);
+        toolOffsetsCachedTable = new CachedTable(jTableToolOffsets);
+        trayAttachOffsetsCachedTable = new CachedTable(jTableTrayAttachOffsets);
+        positionCacheCachedTable = new CachedTable(jTablePositionCache);
     }
 
     public JMenu getToolMenu() {
         return toolMenu;
     }
 
-    @Nullable
     public String getSelectedToolName() {
         return crclGenerator.getCurrentToolName();
+    }
+
+    @SuppressWarnings({"nullness", "keyfor"})
+    public Set<String> getPossibleToolNames() {
+        return crclGenerator.getToolOffsetMap().keySet();
     }
 
     @Nullable
@@ -289,7 +341,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 return getDefaultSelectedToolNameFile();
             } catch (Exception ex) {
-                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
         return selectedToolNameFileName;
@@ -345,28 +397,38 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return "";
     }
 
+    private final ConcurrentLinkedQueue<Consumer<String>> selectedToolNameListeners = new ConcurrentLinkedQueue<>();
+
+    public void addSelectedToolNameListener(Consumer<String> listener) {
+        selectedToolNameListeners.add(listener);
+    }
+
+    public void removeSelectedToolNameListener(Consumer<String> listener) {
+        selectedToolNameListeners.add(listener);
+    }
+
     public void setSelectedToolName(String newToolName) {
         try {
             if (null == newToolName) {
                 return;
             }
-            jTextFieldCurrentToolName.setText(newToolName);
             String currentToolName = crclGenerator.getCurrentToolName();
             if (!Objects.equals(currentToolName, newToolName)) {
                 crclGenerator.setCurrentToolName(newToolName);
             }
             PoseType newPose = crclGenerator.getToolOffsetPose();
+            String offsetText;
             if (null != newPose) {
                 PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
                 PointType newPosePoint = requireNonNull(newPose.getPoint(), "newPose.getPoint()");
                 PmCartesian tran = CRCLPosemath.toPmCartesian(newPosePoint);
-                String offsetText
-                        = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
-                                tran.x, tran.y, tran.z,
-                                Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
-                jTextFieldCurrentToolOffset.setText(offsetText);
+
+                offsetText = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
+                        tran.x, tran.y, tran.z,
+                        Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
+
             } else {
-                jTextFieldCurrentToolOffset.setText("X=0,Y=0,Z=0,roll=0,pitch=0,yaw=0");
+                offsetText = "X=0,Y=0,Z=0,roll=0,pitch=0,yaw=0";
             }
             String filename = getSelectedToolNameFileName();
             if (null == filename) {
@@ -378,90 +440,167 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 try (PrintWriter pw = new PrintWriter(new FileWriter(new File(propertiesFile.getParentFile(), filename)))) {
                     pw.println(newToolName);
                 } catch (IOException ex) {
-                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
-            loadToolMenus();
+            Utils.runOnDispatchThread(() -> setCurrentToolNamOnDisplay(newToolName, offsetText));
+            for (Consumer<String> listener : selectedToolNameListeners) {
+                listener.accept(newToolName);
+            }
         } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, null, exception);
+            LOGGER.log(Level.SEVERE, "", exception);
         }
     }
 
-    private void setObtionsTableEntry(String key, String value) {
-        DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Object keyFromTable = model.getValueAt(i, 0);
+    @UIEffect
+    private void setCurrentToolNamOnDisplay(String newToolName, String offsetText) {
+        jTextFieldCurrentToolOffset.setText(offsetText);
+        jTextFieldCurrentToolName.setText(newToolName);
+        loadToolMenus();
+    }
+
+    private void setOptionsTableEntry(String key, String value) {
+        for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+            Object keyFromTable = optionsCachedTable.getValueAt(i, 0);
             if (Objects.equals(keyFromTable, key)) {
-                model.setValueAt(value, i, 1);
+                optionsCachedTable.setValueAt(value, i, 1);
                 return;
             }
         }
-        model.addRow(new Object[]{key, value});
+        optionsCachedTable.addRow(new Object[]{key, value});
         crclGenerator.setOptions(getTableOptions());
     }
 
-    public void setLookForXYZ(double x, double y, double z) {
+    public XFutureVoid setLookForXYZ(double x, double y, double z) {
         try {
             String valueString = String.format("%.3f,%.3f,%.3f", x, y, z);
-            Utils.runAndWaitOnDispatchThread("setLookForXYZ",
-                    () -> setObtionsTableEntry("lookForXYZ", valueString));
+            return Utils.runOnDispatchThread("setLookForXYZ",
+                    () -> setOptionsTableEntry("lookForXYZ", valueString));
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
+    private volatile boolean toolOffsetTablemModelListenerEnabled = false;
+
     private void setToolOffsetTableModelListener() {
+        toolOffsetTablemModelListenerEnabled = true;
+        Utils.runOnDispatchThread(this::setToolOffsetTableModelListenerOnDisplay);
+    }
+
+    @UIEffect
+    private void setToolOffsetTableModelListenerOnDisplay() {
         jTableToolOffsets.getModel().addTableModelListener(toolOffsetsModelListener);
     }
 
     private void clearToolOffsetTableModelListener() {
+        toolOffsetTablemModelListenerEnabled = false;
+        Utils.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
+    }
+
+    @UIEffect
+    private void clearToolOffsetTableModelListenerOnDisplay() {
         jTableToolOffsets.getModel().removeTableModelListener(toolOffsetsModelListener);
     }
 
+    private volatile boolean trayAttachOffsetTablemModelListenerEnabled = false;
+
     private void setTrayAttachOffsetTableModelListener() {
-        jTableTrayAttachOffsets.getModel().addTableModelListener(trayAttachOffsetsModelListener);
+        trayAttachOffsetTablemModelListenerEnabled = true;
+        Utils.runOnDispatchThread(this::setTrayAttachOffsetTableModelListenerOnDisplay);
     }
 
     private void clearTrayAttachOffsetTableModelListener() {
+        trayAttachOffsetTablemModelListenerEnabled = false;
+        Utils.runOnDispatchThread(this::clearTrayAttachOffsetTableModelListenerOnDisplay);
+    }
+
+    @UIEffect
+    private void setTrayAttachOffsetTableModelListenerOnDisplay() {
+        jTableTrayAttachOffsets.getModel().addTableModelListener(trayAttachOffsetsModelListener);
+    }
+
+    @UIEffect
+    private void clearTrayAttachOffsetTableModelListenerOnDisplay() {
         jTableTrayAttachOffsets.getModel().removeTableModelListener(trayAttachOffsetsModelListener);
     }
 
+    private volatile StackTraceElement setReverseFlagTrace @Nullable []  = null;
+
+    public void setReverseFlag(boolean reverseFlag) {
+        this.reverseFlag = reverseFlag;
+        setReverseFlagTrace = Thread.currentThread().getStackTrace();
+    }
+
+    @UIType
+    @SuppressWarnings("guieffect")
     private class TrayAttachOffsetModelListenerClass implements TableModelListener {
 
         @Override
         public void tableChanged(TableModelEvent e) {
-            Utils.autoResizeTableColWidths(jTableTrayAttachOffsets);
-            saveTrayAttachOffsetPoseMap();
-            loadTrayAttachOffsetsTableToMap();
+            if (trayAttachOffsetTablemModelListenerEnabled) {
+                Utils.autoResizeTableColWidths(jTableTrayAttachOffsets);
+                saveTrayAttachOffsetPoseMap();
+                loadTrayAttachOffsetsTableToMap();
+            }
         }
     }
 
     private final TableModelListener trayAttachOffsetsModelListener = new TrayAttachOffsetModelListenerClass();
 
+    @UIType
+    @SuppressWarnings("guieffect")
     private class ToolOffsetModelListenerClass implements TableModelListener {
 
         @Override
         public void tableChanged(TableModelEvent e) {
-            Utils.autoResizeTableColWidths(jTableToolOffsets);
-            saveToolOffsetPoseMap();
-            loadToolOffsetsTableToMap();
+            if (toolOffsetTablemModelListenerEnabled) {
+                Utils.autoResizeTableColWidths(jTableToolOffsets);
+                saveToolOffsetPoseMap();
+                loadToolOffsetsTableToMap();
+            }
         }
     }
 
     private final TableModelListener toolOffsetsModelListener = new ToolOffsetModelListenerClass();
 
+    private volatile boolean toolHolderContentsModelListenerEnabled = false;
+
     private void setToolHolderContentsTableModelListener() {
-        jTableHolderContents.getModel().addTableModelListener(toolHolderContentsModelListener);
+        toolHolderContentsModelListenerEnabled = true;
+        Utils.runOnDispatchThread(this::setToolHolderContentsTableModelListenerOnDisplay);
     }
 
     private void clearToolHolderContentsTableModelListener() {
+        toolHolderContentsModelListenerEnabled = false;
+        Utils.runOnDispatchThread(this::clearToolHolderContentsTableModelListenerOnDisplay);
+    }
+
+    @UIEffect
+    private void setToolHolderContentsTableModelListenerOnDisplay() {
+        jTableHolderContents.getModel().addTableModelListener(toolHolderContentsModelListener);
+    }
+
+    @UIEffect
+    private void clearToolHolderContentsTableModelListenerOnDisplay() {
         jTableHolderContents.getModel().removeTableModelListener(toolHolderContentsModelListener);
     }
 
+    @UIType
+    @SuppressWarnings("guieffect")
     private class ToolHolderContentsModelListenerClass implements TableModelListener {
 
         @Override
         public void tableChanged(TableModelEvent e) {
+            handleToolHolderContentsChange();
+        }
+
+    }
+
+    @UIEffect
+    private void handleToolHolderContentsChange() {
+        if (toolHolderContentsModelListenerEnabled) {
             syncPanelToGeneratorToolData();
             Utils.autoResizeTableColWidths(jTableHolderContents);
             saveToolHolderContentsMap();
@@ -471,16 +610,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final TableModelListener toolHolderContentsModelListener = new ToolHolderContentsModelListenerClass();
 
+    private CachedTable pddlOutputCachedTableModel;
+
     private void runSingleRow() {
         this.aprsSystem.abortCrclProgram();
-        int row = jTablePddlOutput.getSelectedRow();
+        int row = pddlOutputCachedTableModel.getSelectedRow();
         currentActionIndex = row;
         setReplanFromIndex(row);
         stepping = true;
         continueActionListPrivate();
     }
 
-    private boolean reverseFlag = false;
+    private volatile boolean reverseFlag = false;
 
     /**
      * Get the value of reverseFlag
@@ -489,15 +630,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     public boolean isReverseFlag() {
         return reverseFlag;
-    }
-
-    /**
-     * Set the value of reverseFlag
-     *
-     * @param reverseFlag new value of reverseFlag
-     */
-    public void setReverseFlag(boolean reverseFlag) {
-        this.reverseFlag = reverseFlag;
     }
 
     private void handlePlacePartCompleted(CrclGenerator.PlacePartInfo ppi) {
@@ -551,9 +683,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private long lastActionMillis = -1;
 
     private void setCost(int index, double cost) {
-        DefaultTableModel m = (DefaultTableModel) jTablePddlOutput.getModel();
-        if (m.getRowCount() > index) {
-            m.setValueAt(cost, index, 5);
+        if (pddlOutputCachedTableModel.getRowCount() > index) {
+            pddlOutputCachedTableModel.setValueAt(cost, index, 5);
         }
     }
 
@@ -584,32 +715,25 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void updateSelectionInterval() {
+        Utils.runOnDispatchThread(this::updateSelectionIntervalOnDisplay);
+    }
+
+    @UIEffect
+    private void updateSelectionIntervalOnDisplay() {
         int startIndex = Math.max(0, currentActionIndex);
         int endIndex = Math.max(startIndex, getReplanFromIndex() - 1);
-        jTablePddlOutput.getSelectionModel().setSelectionInterval(startIndex, endIndex);
+        pddlOutputCachedTableModel.setSelectionInterval(startIndex, endIndex);
         jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(startIndex, 0, true)));
-        if (currentActionIndex > 0 && currentActionIndex < jTablePddlOutput.getRowCount()) {
-            Object o = jTablePddlOutput.getValueAt(startIndex, 1);
+        if (currentActionIndex > 0 && currentActionIndex < pddlOutputCachedTableModel.getRowCount()) {
+            Object o = pddlOutputCachedTableModel.getValueAt(startIndex, 1);
             if (o instanceof Integer) {
                 int crclIndex = ((Integer) o) - 2;
-                if (crclIndex > 0 && crclIndex < jTableCrclProgram.getRowCount()) {
-                    jTableCrclProgram.getSelectionModel().setSelectionInterval(crclIndex, crclIndex);
+                if (crclIndex > 0 && crclIndex < crclProgramCachedTable.getRowCount()) {
+                    crclProgramCachedTable.setSelectionInterval(crclIndex, crclIndex);
                     jTableCrclProgram.scrollRectToVisible(new Rectangle(jTableCrclProgram.getCellRect(crclIndex, 0, true)));
                 }
             }
         }
-    }
-
-    private static Object @Nullable [] getTableRow(JTable table, int row) {
-        final int colCount = table.getModel().getColumnCount();
-        if (colCount < 1) {
-            return null;
-        }
-        Object out[] = new Object[table.getModel().getColumnCount()];
-        for (int i = 0; i < colCount; i++) {
-            out[i] = table.getModel().getValueAt(row, i);
-        }
-        return out;
     }
 
     /**
@@ -636,6 +760,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * regenerated by the Form Editor.
      */
     @SuppressWarnings({"unchecked", "rawtypes", "nullness", "deprecation"})
+    @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -736,18 +861,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTextFieldCurrentToolOffset = new javax.swing.JTextField();
         jPanelContainerPositionMap = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.actions.executor.PositionMapJPanel();
-        jScrollPaneExternalControl = new javax.swing.JScrollPane();
-        jPanelExternalControl = new javax.swing.JPanel();
-        jLabel16 = new javax.swing.JLabel();
-        jTextFieldExternalControlPort = new javax.swing.JTextField();
-        jCheckBoxEnableExternalControlPort = new javax.swing.JCheckBox();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        jTextAreaExternalCommads = new javax.swing.JTextArea();
-        jButtonSafeAbort = new javax.swing.JButton();
-        jTextFieldSafeAbortCount = new javax.swing.JTextField();
-        jLabel18 = new javax.swing.JLabel();
-        jLabel19 = new javax.swing.JLabel();
-        jTextFieldSafeAbortRequestCount = new javax.swing.JTextField();
         jPanelCrcl = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableCrclProgram = new javax.swing.JTable();
@@ -774,29 +887,29 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jLabel6.setText("Pddl Output Actions");
 
         jTablePddlOutput.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
-            },
-            new String [] {
-                "#", "CRCLIndex", "Label", "Type", "Args", "Time/Cost", "TakenPart"
-            }
+                new Object[][]{
+                        {null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null}
+                },
+                new String[]{
+                        "#", "CRCLIndex", "Label", "Type", "Args", "Time/Cost", "TakenPart"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+            boolean[] canEdit = new boolean[]{
+                    false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPane4.setViewportView(jTablePddlOutput);
@@ -851,55 +964,55 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableOptions.setAutoCreateRowSorter(true);
         jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"rpy", "175.0,0.0,0.0"},
-                {"lookForXYZ", "0.0,0.0,0.0"},
-                {"approachZOffset", "50.0"},
-                {"placeZOffset", "5.0"},
-                {"takeZOffset", "0.0"},
-                {"testTransSpeed", "50.0"},
-                {"fastTransSpeed", "200.0"},
-                {"slowTransSpeed", "75"},
-                {"verySlowTransSpeed", "25"},
-                {"lookDwellTime", "5.0"},
-                {"firstLookDwellTime", "5.0"},
-                {"lastLookDwellTime", "1.0"},
-                {"skipLookDwellTime", "5.0"},
-                {"afterMoveToLookForDwellTime", "5.0"},
-                {"rotSpeed", "30.0"},
-                {"placePartSlotArgIndex", "0"},
-                {"takePartArgIndex", "0"},
-                {"settleDwellTime", "0.1"},
-                {"useJointLookFor", "false"},
-                {"jointSpeed", "5.0"},
-                {"jointAccel", "100.0"},
-                {"takeSnapshots", "false"},
-                {"doInspectKit", "false"},
-                {"kitInspectDistThreshold", "20.0"},
-                {"requireNewPoses", "false"},
-                {"visionCycleNewDiffThreshold", "3"},
-                {"pauseInsteadOfRecover", "false"},
-                {"skipMissingParts", "false"},
-                {"useJointMovesForToolHolderApproach", "true"},
-                {"joint0DiffTolerance", "20.0"}
-            },
-            new String [] {
-                "Name", "Value"
-            }
+                new Object[][]{
+                        {"rpy", "175.0,0.0,0.0"},
+                        {"lookForXYZ", "0.0,0.0,0.0"},
+                        {"approachZOffset", "50.0"},
+                        {"placeZOffset", "5.0"},
+                        {"takeZOffset", "0.0"},
+                        {"testTransSpeed", "50.0"},
+                        {"fastTransSpeed", "200.0"},
+                        {"slowTransSpeed", "75"},
+                        {"verySlowTransSpeed", "25"},
+                        {"lookDwellTime", "5.0"},
+                        {"firstLookDwellTime", "5.0"},
+                        {"lastLookDwellTime", "1.0"},
+                        {"skipLookDwellTime", "5.0"},
+                        {"afterMoveToLookForDwellTime", "5.0"},
+                        {"rotSpeed", "30.0"},
+                        {"placePartSlotArgIndex", "0"},
+                        {"takePartArgIndex", "0"},
+                        {"settleDwellTime", "0.1"},
+                        {"useJointLookFor", "false"},
+                        {"jointSpeed", "5.0"},
+                        {"jointAccel", "100.0"},
+                        {"takeSnapshots", "false"},
+                        {"doInspectKit", "false"},
+                        {"kitInspectDistThreshold", "20.0"},
+                        {"requireNewPoses", "false"},
+                        {"visionCycleNewDiffThreshold", "3"},
+                        {"pauseInsteadOfRecover", "false"},
+                        {"skipMissingParts", "false"},
+                        {"useJointMovesForToolHolderApproach", "true"},
+                        {"joint0DiffTolerance", "20.0"}
+                },
+                new String[]{
+                        "Name", "Value"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, true
+            boolean[] canEdit = new boolean[]{
+                    false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPaneOptions.setViewportView(jTableOptions);
@@ -1082,165 +1195,165 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
-            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addComponent(jButtonReset)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRecordFail)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRecordSuccess)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel11)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonNewLogFile))
-                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addComponent(jButtonRandDropOff)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonTestPickup)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel10)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel14)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel15)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonTake)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonLookFor)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonTest)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonReturn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRecord)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPlacePart)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonContRandomTest)
-                        .addGap(90, 90, 90)
-                        .addComponent(jButtonStopRandomTest)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRecordLookForJoints))
-                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                        .addComponent(jLabel12)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGridTest)))
-                .addContainerGap(239, Short.MAX_VALUE))
+                jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                                .addComponent(jButtonReset)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonRecordFail)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonRecordSuccess)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel11)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonNewLogFile))
+                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                                .addComponent(jButtonRandDropOff)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonTestPickup)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel10)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel14)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel15)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                                .addComponent(jLabel1)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonTake)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonLookFor)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonTest)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonReturn)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonRecord)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonPlacePart)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel20)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                                .addComponent(jLabel3)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel4)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel5)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel8)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel9)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonContRandomTest)
+                                                .addGap(90, 90, 90)
+                                                .addComponent(jButtonStopRandomTest)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonRecordLookForJoints))
+                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                                .addComponent(jLabel12)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonGridTest)))
+                                .addContainerGap(239, Short.MAX_VALUE))
         );
 
-        jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
+        jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[]{jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
 
         jPanelInnerManualControlLayout.setVerticalGroup(
-            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jButtonTake)
-                    .addComponent(jButtonLookFor)
-                    .addComponent(jButtonReturn)
-                    .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonTest)
-                    .addComponent(jButtonPlacePart)
-                    .addComponent(jLabel20)
-                    .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonRecord))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel3)
-                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel4)
-                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel5)
-                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel8)
-                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jButtonContRandomTest)
-                        .addComponent(jButtonStopRandomTest)
-                        .addComponent(jLabel9)
-                        .addComponent(jButtonRecordLookForJoints)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jButtonRandDropOff)
-                        .addComponent(jButtonTestPickup)
-                        .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel10)
-                        .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel15)
-                        .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel14)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonReset)
-                    .addComponent(jButtonRecordFail)
-                    .addComponent(jButtonRecordSuccess)
-                    .addComponent(jLabel11)
-                    .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonNewLogFile)
-                    .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel12)
-                    .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonGridTest))
-                .addContainerGap(87, Short.MAX_VALUE))
+                jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel1)
+                                        .addComponent(jButtonTake)
+                                        .addComponent(jButtonLookFor)
+                                        .addComponent(jButtonReturn)
+                                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonTest)
+                                        .addComponent(jButtonPlacePart)
+                                        .addComponent(jLabel20)
+                                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonRecord))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                .addComponent(jLabel3)
+                                                .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel4)
+                                                .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel5)
+                                                .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel8)
+                                                .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jButtonContRandomTest)
+                                                .addComponent(jButtonStopRandomTest)
+                                                .addComponent(jLabel9)
+                                                .addComponent(jButtonRecordLookForJoints)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                .addComponent(jButtonRandDropOff)
+                                                .addComponent(jButtonTestPickup)
+                                                .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel10)
+                                                .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel15)
+                                                .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addComponent(jLabel14)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonReset)
+                                        .addComponent(jButtonRecordFail)
+                                        .addComponent(jButtonRecordSuccess)
+                                        .addComponent(jLabel11)
+                                        .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonNewLogFile)
+                                        .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel12)
+                                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonGridTest))
+                                .addContainerGap(87, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -1248,18 +1361,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelOuterManualControlLayout = new javax.swing.GroupLayout(jPanelOuterManualControl);
         jPanelOuterManualControl.setLayout(jPanelOuterManualControlLayout);
         jPanelOuterManualControlLayout.setHorizontalGroup(
-            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2)
-                .addContainerGap())
+                jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane2)
+                                .addContainerGap())
         );
         jPanelOuterManualControlLayout.setVerticalGroup(
-            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2)
-                .addContainerGap())
+                jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane2)
+                                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Manual Pickup Return", jPanelOuterManualControl);
@@ -1303,19 +1416,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableHolderContents.setAutoCreateRowSorter(true);
         jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Holder Position Name", "Contents", "Possible Contents", "Comment"
-            }
+                },
+                new String[]{
+                        "Holder Position Name", "Contents", "Possible Contents", "Comment"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
         });
         jScrollPaneHolderContents.setViewportView(jTableHolderContents);
@@ -1324,19 +1437,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableToolHolderPositions.setAutoCreateRowSorter(true);
         jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
-            }
+                },
+                new String[]{
+                        "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
         });
         jScrollPaneToolHolderPositions.setViewportView(jTableToolHolderPositions);
@@ -1379,41 +1492,41 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(jPanelToolHolderPositions);
         jPanelToolHolderPositions.setLayout(jPanelToolHolderPositionsLayout);
         jPanelToolHolderPositionsLayout.setHorizontalGroup(
-            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButtonRecordToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRecordToolHolderApproach)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonAddToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonDeleteToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRenameToolHolderPose)
-                .addContainerGap(461, Short.MAX_VALUE))
-            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addContainerGap()))
+                jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jButtonRecordToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRecordToolHolderApproach)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonAddToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonDeleteToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRenameToolHolderPose)
+                                .addContainerGap(461, Short.MAX_VALUE))
+                        .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
+                                        .addContainerGap()))
         );
         jPanelToolHolderPositionsLayout.setVerticalGroup(
-            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonRecordToolHolderPose)
-                    .addComponent(jButtonRecordToolHolderApproach)
-                    .addComponent(jButtonDeleteToolHolderPose)
-                    .addComponent(jButtonAddToolHolderPose)
-                    .addComponent(jButtonRenameToolHolderPose))
-                .addContainerGap())
-            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
-                    .addGap(40, 40, 40)
-                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
-                    .addContainerGap()))
+                jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonRecordToolHolderPose)
+                                        .addComponent(jButtonRecordToolHolderApproach)
+                                        .addComponent(jButtonDeleteToolHolderPose)
+                                        .addComponent(jButtonAddToolHolderPose)
+                                        .addComponent(jButtonRenameToolHolderPose))
+                                .addContainerGap())
+                        .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                        .addGap(40, 40, 40)
+                                        .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                                        .addContainerGap()))
         );
 
         jTabbedPaneToolChangeInner.addTab("Holder Positions", jPanelToolHolderPositions);
@@ -1434,19 +1547,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableToolOffsets.setAutoCreateRowSorter(true);
         jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
-            }
+                },
+                new String[]{
+                        "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
         });
         jScrollPaneToolOffsets.setViewportView(jTableToolOffsets);
@@ -1454,32 +1567,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelToolOffsetsLayout = new javax.swing.GroupLayout(jPanelToolOffsets);
         jPanelToolOffsets.setLayout(jPanelToolOffsetsLayout);
         jPanelToolOffsetsLayout.setHorizontalGroup(
-            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButtonAddToolOffset)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonDeleteToolOffset)
-                .addContainerGap(1059, Short.MAX_VALUE))
-            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addContainerGap()))
+                jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jButtonAddToolOffset)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonDeleteToolOffset)
+                                .addContainerGap(1059, Short.MAX_VALUE))
+                        .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
+                                        .addContainerGap()))
         );
         jPanelToolOffsetsLayout.setVerticalGroup(
-            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonAddToolOffset)
-                    .addComponent(jButtonDeleteToolOffset))
-                .addContainerGap())
-            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
-                    .addGap(42, 42, 42)
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
-                    .addContainerGap()))
+                jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonAddToolOffset)
+                                        .addComponent(jButtonDeleteToolOffset))
+                                .addContainerGap())
+                        .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
+                                        .addGap(42, 42, 42)
+                                        .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
+                                        .addContainerGap()))
         );
 
         jTabbedPaneToolChangeInner.addTab("Tool Offsets", jPanelToolOffsets);
@@ -1495,19 +1608,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableTrayAttachOffsets.setAutoCreateRowSorter(true);
         jTableTrayAttachOffsets.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
-            }
+                },
+                new String[]{
+                        "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
         });
         jScrollPaneToolOffsets1.setViewportView(jTableTrayAttachOffsets);
@@ -1515,28 +1628,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButtonAddTrayAttach)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDeleteTrayAttach)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addComponent(jButtonAddTrayAttach)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonDeleteTrayAttach)
+                                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonAddTrayAttach)
-                    .addComponent(jButtonDeleteTrayAttach))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonAddTrayAttach)
+                                        .addComponent(jButtonDeleteTrayAttach))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanel1);
@@ -1560,57 +1673,57 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelToolChangeLayout = new javax.swing.GroupLayout(jPanelToolChange);
         jPanelToolChange.setLayout(jPanelToolChangeLayout);
         jPanelToolChangeLayout.setHorizontalGroup(
-            jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPaneToolChangeInner)
-                    .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                        .addComponent(jButtonGotoToolChangerPose)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel13)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGotoToolChangerApproach)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDropTool)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonPickupTool)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonSetCurrentTool)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel21)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldCurrentToolOffset)))
-                .addContainerGap())
+                jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jTabbedPaneToolChangeInner)
+                                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                                                .addComponent(jButtonGotoToolChangerPose)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel13)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonGotoToolChangerApproach)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonDropTool)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonPickupTool)
+                                                .addGap(0, 0, Short.MAX_VALUE))
+                                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                                                .addComponent(jLabel7)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonSetCurrentTool)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel21)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldCurrentToolOffset)))
+                                .addContainerGap())
         );
         jPanelToolChangeLayout.setVerticalGroup(
-            jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonGotoToolChangerApproach)
-                    .addComponent(jLabel13)
-                    .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonGotoToolChangerPose)
-                    .addComponent(jButtonDropTool)
-                    .addComponent(jButtonPickupTool))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonSetCurrentTool)
-                    .addComponent(jLabel21)
-                    .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonGotoToolChangerApproach)
+                                        .addComponent(jLabel13)
+                                        .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonGotoToolChangerPose)
+                                        .addComponent(jButtonDropTool)
+                                        .addComponent(jButtonPickupTool))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel7)
+                                        .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonSetCurrentTool)
+                                        .addComponent(jLabel21)
+                                        .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Tool Change", jPanelToolChange);
@@ -1618,126 +1731,46 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelContainerPositionMapLayout = new javax.swing.GroupLayout(jPanelContainerPositionMap);
         jPanelContainerPositionMap.setLayout(jPanelContainerPositionMapLayout);
         jPanelContainerPositionMapLayout.setHorizontalGroup(
-            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
+                                .addContainerGap())
         );
         jPanelContainerPositionMapLayout.setVerticalGroup(
-            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Error Map", jPanelContainerPositionMap);
 
-        jLabel16.setText("Port:");
-
-        jTextFieldExternalControlPort.setText("9999");
-
-        jCheckBoxEnableExternalControlPort.setText("Enable");
-        jCheckBoxEnableExternalControlPort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxEnableExternalControlPortActionPerformed(evt);
-            }
-        });
-
-        jTextAreaExternalCommads.setColumns(20);
-        jTextAreaExternalCommads.setRows(5);
-        jScrollPane6.setViewportView(jTextAreaExternalCommads);
-
-        jButtonSafeAbort.setText("Safe Abort");
-        jButtonSafeAbort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonSafeAbortActionPerformed(evt);
-            }
-        });
-
-        jTextFieldSafeAbortCount.setEditable(false);
-        jTextFieldSafeAbortCount.setText("0");
-
-        jLabel18.setText("Safe Aborts Completed: ");
-
-        jLabel19.setText("SafeAbortsRequested:");
-
-        jTextFieldSafeAbortRequestCount.setEditable(false);
-        jTextFieldSafeAbortRequestCount.setText("0");
-
-        javax.swing.GroupLayout jPanelExternalControlLayout = new javax.swing.GroupLayout(jPanelExternalControl);
-        jPanelExternalControl.setLayout(jPanelExternalControlLayout);
-        jPanelExternalControlLayout.setHorizontalGroup(
-            jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelExternalControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 1162, Short.MAX_VALUE)
-                    .addGroup(jPanelExternalControlLayout.createSequentialGroup()
-                        .addComponent(jLabel16)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxEnableExternalControlPort)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonSafeAbort)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel19)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSafeAbortRequestCount, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel18)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSafeAbortCount, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-        );
-        jPanelExternalControlLayout.setVerticalGroup(
-            jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelExternalControlLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelExternalControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel16)
-                    .addComponent(jTextFieldExternalControlPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jCheckBoxEnableExternalControlPort)
-                    .addComponent(jButtonSafeAbort)
-                    .addComponent(jTextFieldSafeAbortCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel18)
-                    .addComponent(jLabel19)
-                    .addComponent(jTextFieldSafeAbortRequestCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6))
-        );
-
-        jScrollPaneExternalControl.setViewportView(jPanelExternalControl);
-
-        jTabbedPane1.addTab("External Control", jScrollPaneExternalControl);
-
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                { new Integer(1), null},
-                { new Integer(2), null},
-                { new Integer(3), null},
-                { new Integer(4), null}
-            },
-            new String [] {
-                "ID", "Text"
-            }
+                new Object[][]{
+                        {new Integer(1), null},
+                        {new Integer(2), null},
+                        {new Integer(3), null},
+                        {new Integer(4), null}
+                },
+                new String[]{
+                        "ID", "Text"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.Integer.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, true
+            boolean[] canEdit = new boolean[]{
+                    false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPane1.setViewportView(jTableCrclProgram);
@@ -1745,44 +1778,44 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelCrclLayout = new javax.swing.GroupLayout(jPanelCrcl);
         jPanelCrcl.setLayout(jPanelCrclLayout);
         jPanelCrclLayout.setHorizontalGroup(
-            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelCrclLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1)
-                .addContainerGap())
+                jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelCrclLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane1)
+                                .addContainerGap())
         );
         jPanelCrclLayout.setVerticalGroup(
-            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelCrclLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelCrclLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                                .addContainerGap())
         );
 
         jTabbedPane1.addTab("CRCL", jPanelCrcl);
 
         jTablePositionCache.setAutoCreateRowSorter(true);
         jTablePositionCache.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
+                new Object[][]{
 
-            },
-            new String [] {
-                "Name", "X", "Y", "Z", "Roll", "Pitch", "Yaw", "Comment"
-            }
+                },
+                new String[]{
+                        "Name", "X", "Y", "Z", "Roll", "Pitch", "Yaw", "Comment"
+                }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            Class[] types = new Class[]{
+                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, true
+            boolean[] canEdit = new boolean[]{
+                    false, false, false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         jScrollPanePositionTable.setViewportView(jTablePositionCache);
@@ -1804,32 +1837,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout jPanelContainerPoseCacheLayout = new javax.swing.GroupLayout(jPanelContainerPoseCache);
         jPanelContainerPoseCache.setLayout(jPanelContainerPoseCacheLayout);
         jPanelContainerPoseCacheLayout.setHorizontalGroup(
-            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButtonClearPoseCache)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonUpdatePoseCache)
-                .addContainerGap(1034, Short.MAX_VALUE))
-            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1238, Short.MAX_VALUE)
-                    .addContainerGap()))
+                jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jButtonClearPoseCache)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonUpdatePoseCache)
+                                .addContainerGap(1034, Short.MAX_VALUE))
+                        .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1238, Short.MAX_VALUE)
+                                        .addContainerGap()))
         );
         jPanelContainerPoseCacheLayout.setVerticalGroup(
-            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(237, Short.MAX_VALUE)
-                .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonClearPoseCache)
-                    .addComponent(jButtonUpdatePoseCache))
-                .addContainerGap())
-            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                    .addGap(38, 38, 38)))
+                jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                                .addContainerGap(237, Short.MAX_VALUE)
+                                .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonClearPoseCache)
+                                        .addComponent(jButtonUpdatePoseCache))
+                                .addContainerGap())
+                        .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                                        .addContainerGap()
+                                        .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                                        .addGap(38, 38, 38)))
         );
 
         jTabbedPane1.addTab("Pose Cache", jPanelContainerPoseCache);
@@ -1841,12 +1874,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout opDisplayJPanelInputLayout = new javax.swing.GroupLayout(opDisplayJPanelInput);
         opDisplayJPanelInput.setLayout(opDisplayJPanelInputLayout);
         opDisplayJPanelInputLayout.setHorizontalGroup(
-            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 578, Short.MAX_VALUE)
+                opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 578, Short.MAX_VALUE)
         );
         opDisplayJPanelInputLayout.setVerticalGroup(
-            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+                opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 0, Short.MAX_VALUE)
         );
 
         opDisplayJPanelSolution.setLabel("Output");
@@ -1856,33 +1889,33 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout opDisplayJPanelSolutionLayout = new javax.swing.GroupLayout(opDisplayJPanelSolution);
         opDisplayJPanelSolution.setLayout(opDisplayJPanelSolutionLayout);
         opDisplayJPanelSolutionLayout.setHorizontalGroup(
-            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 578, Short.MAX_VALUE)
+                opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 578, Short.MAX_VALUE)
         );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
-            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 260, Short.MAX_VALUE)
+                opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 260, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
         jPanelOpOuter.setLayout(jPanelOpOuterLayout);
         jPanelOpOuterLayout.setHorizontalGroup(
-            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOpOuterLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanelOpOuterLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addContainerGap())
         );
         jPanelOpOuterLayout.setVerticalGroup(
-            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOpOuterLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOpOuterLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addContainerGap())
         );
 
         jTabbedPane1.addTab("OptaPlanner", jPanelOpOuter);
@@ -1917,12 +1950,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jLabel17.setText("Part:");
 
+        jTextFieldCurrentPart.setEditable(false);
         jTextFieldCurrentPart.setText(" ");
-        jTextFieldCurrentPart.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldCurrentPartActionPerformed(evt);
-            }
-        });
 
         jButtonStep.setText("Step");
         jButtonStep.addActionListener(new java.awt.event.ActionListener() {
@@ -1957,100 +1986,100 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane4)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButtonPause)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonStep)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonContinue)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGenerateAndRun)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGenerateCRCL)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxForceFakeTake)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxEnableOptaPlanner)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jCheckBoxDebug)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonAbort)
-                        .addGap(11, 11, 11))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel6)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonLoad)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonLoadPddlActionsFromFile)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonPddlOutputViewEdit)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonClear))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jCheckBoxReplan)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBoxNeedLookFor)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel17)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jScrollPane4)
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addComponent(jButtonPause)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonStep)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonContinue)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonGenerateAndRun)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonGenerateCRCL)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jCheckBoxForceFakeTake)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jCheckBoxEnableOptaPlanner)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(jCheckBoxDebug)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jButtonAbort)
+                                                .addGap(11, 11, 11))
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addComponent(jLabel6)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jButtonLoad)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jButtonLoadPddlActionsFromFile)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jButtonPddlOutputViewEdit)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jButtonClear))
+                                                        .addGroup(layout.createSequentialGroup()
+                                                                .addComponent(jCheckBoxReplan)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jLabel2)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jCheckBoxNeedLookFor)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jLabel17)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(jButtonLoadPddlActionsFromFile)
-                    .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonLoad)
-                    .addComponent(jButtonPddlOutputViewEdit)
-                    .addComponent(jButtonClear))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxNeedLookFor)
-                    .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel17)
-                    .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(jCheckBoxReplan))
-                .addGap(1, 1, 1)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonPause)
-                    .addComponent(jButtonStep)
-                    .addComponent(jButtonContinue)
-                    .addComponent(jButtonGenerateAndRun)
-                    .addComponent(jButtonGenerateCRCL)
-                    .addComponent(jCheckBoxForceFakeTake)
-                    .addComponent(jCheckBoxDebug)
-                    .addComponent(jButtonAbort)
-                    .addComponent(jCheckBoxEnableOptaPlanner))
-                .addContainerGap())
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel6)
+                                        .addComponent(jButtonLoadPddlActionsFromFile)
+                                        .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jButtonLoad)
+                                        .addComponent(jButtonPddlOutputViewEdit)
+                                        .addComponent(jButtonClear))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jCheckBoxNeedLookFor)
+                                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel17)
+                                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel2)
+                                        .addComponent(jCheckBoxReplan))
+                                .addGap(1, 1, 1)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jButtonPause)
+                                        .addComponent(jButtonStep)
+                                        .addComponent(jButtonContinue)
+                                        .addComponent(jButtonGenerateAndRun)
+                                        .addComponent(jButtonGenerateCRCL)
+                                        .addComponent(jCheckBoxForceFakeTake)
+                                        .addComponent(jCheckBoxDebug)
+                                        .addComponent(jButtonAbort)
+                                        .addComponent(jCheckBoxEnableOptaPlanner))
+                                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    @Override
+    @UIEffect
     public void browseActionsFile() throws IOException {
-        String text = jTextFieldPddlOutputActions.getText();
+        String text = pddlOutputActionsCachedText.getText();
         File actionsFile = null;
         File actionsFileParent = null;
         if (null != text) {
@@ -2074,7 +2103,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
-            jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+            pddlOutputActionsCachedText.setText(f.getCanonicalPath());
             saveProperties();
         }
     }
@@ -2105,15 +2134,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public boolean doActions(String comment, int startAbortCount) {
-        checkReverse();
-        final int start = doingActionsStarted.incrementAndGet();
-        this.abortProgram();
+
         try {
+            checkReverse();
+            final int start = doingActionsStarted.incrementAndGet();
+            this.abortProgram();
             setReplanFromIndex(0);
             actionSetsStarted.incrementAndGet();
             autoStart = true;
             lastActionMillis = System.currentTimeMillis();
-            jCheckBoxReplan.setSelected(true);
+            replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
             }
@@ -2126,7 +2156,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             return ret;
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ")", ex);
+            LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ") : " + aprsSystem.getRunName(), ex);
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException("Exception in doActions(" + comment + "," + startAbortCount + "):" + ex.getMessage(), ex);
@@ -2142,11 +2172,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public XFuture<Boolean> startActions() {
         checkReverse();
         this.abortProgram();
+        this.abortProgram();
         try {
             setReplanFromIndex(0);
             autoStart = true;
             lastActionMillis = System.currentTimeMillis();
-            jCheckBoxReplan.setSelected(true);
+            replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
             }
@@ -2161,51 +2192,73 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             runningProgramFuture = ret;
             return ret;
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             throw new RuntimeException(ex);
         }
     }
 
     private void checkReverse() throws IllegalStateException {
-        if (aprsSystem.isReverseFlag() != isReverseFlag()) {
-            throw new IllegalStateException("aprsSystem.isReverseFlag() " + aprsSystem.isReverseFlag() + "!= isReverseFlag() " + isReverseFlag());
+        boolean revFlag = isReverseFlag();
+        if (aprsSystem.isReverseFlag() != revFlag) {
+            throw new IllegalStateException("aprsSystem.isReverseFlag() " + aprsSystem.isReverseFlag() + "!= isReverseFlag() " + revFlag);
         }
-        for (Action action : actionsList) {
-            switch (action.getType()) {
-                case TAKE_PART:
-                    String partname = action.getArgs()[0];
-                    if (partname.contains("_in_pt_") && isReverseFlag()) {
-                        throw new IllegalStateException("taking part in parttray when in reversee");
-                    }
-                    if (partname.contains("_in_kt_") && !isReverseFlag()) {
-                        throw new IllegalStateException("taking part in kittray when not in reversee");
-                    }
-                    break;
 
-                default:
-                    break;
+        if (revFlag != resetReadOnlyActionsListReverseFlag) {
+            System.err.println("setReverseFlagTrace = " + Arrays.toString(setReverseFlagTrace));
+            System.err.println("revFlag = " + revFlag);
+            System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
+            System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
+            System.err.println("resetReadOnlyActionsListTrace = " + Arrays.toString(resetReadOnlyActionsListTrace));
+            System.err.println("readOnlyActionsList = " + readOnlyActionsList);
+            throw new IllegalStateException("revFlag != resetReadOnlyActionsListReverseFlag");
+        }
+        synchronized (actionsList) {
+            for (int i = 0; i < actionsList.size(); i++) {
+                Action action = actionsList.get(i);
+                switch (action.getType()) {
+                    case TAKE_PART:
+                        String partname = action.getArgs()[0];
+                        if (partname.contains("_in_pt_") && revFlag) {
+                            System.err.println("i = " + i);
+                            System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
+                            System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
+                            System.err.println("resetReadOnlyActionsListTrace = " + Arrays.toString(resetReadOnlyActionsListTrace));
+                            System.err.println("readOnlyActionsList = " + readOnlyActionsList);
+                            throw new IllegalStateException("taking part in parttray when in reverse : " + partname);
+                        }
+                        if (partname.contains("_in_kt_") && !revFlag) {
+                            System.err.println("i = " + i);
+                            System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
+                            System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
+                            System.err.println("resetReadOnlyActionsListTrace = " + Arrays.toString(resetReadOnlyActionsListTrace));
+                            System.err.println("readOnlyActionsList = " + readOnlyActionsList);
+                            throw new IllegalStateException("taking part in kittray when not in reverse : " + partname);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
     }
 
-    private final CrclGenerator crclGenerator = new CrclGenerator();
+    private final CrclGenerator crclGenerator;
 
     public CrclGenerator getCrclGenerator() {
         return crclGenerator;
     }
 
-//    public void setPddlActionToCrclGenerator(CrclGenerator crclGenerator) {
-//        this.crclGenerator = crclGenerator;
-//    }
     private final List<Action> actionsList = Collections.synchronizedList(new ArrayList<>());
     private volatile List<Action> readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
 
     @Nullable
     private volatile Thread resetReadOnlyActionsListThread = null;
-    private volatile StackTraceElement resetReadOnlyActionsListTrace @Nullable []  = null;
+    private volatile StackTraceElement resetReadOnlyActionsListTrace@Nullable []  = null;
+    private volatile boolean resetReadOnlyActionsListReverseFlag = false;
 
-    private void resetReadOnlyActionsList() {
+    private List<Action> resetReadOnlyActionsList(boolean newReverseFlag) {
         final Thread curThread = Thread.currentThread();
         if (null == resetReadOnlyActionsListThread) {
             resetReadOnlyActionsListThread = curThread;
@@ -2213,8 +2266,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else if (curThread != resetReadOnlyActionsListThread) {
             LOGGER.log(Level.FINE, "resetReadOnlyActionsList from new thread {0}", curThread.getName());
         }
-        readOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
+        List<Action> newReadOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
+        this.readOnlyActionsList = newReadOnlyActionsList;
+        resetReadOnlyActionsListReverseFlag = newReverseFlag;
+        checkReverse();
+        return newReadOnlyActionsList;
     }
+
     private static final Logger LOGGER = Logger.getLogger(ExecutorJPanel.class.getName());
 
     /**
@@ -2232,13 +2290,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         synchronized (actionsList) {
             if (actionsList.size() > 0) {
                 actionsList.clear();
-                resetReadOnlyActionsList();
+                resetReadOnlyActionsList(reverseFlag);
             }
         }
-        Utils.runOnDispatchThread(() -> {
-            DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-            model.setRowCount(0);
-        });
+        pddlOutputCachedTableModel.setRowCount(0);
     }
 
     private File propertiesFile;
@@ -2257,7 +2312,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param propertiesFile new value of propertiesFile
      */
-    @Override
     public void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
         if (null != propertiesFile) {
@@ -2272,16 +2326,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private static final String REVERSE_PDDLOUTPUT = "pddl.reverse_output";
     private static final String PDDLCRCLAUTOSTART = "pddl.crcl.autostart";
 
-    private String[] getComboPartNames(int maxlen) {
-        DefaultComboBoxModel<String> cbm
-                = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
-        String ret[] = new String[max(maxlen, cbm.getSize())];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = cbm.getElementAt(i);
-        }
-        return ret;
-    }
-
+//    @UIEffect
+//    private String[] getComboPartNames(int maxlen) {
+//        String names[] = manualObjectCachedComboBox.getItems();
+//        if (names.length > maxlen) {
+//            return Arrays.copyOfRange(names, 0, maxlen);
+//        }
+//        return names;
+//    }
+    @UIEffect
     private String[] getComboSlotNames(int maxlen) {
         DefaultComboBoxModel<String> cbm
                 = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
@@ -2313,7 +2366,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return canString;
         } catch (Exception exception) {
             Logger.getLogger(ExecutorJPanel.class
-                    .getName()).log(Level.SEVERE, null, exception);
+                    .getName()).log(Level.SEVERE, "", exception);
         }
         return str;
     }
@@ -2328,7 +2381,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             updateActionFileStrings();
         } catch (HeadlessException | IllegalStateException | IOException ex) {
-            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
             String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
@@ -2346,14 +2399,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 propsMap.put(PDDLOUTPUT, relPath);
             }
         }
-        propsMap.put("reverseFlag", Boolean.toString(reverseFlag));
+        propsMap.put(REVERSE_FLAG, Boolean.toString(reverseFlag));
         Properties props = new Properties();
         props.putAll(propsMap);
         props.putAll(getTableOptions());
-        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
-        props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
+//        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
+//        props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
         props.put(POS_ERROR_MAP_FILES, Arrays.toString(getRelPathPositionMapFileNames()));
-        props.put(ENABLE_OPTA_PLANNER, Boolean.toString(jCheckBoxEnableOptaPlanner.isSelected()));
+        props.put(ENABLE_OPTA_PLANNER, Boolean.toString(enableOptaplannerCachedCheckBox.isSelected()));
         Utils.saveProperties(propertiesFile, props);
     }
 
@@ -2374,11 +2427,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void updateActionFileStrings() throws HeadlessException, IllegalStateException, IOException {
         if (reverseFlag) {
-            this.reverseActionsFileString = jTextFieldPddlOutputActions.getText();
+            this.reverseActionsFileString = pddlOutputActionsCachedText.getText();
             checkFilename(reverseActionsFileString);
 
         } else {
-            this.actionsFileString = jTextFieldPddlOutputActions.getText();
+            this.actionsFileString = pddlOutputActionsCachedText.getText();
             checkFilename(actionsFileString);
         }
     }
@@ -2412,7 +2465,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void addAction(Action action) {
         if (null != action) {
             this.actionsList.add(action);
-
             double cost = 0.0;
             try {
                 cost = Double.parseDouble(action.getCost());
@@ -2420,10 +2472,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 // ignore 
             }
             final double finalCost = cost;
-            Utils.runOnDispatchThread(() -> {
-                DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
-                model.addRow(new Object[]{model.getRowCount(), -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), finalCost});
-            });
+            int rowCount = pddlOutputCachedTableModel.getRowCount();
+            pddlOutputCachedTableModel.addRow(new Object[]{rowCount, -1, action.getLabel(), action.getType(), Arrays.toString(action.getArgs()), finalCost, ""});
         }
     }
 
@@ -2436,7 +2486,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             runningProgramFuture = generateCrclAsync();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
         }
     }
@@ -2450,6 +2500,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @MonotonicNonNull
     private Solver<OpActionPlan> solver = null;
+
+    @MonotonicNonNull
+    private Solver<OpActionPlan> showSolver = null;
 
     private static volatile boolean firstLoad = true;
 
@@ -2480,57 +2533,66 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void loadActionsList(Iterable<? extends Action> newActions) {
+    public List<Action> loadActionsList(Iterable<? extends Action> newActions, boolean newReverseFlag) {
         warnIfNewActionsNotReady();
+        setReverseFlag(newReverseFlag);
+        List<Action> ret;
         synchronized (actionsList) {
             clearActionsList();
             for (Action action : newActions) {
                 addAction(action);
             }
-            resetReadOnlyActionsList();
+            ret = resetReadOnlyActionsList(newReverseFlag);
         }
-        finishLoadActionsList(jTextFieldPddlOutputActions.getText());
+        finishLoadActionsList(pddlOutputActionsCachedText.getText());
+        return ret;
     }
 
-    public void loadActionsFile(File f, boolean showInOptaPlanner) throws IOException {
-        warnIfNewActionsNotReady();
-        if (null != f && f.exists()) {
-            if (f.isDirectory()) {
-                LOGGER.log(Level.SEVERE, "Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
-                return;
-            }
-            if (!f.canRead()) {
-                LOGGER.log(Level.SEVERE, "Can not loadActionsFile \"" + f + "\" : it is not readable.");
-                return;
-            }
+    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag) throws IOException {
 
-            List<String> lines = new ArrayList<>();
-            try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    lines.add(line);
-                }
-            }
-            synchronized (actionsList) {
-                clearActionsList();
-                for (String line : lines) {
-                    if (line.length() < 1) {
-                        continue;
-                    }
-                    addAction(Action.parse(line));
-                }
-                resetReadOnlyActionsList();
-            }
-            try {
-                if (showInOptaPlanner && crclGenerator.isConnected()) {
-                    showLoadedPlanOptaPlanner();
-                }
-            } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
-            }
-            String canonName = f.getCanonicalPath();
-            finishLoadActionsList(canonName);
+        warnIfNewActionsNotReady();
+        setReverseFlag(newReverseFlag);
+        if (null == f) {
+            throw new IllegalArgumentException("f == null");
         }
+        if (!f.exists()) {
+            throw new IllegalArgumentException("\"" + f + "\"  does not exist.");
+        }
+        if (f.isDirectory()) {
+            throw new IllegalArgumentException("Can not loadActionsFile \"" + f + "\" : it is a directory instead of a text file.");
+        }
+        if (!f.canRead()) {
+            throw new IllegalArgumentException("Can not loadActionsFile \"" + f + "\" : it is not readable.");
+        }
+
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while (null != (line = br.readLine())) {
+                lines.add(line);
+            }
+        }
+        List<Action> ret;
+        synchronized (actionsList) {
+            clearActionsList();
+            for (String line : lines) {
+                if (line.length() < 1) {
+                    continue;
+                }
+                addAction(Action.parse(line));
+            }
+            ret = resetReadOnlyActionsList(newReverseFlag);
+        }
+        try {
+            if (showInOptaPlanner && crclGenerator.isConnected()) {
+                showLoadedPlanOptaPlanner(newReverseFlag);
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+        }
+        String canonName = f.getCanonicalPath();
+        finishLoadActionsList(canonName);
+        return ret;
     }
 
     private void finishLoadActionsList(String canonName) {
@@ -2540,27 +2602,24 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jTextFieldIndex.setText("0");
             updateComboPartModel();
             updateComboSlotModel();
-
-            if (!jTextFieldPddlOutputActions.getText().equals(canonName)) {
+            String origActionsName = pddlOutputActionsCachedText.getText();
+            if (!origActionsName.equals(canonName)) {
                 try {
-                    jTextFieldPddlOutputActions.setText(canonName);
+                    pddlOutputActionsCachedText.setText(canonName);
                     updateActionFileStrings();
                 } catch (Exception ex) {
-                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
         });
     }
 
-    private void showLoadedPlanOptaPlanner() throws SQLException {
+    private void showLoadedPlanOptaPlanner(boolean newReverseFlag) throws SQLException {
         crclGenerator.clearPoseCache();
         crclGenerator.setOptions(getTableOptions());
         PointType lookForPt = crclGenerator.getLookForXYZ();
-        if (null != lookForPt && jCheckBoxEnableOptaPlanner.isSelected()) {
-            if (firstLoad) {
-                OpDisplayJPanel.clearColorMap();
-                firstLoad = false;
-            }
+        if (null != lookForPt && enableOptaplannerCachedCheckBox.isSelected()) {
+
             List<OpAction> opActions;
             int startIndex = 0;
             for (int i = 0; i < actionsList.size(); i++) {
@@ -2571,7 +2630,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             synchronized (actionsList) {
                 opActions = crclGenerator.pddlActionsToOpActions(actionsList, 0);
-                resetReadOnlyActionsList();
+                resetReadOnlyActionsList(newReverseFlag);
             }
             if (null == opActions || opActions.size() < 2) {
                 return;
@@ -2580,12 +2639,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             double worstScore = Double.POSITIVE_INFINITY;
             OpActionPlan bestPlan = null;
             double bestScore = Double.NEGATIVE_INFINITY;
-            if (null == solver) {
+            if (null == showSolver) {
                 synchronized (solverFactory) {
-                    solver = solverFactory.buildSolver();
+                    showSolver = solverFactory.buildSolver();
                 }
             }
-            solver.addEventListener(e -> logDebug(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
+            showSolver.addEventListener(e -> logDebug(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
 
             for (int i = 0; i < 10; i++) {
 
@@ -2607,7 +2666,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     worstPlan = inputPlan;
                     worstScore = inScore;
                 }
-                OpActionPlan solvedPlan = solver.solve(inputPlan);
+                OpActionPlan solvedPlan = showSolver.solve(inputPlan);
                 HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
                 assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
                 double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
@@ -2620,68 +2679,84 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     worstScore = solveScore;
                 }
             }
-            if (null != worstPlan) {
-                this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
+            if (null != bestPlan && null != worstPlan) {
+                OpActionPlan worstPlanFinal = worstPlan;
+                double worstScoreFinal = worstScore;
+                OpActionPlan bestPlanFinal = bestPlan;
+                double bestScoreFinal = bestScore;
+                Utils.runOnDispatchThread(() -> showLoadedPlanOptaPlannerOnDisplay(worstPlanFinal, worstScoreFinal, bestPlanFinal, bestScoreFinal));
             }
-            if (null != bestPlan) {
-                this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
-            }
-            this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
-            this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
-//                        OpDisplayJPanel.showPlan(solvedPlan, "Output : " + solvedPlan.getScore());
         }
     }
 
-    @Override
-    public void autoResizeTableColWidthsPddlOutput() {
+    @UIEffect
+    private void showLoadedPlanOptaPlannerOnDisplay(OpActionPlan worstPlan, double worstScore, OpActionPlan bestPlan, double bestScore) {
+        if (firstLoad) {
+            OpDisplayJPanel.clearColorMap();
+            firstLoad = false;
+        }
+        if (null != worstPlan) {
+            this.opDisplayJPanelInput.setOpActionPlan(worstPlan);
+        }
+        if (null != bestPlan) {
+            this.opDisplayJPanelSolution.setOpActionPlan(bestPlan);
+        }
+        this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -worstScore));
+        this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
+    }
+
+   
+    void autoResizeTableColWidthsPddlOutput() {
         autoResizeTableColWidths(jTablePddlOutput);
     }
 
     public void refresh() {
         crclGenerator.reset();
         String origErrorString = this.getErrorString();
-        String fname = jTextFieldPddlOutputActions.getText();
+        String fname = pddlOutputActionsCachedText.getText();
         File f = new File(fname);
         if (f.exists() && f.canRead()) {
             try {
-                loadActionsFile(f, true);
+                loadActionsFile(f, true, reverseFlag);
                 if (Objects.equals(this.getErrorString(), origErrorString)) {
                     setErrorString(null);
                 }
             } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }
 
+    @UIEffect
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
             browseActionsFile();
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
-
+            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonLoadPddlActionsFromFileActionPerformed
 
+    @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
+            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
+    @UIEffect
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
         try {
-            loadActionsFile(new File(jTextFieldPddlOutputActions.getText()), true);
+            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jTextFieldPddlOutputActionsActionPerformed
 
@@ -2709,7 +2784,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             dbSetupPublisher.addDbSetupListener(dbSetupListener);
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -2743,7 +2818,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return crclProgram;
     }
 
-//    List<JTextArea> crclAreas = new ArrayList<>();
+    //    List<JTextArea> crclAreas = new ArrayList<>();
     private JTextArea editTableArea = new JTextArea();
 
     private String trimXml(String in) {
@@ -2763,103 +2838,107 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         return in.substring(start, end).trim();
     }
+
     private Color progColor = Color.white;
 
-    private void loadProgramToTable(CRCLProgramType crclProgram) {
+    private XFutureVoid loadProgramToTable(CRCLProgramType crclProgram) {
+        return Utils.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgram));
+    }
+
+    @UIType
+    @SuppressWarnings("guieffect")
+    private class CrclTableCellRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, @Nullable Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            JTextArea area = new JTextArea();
+            area.setOpaque(true);
+            area.setVisible(true);
+            area.setText(Objects.toString(value));
+            return area;
+        }
+    }
+
+    @UIType
+    @SuppressWarnings("guieffect")
+    private class CrclTableCellEditor implements TableCellEditor {
+
+        private List<CellEditorListener> listeners = new ArrayList<>();
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            editTableArea.setOpaque(true);
+            editTableArea.setVisible(true);
+            editTableArea.setText(value.toString());
+            return editTableArea;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return editTableArea.getText();
+        }
+
+        @Override
+        public boolean isCellEditable(EventObject anEvent) {
+            return true;
+        }
+
+        @Override
+        public boolean shouldSelectCell(EventObject anEvent) {
+            return true;
+        }
+
+        @Override
+        public boolean stopCellEditing() {
+            for (CellEditorListener l : listeners) {
+                if (null != l) {
+                    l.editingStopped(new ChangeEvent(jTableCrclProgram));
+                }
+            }
+            return true;
+        }
+
+        @Override
+        public void cancelCellEditing() {
+            for (CellEditorListener l : listeners) {
+                if (null != l) {
+                    l.editingCanceled(new ChangeEvent(jTableCrclProgram));
+                }
+            }
+        }
+
+        @Override
+        public void addCellEditorListener(CellEditorListener l) {
+            listeners.add(l);
+        }
+
+        @Override
+        public void removeCellEditorListener(CellEditorListener l) {
+            listeners.remove(l);
+        }
+    }
+
+    @UIEffect
+    private void loadProgramToTableInternal(CRCLProgramType crclProgram) {
         jTableCrclProgram.setBackground(Color.white);
-        DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
-        jTableCrclProgram.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, @Nullable Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-//                while (crclAreas.size() <= row) {
-//                    JTextArea area = new JTextArea();
-//                    area.setOpaque(true);
-//                    area.setVisible(true);
-//                    crclAreas.add(area);
-//                }
-                JTextArea area = new JTextArea();
-                area.setOpaque(true);
-                area.setVisible(true);
-//                JTextArea area = crclAreas.get(row);
-//                if (area != null) {
-                area.setText(Objects.toString(value));
-//                }
-                return area;
-            }
-
-        });
-        jTableCrclProgram.getColumnModel().getColumn(1).setCellEditor(new TableCellEditor() {
-
-            private List<CellEditorListener> listeners = new ArrayList<>();
-
-            @Override
-            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                editTableArea.setOpaque(true);
-                editTableArea.setVisible(true);
-                editTableArea.setText(value.toString());
-                return editTableArea;
-            }
-
-            @Override
-            public Object getCellEditorValue() {
-                return editTableArea.getText();
-            }
-
-            @Override
-            public boolean isCellEditable(EventObject anEvent) {
-                return true;
-            }
-
-            @Override
-            public boolean shouldSelectCell(EventObject anEvent) {
-                return true;
-            }
-
-            @Override
-            public boolean stopCellEditing() {
-                for (CellEditorListener l : listeners) {
-                    if (null != l) {
-                        l.editingStopped(new ChangeEvent(jTableCrclProgram));
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public void cancelCellEditing() {
-                for (CellEditorListener l : listeners) {
-                    if (null != l) {
-                        l.editingCanceled(new ChangeEvent(jTableCrclProgram));
-                    }
-                }
-            }
-
-            @Override
-            public void addCellEditorListener(CellEditorListener l) {
-                listeners.add(l);
-            }
-
-            @Override
-            public void removeCellEditorListener(CellEditorListener l) {
-                listeners.remove(l);
-            }
-        });
-        model.setRowCount(0);
+        jTableCrclProgram.getColumnModel().getColumn(1).setCellRenderer(new CrclTableCellRenderer());
+        jTableCrclProgram.getColumnModel().getColumn(1).setCellEditor(new CrclTableCellEditor());
+        crclProgramCachedTable.setRowCount(0);
         CRCLSocket crclSocket = CRCLSocket.getUtilSocket();
         CRCLCommandInstanceType instance = new CRCLCommandInstanceType();
         InitCanonType initCanon = crclProgram.getInitCanon();
         if (null != initCanon) {
             try {
                 instance.setCRCLCommand(initCanon);
-                model.addRow(new Object[]{initCanon.getCommandID(),
+                crclProgramCachedTable.addRow(new Object[]{initCanon.getCommandID(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
             } catch (JAXBException | CRCLException ex) {
-                model.addRow(new Object[]{initCanon.getCommandID(),
+                crclProgramCachedTable.addRow(new Object[]{initCanon.getCommandID(),
                     ex.getMessage()
                 });
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
         for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
@@ -2870,15 +2949,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != midCmd) {
                 try {
                     instance.setCRCLCommand(midCmd);
-                    model.addRow(new Object[]{midCmd.getCommandID(),
+                    crclProgramCachedTable.addRow(new Object[]{midCmd.getCommandID(),
                         trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                     });
 
                 } catch (JAXBException | CRCLException ex) {
-                    model.addRow(new Object[]{midCmd.getCommandID(),
+                    crclProgramCachedTable.addRow(new Object[]{midCmd.getCommandID(),
                         ex.getMessage()
                     });
-                    LOGGER.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
             }
         }
@@ -2886,15 +2965,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != endCanon) {
             try {
                 instance.setCRCLCommand(endCanon);
-                model.addRow(new Object[]{endCanon.getCommandID(),
+                crclProgramCachedTable.addRow(new Object[]{endCanon.getCommandID(),
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
             } catch (JAXBException | CRCLException ex) {
-                model.addRow(new Object[]{endCanon.getCommandID(),
+                crclProgramCachedTable.addRow(new Object[]{endCanon.getCommandID(),
                     ex.getMessage()
                 });
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
         autoResizeTableRowHeights(jTableCrclProgram);
@@ -2906,7 +2985,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     private volatile CRCLProgramType unstartedProgram = null;
 
-    private AprsSystem aprsSystem;
+    final private AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
@@ -2917,33 +2996,29 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return aprsSystem;
     }
 
-    /**
-     * Set the value of aprsSystemInterface
-     *
-     * @param aprsSystemInterface new value of aprsSystemInterface
-     */
-    public void setAprsSystem(AprsSystem aprsSystemInterface) {
-        this.aprsSystem = aprsSystemInterface;
-        if (null != crclGenerator) {
-            crclGenerator.setAprsSystem(aprsSystemInterface);
-        }
-    }
+    private final CachedCheckBox forceFakeTakeFlagCachedCheckBox;
 
     public boolean getForceFakeTakeFlag() {
-        return jCheckBoxForceFakeTake.isSelected();
+        return forceFakeTakeFlagCachedCheckBox.isSelected();
+    }
+
+    private void setCheckBoxForceFakeTakeSelected(boolean selected) {
+        forceFakeTakeFlagCachedCheckBox.setSelected(selected);
     }
 
     public void setForceFakeTakeFlag(boolean _force) {
-        if (_force != jCheckBoxForceFakeTake.isSelected()) {
-            jCheckBoxForceFakeTake.setSelected(_force);
-        }
-        if (null != aprsSystem) {
-            aprsSystem.setForceFakeTakeFlag(_force);
+        if (forceFakeTakeFlagCachedCheckBox.isSelected() != _force) {
+            forceFakeTakeFlagCachedCheckBox.setSelected(_force);
+            if (null != aprsSystem) {
+                aprsSystem.setExecutorForceFakeTakeFlag(_force);
+            }
         }
     }
 
+    private final CachedTextField pddlOutputActionsCachedText;
+
     private String getActionsCrclName() {
-        String actionsName = jTextFieldPddlOutputActions.getText();
+        String actionsName = pddlOutputActionsCachedText.getText();
         int sindex = actionsName.lastIndexOf('/');
         if (sindex > 0 && sindex < actionsName.length() - 1) {
             actionsName = actionsName.substring(sindex + 1);
@@ -2952,7 +3027,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (sindex > 0 && sindex < actionsName.length() - 1) {
             actionsName = actionsName.substring(sindex + 1);
         }
-        return actionsName + ":" + currentActionIndex + "_" + crclGenerator.getLastIndex() + ":" + crclGenerator.getCrclNumber();
+        return toNonColonizedName(actionsName + ":" + currentActionIndex + "_" + crclGenerator.getLastIndex() + ":" + crclGenerator.getCrclNumber());
+    }
+
+    private String toNonColonizedName(String name) {
+        return name.trim().replace(' ', '_').replace('=', '_').replace(':', '.');
     }
 
     /**
@@ -2968,13 +3047,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (crclProgramName == null || crclProgramName.length() < 1) {
                 crclProgram.setName(getActionsCrclName());
             }
-            Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram));
+            loadProgramToTable(crclProgram);
             if (null != aprsSystem) {
                 aprsSystem.addProgramLineListener(this);
                 aprsSystem.setCRCLProgram(crclProgram);
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
@@ -2987,7 +3066,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Start executing a CRCL Program.
-     *
+     * <p>
      * The program will be run asynchronously in another thread after this
      * method has returned. The task can be modified, canceled or extended with
      * the returned future. The boolean contained within the future will be true
@@ -3004,7 +3083,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return aprsSystem.startCRCLProgram(crclProgram);
         } catch (Exception ex) {
             XFuture<Boolean> future = new XFuture<>("startCrclProgramException");
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             future.completeExceptionally(ex);
             return future;
         }
@@ -3015,7 +3094,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         startCrclProgramCount.incrementAndGet();
         this.crclProgram = crclProgram1;
         unstartedProgram = null;
-        Utils.runOnDispatchThreadWithCatch(() -> loadProgramToTable(crclProgram1));
+        loadProgramToTable(crclProgram1);
         this.runningProgram = true;
         if (null == aprsSystem) {
             throw new IllegalStateException("Can't start crcl program with null aprsSystemInterface reference.");
@@ -3033,12 +3112,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             aprsSystem.saveLastProgramRunDataListToCsv(aprsSystem.createTempFile("programRunData", ".csv"));
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
 //        logDebug("runCrclProgram returned = " + ret);
         return ret;
     }
 
+    @UIEffect
     private void jButtonGenerateCRCLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateCRCLActionPerformed
 
         try {
@@ -3047,7 +3127,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
         }
     }//GEN-LAST:event_jButtonGenerateCRCLActionPerformed
@@ -3058,12 +3138,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    @UIEffect
     private void jButtonPddlOutputViewEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlOutputViewEditActionPerformed
         try {
-            Desktop.getDesktop().open(new File(jTextFieldPddlOutputActions.getText()));
+            Desktop.getDesktop().open(new File(pddlOutputActionsCachedText.getText()));
 
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPddlOutputViewEditActionPerformed
 
@@ -3073,8 +3154,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @Nullable
     private String currentPart = null;
-    private volatile StackTraceElement setReplanFromIndexLastTrace @Nullable []  = null;
-    private volatile StackTraceElement prevSetReplanFromIndexLastTrace @Nullable []  = null;
+    private volatile StackTraceElement setReplanFromIndexLastTrace@Nullable []  = null;
+    private volatile StackTraceElement prevSetReplanFromIndexLastTrace@Nullable []  = null;
 
     @Nullable
     private volatile Thread setReplanFromIndexLastThread = null;
@@ -3120,11 +3201,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-
+    @UIEffect
     private void jTextFieldIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldIndexActionPerformed
         setReplanFromIndex(Integer.parseInt(jTextFieldIndex.getText()));
     }//GEN-LAST:event_jTextFieldIndexActionPerformed
 
+    @UIEffect
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
         clearAll();
     }//GEN-LAST:event_jButtonClearActionPerformed
@@ -3132,13 +3214,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final AtomicInteger clearAllCount = new AtomicInteger(0);
     private volatile long clearAllTime = 0;
 
+    private final CachedTable crclProgramCachedTable;
+
     private void clearAll() {
         warnIfNewActionsNotReady();
         clearAllCount.incrementAndGet();
         clearAllTime = System.currentTimeMillis();
         clearActionsList();
-        DefaultTableModel model = (DefaultTableModel) jTableCrclProgram.getModel();
-        model.setRowCount(0);
+        crclProgramCachedTable.setRowCount(0);
         setReplanFromIndex(0);
         safeAbortRunnablesVector.clear();
         abortProgram();
@@ -3163,8 +3246,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         customRunnablesIndex = -1;
         if (null != replanActionTimer) {
-            replanActionTimer.stop();
-            replanActionTimer = null;
+            Utils.runOnDispatchThread(this::stopReplanActionTimer);
         }
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != aprsSystem) {
@@ -3177,6 +3259,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         abortProgramCount.incrementAndGet();
     }
 
+    private void stopReplanActionTimer() {
+        if (null != replanActionTimer) {
+            Utils.runOnDispatchThread(this::stopReplanActionTimerOnDisplay);
+        }
+    }
+
+    @UIEffect
+    private void stopReplanActionTimerOnDisplay() {
+        if (null != replanActionTimer) {
+            replanActionTimer.stop();
+            replanActionTimer = null;
+        }
+    }
+
     private void completeSafeAbort() {
         Runnable r;
         while (null != (r = safeAbortRunnablesVector.pollFirst())) {
@@ -3186,11 +3282,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private int takePartCount = 0;
 
+    @UIEffect
     private void jButtonTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTakeActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             takePartCount++;
@@ -3203,11 +3298,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             runningProgramFuture = this.takePart(part);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonTakeActionPerformed
+
+    private final CachedComboBox<String> manualObjectCachedComboBox;
+
+    private void setSelectedManualObjectName() {
+        if (null != currentPart) {
+            this.manualObjectCachedComboBox.setSelectedItem(currentPart);
+        }
+    }
 
     private void warnDialog(String msg) throws HeadlessException {
         LOGGER.log(Level.WARNING, msg);
@@ -3216,28 +3319,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @Nullable
     private String getComboPart() {
-        Object object = jComboBoxManualObjectName.getSelectedItem();
+        Object object = manualObjectCachedComboBox.getSelectedItem();
         if (null == object) {
             return null;
         }
         String part = object.toString();
-        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean partfound = false;
-        for (int i = 0; i < cbm.getSize(); i++) {
-            String parti = cbm.getElementAt(i);
+        for (int i = 0; i < manualObjectCachedComboBox.getSize(); i++) {
+            String parti = manualObjectCachedComboBox.getElementAt(i);
             if (parti.equals(part)) {
                 partfound = true;
                 break;
             }
         }
         if (!partfound) {
-            cbm.insertElementAt(part, 0);
+            manualObjectCachedComboBox.insertElementAt(part, 0);
         }
         return part;
     }
 
     private void updateComboPartModel() {
-        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
         boolean first = true;
         synchronized (actionsList) {
             for (Action action : actionsList) {
@@ -3247,17 +3348,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         if (action.getArgs().length > 0) {
                             boolean found = false;
                             String part = action.getArgs()[0];
-                            for (int i = 0; i < cbm.getSize(); i++) {
-                                if (cbm.getElementAt(i).equals(part)) {
+                            for (int i = 0; i < manualObjectCachedComboBox.getSize(); i++) {
+                                if (manualObjectCachedComboBox.getElementAt(i).equals(part)) {
                                     found = true;
                                     break;
                                 }
                             }
                             if (!found) {
-                                cbm.insertElementAt(part, 0);
+                                manualObjectCachedComboBox.insertElementAt(part, 0);
                             }
                             if (first) {
-                                cbm.setSelectedItem(part);
+                                manualObjectCachedComboBox.setSelectedItem(part);
                                 first = false;
                             }
                         }
@@ -3267,8 +3368,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    private final CachedComboBox<String> manualSlotCachedComboBox;
+
     private void updateComboSlotModel() {
-        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
         boolean first = true;
         synchronized (actionsList) {
             for (Action action : actionsList) {
@@ -3277,17 +3379,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         if (action.getArgs().length > 0) {
                             boolean found = false;
                             String slot = action.getArgs()[0];
-                            for (int i = 0; i < cbm.getSize(); i++) {
-                                if (cbm.getElementAt(i).equals(slot)) {
+                            for (int i = 0; i < manualSlotCachedComboBox.getSize(); i++) {
+                                if (manualSlotCachedComboBox.getElementAt(i).equals(slot)) {
                                     found = true;
                                     break;
                                 }
                             }
                             if (!found) {
-                                cbm.insertElementAt(slot, 0);
+                                manualSlotCachedComboBox.insertElementAt(slot, 0);
                             }
                             if (first) {
-                                cbm.setSelectedItem(slot);
+                                manualSlotCachedComboBox.setSelectedItem(slot);
                                 first = false;
                             }
                         }
@@ -3297,29 +3399,31 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    @Nullable
     private String getComboSlot() {
-        String slot = jComboBoxManualSlotName.getSelectedItem().toString();
-        DefaultComboBoxModel<String> cbm = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
-        boolean partfound = false;
-        for (int i = 0; i < cbm.getSize(); i++) {
-            String parti = cbm.getElementAt(i);
-            if (parti.equals(slot)) {
-                partfound = true;
-                break;
+        String slot = manualSlotCachedComboBox.getSelectedItem();
+        if (null != slot) {
+            boolean partfound = false;
+            for (int i = 0; i < manualSlotCachedComboBox.getSize(); i++) {
+                String parti = manualSlotCachedComboBox.getElementAt(i);
+                if (parti.equals(slot)) {
+                    partfound = true;
+                    break;
+                }
             }
-        }
-        if (!partfound) {
-            cbm.insertElementAt(slot, 0);
+            if (!partfound) {
+                manualSlotCachedComboBox.insertElementAt(slot, 0);
+            }
         }
         return slot;
     }
 
     private int lookForCount = 0;
+
+    @UIEffect
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             lookForCount++;
@@ -3335,11 +3439,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonLookForActionPerformed
 
     private int returnCount = 0;
+
+    @UIEffect
     private void jButtonReturnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReturnActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             returnCount++;
@@ -3354,13 +3458,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             runningProgramFuture = this.returnPart(part);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonReturnActionPerformed
 
     private int randomDropOffCount = 0;
 
+    @UIEffect
     private void jButtonRandDropOffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRandDropOffActionPerformed
         randomDropOffCount++;
         clearAll();
@@ -3387,6 +3492,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    @UIEffect
     private void jButtonTestPickupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTestPickupActionPerformed
         clearAll();
         queryLogFileName();
@@ -3394,6 +3500,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonTestPickupActionPerformed
 
     private String recordCsvName = "corrections.csv";
+
+    @Nullable
+    private String getComboBoxManualObjectSelectedItem() {
+        return manualObjectCachedComboBox.getSelectedItem();
+    }
 
     private XFuture<Boolean> recordAndCompletTestPickup() {
         try {
@@ -3405,7 +3516,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     + "," + testDropOffPosePoint.getZ();
             logDebug("randomPoseString = " + randomPoseString);
             logDebug("randomPickupCount = " + randomPickupCount);
-            String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            String partName = getComboBoxManualObjectSelectedItem();
             if (null != partName && partName.length() > 0) {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
                 if (null != poseFromDb) {
@@ -3426,18 +3537,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             return XFuture.completedFuture(false);
         } catch (CRCLException | PmException | IOException | SQLException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("recordAndCompletTestPickupException");
             future.completeExceptionally(ex);
             return future;
         }
     }
 
+    @UIEffect
     private void jButtonContRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContRandomTestActionPerformed
-        startRandomTest();
+        //startRandomTest();
     }//GEN-LAST:event_jButtonContRandomTestActionPerformed
 
-    private XFuture<Boolean> startRandomTest() {
+    /*private XFuture<Boolean> startRandomTest() {
         clearAll();
         queryLogFileName();
         jCheckBoxReplan.setSelected(true);
@@ -3446,9 +3558,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         PointType testDropOffPosePoint = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
-                        testDropOffPosePoint.getX(),
-                        testDropOffPosePoint.getY(),
-                        testDropOffPosePoint.getZ());
+                testDropOffPosePoint.getX(),
+                testDropOffPosePoint.getY(),
+                testDropOffPosePoint.getZ());
         logDebug("randomPoseString = " + randomPoseString);
         logDebug("randomDropOffCount = " + randomDropOffCount);
         customRunnables.clear();
@@ -3473,8 +3585,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         x -> recursiveSupplyBoolean(x, this::recordAndCompletTestPickup))
                 .thenCompose("randomTest.randomDropOff",
                         x -> recursiveSupplyBoolean(x, this::randomDropOff));
-    }
-
+    }*/
+    @UIEffect
     private void startGridTest() throws HeadlessException {
 
         try {
@@ -3507,10 +3619,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             logDebug("gridTestMaxX = " + gridTestMaxX);
             logDebug("gridTestMaxY = " + gridTestMaxY);
             queryLogFileName();
-            jCheckBoxReplan.setSelected(true);
+            replanCachedCheckBox.setSelected(true);
             autoStart = true;
 //            jCheckBoxAutoStartCrcl.setSelected(true);
-            final String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            final String partName = manualObjectCachedComboBox.getSelectedItem();
             this.gridDropOff();
             PointType testDropOffPosePoint = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
             String randomPoseString
@@ -3536,18 +3648,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             this.customRunnablesIndex = 0;
             this.replanRunnable = this.customReplanRunnable;
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
+    @UIEffect
     private void jButtonStopRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopRandomTestActionPerformed
         this.clearAll();
     }//GEN-LAST:event_jButtonStopRandomTestActionPerformed
 
+    @UIEffect
     private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
         this.setDebug(this.jCheckBoxDebug.isSelected());
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
+    @UIEffect
     private void jButtonResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonResetActionPerformed
         this.clearAll();
         takePartCount = 0;
@@ -3570,14 +3685,24 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
     }
+
     private int recordFailCount = 0;
+
+    @UIEffect
     private void jButtonRecordFailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordFailActionPerformed
         recordFailCount++;
         jTextFieldRecordFailCount.setText(Integer.toString(recordFailCount));
         try {
             File f = new File(jTextFieldLogFilename.getText());
             addFailLogCsvHeader(f);
-            String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            String partName = manualObjectCachedComboBox.getSelectedItem();
+            if (null == partName) {
+                String msg = "No partName selected.";
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.WARNING, msg);
+                warnDialog(msg);
+                return;
+            }
             PoseType poseFromDb = crclGenerator.getPose(partName);
             if (null == poseFromDb) {
                 String msg = "Unable to get pose for " + partName + " from the database.";
@@ -3595,18 +3720,27 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordFailActionPerformed
 
     private int recordSuccessCount = 0;
+
+    @UIEffect
     private void jButtonRecordSuccessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordSuccessActionPerformed
         recordSuccessCount++;
         jTextFieldRecordSuccessCount.setText(Integer.toString(recordSuccessCount));
         try {
             File f = new File(jTextFieldLogFilename.getText());
             addFailLogCsvHeader(f);
-            String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+            String partName = manualObjectCachedComboBox.getSelectedItem();
+            if (null == partName) {
+                String msg = "No object selected.";
+                Logger.getLogger(VisionToDBJPanel.class
+                        .getName()).log(Level.WARNING, msg);
+                warnDialog(msg);
+                return;
+            }
             PoseType poseFromDb = crclGenerator.getPose(partName);
             if (null == poseFromDb) {
                 String msg = "Unable to get pose for " + partName + " from the database.";
@@ -3624,199 +3758,45 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordSuccessActionPerformed
 
-
+    @UIEffect
     private void jButtonGridTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGridTestActionPerformed
         this.startGridTest();
     }//GEN-LAST:event_jButtonGridTestActionPerformed
 
+    @UIEffect
     private void jButtonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAbortActionPerformed
         stepping = false;
-        if (null != currentPart) {
-            this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-        }
+        setSelectedManualObjectName();
         setReplanFromIndex(0);
         abortProgram();
     }//GEN-LAST:event_jButtonAbortActionPerformed
 
+    @UIEffect
     private void jButtonGenerateAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateAndRunActionPerformed
         try {
             stepping = false;
             setReplanFromIndex(0);
             autoStart = true;
-            jCheckBoxReplan.setSelected(true);
+            replanCachedCheckBox.setSelected(true);
             cancelRunProgramFuture();
             runningProgramFuture = generateCrclAsync();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
         }
     }//GEN-LAST:event_jButtonGenerateAndRunActionPerformed
 
     @Nullable
-    private ServerSocket externalControlSocket = null;
-    @Nullable
-    private Thread externalControlAcceptThread = null;
-    final private List<Socket> externalControlClientSockets = new ArrayList<>();
-    final private List<Thread> externalControlClientThreads = new ArrayList<>();
-
-    private static void sendSocket(Socket s, String msg) {
-        try {
-            s.getOutputStream().write(msg.getBytes());
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void handleExternalCommand(Socket s, String line) {
-        jTextAreaExternalCommads.append(new Date() + ":" + s.getRemoteSocketAddress() + ": " + line + "\r\n");
-        if (line.startsWith("safe_abort")) {
-//            if (this.safeAbort()) {
-//                sendSocket(s, "Done\r\n");
-//            } else {
-//                this.safeAbortRunnablesVector.add(() -> sendSocket(s, "Done\r\n"));
-//            }
-            this.startSafeAbort("external from " + s + ":" + line).thenAccept(b -> sendSocket(s, "Done\r\n"));
-        }
-        jTextAreaExternalCommads.setCaretPosition(jTextAreaExternalCommads.getText().length() - 1);
-    }
-
-    private void runMainExternalControlClientHandler(final Socket s) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
-            String line = null;
-            while (null != (line = br.readLine()) && !Thread.currentThread().isInterrupted()) {
-                if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
-                    final String finalLine = line;
-                    javax.swing.SwingUtilities.invokeAndWait(() -> handleExternalCommand(s, finalLine));
-                } else {
-                    handleExternalCommand(s, line);
-                }
-            }
-        } catch (IOException | InterruptedException | InvocationTargetException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-        try {
-            s.close();
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void runExternalControlMainServerThread() {
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                if (null == externalControlSocket) {
-                    break;
-                }
-                final Socket s = externalControlSocket.accept();
-                externalControlClientSockets.add(s);
-                Thread t = new Thread(() -> runMainExternalControlClientHandler(s),
-                        "externalControlClientThread_" + s.getRemoteSocketAddress());
-                t.start();
-                externalControlClientThreads.add(t);
-            }
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void setExternalControlPortEnabled(boolean on) throws IOException {
-        closeExternalControlService();
-        externalControlSocket = new ServerSocket(Integer.parseInt(jTextFieldExternalControlPort.getText()));
-        externalControlClientSockets.clear();
-        externalControlClientThreads.clear();
-        externalControlAcceptThread = new Thread(this::runExternalControlMainServerThread, "externalControlMainServerThread");
-        externalControlAcceptThread.start();
-        if (jCheckBoxEnableExternalControlPort.isSelected() != on) {
-            jCheckBoxEnableExternalControlPort.setSelected(on);
-        }
-    }
-
-    private static void closeSocket(Socket s) {
-        try {
-            s.close();
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private static void closeThread(Thread t) {
-        try {
-            t.interrupt();
-            t.join(100);
-        } catch (InterruptedException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void closeExternalControlService() {
-        if (null != externalControlSocket) {
-            try {
-                externalControlSocket.close();
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
-            }
-        }
-        if (null != externalControlAcceptThread) {
-            externalControlAcceptThread.interrupt();
-            try {
-                externalControlAcceptThread.join(100);
-            } catch (InterruptedException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
-            }
-        }
-        if (externalControlClientSockets != null) {
-            externalControlClientSockets.forEach(ExecutorJPanel::closeSocket);
-            externalControlClientSockets.clear();
-        }
-        if (externalControlClientThreads != null) {
-            externalControlClientThreads.forEach(ExecutorJPanel::closeThread);
-            externalControlClientThreads.clear();
-        }
-    }
-
-    private void jCheckBoxEnableExternalControlPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEnableExternalControlPortActionPerformed
-        try {
-            setExternalControlPortEnabled(jCheckBoxEnableExternalControlPort.isSelected());
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_jCheckBoxEnableExternalControlPortActionPerformed
-
-    @Nullable
     private volatile XFuture<Boolean> runningProgramFuture = null;
 
+    @UIEffect
     private void jButtonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStepActionPerformed
 
         runSingleRow();
-//        stepping = true;
-//        continueActionListPrivate();
-//        try {
-//            stepping = true;
-//            autoStart = !started;
-//            if (null != unstartedProgram) {
-//                if (autoStart) {
-//                    if (null != runningProgramFuture) {
-//                        runningProgramFuture.cancel(true);
-//                    }
-//                    runningProgramFuture = startCrclProgram(unstartedProgram);
-//                } else {
-//                    setCrclProgram(unstartedProgram);
-//                }
-//            } else {
-//                if (null != runningProgramFuture) {
-//                    runningProgramFuture.cancel(true);
-//                }
-//                runningProgramFuture = generateCrcl();
-//            }
-//            autoStart = false;
-//        } catch (IOException | IllegalStateException | SQLException ex) {
-//            Logger.getLogger(PddlExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-//            abortProgram();
-//        }
     }//GEN-LAST:event_jButtonStepActionPerformed
 
     private final AtomicInteger safeAboutCount = new AtomicInteger(0);
@@ -3824,12 +3804,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void incSafeAbortCount() {
         final int count = safeAboutCount.incrementAndGet();
-        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortCount.setText(Integer.toString(count)));
+//        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortCount.setText(Integer.toString(count)));
     }
 
     private void incSafeAbortRequestCount() {
         final int count = safeAbortRequestCount.incrementAndGet();
-        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortRequestCount.setText(Integer.toString(count)));
+//        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortRequestCount.setText(Integer.toString(count)));
     }
 
     public void debugAction() {
@@ -3951,13 +3931,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private void jButtonSafeAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSafeAbortActionPerformed
-        this.startSafeAbort("user");
-    }//GEN-LAST:event_jButtonSafeAbortActionPerformed
-
+    @UIEffect
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
         this.aprsSystem.abortCrclProgram();
-        int row = jTablePddlOutput.getSelectedRow();
+        int row = pddlOutputCachedTableModel.getSelectedRow();
         currentActionIndex = row;
         setReplanFromIndex(row);
         stepping = false;
@@ -3982,7 +3959,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             return ret;
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
             throw new RuntimeException(ex);
@@ -4013,7 +3990,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (rpi < 0 || rpi >= actionsList.size()) {
             setReplanFromIndex(0);
         }
-        jCheckBoxReplan.setSelected(true);
+        replanCachedCheckBox.setSelected(true);
         if (null != unstartedProgram) {
             runningProgramFuture = startCrclProgram(unstartedProgram);
         } else if (null != runningProgramFuture
@@ -4025,17 +4002,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 runningProgramFuture = generateCrclAsync();
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }
 
     private int placePartCount = 0;
+
+    @UIEffect
     private void jButtonPlacePartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlacePartActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             placePartCount++;
@@ -4054,17 +4031,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             cancelRunProgramFuture();
             runningProgramFuture = this.placePartSlot(part, slot);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonPlacePartActionPerformed
 
+    @UIEffect
     private void jButtonTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTestActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             clearAll();
@@ -4078,19 +4054,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             runningProgramFuture = this.testPartPosition(part);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonTestActionPerformed
 
+    @UIEffect
     private void jButtonNewLogFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewLogFileActionPerformed
         newLogFileName();
     }//GEN-LAST:event_jButtonNewLogFileActionPerformed
 
+    @UIEffect
     private void jButtonRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordActionPerformed
         queryLogFileName();
-        String partName = (String) jComboBoxManualObjectName.getSelectedItem();
+        String partName = manualObjectCachedComboBox.getSelectedItem();
         if (null != partName && partName.length() > 0) {
             try {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
@@ -4117,11 +4095,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
                 }
             } catch (SQLException | IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }//GEN-LAST:event_jButtonRecordActionPerformed
 
+    @UIEffect
     private void jButtonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPauseActionPerformed
         pause();
     }//GEN-LAST:event_jButtonPauseActionPerformed
@@ -4131,6 +4110,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void showPaused(boolean paused) {
+        Utils.runOnDispatchThread(() -> showPausedOnDisplay(paused));
+    }
+
+    @UIEffect
+    private void showPausedOnDisplay(boolean paused) {
         jButtonDropTool.setEnabled(!paused);
         jButtonLookFor.setEnabled(!paused);
         jButtonPickupTool.setEnabled(!paused);
@@ -4152,16 +4136,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 String jointVals
                         = jointStatusListToString(jointList);
                 logDebug("jointVals = " + jointVals);
-                DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
                 boolean keyFound = false;
-                for (int i = 0; i < model.getRowCount(); i++) {
-                    if (Objects.equals("lookForJoints", model.getValueAt(i, 0))) {
-                        model.setValueAt(jointVals, i, 1);
+                for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+                    if (Objects.equals("lookForJoints", optionsCachedTable.getValueAt(i, 0))) {
+                        optionsCachedTable.setValueAt(jointVals, i, 1);
                         keyFound = true;
                     }
                 }
                 if (!keyFound) {
-                    model.addRow(new Object[]{"lookForJoints", jointVals});
+                    optionsCachedTable.addRow(new Object[]{"lookForJoints", jointVals});
                 }
                 crclGenerator.setOptions(getTableOptions());
             }
@@ -4179,6 +4162,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return jointVals;
     }
 
+    @UIEffect
     private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
         CRCLStatusType status = aprsSystem.getCurrentStatus();
         if (null != status) {
@@ -4186,26 +4170,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonRecordLookForJointsActionPerformed
 
+    @UIEffect
     private void jButtonClearPoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearPoseCacheActionPerformed
         clearPoseCache();
     }//GEN-LAST:event_jButtonClearPoseCacheActionPerformed
 
-    private void jTextFieldCurrentPartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCurrentPartActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldCurrentPartActionPerformed
-
+    @UIEffect
     private void jCheckBoxForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxForceFakeTakeActionPerformed
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-//    @Nullable
-//    private volatile PoseType toolChangerPose = null;
-//    @Nullable
-//    private volatile String toolChangerPoseName = null;
-//    private final Map<String, PoseType> toolChangerPoseMap = new ConcurrentHashMap<>();
-//    private final Map<String, PoseType> toolOffsetPoseMap = new ConcurrentHashMap<>();
     @Nullable
     private String toolChangerPoseMapFileName = null;
+
+    private final CachedTable toolHolderPositionsCachedTable;
 
     private void loadToolChangerPoseMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
@@ -4218,8 +4196,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         int lineNumber = 0;
         crclGenerator.clearToolChangerJointVals();
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
-        dtm.setRowCount(0);
+        toolHolderPositionsCachedTable.setRowCount(0);
         Map<String, PoseType> toolHolderPoseMap
                 = crclGenerator.getToolHolderPoseMap();
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
@@ -4230,7 +4207,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
             for (CSVRecord rec : records) {
-                String colName = dtm.getColumnName(0);
+                String colName = toolHolderPositionsCachedTable.getColumnName(0);
                 Integer colIndex = headerMap.get(colName);
                 if (null == colIndex) {
                     throw new IllegalArgumentException(f.getCanonicalPath() + " does not have field :" + colName);
@@ -4241,12 +4218,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
                 skipRows++;
             }
-            dtm.setRowCount(records.size() - skipRows);
+            toolHolderPositionsCachedTable.setRowCount(records.size() - skipRows);
             ROW_LOOP:
             for (int i = skipRows; i < records.size(); i++) {
                 CSVRecord rec = records.get(i);
-                for (int j = 0; j < dtm.getColumnCount(); j++) {
-                    String colName = dtm.getColumnName(j);
+                for (int j = 0; j < toolHolderPositionsCachedTable.getColumnCount(); j++) {
+                    String colName = toolHolderPositionsCachedTable.getColumnName(j);
                     Integer colIndex = headerMap.get(colName);
                     if (null == colIndex) {
                         continue;
@@ -4257,13 +4234,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             if (val.equals(colName) || (j == 0 && val.length() < 1)) {
                                 continue ROW_LOOP;
                             }
-                            Class<?> colClass = dtm.getColumnClass(j);
+                            Class<?> colClass = toolHolderPositionsCachedTable.getColumnClass(j);
                             if (colClass == Double.class) {
-                                dtm.setValueAt(Double.valueOf(val), i - skipRows, j);
+                                toolHolderPositionsCachedTable.setValueAt(Double.valueOf(val), i - skipRows, j);
                             } else if (colClass == Boolean.class) {
-                                dtm.setValueAt(Boolean.valueOf(val), i - skipRows, j);
+                                toolHolderPositionsCachedTable.setValueAt(Boolean.valueOf(val), i - skipRows, j);
                             } else {
-                                dtm.setValueAt(val, i - skipRows, j);
+                                toolHolderPositionsCachedTable.setValueAt(val, i - skipRows, j);
                             }
                         }
                     } catch (Exception exception) {
@@ -4300,10 +4277,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
         clearEmptyToolChangerPoseRows();
     }
+
+    private final CachedTable holderContentsCachedTable;
 
     private void loadHolderContentsMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
@@ -4318,9 +4297,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         clearToolHolderContentsTableModelListener();
         int lineNumber = 0;
-        readCsvFileToTable(jTableHolderContents, f);
-        clearEmptyRows(jTableHolderContents);
-        clearRedundantRows(jTableHolderContents);
+        readCsvFileToTable(holderContentsCachedTable, f);
+        clearEmptyRows(holderContentsCachedTable);
+        clearRedundantRows(holderContentsCachedTable);
         setToolHolderContentsTableModelListener();
     }
 
@@ -4337,12 +4316,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 = crclGenerator.getToolOffsetMap();
         clearToolOffsetTableModelListener();
         int lineNumber = 0;
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
-        readCsvFileToTableAndMap(dtm, f, "ToolName", toolOffsetMap, ExecutorJPanel::recordToPose);
+        readCsvFileToTableAndMap(toolOffsetsCachedTable, f, "ToolName", toolOffsetMap, ExecutorJPanel::recordToPose);
         clearEmptyToolOffsetPoseRows();
         loadToolOffsetsTableToMap();
         setToolOffsetTableModelListener();
     }
+
+    private final CachedTable trayAttachOffsetsCachedTable;
 
     private void loadTrayAttachOffsetMap() {
         if (null == propertiesFile || !propertiesFile.exists()) {
@@ -4355,8 +4335,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         clearTrayAttachOffsetTableModelListener();
         int lineNumber = 0;
-        DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
-        readCsvFileToTableAndMap(dtm, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(), ExecutorJPanel::recordToPose);
+        readCsvFileToTableAndMap(trayAttachOffsetsCachedTable, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(), ExecutorJPanel::recordToPose);
         loadTrayAttachOffsetsTableToMap();
         setTrayAttachOffsetTableModelListener();
     }
@@ -4402,29 +4381,30 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-            Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+            Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
             File properitesParent = propertiesFile.getParentFile();
             if (null != properitesParent && null != toolChangerPoseMapFileName) {
-                Utils.saveJTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), jTableToolHolderPositions);
+                Utils.saveCachedTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), toolHolderPositionsCachedTable);
             } else {
                 throw new IllegalStateException("properitesParent=" + properitesParent + ", toolChangerPoseMapFileName=" + toolChangerPoseMapFileName);
             }
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
     private void saveToolHolderContentsMap() {
         try {
-            if (null == propertiesFile || !propertiesFile.exists() || jTableHolderContents.getRowCount() < 1) {
+            if (null == propertiesFile || !propertiesFile.exists() || holderContentsCachedTable.getRowCount() < 1) {
                 return;
             }
             String fileName = propertiesFile.getName() + TOOL_HOLDER_CONTENTS_CSV_EXTENSION;
-            Utils.saveJTable(new File(propertiesFile.getParentFile(), fileName), jTableHolderContents);
+            Utils.saveCachedTable(new File(propertiesFile.getParentFile(), fileName), holderContentsCachedTable);
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
+
     private static final String TOOL_HOLDER_CONTENTS_CSV_EXTENSION = ".toolHolderContents.csv";
 
     private void saveToolOffsetPoseMap() {
@@ -4433,9 +4413,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             String fileName = propertiesFile.getName() + ".toolOffsets.csv";
-            Utils.saveJTable(new File(propertiesFile.getParentFile(), fileName), jTableToolOffsets);
+            Utils.saveCachedTable(new File(propertiesFile.getParentFile(), fileName), toolOffsetsCachedTable);
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
@@ -4445,29 +4425,29 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             String fileName = propertiesFile.getName() + ".trayAttachOffsets.csv";
-            Utils.saveJTable(new File(propertiesFile.getParentFile(), fileName), jTableTrayAttachOffsets);
+            Utils.saveCachedTable(new File(propertiesFile.getParentFile(), fileName), trayAttachOffsetsCachedTable);
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
     @Nullable
     public String getSelectedToolChangerPoseName() {
-        int r = jTableToolHolderPositions.getSelectedRow();
+        int r = toolHolderPositionsCachedTable.getSelectedRow();
         if (r < 0) {
             return null;
         }
-        if (r >= jTableToolHolderPositions.getRowCount()) {
+        if (r >= toolHolderPositionsCachedTable.getRowCount()) {
             return null;
         }
-        return (String) jTableToolHolderPositions.getValueAt(r, 0);
+        return (String) toolHolderPositionsCachedTable.getValueAt(r, 0);
     }
 
     private String[] getToolChangerNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
-        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
-            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+        for (int i = 0; i < toolHolderPositionsCachedTable.getRowCount(); i++) {
+            Object o = toolHolderPositionsCachedTable.getValueAt(i, 0);
             if (o instanceof String) {
                 String s = (String) o;
                 if (s.length() > 0) {
@@ -4481,8 +4461,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String[] getEmptyToolChangerNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
-        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
-            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+        for (int i = 0; i < toolHolderPositionsCachedTable.getRowCount(); i++) {
+            Object o = toolHolderPositionsCachedTable.getValueAt(i, 0);
             if (o instanceof String) {
                 String s = (String) o;
                 String expectedContents = crclGenerator.getExpectedToolHolderContentsMap().get(s);
@@ -4497,8 +4477,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String[] getFullToolChangerNames() {
         Set<String> names = new TreeSet<>();
         names.add("");
-        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
-            Object o = jTableToolHolderPositions.getValueAt(i, 0);
+        for (int i = 0; i < toolHolderPositionsCachedTable.getRowCount(); i++) {
+            Object o = toolHolderPositionsCachedTable.getValueAt(i, 0);
             if (o instanceof String) {
                 String s = (String) o;
                 String expectedContents = crclGenerator.getExpectedToolHolderContentsMap().get(s);
@@ -4514,8 +4494,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Set<String> names = new TreeSet<>();
         names.add("");
         names.add("empty");
-        for (int i = 0; i < jTableToolOffsets.getRowCount(); i++) {
-            Object o = jTableToolOffsets.getValueAt(i, 0);
+        for (int i = 0; i < toolOffsetsCachedTable.getRowCount(); i++) {
+            Object o = toolOffsetsCachedTable.getValueAt(i, 0);
             if (o instanceof String) {
                 String s = (String) o;
                 if (s.length() > 0) {
@@ -4526,6 +4506,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return names.toArray(new String[0]);
     }
 
+    @UIEffect
     private String queryUserForToolHolderPosName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
@@ -4538,6 +4519,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
     }
 
+    @UIEffect
     private String queryUserForToolName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
@@ -4551,16 +4533,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private int getToolChangerRow(String name, boolean approach) {
-        for (int j = 0; j < jTableToolHolderPositions.getColumnCount(); j++) {
+        for (int j = 0; j < toolHolderPositionsCachedTable.getColumnCount(); j++) {
             logDebug("j = " + j);
-            String colName = jTableToolHolderPositions.getColumnName(j);
+            String colName = toolHolderPositionsCachedTable.getColumnName(j);
             logDebug("colName = " + colName);
-            TableColumn col = jTableToolHolderPositions.getColumn(colName);
-            logDebug("col = " + col);
+//            TableColumn col = toolHolderPositionsCachedTable.getColumn(colName);
+//            logDebug("col = " + col);
         }
-        for (int i = 0; i < jTableToolHolderPositions.getRowCount(); i++) {
-            String entryName = (String) jTableToolHolderPositions.getValueAt(i, 0);
-            Object entryApproachObject = jTableToolHolderPositions.getValueAt(i, APPROACH_COLUMN_INDEX);
+        for (int i = 0; i < toolHolderPositionsCachedTable.getRowCount(); i++) {
+            String entryName = (String) toolHolderPositionsCachedTable.getValueAt(i, 0);
+            Object entryApproachObject = toolHolderPositionsCachedTable.getValueAt(i, APPROACH_COLUMN_INDEX);
             if (null != entryName && null != entryApproachObject) {
                 boolean entryApproach = (boolean) entryApproachObject;
                 if (entryApproach == approach && entryName.equals(name)) {
@@ -4574,14 +4556,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private int getHolderContentsRow(String name) {
-        for (int i = 0; i < jTableHolderContents.getRowCount(); i++) {
-            String entryName = (String) jTableHolderContents.getValueAt(i, 0);
+        for (int i = 0; i < holderContentsCachedTable.getRowCount(); i++) {
+            String entryName = (String) holderContentsCachedTable.getValueAt(i, 0);
             if (null != entryName && entryName.equals(name)) {
                 return i;
             }
         }
         return -1;
     }
+
     private static final int APPROACH_COLUMN_INDEX = 7;
     private static final String APPROACH_COLUMN_HEADER = "Approach";
 
@@ -4600,7 +4583,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return null;
     }
 
-
+    @UIEffect
     private void jButtonRecordToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderPoseActionPerformed
         try {
             Map<String, PoseType> toolHolderPoseMap
@@ -4613,7 +4596,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Pose");
             if (null == toolHolderPoseName
                     || toolHolderPoseName.length() < 1) {
-                toolHolderPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+                toolHolderPoseName = "toolChangerPose" + (toolHolderPositionsCachedTable.getRowCount() + 1);
             }
 //            toolChangerPose = pose;
             String name = toolHolderPoseName;
@@ -4626,58 +4609,58 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.removeToolChangerJointVals(name);
             saveToolChangerPoseMap();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordToolHolderPoseActionPerformed
 
+    private final CachedTable toolOffsetsCachedTable;
+
     private void clearEmptyToolOffsetPoseRows() {
-        clearEmptyRows(jTableToolOffsets);
+        clearEmptyRows(toolOffsetsCachedTable);
     }
 
     private void clearEmptyToolChangerPoseRows() {
-        clearEmptyRows(jTableToolHolderPositions);
-        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+        clearEmptyRows(toolHolderPositionsCachedTable);
+        Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
     }
 
     private void clearEmptHolderContentsRows() {
-        clearEmptyRows(jTableHolderContents);
-        clearRedundantRows(jTableHolderContents);
+        clearEmptyRows(holderContentsCachedTable);
+        clearRedundantRows(holderContentsCachedTable);
     }
 
-    private void clearEmptyRows(JTable jtable) {
-        DefaultTableModel dtm = (DefaultTableModel) jtable.getModel();
-        for (int i = 0; i < dtm.getRowCount(); i++) {
-            Object val = dtm.getValueAt(i, 0);
+    private void clearEmptyRows(CachedTable cachedTable) {
+        for (int i = 0; i < cachedTable.getRowCount(); i++) {
+            Object val = cachedTable.getValueAt(i, 0);
             if (val == null) {
-                dtm.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
                 continue;
             }
             String valString = val.toString();
             if (valString.length() < 1) {
-                dtm.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
             }
         }
     }
 
-    private void clearRedundantRows(JTable jtable) {
-        DefaultTableModel dtm = (DefaultTableModel) jtable.getModel();
+    private void clearRedundantRows(CachedTable cachedTable) {
         Set<String> valStringSet = new HashSet<>();
-        for (int i = 0; i < dtm.getRowCount(); i++) {
-            Object val = dtm.getValueAt(i, 0);
+        for (int i = 0; i < cachedTable.getRowCount(); i++) {
+            Object val = cachedTable.getValueAt(i, 0);
             if (val == null) {
-                dtm.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
                 continue;
             }
             String valString = val.toString();
             if (valString.length() < 1) {
-                dtm.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
             }
             if (valStringSet.contains(valString)) {
-                dtm.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
             } else {
                 valStringSet.add(valString);
@@ -4691,10 +4674,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return;
         }
         int tableRowIndex = getToolChangerRow(name, approach);
-        DefaultTableModel dtm = (DefaultTableModel) jTableToolHolderPositions.getModel();
-        PointType posePoint = requireNonNull(pose.getPoint(),"pose.getPoint()");
+        PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
         if (tableRowIndex < 0) {
-            dtm.addRow(new Object[]{
+            this.toolHolderPositionsCachedTable.addRow(new Object[]{
                 name,
                 posePoint.getX(),
                 posePoint.getY(),
@@ -4706,13 +4688,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 jointString
             });
         } else {
-            dtm.setValueAt(posePoint.getX(), tableRowIndex, 1);
-            dtm.setValueAt(posePoint.getY(), tableRowIndex, 2);
-            dtm.setValueAt(posePoint.getZ(), tableRowIndex, 3);
-            dtm.setValueAt(Math.toDegrees(rpy.r), tableRowIndex, 4);
-            dtm.setValueAt(Math.toDegrees(rpy.p), tableRowIndex, 5);
-            dtm.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
-            dtm.setValueAt(jointString, tableRowIndex, 8);
+            toolHolderPositionsCachedTable.setValueAt(posePoint.getX(), tableRowIndex, 1);
+            toolHolderPositionsCachedTable.setValueAt(posePoint.getY(), tableRowIndex, 2);
+            toolHolderPositionsCachedTable.setValueAt(posePoint.getZ(), tableRowIndex, 3);
+            toolHolderPositionsCachedTable.setValueAt(Math.toDegrees(rpy.r), tableRowIndex, 4);
+            toolHolderPositionsCachedTable.setValueAt(Math.toDegrees(rpy.p), tableRowIndex, 5);
+            toolHolderPositionsCachedTable.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
+            toolHolderPositionsCachedTable.setValueAt(jointString, tableRowIndex, 8);
         }
         addHolderContentsRowIfNameNotFound(name);
         clearEmptyToolChangerPoseRows();
@@ -4721,9 +4703,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void addHolderContentsRowIfNameNotFound(String name) {
         clearToolHolderContentsTableModelListener();
         int holderContentsTableRowIndex = getHolderContentsRow(name);
-        DefaultTableModel hcdtm = (DefaultTableModel) jTableHolderContents.getModel();
         if (holderContentsTableRowIndex < 0) {
-            hcdtm.addRow(new Object[]{
+            holderContentsCachedTable.addRow(new Object[]{
                 name,
                 "empty",
                 ""
@@ -4732,11 +4713,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setToolHolderContentsTableModelListener();
     }
 
+    @UIEffect
     private void jButtonGotoToolChangerApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerApproachActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             lookForCount++;
@@ -4758,16 +4738,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //            toolChangerPose = pose;
             runningProgramFuture = this.gotoToolChangerApproach(name, pose);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonGotoToolChangerApproachActionPerformed
 
+    @UIEffect
     private void jButtonGotoToolChangerPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGotoToolChangerPoseActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             lookForCount++;
@@ -4789,16 +4768,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //            toolChangerPose = pose;
             runningProgramFuture = this.gotoToolChangerPose(name, pose);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonGotoToolChangerPoseActionPerformed
 
+    @UIEffect
     private void jButtonDropToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDropToolActionPerformed
         try {
-            if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
-            }
+            setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
             lookForCount++;
@@ -4820,12 +4798,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             runningProgramFuture = this.dropToolByHolder(toolHolderPoseName);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonDropToolActionPerformed
 
     private void syncPanelToGeneratorToolData() {
+        Utils.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
+    }
+
+    @UIEffect
+    private void syncPanelToGeneratorToolDataOnDisplay() {
         String toolName = jTextFieldCurrentToolName.getText();
         if (null == toolName || toolName.length() < 1) {
             warnDialog("Invalid toolName =" + toolName);
@@ -4833,17 +4816,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         crclGenerator.setCurrentToolName(toolName);
         crclGenerator.setExpectedToolName(toolName);
-        TableModel holderContentsTableModel = jTableHolderContents.getModel();
-        for (int i = 0; i < holderContentsTableModel.getRowCount(); i++) {
-            String holderName = (String) holderContentsTableModel.getValueAt(i, 0);
+        for (int i = 0; i < holderContentsCachedTable.getRowCount(); i++) {
+            String holderName = (String) holderContentsCachedTable.getValueAt(i, 0);
             if (holderName == null || holderName.length() < 1) {
                 continue;
             }
-            String toolForHolder = (String) holderContentsTableModel.getValueAt(i, 1);
+            String toolForHolder = (String) holderContentsCachedTable.getValueAt(i, 1);
             if (toolForHolder == null || toolForHolder.length() < 1) {
                 toolForHolder = "empty";
             }
-            String toolsListString = (String) holderContentsTableModel.getValueAt(i, 2);
+            String toolsListString = (String) holderContentsCachedTable.getValueAt(i, 2);
             crclGenerator.getCurrentToolHolderContentsMap().put(holderName, toolForHolder);
             crclGenerator.getExpectedToolHolderContentsMap().put(holderName, toolForHolder);
             if (null != toolsListString) {
@@ -4854,10 +4836,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    @UIEffect
     private void jButtonPickupToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPickupToolActionPerformed
         try {
             if (null != currentPart) {
-                this.jComboBoxManualObjectName.setSelectedItem(currentPart);
+                manualObjectCachedComboBox.setSelectedItem(currentPart);
             }
             setReplanFromIndex(0);
             abortProgram();
@@ -4884,30 +4867,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             runningProgramFuture = this.pickupToolByHolder(holderPosName);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
         }
     }//GEN-LAST:event_jButtonPickupToolActionPerformed
 
+    @UIEffect
     private void jTextFieldToolChangerApproachZOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
         crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
     }//GEN-LAST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
 
+    @UIEffect
     private void jButtonDeleteToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
         clearEmptHolderContentsRows();
         String nameToDelete = queryUserForToolHolderPosName("Holder name of pose to delete");
         deleteFromToolHolderPositionsTable(nameToDelete);
         deleteFromToolHolderContentsTable(nameToDelete);
-        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
-        Utils.autoResizeTableColWidths(jTableHolderContents);
+        Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
+        Utils.autoResizeTableColWidths(holderContentsCachedTable);
         syncPanelToGeneratorToolData();
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
 
     private void deleteFromToolHolderPositionsTable(String nameToDelete) {
-        deleteMatchingRowsFromTable(jTableToolHolderPositions, nameToDelete);
+        deleteMatchingRowsFromTable(toolHolderPositionsCachedTable, nameToDelete);
         Map<String, PoseType> toolHolderPoseMap
                 = crclGenerator.getToolHolderPoseMap();
         toolHolderPoseMap.remove(nameToDelete);
@@ -4917,37 +4902,35 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Map<String, PoseType> toolHolderPoseMap
                 = crclGenerator.getToolHolderPoseMap();
         PoseType pose = toolHolderPoseMap.get(oldName);
-        renameMatchingRowsFromTable(jTableToolHolderPositions, oldName, newName);
+        renameMatchingRowsFromTable(toolHolderPositionsCachedTable, oldName, newName);
         if (null != pose) {
             toolHolderPoseMap.put(newName, pose);
         }
         toolHolderPoseMap.remove(oldName);
     }
 
-    private void deleteMatchingRowsFromTable(JTable jtable, String nameToDelete) {
-        DefaultTableModel model = (DefaultTableModel) jtable.getModel();
-        for (int i = 0; i < jtable.getRowCount(); i++) {
-            String nameFromTable = (String) jtable.getValueAt(i, 0);
+    private void deleteMatchingRowsFromTable(CachedTable cachedTable, String nameToDelete) {
+        for (int i = 0; i < cachedTable.getRowCount(); i++) {
+            String nameFromTable = (String) cachedTable.getValueAt(i, 0);
             if (null == nameFromTable || nameFromTable.equals(nameToDelete)) {
-                model.removeRow(i);
+                cachedTable.removeRow(i);
                 i--;
             }
         }
-        clearEmptyRows(jtable);
-        Utils.autoResizeTableColWidths(jtable);
+        clearEmptyRows(cachedTable);
+        Utils.autoResizeTableColWidths(cachedTable);
     }
 
-    private void renameMatchingRowsFromTable(JTable jtable, String oldName, String newName) {
-        DefaultTableModel model = (DefaultTableModel) jtable.getModel();
-        for (int i = 0; i < jtable.getRowCount(); i++) {
-            String nameFromTable = (String) jtable.getValueAt(i, 0);
+    private void renameMatchingRowsFromTable(CachedTable cachedTable, String oldName, String newName) {
+        for (int i = 0; i < cachedTable.getRowCount(); i++) {
+            String nameFromTable = (String) cachedTable.getValueAt(i, 0);
             if (null != nameFromTable && nameFromTable.equals(oldName)) {
-                model.setValueAt(newName, i, 0);
+                cachedTable.setValueAt(newName, i, 0);
                 i--;
             }
         }
-        clearEmptyRows(jtable);
-        Utils.autoResizeTableColWidths(jtable);
+        clearEmptyRows(cachedTable);
+        Utils.autoResizeTableColWidths(cachedTable);
     }
 
     private void renameFromToolHolderContentsTable(String oldName, String newName) {
@@ -4957,7 +4940,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Map<String, String> currentToolHolderContentsMap
                 = crclGenerator.getCurrentToolHolderContentsMap();
         String oldCurrentContents = currentToolHolderContentsMap.get(oldName);
-        renameMatchingRowsFromTable(jTableHolderContents, oldName, newName);
+        renameMatchingRowsFromTable(holderContentsCachedTable, oldName, newName);
         if (null != oldExpectedContents) {
             expectedToolHolderContentsMap.put(newName, oldExpectedContents);
         }
@@ -4969,7 +4952,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void deleteFromToolHolderContentsTable(String nameToDelete) {
-        deleteMatchingRowsFromTable(jTableHolderContents, nameToDelete);
+        deleteMatchingRowsFromTable(holderContentsCachedTable, nameToDelete);
         Map<String, String> expectedToolHolderContentsMap
                 = crclGenerator.getExpectedToolHolderContentsMap();
         expectedToolHolderContentsMap.remove(nameToDelete);
@@ -4978,6 +4961,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         currentToolHolderContentsMap.remove(nameToDelete);
     }
 
+    @UIEffect
     private void jButtonAddToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPoseActionPerformed
         try {
             clearEmptyToolChangerPoseRows();
@@ -5001,14 +4985,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
                 updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
                 clearEmptyToolChangerPoseRows();
-                Utils.autoResizeTableColWidths(jTableToolHolderPositions);
+                Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
                 saveToolChangerPoseMap();
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonAddToolHolderPoseActionPerformed
 
+    @UIEffect
     private void jButtonRecordToolHolderApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderApproachActionPerformed
         try {
             PoseType pose = aprsSystem.getCurrentPose();
@@ -5019,7 +5004,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Approach");
             if (null == toolHolderPoseName
                     || toolHolderPoseName.length() < 1) {
-                toolHolderPoseName = "toolChangerPose" + (jTableToolHolderPositions.getRowCount() + 1);
+                toolHolderPoseName = "toolChangerPose" + (toolHolderPositionsCachedTable.getRowCount() + 1);
             }
 
             PmRpy rpy = CRCLPosemath.toPmRpy(pose);
@@ -5030,12 +5015,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             saveToolChangerPoseMap();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
 
-    private static double getDoubleValueAt(DefaultTableModel dtm, int row, int col) {
-        Object o = dtm.getValueAt(row, col);
+    private static double getDoubleValueAt(CachedTable cachedTable, int row, int col) {
+        Object o = cachedTable.getValueAt(row, col);
         if (o == null) {
             throw new IllegalStateException("null value in table at " + row + "," + col);
         }
@@ -5047,66 +5032,65 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void loadTrayAttachOffsetsTableToMap() {
         try {
-            DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
             Map<String, PoseType> map = crclGenerator.getTrayAttachOffsetsMap();
             map.clear();
-            for (int i = 0; i < dtm.getRowCount(); i++) {
-                Object v0 = dtm.getValueAt(i, 0);
+            for (int i = 0; i < trayAttachOffsetsCachedTable.getRowCount(); i++) {
+                Object v0 = trayAttachOffsetsCachedTable.getValueAt(i, 0);
                 if (v0 instanceof String) {
                     String name = (String) v0;
                     name = name.trim();
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = getDoubleValueAt(dtm, i, 1);
-                    double y = getDoubleValueAt(dtm, i, 2);
-                    double z = getDoubleValueAt(dtm, i, 3);
-                    double roll = getDoubleValueAt(dtm, i, 4);
+                    double x = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 1);
+                    double y = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 2);
+                    double z = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 3);
+                    double roll = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = getDoubleValueAt(dtm, i, 5);
+                    double pitch = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = getDoubleValueAt(dtm, i, 6);
+                    double yaw = getDoubleValueAt(trayAttachOffsetsCachedTable, i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
         }
     }
 
     private void loadToolOffsetsTableToMap() {
         try {
-            DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
             Map<String, PoseType> map = crclGenerator.getToolOffsetMap();
             map.clear();
-            for (int i = 0; i < dtm.getRowCount(); i++) {
-                Object v0 = dtm.getValueAt(i, 0);
+            for (int i = 0; i < toolOffsetsCachedTable.getRowCount(); i++) {
+                Object v0 = toolOffsetsCachedTable.getValueAt(i, 0);
                 if (v0 instanceof String) {
                     String name = (String) v0;
                     name = name.trim();
                     if (name.length() < 1) {
                         continue;
                     }
-                    double x = getDoubleValueAt(dtm, i, 1);
-                    double y = getDoubleValueAt(dtm, i, 2);
-                    double z = getDoubleValueAt(dtm, i, 3);
-                    double roll = getDoubleValueAt(dtm, i, 4);
+                    double x = getDoubleValueAt(toolOffsetsCachedTable, i, 1);
+                    double y = getDoubleValueAt(toolOffsetsCachedTable, i, 2);
+                    double z = getDoubleValueAt(toolOffsetsCachedTable, i, 3);
+                    double roll = getDoubleValueAt(toolOffsetsCachedTable, i, 4);
                     roll = Math.toRadians(roll);
-                    double pitch = getDoubleValueAt(dtm, i, 5);
+                    double pitch = getDoubleValueAt(toolOffsetsCachedTable, i, 5);
                     pitch = Math.toRadians(pitch);
-                    double yaw = getDoubleValueAt(dtm, i, 6);
+                    double yaw = getDoubleValueAt(toolOffsetsCachedTable, i, 6);
                     yaw = Math.toRadians(yaw);
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(x, y, z), new PmRpy(roll, pitch, yaw));
                     map.put(name, pose);
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, null, e);
+            LOGGER.log(Level.SEVERE, "", e);
         }
     }
 
+    @UIEffect
     private void jButtonAddToolOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolOffsetActionPerformed
         DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
         dtm.addRow(new Object[]{"tool" + (dtm.getRowCount() + 1), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ""});
@@ -5117,6 +5101,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setToolOffsetTableModelListener();
     }//GEN-LAST:event_jButtonAddToolOffsetActionPerformed
 
+    @UIEffect
     private void jButtonDeleteToolOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolOffsetActionPerformed
         String nameToDelete = queryUserForToolName("Delete Pose");
         DefaultTableModel model = (DefaultTableModel) jTableToolOffsets.getModel();
@@ -5134,16 +5119,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setToolOffsetTableModelListener();
     }//GEN-LAST:event_jButtonDeleteToolOffsetActionPerformed
 
+    @UIEffect
     private void jButtonUpdatePoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheActionPerformed
         try {
             crclGenerator.clearPoseCache();
             List<PhysicalItem> newItems = crclGenerator.newPoseItems("userRequestedPoseUpdate");
-            DefaultComboBoxModel<String> objectCbm
-                    = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
-            objectCbm.removeAllElements();
-            DefaultComboBoxModel<String> slotCbm
-                    = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
-            slotCbm.removeAllElements();
+            manualObjectCachedComboBox.removeAllElements();
+            manualSlotCachedComboBox.removeAllElements();
             newItems = new ArrayList<>(newItems);
             newItems.sort(Comparators.fromFunctions(PhysicalItem::getFullName));
             for (PhysicalItem item : newItems) {
@@ -5153,24 +5135,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         case "P":
                         case "KT":
                         case "PT":
-                            objectCbm.addElement(fullName);
+                            manualObjectCachedComboBox.addElement(fullName);
                             break;
 
                         case "ES":
                         case "SLOT":
-                            slotCbm.addElement(fullName);
+                            manualSlotCachedComboBox.addElement(fullName);
                             break;
                     }
                 }
             }
             updatePositionCacheTable();
-            jComboBoxManualObjectName.setModel(objectCbm);
-            jComboBoxManualSlotName.setModel(slotCbm);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonUpdatePoseCacheActionPerformed
 
+    @UIEffect
     private void jButtonSetCurrentToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetCurrentToolActionPerformed
         try {
             String newToolName = queryUserForToolName("Which tool is currently in the robot? ");
@@ -5191,10 +5172,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //                }
             }
         } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, null, exception);
+            LOGGER.log(Level.SEVERE, "", exception);
         }
     }//GEN-LAST:event_jButtonSetCurrentToolActionPerformed
 
+    @UIEffect
     private void jButtonAddTrayAttachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddTrayAttachActionPerformed
         DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
         dtm.addRow(new Object[]{"tray" + (dtm.getRowCount() + 1), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ""});
@@ -5205,6 +5187,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setTrayAttachOffsetTableModelListener();
     }//GEN-LAST:event_jButtonAddTrayAttachActionPerformed
 
+    @UIEffect
     private void jButtonRenameToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPoseActionPerformed
         clearEmptyToolChangerPoseRows();
         clearEmptHolderContentsRows();
@@ -5217,8 +5200,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
         renameFromToolHolderPositionsTable(oldName, newName);
         renameFromToolHolderContentsTable(oldName, newName);
-        Utils.autoResizeTableColWidths(jTableToolHolderPositions);
-        Utils.autoResizeTableColWidths(jTableHolderContents);
+        Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
+        Utils.autoResizeTableColWidths(holderContentsCachedTable);
         syncPanelToGeneratorToolData();
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
@@ -5229,12 +5212,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         updatePositionCacheTable();
     }
 
+    @UIEffect
     private void queryLogFileName() {
         if (!new File(recordCsvName).exists()) {
             newLogFileName();
         }
     }
 
+    @UIEffect
     private void newLogFileName() throws HeadlessException {
         recordCsvName = jTextFieldLogFilename.getText();
         JFileChooser chooser = new JFileChooser();
@@ -5253,7 +5238,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
                 jTextFieldLogFilename.setText(recordCsvName);
             } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -5261,60 +5246,56 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private int @Nullable [] crclIndexes = null;
 
     private void setCrclIndexes(int indexes[]) {
-        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < indexes.length; i++) {
-            if (i >= model.getRowCount()) {
+            if (i >= pddlOutputCachedTableModel.getRowCount()) {
                 break;
             }
-            if (!Objects.equals(model.getValueAt(i, 1), indexes[i])) {
-                model.setValueAt(indexes[i], i, 1);
+            if (!Objects.equals(pddlOutputCachedTableModel.getValueAt(i, 1), indexes[i])) {
+                pddlOutputCachedTableModel.setValueAt(indexes[i], i, 1);
             }
         }
         this.crclIndexes = indexes;
     }
 
     private void setPddlLabelss(String labels[]) {
-        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < labels.length; i++) {
-            if (i >= model.getRowCount()) {
+            if (i >= pddlOutputCachedTableModel.getRowCount()) {
                 break;
             }
             if (null != labels[i]) {
-                if (!Objects.equals(model.getValueAt(i, 2), labels[i])) {
-                    model.setValueAt(labels[i], i, 2);
+                if (!Objects.equals(pddlOutputCachedTableModel.getValueAt(i, 2), labels[i])) {
+                    pddlOutputCachedTableModel.setValueAt(labels[i], i, 2);
                 }
             }
         }
     }
 
     private void setPddlTakenParts(@Nullable String parts[]) {
-        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < parts.length; i++) {
-            if (i >= model.getRowCount()) {
+            if (i >= pddlOutputCachedTableModel.getRowCount()) {
                 break;
             }
             if (null != parts[i]) {
-                if (!Objects.equals(model.getValueAt(i, 6), parts[i])) {
-                    model.setValueAt(parts[i], i, 6);
+                if (!Objects.equals(pddlOutputCachedTableModel.getValueAt(i, 6), parts[i])) {
+                    pddlOutputCachedTableModel.setValueAt(parts[i], i, 6);
                 }
             }
         }
     }
 
     private void reloadPddlActions(List<Action> l) {
-        DefaultTableModel model = (DefaultTableModel) jTablePddlOutput.getModel();
         for (int i = 0; i < l.size(); i++) {
-            if (i >= model.getRowCount()) {
+            if (i >= pddlOutputCachedTableModel.getRowCount()) {
                 break;
             }
             Action act = l.get(i);
             if (null != act) {
-                if (!Objects.equals(model.getValueAt(i, 3), act.getType())) {
-                    model.setValueAt(act.getType(), i, 3);
+                if (!Objects.equals(pddlOutputCachedTableModel.getValueAt(i, 3), act.getType())) {
+                    pddlOutputCachedTableModel.setValueAt(act.getType(), i, 3);
                 }
                 String argsString = Arrays.toString(act.getArgs());
-                if (!Objects.equals(model.getValueAt(i, 4), argsString)) {
-                    model.setValueAt(argsString, i, 4);
+                if (!Objects.equals(pddlOutputCachedTableModel.getValueAt(i, 4), argsString)) {
+                    pddlOutputCachedTableModel.setValueAt(argsString, i, 4);
                 }
             }
         }
@@ -5335,7 +5316,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             abortProgram();
             showExceptionInProgram(ex);
 //            actionToCrclLabels[lastIndex] = "Error";
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
@@ -5363,7 +5344,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.errorString = errorString;
     }
 
-    private void showExceptionInProgram(final java.lang.Exception ex) {
+    private XFutureVoid showExceptionInProgram(final java.lang.Exception ex) {
+        return Utils.runOnDispatchThread(() -> showExceptionInProgramInternalOnDisplay(ex));
+    }
+
+    @UIEffect
+    private void showExceptionInProgramInternalOnDisplay(final java.lang.Exception ex) {
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = program.getMiddleCommand();
         MessageType message = new MessageType();
@@ -5399,13 +5385,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    /*@SafeEffect
     private XFuture<Boolean> recursiveSupplyBoolean(boolean prevSuccess,
-            Supplier<XFuture<Boolean>> supplier) {
+                                                    UiSupplier<XFuture<Boolean>> supplier) {
         if (prevSuccess) {
             try {
                 return Utils.composeOnDispatchThread(supplier);
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
                 XFuture<Boolean> ret = new XFuture<>("recursiveSupplyBoolean");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -5413,8 +5400,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             return XFuture.completedFuture(false);
         }
-    }
-
+    }*/
     public static XFuture<Boolean> ifOk(boolean ok, Supplier<XFuture<Boolean>> thenSupplier) {
         return ok ? thenSupplier.get() : XFuture.completedFuture(false);
     }
@@ -5425,7 +5411,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 return generateCrclAsync();
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
                 XFuture<Boolean> ret = new XFuture<>("recursiveApplyGenerateCrclException");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -5434,6 +5420,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return XFuture.completedFuture(false);
         }
     }
+
     private int crclStartActionIndex = -1;
     private int crclEndActionIndex = -1;
 
@@ -5522,11 +5509,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         checkDbSupplierPublisher();
         int abortReplanFromIndex = getReplanFromIndex();
-        if (jCheckBoxEnableOptaPlanner.isSelected() && abortReplanFromIndex == 0) {
-            this.opDisplayJPanelInput.setOpActionPlan(null);
-            this.opDisplayJPanelSolution.setOpActionPlan(null);
-            this.opDisplayJPanelInput.setLabel("Input");
-            this.opDisplayJPanelSolution.setLabel("Output");
+        if (abortReplanFromIndex == 0) {
+            Utils.runOnDispatchThread(this::clearOpDisplay);
         }
         List<Integer> lil = new ArrayList<>();
         final int li0 = crclGenerator.getLastIndex();
@@ -5551,7 +5535,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         boolean replanAfterCrclBlock
                 = (!crclGenerator.atLastIndex())
-                && jCheckBoxReplan.isSelected();
+                && replanCachedCheckBox.isSelected();
         lastReplanAfterCrclBlock = replanAfterCrclBlock;
         int sectionNumber = 1;
         while (replanAfterCrclBlock && autoStart) {
@@ -5567,7 +5551,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             boolean emptyProgram = program.getMiddleCommand().isEmpty();
             boolean nextReplanAfterCrclBlock
                     = crclGenerator.getLastIndex() < actionsList.size() - 1
-                    && jCheckBoxReplan.isSelected();
+                    && replanCachedCheckBox.isSelected();
             if (emptyProgram) {
                 if (!nextReplanAfterCrclBlock) {
                     break;
@@ -5621,6 +5605,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return true;
     }
 
+    @UIEffect
+    private void clearOpDisplay() {
+        if (enableOptaplannerCachedCheckBox.isSelected()) {
+            this.opDisplayJPanelInput.setOpActionPlan(null);
+            this.opDisplayJPanelSolution.setOpActionPlan(null);
+            this.opDisplayJPanelInput.setLabel("Input");
+            this.opDisplayJPanelSolution.setLabel("Output");
+        }
+    }
+
     private boolean atLastAction() {
         boolean ret = crclGenerator.atLastIndex();
 //        if (ret) {
@@ -5651,7 +5645,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                 x -> doPddlActionsSectionAsync(startSafeAbortRequestCount, 0),
                                 genCrclService);
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
                 XFuture<Boolean> xf = new XFuture<>("generateCrclException");
                 xf.completeExceptionally(ex);
                 return xf;
@@ -5660,6 +5654,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
     }
 
+    private final CachedCheckBox enableOptaplannerCachedCheckBox;
+
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, PendantClientInner.ConcurrentBlockProgramsException, CRCLException, PmException {
         Map<String, String> options = getTableOptions();
         final int rpi = getReplanFromIndex();
@@ -5667,7 +5663,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
         }
         crclGenerator.setPositionMaps(getPositionMaps());
-        if (jCheckBoxEnableOptaPlanner.isSelected()) {
+        if (enableOptaplannerCachedCheckBox.isSelected()) {
             if (null == solver) {
                 synchronized (solverFactory) {
                     solver = solverFactory.buildSolver();
@@ -5690,7 +5686,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         checkReverse();
         synchronized (actionsList) {
             cmds = crclGenerator.generate(actionsList, startReplanFromIndex, options, safeAbortRequestCount.get());
-            resetReadOnlyActionsList();
+            resetReadOnlyActionsList(reverseFlag);
         }
         int indexes[] = crclGenerator.getActionToCrclIndexes();
         int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
@@ -5701,11 +5697,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final @Nullable
         String takenPartNamesCopy[] = Arrays.copyOf(takenPartNames, takenPartNames.length);
         javax.swing.SwingUtilities.invokeLater(() -> {
-            setCrclIndexes(indexesCopy);
-            setPddlLabelss(labelsCopy);
-            setPddlTakenParts(takenPartNamesCopy);
-            reloadPddlActions(readOnlyActionsList);
-            autoResizeTableColWidths(jTablePddlOutput);
+            updatePddlActionSectionToCrclDisplay(indexesCopy, labelsCopy, takenPartNamesCopy);
         });
 
         program.setName(getActionsCrclName());
@@ -5730,6 +5722,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setEndCanonCmdId(program);
         updatePositionCacheTable();
         return program;
+    }
+
+    @UIEffect
+    private void updatePddlActionSectionToCrclDisplay(int[] indexesCopy, String[] labelsCopy, @Nullable String[] takenPartNamesCopy) {
+        setCrclIndexes(indexesCopy);
+        setPddlLabelss(labelsCopy);
+        setPddlTakenParts(takenPartNamesCopy);
+        reloadPddlActions(readOnlyActionsList);
+        autoResizeTableColWidths(jTablePddlOutput);
     }
 
     private void logDebug(String string) {
@@ -5761,8 +5762,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void updatePositionCacheTable() {
         Map<String, PoseType> map = crclGenerator.getPoseCache();
-        DefaultTableModel model = (DefaultTableModel) jTablePositionCache.getModel();
-        model.setRowCount(0);
+        Utils.runOnDispatchThread(() -> updatePositionCacheTableOnDisplay(map));
+    }
+
+    private final CachedTable positionCacheCachedTable;
+
+    private void updatePositionCacheTableOnDisplay(Map<String, PoseType> map) {
+        positionCacheCachedTable.setRowCount(0);
         for (Map.Entry<String, PoseType> entry : map.entrySet()) {
             PoseType pose = entry.getValue();
             if (null != pose) {
@@ -5771,18 +5777,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     PmRpy rpy;
                     try {
                         rpy = CRCLPosemath.toPmRpy(pose);
-                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y), ""});
+                        positionCacheCachedTable.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y), ""});
                     } catch (PmException ex) {
-                        model.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Double.NaN, Double.NaN, Double.NaN, ex.toString()});
-                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        positionCacheCachedTable.addRow(new Object[]{entry.getKey(), point.getX(), point.getY(), point.getZ(), Double.NaN, Double.NaN, Double.NaN, ex.toString()});
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
             }
         }
-        Utils.autoResizeTableColWidths(jTablePositionCache);
+        Utils.autoResizeTableColWidths(positionCacheCachedTable);
     }
 
     private boolean lastReplanAfterCrclBlock = false;
+    private final CachedCheckBox replanCachedCheckBox;
+
+    private boolean isReplanCheckBoxSelected() {
+        return replanCachedCheckBox.isSelected();
+    }
 
     private XFuture<Boolean> doPddlActionsSectionAsync(int startSafeAbortRequestCount, int sectionNumber) {
         try {
@@ -5792,7 +5803,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (autoStart) {
                 boolean replanAfterCrclBlock
                         = crclGenerator.getLastIndex() < actionsList.size() - 1
-                        && jCheckBoxReplan.isSelected();
+                        && isReplanCheckBoxSelected();
                 lastReplanAfterCrclBlock = replanAfterCrclBlock;
                 if (replanAfterCrclBlock) {
                     return startCrclProgram(program)
@@ -5810,7 +5821,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 setCrclProgram(program);
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showExceptionInProgram(ex);
             XFuture<Boolean> ret = new XFuture<>("doPddlActionsSectionException");
             ret.completeExceptionally(ex);
@@ -5988,7 +5999,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Add a position map.
-     *
+     * <p>
      * The position map is similar to a transform in that it may offset
      * positions output by the executor but may also be used to change scaling
      * or correct for non uniform distortions from the sensor system or
@@ -6063,6 +6074,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return pout;
     }
 
+    @UIEffect
     private XFuture<Boolean> randomDropOff() {
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -6087,15 +6099,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
 
-        PointType testDropOffPosePoint =
-                requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
+        PointType testDropOffPosePoint
+                = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String randomPoseString
                 = String.format("%.1f, %.1f, %.1f",
                         testDropOffPosePoint.getX(),
                         testDropOffPosePoint.getY(),
                         testDropOffPosePoint.getZ());
-        PointType origPosePoint =
-                requireNonNull(origPose.getPoint(), "origPose.getPoint()");
+        PointType origPosePoint
+                = requireNonNull(origPose.getPoint(), "origPose.getPoint()");
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
                         origPosePoint.getX(),
@@ -6124,6 +6136,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return out;
     }
 
+    @UIEffect
     private void gridDropOff() {
         if (gridTestCurrentY > gridTestMaxY + 0.001) {
             this.clearAll();
@@ -6157,15 +6170,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
         setCrclProgram(program);
-        PointType testDropOffPosePoint =
-                requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
+        PointType testDropOffPosePoint
+                = requireNonNull(testDropOffPose.getPoint(), "testDropOffPose.getPoint()");
         String gridPoseString
                 = String.format("%.1f, %.1f, %.1f",
                         testDropOffPosePoint.getX(),
                         testDropOffPosePoint.getY(),
                         testDropOffPosePoint.getZ());
-        PointType origPosePoint =
-                requireNonNull(origPose.getPoint(), "origPose.getPoint()");
+        PointType origPosePoint
+                = requireNonNull(origPose.getPoint(), "origPose.getPoint()");
         String origPoseString
                 = String.format("%.1f, %.1f, %.1f",
                         origPosePoint.getX(),
@@ -6198,7 +6211,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             CRCLProgramType program = createLookForPartsProgram();
             return startCrclProgram(program);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("lookForPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -6209,7 +6222,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             return createLookForPartsProgramInternal();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -6237,6 +6250,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return program;
     }
 
+    @UIEffect
     private XFuture<Boolean> gotoToolChangerApproach(String poseName, PoseType pose) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6254,7 +6268,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(gototToolChangerApproachActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -6277,29 +6291,64 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.putPoseCache(poseName, pose);
             return executeActions(gototToolChangerApproachActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
         }
     }
 
-    public void updateCurrentToolHolderContentsMap(String toolChangerPosName, String toolName) {
+    void updateCurrentToolHolderContentsMap(String toolChangerPosName, String toolName) {
         Utils.runOnDispatchThread(() -> updateCurrentToolHolderJTable(toolChangerPosName, toolName));
     }
 
-    private void updateCurrentToolHolderJTable(String toolChangerPosName, String toolName) {
-        TableModel model = jTableHolderContents.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String holderName = (String) model.getValueAt(i, 0);
-            if (toolChangerPosName.equals(holderName)) {
-                model.setValueAt(toolName, i, 1);
-                return;
-            }
-        }
-        loadToolMenus();
+    private final ConcurrentLinkedQueue<BiConsumer<String, String>> updateToolHolderContentsListeners = new ConcurrentLinkedQueue<>();
+
+    public void addToolHolderContentsListener(BiConsumer<String, String> listener) {
+        updateToolHolderContentsListeners.add(listener);
     }
 
+    public void removeToolHolderContentsListener(BiConsumer<String, String> listener) {
+        updateToolHolderContentsListeners.add(listener);
+    }
+
+    @UIEffect
+    private synchronized void updateCurrentToolHolderJTable(String toolChangerPosName, String toolName) {
+        try {
+            clearToolHolderContentsTableModelListener();
+            for (int i = 0; i < holderContentsCachedTable.getRowCount(); i++) {
+                String holderName = (String) holderContentsCachedTable.getValueAt(i, 0);
+                if (toolChangerPosName.equals(holderName)) {
+                    String origToolName = (String) holderContentsCachedTable.getValueAt(i, 1);
+                    if (!toolName.equals(origToolName)) {
+                        holderContentsCachedTable.setValueAt(toolName, i, 1);
+                        for (BiConsumer<String, String> listener : updateToolHolderContentsListeners) {
+                            listener.accept(toolChangerPosName, toolName);
+                        }
+                        handleToolHolderContentsChange();
+                    }
+                    break;
+                }
+            }
+        } finally {
+            setToolHolderContentsTableModelListener();
+        }
+    }
+
+    public void putInToolHolderContentsMap(String holder, String contents) {
+        crclGenerator.getCurrentToolHolderContentsMap().put(holder, contents);
+        updateCurrentToolHolderContentsMap(holder, contents);
+    }
+
+    public Map<String, String> getCurrentToolHolderContentsMap() {
+        return Collections.unmodifiableMap(crclGenerator.getCurrentToolHolderContentsMap());
+    }
+
+    public Map<String, Set<String>> getPossibleToolHolderContentsMap() {
+        return crclGenerator.getPossibleToolHolderContentsMap();
+    }
+
+    @UIEffect
     private XFuture<Boolean> dropToolByHolder(String holderName) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6315,13 +6364,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
         }
     }
 
+    @UIEffect
     private XFuture<Boolean> dropToolAny() {
         try {
             Map<String, String> options = getTableOptions();
@@ -6335,7 +6385,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("gototToolChangerApproachPartsException");
             future.completeExceptionally(ex);
             return future;
@@ -6343,7 +6393,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
-        this.loadActionsList(actionsList);
+        this.loadActionsList(actionsList, reverseFlag);
         ExecutorService service = this.generateCrclService;
         if (null == service) {
             service = aprsSystem.getRunProgramService();
@@ -6351,6 +6401,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         return checkDbSupplierPublisherAsync()
                 .thenComposeAsync("executeActions", x -> executeActionsInternal(actionsList, options), service);
+    }
+
+    private void showException(Exception ex) {
+        showExceptionInProgram(ex);
+        if (null != aprsSystem) {
+            aprsSystem.showException(ex);
+        }
     }
 
     private XFuture<Boolean> executeActionsInternal(List<Action> actionsList, Map<String, String> options) {
@@ -6369,11 +6426,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             replanStarted.set(false);
             return startCrclProgram(program);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
+            showException(ex);
             throw new RuntimeException(ex);
         }
     }
 
+    @UIEffect
     private XFuture<Boolean> pickupToolByHolder(String holderName) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6388,13 +6447,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("pickupToolByHolder." + holderName);
             future.completeExceptionally(ex);
             return future;
         }
     }
 
+    @UIEffect
     private XFuture<Boolean> pickupToolByTool(String toolName) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6409,13 +6469,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("pickupToolByTool." + toolName);
             future.completeExceptionally(ex);
             return future;
         }
     }
 
+    @UIEffect
     private XFuture<Boolean> switchTool(String toolName) {
         try {
             Map<String, String> options = getTableOptions();
@@ -6430,7 +6491,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("pickupToolByTool." + toolName);
             future.completeExceptionally(ex);
             return future;
@@ -6452,7 +6513,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             } catch (Exception ex) {
                 Logger.getLogger(VisionToDBJPanel.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
         dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
@@ -6481,7 +6542,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 return XFutureVoid.completedFutureWithName("checkDbSupplierPublisher.alreadyConnected." + getConnnectionURL());
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
                 XFutureVoid ret = new XFutureVoid("checkDbSupplierPublisher.alreadyConnected.withException");
                 ret.completeExceptionally(ex);
                 return ret;
@@ -6496,7 +6557,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             } catch (Exception ex) {
                 Logger.getLogger(VisionToDBJPanel.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
         if (null != dbSetupPublisher) {
@@ -6510,11 +6571,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void setOption(String key, String val) {
-        TableModel model = jTableOptions.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Object keyCheck = model.getValueAt(i, 0);
-            if (keyCheck.equals(key)) {
-                model.setValueAt(val, i, 1);
+        for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+            Object keyCheck = optionsCachedTable.getValueAt(i, 0);
+            if (Objects.equals(keyCheck, key)) {
+                optionsCachedTable.setValueAt(val, i, 1);
                 break;
             }
         }
@@ -6529,12 +6589,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return crclGenerator.isToolHolderOperationEnabled();
     }
 
+    private final CachedTable optionsCachedTable;
+
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
-        TableModel model = jTableOptions.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Object key = model.getValueAt(i, 0);
-            Object val = model.getValueAt(i, 1);
+        @Nullable Object[][] optionsData = optionsCachedTable.getData();
+        for (int i = 0; i < optionsData.length; i++) {
+            Object key = optionsData[i][0];
+            Object val = optionsData[i][1];
             if (null != key && null != val) {
                 options.put(key.toString(), val.toString());
             }
@@ -6579,7 +6641,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonRenameToolHolderPose;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonReturn;
-    private javax.swing.JButton jButtonSafeAbort;
     private javax.swing.JButton jButtonSetCurrentTool;
     private javax.swing.JButton jButtonStep;
     private javax.swing.JButton jButtonStopRandomTest;
@@ -6588,7 +6649,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonTestPickup;
     private javax.swing.JButton jButtonUpdatePoseCache;
     private javax.swing.JCheckBox jCheckBoxDebug;
-    private javax.swing.JCheckBox jCheckBoxEnableExternalControlPort;
     private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;
     private javax.swing.JCheckBox jCheckBoxForceFakeTake;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
@@ -6602,10 +6662,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
-    private javax.swing.JLabel jLabel18;
-    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
@@ -6620,7 +6677,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JPanel jPanelContainerPoseCache;
     private javax.swing.JPanel jPanelContainerPositionMap;
     private javax.swing.JPanel jPanelCrcl;
-    private javax.swing.JPanel jPanelExternalControl;
     private javax.swing.JPanel jPanelInnerManualControl;
     private javax.swing.JPanel jPanelOpOuter;
     private javax.swing.JPanel jPanelOuterManualControl;
@@ -6630,8 +6686,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JScrollPane jScrollPane6;
-    private javax.swing.JScrollPane jScrollPaneExternalControl;
     private javax.swing.JScrollPane jScrollPaneHolderContents;
     private javax.swing.JScrollPane jScrollPaneOptions;
     private javax.swing.JScrollPane jScrollPanePositionTable;
@@ -6648,12 +6702,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTable jTableToolHolderPositions;
     private javax.swing.JTable jTableToolOffsets;
     private javax.swing.JTable jTableTrayAttachOffsets;
-    private javax.swing.JTextArea jTextAreaExternalCommads;
     private javax.swing.JTextField jTextFieldAdjPose;
     private javax.swing.JTextField jTextFieldCurrentPart;
     private javax.swing.JTextField jTextFieldCurrentToolName;
     private javax.swing.JTextField jTextFieldCurrentToolOffset;
-    private javax.swing.JTextField jTextFieldExternalControlPort;
     private javax.swing.JTextField jTextFieldGridSize;
     private javax.swing.JTextField jTextFieldIndex;
     private javax.swing.JTextField jTextFieldLogFilename;
@@ -6663,8 +6715,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTextField jTextFieldRandomPickupCount;
     private javax.swing.JTextField jTextFieldRecordFailCount;
     private javax.swing.JTextField jTextFieldRecordSuccessCount;
-    private javax.swing.JTextField jTextFieldSafeAbortCount;
-    private javax.swing.JTextField jTextFieldSafeAbortRequestCount;
     private javax.swing.JTextField jTextFieldTestPose;
     private javax.swing.JTextField jTextFieldTestXMax;
     private javax.swing.JTextField jTextFieldTestXMin;
@@ -6677,7 +6727,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private aprs.actions.executor.PositionMapJPanel positionMapJPanel1;
     // End of variables declaration//GEN-END:variables
 
-    @Nullable private String propsGetFileName(Properties props, String key) throws IOException {
+    @Nullable
+    private String propsGetFileName(Properties props, String key) throws IOException {
         String filename = props.getProperty(key);
         if (null == filename || !filename.startsWith("..") || null == propertiesFile) {
             return filename;
@@ -6700,7 +6751,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return fullfilename;
     }
 
-    @Override
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             if (propertiesFile.isDirectory()) {
@@ -6720,7 +6770,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             checkFilename(actionsFileString);
             this.reverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
             checkFilename(reverseActionsFileString);
-            reloadActionsFile();
+            boolean reverseFlagFromProperty = false;
+            String reverseFlagProperty = props.getProperty(REVERSE_FLAG);
+            if (null != reverseFlagProperty) {
+                reverseFlagFromProperty = Boolean.parseBoolean(reverseFlagProperty);
+            }
+            setReverseFlag(reverseFlagFromProperty);
+            reloadActionsFile(reverseFlagFromProperty, true);
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
             if (null != autostartString) {
                 this.autoStart = Boolean.valueOf(autostartString);
@@ -6728,29 +6784,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String enableOptaPlannerString = props.getProperty(ENABLE_OPTA_PLANNER);
             if (null != enableOptaPlannerString) {
                 boolean enableOptaPlanner = Boolean.valueOf(enableOptaPlannerString);
-                jCheckBoxEnableOptaPlanner.setSelected(enableOptaPlanner);
+                enableOptaplannerCachedCheckBox.setSelected(enableOptaPlanner);
             }
             for (String name : props.stringPropertyNames()) {
                 if (!name.equals(PDDLCRCLAUTOSTART)
                         && !name.equals(PDDLOUTPUT)
                         && !name.equals(MANUAL_PART_NAMES)
                         && !name.equals(MANUAL_SLOT_NAMES)) {
-                    DefaultTableModel model = (DefaultTableModel) jTableOptions.getModel();
                     boolean foundit = false;
-                    for (int i = 0; i < model.getRowCount(); i++) {
-                        Object tableValue = model.getValueAt(i, 0);
+                    for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+                        Object tableValue = optionsCachedTable.getValueAt(i, 0);
                         if (tableValue == null) {
                             continue;
                         }
                         String nameFromTable = tableValue.toString();
                         if (nameFromTable.equals(name)) {
-                            model.setValueAt(props.getProperty(name), i, 1);
+                            optionsCachedTable.setValueAt(props.getProperty(name), i, 1);
                             foundit = true;
                             break;
                         }
                     }
                     if (!foundit) {
-                        model.addRow(new Object[]{name, props.getProperty(name)});
+                        optionsCachedTable.addRow(new Object[]{name, props.getProperty(name)});
                     }
                 }
             }
@@ -6770,11 +6825,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     setSelectedToolName(selectedTool);
                 }
             }
-            syncPanelToGeneratorToolData();
-            loadToolMenus();
+
+            Utils.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
         }
     }
 
+    @UIEffect
+    private void completeLoadPropertiesOnDisplay() {
+        syncPanelToGeneratorToolData();
+        loadToolMenus();
+    }
+
+    private static final String REVERSE_FLAG = "reverseFlag";
+
+    @UIEffect
     private void loadToolMenus() {
         toolDropByHolderMenu.removeAll();
         String[] emptyToolChangerNames = getEmptyToolChangerNames();
@@ -6851,7 +6915,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 try {
                     positionMapJPanel1.addPositionMapFile(f);
                 } catch (PositionMap.BadErrorMapFormatException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
             } else {
                 File parentFile = propertiesFile.getParentFile();
@@ -6867,7 +6931,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     try {
                         positionMapJPanel1.addPositionMapFile(f);
                     } catch (PositionMap.BadErrorMapFormatException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, "", ex);
                     }
                 } else {
                     String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
@@ -6883,62 +6947,73 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void loadComboModels(Properties props) {
         String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
         String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
-        DefaultComboBoxModel<String> cbm
-                = (DefaultComboBoxModel<String>) jComboBoxManualObjectName.getModel();
-        cbm.removeAllElements();
-        for (String aPna : pna) {
-            if (null != aPna && aPna.length() > 0
-                    && !aPna.equals("null")) {
-                cbm.addElement(aPna);
-            }
-        }
+        manualObjectCachedComboBox.setItems(pna);
+//        manualObjectCachedComboBox.removeAllElements();
+//        for (String aPna : pna) {
+//            if (null != aPna && aPna.length() > 0
+//                    && !aPna.equals("null")) {
+//                manualObjectCachedComboBox.addElement(aPna);
+//            }
+//        }
 
         String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
         String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
+        manualSlotCachedComboBox.setItems(sna);
 
-        cbm
-                = (DefaultComboBoxModel<String>) jComboBoxManualSlotName.getModel();
-        cbm.removeAllElements();
-        for (String aSna : sna) {
-            if (null != aSna && aSna.length() > 0
-                    && !aSna.equals("null")) {
-                cbm.addElement(aSna);
-            }
-        }
+//        manualSlotCachedComboBox.removeAllElements();
+//        for (String aSna : sna) {
+//            if (null != aSna && aSna.length() > 0
+//                    && !aSna.equals("null")) {
+//                manualSlotCachedComboBox.addElement(aSna);
+//            }
+//        }
     }
 
-    public void reloadActionsFile() throws IOException {
-        String output = reverseFlag ? reverseActionsFileString : actionsFileString;
-        if (null != output) {
-            checkFilename(output);
-            File f = new File(output);
+    @Nullable
+    public List<Action> reloadActionsFile(boolean newReverseFlag, boolean showInOptaplanner) throws IOException {
+        setReverseFlag(newReverseFlag);
+        String output = newReverseFlag ? reverseActionsFileString : actionsFileString;
+        if (null == output) {
+            System.err.println("newReverseFlag = " + newReverseFlag);
+            System.err.println("reverseActionsFileString = " + reverseActionsFileString);
+            System.err.println("actionsFileString = " + actionsFileString);
+            checkReverse();
+            return null;
+        }
+        checkFilename(output);
+        File f = new File(output);
+        List<Action> ret;
+        if (f.exists() && f.canRead() && !f.isDirectory()) {
+            ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
+            pddlOutputActionsCachedText.setText(f.getCanonicalPath());
+        } else {
+            File parentFile = propertiesFile.getParentFile();
+            if (null == parentFile) {
+                System.err.println("newReverseFlag = " + newReverseFlag);
+                System.err.println("reverseActionsFileString = " + reverseActionsFileString);
+                System.err.println("actionsFileString = " + actionsFileString);
+                throw new IllegalStateException("propertiesFile \"" + propertiesFile + "\" has no parent");
+            }
+            String fullPath = parentFile.toPath().resolve(output).normalize().toString();
+            f = new File(fullPath);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
-                loadActionsFile(f, true);
-                jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
+                pddlOutputActionsCachedText.setText(f.getCanonicalPath());
             } else {
-                File parentFile = propertiesFile.getParentFile();
-                if (null == parentFile) {
-                    return;
-                }
-                String fullPath = parentFile.toPath().resolve(output).normalize().toString();
-                f = new File(fullPath);
+                String fullPath2 = parentFile.toPath().resolveSibling(output).normalize().toString();
+                f = new File(fullPath2);
                 if (f.exists() && f.canRead() && !f.isDirectory()) {
-                    loadActionsFile(f, true);
-                    jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
+                    pddlOutputActionsCachedText.setText(f.getCanonicalPath());
+                    ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
                 } else {
-                    String fullPath2 = parentFile.toPath().resolveSibling(output).normalize().toString();
-                    f = new File(fullPath2);
-                    if (f.exists() && f.canRead() && !f.isDirectory()) {
-                        jTextFieldPddlOutputActions.setText(f.getCanonicalPath());
-                        loadActionsFile(f, true);
-                    }
+                    System.err.println("newReverseFlag = " + newReverseFlag);
+                    System.err.println("reverseActionsFileString = " + reverseActionsFileString);
+                    System.err.println("actionsFileString = " + actionsFileString);
+                    throw new IllegalStateException("can not read file \"" + output + "\" f=" + f);
                 }
             }
         }
-    }
-
-    @Override
-    public void close() {
+        return ret;
     }
 
     private final ConcurrentLinkedDeque<XFutureVoid> newDbSetupFutures = new ConcurrentLinkedDeque<>();
@@ -6963,14 +7038,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.@Nullable Timer replanActionTimer = null;
     private final Runnable defaultReplanRunnable = new Runnable() {
         @Override
+        @SuppressWarnings("guieffect")
         public void run() {
-//            Utils.runOnDispatchThread(PddlExecutorJPanel.this::generateCrclWithCatch);
             replanActionTimer
-                    = new javax.swing.Timer(200, new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            generateCrclAsyncWithCatch();
-                        }
+                    = new javax.swing.Timer(200, (ActionEvent e) -> {
+                        generateCrclAsyncWithCatch();
                     });
             replanActionTimer.setRepeats(false);
             replanActionTimer.start();
@@ -6994,11 +7066,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     Utils.runOnDispatchThreadWithCatch(runnable);
                 }
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
                 clearAll();
             }
         }
     }
+
     private final Runnable customReplanRunnable = new Runnable() {
         @Override
         public void run() {
@@ -7050,7 +7123,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             int sz = program.getMiddleCommand().size();
             logDebug("replanStarted = " + replanStarted);
             logDebug("replanRunnable = " + replanRunnable);
-            logDebug("jCheckBoxReplan.isSelected() = " + jCheckBoxReplan.isSelected());
+            logDebug("jCheckBoxReplan.isSelected() = " + replanCachedCheckBox.isSelected());
             logDebug("sz = " + sz);
             logDebug("line = " + line);
             CommandStateEnumType state = status.getCommandStatus().getCommandState();

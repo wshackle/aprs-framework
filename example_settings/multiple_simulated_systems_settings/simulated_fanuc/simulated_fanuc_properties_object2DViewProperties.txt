@@ -6,7 +6,7 @@ alternativeRotation=-90.00
 autoscale=false
 connected=true
 datafile=fanuc_cart_objects_in_parts_trays.csv
-displayAxis=(X-,Y-)
+displayAxis=(Y+,X-)
 dropOffThreshold=25.00
 items=sku_part_large_gear,0.0,528.65,33.8,100.0,P,sku_part_medium_gear,0.0,510.24,-157.65,0.87,P,sku_part_medium_gear,0.0,588.68,-153.31,0.82,P,sku_part_medium_gear,0.0,507.15,-79.58,0.81,P,sku_large_gear_vessel,0.03,573.08,29.97,0.75,PT,sku_medium_gear_vessel,0.04,546.82,-115.13,0.81,PT,sku_kit_m2l1_vessel,0.7853981633974483,360.79,-107.93,0.97,KT,sku_kit_m2l1_vessel,-0.7853981633974483,355.85,109.48,0.88,KT,sku_part_large_gear,0.0,632.0534519911903,31.739734511947244,100.0,P,sku_part_medium_gear,0.0,582.7904039677879,-76.16039596821454,100.0,P,
 
@@ -26,5 +26,5 @@ tools=true
 trackcurrentpos=true
 viewDetails=false
 viewOutput=false
-xmaxymax=-300.0, 700.0
-xminymin=-600.0, 200.0
+xmaxymax=+800.0, +700.0
+xminymin=-600.0, -300.0

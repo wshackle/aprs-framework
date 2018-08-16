@@ -35,7 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @SuppressWarnings("ALL")
 public interface DbSetupPublisher {
 
-    public void setDbSetup(DbSetup setup);
+    public XFutureVoid setDbSetup(DbSetup setup);
 
     public DbSetup getDbSetup();
 
@@ -47,5 +47,5 @@ public interface DbSetupPublisher {
     
     public List<XFutureVoid> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService);
     
-    public void disconnect();
+    public XFutureVoid disconnect();
 }

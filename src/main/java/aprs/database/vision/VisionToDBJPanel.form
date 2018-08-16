@@ -363,9 +363,6 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Add Repeat Counts To Database Names"/>
           </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed"/>
-          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>

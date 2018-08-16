@@ -46,6 +46,7 @@ import org.optaplanner.core.api.solver.SolverFactory;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("guieffect")
 public class OptaplannerTest {
 
     /**

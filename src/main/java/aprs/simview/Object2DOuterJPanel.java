@@ -22,12 +22,15 @@
  */
 package aprs.simview;
 
+import aprs.cachedcomponents.CachedCheckBox;
+import aprs.cachedcomponents.CachedTextField;
 import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.PhysicalItem;
 import aprs.database.DbSetupBuilder;
+import aprs.database.Part;
 import aprs.database.Slot;
 import aprs.database.Tray;
 import aprs.database.vision.VisionSocketClient;
@@ -76,6 +79,7 @@ import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
+import crcl.ui.XFutureVoid;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -88,6 +92,7 @@ import javax.swing.JDialog;
 import javax.swing.table.TableModel;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -95,9 +100,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("CanBeFinal")
 public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
 
+    @UIEffect
     public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
         JDialog diag = new JDialog();
         diag.setModal(true);
@@ -172,7 +177,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -215,7 +220,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -258,23 +263,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return (null != visionSocketServer) ? visionSocketServer.getPublishCount() : -1;
     }
 
+    private final CachedCheckBox simulatedCachedCheckBox;
+    private final CachedTextField filenameCachedTextField;
+    private final CachedCheckBox pauseCachedCheckBox;
+
     public void refresh(boolean loadFile) {
         try {
-            if (jCheckBoxSimulated.isSelected()) {
+            if (simulatedCachedCheckBox.isSelected()) {
                 boolean fileLoaded = false;
                 if (loadFile) {
-                    String fname = jTextFieldFilename.getText().trim();
+                    String fname = filenameCachedTextField.getText().trim();
                     File f = new File(fname);
                     if (f.exists() && f.canRead()) {
                         try {
                             loadFile(f);
                             fileLoaded = true;
                         } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
                     }
                 }
-                if (!fileLoaded && null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+                if (!fileLoaded && null != visionSocketServer && !pauseCachedCheckBox.isSelected()) {
                     this.setItems(object2DJPanel1.getItems());
                     publishCurrentItems();
                 }
@@ -289,7 +298,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void setItems(List<PhysicalItem> items) {
-        setItems(items, true);
+        setItems(items, !pauseCachedCheckBox.isSelected());
     }
 
     private volatile @Nullable
@@ -308,7 +317,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
-            if (null != srv && !this.jCheckBoxPause.isSelected()) {
+            if (null != srv && !pauseCachedCheckBox.isSelected()) {
                 srv.publishList(items);
             }
         }
@@ -322,24 +331,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
     }
 
+    @UIEffect
     private void setItemsInternal(List<PhysicalItem> items) {
         if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
             object2DJPanel1.setRotationOffset(aprsSystem.getVisionToDBRotationOffset());
         }
         object2DJPanel1.setItems(items);
-        updateItemsTableInternal(items);
+        updateItemsTableOnDisplay(items);
         loadTraySlotInfo(items);
     }
 
     private void updateItemsTable(List<PhysicalItem> items) {
         settingItems = true;
         Utils.runOnDispatchThread(() -> {
-            updateItemsTableInternal(items);
+            updateItemsTableOnDisplay(items);
             settingItems = false;
         });
     }
 
-    private void updateItemsTableInternal(List<PhysicalItem> items) {
+    @UIEffect
+    private void updateItemsTableOnDisplay(List<PhysicalItem> items) {
         if (!object2DJPanel1.isShowOutputItems()) {
             if (object2DJPanel1.isShowAddedSlotPositions()) {
                 loadItemsToTable(object2DJPanel1.getItemsWithAddedExtras(), jTableItems);
@@ -361,6 +372,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return minDist(sx, sy, items) < 20.0;
     }
 
+    @UIEffect
     private void loadTraySlotInfo(List<PhysicalItem> items) {
         int row = jTableItems.getSelectedRow();
         if (row < 0) {
@@ -411,11 +423,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             }
                         }
                     }
-//                    else {
-//                        System.err.println("cant' find name");
-//                        List<Slot> l2 = slotOffsetProvider.getSlotOffsets(name, true);
-//                        System.out.println("l2 = " + l2);
-//                    }
                 }
                 break;
 
@@ -425,6 +432,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         Utils.autoResizeTableColWidths(jTableTraySlots);
     }
 
+    @UIEffect
     private void setOutputItemsInternal(List<PhysicalItem> items) {
         object2DJPanel1.setOutputItems(items);
         if (object2DJPanel1.isShowOutputItems()) {
@@ -436,6 +444,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    @UIEffect
     private void loadItemsToTable(List<PhysicalItem> items, JTable jtable) {
         boolean origSettingItems = settingItems;
         settingItems = true;
@@ -495,130 +504,219 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * Creates new form Object2DOuterJPanel
      */
     @SuppressWarnings("initialization")
+    @UIEffect
     public Object2DOuterJPanel() {
         initComponents();
         this.setItemsInternal(object2DJPanel1.getItems());
-        jTableItems.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                try {
-                    boolean changeFound = false;
-
-                    if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
-                        List<PhysicalItem> l = new ArrayList<>(getItems());
-                        PhysicalItem item;
-                        for (int i = 0; i < jTableItems.getRowCount(); i++) {
-                            int listIndex = (int) jTableItems.getValueAt(i, 0);
-                            if (jTableItems.getValueAt(i, 1) == null || jTableItems.getValueAt(i, 1).toString().length() < 1) {
-                                continue;
-                            }
-                            if (listIndex < l.size()) {
-                                item = l.get(listIndex);
-                            } else {
-                                item = null;
-                            }
-                            if (item == null || item.getName() == null
-                                    || !Objects.equals(item.getType(), jTableItems.getValueAt(i, 5))
-                                    || !Objects.equals(item.getName(), jTableItems.getValueAt(i, 1))
-                                    || Math.abs(item.x - Double.parseDouble(jTableItems.getValueAt(i, 2).toString())) > 0.001
-                                    || Math.abs(item.y - Double.parseDouble(jTableItems.getValueAt(i, 3).toString())) > 0.001
-                                    || Math.abs(item.getRotation() - Double.parseDouble(jTableItems.getValueAt(i, 4).toString())) > 0.001
-                                    || Math.abs(item.getScore() - Double.parseDouble(jTableItems.getValueAt(i, 6).toString())) > 0.001) {
-                                changeFound = true;
-                            } else {
-                                continue;
-                            }
-                            String name = Objects.toString(jTableItems.getValueAt(i, 1));
-                            if (item == null || !item.getName().equals(name)) {
-                                double x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
-                                double y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
-                                double rotation = Math.toRadians(Double.parseDouble(jTableItems.getValueAt(i, 4).toString()));
-                                String type = Objects.toString(jTableItems.getValueAt(i, 5));
-                                double score = Double.parseDouble(jTableItems.getValueAt(i, 6).toString());
-                                item = newPhysicalItemNameRotXYScoreType(name, rotation, x, y, score, type);
-                            }
-                            item.x = Double.parseDouble(jTableItems.getValueAt(i, 2).toString());
-                            item.y = Double.parseDouble(jTableItems.getValueAt(i, 3).toString());
-                            item.setRotation(Math.toRadians(Double.parseDouble(jTableItems.getValueAt(i, 4).toString())));
-                            item.setType(Objects.toString(jTableItems.getValueAt(i, 5)));
-                            item.setScore(Double.parseDouble(jTableItems.getValueAt(i, 6).toString()));
-                            while (l.size() < listIndex) {
-                                l.add(null);
-                            }
-                            l.set(listIndex, item);
-                        }
-                        if (changeFound) {
-                            setItems(l);
-                        }
-                    }
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                }
-            }
-        });
-        jTableItems.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent event) {
-                int selectedRow = jTableItems.getSelectedRow();
-                if (selectedRow >= 0 && selectedRow < jTableItems.getRowCount()) {
-                    object2DJPanel1.setSelectedItemIndex(
-                            (int) (jTableItems.getValueAt(selectedRow, 0)));
-                    if (!object2DJPanel1.isShowOutputItems()) {
-                        loadTraySlotInfo(getItems());
-                    }
-                }
-            }
-        });
-        jTableTraySlots.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                if (!jCheckBoxSimulated.isSelected()) {
-                    return;
-                }
-                if (e.getColumn() == 1 && e.getType() == TableModelEvent.UPDATE) {
-                    int row = e.getFirstRow();
-                    if (row == e.getLastRow()) {
-                        boolean filled = (boolean) jTableTraySlots.getValueAt(row, 1);
-                        List<PhysicalItem> l = new ArrayList<>();
-                        int selectedRowIndex = jTableItems.getSelectedRow();
-                        if (filled) {
-                            l.addAll(getItems());
-                            double sx = (double) jTableTraySlots.getValueAt(row, 2);
-                            double sy = (double) jTableTraySlots.getValueAt(row, 3);
-                            String name = (String) jTableTraySlots.getValueAt(row, 0);
-                            PhysicalItem newPart = newPhysicalItemNameRotXYScoreType(name, 0.0, sx, sy, 100.0, "P");
-                            l.add(newPart);
-                        } else {
-                            double sx = (double) jTableTraySlots.getValueAt(row, 2);
-                            double sy = (double) jTableTraySlots.getValueAt(row, 3);
-                            List<PhysicalItem> items = getItems();
-                            for (int i = 0; i < items.size(); i++) {
-                                PhysicalItem it = items.get(i);
-                                if (Math.hypot(sx - it.x, sy - it.y) > 20.0) {
-                                    l.add(it);
-                                } else if (i < selectedRowIndex) {
-                                    selectedRowIndex--;
-                                }
-                            }
-                        }
-                        javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(l));
-                        int newSelectedRowIndex = selectedRowIndex;
-                        javax.swing.SwingUtilities.invokeLater(() -> jTableItems.getSelectionModel().setSelectionInterval(newSelectedRowIndex, newSelectedRowIndex));
-                    }
-                }
-            }
-        });
+        jTableItems.getModel().addTableModelListener(itemsTableModelListener);
+        jTableItems.getSelectionModel().addListSelectionListener(itemsTableListSelectionListener);
+        jTableTraySlots.getModel().addTableModelListener(traySlotsTableModelListener);
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText().trim());
         setMinXMinYText(jTextFieldMinXMinY.getText().trim());
         object2DJPanel1.setShowCurrentXY(jCheckBoxShowCurrent.isSelected());
+        simulatedCachedCheckBox = new CachedCheckBox(jCheckBoxSimulated);
+        filenameCachedTextField = new CachedTextField(jTextFieldFilename);
+        pauseCachedCheckBox = new CachedCheckBox(jCheckBoxPause);
+        portCachedTextField = new CachedTextField(jTextFieldPort);
+        hostCachedTextField = new CachedTextField(jTextFieldHost);
+        debugCachedCheckBox = new CachedCheckBox(jCheckBoxDebug);
+        addPosNoiseCachedCheckBox = new CachedCheckBox(jCheckBoxAddPosNoise);
+        shuffleSimulatedUpdatesCachedCheckBox = new CachedCheckBox(jCheckBoxShuffleSimulatedUpdates);
+        posNoiseCachedTextField = new CachedTextField(jTextFieldPosNoise);
+        rotNoiseCachedTextField = new CachedTextField(jTextFieldRotNoise);
+        connectedCachedCheckBox = new CachedCheckBox(jCheckBoxConnected);
+        simDropRateCachedTextField = new CachedTextField(jTextFieldSimDropRate);
+        simulationUpdateTimeCachedTextField = new CachedTextField(jTextFieldSimulationUpdateTime);
+        simulationUpdateAsNeededCachedCheckBox = new CachedCheckBox(jCheckBoxSimulationUpdateAsNeeded);
+        showCurrentCachedCheckBox = new CachedCheckBox(jCheckBoxShowCurrent);
+        viewOutputCachedCheckBox = new CachedCheckBox(jCheckBoxViewOutput);
+        autoscaleCachedCheckBox = new CachedCheckBox(jCheckBoxAutoscale);
+        pickupDistCachedTextField = new CachedTextField(jTextFieldPickupDist);
+        dropOffThresholdCachedTextField = new CachedTextField(jTextFieldDropOffThreshold);
+
     }
+
+    private final TableModelListener itemsTableModelListener = new TableModelListener() {
+        @Override
+        @UIEffect
+        public void tableChanged(TableModelEvent e) {
+            try {
+                boolean changeFound = false;
+
+                if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
+                    List<PhysicalItem> l = new ArrayList<>(getItems());
+                    PhysicalItem item;
+                    for (int i = 0; i < jTableItems.getRowCount(); i++) {
+                        Object listIndexObject = jTableItems.getValueAt(i, 0);
+                        if (!(listIndexObject instanceof Integer)) {
+                            throw new IllegalStateException("bad listIndexObject in table at(" + i + ",0) :" + listIndexObject);
+                        }
+                        int listIndex = (int) listIndexObject;
+                        Object valueAtI1 = jTableItems.getValueAt(i, 1);
+                        if (!(valueAtI1 instanceof String)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",1) :" + valueAtI1);
+                        }
+                        String nameValue = (String) valueAtI1;
+                        if (nameValue.length() < 1) {
+                            continue;
+                        }
+                        if (listIndex < l.size()) {
+                            item = l.get(listIndex);
+                        } else {
+                            item = null;
+                        }
+                        Object valueAtI2 = jTableItems.getValueAt(i, 2);
+                        if (valueAtI2 instanceof String) {
+                            valueAtI2 = Double.valueOf((String) valueAtI2);
+                        } else if (!(valueAtI2 instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",2) :" + valueAtI2);
+                        }
+                        Double xValue = (Double) valueAtI2;
+                        Object valueAtI3 = jTableItems.getValueAt(i, 3);
+                        if (valueAtI3 instanceof String) {
+                            valueAtI3 = Double.valueOf((String) valueAtI3);
+                        } else if (!(valueAtI3 instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",3) :" + valueAtI3);
+                        }
+                        Double yValue = (Double) valueAtI3;
+                        Object valueAtI4 = jTableItems.getValueAt(i, 4);
+                        if (valueAtI4 instanceof String) {
+                            valueAtI4 = Double.valueOf((String) valueAtI4);
+                        } else if (!(valueAtI4 instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",4) :" + valueAtI4);
+                        }
+                        Double rotationValue = (Double) valueAtI4;
+                        Object valueAtI5 = jTableItems.getValueAt(i, 5);
+                        if (null == valueAtI5) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",5) :" + valueAtI5);
+                        }
+                        Object valueAtI6 = jTableItems.getValueAt(i, 6);
+                        if (valueAtI6 instanceof String) {
+                            valueAtI6 = Double.valueOf((String) valueAtI6);
+                        } else if (!(valueAtI6 instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",6) :" + valueAtI6);
+                        }
+                        Double scoreValue = (Double) valueAtI6;
+                        if (item == null || item.getName() == null
+                                || !Objects.equals(item.getType(), valueAtI5)
+                                || !Objects.equals(item.getName(), nameValue)
+                                || Math.abs(item.x - xValue) > 0.001
+                                || Math.abs(item.y - yValue) > 0.001
+                                || Math.abs(item.getRotation() - rotationValue) > 0.001
+                                || Math.abs(item.getScore() - scoreValue) > 0.001) {
+                            changeFound = true;
+                        } else {
+                            continue;
+                        }
+                        String name = Objects.toString(nameValue);
+                        if (item == null || !item.getName().equals(name)) {
+                            double x = xValue;
+                            double y = yValue;
+                            double rotation = rotationValue;
+                            String type = Objects.toString(valueAtI5);
+                            double score = scoreValue;
+                            item = newPhysicalItemNameRotXYScoreType(name, rotation, x, y, score, type);
+                        }
+                        item.x = Double.parseDouble(xValue.toString());
+                        item.y = Double.parseDouble(yValue.toString());
+                        item.setRotation(Math.toRadians(rotationValue));
+                        item.setType(Objects.toString(valueAtI5));
+                        item.setScore(Double.parseDouble(scoreValue.toString()));
+                        while (l.size() < listIndex) {
+                            l.add(new Part("placeHolder" + l.size()));
+                        }
+                        l.set(listIndex, item);
+                    }
+                    if (changeFound) {
+                        setItems(l);
+                    }
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        }
+    };
+
+    private final TableModelListener traySlotsTableModelListener = new TableModelListener() {
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            if (!jCheckBoxSimulated.isSelected()) {
+                return;
+            }
+            if (e.getColumn() == 1 && e.getType() == TableModelEvent.UPDATE) {
+                int row = e.getFirstRow();
+                if (row == e.getLastRow()) {
+                    Object traySlotValue1 = jTableTraySlots.getValueAt(row, 1);
+                    if (!(traySlotValue1 instanceof Boolean)) {
+                        throw new IllegalStateException("bad value in table at " + row + ",1 :" + traySlotValue1);
+                    }
+                    boolean filled = (boolean) traySlotValue1;
+                    List<PhysicalItem> l = new ArrayList<>();
+                    int selectedRowIndex = jTableItems.getSelectedRow();
+                    Object traySlotValue2 = jTableTraySlots.getValueAt(row, 2);
+                    if (!(traySlotValue2 instanceof Double)) {
+                        throw new IllegalStateException("bad value in table at " + row + ",2 :" + traySlotValue2);
+                    }
+                    Object traySlotValue3 = jTableTraySlots.getValueAt(row, 3);
+                    if (!(traySlotValue3 instanceof Double)) {
+                        throw new IllegalStateException("bad value in table at " + row + ",3 :" + traySlotValue3);
+                    }
+                    if (filled) {
+                        l.addAll(getItems());
+                        double sx = (double) traySlotValue2;
+                        double sy = (double) traySlotValue3;
+                        Object traySlotValue0 = jTableTraySlots.getValueAt(row, 0);
+                        if (!(traySlotValue0 instanceof String)) {
+                            throw new IllegalStateException("bad value in table at " + row + ",0 :" + traySlotValue0);
+                        }
+                        String name = (String) traySlotValue0;
+                        PhysicalItem newPart = newPhysicalItemNameRotXYScoreType(name, 0.0, sx, sy, 100.0, "P");
+                        l.add(newPart);
+                    } else {
+                        double sx = (double) traySlotValue2;
+                        double sy = (double) traySlotValue3;
+                        List<PhysicalItem> items = getItems();
+                        for (int i = 0; i < items.size(); i++) {
+                            PhysicalItem it = items.get(i);
+                            if (Math.hypot(sx - it.x, sy - it.y) > 20.0) {
+                                l.add(it);
+                            } else if (i < selectedRowIndex) {
+                                selectedRowIndex--;
+                            }
+                        }
+                    }
+                    javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(l));
+                    int newSelectedRowIndex = selectedRowIndex;
+                    javax.swing.SwingUtilities.invokeLater(() -> jTableItems.getSelectionModel().setSelectionInterval(newSelectedRowIndex, newSelectedRowIndex));
+                }
+            }
+        }
+    };
+
+    private final ListSelectionListener itemsTableListSelectionListener = new ListSelectionListener() {
+        @Override
+        public void valueChanged(ListSelectionEvent event) {
+            int selectedRow = jTableItems.getSelectedRow();
+            if (selectedRow >= 0 && selectedRow < jTableItems.getRowCount()) {
+                Object itemValue0 = jTableItems.getValueAt(selectedRow, 0);
+                if (!(itemValue0 instanceof Integer)) {
+                    throw new IllegalStateException("Bad value in table at " + selectedRow + ",0 :" + itemValue0);
+                }
+                object2DJPanel1.setSelectedItemIndex((int) (itemValue0));
+                if (!object2DJPanel1.isShowOutputItems()) {
+                    loadTraySlotInfo(getItems());
+                }
+            }
+        }
+    };
 
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings({"unchecked", "rawtypes", "nullness"})
+    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "guieffect"})
+    @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -1390,13 +1488,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return posNoise;
     }
 
+    private final CachedTextField posNoiseCachedTextField;
+
     /**
      * Set the value of posNoise
      *
      * @param posNoise new value of posNoise
      */
     private void setPosNoise(double posNoise) {
-        updateTextFieldDouble(posNoise, jTextFieldPosNoise, 0.01);
+        updateTextFieldDouble(posNoise, posNoiseCachedTextField, 0.01);
         this.posNoise = posNoise;
     }
 
@@ -1411,11 +1511,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return rotNoise;
     }
 
+    @UIEffect
     private void updateTextFieldDouble(double value, JTextField textField, double threshold) {
         if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
             textField.setText(String.format("%.3f", value));
         }
     }
+
+    private void updateTextFieldDouble(double value, CachedTextField textField, double threshold) {
+        if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
+            textField.setText(String.format("%.3f", value));
+        }
+    }
+
+    private final CachedTextField rotNoiseCachedTextField;
 
     /**
      * Set the value of rotNoise
@@ -1423,30 +1532,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * @param rotNoise new value of rotNoise
      */
     private void setRotNoise(double rotNoise) {
-        updateTextFieldDouble(rotNoise, jTextFieldRotNoise, 0.01);
+        updateTextFieldDouble(rotNoise, rotNoiseCachedTextField, 0.01);
         this.rotNoise = rotNoise;
     }
 
     private void setSimulatedInternal(boolean simulated) {
+        Utils.runOnDispatchThread(() -> setSimulatedInternalOnDisplay(simulated));
+    }
+
+    @UIEffect
+    private void setSimulatedInternalOnDisplay(boolean simulated) {
 
         jButtonAdd.setEnabled(simulated);
         jButtonDelete.setEnabled(simulated);
         jButtonReset.setEnabled(simulated);
         jButtonOffsetAll.setEnabled(simulated);
-        jTextFieldSimulationUpdateTime.setEditable(simulated && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-        jTextFieldSimulationUpdateTime.setEnabled(simulated && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-        jCheckBoxSimulationUpdateAsNeeded.setEnabled(simulated);
+        boolean simulationUpdateAsNeeded = simulationUpdateAsNeededCachedCheckBox.isSelected();
+        jTextFieldSimulationUpdateTime.setEditable(simulated && !simulationUpdateAsNeeded);
+        jTextFieldSimulationUpdateTime.setEnabled(simulated && !simulationUpdateAsNeeded);
+        simulationUpdateAsNeededCachedCheckBox.setEnabled(simulated);
         jPanelSimulationTab.setEnabled(simulated);
         jTextFieldSimDropRate.setEnabled(simulated);
         jTextFieldSimDropRate.setEditable(simulated);
-        jCheckBoxShuffleSimulatedUpdates.setEnabled(simulated);
-        jCheckBoxAddPosNoise.setEnabled(simulated);
+        shuffleSimulatedUpdatesCachedCheckBox.setEnabled(simulated);
+        addPosNoiseCachedCheckBox.setEnabled(simulated);
         jCheckBoxViewOutput.setEnabled(simulated);
-        jTextFieldPosNoise.setEditable(simulated && jCheckBoxAddPosNoise.isSelected());
-        jTextFieldPosNoise.setEnabled(simulated && jCheckBoxAddPosNoise.isSelected());
-        jTextFieldRotNoise.setEditable(simulated && jCheckBoxAddPosNoise.isSelected());
-        jTextFieldRotNoise.setEnabled(simulated && jCheckBoxAddPosNoise.isSelected());
-        object2DJPanel1.setShowOutputItems(simulated && jCheckBoxViewOutput.isSelected());
+        jTextFieldPosNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
+        jTextFieldPosNoise.setEnabled(simulated && addPosNoiseCachedCheckBox.isSelected());
+        jTextFieldRotNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
+        jTextFieldRotNoise.setEnabled(simulated && addPosNoiseCachedCheckBox.isSelected());
+        object2DJPanel1.setShowOutputItems(simulated && viewOutputCachedCheckBox.isSelected());
         if (simulated) {
             jTextFieldHost.setEditable(false);
             jTextFieldHost.setEnabled(false);
@@ -1466,15 +1581,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    @UIEffect
     private void jCheckBoxSimulatedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSimulatedActionPerformed
-        this.jCheckBoxConnected.setSelected(false);
+        connectedCachedCheckBox.setSelected(false);
         setSimulatedInternal(this.jCheckBoxSimulated.isSelected());
         disconnect();
     }//GEN-LAST:event_jCheckBoxSimulatedActionPerformed
 
+    private final CachedCheckBox connectedCachedCheckBox;
+
     public void setSimulatedAndDisconnect() {
-        this.jCheckBoxConnected.setSelected(false);
-        this.jCheckBoxSimulated.setSelected(true);
+        connectedCachedCheckBox.setSelected(false);
+        simulatedCachedCheckBox.setSelected(true);
         setSimulatedInternal(true);
         disconnect();
     }
@@ -1484,12 +1602,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @Nullable
     private VisionSocketClient visionSocketClient = null;
 
+    @UIEffect
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
         jButtonReset.setEnabled(false);
         if (this.jCheckBoxConnected.isSelected()) {
             connect();
         } else {
-            if (this.jCheckBoxSimulated.isSelected()) {
+            if (simulatedCachedCheckBox.isSelected()) {
                 jButtonReset.setEnabled(true);
             }
             disconnect();
@@ -1501,7 +1620,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 visionSocketClient.close();
             } catch (Exception ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
             visionSocketClient.removeListListener(this);
             visionSocketClient = null;
@@ -1512,24 +1631,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    private final CachedTextField hostCachedTextField;
+    private final CachedTextField portCachedTextField;
+    private final CachedCheckBox debugCachedCheckBox;
+
     private void connect() throws NumberFormatException {
-        if (this.jCheckBoxSimulated.isSelected()) {
+        if (simulatedCachedCheckBox.isSelected()) {
             try {
-                int port = Integer.parseInt(this.jTextFieldPort.getText().trim());
+                int port = Integer.parseInt(portCachedTextField.getText().trim());
                 if (null != visionSocketServer && visionSocketServer.getPort() != port) {
                     disconnect();
                 }
                 if (null == visionSocketServer) {
                     visionSocketServer = new VisionSocketServer(port);
                 }
-                visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
+                visionSocketServer.setDebug(debugCachedCheckBox.isSelected());
                 publishCurrentItems();
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            int port = Integer.parseInt(jTextFieldPort.getText().trim());
-            String host = jTextFieldHost.getText().trim();
+            int port = Integer.parseInt(portCachedTextField.getText().trim());
+            String host = hostCachedTextField.getText().trim();
             if (null != visionSocketClient) {
                 if (visionSocketClient.isConnected()
                         && port == visionSocketClient.getPort()
@@ -1539,22 +1662,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 try {
                     visionSocketClient.close();
                 } catch (Exception ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
             VisionSocketClient clnt = new VisionSocketClient();
             this.visionSocketClient = clnt;
             Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
-            argsMap.put("--visionport", jTextFieldPort.getText().trim());
+            argsMap.put("--visionport", portCachedTextField.getText().trim());
             argsMap.put("--visionhost", host);
-            clnt.setDebug(this.jCheckBoxDebug.isSelected());
+            clnt.setDebug(debugCachedCheckBox.isSelected());
             clnt.start(argsMap);
             if (!clnt.isConnected()) {
-                jCheckBoxConnected.setSelected(false);
+                connectedCachedCheckBox.setSelected(false);
                 try {
                     clnt.close();
                 } catch (Exception ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
                 visionSocketClient = null;
                 return;
@@ -1574,6 +1697,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return simulatedDropRate;
     }
 
+    private final CachedTextField simDropRateCachedTextField;
+
     /**
      * Set the value of simulatedDropRate
      *
@@ -1586,7 +1711,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (simulatedDropRate < 0.001) {
             simulatedDropRate = 0;
         }
-        updateTextFieldDouble(simulatedDropRate, jTextFieldSimDropRate, 0.001);
+        updateTextFieldDouble(simulatedDropRate, simDropRateCachedTextField, 0.001);
         this.simulatedDropRate = simulatedDropRate;
     }
 
@@ -1600,9 +1725,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private final Random posRandom = new Random();
+    private final CachedCheckBox addPosNoiseCachedCheckBox;
 
     private PhysicalItem noiseFilter(PhysicalItem in) {
-        if (!jCheckBoxAddPosNoise.isSelected()) {
+        if (!addPosNoiseCachedCheckBox.isSelected()) {
             return in;
         }
         PhysicalItem out = newPhysicalItemNameRotXYScoreType(in.getName(),
@@ -1635,6 +1761,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return nextLimitedGaussian() * Math.toRadians(rotNoise);
     }
 
+    private final CachedCheckBox shuffleSimulatedUpdatesCachedCheckBox;
+
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
@@ -1643,16 +1771,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == srv) {
             throw new IllegalStateException("visionSocketServer is null");
         }
-        if (jCheckBoxShuffleSimulatedUpdates.isSelected() || simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
+        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
+        if (shuffleSimulatedUpdatesCachedCheckBox.isSelected() || simulatedDropRate > 0.01 || addPosNoise) {
             List<PhysicalItem> origList = getItems();
             List<PhysicalItem> l = new ArrayList<>(origList);
-            if (simulatedDropRate > 0.01 || jCheckBoxAddPosNoise.isSelected()) {
+            if (simulatedDropRate > 0.01 || addPosNoise) {
                 l = l.stream()
                         .filter(this::dropFilter)
                         .map(this::noiseFilter)
                         .collect(Collectors.toList());
             }
-            if (jCheckBoxShuffleSimulatedUpdates.isSelected()) {
+            if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()) {
                 Collections.shuffle(l);
             }
             srv.publishList(l);
@@ -1662,6 +1791,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    @UIEffect
     private void jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddActionPerformed
         List<PhysicalItem> l = new ArrayList<>(getItems());
         PhysicalItem item = newPhysicalItemNameRotXYScoreType("item_" + (l.size() + 1), 0,
@@ -1674,6 +1804,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setItems(l);
     }//GEN-LAST:event_jButtonAddActionPerformed
 
+    @UIEffect
     private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
         int row = jTableItems.getSelectedRow();
         List<PhysicalItem> oldList = getItems();
@@ -1696,6 +1827,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return null != this.draggedItem || System.currentTimeMillis() - mouseDragTime < 30;
     }
 
+    @UIEffect
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
@@ -1828,11 +1960,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            System.out.println("newPoint = " + newPoint.getX() + ", " + newPoint.getY());
             inside = itemDisplayRect.contains(newPoint);
         } catch (NoninvertibleTransformException ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
         return inside;
     }
 
+    @UIEffect
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
 
         int x = evt.getX();
@@ -1860,16 +1993,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         draggedItem = closestItem;
     }//GEN-LAST:event_object2DJPanel1MousePressed
 
+    @UIEffect
     private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
         draggedItem = null;
     }//GEN-LAST:event_object2DJPanel1MouseReleased
 
+    @UIEffect
     private void jTextFieldMaxXMaxYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMaxXMaxYActionPerformed
         String txt = jTextFieldMaxXMaxY.getText().trim();
         setMaxXMaxYText(txt);
     }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
 
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
+        Utils.runOnDispatchThread(() -> setViewLimitsOnDisplay(minX, minY, maxX, maxY));
+    }
+
+    @UIEffect
+    private void setViewLimitsOnDisplay(double minX, double minY, double maxX, double maxY) {
         String minXMinYString = String.format("%.3f,%.3f", minX, minY);
         jTextFieldMinXMinY.setText(minXMinYString);
         jTextFieldCurrentXY.setText(minXMinYString);
@@ -1877,8 +2017,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String maxXMaxYString = String.format("%.3f,%.3f", maxX, maxY);
         jTextFieldMaxXMaxY.setText(maxXMaxYString);
         setMaxXMaxYText(maxXMaxYString);
-        this.jCheckBoxAutoscale.setSelected(false);
-        object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
+        autoscaleCachedCheckBox.setSelected(false);
+        object2DJPanel1.setAutoscale(false);
     }
 
     private void setMaxXMaxYText(String txt) throws NumberFormatException {
@@ -1893,11 +2033,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    @UIEffect
     private void jTextFieldMinXMinYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMinXMinYActionPerformed
         String txt = jTextFieldMinXMinY.getText().trim();
         setMinXMinYText(txt);
     }//GEN-LAST:event_jTextFieldMinXMinYActionPerformed
 
+    @UIEffect
     private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
         if (null != visionSocketServer) {
             visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
@@ -1907,22 +2049,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
+    @UIEffect
     private void jButtonResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonResetActionPerformed
         this.setItems(Object2DJPanel.EXAMPLES_ITEMS_LIST);
     }//GEN-LAST:event_jButtonResetActionPerformed
 
+    @UIEffect
     private void jCheckBoxShowRotationsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowRotationsActionPerformed
         object2DJPanel1.setViewRotationsAndImages(this.jCheckBoxShowRotations.isSelected());
     }//GEN-LAST:event_jCheckBoxShowRotationsActionPerformed
 
+    @UIEffect
     private void jCheckBoxPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxPauseActionPerformed
-        if (!this.jCheckBoxPause.isSelected()) {
-            if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
+        boolean wasPaused = this.jCheckBoxPause.isSelected();
+        if (!wasPaused) {
+            if (null != visionSocketServer) {
                 publishCurrentItems();
+                if (jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
+                    setupSimUpdateTimer();
+                }
             }
+        } else {
+            stopSimUpdateTimerOnDisplay();
         }
     }//GEN-LAST:event_jCheckBoxPauseActionPerformed
 
+    @UIEffect
     private void jButtonRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRefreshActionPerformed
         if (null != visionSocketServer && !this.jCheckBoxPause.isSelected()) {
             this.setItems(object2DJPanel1.getItems());
@@ -1930,6 +2082,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonRefreshActionPerformed
 
+    @UIEffect
     private void jComboBoxDisplayAxisActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDisplayAxisActionPerformed
         object2DJPanel1.setDisplayAxis((DisplayAxis) jComboBoxDisplayAxis.getSelectedItem());
     }//GEN-LAST:event_jComboBoxDisplayAxisActionPerformed
@@ -1953,7 +2106,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == aprsSystem) {
             return true;
         }
-        return aprsSystem.isSnapshotsEnabled();
+        return aprsSystem.isSnapshotsSelected();
     }
 
     public void loadFile(File f) throws IOException {
@@ -1963,7 +2116,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
         if (f.isDirectory()) {
@@ -1972,13 +2125,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
         this.setItems(VisionSocketClient.lineToList(line));
-        jTextFieldFilename.setText(f.getCanonicalPath());
+        filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
             javax.swing.SwingUtilities.invokeLater(() -> {
                 try {
                     takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
                 } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             });
         }
@@ -1999,6 +2152,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }
 
+    @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         String fname = jTextFieldFilename.getText().trim();
         File dir = new File(System.getProperty("user.home"));
@@ -2018,11 +2172,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 loadFile(chooser.getSelectedFile());
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
+    @UIEffect
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         String fname = jTextFieldFilename.getText().trim();
         File dir = new File(System.getProperty("user.home"));
@@ -2042,13 +2197,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 File newFile = chooser.getSelectedFile();
                 saveFile(newFile);
-                jTextFieldFilename.setText(newFile.getCanonicalPath());
+                filenameCachedTextField.setText(newFile.getCanonicalPath());
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
     }//GEN-LAST:event_jButtonSaveActionPerformed
 
+    @UIEffect
     private void jTextFieldCurrentXYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldCurrentXYActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldCurrentXYActionPerformed
@@ -2103,6 +2259,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    @UIEffect
     private void jButtonCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCurrentActionPerformed
         List<PhysicalItem> items = this.getItems();
         int selectedIndex = object2DJPanel1.getSelectedItemIndex();
@@ -2113,14 +2270,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonCurrentActionPerformed
 
+    @UIEffect
     private void jCheckBoxShowCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowCurrentActionPerformed
         setTrackCurrentPos(jCheckBoxShowCurrent.isSelected());
     }//GEN-LAST:event_jCheckBoxShowCurrentActionPerformed
 
+    @UIEffect
     private void jCheckBoxSeparateNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSeparateNamesActionPerformed
         object2DJPanel1.setUseSeparateNames(jCheckBoxSeparateNames.isSelected());
     }//GEN-LAST:event_jCheckBoxSeparateNamesActionPerformed
 
+    @UIEffect
     private void jCheckBoxAutoscaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAutoscaleActionPerformed
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
@@ -2144,29 +2304,37 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return minDiffCart;
     }
 
+    @UIEffect
     private void jButtonOffsetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOffsetAllActionPerformed
         offsetAll();
     }//GEN-LAST:event_jButtonOffsetAllActionPerformed
 
+    @UIEffect
     private void jTextFieldSimulationUpdateTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSimulationUpdateTimeActionPerformed
         setSimRefreshMillis(Integer.parseInt(jTextFieldSimulationUpdateTime.getText().trim()));
         setupSimUpdateTimer();
     }//GEN-LAST:event_jTextFieldSimulationUpdateTimeActionPerformed
 
+    @UIEffect
     private void jCheckBoxSimulationUpdateAsNeededActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSimulationUpdateAsNeededActionPerformed
-        jTextFieldSimulationUpdateTime.setEditable(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-        jTextFieldSimulationUpdateTime.setEnabled(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
+        boolean simulationUpdateAsNeeded = jCheckBoxSimulationUpdateAsNeeded.isSelected();
+        boolean simulated = jCheckBoxSimulated.isSelected();
+        jTextFieldSimulationUpdateTime.setEditable(simulated && !simulationUpdateAsNeeded);
+        jTextFieldSimulationUpdateTime.setEnabled(simulated && !simulationUpdateAsNeeded);
         setupSimUpdateTimer();
     }//GEN-LAST:event_jCheckBoxSimulationUpdateAsNeededActionPerformed
 
+    @UIEffect
     private void jTextFieldRotNoiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotNoiseActionPerformed
         setRotNoise(Double.parseDouble(jTextFieldRotNoise.getText().trim()));
     }//GEN-LAST:event_jTextFieldRotNoiseActionPerformed
 
+    @UIEffect
     private void jTextFieldPosNoiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPosNoiseActionPerformed
         setPosNoise(Double.parseDouble(jTextFieldPosNoise.getText().trim()));
     }//GEN-LAST:event_jTextFieldPosNoiseActionPerformed
 
+    @UIEffect
     private void jCheckBoxAddPosNoiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddPosNoiseActionPerformed
         final boolean enable = jCheckBoxSimulated.isSelected() && jCheckBoxAddPosNoise.isSelected();
         jTextFieldPosNoise.setEditable(enable);
@@ -2175,43 +2343,55 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldRotNoise.setEnabled(enable);
     }//GEN-LAST:event_jCheckBoxAddPosNoiseActionPerformed
 
+    @UIEffect
     private void jCheckBoxViewOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxViewOutputActionPerformed
-        setShowOutputItems(jCheckBoxViewOutput.isSelected());
+        setShowOutputItemsOnDisplay(jCheckBoxViewOutput.isSelected());
     }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
 
     public void setShowOutputItems(boolean showOutputItems) {
+        Utils.runOnDispatchThread(() -> setShowOutputItemsOnDisplay(showOutputItems));
+    }
+
+    @UIEffect
+    private void setShowOutputItemsOnDisplay(boolean showOutputItems) {
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
             setItemsInternal(getItems());
         } else {
             setOutputItemsInternal(getOutputItems());
         }
-        if (showOutputItems != jCheckBoxViewOutput.isSelected()) {
-            jCheckBoxViewOutput.setSelected(showOutputItems);
+        if (showOutputItems != viewOutputCachedCheckBox.isSelected()) {
+            viewOutputCachedCheckBox.setSelected(showOutputItems);
         }
     }
 
+    @UIEffect
     private void jTextFieldSimDropRateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSimDropRateActionPerformed
         setSimulatedDropRate(Double.parseDouble(jTextFieldSimDropRate.getText().trim()));
     }//GEN-LAST:event_jTextFieldSimDropRateActionPerformed
 
+    @UIEffect
     private void jTextFieldPickupDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPickupDistActionPerformed
         setPickupDist(Double.parseDouble(jTextFieldPickupDist.getText().trim()));
     }//GEN-LAST:event_jTextFieldPickupDistActionPerformed
 
+    @UIEffect
     private void jTextFieldDropOffThresholdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDropOffThresholdActionPerformed
         setDropOffThreshold(Double.parseDouble(jTextFieldDropOffThreshold.getText().trim()));
     }//GEN-LAST:event_jTextFieldDropOffThresholdActionPerformed
 
+    @UIEffect
     private void jCheckBoxAddSlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxAddSlotsActionPerformed
         object2DJPanel1.setShowAddedSlotPositions(jCheckBoxAddSlots.isSelected());
         refresh(false);
     }//GEN-LAST:event_jCheckBoxAddSlotsActionPerformed
 
+    @UIEffect
     private void jCheckBoxDetailsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDetailsActionPerformed
         object2DJPanel1.setViewDetails(jCheckBoxDetails.isSelected());
     }//GEN-LAST:event_jCheckBoxDetailsActionPerformed
 
+    @UIEffect
     private void object2DJPanel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseClicked
         int x = evt.getX();
         int y = evt.getY();
@@ -2242,6 +2422,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.draggedItem = null;
     }//GEN-LAST:event_object2DJPanel1MouseExited
 
+    @UIEffect
     private void jCheckBoxToolsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxToolsActionPerformed
         object2DJPanel1.setShowAddedToolsAndToolHolders(jCheckBoxTools.isSelected());
         refresh(false);
@@ -2260,20 +2441,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return simRefreshMillis;
     }
 
+    private final CachedTextField simulationUpdateTimeCachedTextField;
+
     /**
      * Set the value of simRefreshMillis
      *
      * @param simRefreshMillis new value of simRefreshMillis
      */
     private void setSimRefreshMillis(int simRefreshMillis) {
-        if (Integer.parseInt(jTextFieldSimulationUpdateTime.getText().trim()) != simRefreshMillis) {
-            jTextFieldSimulationUpdateTime.setText(Integer.toString(simRefreshMillis));
+        if (Integer.parseInt(simulationUpdateTimeCachedTextField.getText().trim()) != simRefreshMillis) {
+            simulationUpdateTimeCachedTextField.setText(Integer.toString(simRefreshMillis));
         }
         this.simRefreshMillis = simRefreshMillis;
     }
 
+    private final CachedCheckBox simulationUpdateAsNeededCachedCheckBox;
+
     private void simUpdateAction(ActionEvent evt) {
-        if (jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
+        if (simulationUpdateAsNeededCachedCheckBox.isSelected()) {
             return;
         }
         if (!forceOutputFlag) {
@@ -2282,6 +2467,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public void stopSimUpdateTimer() {
+        if (null != simUpdateTimer) {
+            Utils.runOnDispatchThread(this::stopSimUpdateTimerOnDisplay);
+        }
+    }
+
+    @UIEffect
+    private void stopSimUpdateTimerOnDisplay() {
         if (null != simUpdateTimer) {
             simUpdateTimer.stop();
             simUpdateTimer = null;
@@ -2293,13 +2485,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return;
         }
         stopSimUpdateTimer();
-        if (jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
+        if (simulationUpdateAsNeededCachedCheckBox.isSelected() || pauseCachedCheckBox.isSelected()) {
             return;
         }
+        Utils.runOnDispatchThread(this::setupSimUpdateTimerOnDisplay);
+    }
+
+    @UIEffect
+    private void setupSimUpdateTimerOnDisplay() {
         simUpdateTimer = new javax.swing.Timer(simRefreshMillis, this::simUpdateAction);
         simUpdateTimer.start();
     }
 
+    @UIEffect
     private void offsetAll() {
         try {
             PmCartesian minOffset = getMinOffset();
@@ -2323,17 +2521,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         newItem.setVisioncycle(item.getVisioncycle());
                         newItems.add(newItem);
                     }
-                    setItems(newItems, true);
+                    setItems(newItems);
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
+    private final CachedCheckBox showCurrentCachedCheckBox;
+
     public void setTrackCurrentPos(boolean v) {
-        if (jCheckBoxShowCurrent.isSelected() != v) {
-            jCheckBoxShowCurrent.setSelected(v);
+        if (showCurrentCachedCheckBox.isSelected() != v) {
+            showCurrentCachedCheckBox.setSelected(v);
         }
         object2DJPanel1.setShowCurrentXY(v);
         if (v) {
@@ -2426,7 +2626,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 visionSocketClient.close();
             } catch (Exception ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
             visionSocketClient = null;
         }
@@ -2463,12 +2663,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return canString;
         } catch (Exception exception) {
             Logger.getLogger(Object2DOuterJPanel.class
-                    .getName()).log(Level.SEVERE, null, exception);
+                    .getName()).log(Level.SEVERE, "", exception);
         }
         return str;
     }
 
-    public void saveProperties() {
+    private final CachedCheckBox viewOutputCachedCheckBox;
+    private final CachedCheckBox autoscaleCachedCheckBox;
+
+    public XFutureVoid saveProperties() {
+        return Utils.runOnDispatchThread(this::savePropertiesOnDisplay);
+    }
+
+    @UIEffect
+    private void savePropertiesOnDisplay() {
         if (null != propertiesFile) {
             File parentFile = propertiesFile.getParentFile();
             if (null != parentFile) {
@@ -2476,32 +2684,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             Properties props = new Properties();
             props.put("alternativeRotation", String.format("%.2f", Math.toDegrees(object2DJPanel1.getAlternativeRotation())));
-            props.put("--visionport", jTextFieldPort.getText().trim());
-            props.put("--visionhost", jTextFieldHost.getText().trim());
-            props.put("simulated", Boolean.toString(jCheckBoxSimulated.isSelected()));
-            props.put("viewOutput", Boolean.toString(jCheckBoxViewOutput.isSelected()));
-            props.put("simulationUpdateAsNeeded", Boolean.toString(jCheckBoxSimulationUpdateAsNeeded.isSelected()));
-            props.put("shuffleSimulatedUpdates", Boolean.toString(jCheckBoxShuffleSimulatedUpdates.isSelected()));
+            props.put("--visionport", portCachedTextField.getText().trim());
+            props.put("--visionhost", hostCachedTextField.getText().trim());
+            props.put("simulated", Boolean.toString(simulatedCachedCheckBox.isSelected()));
+            props.put("viewOutput", Boolean.toString(viewOutputCachedCheckBox.isSelected()));
+            props.put("simulationUpdateAsNeeded", Boolean.toString(simulationUpdateAsNeededCachedCheckBox.isSelected()));
+            props.put("shuffleSimulatedUpdates", Boolean.toString(shuffleSimulatedUpdatesCachedCheckBox.isSelected()));
             props.put("simulatedDropRate", String.format("%.3f", simulatedDropRate));
-            props.put("addPosNoise", Boolean.toString(jCheckBoxAddPosNoise.isSelected()));
+            props.put("addPosNoise", Boolean.toString(addPosNoiseCachedCheckBox.isSelected()));
             props.put("pickupDist", String.format("%.2f", pickupDist));
             props.put("dropOffThreshold", String.format("%.2f", dropOffThreshold));
             props.put("posNoise", String.format("%.2f", posNoise));
             props.put("rotNoise", String.format("%.2f", rotNoise));
             props.put("simRefreshMillis", Integer.toString(simRefreshMillis));
-            props.put("connected", Boolean.toString(jCheckBoxConnected.isSelected()));
-            props.put("autoscale", Boolean.toString(jCheckBoxAutoscale.isSelected()));
+            props.put("connected", Boolean.toString(connectedCachedCheckBox.isSelected()));
+            props.put("autoscale", Boolean.toString(autoscaleCachedCheckBox.isSelected()));
             props.put("tools", Boolean.toString(jCheckBoxTools.isSelected()));
-            props.put("trackcurrentpos", Boolean.toString(jCheckBoxShowCurrent.isSelected()));
+            props.put("trackcurrentpos", Boolean.toString(showCurrentCachedCheckBox.isSelected()));
             props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
             props.put("viewDetails", Boolean.toString(jCheckBoxDetails.isSelected()));
             props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
             props.put("xmaxymax", jTextFieldMaxXMaxY.getText().trim());
             props.put("xminymin", jTextFieldMinXMinY.getText().trim());
             if (reverseFlag) {
-                this.reverseDataFileString = jTextFieldFilename.getText().trim();
+                this.reverseDataFileString = filenameCachedTextField.getText().trim();
             } else {
-                this.dataFileString = jTextFieldFilename.getText().trim();
+                this.dataFileString = filenameCachedTextField.getText().trim();
             }
             if (null != reverseDataFileString && reverseDataFileString.length() > 0) {
                 String datafileShort = makeShortPath(propertiesFile, reverseDataFileString);
@@ -2546,18 +2754,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.reverseFlag = reverseFlag;
     }
 
-    public void loadProperties() throws IOException {
-        loadingProperties = true;
-        DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
-        model.removeTableModelListener(propertiesTableModelListener);
+    public XFutureVoid loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
+            loadingProperties = true;
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            updateDisplayFromProperties(props);
-            loadPropertiesTable(props);
+            return Utils.runOnDispatchThread(() -> {
+                completeLoadPropertiesOnDisplay(props);
+            });
         }
+        return XFutureVoid.completedFutureWithName("Object2D.propertiesFile="+propertiesFile);
+    }
+
+    @UIEffect
+    private void completeLoadPropertiesOnDisplay(Properties props) {
+        updateDisplayFromProperties(props);
+        loadPropertiesTableOnDisplay(props);
         loadingProperties = false;
     }
 
@@ -2601,7 +2815,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @MonotonicNonNull private volatile Properties tableLoadedProperties = null;
 
-    private void loadPropertiesTable(Properties props) {
+    @UIEffect
+    private void loadPropertiesTableOnDisplay(Properties props) {
         loadingTableProperties = true;
         DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
         model.removeTableModelListener(propertiesTableModelListener);
@@ -2622,6 +2837,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         model.addTableModelListener(propertiesTableModelListener);
     }
 
+    @UIEffect
     private void updateDisplayFromProperties(Properties props) {
         updatingDisplayFromProperties = true;
         String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
@@ -2640,7 +2856,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         try {
             if (null != portString && portString.length() > 0) {
                 int port = Integer.parseInt(portString);
-                jTextFieldPort.setText(Integer.toString(port));
+                portCachedTextField.setText(Integer.toString(port));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -2648,7 +2864,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String hostString = props.getProperty("--visionhost");
         try {
             if (null != hostString && hostString.length() > 0) {
-                jTextFieldHost.setText(hostString);
+                hostCachedTextField.setText(hostString);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -2657,27 +2873,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String simulationUpdateAsNeededString = props.getProperty("simulationUpdateAsNeeded");
         if (null != simulationUpdateAsNeededString && simulationUpdateAsNeededString.length() > 0) {
             boolean simulationUpdateAsNeeded = Boolean.valueOf(simulationUpdateAsNeededString);
-            jCheckBoxSimulationUpdateAsNeeded.setSelected(simulationUpdateAsNeeded);
-            jTextFieldSimulationUpdateTime.setEditable(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
-            jTextFieldSimulationUpdateTime.setEnabled(jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected());
+            simulationUpdateAsNeededCachedCheckBox.setSelected(simulationUpdateAsNeeded);
+            boolean simulated = simulatedCachedCheckBox.isSelected();
+            jTextFieldSimulationUpdateTime.setEditable(simulated && !simulationUpdateAsNeeded);
+            jTextFieldSimulationUpdateTime.setEnabled(simulated && !simulationUpdateAsNeeded);
         }
 
         String shuffleSimulatedUpdatesString = props.getProperty("shuffleSimulatedUpdates");
         if (null != shuffleSimulatedUpdatesString && shuffleSimulatedUpdatesString.length() > 0) {
             boolean shuffleSimulatedUpdates = Boolean.valueOf(shuffleSimulatedUpdatesString);
-            jCheckBoxShuffleSimulatedUpdates.setSelected(shuffleSimulatedUpdates);
+            shuffleSimulatedUpdatesCachedCheckBox.setSelected(shuffleSimulatedUpdates);
         }
 
         String viewOutputString = props.getProperty("viewOutput");
         if (null != viewOutputString && viewOutputString.length() > 0) {
             boolean viewOutput = Boolean.valueOf(viewOutputString);
-            jCheckBoxViewOutput.setSelected(viewOutput);
+            viewOutputCachedCheckBox.setSelected(viewOutput);
         }
 
         String addPosNoiseString = props.getProperty("addPosNoise");
         if (null != addPosNoiseString && addPosNoiseString.length() > 0) {
             boolean addPosNoise = Boolean.valueOf(addPosNoiseString);
-            jCheckBoxAddPosNoise.setSelected(addPosNoise);
+            addPosNoiseCachedCheckBox.setSelected(addPosNoise);
         }
         String simulatedDropRateString = props.getProperty("simulatedDropRate");
         if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
@@ -2720,14 +2937,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String simulatedString = props.getProperty("simulated");
         if (null != simulatedString && simulatedString.length() > 0) {
             boolean simulated = Boolean.valueOf(simulatedString);
-            jCheckBoxSimulated.setSelected(simulated);
+            simulatedCachedCheckBox.setSelected(simulated);
             setSimulatedInternal(simulated);
         }
 
         String autoscaleString = props.getProperty("autoscale");
         if (null != autoscaleString && autoscaleString.length() > 0) {
             boolean autoscale = Boolean.valueOf(autoscaleString);
-            jCheckBoxAutoscale.setSelected(autoscale);
+            autoscaleCachedCheckBox.setSelected(autoscale);
             object2DJPanel1.setAutoscale(autoscale);
         }
         String toolsString = props.getProperty("tools");
@@ -2752,17 +2969,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String connectedString = props.getProperty("connected");
         if (null != connectedString && connectedString.length() > 0) {
             boolean connected = Boolean.valueOf(connectedString);
-            jCheckBoxConnected.setSelected(connected);
+            connectedCachedCheckBox.setSelected(connected);
             if (connected) {
                 connect();
             }
         }
-        if (jCheckBoxSimulated.isSelected() || !jCheckBoxConnected.isSelected()) {
+        if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
             if (needReloadDataFile()) {
                 try {
                     reloadDataFile();
                 } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
         }
@@ -2787,7 +3004,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String trackCurrentPosString = props.getProperty("trackcurrentpos");
         if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
             boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
-            jCheckBoxShowCurrent.setSelected(trackCurrentPos);
+            showCurrentCachedCheckBox.setSelected(trackCurrentPos);
             this.setTrackCurrentPos(trackCurrentPos);
         }
         //showrotations
@@ -2813,11 +3030,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public boolean isSimulated() {
-        return jCheckBoxSimulated.isSelected();
+        return simulatedCachedCheckBox.isSelected();
     }
 
     public boolean isConnected() {
-        return jCheckBoxConnected.isSelected();
+        return connectedCachedCheckBox.isSelected();
     }
 
     @Nullable
@@ -2848,7 +3065,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != currentDataFileString && currentDataFileString.length() > 0) {
             File f = new File(currentDataFileString);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
-                jTextFieldFilename.setText(f.getCanonicalPath());
+                filenameCachedTextField.setText(f.getCanonicalPath());
                 loadFile(f);
             } else {
                 File parentFile = propertiesFile.getParentFile();
@@ -2858,13 +3075,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 String fullPath = parentFile.toPath().resolve(currentDataFileString).normalize().toString();
                 f = new File(fullPath);
                 if (f.exists() && f.canRead()) {
-                    jTextFieldFilename.setText(f.getCanonicalPath());
+                    filenameCachedTextField.setText(f.getCanonicalPath());
                     loadFile(f);
                 } else {
                     String fullPath2 = parentFile.toPath().resolveSibling(currentDataFileString).normalize().toString();
                     f = new File(fullPath2);
                     if (f.exists() && f.canRead()) {
-                        jTextFieldFilename.setText(f.getCanonicalPath());
+                        filenameCachedTextField.setText(f.getCanonicalPath());
                         loadFile(f);
                     }
                 }
@@ -2880,7 +3097,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();
 
     @Override
-    public void visionClientUpdateReceived(List<PhysicalItem> l, String line) {
+    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line) {
         long now = System.currentTimeMillis();
 
         String detailsMessage = null;
@@ -2895,21 +3112,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         final String finalDetailsMessage = detailsMessage;
         lastVisionUpdateTime = now;
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-            setItems(l);
-            if (null != detailsMessage) {
-                jTextAreaConnectDetails.setText(detailsMessage);
-            }
-        } else {
-            javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    setItems(l);
-                    if (null != finalDetailsMessage) {
-                        jTextAreaConnectDetails.setText(finalDetailsMessage);
-                    }
-                }
-            });
+        return Utils.runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
+    }
+
+    @UIEffect
+    private void handleClientUpdateOnDisplay(List<PhysicalItem> l, @Nullable String detailsMessage) {
+        setItems(l);
+        if (null != detailsMessage) {
+            jTextAreaConnectDetails.setText(detailsMessage);
         }
     }
 
@@ -2927,7 +3137,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             csvDir.mkdirs();
             saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -2950,13 +3160,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return pickupDist;
     }
 
+    private final CachedTextField pickupDistCachedTextField;
+    
     /**
      * Set the value of pickupDist
      *
      * @param pickupDist new value of pickupDist
      */
     private void setPickupDist(double pickupDist) {
-        updateTextFieldDouble(pickupDist, jTextFieldPickupDist, 0.005);
+        updateTextFieldDouble(pickupDist, pickupDistCachedTextField, 0.005);
         this.pickupDist = pickupDist;
     }
 
@@ -2971,13 +3183,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return dropOffThreshold;
     }
 
+    private final CachedTextField dropOffThresholdCachedTextField;
+    
     /**
      * Set the value of dropOffThreshold
      *
      * @param dropOffThreshold new value of dropOffThreshold
      */
     private void setDropOffThreshold(double dropOffThreshold) {
-        updateTextFieldDouble(pickupDist, jTextFieldDropOffThreshold, 0.005);
+        updateTextFieldDouble(pickupDist, dropOffThresholdCachedTextField, 0.005);
         this.dropOffThreshold = dropOffThreshold;
     }
 
@@ -3217,7 +3431,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             @Nullable CRCLCommandType cmd,
             boolean isHoldingObjectExpected,
             long statRecievTime) {
-        if (!jCheckBoxShowCurrent.isSelected()) {
+        if (!showCurrentCachedCheckBox.isSelected()) {
             return;
         }
         PoseType pose = CRCLPosemath.getPose(stat);
@@ -3269,7 +3483,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
             object2DJPanel1.setCapturedPartPoint(null);
         }
-        if (this.jCheckBoxSimulated.isSelected()) {
+        if (simulatedCachedCheckBox.isSelected()) {
             if (min_dist < dropOffThreshold
                     && lastIsHoldingObjectExpected && !isHoldingObjectExpected
                     && min_dist_index != captured_item_index) {
@@ -3286,7 +3500,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 try {
                     printHandlePoseErrorInfo(errString, stat, pose, cmd);
                 } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
                 this.aprsSystem.setTitleErrorString(errString);
                 this.aprsSystem.pause();
@@ -3301,7 +3515,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                             }
                         } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
                     }
                 } else {
@@ -3321,7 +3535,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
 
                     } catch (Exception ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                     this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                 }
@@ -3332,7 +3546,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         try {
                             takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                         } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
                     }
                 }
@@ -3341,7 +3555,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     try {
                         printHandlePoseErrorInfo(err, stat, pose, cmd);
                     } catch (IOException ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                     System.out.println("lastDropUpdate = " + lastDropUpdate);
                     this.aprsSystem.setTitleErrorString(err);
@@ -3352,12 +3566,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             lastDropUpdate = currentUpdate;
             captured_item_index = -1;
         }
-        if (this.jCheckBoxSimulated.isSelected()) {
+        if (simulatedCachedCheckBox.isSelected()) {
             if (captured_item_index >= 0 && captured_item_index < l.size()) {
                 PhysicalItem item = l.get(captured_item_index);
                 item.x = currentX;
                 item.y = currentY;
-                setItems(l, (isHoldingObjectExpected != lastIsHoldingObjectExpected) && jCheckBoxSimulationUpdateAsNeeded.isSelected());
+                setItems(l, (isHoldingObjectExpected != lastIsHoldingObjectExpected) && simulationUpdateAsNeededCachedCheckBox.isSelected());
             } else if (isHoldingObjectExpected != lastIsHoldingObjectExpected) {
                 setItems(l);
             }

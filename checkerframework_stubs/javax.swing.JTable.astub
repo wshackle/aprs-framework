@@ -3,7 +3,9 @@ package javax.swing;
 
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.guieffect.qual.UIType;
 
+@UIType
 class JTable extends JComponent implements TableModelListener, Scrollable, TableColumnModelListener, ListSelectionListener, CellEditorListener, Accessible, RowSorterListener {
     static final int AUTO_RESIZE_OFF;
     static final int AUTO_RESIZE_NEXT_COLUMN;

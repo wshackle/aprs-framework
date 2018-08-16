@@ -20,43 +20,45 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.misc;
+package aprs.actions.executor;
 
-import java.io.File;
+import aprs.system.AprsSystem;
 import java.io.IOException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.List;
 
 /**
- * Common Interface implemented by the JInternalFrame of each submodule.
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "RedundantThrows"})
-public interface DisplayInterface {
-   
-    /**
-     * Set the properties file   
-     * @param propertiesFile new value of propertiesFile
-     */
-    public void setPropertiesFile(File propertiesFile);
-    
-    @Nullable public File getPropertiesFile();
-    
+@SuppressWarnings("ALL")
+interface ExecutorDisplayInterface {
 
     /**
-     * Write current settings to the properties file.
-     * @throws IOException if writing file fails
+     * Get the current list of actions.
+     * @return list of actions
      */
-    public void saveProperties() throws IOException;
+    public List<Action> getActionsList();
 
     /**
-     * Read settings from the current properties file.
-     * @throws IOException if reading file fails.
+     * Clear the actions list.
      */
-    public void loadProperties() throws IOException;
+    public void clearActionsList();
     
     /**
-     * Close the Frame/Window associated with this interface.
+     * Add the action to the list of actions.
+     * @param action action to add.
      */
-    public void close();
+    public void addAction(Action action);
+
+    /**
+     * Process the current list of actions.
+     */
+    public void processActions();
+
+    /**
+     * Get the current aprsSystemInterface
+     * @return aprsSystemInterface
+     */
+    public AprsSystem getAprsSystem();
+
 }
