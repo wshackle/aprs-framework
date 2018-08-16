@@ -47,6 +47,8 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -58,6 +60,7 @@ public class SplashScreen extends JFrame {
 
     private final SplashPanel panel;
 
+    @UIType
     private static class SplashPanel extends JPanel {
 
         private final Font font;
@@ -92,6 +95,7 @@ public class SplashScreen extends JFrame {
         final Image image;
     }
 
+    @UIEffect
     private SplashScreen(String message, float fontSize, @Nullable Image image) {
         super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);
@@ -100,6 +104,7 @@ public class SplashScreen extends JFrame {
 
     private volatile javax.swing.@Nullable Timer timer = null;
 
+    @UIEffect
     private void close(GraphicsDevice gd, XFutureVoid returnFuture) {
         gd.setFullScreenWindow(null);
         setVisible(false);
@@ -127,7 +132,7 @@ public class SplashScreen extends JFrame {
             }
             return ImageIO.read(stream);
         } catch (IOException ex) {
-            Logger.getLogger(SplashScreen.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SplashScreen.class.getName()).log(Level.SEVERE, "", ex);
         }
         return null;
     }

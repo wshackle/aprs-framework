@@ -8,7 +8,7 @@ crclWebApp.httpPort=8081
 maxLimit= { x=+10000.000, y=+10000.000, z=+10000.000 } 
 minLimit= { x=-10000.000, y=-10000.000, z=-10000.000 } 
 reloadSimFilesOnReverse=false
-snapShotEnable=false
+snapShotEnable=true
 snapShotHeight=700
 snapShotWidth=900
 startup.connectdatabase=true

@@ -22,6 +22,7 @@
  */
 package aprs.misc;
 
+import aprs.cachedcomponents.CachedTable;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
@@ -38,7 +39,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -53,9 +53,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -71,6 +69,9 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.guieffect.qual.UI;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -87,6 +88,7 @@ public class Utils {
      * A Runnable that may throw a checked exception.
      */
     @SuppressWarnings("RedundantThrows")
+    @UIType
     public interface RunnableWithThrow {
 
         /**
@@ -110,6 +112,7 @@ public class Utils {
      *
      * @param <T> type of object that may eventually be returned with get etc.
      */
+    @UIType
     public static class SwingFuture<T> extends XFuture<T> {
 
         /**
@@ -123,6 +126,8 @@ public class Utils {
         }
 
         @Override
+        @Deprecated
+        @SuppressWarnings("guieffect")
         public T get() throws InterruptedException, ExecutionException {
             if (SwingUtilities.isEventDispatchThread()) {
                 throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
@@ -131,6 +136,8 @@ public class Utils {
         }
 
         @Override
+        @Deprecated
+        @SuppressWarnings("guieffect")
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             if (SwingUtilities.isEventDispatchThread()) {
                 throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
@@ -252,7 +259,7 @@ public class Utils {
         Date date = new Date();
         return dateFormat.format(date);
     }
-    
+
     /**
      * Get the current date and time in the default format.
      *
@@ -262,7 +269,6 @@ public class Utils {
         Date date = new Date(time);
         return dateFormat.format(date);
     }
-    
 
     private static final DateFormat timeFormat = new SimpleDateFormat("HHmmss.SSS");
 
@@ -287,16 +293,22 @@ public class Utils {
     }
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
+    @SuppressWarnings("guieffect")
+    public static boolean isEventDispatchThread() {
+        return SwingUtilities.isEventDispatchThread();
+    }
+
     /**
      * Run something on the dispatch thread that may throw a checked exception.
      *
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
      */
+    @SuppressWarnings("guieffect")
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         try {
-            if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+            if (isEventDispatchThread()) {
                 r.run();
                 ret.complete(null);
                 return ret;
@@ -307,14 +319,14 @@ public class Utils {
                         r.run();
                         ret.complete(null);
                     } catch (Exception ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, "", ex);
                         ret.completeExceptionally(ex);
                     }
                 });
                 return ret;
             }
         } catch (Throwable exception) {
-            LOGGER.log(Level.SEVERE, null, exception);
+            LOGGER.log(Level.SEVERE, "", exception);
             ret.completeExceptionally(exception);
             return ret;
         }
@@ -326,7 +338,7 @@ public class Utils {
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
      */
-    public static XFutureVoid runOnDispatchThread(final Runnable r) {
+    public static XFutureVoid runOnDispatchThread(final @UI Runnable r) {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
@@ -338,9 +350,10 @@ public class Utils {
      * @param r object with run method to call
      * @return future that provides info on when the method completes.
      */
-    public static XFutureVoid runOnDispatchThread(String name, final Runnable r) {
+    @SuppressWarnings("guieffect")
+    public static XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
         XFutureVoid ret = new XFutureVoid(name);
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (isEventDispatchThread()) {
             try {
                 r.run();
                 ret.complete(null);
@@ -365,57 +378,29 @@ public class Utils {
     }
 
     /**
-     * Run something on the dispatch thread and attach a name to it for
-     * debugging/logging/visualization.
-     *
-     * @param name optional name for better debugging/logging/visualization
-     * @param r object with run method to call
-     * @throws java.lang.InterruptedException the calling thread was interrupted
-     * @throws java.lang.reflect.InvocationTargetException an exception occurred
-     * within the called runnable on the dispatch thread
-     */
-    public static void runAndWaitOnDispatchThread(String name, final Runnable r) throws InterruptedException, InvocationTargetException {
-        AtomicReference<Exception> exRef = new AtomicReference<>();
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-            try {
-                r.run();
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, name, e);
-                exRef.set(e);
-            }
-        } else {
-            javax.swing.SwingUtilities.invokeAndWait(() -> {
-                try {
-                    r.run();
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, name, e);
-                    exRef.set(e);
-                }
-            });
-        }
-        Exception ex = exRef.get();
-        if (null != ex) {
-            throw new InvocationTargetException(ex);
-        }
-    }
-    
-    /**
      * Call a method that returns a value on the dispatch thread.
      *
-     * @param <R> type of return of the caller
      * @param s supplier object with get method to be called.
      * @return future that will make the return value accessible when the call
      * is complete.
      */
-    public static SwingFuture<XFutureVoid> supplyXVoidOnDispatchThread(final Supplier<XFutureVoid> s) {
+    @SuppressWarnings("guieffect")
+    public static SwingFuture<XFutureVoid> supplyXVoidOnDispatchThread(final UiSupplier<XFutureVoid> s) {
         SwingFuture<XFutureVoid> ret = new SwingFuture<>("supplyOnDispatchThread");
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (isEventDispatchThread()) {
             ret.complete(s.get());
             return ret;
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
             return ret;
         }
+    }
+
+    @UI
+    @FunctionalInterface
+    public static interface UiSupplier<R> {
+
+        public R get();
     }
 
     /**
@@ -426,9 +411,10 @@ public class Utils {
      * @return future that will make the return value accessible when the call
      * is complete.
      */
-    public static <R> SwingFuture<R> supplyOnDispatchThread(final Supplier<R> s) {
+    @SuppressWarnings("guieffect")
+    public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (isEventDispatchThread()) {
             ret.complete(s.get());
             return ret;
         } else {
@@ -442,7 +428,7 @@ public class Utils {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             return null;
         }
     }
@@ -455,15 +441,57 @@ public class Utils {
      * @return future that will make the return value accessible when the call
      * is complete.
      */
-    @SuppressWarnings("nullness")
-    public static <R> XFuture<R> composeOnDispatchThread(final Supplier<XFuture<R>> s) {
+    @SuppressWarnings({"nullness", "guieffect"})
+    public static <R> XFuture<R> composeOnDispatchThread(final UiSupplier<? extends XFuture<R>> s) {
         XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (isEventDispatchThread()) {
             return s.get();
         } else {
 
             javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
-            return ret.thenApply(Utils::unwrap);
+            return ret.thenCompose(x -> x);
+        }
+    }
+
+    /**
+     * Call a method that returns a future of a value on the dispatch thread.
+     *
+     * @param <R> type of return of the caller
+     * @param s supplier object with get method to be called.
+     * @return future that will make the return value accessible when the call
+     * is complete.
+     */
+    @SuppressWarnings({"nullness", "guieffect"})
+    public static  XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
+        XFuture<XFutureVoid> ret = new SwingFuture<>("composeOnDispatchThread");
+        if (isEventDispatchThread()) {
+            return s.get();
+        } else {
+            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            return ret.thenComposeToVoid(x -> x);
+        }
+    }
+    /**
+     * Adjust the widths of each column of a table to match the max width of
+     * each value in the table.
+     *
+     * @param table table to be resized
+     */
+    public static void autoResizeTableColWidths(JTable table) {
+        Utils.runOnDispatchThread(() -> autoResizeTableColWidthsOnDisplay(table));
+    }
+
+    /**
+     * Adjust the widths of each column of a table to match the max width of
+     * each value in the table.
+     *
+     * @param table table to be resized
+     */
+    public static void autoResizeTableColWidths(CachedTable table) {
+        JTable jTable = table.getjTable();
+        if (null != jTable) {
+            final JTable jTableNonNull = jTable;
+            Utils.runOnDispatchThread(() -> autoResizeTableColWidthsOnDisplay(jTableNonNull));
         }
     }
 
@@ -473,7 +501,8 @@ public class Utils {
      *
      * @param table table to be resized
      */
-    public static void autoResizeTableColWidths(JTable table) {
+    @UIEffect
+    private static void autoResizeTableColWidthsOnDisplay(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
@@ -530,7 +559,32 @@ public class Utils {
      *
      * @param table table to be resized
      */
+    static public void autoResizeTableRowHeights(CachedTable table) {
+        JTable jTable = table.getjTable();
+        if (null != jTable) {
+            JTable jTableNonNull = jTable;
+            runOnDispatchThread(() -> autoResizeTableRowHeightsOnDisplay(jTableNonNull));
+        }
+    }
+
+    /**
+     * Adjust the heights of each row of a table to match the max height of each
+     * value in the table.
+     *
+     * @param table table to be resized
+     */
     static public void autoResizeTableRowHeights(JTable table) {
+        runOnDispatchThread(() -> autoResizeTableRowHeightsOnDisplay(table));
+    }
+
+    /**
+     * Adjust the heights of each row of a table to match the max height of each
+     * value in the table.
+     *
+     * @param table table to be resized
+     */
+    @UIEffect
+    static private void autoResizeTableRowHeightsOnDisplay(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
@@ -579,7 +633,7 @@ public class Utils {
                 }
             }
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
@@ -595,24 +649,66 @@ public class Utils {
     /**
      * Convert the table model column names to an array of strings.
      *
-     * @param jtable table to get column names from
+     * @param jTable table to get column names from
      * @return array of strings with column names
      */
-    public static String[] tableHeaders(JTable jtable) {
-        TableModel tm = jtable.getModel();
+    @UIEffect
+    public static String[] tableHeaders(JTable jTable) {
+        TableModel tm = jTable.getModel();
+        return tableHeaders(tm);
+    }
+
+    /**
+     * Convert the table model column names to an array of strings.
+     *
+     * @param tm TableModel to get column names from
+     * @return array of strings with column names
+     */
+    @UIEffect
+    public static String[] tableHeaders(TableModel tm) {
+        String headers[] = new String[tm.getColumnCount()];
+        for (int i = 0; i < tm.getColumnCount() && i < headers.length; i++) {
+            headers[i] = tm.getColumnName(i);
+        }
+        return headers;
+    }
+
+    /**
+     * Convert the table model column names to an array of strings.
+     *
+     * @param cachedTable table to get column names from
+     * @return array of strings with column names
+     */
+    public static String[] tableHeaders(CachedTable cachedTable) {
+        String headers[] = new String[cachedTable.getColumnCount()];
+        for (int i = 0; i < cachedTable.getColumnCount() && i < headers.length; i++) {
+            headers[i] = cachedTable.getColumnName(i);
+        }
+        return headers;
+    }
+
+    public static String[] tableHeaders(CachedTable cachedTable, Iterable<Integer> columnIndexes) {
         List<String> colNameList = new ArrayList<>();
-        for (int i = 0; i < tm.getColumnCount(); i++) {
-            colNameList.add(tm.getColumnName(i));
+        for (Integer colIndex : columnIndexes) {
+            if (colIndex == null) {
+                throw new IllegalArgumentException("columnIndexe contains null : " + columnIndexes);
+            }
+            int i = colIndex;
+            if (i < 0 || i > cachedTable.getColumnCount()) {
+                throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to " + cachedTable.getColumnCount() + " : " + columnIndexes);
+            }
+            colNameList.add(cachedTable.getColumnName(i));
         }
         return colNameList.toArray(new String[0]);
     }
-
+    
     /**
      * Convert the table model column names to an array of strings.
      *
      * @param jtable table to get column names from
      * @return array of strings with column names
      */
+    @UIEffect
     public static String[] tableHeaders(JTable jtable, Iterable<Integer> columnIndexes) {
         TableModel tm = jtable.getModel();
         List<String> colNameList = new ArrayList<>();
@@ -633,12 +729,66 @@ public class Utils {
      * Save a JTable to a file.
      *
      * @param f file the save table data to
+     * @param cachedTable table to get data from
+     * @throws IOException file could not be written
+     */
+    public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
+            List<String> colNameList = new ArrayList<>();
+            for (int i = 0; i < cachedTable.getColumnCount(); i++) {
+                colNameList.add(cachedTable.getColumnName(i));
+            }
+            for (int i = 0; i < cachedTable.getRowCount(); i++) {
+                List<Object> l = new ArrayList<>();
+                for (int j = 0; j < cachedTable.getColumnCount(); j++) {
+                    Object o = cachedTable.getValueAt(i, j);
+                    if (o == null) {
+                        l.add("");
+                    } else if (o instanceof File) {
+                        File parentFile = f.getParentFile();
+                        if (null != parentFile) {
+                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
+                                l.add(rel);
+                            } else {
+                                l.add(o);
+                            }
+                        } else {
+                            l.add(o);
+                        }
+                    } else {
+                        l.add(o);
+                    }
+                }
+                printer.printRecord(l);
+            }
+        }
+    }
+
+    /**
+     * Save a JTable to a file.
+     *
+     * @param f file the save table data to
      * @param jtable table to get data from
      * @throws IOException file could not be written
      */
+    @UIEffect
     public static void saveJTable(File f, JTable jtable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(jtable)))) {
-            TableModel tm = jtable.getModel();
+        TableModel tm = jtable.getModel();
+        saveTableModel(f, tm);
+    }
+
+    /**
+     * Save a JTable to a file.
+     *
+     * @param f file the save table data to
+     * @param tm TableModel to get data from
+     * @throws IOException file could not be written
+     */
+    @UIEffect
+    public static void saveTableModel(File f, TableModel tm) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(tm)))) {
+
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < tm.getColumnCount(); i++) {
                 colNameList.add(tm.getColumnName(i));
@@ -742,6 +892,7 @@ public class Utils {
         return out;
     }
 
+    @SuppressWarnings("guieffect")
     public static void showMessageDialog(Component component, String message) {
         if (null == message || message.trim().length() < 1) {
             throw new IllegalArgumentException("message=" + message);
@@ -753,24 +904,26 @@ public class Utils {
         for (int i = 80; i < message.length(); i += 80) {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
-        if(javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (isEventDispatchThread()) {
             JOptionPane.showMessageDialog(component, msgCopy);
         } else {
-            try { 
+            try {
                 final Component componentFinal = component;
-                final String msgCopyFinal =msgCopy;
+                final String msgCopyFinal = msgCopy;
                 javax.swing.SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(componentFinal, msgCopyFinal));
             } catch (Exception ex) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
-    
-    public static void readCsvFileToTable(JTable jtable,File f) {
-        readCsvFileToTableAndMap((DefaultTableModel) jtable.getModel(),f,null,null,null);
+
+    @UIEffect
+    public static void readCsvFileToTable(JTable jtable, File f) {
+        readCsvFileToTableAndMap((DefaultTableModel) jtable.getModel(), f, null, null, null);
     }
 
-    public static <T>  void readCsvFileToTableAndMap(@Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+    @UIEffect
+    public static <T> void readCsvFileToTableAndMap(@Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 
         if (null != dtm) {
             dtm.setRowCount(0);
@@ -790,8 +943,8 @@ public class Utils {
                     if (!val0.equals(colName) && val0.length() > 0) {
                         break;
                     }
-                    if(val0.length() < 1) {
-                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec="+rec+" in file="+f.getCanonicalPath()+", colName="+colName+", val0="+val0+",skipRows="+skipRows);
+                    if (val0.length() < 1) {
+                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec=" + rec + " in file=" + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0 + ",skipRows=" + skipRows);
                     }
                     skipRows++;
                 }
@@ -841,8 +994,86 @@ public class Utils {
                 }
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
-    
+
+    public static void readCsvFileToTable(CachedTable cachedTable, File f) {
+        readCsvFileToTableAndMap(cachedTable, f, null, null, null);
+    }
+
+    public static <T> void readCsvFileToTableAndMap(CachedTable cachedTable, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+
+        if (null != cachedTable) {
+            cachedTable.setRowCount(0);
+        }
+        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            if (null != cachedTable) {
+                for (CSVRecord rec : records) {
+                    String colName = cachedTable.getColumnName(0);
+                    Integer colIndex = headerMap.get(colName);
+                    if (colIndex == null) {
+                        throw new IllegalArgumentException(f + " does not have field " + colName);
+                    }
+                    String val0 = rec.get(colIndex);
+                    if (!val0.equals(colName) && val0.length() > 0) {
+                        break;
+                    }
+                    if (val0.length() < 1) {
+                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec=" + rec + " in file=" + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0 + ",skipRows=" + skipRows);
+                    }
+                    skipRows++;
+                }
+                cachedTable.setRowCount(records.size() - skipRows);
+            }
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                if (null != cachedTable) {
+                    for (int j = 0; j < cachedTable.getColumnCount(); j++) {
+                        String colName = cachedTable.getColumnName(j);
+                        Integer colIndex = headerMap.get(colName);
+                        if (colIndex == null) {
+                            continue ROW_LOOP;
+                        }
+                        String val = rec.get(colIndex);
+                        try {
+                            if (null != val) {
+                                if (val.equals(colName) || (j == 0 && val.length() < 1)) {
+                                    continue ROW_LOOP;
+                                }
+                                Class<?> colClass = cachedTable.getColumnClass(j);
+                                if (colClass == Double.class) {
+                                    cachedTable.setValueAt(Double.valueOf(val), i - skipRows, j);
+                                } else if (colClass == Boolean.class) {
+                                    cachedTable.setValueAt(Boolean.valueOf(val), i - skipRows, j);
+                                } else {
+                                    cachedTable.setValueAt(val, i - skipRows, j);
+                                }
+                            }
+                        } catch (Exception exception) {
+                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                            LOGGER.log(Level.SEVERE, msg, exception);
+                            throw new RuntimeException(msg, exception);
+                        }
+                    }
+                }
+                try {
+                    if (null != nameRecord && null != map && null != recordToValue) {
+                        String name = rec.get(nameRecord);
+                        T value = recordToValue.apply(rec);
+                        map.put(name, value);
+                    }
+                } catch (Exception exception) {
+                    LOGGER.log(Level.SEVERE, "rec=" + rec, exception);
+                    throw new RuntimeException(exception);
+                }
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+        }
+    }
 }

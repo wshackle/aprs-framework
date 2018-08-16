@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="0" attributes="0">
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="jScrollPane2" max="32767" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="jLabel11" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jCheckBoxDebug" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jSpinnerLogLines" min="-2" pref="79" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jCheckBoxDbUpdateEnabled" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jTextFieldRequiredParts" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jPanel2" max="32767" attributes="0"/>
+                  </Group>
+              </Group>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Group type="102" alignment="0" attributes="0">
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="jPanel2" max="32767" attributes="0"/>
+                  <Component id="jPanel1" max="32767" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel11" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jCheckBoxDebug" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jSpinnerLogLines" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="103" alignment="1" groupAlignment="3" attributes="0">
+                      <Component id="jCheckBoxDbUpdateEnabled" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldRequiredParts" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="jScrollPane2" pref="73" max="32767" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+          </Group>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Container class="javax.swing.JPanel" name="jPanel1">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.SoftBevelBorderInfo">
+            <BevelBorder/>
+          </Border>
+        </Property>
+      </Properties>
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="jScrollPane1" pref="0" max="32767" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jLabel9" alignment="1" max="32767" attributes="0"/>
+                              <Component id="jLabel8" alignment="1" max="32767" attributes="0"/>
+                              <Component id="jLabel7" alignment="1" max="32767" attributes="0"/>
+                              <Component id="jLabel6" alignment="1" max="32767" attributes="0"/>
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="jLabel10" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jLabel14" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jLabel15" alignment="0" min="-2" pref="186" max="-2" attributes="0"/>
+                                      <Component id="jLabel12" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jLabel17" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jLabel18" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonConnectVision" alignment="0" min="-2" pref="203" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                              </Group>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jTextFieldAcquire" linkSize="1" alignment="0" pref="200" max="32767" attributes="0"/>
+                              <Component id="jTextFieldLastCommand" linkSize="1" alignment="0" pref="213" max="32767" attributes="0"/>
+                              <Component id="jLabelCommnandStatus" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jLabelVisionStatus" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jLabelDatabaseStatus" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldCmdPort" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldPoseUpdatesProcessed" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldPoseUpdatesParsed" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jButtonDisconnectVision" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldVisionPort" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jTextFieldVisionHost" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <Component id="jTextFieldPerformance" alignment="0" max="32767" attributes="0"/>
+                      <Group type="102" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jCheckBoxAddRepeatCountsToDatabaseNames" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
+                          <Component id="jTextFieldRotationOffset" min="-2" pref="208" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" alignment="0" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel6" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldVisionHost" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldVisionPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jButtonConnectVision" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonDisconnectVision" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel8" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldPoseUpdatesParsed" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldPoseUpdatesProcessed" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel15" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldCmdPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabelDatabaseStatus" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabel12" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabelVisionStatus" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel14" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jLabelCommnandStatus" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel17" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldLastCommand" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel18" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldAcquire" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jCheckBoxAddRepeatCountsToDatabaseNames" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jScrollPane1" min="-2" pref="76" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="3" attributes="0">
+                      <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jTextFieldRotationOffset" alignment="3" min="-2" max="-2" attributes="0"/>
+                  </Group>
+                  <EmptySpace max="32767" attributes="0"/>
+                  <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jTextFieldPerformance" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JButton" name="jButtonDisconnectVision">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Disconnect From Vision"/>
+            <Property name="enabled" type="boolean" value="false"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDisconnectVisionActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel6">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Vision Host:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel7">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Vision Port: "/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="jButtonConnectVision">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Connect to Vision"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonConnectVisionActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldVisionHost">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="localhost"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldVisionHostActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldVisionPort">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="4000"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel8">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Poses Received from Vision:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel9">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Pose Updates Processed:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldPoseUpdatesParsed">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="text" type="java.lang.String" value="0"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldPoseUpdatesProcessed">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="text" type="java.lang.String" value="0"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel10">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Vision Status: "/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabelDatabaseStatus">
+          <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="c" green="c" red="ef" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="DISCONNECTED"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel12">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Database Status: "/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabelVisionStatus">
+          <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="c" green="c" red="ef" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="DISCONNECTED"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel14">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Command Port:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabelCommnandStatus">
+          <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="c" green="c" red="ef" type="rgb"/>
+            </Property>
+            <Property name="text" type="java.lang.String" value="DISCONNECTED"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel15">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Command Port:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldCmdPort">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="4001"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldCmdPortActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel17">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Last Command Received:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldLastCommand">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel18">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Acquire State:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldAcquire">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="ON"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldAcquireActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="jCheckBoxAddRepeatCountsToDatabaseNames">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Add Repeat Counts To Database Names"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxAddRepeatCountsToDatabaseNamesActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel2">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Transform:"/>
+          </Properties>
+        </Component>
+        <Container class="javax.swing.JScrollPane" name="jScrollPane1">
+          <AuxValues>
+            <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+          </AuxValues>
+
+          <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+          <SubComponents>
+            <Component class="javax.swing.JTable" name="jTableTransform">
+              <Properties>
+                <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                  <Table columnCount="4" rowCount="3">
+                    <Column editable="false" title="Label" type="java.lang.String">
+                      <Data value="Point"/>
+                      <Data value="Xaxis"/>
+                      <Data value="Zaxis"/>
+                    </Column>
+                    <Column editable="true" title="x/i" type="java.lang.Double">
+                      <Data value="0.0"/>
+                      <Data value="1.0"/>
+                      <Data value="0.0"/>
+                    </Column>
+                    <Column editable="true" title="y/j" type="java.lang.Double">
+                      <Data value="0.0"/>
+                      <Data value="0.0"/>
+                      <Data value="0.0"/>
+                    </Column>
+                    <Column editable="true" title="z/k" type="java.lang.Double">
+                      <Data value="0.0"/>
+                      <Data value="0.0"/>
+                      <Data value="1.0"/>
+                    </Column>
+                  </Table>
+                </Property>
+              </Properties>
+            </Component>
+          </SubComponents>
+        </Container>
+        <Component class="javax.swing.JLabel" name="jLabel3">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Performance:"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldPerformance">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="jLabel4">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Rotation Offset"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="jTextFieldRotationOffset">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="0.0"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldRotationOffsetActionPerformed"/>
+          </Events>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JScrollPane" name="jScrollPane2">
+      <AuxValues>
+        <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+      </AuxValues>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+      <SubComponents>
+        <Component class="javax.swing.JTextArea" name="jTextAreaLog">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="columns" type="int" value="20"/>
+            <Property name="rows" type="int" value="5"/>
+          </Properties>
+          <Events>
+            <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="jTextAreaLogMousePressed"/>
+            <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="jTextAreaLogMouseReleased"/>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="jTextAreaLogMouseClicked"/>
+          </Events>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Component class="javax.swing.JLabel" name="jLabel11">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Log: "/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="jCheckBoxDebug">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Debug"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxDebugActionPerformed"/>
+      </Events>
+    </Component>
+    <Container class="javax.swing.JPanel" name="jPanel2">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.SoftBevelBorderInfo">
+            <BevelBorder/>
+          </Border>
+        </Property>
+      </Properties>
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="jPanelTableFromDatabase" max="32767" attributes="0"/>
+                      <Component id="jPanelTableUpdateResults" max="32767" attributes="0"/>
+                      <Component id="jPanelTableFromVision" max="32767" attributes="0"/>
+                  </Group>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jPanelTableFromDatabase" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jPanelTableUpdateResults" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jPanelTableFromVision" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Container class="javax.swing.JPanel" name="jPanelTableFromDatabase">
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="jScrollPaneTableFromDatabase" pref="0" max="32767" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Component id="jLabel20" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jButtonCsvFromDatabase" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonDelete" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonAddItem" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonCheck" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonCheckNewItemsOnly" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonShowImage" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel20" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCheck" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonAddItem" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonDelete" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCsvFromDatabase" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCheckNewItemsOnly" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonShowImage" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jScrollPaneTableFromDatabase" pref="112" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="jScrollPaneTableFromDatabase">
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTable" name="jTableFromDatabase">
+                  <Properties>
+                    <Property name="autoCreateRowSorter" type="boolean" value="true"/>
+                    <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                      <Table columnCount="6" rowCount="0">
+                        <Column editable="false" title="Name" type="java.lang.String"/>
+                        <Column editable="false" title="X" type="java.lang.Double"/>
+                        <Column editable="false" title="Y" type="java.lang.Double"/>
+                        <Column editable="false" title="Z" type="java.lang.Double"/>
+                        <Column editable="false" title="Rotation" type="java.lang.Double"/>
+                        <Column editable="false" title="Vision Cycle" type="java.lang.Integer"/>
+                      </Table>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JLabel" name="jLabel20">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="From Database: "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCheck">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Check"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCheckActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonAddItem">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Add Item"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAddItemActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonDelete">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Delete"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDeleteActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCsvFromDatabase">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="csv"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCsvFromDatabaseActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCheckNewItemsOnly">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCheckNewItemsOnlyActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonShowImage">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Image"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonShowImageActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="jPanelTableFromVision">
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="jScrollPaneTableFromVision" max="32767" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jButtonCsv" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonForceAll" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonForceSingleUpdate" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel19" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonForceSingleUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonForceAll" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCsv" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jScrollPaneTableFromVision" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="jScrollPaneTableFromVision">
+              <Properties>
+                <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 200]"/>
+                </Property>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[200, 200]"/>
+                </Property>
+              </Properties>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTable" name="jTableFromVision">
+                  <Properties>
+                    <Property name="autoCreateRowSorter" type="boolean" value="true"/>
+                    <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                      <Table columnCount="14" rowCount="0">
+                        <Column editable="true" title="Position" type="java.lang.Integer"/>
+                        <Column editable="true" title="Name" type="java.lang.String"/>
+                        <Column editable="true" title="Repeats" type="java.lang.Integer"/>
+                        <Column editable="true" title="Rotation" type="java.lang.Double"/>
+                        <Column editable="true" title="X" type="java.lang.Double"/>
+                        <Column editable="true" title="Y" type="java.lang.Double"/>
+                        <Column editable="true" title="Z" type="java.lang.Double"/>
+                        <Column editable="true" title="Score" type="java.lang.Double"/>
+                        <Column editable="true" title="Type" type="java.lang.String"/>
+                        <Column editable="true" title="In PT?" type="java.lang.Boolean"/>
+                        <Column editable="true" title="In KT?" type="java.lang.Boolean"/>
+                        <Column editable="true" title="FullName" type="java.lang.String"/>
+                        <Column editable="true" title="VisionCycle" type="java.lang.Integer"/>
+                        <Column editable="true" title="Query" type="java.lang.String"/>
+                      </Table>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JLabel" name="jLabel19">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="From Vision:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonForceSingleUpdate">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Force Single Update"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonForceSingleUpdateActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonForceAll">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Force All"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonForceAllActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCsv">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="csv"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCsvActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="jPanelTableUpdateResults">
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="jScrollPaneTableUpdateResults" alignment="0" pref="0" max="32767" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jCheckBoxForceUpdates" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jCheckBoxVerifyUpdates" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jButtonUpdateResultDetails" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonUpdateResultDetails" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jCheckBoxVerifyUpdates" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jCheckBoxForceUpdates" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jScrollPaneTableUpdateResults" pref="159" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="jScrollPaneTableUpdateResults">
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTable" name="jTableUpdateResults">
+                  <Properties>
+                    <Property name="autoCreateRowSorter" type="boolean" value="true"/>
+                    <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                      <Table columnCount="4" rowCount="0">
+                        <Column editable="false" title="Name" type="java.lang.String"/>
+                        <Column editable="false" title="Verified" type="java.lang.Boolean"/>
+                        <Column editable="false" title="Exception Occured" type="java.lang.Boolean"/>
+                        <Column editable="false" title="Total Update Count" type="java.lang.Integer"/>
+                      </Table>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JLabel" name="jLabel21">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Update Results: "/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonUpdateResultDetails">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Details"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonUpdateResultDetailsActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="jCheckBoxVerifyUpdates">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Verify "/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxVerifyUpdatesActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="jCheckBoxForceUpdates">
+              <Properties>
+                <Property name="selected" type="boolean" value="true"/>
+                <Property name="text" type="java.lang.String" value="Force all updates"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxForceUpdatesActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+      </SubComponents>
+    </Container>
+    <Component class="javax.swing.JSpinner" name="jSpinnerLogLines">
+      <Properties>
+        <Property name="value" type="java.lang.Object" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="200" type="code"/>
+        </Property>
+      </Properties>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value=""/>
+      </AuxValues>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel1">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Lines to Keep:"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="jCheckBoxDbUpdateEnabled">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Db Update Enabled"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxDbUpdateEnabledActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel5">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Required Parts:"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="jTextFieldRequiredParts">
+    </Component>
+  </SubComponents>
+</Form>

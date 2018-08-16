@@ -51,6 +51,9 @@ import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import java.awt.image.ImageObserver;
+import org.checkerframework.checker.guieffect.qual.UI;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -64,6 +67,7 @@ public class Object2DJPanel extends JPanel {
 
     private DisplayAxis displayAxis = POS_X_POS_Y;
 
+    @UIEffect
     public Object2DJPanel() {
         partImageMap = new HashMap<>();
         try {
@@ -92,7 +96,7 @@ public class Object2DJPanel extends JPanel {
             addPartImage("sku_small_gear_vessel", "aprs/partImages/orange_small_gear_parts_tray.png", 110.0);
             addPartImage("sku_kit_m2l1_vessel", "aprs/partImages/m2l1_kit_tray_right.png", 190.0);
         } catch (IOException ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -386,6 +390,7 @@ public class Object2DJPanel extends JPanel {
         this.addedSlots = addedSlots;
     }
 
+    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PoseType pose, String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -396,6 +401,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, pose, label, w, h);
     }
 
+    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PointType point, String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -406,6 +412,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
+    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -433,6 +440,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, final int w, final int h) {
         try {
             BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
@@ -506,7 +514,7 @@ public class Object2DJPanel extends JPanel {
             ImageIO.write(img, type, f);
             System.out.println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -524,6 +532,7 @@ public class Object2DJPanel extends JPanel {
         return itemsToPaint;
     }
 
+    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         final int w = this.getWidth();
         final int h = this.getHeight();
@@ -548,7 +557,7 @@ public class Object2DJPanel extends JPanel {
             ImageIO.write(img, type, f);
             System.out.println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -581,6 +590,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("guieffect")
     BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
 
         Dimension dim = this.getSize();
@@ -608,6 +618,7 @@ public class Object2DJPanel extends JPanel {
         return img;
     }
 
+    @SuppressWarnings("guieffect")
     private void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
         try {
             if (itemsToPaint.isEmpty()) {
@@ -656,11 +667,12 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.y = maxY;
             this.paintItems(g2d, itemsToPaint, selectedItem, tempMinMax, opts);
         } catch (Exception e) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", e);
             g2d.drawString(e.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
 
+    @SuppressWarnings("guieffect")
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY, int w, int h, double currentScale, AffineTransform origTransform) {
         PointType point = pose.getPoint();
         if (null != point) {
@@ -673,6 +685,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("guieffect")
     private void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, MinMax minmaxParam,
             int width,
             int height,
@@ -876,6 +889,7 @@ public class Object2DJPanel extends JPanel {
 //    }
     private MinMax minmax = new MinMax();
 
+    @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
 
         MinMax tempMinMax = new MinMax();
@@ -1054,6 +1068,7 @@ public class Object2DJPanel extends JPanel {
 
     @SuppressWarnings("WeakerAccess")
     @Override
+    @UIEffect
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
@@ -1289,6 +1304,7 @@ public class Object2DJPanel extends JPanel {
         return slotList;
     }
 
+    @UIType
     private static class PartImageInfo {
 
         final BufferedImage image;
@@ -1404,6 +1420,7 @@ public class Object2DJPanel extends JPanel {
         this.viewLimitsLine = viewLimitsLine;
     }
 
+    @SuppressWarnings("guieffect")
     private void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
             @Nullable PhysicalItem selectedItem,
@@ -1628,7 +1645,7 @@ public class Object2DJPanel extends JPanel {
                             item.setRelTransform(itemRelTransform);
                         }
                     } catch (NoninvertibleTransformException ex) {
-                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
                 int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
@@ -1681,7 +1698,7 @@ public class Object2DJPanel extends JPanel {
                         itemRelTransform.concatenate(itemDisplayTransform);
                         item.setRelTransform(itemRelTransform);
                     } catch (NoninvertibleTransformException ex) {
-                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
 
@@ -1775,7 +1792,7 @@ public class Object2DJPanel extends JPanel {
                 g2d.setTransform(origTransform);
             }
         } catch (Exception exception) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, null, exception);
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", exception);
             g2d.drawString(exception.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
@@ -1802,6 +1819,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("guieffect")
     private double computeNewScale(MinMax minmax, @Nullable ViewOptions opts) {
         boolean useSeperateNamesThisTime = useSeparateNames;
         if (null != opts) {
@@ -1913,6 +1931,7 @@ public class Object2DJPanel extends JPanel {
                 && null != getPartImageInfo(item);
     }
 
+    @SuppressWarnings("guieffect")
     private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item, double rotationOffsetParam, double currentScale) {
         if (!viewRotationsAndImages) {
             return;
@@ -1988,6 +2007,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @SuppressWarnings("guieffect")
     @Nullable private PartImageInfo getPartImageInfo(PhysicalItem item) {
         PartImageInfo info = partImageMap.get(item.getName());
         if (null == info) {
@@ -2070,6 +2090,7 @@ public class Object2DJPanel extends JPanel {
         this.repaint();
     }
 
+    @SuppressWarnings("guieffect")
     private void translateThenRotate(Graphics2D g2d, double itemx, double itemy, MinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
         Point2D.Double translatePoint = toScreenPoint(displayAxis, itemx, itemy, minMaxParam, scaleParam);
         g2d.translate(translatePoint.x, translatePoint.y);

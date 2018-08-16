@@ -11,7 +11,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <main.class>aprs.launcher.LauncherAprsJFrame</main.class>
         <exec.mainClass>${main.class}</exec.mainClass>
-        <optiplanner.version>7.6.0.Final</optiplanner.version>
+        <optiplanner.version>7.8.0.Final</optiplanner.version>
         <crcl4java.version>1.9.dev2-SNAPSHOT</crcl4java.version>
     </properties>
     <name>aprs-framework</name>
@@ -632,6 +632,7 @@
                             <annotationProcessors>
                                 <!-- Add all the checkers you want to enable here -->
                                 <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                <annotationProcessor>org.checkerframework.checker.guieffect.GuiEffectChecker</annotationProcessor>
                             </annotationProcessors>
                             <compilerArgs>
                                 <arg>-Xlint:all,-serial</arg>

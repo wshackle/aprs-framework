@@ -22,7 +22,9 @@
  */
 package aprs.system;
 
+import aprs.cachedcomponents.CachedCheckBox;
 import aprs.misc.ActiveWinEnum;
+import aprs.misc.Utils;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -35,7 +37,11 @@ import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Container;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,10 +56,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import javax.swing.DesktopManager;
 import javax.swing.JMenu;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
- * AprsSystemInterface is the container for one robotic system in the APRS (Agility
- * Performance of Robotic Systems) framework.
+ * AprsSystemInterface is the container for one robotic system in the APRS
+ * (Agility Performance of Robotic Systems) framework.
  *
  * Internal windows are used to represent each of the modules within the system.
  * Vision, Sensor Processing, Planning, Execution, and the CRCL (Canonical Robot
@@ -64,100 +73,97 @@ import javax.swing.JMenu;
 @SuppressWarnings("unused")
 class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
-    @MonotonicNonNull private AprsSystem aprsSystem = null;
+    @MonotonicNonNull private volatile AprsSystem aprsSystem = null;
 
-    void setAprsSystem(AprsSystem aprsSystem) {
+    @SafeEffect
+    public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
     }
 
-    public void setConnectDatabaseCheckboxEnabled(boolean enable) {
-        jCheckBoxMenuItemConnectDatabase.setEnabled(enable);
-    }
-    
-    
-    public boolean isStepping() {
-        return jCheckBoxMenuItemStepping.isSelected();
-    }
-    
-    public boolean isLogCrclProgramsEnabled() {
-        return jCheckBoxMenuItemLogCrclPrograms.isSelected();
-    }
+    private volatile boolean showingException = false;
 
-    public void setLogCrclProgramsEnabled(boolean logCrclProgramsEnabled) {
-         jCheckBoxMenuItemLogCrclPrograms.setSelected(logCrclProgramsEnabled);
-    }
-    
-    public void setStepping(boolean stepping) {
-        if(jCheckBoxMenuItemStepping.isSelected() != stepping) {
-            jCheckBoxMenuItemStepping.setSelected(stepping);
+    @SafeEffect
+    public void showException(Exception ex) {
+        if (!showingException) {
+            showingException = true;
+            javax.swing.SwingUtilities.invokeLater(() -> showExceptionInternal(ex));
         }
     }
-    
+
+    @UIEffect
+    private void showExceptionInternal(Exception ex) {
+        StringWriter sw = new StringWriter();
+        try (PrintWriter pw = new PrintWriter(sw, true)) {
+            ex.printStackTrace(pw);
+        } catch (Exception ex1) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex1);
+        }
+        String exText = sw.toString();
+        MultiLineStringJPanel.showText(exText, this, "Exception from " + this.getTitle(), false).thenRun(() -> showingException = false);
+    }
+
+    CachedCheckBox logCrclProgramsCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemLogCrclPrograms);
+    }
+
+    CachedCheckBox steppingCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStepping);
+    }
+
+    @UIEffect
     public boolean addMenu(JMenu menu) {
-        if(null == menu) {
+        if (null == menu) {
             return false;
         }
         for (int i = 0; i < jMenuBar1.getMenuCount(); i++) {
             JMenu menuFromBar = jMenuBar1.getMenu(i);
-            if(menuFromBar == null) {
+            if (menuFromBar == null) {
                 continue; // paranoid
             }
-            if(menuFromBar == menu) {
+            if (menuFromBar == menu) {
                 return false;
             }
-            if(menuFromBar.getText().equals(menu.getText())) {
+            if (menuFromBar.getText().equals(menu.getText())) {
                 return false;
             }
         }
         this.jMenuBar1.add(menu);
         return true;
     }
-    
-    /**
-     * Check if the user has selected a check box asking for snapshot files to
-     * be created for logging/debugging.
-     *
-     * @return Has user enabled snapshots?
-     */
-    public boolean isSnapshotsEnabled() {
-        return jCheckBoxMenuItemSnapshotImageSize.isSelected();
+
+    CachedCheckBox snapshotsCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemSnapshotImageSize);
     }
 
-    public void setSnapshotsEnabled(boolean enable) {
-        jCheckBoxMenuItemSnapshotImageSize.setSelected(enable);
-    }
-
+    @UIEffect
     public void updateConnectedRobotDisplay(boolean connected, @Nullable String robotName, @Nullable String crclHost, int crclPort) {
         jCheckBoxMenuItemConnectedRobot.setSelected(connected);
         jCheckBoxMenuItemConnectedRobot.setText("Robot (CRCL " + robotName + " " + crclHost + ":" + crclPort + " )");
     }
 
-    public void setConnectedRobotCheckBox(boolean connected) {
-        jCheckBoxMenuItemConnectedRobot.setSelected(connected);
+    CachedCheckBox connectedRobotCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemConnectedRobot);
     }
 
-    public boolean getUseTeachTable() {
-        return jCheckBoxMenuItemUseTeachTable.isSelected();
+    CachedCheckBox useTeachTableCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemUseTeachTable);
     }
 
-    public void setUseTeachTable(boolean useTeachTable) {
-        jCheckBoxMenuItemUseTeachTable.setSelected(useTeachTable);
+    CachedCheckBox continousDemoCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemContinuousDemo);
     }
 
-    public void setContinuousDemoCheckbox(boolean selected) {
-        jCheckBoxMenuItemContinuousDemo.setSelected(selected);
-    }
-
+    @UIEffect
     public void addToDesktopPane(JInternalFrame internalFrame) {
-        JInternalFrame[] prevFrames =jDesktopPane1.getAllFramesInLayer(JLayeredPane.DEFAULT_LAYER);
+        JInternalFrame[] prevFrames = jDesktopPane1.getAllFramesInLayer(JLayeredPane.DEFAULT_LAYER);
         for (JInternalFrame prevFrame : prevFrames) {
             if (internalFrame == prevFrame) {
                 throw new IllegalStateException("internalFrame=" + internalFrame + " already in prevFrames=" + Arrays.toString(prevFrames) + " of jDesktopPane1=" + jDesktopPane1);
             }
         }
         Container internalFrameParent = internalFrame.getParent();
-        if(internalFrameParent != null) {
-                throw new IllegalStateException("internalFrame="+internalFrame+" already hasParent="+internalFrameParent+"  ((jDesktopPane1="+jDesktopPane1+")==internalFrameParent) ="+(jDesktopPane1==internalFrameParent));
+        if (internalFrameParent != null) {
+            throw new IllegalStateException("internalFrame=" + internalFrame + " already hasParent=" + internalFrameParent + "  ((jDesktopPane1=" + jDesktopPane1 + ")==internalFrameParent) =" + (jDesktopPane1 == internalFrameParent));
         }
         jDesktopPane1.add(internalFrame, JLayeredPane.DEFAULT_LAYER);
     }
@@ -165,136 +171,69 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     /**
      * Creates new AprsSystemInterface using a default properties file.
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"initialization", "nullness"})
+    @UIEffect
     public AprsSystemDisplayJFrame() {
         try {
             initComponents();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
-    public void clearStartCheckBoxes() {
-        jCheckBoxMenuItemKitInspectionStartup.setSelected(false);
-        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(false);
-        jCheckBoxMenuItemStartupExecutor.setSelected(false);
-        jCheckBoxMenuItemStartupObjectSP.setSelected(false);
-        jCheckBoxMenuItemStartupObject2DView.setSelected(false);
-        jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(false);
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(false);
-        jCheckBoxMenuItemExploreGraphDbStartup.setSelected(false);
-        jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(false);
-        jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(false);
-        jCheckBoxMenuItemShowDatabaseSetup.setSelected(false);
-//        jCheckBoxMenuItemStartupCRCLWebApp.setSelected(false);
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(false);
-        jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(false);
+    CachedCheckBox kitInspectionStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemKitInspectionStartup);
     }
 
-    public boolean isKitInspectionStartupSelected() {
-        return jCheckBoxMenuItemKitInspectionStartup.isSelected();
+    CachedCheckBox pddlPlannerStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupPDDLPlanner);
     }
 
-    public void setKitInspectionStartupSelected(boolean selected) {
-        jCheckBoxMenuItemKitInspectionStartup.setSelected(selected);
+    CachedCheckBox executorStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupExecutor);
     }
 
-    public boolean isPddlPlannerStartupSelected() {
-        return jCheckBoxMenuItemStartupPDDLPlanner.isSelected();
+    CachedCheckBox objectSpStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupObjectSP);
     }
 
-    public void setPddlPlannerStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(selected);
+    CachedCheckBox object2DViewStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupObject2DView);
     }
 
-    public boolean isExecutorStartupSelected() {
-        return jCheckBoxMenuItemStartupExecutor.isSelected();
+    CachedCheckBox robotCrclGUIStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupRobotCrclGUI);
     }
 
-    public void setExecutorStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupExecutor.setSelected(selected);
+    CachedCheckBox robotCrclSimServerStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupRobtCRCLSimServer);
     }
 
-    public boolean isObjectSpStartupSelected() {
-        return jCheckBoxMenuItemStartupObjectSP.isSelected();
+    CachedCheckBox robotCrclFanucServerStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupFanucCRCLServer);
     }
 
-    public void setObjectSpStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupObjectSP.setSelected(selected);
+    CachedCheckBox robotCrclMotomanServerStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemStartupMotomanCRCLServer);
     }
 
-    public boolean isObject2DViewStartupSelected() {
-        return jCheckBoxMenuItemStartupObject2DView.isSelected();
+    CachedCheckBox exploreGraphDBStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemExploreGraphDbStartup);
     }
 
-    public void setObject2DViewStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupObject2DView.setSelected(selected);
+    CachedCheckBox showDatabaseSetupOnStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemShowDatabaseSetupOnStartup);
     }
 
-    public boolean isRobotCrclGUIStartupSelected() {
-        return jCheckBoxMenuItemStartupRobotCrclGUI.isSelected();
+    CachedCheckBox onStartupConnectDatabaseCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemConnectDatabaseOnStartup);
     }
 
-    public void setRobotCrclGUIStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(selected);
+    CachedCheckBox connectVisionOnStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemConnectVisionOnStartup);
     }
 
-    public boolean isRobotCrclSimServerStartupSelected() {
-        return jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected();
-    }
-
-    public void setRobotCrclSimServerStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupRobtCRCLSimServer.setSelected(selected);
-    }
-
-    public boolean isRobotCrclFanucServerStartupSelected() {
-        return jCheckBoxMenuItemStartupFanucCRCLServer.isSelected();
-    }
-
-    public void setRobotCrclFanucServerStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupFanucCRCLServer.setSelected(selected);
-    }
-
-    public boolean isRobotCrclMotomanServerStartupSelected() {
-        return jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected();
-    }
-
-    public void setRobotCrclMotomanServerStartupSelected(boolean selected) {
-        jCheckBoxMenuItemStartupMotomanCRCLServer.setSelected(selected);
-    }
-
-    public boolean isExploreGraphDBStartupSelected() {
-        return jCheckBoxMenuItemExploreGraphDbStartup.isSelected();
-    }
-
-    public void setExploreGraphDBStartupSelected(boolean selected) {
-        jCheckBoxMenuItemExploreGraphDbStartup.setSelected(selected);
-    }
-
-    public boolean isShowDatabaseSetupSelected() {
-        return jCheckBoxMenuItemShowDatabaseSetup.isSelected();
-    }
-
-    public void setShowDatabaseSetupSelected(boolean selected) {
-        jCheckBoxMenuItemShowDatabaseSetup.setSelected(selected);
-    }
-
-    public boolean isConnectDatabaseOnStartupSelected() {
-        return jCheckBoxMenuItemConnectToDatabaseOnStartup.isSelected();
-    }
-
-    public void setConnectDatabaseOnStartupSelected(boolean selected) {
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setSelected(selected);
-    }
-
-    public boolean isConnectVisionOnStartupSelected() {
-        return jCheckBoxMenuItemConnectToVisionOnStartup.isSelected();
-    }
-
-    public void setConnectVisionOnStartupSelected(boolean selected) {
-        jCheckBoxMenuItemConnectToVisionOnStartup.setSelected(selected);
-    }
-
+    @UIEffect
     private void commonInit() {
         try {
             URL aprsPngUrl = AprsSystemDisplayJFrame.class.getResource("aprs.png");
@@ -304,20 +243,23 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.WARNING, "getResource(\"aprs.png\") returned null");
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
         setupWindowsMenu();
     }
 
-    public void closeAllInternalFrames() {
+    @UIEffect
+    void closeAllInternalFrames() {
         JInternalFrame frames[] = jDesktopPane1.getAllFrames();
         for (JInternalFrame f : frames) {
             jDesktopPane1.getDesktopManager().closeFrame(f);
+            f.setVisible(false);
             jDesktopPane1.remove(f);
         }
     }
 
-    public void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
+    @UIEffect
+    void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
         internalFrame.setVisible(true);
         if (checkInternalFrame(internalFrame)) {
             DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
@@ -327,7 +269,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    public boolean checkInternalFrame(JInternalFrame frm) {
+    @UIEffect
+    boolean checkInternalFrame(JInternalFrame frm) {
         try {
             if (frm == null) {
                 return false;
@@ -344,7 +287,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return false;
     }
 
-    public void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
+    @UIEffect
+    void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
         if (checkInternalFrame(internalFrame)) {
             DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
             desktopManager.iconifyFrame(internalFrame);
@@ -352,6 +296,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void activateFrame(final JInternalFrame frameToShow) {
         frameToShow.setVisible(true);
         if (checkInternalFrame(frameToShow)) {
@@ -363,16 +308,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    public void deiconifyAndActivate(final JInternalFrame frameToShow) {
+    @UIEffect
+    void deiconifyAndActivate(final JInternalFrame frameToShow) {
         DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
         desktopManager.deiconifyFrame(frameToShow);
         desktopManager.activateFrame(frameToShow);
     }
 
     private String lastFrameTitles[] = new String[0];
-    public void setupWindowsMenu() {
-//        jMenuWindow.removeAll();
 
+    @UIEffect
+    void setupWindowsMenu() {
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
             return;
         }
@@ -383,19 +329,19 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         ArrayList<JInternalFrame> framesList = new ArrayList<>(Arrays.asList(jDesktopPane1.getAllFrames()));
         framesList.sort(Comparator.comparing(JInternalFrame::getTitle));
         boolean framesChanged = false;
-        if(lastFrameTitles.length != framesList.size()) {
+        if (lastFrameTitles.length != framesList.size()) {
             framesChanged = true;
             lastFrameTitles = new String[framesList.size()];
         }
         for (int i = 0; i < framesList.size(); i++) {
             JInternalFrame f = framesList.get(i);
             String title = f.getTitle();
-            if(!Objects.equals(lastFrameTitles[i], title)) {
+            if (!Objects.equals(lastFrameTitles[i], title)) {
                 lastFrameTitles[i] = title;
-                framesChanged= true;
+                framesChanged = true;
             }
         }
-        if(!framesChanged) {
+        if (!framesChanged) {
             return;
         }
         List<JMenuItem> menuItems = new ArrayList<>();
@@ -409,7 +355,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                     activateFrame(frameToShow);
                 }
             });
-//            jMenuWindow.add(menuItem);
             count++;
             menuItems.add(menuItem);
         }
@@ -460,15 +405,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return ActiveWinEnum.OTHER;
     }
 
-    /**
-     * Set the menu checkbox item to reflect the val of the whether the vision
-     * system is connected. This will not cause the system to connect/disconnect
-     * only to show the state the caller already knows.
-     *
-     * @param val of vision systems connected status to show
-     */
-    public void setShowVisionConnected(boolean val) {
-        jCheckBoxMenuItemConnectVision.setSelected(val);
+    CachedCheckBox connectVisionCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemConnectVision);
     }
 
     /**
@@ -476,7 +414,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"rawtypes","unchecked"})
+    @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -496,14 +435,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemStartupObjectSP = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupObject2DView = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupRobotCrclGUI = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemShowDatabaseSetup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemShowDatabaseSetupOnStartup = new javax.swing.JCheckBoxMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jCheckBoxMenuItemStartupRobtCRCLSimServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupFanucCRCLServer = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupMotomanCRCLServer = new javax.swing.JCheckBoxMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
-        jCheckBoxMenuItemConnectToDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemConnectToVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectDatabaseOnStartup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemConnectVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemKitInspectionStartup = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
@@ -644,14 +583,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupRobotCrclGUI);
 
-        jCheckBoxMenuItemShowDatabaseSetup.setSelected(true);
-        jCheckBoxMenuItemShowDatabaseSetup.setText("Database Setup");
-        jCheckBoxMenuItemShowDatabaseSetup.addActionListener(new java.awt.event.ActionListener() {
+        jCheckBoxMenuItemShowDatabaseSetupOnStartup.setSelected(true);
+        jCheckBoxMenuItemShowDatabaseSetupOnStartup.setText("Database Setup");
+        jCheckBoxMenuItemShowDatabaseSetupOnStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemShowDatabaseSetupActionPerformed(evt);
+                jCheckBoxMenuItemShowDatabaseSetupOnStartupActionPerformed(evt);
             }
         });
-        jMenu3.add(jCheckBoxMenuItemShowDatabaseSetup);
+        jMenu3.add(jCheckBoxMenuItemShowDatabaseSetupOnStartup);
         jMenu3.add(jSeparator2);
 
         jCheckBoxMenuItemStartupRobtCRCLSimServer.setText("Robot CRCL SimServer");
@@ -679,16 +618,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenu3.add(jCheckBoxMenuItemStartupMotomanCRCLServer);
         jMenu3.add(jSeparator3);
 
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.setText("Connect To Database On Startup");
-        jCheckBoxMenuItemConnectToDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
+        jCheckBoxMenuItemConnectDatabaseOnStartup.setText("Connect To Database On Startup");
+        jCheckBoxMenuItemConnectDatabaseOnStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(evt);
+                jCheckBoxMenuItemConnectDatabaseOnStartupActionPerformed(evt);
             }
         });
-        jMenu3.add(jCheckBoxMenuItemConnectToDatabaseOnStartup);
+        jMenu3.add(jCheckBoxMenuItemConnectDatabaseOnStartup);
 
-        jCheckBoxMenuItemConnectToVisionOnStartup.setText("Connect To Vision On Startup");
-        jMenu3.add(jCheckBoxMenuItemConnectToVisionOnStartup);
+        jCheckBoxMenuItemConnectVisionOnStartup.setText("Connect To Vision On Startup");
+        jMenu3.add(jCheckBoxMenuItemConnectVisionOnStartup);
 
         jCheckBoxMenuItemExploreGraphDbStartup.setText("Explore Graph Database");
         jCheckBoxMenuItemExploreGraphDbStartup.addActionListener(new java.awt.event.ActionListener() {
@@ -777,6 +716,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenu4.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
 
         jCheckBoxMenuItemUseTeachTable.setText("Use Teach Table");
+        jCheckBoxMenuItemUseTeachTable.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemUseTeachTableActionPerformed(evt);
+            }
+        });
         jMenu4.add(jCheckBoxMenuItemUseTeachTable);
 
         jCheckBoxMenuItemLogCrclPrograms.setSelected(true);
@@ -908,12 +852,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    
+    @SafeEffect
     private void startPddlPlanner() {
         if (null != aprsSystem) {
             aprsSystem.startPddlPlanner();
         }
     }
 
+    @SafeEffect
     private void saveProperties() throws IOException {
         if (null != aprsSystem) {
             aprsSystem.saveProperties();
@@ -922,13 +869,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @SafeEffect
     private void closePddlPlanner() {
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             aprsSystem.closePddlPlanner();
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
+    
+    @UIEffect
     private void jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
         try {
             if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
@@ -940,7 +890,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             saveProperties();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
 
@@ -959,7 +909,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-    
+
+    @UIEffect
     private void jCheckBoxMenuItemStartupExecutorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupExecutorActionPerformed
         try {
             if (jCheckBoxMenuItemStartupExecutor.isSelected()) {
@@ -972,7 +923,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupExecutorActionPerformed
 
@@ -982,6 +933,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemStartupObjectSPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
         try {
             if (jCheckBoxMenuItemStartupObjectSP.isSelected()) {
@@ -992,17 +944,19 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupObjectSPActionPerformed
 
-    private void startObject2DJinternalFrame() {
+    private XFutureVoid startObject2DJinternalFrame() {
         if (null != aprsSystem) {
-            aprsSystem.startObject2DJinternalFrame();
+             return aprsSystem.startObject2DJinternalFrame();
         }
+        return XFutureVoid.completedFuture();
     }
 
 
+    @UIEffect
     private void jCheckBoxMenuItemStartupObject2DViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
         try {
             if (jCheckBoxMenuItemStartupObject2DView.isSelected()) {
@@ -1013,7 +967,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupObject2DViewActionPerformed
 
@@ -1025,26 +979,29 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemLoadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesActionPerformed
         try {
             this.loadProperties();
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jMenuItemLoadPropertiesActionPerformed
 
+    @UIEffect
     private void jMenuItemSavePropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropertiesActionPerformed
         try {
             this.saveProperties();
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
 
+    @UIEffect
     private void jMenuItemLoadPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadPropertiesFileActionPerformed
         browseOpenPropertiesFile();
     }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
@@ -1057,7 +1014,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable public File choosePropertiesFileToOpen() {
+    @UIEffect
+    @Nullable
+    File choosePropertiesFileToOpen() {
         JFileChooser chooser = new JFileChooser(getPropertiesDirectory());
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
         chooser.addChoosableFileFilter(filter);
@@ -1077,9 +1036,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void initLoggerWindow() {
+    private XFutureVoid initLoggerWindow() {
         if (null != aprsSystem) {
-            aprsSystem.initLoggerWindow();
+            return aprsSystem.initLoggerWindow();
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
@@ -1088,6 +1047,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     /**
      * Query the user to select a properties file to open.
      */
+    @UIEffect
     private void browseOpenPropertiesFile() {
         File selectedFile = choosePropertiesFileToOpen();
         if (null != selectedFile) {
@@ -1097,29 +1057,29 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystemDisplayJFrame.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                        .getName()).log(Level.SEVERE, "", ex);
             }
-            this.initLoggerWindow();
-            this.commonInit();
+            this.initLoggerWindow()
+                    .thenRun(this::commonInit);
         }
     }
 
-    
     private void close() {
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             aprsSystem.close();
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
 
+    @UIEffect
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         try {
             close();
 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         System.exit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
@@ -1130,6 +1090,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
         try {
             if (jCheckBoxMenuItemStartupRobotCrclGUI.isSelected()) {
@@ -1140,7 +1101,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupRobotCrclGUIActionPerformed
 
@@ -1156,9 +1117,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void jCheckBoxMenuItemShowDatabaseSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
+    @UIEffect
+    private void jCheckBoxMenuItemShowDatabaseSetupOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemShowDatabaseSetupOnStartupActionPerformed
         try {
-            if (jCheckBoxMenuItemShowDatabaseSetup.isSelected()) {
+            if (jCheckBoxMenuItemShowDatabaseSetupOnStartup.isSelected()) {
                 showDatabaseSetupWindow();
             } else {
                 hideDatabaseSetupWindow();
@@ -1168,15 +1130,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
-    }//GEN-LAST:event_jCheckBoxMenuItemShowDatabaseSetupActionPerformed
+    }//GEN-LAST:event_jCheckBoxMenuItemShowDatabaseSetupOnStartupActionPerformed
 
     private void startSimServerJInternalFrame() {
         if (null != aprsSystem) {
             aprsSystem.startSimServerJInternalFrame();
         }
     }
+    @UIEffect
     private void jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupRobtCRCLSimServerActionPerformed
         if (jCheckBoxMenuItemStartupRobtCRCLSimServer.isSelected()) {
             startSimServerJInternalFrame();
@@ -1189,6 +1152,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
         if (jCheckBoxMenuItemStartupFanucCRCLServer.isSelected()) {
             startFanucCrclServer();
@@ -1211,6 +1175,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemExploreGraphDbStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
         if (this.jCheckBoxMenuItemExploreGraphDbStartup.isSelected()) {
             startExploreGraphDb();
@@ -1219,14 +1184,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
 
-    private XFuture<Boolean>  startConnectDatabase() {
+    private XFuture<Boolean> startConnectDatabase() {
         if (null != aprsSystem) {
             return aprsSystem.startConnectDatabase();
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-    
+
     private XFuture<?> startDisconnectDatabase() {
         if (null != aprsSystem) {
             return aprsSystem.startDisconnectDatabase();
@@ -1235,27 +1200,35 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemConnectDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
         if (this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
             this.jCheckBoxMenuItemConnectDatabase.setEnabled(false);
             startConnectDatabase()
-                    .always(() -> this.jCheckBoxMenuItemConnectDatabase.setEnabled(true));
+                    .always(() -> safeSetMenuItemConnectDatabaseEnabled(true));
         } else {
             this.jCheckBoxMenuItemConnectDatabase.setEnabled(false);
             startDisconnectDatabase()
-                    .always(() -> this.jCheckBoxMenuItemConnectDatabase.setEnabled(true));
+                    .always(() -> safeSetMenuItemConnectDatabaseEnabled(true));
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
 
-    private void jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
+    @SafeEffect
+    private void safeSetMenuItemConnectDatabaseEnabled(boolean enabled) {
+        Utils.runOnDispatchThread(() -> this.jCheckBoxMenuItemConnectDatabase.setEnabled(enabled));
+    }
+
+
+    @UIEffect
+    private void jCheckBoxMenuItemConnectDatabaseOnStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectDatabaseOnStartupActionPerformed
         try {
             saveProperties();
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                    .getName()).log(Level.SEVERE, "", ex);
         }
-    }//GEN-LAST:event_jCheckBoxMenuItemConnectToDatabaseOnStartupActionPerformed
+    }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseOnStartupActionPerformed
 
     private void startMotomanCrclServer() {
         if (null != aprsSystem) {
@@ -1265,17 +1238,20 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
         if (jCheckBoxMenuItemStartupMotomanCRCLServer.isSelected()) {
             startMotomanCrclServer();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupMotomanCRCLServerActionPerformed
 
+    @UIEffect
     private void jMenuItemSavePropsAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropsAsActionPerformed
         browseSavePropertiesFileAs();
     }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
 
     @Nullable
+    @UIEffect
     private File choosePropertiesFileToSaveAs() {
         JFileChooser chooser = new JFileChooser(getPropertiesDirectory());
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
@@ -1295,10 +1271,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-            
+
     /**
      * Query the user to select a properties file to save.
      */
+    @UIEffect
     private void browseSavePropertiesFileAs() {
         File selectedFile = choosePropertiesFileToSaveAs();
         if (null != selectedFile) {
@@ -1307,7 +1284,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 this.saveProperties();
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystemDisplayJFrame.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -1318,6 +1295,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemImmediateAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortActionPerformed
         this.immediateAbort();
     }//GEN-LAST:event_jMenuItemImmediateAbortActionPerformed
@@ -1337,19 +1315,20 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void startActions(String label) {
+    private void startActions(String label, boolean reverseFlag) {
         if (null != aprsSystem) {
-            aprsSystem.startActions(label);
+            aprsSystem.startActions(label, reverseFlag);
         } else {
             throw new IllegalStateException("this=" + this + ", aprsSystem==null");
         }
     }
 
+    @UIEffect
     private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
         setTitleErrorString(null);
         jCheckBoxMenuItemPause.setSelected(false);
         notifyPauseFutures();
-        this.startActions("user");
+        this.startActions("user",jCheckBoxMenuItemReverse.isSelected());
     }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
 
     private void connectVision() {
@@ -1358,11 +1337,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @Override
+    public void setVisible(boolean visible) {
+        Utils.runOnDispatchThread(() -> super.setVisible(visible));
+    }
+
     private void disconnectVision() {
         if (null != aprsSystem) {
             aprsSystem.disconnectVision();
         }
     }
+    @UIEffect
     private void jCheckBoxMenuItemConnectVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectVisionActionPerformed
         if (jCheckBoxMenuItemConnectVision.isSelected()) {
             connectVision();
@@ -1387,26 +1372,30 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void startSetReverseFlag(boolean flag) {
-        if (null != aprsSystem) {
-            aprsSystem.startSetReverseFlag(flag);
-        } else {
-            throw new IllegalStateException("aprsSystem ==null, this=" + this);
-        }
-    }
 
+    @UIEffect
     private void jCheckBoxMenuItemKitInspectionStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
         this.startKitInspection();
     }//GEN-LAST:event_jCheckBoxMenuItemKitInspectionStartupActionPerformed
 
+    @UIEffect
     private void jMenuItemResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetActionPerformed
         reset();
     }//GEN-LAST:event_jMenuItemResetActionPerformed
 
+    private volatile boolean reverseFlag;
+    
+    @UIEffect
     private void jCheckBoxMenuItemReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemReverseActionPerformed
-        boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
-        startSetReverseFlag(reverseFlag);
+        reverseFlag = jCheckBoxMenuItemReverse.isSelected();
+        reloadForReverse(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
+
+    private void reloadForReverse(boolean reverseFlag) {
+        if (null != aprsSystem) {
+            aprsSystem.reloadForReverse(reverseFlag);
+        }
+    }
 
     @SuppressWarnings("SameParameterValue")
     private XFuture<Boolean> startContinuousDemo(String label, boolean reverseFlag) {
@@ -1417,6 +1406,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemContinuousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
         boolean start = jCheckBoxMenuItemContinuousDemo.isSelected();
         boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
@@ -1464,7 +1454,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseActionPerformed
+        if (null == aprsSystem) {
+            throw new IllegalStateException("null == aprsSystem");
+        }
         System.out.println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
         XFuture<Boolean> cdf = getContinuousDemoFuture();
         if (null != cdf) {
@@ -1492,15 +1486,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemDebugActionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDebugActionActionPerformed
         debugAction();
     }//GEN-LAST:event_jMenuItemDebugActionActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemForceFakeTakeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
         if (aprsSystem != null) {
             boolean val = jCheckBoxMenuItemForceFakeTake.isSelected();
-            if (aprsSystem.getForceFakeTakeFlag() != val) {
-                aprsSystem.setForceFakeTakeFlag(val);
+            if (aprsSystem.getExcutorForceFakeTakeFlag() != val) {
+                aprsSystem.setExecutorForceFakeTakeFlag(val);
             }
         }
     }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
@@ -1514,6 +1510,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemContinueActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueActionListActionPerformed
         continueActionList("user");
     }//GEN-LAST:event_jMenuItemContinueActionListActionPerformed
@@ -1526,6 +1523,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemCreateActionListFromVisionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCreateActionListFromVisionActionPerformed
         createActionListFromVision();
     }//GEN-LAST:event_jMenuItemCreateActionListFromVisionActionPerformed
@@ -1546,6 +1544,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemSetPoseMinLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinLimitsActionPerformed
         PmCartesian minLimit = getMinLimit();
         String newMinLimitsString = JOptionPane.showInputDialog(this, "New Min Pose Limits",
@@ -1572,6 +1571,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jMenuItemSetPoseMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMaxLimitsActionPerformed
         PmCartesian maxLimit = getMaxLimit();
         String newMaxLimitsString = JOptionPane.showInputDialog(this, "New Max Pose Limits",
@@ -1598,8 +1598,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemSnapshotImageSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
-        if (jCheckBoxMenuItemSnapshotImageSize.isSelected()) {
+        boolean snapshotsEnabled = jCheckBoxMenuItemSnapshotImageSize.isSelected();
+        if (snapshotsEnabled) {
             String newSnapshotImageSize = JOptionPane.showInputDialog(this, "New Snapshot Image Size",
                     String.format("%d x %d ", getSnapShotWidth(), getSnapShotHeight()));
             if (newSnapshotImageSize != null && newSnapshotImageSize.length() > 0) {
@@ -1620,20 +1622,22 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
+    @UIEffect
     private void jMenuItemLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForActionPerformed
         startLookForParts();
     }//GEN-LAST:event_jMenuItemLookForActionPerformed
 
-    @SuppressWarnings("unused")
+    @UIEffect
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         windowClosing();
     }//GEN-LAST:event_formWindowClosing
 
-    @SuppressWarnings("unused")
+    @UIEffect
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         windowClosed();
     }//GEN-LAST:event_formWindowClosed
 
+    @UIEffect
     private void windowClosed() {
         if (isVisible()) {
             setVisible(false);
@@ -1644,6 +1648,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void windowClosing() {
         try {
             if (null != aprsSystem) {
@@ -1663,6 +1668,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @SafeEffect
     private XFuture<Boolean> startCheckEnabled() {
         if (null != aprsSystem) {
             return aprsSystem.startCheckEnabled();
@@ -1671,6 +1677,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
         if (selected && null != aprsSystem) {
@@ -1697,12 +1704,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                     .thenCompose(x -> startCheckEnabled())
                     .thenApply((Boolean success) -> {
                         if (!success) {
-                            jCheckBoxMenuItemConnectedRobot.setSelected(false);
+                            clearRobotConnectedCheckBox();
                         }
                         return success;
                     })
                     .exceptionally(x -> {
-                        jCheckBoxMenuItemConnectedRobot.setSelected(false);
+                        clearRobotConnectedCheckBox();
                         return false;
                     });
         } else {
@@ -1710,6 +1717,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
 
+    @SafeEffect
+    private void clearRobotConnectedCheckBox() {
+        Utils.runOnDispatchThread(this::clearRobotConnectedCheckBoxOnDisplay);
+    }
+
+    @UIEffect
+    private void clearRobotConnectedCheckBoxOnDisplay() {
+        jCheckBoxMenuItemConnectedRobot.setSelected(false);
+    }
+
+    @UIEffect
     private void jMenuItemClearErrorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemClearErrorsActionPerformed
         this.clearErrors();
     }//GEN-LAST:event_jMenuItemClearErrorsActionPerformed
@@ -1720,72 +1738,49 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     private void jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
         boolean selected = jCheckBoxMenuItemEnableDebugDumpstacks.isSelected();
         setDebug(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemSteppingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSteppingActionPerformed
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             aprsSystem.setStepMode(jCheckBoxMenuItemStepping.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemSteppingActionPerformed
 
-    public boolean isConnectDatabaseCheckboxSelected() {
-        return jCheckBoxMenuItemConnectDatabase.isSelected();
-    }
-    
-    public void setConnectDatabaseCheckboxSelected(boolean selected) {
-        jCheckBoxMenuItemConnectDatabase.setSelected(selected);
+    @UIEffect
+    private void jCheckBoxMenuItemUseTeachTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemUseTeachTableActionPerformed
+        if (null != aprsSystem) {
+            aprsSystem.setUseTeachTableChecked(false);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemUseTeachTableActionPerformed
+
+    CachedCheckBox connectDatabaseCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
     }
 
-    public void setImageSizeMenuText(int snapShotWidth, int snapShotHeight) {
+    @UIEffect
+    void setImageSizeMenuText(int snapShotWidth, int snapShotHeight) {
         jCheckBoxMenuItemSnapshotImageSize.setText(String.format("Snapshot Image size (%d x %d )", snapShotWidth, snapShotHeight));
     }
 
-    public boolean isPauseCheckboxSelected() {
-        return jCheckBoxMenuItemPause.isSelected();
+    CachedCheckBox pauseCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemPause);
     }
 
-    public void setPauseCheckboxSelected(boolean val) {
-        jCheckBoxMenuItemPause.setSelected(val);
+    CachedCheckBox reverseCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemReverse);
     }
 
-    public boolean isReverseCheckboxSelected() {
-        return jCheckBoxMenuItemReverse.isSelected();
+    CachedCheckBox reloadSimFilesOnReverseCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemReloadSimFilesOnReverse);
     }
 
-    public void setReverseCheckboxSelected(boolean val) {
-        jCheckBoxMenuItemReverse.setSelected(val);
-    }
-
-
-    public boolean isReloadSimFilesOnReverseCheckboxSelected() {
-        return jCheckBoxMenuItemReloadSimFilesOnReverse.isSelected();
-    }
-
-    public void setReloadSimFilesOnReverseCheckboxSelected(boolean val) {
-        jCheckBoxMenuItemReloadSimFilesOnReverse.setSelected(val);
-    }
-
-    public boolean isSnapshotCheckboxSelected() {
-        return jCheckBoxMenuItemSnapshotImageSize.isSelected();
-    }
-
-    public void setSnapshotCheckboxSelected(boolean val) {
-        jCheckBoxMenuItemSnapshotImageSize.setSelected(val);
-    }
-
-    /**
-     * Set the menu checkbox setting to force take operations to be faked so
-     * that the gripper will not close, useful for testing.
-     *
-     * @param val true if take operations should be faked
-     */
-    public void setForceFakeTakeFlag(boolean val) {
-        if (val != jCheckBoxMenuItemForceFakeTake.isSelected()) {
-            jCheckBoxMenuItemForceFakeTake.setSelected(val);
-        }
+    CachedCheckBox forceFakeTakeCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemForceFakeTake);
     }
 
     private void logEvent(String string, Object o) {
@@ -1803,7 +1798,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
      *
      * @return reverse flag
      */
-    public boolean isReverseFlag() {
+    @UIEffect
+    boolean isReverseFlag() {
         return jCheckBoxMenuItemReverse.isSelected();
     }
 
@@ -1812,16 +1808,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
      *
      * @return paused state
      */
-    public boolean isPaused() {
+    @UIEffect
+    boolean isPaused() {
         return jCheckBoxMenuItemPause.isSelected();
     }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabase;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToDatabaseOnStartup;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectToVisionOnStartup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectedRobot;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
@@ -1832,7 +1829,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReloadSimFilesOnReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetup;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetupOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupExecutor;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;

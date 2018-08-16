@@ -308,13 +308,13 @@ public class DbSetupBuilder {
                 try {
                     queriesMap = readRelResourceQueriesDirectory(setupQueriesDir);
                 } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
             } else {
                 try {
                     queriesMap = readQueriesDirectory(setupQueriesDir);
                 } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
             }
         }
@@ -355,7 +355,7 @@ public class DbSetupBuilder {
      * @param type database type
      * @return this builder
      */
-    public DbSetupBuilder type(DbType type) {
+    public DbSetupBuilder type(@Nullable DbType type) {
         if (null != type) {
             this.type = type;
         }
@@ -624,7 +624,7 @@ public class DbSetupBuilder {
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
             Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
@@ -671,7 +671,7 @@ public class DbSetupBuilder {
         try {
             System.out.println("Saving " + propertiesFile.getCanonicalPath());
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
         File parentFile = propertiesFile.getParentFile();
         if (null != parentFile) {
@@ -751,7 +751,7 @@ public class DbSetupBuilder {
                 ret.complete(setupConnectionPriv(dbtype, host, port, db, username, password, debug, loginTimeout));
             } catch (Exception ex) {
                 ret.completeExceptionally(ex);
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }, "connectionSetupThread").start();
         return ret;
@@ -779,7 +779,7 @@ public class DbSetupBuilder {
                         neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                         //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
                     } catch (ClassNotFoundException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, "", ex);
                     }
                     
                     Properties properties = new Properties();
@@ -814,7 +814,7 @@ public class DbSetupBuilder {
             }
             throw new IllegalArgumentException("Unsupported dbtype =" + dbtype);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }

@@ -26,69 +26,69 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
+import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@UIType
 class ImagePanel extends JPanel {
 
-        @Nullable
-        private
-        BufferedImage image = null;
+    @Nullable
+    private BufferedImage image = null;
 
-        @Nullable
-        private
-        String label = null;
+    @Nullable
+    private String label = null;
 
-        public ImagePanel(BufferedImage image) {
-            this.image = image;
-            if (image != null) {
+    public ImagePanel(BufferedImage image) {
+        this.image = image;
+        if (image != null) {
+            super.setSize(image.getWidth(), image.getHeight());
+            super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        }
+    }
+
+    public ImagePanel(BufferedImage image, String label) {
+        this.image = image;
+        this.label = label;
+        if (image != null) {
+            if (null != label) {
                 super.setSize(image.getWidth(), image.getHeight());
                 super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+            } else {
+                super.setSize(image.getWidth(), image.getHeight() + 30);
+                super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight() + 30));
             }
         }
+    }
 
-        public ImagePanel(BufferedImage image, String label) {
-            this.image = image;
-            this.label = label;
-            if (image != null) {
-                if (null != label) {
-                    super.setSize(image.getWidth(), image.getHeight());
-                    super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-                } else {
-                    super.setSize(image.getWidth(), image.getHeight() + 30);
-                    super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight() + 30));
-                }
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (image != null) {
+            if (null == label) {
+                g.drawImage(image, 0, 0, this);
+            } else {
+                g.drawImage(image, 0, 20, this);
             }
         }
+        if (null != label) {
+            g.drawString(label, 10, 15);
+        }
+    }
 
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (image != null) {
-                if (null == label) {
-                    g.drawImage(image, 0, 0, this);
-                } else {
-                    g.drawImage(image, 0, 20, this);
-                }
-            }
-            if (null != label) {
-                g.drawString(label, 10, 15);
-            }
+    public void setImage(@Nullable BufferedImage image) {
+        this.image = image;
+        if (image != null) {
+            this.setSize(image.getWidth(), image.getHeight());
+            this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+            repaint();
         }
-
-        public void setImage(@Nullable BufferedImage image) {
-            this.image = image;
-            if (image != null) {
-                this.setSize(image.getWidth(), image.getHeight());
-                this.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-                repaint();
-            }
-        }
+    }
 
     public void setLabel(@Nullable String label) {
-            this.label = label;
-        }
+        this.label = label;
+    }
 }

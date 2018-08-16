@@ -27,6 +27,7 @@ import aprs.database.DbSetupPublisher;
 import aprs.database.DbType;
 import aprs.database.PhysicalItem;
 import aprs.database.PoseQueryElem;
+import crcl.ui.XFutureVoid;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -40,8 +41,6 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
 
     public void setAquiring(String s);
 
-    public void updateInfo(List<PhysicalItem> _list, String line);
-
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list);
     
     public void updateResultsMap(final Map<String, UpdateResults> _map);
@@ -54,18 +53,8 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
 
     public void setVisionConnected(boolean _val);
 
-    public void setDBConnected(boolean _val);
-
     public void setLastCommand(String c);
 
-    public void setCommandConnected(boolean _val);
-
-    public void updateFromArgs(Map<String, String> _argsMap);
-
-    public void setVisible(boolean v);
-
-    public Map<String, String> updateArgsMap();
-    
     public java.sql.@Nullable Connection getSqlConnection();
     
     public DbType getDbType();
@@ -76,5 +65,5 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
     
-    public void connectVision();
+    public XFutureVoid connectVision();
 }

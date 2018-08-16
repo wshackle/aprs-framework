@@ -23,7 +23,6 @@
 package aprs.actions.executor;
 
 import aprs.system.AprsSystem;
-import aprs.misc.DisplayInterface;
 import java.io.IOException;
 import java.util.List;
 
@@ -32,13 +31,7 @@ import java.util.List;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings("ALL")
-interface ExecutorDisplayInterface extends DisplayInterface {
-
-    /**
-     * Show File chooser to select a new actions file and load it.
-     * @throws IOException if selected file can not be read
-     */
-    public void browseActionsFile() throws IOException;
+interface ExecutorDisplayInterface {
 
     /**
      * Get the current list of actions.
@@ -61,19 +54,7 @@ interface ExecutorDisplayInterface extends DisplayInterface {
      * Process the current list of actions.
      */
     public void processActions();
-    
-    /**
-     * Auto resize the columns in the pddl output table.
-     */
-    public void autoResizeTableColWidthsPddlOutput();
 
-    
-    /**
-     * Set the AprsSystem 
-     * @param aprsSystemInterface new value of aprsSystemInterface.
-     */
-    public void setAprsSystem(AprsSystem aprsSystemInterface);
-    
     /**
      * Get the current aprsSystemInterface
      * @return aprsSystemInterface

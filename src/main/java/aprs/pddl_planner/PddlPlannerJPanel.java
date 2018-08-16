@@ -24,7 +24,6 @@ package aprs.pddl_planner;
 
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.system.AprsSystem;
-import aprs.misc.DisplayInterface;
 import aprs.actions.executor.Action;
 import aprs.misc.Utils;
 import com.jcraft.jsch.Channel;
@@ -58,6 +57,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -65,8 +65,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("unused")
-class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
+@SuppressWarnings({"unused", "guieffect"})
+class PddlPlannerJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form PddlPlannerJPanel
@@ -387,7 +387,6 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
 
     @MonotonicNonNull private File propertiesFile = null;
 
-
     /**
      * Set the value of propertiesFile
      *
@@ -451,63 +450,71 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
     private static final String PDDL_PLANNER_SSH = "pddl.planner.ssh";
     private static final String PDDL_PLANNER_HOST = "pddl.planner.host";
 
-
+    @UIEffect
     private void jButtonPlannerProgramExecutableBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
         try {
             browseProgramExecutable();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPlannerProgramExecutableBrowseActionPerformed
 
+    @UIEffect
     private void jTextFieldPddlDomainFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlDomainFileActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldPddlDomainFileActionPerformed
 
+    @UIEffect
     private void jButtonPddlDomainBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlDomainBrowseActionPerformed
         try {
             browsePddlDomain();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPddlDomainBrowseActionPerformed
 
+    @UIEffect
     private void jButtonPddlProblemBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlProblemBrowseActionPerformed
         try {
             browsePddlProblem();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPddlProblemBrowseActionPerformed
 
+    @UIEffect
     private void jButtonRunOnceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRunOnceActionPerformed
         try {
             runPddlPlannerOnce();
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRunOnceActionPerformed
 
+    @UIEffect
     private void jButtonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopActionPerformed
         this.closePddlProcess();
     }//GEN-LAST:event_jButtonStopActionPerformed
 
+    @UIEffect
     private void jButtonPddlProblemEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlProblemEditActionPerformed
         try {
             Desktop.getDesktop().open(new File(jTextFieldPddlProblem.getText()));
         } catch (IOException ex) {
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPddlProblemEditActionPerformed
 
+    @UIEffect
     private void jButtonPddlDomainEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPddlDomainEditActionPerformed
         try {
             Desktop.getDesktop().open(new File(jTextFieldPddlDomainFile.getText()));
         } catch (IOException ex) {
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonPddlDomainEditActionPerformed
 
+    @UIEffect
     private void jCheckBoxSshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSshActionPerformed
         boolean useSsh = jCheckBoxSsh.isSelected();
         jTextFieldSshUser.setEditable(useSsh);
@@ -518,6 +525,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         jTextFieldHost.setEnabled(useSsh);
     }//GEN-LAST:event_jCheckBoxSshActionPerformed
 
+    @UIEffect
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
         jTextAreaOutput.setText("");
     }//GEN-LAST:event_jButtonClearActionPerformed
@@ -578,7 +586,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
 
     @SuppressWarnings("nullness")
     private final UserInfo sshUserInfo = new UserInfo() {
-        
+
         @Override
         public String getPassphrase() {
             return null;
@@ -628,7 +636,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         pddlInputStream = in;
         pddlErrorStream = null;
         setupOutputHandlers();
-        if(null != ppdlInputStreamFuture) {
+        if (null != ppdlInputStreamFuture) {
             ppdlInputStreamFuture.get();
         }
         channel.disconnect();
@@ -649,7 +657,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
             }
         } catch (Exception exception) {
             Logger.getLogger(PddlPlannerJPanel.class
-                    .getName()).log(Level.SEVERE, null, exception);
+                    .getName()).log(Level.SEVERE, "", exception);
         }
         if (logLines.size() < maxLines) {
             addLogLine(l);
@@ -837,7 +845,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
             sshExec(pddlPlannerSession, jTextFieldPlannerProgramExecutable.getText() + " " + jTextFieldAdditionalArgs.getText() + " " + remoteDomainFile + " " + remoteProblemFile);
         } catch (Exception ex) {
             printMessage("runPddlPlannerOnceSsh failed with " + ex);
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -858,7 +866,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         try {
             closePddlProcess();
         } catch (Exception ex) {
-            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PddlPlannerJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
         List<String> commandList = new ArrayList<>();
         commandList.add(new File(jTextFieldPlannerProgramExecutable.getText()).getCanonicalPath());
@@ -895,7 +903,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                                 });
                             }
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
                         }
                     }
                 }
@@ -904,41 +912,46 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         if (null == pddlInputStream) {
             throw new IllegalStateException("pddlInputStream is null");
         }
-        ppdlInputStreamFuture = executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                if (null == pddlInputStream) {
-                    throw new IllegalStateException("pddlInputStream is null");
-                }
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(pddlInputStream))) {
-                    String line = null;
-                    boolean planFoundFound = false;
-                    while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
-                        final String lineToAppend = line;
-                        System.out.println("Line from remote out source:" + line);
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                printMessage(lineToAppend + System.lineSeparator());
-                            }
-                        });
+        ppdlInputStreamFuture = executor.submit(this::readPddlInputStream);
+    }
 
-                        if (planFoundFound) {
-                            addAction(Action.parse(lineToAppend));
-                        }
-                        if (line.contains("; Plan found") || line.contains("Solution Found")) {
-                            planFoundFound = true;
-                        }
+    private void readPddlInputStream() throws IllegalStateException {
+        if (null == pddlInputStream) {
+            throw new IllegalStateException("pddlInputStream is null");
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(pddlInputStream))) {
+            String line = null;
+            boolean planFoundFound = false;
+            while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
+                final String lineToAppend = line;
+                System.out.println("Line from remote out source:" + line);
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        printMessage(lineToAppend + System.lineSeparator());
                     }
-                    if (null != actionsToCrclJInternalFrame1) {
-                        actionsToCrclJInternalFrame1.autoResizeTableColWidthsPddlOutput();
-                    }
-                    processActions();
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                });
+
+                if (planFoundFound) {
+                    addAction(Action.parse(lineToAppend));
+                }
+                if (line.contains("; Plan found") || line.contains("Solution Found")) {
+                    planFoundFound = true;
                 }
             }
-        });
+            ExecutorJInternalFrame executor = actionsToCrclJInternalFrame1;
+            if (null != executor) {
+                Utils.runOnDispatchThread(() -> {
+                    if (null != executor) {
+                        executor.autoResizeTableColWidthsPddlOutput();
+                    }
+                });
+                executor.autoResizeTableColWidthsPddlOutput();
+            }
+            processActions();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -972,7 +985,6 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
     private javax.swing.JTextField jTextFieldSshUser;
     // End of variables declaration//GEN-END:variables
 
-    @Override
     public void saveProperties() {
         if (null == propertiesFile) {
             throw new IllegalStateException("propertiesFile not set");
@@ -1009,7 +1021,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlProcess = null;
             }
         } catch (InterruptedException interruptedException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, interruptedException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", interruptedException);
         }
         try {
             if (null != ppdlInputStreamFuture) {
@@ -1017,7 +1029,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 ppdlInputStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
         }
         try {
             if (null != ppdlErrorStreamFuture) {
@@ -1025,7 +1037,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 ppdlErrorStreamFuture = null;
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
         }
         try {
             if (null != pddlInputStream) {
@@ -1033,7 +1045,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlInputStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", iOException);
         }
         try {
             if (null != pddlErrorStream) {
@@ -1041,13 +1053,12 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
                 pddlErrorStream = null;
             }
         } catch (IOException iOException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, iOException);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", iOException);
         }
         closing = orig_closing;
     }
 
-    @Override
-    public void close()  {
+    public void close() {
         closing = true;
         this.closePddlProcess();
         closing = true;
@@ -1063,8 +1074,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel implements DisplayInterface {
         jsch = null;
     }
 
-    @Override
     @Nullable public File getPropertiesFile() {
-       return propertiesFile;
+        return propertiesFile;
     }
 }

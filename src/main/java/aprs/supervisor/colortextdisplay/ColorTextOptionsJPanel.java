@@ -24,6 +24,8 @@ package aprs.supervisor.colortextdisplay;
 
 import java.awt.Frame;
 import javax.swing.JDialog;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -32,7 +34,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused","guieffect"})
+@UIType
 public class ColorTextOptionsJPanel extends javax.swing.JPanel {
 
     /**
@@ -220,11 +223,13 @@ public class ColorTextOptionsJPanel extends javax.swing.JPanel {
 
     private boolean cancelled = false;
 
+    @UIEffect
     private void jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCancelActionPerformed
         cancelled = true;
         dialog.setVisible(false);
     }//GEN-LAST:event_jButtonCancelActionPerformed
 
+    @UIEffect
     private void jButtonOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOkActionPerformed
         dialog.setVisible(false);
     }//GEN-LAST:event_jButtonOkActionPerformed
