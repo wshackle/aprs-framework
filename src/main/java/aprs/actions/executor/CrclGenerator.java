@@ -147,7 +147,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import java.util.Iterator;
 import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 /**
@@ -426,11 +426,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     break;
 
                 case LOOK_FOR_PARTS:
-                        if (null != endl && endl.length > 1) {
-                            endl[1] = i;
-                        }
-                        return ret;
-                    
+                    if (null != endl && endl.length > 1) {
+                        endl[1] = i;
+                    }
+                    return ret;
 
                 default:
                     break;
@@ -1971,7 +1970,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private final AtomicInteger solverRunCount = new AtomicInteger();
-    
+
     private List<Action> optimizePddlActionsWithOptaPlanner(
             List<Action> actions,
             int startingIndex,
@@ -2004,13 +2003,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2034,15 +2033,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2208,8 +2207,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2242,6 +2241,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return skuNameToInstanceNamesMap.computeIfAbsent(kitName, this::getPartTrayInstancesFromSkuName);
     }
 
+    private static <T> List<T>  listFilter(List<T> listIn, Predicate<T> predicate) {
+        return listIn
+                .stream()
+                .filter(predicate)
+                .collect(Collectors.toList());
+    }
+    
     private List<Slot> getAbsSlotListForKitInstance(String kitSkuName, String kitInstanceName) {
         try {
             PoseType pose = getPose(kitInstanceName);
@@ -2304,10 +2310,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         takeSnapshots("plan", "checkKits-", null, "");
 
+        List<String> newItemsFullNames = newItems
+                .stream()
+                .map(PhysicalItem::getFullName)
+                .collect(Collectors.toList());
         List<PhysicalItem> parts = newItems.stream()
                 .filter(x -> !x.getName().startsWith("empty_slot"))
                 .filter(x -> !x.getName().contains("vessel"))
                 .collect(Collectors.toList());
+        List<String> partsFullNames
+                = parts
+                .stream()
+                .map(PhysicalItem::getFullName)
+                .collect(Collectors.toList());
+        List<String> partsInPartsTrayFullNames
+                = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
+        
         logDebug("checkKits: parts = " + parts);
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
@@ -2395,8 +2413,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 } else {
                     Map<String, Integer> prefixCountMap = new HashMap<>();
                     Map<String, List<String>> itemsNameMap = new HashMap<>();
+                    Map<String, List<String>> removedItemsNameMap = new HashMap<>();
                     kitsToFix.sort(Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
                     List<Action> correctiveActions = new ArrayList<>();
+                    List<String> fixLogList = new ArrayList<>();
                     for (KitToCheck kit : kitsToFix) {
                         List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
                         infoList.sort(Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
@@ -2425,6 +2445,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     itemSkuName = closestItem.origName;
                                 }
                                 String slotItemSkuName = kit.slotMap.get(absSlotPrpName);
+                                fixLogList.add("kitInstanceName="+kitInstanceName+",absSlotPrpName="+absSlotPrpName+",itemsNameMap="+itemsNameMap+"\r\n");
                                 if (null != slotItemSkuName && !slotItemSkuName.equals(itemSkuName)) {
 
                                     if (!itemSkuName.equals("empty")) {
@@ -2452,22 +2473,26 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                         final String finalShortSkuName = shortSkuName;
                                         List<String> partNames
                                                 = itemsNameMap.computeIfAbsent(finalShortSkuName,
-                                                        k -> partNamesListForShortSkuName(newItems, k));
+                                                        k -> listFilter(
+                                                                partsInPartsTrayFullNames,
+                                                                name2 -> name2.contains(k)));
                                         logDebug("checkKits: partNames = " + partNames);
                                         if (partNames.isEmpty()) {
-                                            logDebug("No partnames for finalShortSkuName=" + finalShortSkuName);
-                                            logDebug("newItems = " + newItems);
-                                            List<String> newItemsFullNames = newItems
-                                                    .stream()
-                                                    .map(PhysicalItem::getFullName)
-                                                    .collect(Collectors.toList());
-                                            logDebug("newItemsFullNames = " + newItemsFullNames);
-                                            logDebug("itemsNameMap = " + itemsNameMap);
-                                            logDebug("slotItemSkuName = " + slotItemSkuName);
-                                            logDebug("itemSkuName = " + itemSkuName);
+                                            logError("No partnames for finalShortSkuName=" + finalShortSkuName);
+                                            logError("fixLogList="+fixLogList);
+                                            logError("kit.slotMap = " + kit.slotMap);
+                                            logError("newItems = " + newItems);
+                                            logError("newItemsFullNames = " + newItemsFullNames);
+                                            logError("itemsNameMap = " + itemsNameMap);
+                                            logError("removedItemsMap="+removedItemsNameMap);
+                                            logError("slotItemSkuName = " + slotItemSkuName);
+                                            logError("itemSkuName = " + itemSkuName);
+                                            logError("partsInPartsTrayFullNames = " + partsInPartsTrayFullNames);
                                             List<String> recalcPartNames
-                                                    = partNamesListForShortSkuName(newItems, finalShortSkuName);
-                                            logDebug("recalcPartNames = " + recalcPartNames);
+                                                    = listFilter(
+                                                                partsInPartsTrayFullNames,
+                                                                name2 -> name2.contains(finalShortSkuName));
+                                            logError("recalcPartNames = " + recalcPartNames);
                                             throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
                                                     + ",slotItemSkuName = " + slotItemSkuName
                                                     + ",itemSkuName = " + itemSkuName
@@ -2478,6 +2503,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                                        int count = prefixCountMap.compute(partNamePrefix,
 //                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                         String partName = partNames.remove(0);
+                                        removedItemsNameMap.compute(finalShortSkuName, (k,v) -> {
+                                            if(v == null) {
+                                                v = new ArrayList<>();
+                                            }
+                                            v.add(partName);
+                                            return v;
+                                        });
                                         correctiveActions.add(new Action(TAKE_PART, partName));
                                         String slotName = absSlot.getFullName();
                                         logDebug("checkKits: slotName = " + slotName);
@@ -2497,14 +2529,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 min_dist = dist;
                                             }
                                         }
-                                        if (closestKey == null || min_dist > 6.0) {
-                                            logDebug("closestKey = " + closestKey);
-                                            logDebug("min_dist = " + min_dist);
+                                        if (closestKey == null || min_dist > 10.0) {
+                                            logError("closestKey = " + closestKey);
+                                            logError("min_dist = " + min_dist);
                                             for (Entry<String, PoseType> entry : poseCache.entrySet()) {
                                                 double dist = CRCLPosemath.diffPosesTran(slotPose, entry.getValue());
-                                                logDebug("entry.getKey = " + entry.getKey() + ", dist=" + dist);
+                                                logError("entry.getKey = " + entry.getKey() + ", dist=" + dist);
                                             }
-                                            throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache keys=" + poseCache.keySet());
+                                            throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist="+min_dist+", closestKet="+closestKey+", keys=" + poseCache.keySet());
                                         }
                                         correctiveActions.add(new Action(PLACE_PART, closestKey));
 
@@ -2555,7 +2587,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
+    private static List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
         return newItems.stream()
                 .filter(item -> item.getType().equals("P"))
                 .flatMap(item -> {
@@ -5134,6 +5166,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logDebug("curAtanXYfromMap = " + curAtanXYfromMap);
             return Double.NaN;
         }
+        if(atanxy - curAtanXYfromMap > Math.PI/4 && atanxy - lastAtanXYfromMap > Math.PI/4) {
+            logDebug("atanxy = " + atanxy);
+            logDebug("atanXYJoint0Map = " + atanXYJoint0Map);
+            logDebug("curAtanXYfromMap = " + curAtanXYfromMap);
+            return Double.NaN;
+        }
+        if(atanxy - curAtanXYfromMap < -Math.PI/4 && atanxy - lastAtanXYfromMap < -Math.PI/4) {
+            logDebug("atanxy = " + atanxy);
+            logDebug("atanXYJoint0Map = " + atanXYJoint0Map);
+            logDebug("curAtanXYfromMap = " + curAtanXYfromMap);
+            return Double.NaN;
+        }
         if (!Double.isFinite(lastJoint0fromMap)) {
             logDebug("atanxy = " + atanxy);
             logDebug("atanXYJoint0Map = " + atanXYJoint0Map);
@@ -5440,7 +5484,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     double lookForJointVals[] = jointValStringToArray(lookForJointsString);
                     addPrepJointMove(lookForJointVals, out);
                     lookForJointVals[0] = jointVals[0];
-                    addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
+                    addMessageCommand(out, 
+                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
                     addJointMove(out, lookForJointVals, 1.0);
                 }
             }
