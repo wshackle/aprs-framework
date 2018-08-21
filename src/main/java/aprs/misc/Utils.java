@@ -53,6 +53,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -342,6 +343,8 @@ public class Utils {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
+    private static final AtomicInteger dispathThreadExceptionCount = new AtomicInteger();
+
     /**
      * Run something on the dispatch thread and attach a name to it for
      * debugging/logging/visualization.
@@ -358,8 +361,13 @@ public class Utils {
                 r.run();
                 ret.complete(null);
             } catch (Exception e) {
-                ret.completeExceptionally(e);
+                int count = dispathThreadExceptionCount.incrementAndGet();
+
                 LOGGER.log(Level.SEVERE, name, e);
+                if (count < 2) {
+                    JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                }
+                ret.completeExceptionally(e);
             }
 
             return ret;
@@ -369,7 +377,11 @@ public class Utils {
                     r.run();
                     ret.complete(null);
                 } catch (Exception e) {
+                    int count = dispathThreadExceptionCount.incrementAndGet();
                     LOGGER.log(Level.SEVERE, name, e);
+                    if (count < 2) {
+                        JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    }
                     ret.completeExceptionally(e);
                 }
             });
@@ -415,10 +427,32 @@ public class Utils {
     public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (isEventDispatchThread()) {
-            ret.complete(s.get());
+            try {
+                R val = s.get();
+                ret.complete(val);
+            } catch (Exception e) {
+                int count = dispathThreadExceptionCount.incrementAndGet();
+                LOGGER.log(Level.SEVERE, "", e);
+                if (count < 2) {
+                    JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                }
+                ret.completeExceptionally(e);
+            }
             return ret;
         } else {
-            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                try {
+                    R val = s.get();
+                    ret.complete(val);
+                } catch (Exception e) {
+                    int count = dispathThreadExceptionCount.incrementAndGet();
+                    LOGGER.log(Level.SEVERE, "", e);
+                    if (count < 2) {
+                        JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    }
+                    ret.completeExceptionally(e);
+                }
+            });
             return ret;
         }
     }
@@ -462,7 +496,7 @@ public class Utils {
      * is complete.
      */
     @SuppressWarnings({"nullness", "guieffect"})
-    public static  XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
+    public static XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
         XFuture<XFutureVoid> ret = new SwingFuture<>("composeOnDispatchThread");
         if (isEventDispatchThread()) {
             return s.get();
@@ -471,6 +505,7 @@ public class Utils {
             return ret.thenComposeToVoid(x -> x);
         }
     }
+
     /**
      * Adjust the widths of each column of a table to match the max width of
      * each value in the table.
@@ -701,7 +736,7 @@ public class Utils {
         }
         return colNameList.toArray(new String[0]);
     }
-    
+
     /**
      * Convert the table model column names to an array of strings.
      *

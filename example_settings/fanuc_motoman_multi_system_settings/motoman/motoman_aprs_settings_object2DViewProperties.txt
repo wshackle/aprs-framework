@@ -2,11 +2,12 @@
 --visionhost=agility
 --visionport=5002
 addPosNoise=false
+alternativeRotation=0.00
 autoscale=false
 connected=true
 displayAxis=(X-,Y-)
 dropOffThreshold=25.00
-items=sku_part_large_gear,-0.07,662.67,-78.22,1.0,P,sku_part_large_gear,-0.15,648.53,33.23,0.99,P,sku_part_large_gear,0.13,659.87,139.3,0.99,P,sku_part_large_gear,0.11,658.43,-187.0,0.98,P,sku_part_small_gear,0.0,738.32,116.57,1.0,P,sku_part_small_gear,0.0,743.07,-97.24,1.0,P,sku_part_small_gear,0.0,739.95,-175.87,0.99,P,sku_part_small_gear,0.0,523.47,-110.47,0.98,P,sku_small_gear_vessel,-0.0015926535897929917,549.97,-82.59,0.94,PT,sku_large_gear_vessel,-0.01,718.31,-348.43,0.98,PT,sku_large_gear_vessel,-0.01,536.89,102.62,0.87,PT,sku_kit_s2l2_vessel,-0.13,680.24,81.44,0.75,KT,sku_kit_s2l2_vessel,-0.08,686.74,-134.83,0.7,KT,
+items=sku_part_large_gear,-0.15,542.25,199.73,0.64,P,sku_small_gear_vessel,0.05159265358979326,544.9,-63.56,0.94,PT,sku_large_gear_vessel,0.0,725.12,-341.59,0.76,PT,sku_large_gear_vessel,-0.07,539.93,144.46,0.68,PT,sku_kit_s2l2_vessel,-0.03,717.75,-95.95,0.76,KT,
 
 pickupDist=5.00
 posNoise=1.00

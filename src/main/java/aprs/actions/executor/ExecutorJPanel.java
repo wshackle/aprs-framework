@@ -4374,9 +4374,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             Map<String, PoseType> toolHolderPoseMap
                     = crclGenerator.getToolHolderPoseMap();
-            if (toolHolderPoseMap.isEmpty()) {
-                return;
-            }
             if (null == propertiesFile || !propertiesFile.exists()) {
                 return;
             }
