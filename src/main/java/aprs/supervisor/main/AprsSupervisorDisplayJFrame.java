@@ -2711,7 +2711,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.setPosMapInSys(posMapOutSys);
+        supervisor.setPosMapOutSys(posMapOutSys);
     }
 
     @UIEffect

@@ -2856,7 +2856,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private XFutureVoid startWindowsFromMenuCheckBoxes() {
-        if (null == aprsSystemDisplayJFrame || isEventDispatchThread()) {
+        if (null == aprsSystemDisplayJFrame) {
             return startWindowsFromMenuCheckBoxesInternal();
         } else {
             return Utils.supplyOnDispatchThread(this::startWindowsFromMenuCheckBoxesInternal)
