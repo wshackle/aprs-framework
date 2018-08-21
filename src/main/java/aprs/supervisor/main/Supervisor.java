@@ -2117,7 +2117,7 @@ public class Supervisor {
         sys.setSupervisor(this);
         aprsSystems.add(sys);
         sys.getTitleUpdateRunnables().add(() -> {
-            Utils.runOnDispatchThreadWithCatch(this::updateTasksTable);
+            updateTasksTable();
         });
         updateTasksTable();
     }
@@ -3220,10 +3220,19 @@ public class Supervisor {
                 .thenComposeToVoid(this::showScanCompleteDisplay);
     }
 
+    private final  AtomicInteger startScanTillNewInternalCount = new AtomicInteger();
+    private final  AtomicInteger completeScanTillNewInternalCount = new AtomicInteger();
+    
     private XFutureVoid scanTillNewInternal() {
+        int sc = startScanTillNewInternalCount.incrementAndGet();
+        int cc = completeScanTillNewInternalCount.get();
+        if(cc < sc -1) {
+            throw new IllegalStateException("scanTillNewInternal : sc="+sc+",cc="+cc);
+        }
         return lookForPartsAll()
-                .thenRunAsync("completeScanAllInternal", this::completeScanTillNewInternal, supervisorExecutorService)
-                .thenComposeToVoid(this::showScanCompleteDisplay);
+                .thenRunAsync("completeScanTillNewInternal" + sc +":" +cc, this::completeScanTillNewInternal, supervisorExecutorService)
+                .thenComposeToVoid("showScanCompleteDisplay",this::showScanCompleteDisplay)
+                .thenRun(() -> completeScanTillNewInternalCount.incrementAndGet());
     }
 
     private XFutureVoid showScanCompleteDisplay() {
@@ -3968,7 +3977,7 @@ public class Supervisor {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFutureVoid ret
                             = startCheckAndEnableAllRobots()
-                                    .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
+                                    .thenComposeAsyncToVoid("continueContinuousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousScanAndRun.startAllActions1", x -> startAllActions("continueContinuousScanAndRun", false), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
@@ -5483,7 +5492,7 @@ public class Supervisor {
         aprsSys.setTaskName(taskName);
         aprsSys.setRobotName(robotName);
         aprsSys.getTitleUpdateRunnables().add(() -> {
-            Utils.runOnDispatchThreadWithCatch(this::updateTasksTable);
+            updateTasksTable();
         });
         aprsSys.setSupervisorEventLogger(this::logEvent);
         aprsSys.setSupervisor(this);
@@ -5648,7 +5657,7 @@ public class Supervisor {
         }
     }
 
-    private void updateTasksTable() {
+    private synchronized void  updateTasksTable() {
         if (closing) {
             return;
         }
@@ -5661,6 +5670,7 @@ public class Supervisor {
         }
         BufferedImage liveImages[] = new BufferedImage[aprsSystems.size()];
         boolean newImage = false;
+        Object newTasksTableData[][] = new Object[aprsSystems.size()][];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystemInterface = aprsSystems.get(i);
             String taskName = aprsSystemInterface.getTaskName();
@@ -5693,8 +5703,9 @@ public class Supervisor {
             String detailsString = aprsSystemInterface.getDetailsString();
             File propertiesFile = aprsSystemInterface.getPropertiesFile();
             int priority = aprsSystemInterface.getPriority();
-            tasksCachedTable.addRow(new Object[]{priority, taskName, robotName, scanImage, liveImage, detailsString, propertiesFile});
+            newTasksTableData[i] = new Object[]{priority, taskName, robotName, scanImage, liveImage, detailsString, propertiesFile};
         }
+        tasksCachedTable.setData(newTasksTableData);
         if (isRecordLiveImageMovieSelected()) {
             combineAndEncodeLiveImages(newImage, liveImages);
         }
