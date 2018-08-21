@@ -362,7 +362,7 @@ public class Utils {
                 ret.complete(null);
             } catch (Exception e) {
                 int count = dispathThreadExceptionCount.incrementAndGet();
-                
+
                 LOGGER.log(Level.SEVERE, name, e);
                 if (count < 2) {
                     JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
@@ -382,7 +382,7 @@ public class Utils {
                     if (count < 2) {
                         JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
                     }
-                     ret.completeExceptionally(e);
+                    ret.completeExceptionally(e);
                 }
             });
             return ret;
@@ -427,10 +427,32 @@ public class Utils {
     public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (isEventDispatchThread()) {
-            ret.complete(s.get());
+            try {
+                R val = s.get();
+                ret.complete(val);
+            } catch (Exception e) {
+                int count = dispathThreadExceptionCount.incrementAndGet();
+                LOGGER.log(Level.SEVERE, "", e);
+                if (count < 2) {
+                    JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                }
+                ret.completeExceptionally(e);
+            }
             return ret;
         } else {
-            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                try {
+                    R val = s.get();
+                    ret.complete(val);
+                } catch (Exception e) {
+                    int count = dispathThreadExceptionCount.incrementAndGet();
+                    LOGGER.log(Level.SEVERE, "", e);
+                    if (count < 2) {
+                        JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    }
+                    ret.completeExceptionally(e);
+                }
+            });
             return ret;
         }
     }
