@@ -272,7 +272,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (null != cause) {
                 System.err.println("Caused by " + exception.getCause());
             }
-            throw new RuntimeException("Failed to connect to vision "+host+":"+port,exception);
+            throw new RuntimeException("Failed to connect to vision "+host+":"+port +" : "+exception.getMessage(),exception);
         }
     }
 
