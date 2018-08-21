@@ -4813,7 +4813,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static final int XFUTURE_MAX_DEPTH = 100;
+    private static final int XFUTURE_MAX_DEPTH = 30;
     static private boolean firstDepthOverOccured = false;
 
     static private DefaultMutableTreeNode xfutureToNode(XFuture<?> future, boolean showDoneFutures, boolean showUnnamedFutures, int depth) {
