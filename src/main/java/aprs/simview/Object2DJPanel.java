@@ -51,7 +51,8 @@ import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import java.awt.image.ImageObserver;
-import org.checkerframework.checker.guieffect.qual.UI;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
@@ -66,6 +67,40 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class Object2DJPanel extends JPanel {
 
     private DisplayAxis displayAxis = POS_X_POS_Y;
+
+    private volatile boolean debugTimes = false;
+
+//    public boolean isDebugTimes() {
+//        return debugTimes;
+//    }
+//
+//    public void setDebugTimes(boolean debugTimes) {
+//        this.debugTimes = debugTimes;
+//    }
+
+//    private volatile long repaintTime = 0;
+//    private final AtomicInteger repaintCount = new AtomicInteger();
+
+//    private final ConcurrentHashMap<String,Integer> repaintCallersMap 
+//            = new ConcurrentHashMap<>();
+//    
+//    @Override
+//    public void repaint() {
+//        if(debugTimes) {
+//            int c = repaintCount.incrementAndGet();
+//            String caller = Thread.currentThread().getStackTrace()[2].toString();
+//            repaintCallersMap.compute(caller, (k,v) -> (v==null)?1:(v+1));
+//            if(c%10 == 1) {
+//                System.out.println("Object2DJPanel repaintCount = " + c+", repaintCallersMap="+repaintCallersMap);
+//            }
+//            
+//        }
+//        long t = System.currentTimeMillis();
+//        if (t - repaintTime > 50) {
+//            super.repaint();
+//            repaintTime = System.currentTimeMillis();
+//        }
+//    }
 
     @UIEffect
     public Object2DJPanel() {

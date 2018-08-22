@@ -88,6 +88,8 @@ import java.util.Enumeration;
 import static java.util.Objects.requireNonNull;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import javax.swing.JDialog;
 import javax.swing.table.TableModel;
 import org.apache.commons.csv.CSVFormat;
@@ -116,6 +118,56 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         diag.setVisible(true);
         return panel.getItems();
     }
+
+    private final List<Consumer<List<PhysicalItem>>> setItemsListeners
+            = Collections.synchronizedList(new ArrayList<>());
+
+    public void addSetItemsListener(Consumer<List<PhysicalItem>> listener) {
+        setItemsListeners.add(listener);
+    }
+
+    public void removeSetItemsListener(Consumer<List<PhysicalItem>> listener) {
+        setItemsListeners.remove(listener);
+    }
+
+    private final AtomicInteger notifyItemsTableCount = new AtomicInteger();
+    private final AtomicLong notifyItemsTableTime = new AtomicLong();
+    private final AtomicLong notifyItemsTableMaxTime = new AtomicLong();
+
+    private void notifySetItemsListeners(List<PhysicalItem> itemsList) {
+        if (setItemsListeners.isEmpty()) {
+            return;
+        }
+        long startTime = System.currentTimeMillis();
+        int c = notifyItemsTableCount.incrementAndGet();
+        List<Consumer<List<PhysicalItem>>> notifyList
+                = new ArrayList<>(setItemsListeners);
+        List<PhysicalItem> itemsListCopy
+                = Collections.unmodifiableList(new ArrayList<>(itemsList));
+        for (Consumer<List<PhysicalItem>> consumer : notifyList) {
+            consumer.accept(itemsListCopy);
+        }
+        if (debugTimes) {
+            long endTime = System.currentTimeMillis();
+            long diff = endTime - startTime;
+            long total = notifyItemsTableTime.addAndGet(diff);
+            long max = notifyItemsTableMaxTime.getAndAccumulate(diff, Math::max);
+            System.out.println("notifyItemsTable count = " + c);
+            System.out.println("notifyItemsTable max = " + max);
+            System.out.println("notifyItemsTable avg = " + total / c);
+        }
+    }
+
+    private volatile boolean debugTimes = false;
+
+//    public boolean isDebugTimes() {
+//        return debugTimes;
+//    }
+//
+//    public void setDebugTimes(boolean debugTimes) {
+//        this.debugTimes = debugTimes;
+//        object2DJPanel1.setDebugTimes(debugTimes);
+//    }
 
     public BufferedImage createSnapshotImage() {
         return object2DJPanel1.createSnapshotImage();
@@ -311,7 +363,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //                System.out.println("item = " + item);
 //            }
 //        }
-        Utils.runOnDispatchThread(() -> {
+        XFutureVoid future = Utils.runOnDispatchThread(() -> {
             setItemsInternal(items);
             settingItems = false;
         });
@@ -321,6 +373,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 srv.publishList(items);
             }
         }
+        future.thenRun(() -> notifySetItemsListeners(items));
     }
 
     public void setOutputItems(List<PhysicalItem> items) {
@@ -341,22 +394,53 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         loadTraySlotInfo(items);
     }
 
+    private final AtomicInteger updateItemsTableCount = new AtomicInteger();
+    private final AtomicLong updateItemsTableTime = new AtomicLong();
+    private final AtomicLong updateItemsTableMaxTime = new AtomicLong();
+
     private void updateItemsTable(List<PhysicalItem> items) {
         settingItems = true;
+        long startTime = System.currentTimeMillis();
+        int c = updateItemsTableCount.incrementAndGet();
         Utils.runOnDispatchThread(() -> {
             updateItemsTableOnDisplay(items);
             settingItems = false;
+            if (debugTimes) {
+                long endTime = System.currentTimeMillis();
+                long diff = endTime - startTime;
+                long total = updateItemsTableTime.addAndGet(diff);
+                long max = updateItemsTableMaxTime.getAndAccumulate(diff, Math::max);
+                System.out.println("updateItemsTable count = " + c);
+                System.out.println("updateItemsTable max = " + max);
+                System.out.println("updateItemsTable avg = " + total / c);
+            }
         });
     }
 
+    private int updateItemsTableOnDisplayCount = 0;
+    private long updateItemsTableOnDisplayCountTotalTime = 0;
+    private long updateItemsTableOnDisplayCountMaxTime = 0;
+
     @UIEffect
     private void updateItemsTableOnDisplay(List<PhysicalItem> items) {
+        long start = System.currentTimeMillis();
+        updateItemsTableOnDisplayCount++;
         if (!object2DJPanel1.isShowOutputItems()) {
             if (object2DJPanel1.isShowAddedSlotPositions()) {
                 loadItemsToTable(object2DJPanel1.getItemsWithAddedExtras(), jTableItems);
             } else {
                 loadItemsToTable(items, jTableItems);
             }
+        }
+        if (debugTimes) {
+            long end = System.currentTimeMillis();
+            long diff = end - start;
+            updateItemsTableOnDisplayCountTotalTime += diff;
+            updateItemsTableOnDisplayCountMaxTime = Math.max(updateItemsTableOnDisplayCountMaxTime, diff);
+            System.out.println("updateItemsTableOnDisplayCount = " + updateItemsTableOnDisplayCount);
+            System.out.println("updateItemsTableOnDisplayCountMaxTime = " + updateItemsTableOnDisplayCountMaxTime);
+            long averageUpdateItemsTableOnDisplay = updateItemsTableOnDisplayCountTotalTime / updateItemsTableOnDisplayCount;
+            System.out.println("averageUpdateItemsTableOnDisplay = " + averageUpdateItemsTableOnDisplay);
         }
     }
 
@@ -1822,24 +1906,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double last_drag_max_y;
 
     private volatile long mouseDragTime = -1;
+    private volatile boolean mouseDown = false;
 
-    public boolean isPartMoving() {
-        return null != this.draggedItem || System.currentTimeMillis() - mouseDragTime < 30;
+    public boolean isUserMouseDown() {
+        return null != this.draggedItem || mouseDown;
     }
+
+    private volatile long mouseDraggedUpdateTableTime = -1;
 
     @UIEffect
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
+        mouseDown = true;
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
         double max_x = object2DJPanel1.getMaxX();
         double min_y = object2DJPanel1.getMinY();
         double max_y = object2DJPanel1.getMaxY();
         PhysicalItem itemToDrag = this.draggedItem;
-        if (!evt.isShiftDown() && null != draggedItem && !"P".equals(draggedItem.getType())) {
-            System.out.println("Hold SHIFT to move trays : closestItem=" + draggedItem.getFullName());
-            draggedItem = null;
-            return;
-        }
         mouseDragTime = System.currentTimeMillis();
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
@@ -1869,78 +1952,39 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
             double xdiff = itemToDrag.x - orig_x;
             double ydiff = itemToDrag.y - orig_y;
-            if (Math.abs(xdiff) > 100 || Math.abs(ydiff) > 100) {
-                System.out.println("big drag jump");
-                this.draggedItem = null;
-                return;
-            }
+//            if (Math.abs(xdiff) > 100 || Math.abs(ydiff) > 100) {
+//                System.out.println("big drag jump");
+//                this.draggedItem = null;
+//                return;
+//            }
             last_drag_max_x = max_x;
             last_drag_min_x = min_x;
             last_drag_max_y = max_y;
             last_drag_min_y = min_y;
             last_drag_scale = scale;
 
-            if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
-                List<PhysicalItem> origItems = this.getItems();
-                if (itemToDrag.getMaxSlotDist() > 0) {
-                    for (int i = 0; i < origItems.size(); i++) {
-                        PhysicalItem item = origItems.get(i);
-                        if (item == itemToDrag) {
-                            continue;
-                        }
-                        if (item.getMaxSlotDist() > 0) {
-                            continue;
-                        }
-                        if (item.dist(orig_x, orig_y) > itemToDrag.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
-                            continue;
-                        }
-                        boolean foundCloser = false;
-                        for (int j = 0; j < origItems.size(); j++) {
-                            if (j == i) {
-                                continue;
-                            }
-                            PhysicalItem otherItem = origItems.get(j);
-                            if (otherItem == itemToDrag) {
-                                continue;
-                            }
-                            if (otherItem == item) {
-                                continue;
-                            }
-                            if (otherItem.getMaxSlotDist() > 1e-6
-                                    && item.dist(otherItem) < item.dist(orig_x, orig_y)) {
-                                foundCloser = true;
-                                break;
-                            }
-                        }
-                        if (foundCloser) {
-                            continue;
-                        }
-                        item.x += xdiff;
-                        item.y += ydiff;
-                    }
+            List<PhysicalItem> includedItemsToDrag = this.draggedItemsList;
+            if (null != includedItemsToDrag) {
+                for (PhysicalItem item : includedItemsToDrag) {
+                    item.x += xdiff;
+                    item.y += ydiff;
                 }
             }
-            this.updateItemsTable(getItems());
-            object2DJPanel1.repaint();
+            long t = System.currentTimeMillis();
+            if (t - mouseDraggedUpdateTableTime > 200) {
+                this.updateItemsTable(getItems());
+                mouseDraggedUpdateTableTime = System.currentTimeMillis();
+                object2DJPanel1.repaint();
+            }
+            mouseDown = true;
         }
-//        int minIndex = -1;
-//        int x = evt.getX();
-//        int y = evt.getY();
-//        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
-//        PhysicalItem closestItem = closestItemInfo.getClosestItem();
-//        minIndex = closestItemInfo.getMinIndex();
-//        if (minIndex >= 0 && closestItem == itemToDrag) {
-//            ListSelectionModel selectModel = jTableItems.getSelectionModel();
-//            selectModel.setAnchorSelectionIndex(minIndex);
-//            selectModel.setLeadSelectionIndex(minIndex);
-//            selectModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//            selectModel.setSelectionInterval(minIndex, minIndex);
-//            object2DJPanel1.setSelectedItemIndex(minIndex);
-//        }
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     @Nullable
     private volatile PhysicalItem draggedItem = null;
+
+    @Nullable
+    private volatile List<PhysicalItem> draggedItemsList = null;
 
     private boolean insideItem(PhysicalItem item, int x, int y) {
         if (null == item || null == item.getDisplayTransform()) {
@@ -1967,11 +2011,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
-
+        mouseDown = true;
         int x = evt.getX();
         int y = evt.getY();
-        draggedItem = null;
-
         int minIndex = -1;
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
@@ -1990,12 +2032,79 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             selectModel.setSelectionInterval(minIndex, minIndex);
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
+        if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
+            List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
+            this.draggedItemsList = newDragItems;
+        } else if (null != closestItem && !"P".equals(closestItem.getType())) {
+            System.out.println("Hold SHIFT to move trays : closestItem=" + draggedItem.getFullName());
+            draggedItem = null;
+            this.draggedItemsList = null;
+            return;
+        }
         draggedItem = closestItem;
+        mouseDown = true;
+
     }//GEN-LAST:event_object2DJPanel1MousePressed
+
+    private List<PhysicalItem> findIncludedItems(PhysicalItem closestItem) {
+        List<PhysicalItem> origItems = this.getItems();
+        List<PhysicalItem> newDragItems = new ArrayList<>();
+        if (closestItem.getMaxSlotDist() > 0) {
+            double orig_x = closestItem.x;
+            double orig_y = closestItem.y;
+            for (int i = 0; i < origItems.size(); i++) {
+                PhysicalItem item = origItems.get(i);
+                if (item == closestItem) {
+                    continue;
+                }
+                if (item.getMaxSlotDist() > 0) {
+                    continue;
+                }
+                if (item.dist(orig_x, orig_y) > closestItem.getMaxSlotDist() * object2DJPanel1.getSlotMaxDistExpansion()) {
+                    continue;
+                }
+                boolean foundCloser = false;
+                for (int j = 0; j < origItems.size(); j++) {
+                    if (j == i) {
+                        continue;
+                    }
+                    PhysicalItem otherItem = origItems.get(j);
+                    if (otherItem == closestItem) {
+                        continue;
+                    }
+                    if (otherItem == item) {
+                        continue;
+                    }
+                    if (otherItem.getMaxSlotDist() > 1e-6
+                            && item.dist(otherItem) < item.dist(orig_x, orig_y)) {
+                        foundCloser = true;
+                        break;
+                    }
+                }
+                if (foundCloser) {
+                    continue;
+                }
+                newDragItems.add(item);
+            }
+        }
+        return newDragItems;
+    }
 
     @UIEffect
     private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
+        mouseDown = false;
+        draggedItemsList = null;
+        if (null != draggedItem) {
+            draggedItem = null;
+            List<PhysicalItem> itemsList = getItems();
+            this.updateItemsTable(itemsList);
+            if (!setItemsListeners.isEmpty()) {
+                notifySetItemsListeners(itemsList);
+            }
+        }
         draggedItem = null;
+        draggedItemsList = null;
+        mouseDown = false;
     }//GEN-LAST:event_object2DJPanel1MouseReleased
 
     @UIEffect
@@ -2408,18 +2517,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
         this.draggedItem = null;
+        this.draggedItemsList = null;
     }//GEN-LAST:event_object2DJPanel1MouseClicked
 
     private void object2DJPanel1MouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseMoved
         this.draggedItem = null;
+        this.draggedItemsList = null;
     }//GEN-LAST:event_object2DJPanel1MouseMoved
 
     private void object2DJPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseEntered
         this.draggedItem = null;
+        this.draggedItemsList = null;
     }//GEN-LAST:event_object2DJPanel1MouseEntered
 
     private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
         this.draggedItem = null;
+        this.draggedItemsList = null;
     }//GEN-LAST:event_object2DJPanel1MouseExited
 
     @UIEffect
@@ -2765,7 +2878,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 completeLoadPropertiesOnDisplay(props);
             });
         }
-        return XFutureVoid.completedFutureWithName("Object2D.propertiesFile="+propertiesFile);
+        return XFutureVoid.completedFutureWithName("Object2D.propertiesFile=" + propertiesFile);
     }
 
     @UIEffect
@@ -3161,7 +3274,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private final CachedTextField pickupDistCachedTextField;
-    
+
     /**
      * Set the value of pickupDist
      *
@@ -3184,7 +3297,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private final CachedTextField dropOffThresholdCachedTextField;
-    
+
     /**
      * Set the value of dropOffThreshold
      *

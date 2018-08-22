@@ -128,6 +128,7 @@ import crcl.utils.CrclCommandWrapper;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.Set;
@@ -3337,7 +3338,7 @@ public class AprsSystem implements SlotOffsetProvider {
     @UIEffect
     private XFutureVoid startObject2DJinternalFrameOnDisplay() {
         try {
-            
+
             boolean alreadySelected = isObject2DViewStartupSelected();
             if (!alreadySelected) {
                 setObject2DViewStartupSelected(true);
@@ -3351,7 +3352,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
             addInternalFrame(newObject2DViewJInternalFrame);
             this.object2DViewJInternalFrame = newObject2DViewJInternalFrame;
-           return  newObject2DViewJInternalFrame.loadProperties();
+            return newObject2DViewJInternalFrame.loadProperties();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -4150,13 +4151,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * Object2D view and create a set of actions that will fill empty trays to
      * match. Load this list into the PDDL executor.
      */
-    public void createActionListFromVision() {
+    @Nullable
+    public File createActionListFromVision() {
         try {
             List<PhysicalItem> requiredItems = getObjectViewItems();
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            createActionListFromVision(requiredItems, teachItems, false, 0);
+            return createActionListFromVision(requiredItems, teachItems, false, 0);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -4325,18 +4327,21 @@ public class AprsSystem implements SlotOffsetProvider {
      * when complete.
      */
     @SuppressWarnings("unused")
-    public void createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
+    @Nullable
+    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        assert (null != pddlExecutorJInternalFrame1) : ("null == pddlExecutorJInternalFrame1  ");
         long t0 = System.currentTimeMillis();
         long t1 = t0;
+        File ret = null;
         try {
             List<String> startingList = this.getLastCreateActionListFromVisionKitToCheckStrings();
             if (goalLearner == null) {
                 goalLearner = new GoalLearner();
             }
             if (teachItems.isEmpty()) {
-                return;
+                return null;
             }
             goalLearner.setItemPredicate(this::isWithinLimits);
             if (goalLearner.isCorrectionMode()) {
@@ -4362,18 +4367,15 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                 }
             }
-            File f = createTempFile("actionList", ".txt");
-            try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-                assert actions != null;
-                for (Action act : actions) {
-                    ps.println(act.asPddlLine());
-                }
-            }
+
             List<String> endingList = goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
             boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
-            if (null != pddlExecutorJInternalFrame1 && (!equal || !goalLearner.isCorrectionMode())) {
+            if (!equal || !goalLearner.isCorrectionMode()) {
                 boolean startingReverseFlag = isReverseFlag();
-                pddlExecutorJInternalFrame1.loadActionsFile(f, startingReverseFlag);
+                File f = createTempFile("actionList", ".txt");
+                saveActionsListToFile(f, actions);
+                loadActionsFile(f, startingReverseFlag);
+                ret = f;
             }
             if (requiredItems != teachItems) {
                 if (overrideRotation) {
@@ -4395,8 +4397,23 @@ public class AprsSystem implements SlotOffsetProvider {
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
         long t2 = System.currentTimeMillis();
+        return ret;
 //        System.out.println("createActionListFromVision: (t1-t0) = " +(t1-t0));
 //        System.out.println("createActionListFromVision: (t2-t0) = " +(t2-t0));
+    }
+
+    public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
+        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+            assert actions != null;
+            for (Action act : actions) {
+                ps.println(act.asPddlLine());
+            }
+        }
+    }
+
+    private void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
+        assert (null != pddlExecutorJInternalFrame1) : ("null == pddlExecutorJInternalFrame1  ");
+        pddlExecutorJInternalFrame1.loadActionsFile(f, newReverseFlag);
     }
 
     /**
