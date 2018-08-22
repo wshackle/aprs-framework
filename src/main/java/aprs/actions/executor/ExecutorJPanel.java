@@ -312,6 +312,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolOffsetsCachedTable = new CachedTable(jTableToolOffsets);
         trayAttachOffsetsCachedTable = new CachedTable(jTableTrayAttachOffsets);
         positionCacheCachedTable = new CachedTable(jTablePositionCache);
+        indexCachedTextField = new CachedTextField(jTextFieldIndex);
+        
     }
 
     public JMenu getToolMenu() {
@@ -2595,23 +2597,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
+    private final CachedTextField indexCachedTextField;
+    
     private void finishLoadActionsList(String canonName) {
         setReplanFromIndex(0);
-        Utils.runOnDispatchThread(() -> {
-            autoResizeTableColWidthsPddlOutput();
-            jTextFieldIndex.setText("0");
-            updateComboPartModel();
-            updateComboSlotModel();
-            String origActionsName = pddlOutputActionsCachedText.getText();
-            if (!origActionsName.equals(canonName)) {
-                try {
-                    pddlOutputActionsCachedText.setText(canonName);
-                    updateActionFileStrings();
-                } catch (Exception ex) {
-                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                }
+        autoResizeTableColWidthsPddlOutput();
+        indexCachedTextField.setText("0");
+        updateComboPartModel();
+        updateComboSlotModel();
+        String origActionsName = pddlOutputActionsCachedText.getText();
+        if (!origActionsName.equals(canonName)) {
+            try {
+                pddlOutputActionsCachedText.setText(canonName);
+                updateActionFileStrings();
+            } catch (Exception ex) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
-        });
+        }
     }
 
     private void showLoadedPlanOptaPlanner(boolean newReverseFlag) throws SQLException {
@@ -2705,7 +2707,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -bestScore));
     }
 
-   
     void autoResizeTableColWidthsPddlOutput() {
         autoResizeTableColWidths(jTablePddlOutput);
     }
@@ -5713,7 +5714,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             setReplanFromIndex(actionsList.size() - 1);
         }
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -5862,7 +5863,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setManualAction(true);
         List<MiddleCommandType> cmds = crclGenerator.generate(placePartActionsList, 0, options, safeAbortRequestCount.get());
         crclGenerator.setManualAction(false);
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -5884,7 +5885,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setPositionMaps(getPositionMaps());
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = crclGenerator.generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get());
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -5934,7 +5935,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setPositionMaps(getPositionMaps());
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = crclGenerator.generate(takePartActionsList, 0, options, safeAbortRequestCount.get());
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -5979,7 +5980,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setOptions(options);
         crclGenerator.returnPart(part, cmds);
 
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -6091,7 +6092,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         crclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -6162,7 +6163,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         testDropOffPose = correctPose(origPose);
         crclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -6195,7 +6196,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setOptions(options);
         crclGenerator.takePartByPose(cmds, testDropOffPose, "testDropOffPose");
         CRCLProgramType program = createEmptyProgram();
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -6239,7 +6240,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.clearLastRequiredPartsMap();
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = crclGenerator.generate(lookForActionsList, 0, options, safeAbortRequestCount.get());
-        jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
@@ -6416,7 +6417,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             0,
                             options,
                             safeAbortRequestCount.get());
-            jTextFieldIndex.setText(Integer.toString(getReplanFromIndex()));
+            indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
             program.getMiddleCommand().clear();
             program.getMiddleCommand().addAll(cmds);
             setEndCanonCmdId(program);

@@ -125,10 +125,31 @@ public class GoalLearner {
         return new ArrayList<>(lastCreateActionListFromVisionKitToCheckStrings);
     }
     
+    private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable[] = null;
+    @Nullable private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
+    private volatile long setLastCreateActionListFromVisionKitToCheckStringsTime;
+    
+    public StackTraceElement[] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
+        return setLastCreateActionListFromVisionKitToCheckStringsTrace;
+    }
+
+    public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
+        return setLastCreateActionListFromVisionKitToCheckStringsThread;
+    }
+
+    public long getSetLastCreateActionListFromVisionKitToCheckStringsTime() {
+        return setLastCreateActionListFromVisionKitToCheckStringsTime;
+    }
+    
+    
+    
     public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
         if(null == strings) {
             throw new IllegalArgumentException("null == strings");
         }
+        setLastCreateActionListFromVisionKitToCheckStringsTime = System.currentTimeMillis();
+        setLastCreateActionListFromVisionKitToCheckStringsThread = Thread.currentThread();
+        setLastCreateActionListFromVisionKitToCheckStringsTrace = Thread.currentThread().getStackTrace();
         this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 

@@ -58,7 +58,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     public boolean isPartMoving() {
-        return object2DOuterJPanel1.isPartMoving();
+        return object2DOuterJPanel1.isUserMouseDown();
     }
 
     public double getClosestRobotPartDistance() {

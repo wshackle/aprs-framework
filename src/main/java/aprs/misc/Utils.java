@@ -365,7 +365,7 @@ public class Utils {
 
                 LOGGER.log(Level.SEVERE, name, e);
                 if (count < 2) {
-                    JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
                 }
                 ret.completeExceptionally(e);
             }
@@ -380,7 +380,7 @@ public class Utils {
                     int count = dispathThreadExceptionCount.incrementAndGet();
                     LOGGER.log(Level.SEVERE, name, e);
                     if (count < 2) {
-                        JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                        showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
                     }
                     ret.completeExceptionally(e);
                 }
@@ -434,7 +434,7 @@ public class Utils {
                 int count = dispathThreadExceptionCount.incrementAndGet();
                 LOGGER.log(Level.SEVERE, "", e);
                 if (count < 2) {
-                    JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
                 }
                 ret.completeExceptionally(e);
             }
@@ -448,7 +448,7 @@ public class Utils {
                     int count = dispathThreadExceptionCount.incrementAndGet();
                     LOGGER.log(Level.SEVERE, "", e);
                     if (count < 2) {
-                        JOptionPane.showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                        showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
                     }
                     ret.completeExceptionally(e);
                 }
@@ -927,8 +927,8 @@ public class Utils {
         return out;
     }
 
-    @SuppressWarnings("guieffect")
-    public static void showMessageDialog(Component component, String message) {
+    @SuppressWarnings({"guieffect","nullness"})
+    public static void showMessageDialog(@Nullable Component component, String message) {
         if (null == message || message.trim().length() < 1) {
             throw new IllegalArgumentException("message=" + message);
         }
