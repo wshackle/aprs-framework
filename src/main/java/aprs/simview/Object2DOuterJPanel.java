@@ -168,7 +168,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        this.debugTimes = debugTimes;
 //        object2DJPanel1.setDebugTimes(debugTimes);
 //    }
-
     public BufferedImage createSnapshotImage() {
         return object2DJPanel1.createSnapshotImage();
     }
@@ -346,6 +345,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             lastRefreshTime = System.currentTimeMillis();
             refreshCount.incrementAndGet();
         }
+    }
+
+    public void loadFile(File f) throws IOException {
+        loadFile(f, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
     }
 
     @Override
@@ -804,12 +807,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        object2DJPanel1 = new aprs.simview.Object2DJPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTableItems = new javax.swing.JTable();
+        jPanelTopRow = new javax.swing.JPanel();
         jTextFieldFilename = new javax.swing.JTextField();
         jButtonSave = new javax.swing.JButton();
         jButtonLoad = new javax.swing.JButton();
+        jPanelBottomMain = new javax.swing.JPanel();
+        jPanelRightSide = new javax.swing.JPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanelOptionsTab = new javax.swing.JPanel();
         jTextFieldCurrentXY = new javax.swing.JTextField();
@@ -844,6 +847,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel11 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextAreaConnectDetails = new javax.swing.JTextArea();
+        jLabel12 = new javax.swing.JLabel();
+        jComboBoxHandleRotationsEnum = new javax.swing.JComboBox<>();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -866,74 +871,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableTraySlots = new javax.swing.JTable();
         jScrollPaneProperties = new javax.swing.JScrollPane();
         jTableProperties = new javax.swing.JTable();
-
-        object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseMoved(evt);
-            }
-            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseDragged(evt);
-            }
-        });
-        object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MousePressed(evt);
-            }
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseReleased(evt);
-            }
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseClicked(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseEntered(evt);
-            }
-        });
-
-        javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
-        object2DJPanel1.setLayout(object2DJPanel1Layout);
-        object2DJPanel1Layout.setHorizontalGroup(
-            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 326, Short.MAX_VALUE)
-        );
-        object2DJPanel1Layout.setVerticalGroup(
-            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-
-        jTableItems.setAutoCreateRowSorter(true);
-        jTableItems.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
-            },
-            new String [] {
-                "Index", "Name", "X", "Y", "Rotation", "Type", "Score"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jTableItems.setMaximumSize(new java.awt.Dimension(400, 64));
-        jScrollPane1.setViewportView(jTableItems);
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTableItems = new javax.swing.JTable();
+        object2DJPanel1 = new aprs.simview.Object2DJPanel();
 
         jButtonSave.setText("Save");
         jButtonSave.addActionListener(new java.awt.event.ActionListener() {
@@ -948,6 +888,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jButtonLoadActionPerformed(evt);
             }
         });
+
+        javax.swing.GroupLayout jPanelTopRowLayout = new javax.swing.GroupLayout(jPanelTopRow);
+        jPanelTopRow.setLayout(jPanelTopRowLayout);
+        jPanelTopRowLayout.setHorizontalGroup(
+            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopRowLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 624, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonSave)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonLoad)
+                .addContainerGap())
+        );
+        jPanelTopRowLayout.setVerticalGroup(
+            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopRowLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonSave)
+                    .addComponent(jButtonLoad))
+                .addContainerGap())
+        );
+
+        jPanelRightSide.setMinimumSize(new java.awt.Dimension(350, 0));
 
         jTextFieldCurrentXY.setText("0.0,0.0");
         jTextFieldCurrentXY.addActionListener(new java.awt.event.ActionListener() {
@@ -1211,6 +1177,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextAreaConnectDetails.setRows(5);
         jScrollPane3.setViewportView(jTextAreaConnectDetails);
 
+        jLabel12.setText("Rotations:");
+
+        jComboBoxHandleRotationsEnum.setModel(getHandleRotationComboBoxModel());
+        jComboBoxHandleRotationsEnum.setSelectedItem(getHandleRotationEnum());
+        jComboBoxHandleRotationsEnum.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxHandleRotationsEnumActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1219,33 +1195,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                        .addComponent(jScrollPane3)
-                        .addContainerGap())
-                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxSimulated)
+                        .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
-                        .addGap(142, 142, 142))
+                        .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabelHost)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRefresh)
+                        .addGap(0, 35, Short.MAX_VALUE))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane3)
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabelHost)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonRefresh))
-                            .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addComponent(jCheckBoxDebug)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBoxPause)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                        .addComponent(jLabel11)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel11)
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jCheckBoxSimulated)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jCheckBoxDebug)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxPause)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel12)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
             jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1264,11 +1243,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxDebug)
-                    .addComponent(jCheckBoxPause))
+                    .addComponent(jCheckBoxPause)
+                    .addComponent(jLabel12)
+                    .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel11)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1376,41 +1357,39 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSimulationUpdateTime)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxViewOutput))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSimDropRate))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.DEFAULT_SIZE, 142, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8)
-                        .addGap(120, 120, 120))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCheckBoxSimulationUpdateAsNeeded)
-                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                                .addComponent(jCheckBoxShuffleSimulatedUpdates)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBoxAddPosNoise)))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPickupDist)
+                        .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel10)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jCheckBoxSimulationUpdateAsNeeded)
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel7)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel8))
+                            .addComponent(jCheckBoxShuffleSimulatedUpdates))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextFieldDropOffThreshold)
-                            .addComponent(jTextFieldRotNoise))))
-                .addContainerGap())
+                            .addComponent(jCheckBoxAddPosNoise)
+                            .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
+                            .addComponent(jLabel6)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextFieldSimDropRate))
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
+                            .addComponent(jLabel5)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jCheckBoxViewOutput))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1481,14 +1460,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelTraysLayout.setVerticalGroup(
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Trays", jPanelTrays);
@@ -1521,6 +1500,116 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Properties", jScrollPaneProperties);
 
+        jTableItems.setAutoCreateRowSorter(true);
+        jTableItems.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "Index", "Name", "X", "Y", "Rotation", "Type", "Score"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true, true, true, true, true, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jTableItems.setMaximumSize(new java.awt.Dimension(400, 64));
+        jScrollPane1.setViewportView(jTableItems);
+
+        javax.swing.GroupLayout jPanelRightSideLayout = new javax.swing.GroupLayout(jPanelRightSide);
+        jPanelRightSide.setLayout(jPanelRightSideLayout);
+        jPanelRightSideLayout.setHorizontalGroup(
+            jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelRightSideLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanelRightSideLayout.setVerticalGroup(
+            jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelRightSideLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseDragged(evt);
+            }
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseMoved(evt);
+            }
+        });
+        object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseExited(evt);
+            }
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseReleased(evt);
+            }
+        });
+
+        javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
+        object2DJPanel1.setLayout(object2DJPanel1Layout);
+        object2DJPanel1Layout.setHorizontalGroup(
+            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 395, Short.MAX_VALUE)
+        );
+        object2DJPanel1Layout.setVerticalGroup(
+            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 546, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanelBottomMainLayout = new javax.swing.GroupLayout(jPanelBottomMain);
+        jPanelBottomMain.setLayout(jPanelBottomMainLayout);
+        jPanelBottomMainLayout.setHorizontalGroup(
+            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelBottomMainLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(jPanelRightSide, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanelBottomMainLayout.setVerticalGroup(
+            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelBottomMainLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelRightSide, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -1528,36 +1617,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jTextFieldFilename)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonSave)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonLoad))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 430, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addComponent(jPanelTopRow, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonSave)
-                    .addComponent(jButtonLoad))
+                .addComponent(jPanelTopRow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1572,6 +1642,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return posNoise;
     }
 
+    private final DefaultComboBoxModel<HandleRotationEnum> handleRotationComboBoxModel
+            = new javax.swing.DefaultComboBoxModel<>(HandleRotationEnum.values());
+
+    public DefaultComboBoxModel<HandleRotationEnum> getHandleRotationComboBoxModel() {
+        return handleRotationComboBoxModel;
+    }
     private final CachedTextField posNoiseCachedTextField;
 
     /**
@@ -1754,6 +1830,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
             argsMap.put("--visionport", portCachedTextField.getText().trim());
             argsMap.put("--visionhost", host);
+            argsMap.put("handleRotationEnum", handleRotationEnum.toString());
             clnt.setDebug(debugCachedCheckBox.isSelected());
             clnt.start(argsMap);
             if (!clnt.isConnected()) {
@@ -2218,7 +2295,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return aprsSystem.isSnapshotsSelected();
     }
 
-    public void loadFile(File f) throws IOException {
+    public void loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
 
         boolean takeSnapshots = isSnapshotsEnabled();
         if (takeSnapshots) {
@@ -2233,7 +2310,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return;
         }
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
-        this.setItems(VisionSocketClient.lineToList(line));
+        this.setItems(VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations));
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -2279,7 +2356,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
             try {
-                loadFile(chooser.getSelectedFile());
+                Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
+                loadFile(chooser.getSelectedFile(), selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -2541,6 +2619,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jCheckBoxToolsActionPerformed
 
+    private void jComboBoxHandleRotationsEnumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxHandleRotationsEnumActionPerformed
+        Object selectedObject = jComboBoxHandleRotationsEnum.getSelectedItem();
+        HandleRotationEnum newHandleRotationEnum;
+        if (selectedObject instanceof HandleRotationEnum) {
+            newHandleRotationEnum = (HandleRotationEnum) selectedObject;
+        } else if (selectedObject != null) {
+            newHandleRotationEnum = HandleRotationEnum.valueOf(selectedObject.toString());
+        } else {
+            newHandleRotationEnum = HandleRotationEnum.DEGREES;
+        }
+        setHandleRotationEnum(newHandleRotationEnum);
+    }//GEN-LAST:event_jComboBoxHandleRotationsEnumActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -2694,9 +2785,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxTools;
     private javax.swing.JCheckBox jCheckBoxViewOutput;
     private javax.swing.JComboBox<DisplayAxis> jComboBoxDisplayAxis;
+    private javax.swing.JComboBox<Object2DOuterJPanel.HandleRotationEnum> jComboBoxHandleRotationsEnum;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2706,9 +2799,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelHost;
+    private javax.swing.JPanel jPanelBottomMain;
     private javax.swing.JPanel jPanelConnectionsTab;
     private javax.swing.JPanel jPanelOptionsTab;
+    private javax.swing.JPanel jPanelRightSide;
     private javax.swing.JPanel jPanelSimulationTab;
+    private javax.swing.JPanel jPanelTopRow;
     private javax.swing.JPanel jPanelTrays;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
@@ -2926,7 +3022,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     };
 
-    @MonotonicNonNull private volatile Properties tableLoadedProperties = null;
+    @MonotonicNonNull
+    private volatile Properties tableLoadedProperties = null;
 
     @UIEffect
     private void loadPropertiesTableOnDisplay(Properties props) {
@@ -2950,12 +3047,72 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         model.addTableModelListener(propertiesTableModelListener);
     }
 
+    public static enum HandleRotationEnum {
+        IGNORE,
+        DEGREES,
+        RADIANS
+    };
+
+//    private volatile HandleRotationEnum handleRotationEnum = HandleRotationEnum.RADIANS;
+//
+//    public HandleRotationEnum getHandleRotationEnum() {
+//        return handleRotationEnum;
+//    }
+//
+//    public void setHandleRotationEnum(HandleRotationEnum handleRotationEnum) {
+//        this.handleRotationEnum = handleRotationEnum;
+//        if(null != visionSocketClient) {
+//            visionSocketClient.setConvertRotToRadians(handleRotationEnum == HandleRotationEnum.DEGREES);
+//            visionSocketClient.setZeroRotations(handleRotationEnum == HandleRotationEnum.IGNORE);
+//        }
+//    }
+    private HandleRotationEnum handleRotationEnum= HandleRotationEnum.RADIANS;
+
+    /**
+     * Get the value of handleRotationEnum
+     *
+     * @return the value of handleRotationEnum
+     */
+    public HandleRotationEnum getHandleRotationEnum() {
+        return handleRotationEnum;
+    }
+
+    /**
+     * Get the value of handleRotationEnum
+     *
+     * @return the value of handleRotationEnum
+     */
+    public String getHandleRotationEnumName() {
+        return handleRotationEnum.name();
+    }
+
+    public void setHandleRotationEnumName(String handleRotationEnumName) {
+        handleRotationEnum = HandleRotationEnum.valueOf(handleRotationEnumName);
+    }
+
+    /**
+     * Set the value of handleRotationEnum
+     *
+     * @param handleRotationEnum new value of handleRotationEnum
+     */
+    public void setHandleRotationEnum(HandleRotationEnum handleRotationEnum) {
+        this.handleRotationEnum = handleRotationEnum;
+        if (null != visionSocketClient) {
+            visionSocketClient.setConvertRotToRadians(handleRotationEnum == HandleRotationEnum.DEGREES);
+            visionSocketClient.setZeroRotations(handleRotationEnum == HandleRotationEnum.IGNORE);
+        }
+    }
+
     @UIEffect
     private void updateDisplayFromProperties(Properties props) {
         updatingDisplayFromProperties = true;
         String itemsLine = props.getProperty(ITEMS_PROPERTY_NAME);
+        String handleRotationEnumString = props.getProperty("handleRotationEnum");
+        if (null != handleRotationEnumString) {
+            this.handleRotationEnum = HandleRotationEnum.valueOf(handleRotationEnumString);
+        }
         if (null != itemsLine && itemsLine.length() > 0) {
-            List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine);
+            List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
             if (null != l && l.size() > 0) {
                 setItems(l);
             }
@@ -3376,13 +3533,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private class PoseUpdateHistoryItem {
 
         final CRCLStatusType stat;
-        @Nullable final CRCLCommandType cmd;
+        @Nullable
+        final CRCLCommandType cmd;
         final boolean isHoldingObjectExpected;
         final long time;
         final Point2D.@Nullable Double capturedPartPoint;
         final int captured_item_index;
         final DistIndex di;
-        @Nullable final PhysicalItem closestItem;
+        @Nullable
+        final PhysicalItem closestItem;
         final long statReceiveTime;
 
         PoseUpdateHistoryItem(

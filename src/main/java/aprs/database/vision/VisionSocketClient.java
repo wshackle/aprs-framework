@@ -49,10 +49,10 @@ public class VisionSocketClient implements AutoCloseable {
 
     @Nullable
     private volatile List<PhysicalItem> visionList = null;
-    
+
     @Nullable
     private volatile List<PhysicalItem> lastIgnoredVisionList = null;
-    
+
     @Nullable
     private SocketLineReader visionSlr = null;
     @Nullable
@@ -122,7 +122,7 @@ public class VisionSocketClient implements AutoCloseable {
         List<XFutureVoid> futures = new ArrayList<>();
         if (null != visionList) {
             List<PhysicalItem> listToSend = new ArrayList<>(visionList);
-            
+
             synchronized (listListeners) {
                 String lineReceived = this.getLine();
                 if (null != lineReceived) {
@@ -141,7 +141,6 @@ public class VisionSocketClient implements AutoCloseable {
         }
         return XFutureVoid.allOf(futures);
     }
-    
 
     @Nullable
     private VisionToDBJFrameInterface displayInterface;
@@ -203,6 +202,13 @@ public class VisionSocketClient implements AutoCloseable {
         String host = "HOSTNOTSET";
         short port = -99;
         try {
+            String handleRotationEnumString = argsMap.get("handleRotationEnum");
+            this.convertRotToRadians = false;
+            if (null != handleRotationEnumString) {
+                this.convertRotToRadians = handleRotationEnumString.equals("DEGREES");
+                this.zeroRotations = handleRotationEnumString.equals("IGNORE");
+            }
+
             String argsMapHost = argsMap.get("--visionhost");
             if (argsMapHost == null) {
                 throw new IllegalArgumentException("argsMap does not contain a value for --visionhost");
@@ -272,7 +278,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (null != cause) {
                 System.err.println("Caused by " + exception.getCause());
             }
-            throw new RuntimeException("Failed to connect to vision "+host+":"+port +" : "+exception.getMessage(),exception);
+            throw new RuntimeException("Failed to connect to vision " + host + ":" + port + " : " + exception.getMessage(), exception);
         }
     }
 
@@ -284,11 +290,31 @@ public class VisionSocketClient implements AutoCloseable {
         return line;
     }
 
-    public static List<PhysicalItem> lineToList(String line) {
-        return lineToList(line, null);
+    private boolean convertRotToRadians;
+
+    /**
+     * Get the value of convertRotToRadians
+     *
+     * @return the value of convertRotToRadians
+     */
+    public boolean isConvertRotToRadians() {
+        return convertRotToRadians;
     }
 
-    public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface) {
+    /**
+     * Set the value of convertRotToRadians
+     *
+     * @param convertRotToRadians new value of convertRotToRadians
+     */
+    public void setConvertRotToRadians(boolean convertRotToRadians) {
+        this.convertRotToRadians = convertRotToRadians;
+    }
+
+    public static List<PhysicalItem> lineToList(String line, boolean convertRotToRadians, boolean zeroRotations) {
+        return lineToList(line, null, convertRotToRadians, zeroRotations);
+    }
+
+    public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface, boolean convertRotToRadians, boolean zeroRotations) {
         List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
@@ -318,11 +344,20 @@ public class VisionSocketClient implements AutoCloseable {
                 if (missingVal) {
                     continue;
                 }
-                double rot = Double.parseDouble(fa[i + 1]);
-                if (!Double.isFinite(rot)) {
-                    logErr(displayInterface, "Ignoring item with invalid rotation  at position =" + (i + 1) + " of " + (fa[i + 1]) + "in " + line + "\n");
-                    continue;
+                double rot;
+                if (zeroRotations) {
+                    rot = 0;
+                } else {
+                    rot = Double.parseDouble(fa[i + 1]);
+                    if (!Double.isFinite(rot)) {
+                        logErr(displayInterface, "Ignoring item with invalid rotation  at position =" + (i + 1) + " of " + (fa[i + 1]) + "in " + line + "\n");
+                        continue;
+                    }
+                    if (convertRotToRadians) {
+                        rot = Math.toRadians(rot);
+                    }
                 }
+
                 double x = Double.parseDouble(fa[i + 2]);
                 if (!Double.isFinite(x)) {
                     logErr(displayInterface, "Ignoring item with invalid x  at position =" + (i + 2) + " of " + (fa[i + 2]) + "in " + line + "\n");
@@ -366,7 +401,7 @@ public class VisionSocketClient implements AutoCloseable {
                 listOut.remove(index);
             }
         } catch (Exception exception) {
-            System.err.println("i = " + i+",exception="+exception);
+            System.err.println("i = " + i + ",exception=" + exception);
             System.err.println("fa = " + Arrays.toString(fa));
             String msg = "Failed to parse line \"" + line + "\" : " + exception.getMessage() + System.lineSeparator();
             if (null != displayInterface) {
@@ -390,7 +425,27 @@ public class VisionSocketClient implements AutoCloseable {
     private int ignoreCount = 0;
     private int consecutiveIgnoreCount = 0;
     private int parseeVisionLineCount = 0;
-    private volatile long prevListSizeSetTime  = -1;
+    private volatile long prevListSizeSetTime = -1;
+
+    private boolean zeroRotations;
+
+    /**
+     * Get the value of zeroRotations
+     *
+     * @return the value of zeroRotations
+     */
+    public boolean isZeroRotations() {
+        return zeroRotations;
+    }
+
+    /**
+     * Set the value of zeroRotations
+     *
+     * @param zeroRotations new value of zeroRotations
+     */
+    public void setZeroRotations(boolean zeroRotations) {
+        this.zeroRotations = zeroRotations;
+    }
 
     public void parseVisionLine(final String line) {
         try {
@@ -400,19 +455,12 @@ public class VisionSocketClient implements AutoCloseable {
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
-            List<PhysicalItem> newVisionList  = lineToList(line, displayInterface);
+            List<PhysicalItem> newVisionList = lineToList(line, displayInterface, convertRotToRadians, zeroRotations);
             if (null == newVisionList || newVisionList.size() < prevVisionListSize) {
-//                if (ignoreCount < 100 || debug) {
-//                    System.err.println("ignoring vision list that decreased from " + prevVisionListSize + " to " + visionList.size() + " items");
-//                    System.err.println("lineCount=" + lineCount);
-//                    System.err.println("ignoreCount=" + ignoreCount);
-//                } else if (ignoreCount == 100) {
-//                    System.err.println("No more messages about ignored vision lists will be printed");
-//                }
                 this.lastIgnoredVisionList = newVisionList;
                 ignoreCount++;
                 consecutiveIgnoreCount++;
-                if (consecutiveIgnoreCount > 2 
+                if (consecutiveIgnoreCount > 2
                         && consecutiveIgnoreCount % 3 == 0
                         && System.currentTimeMillis() - prevListSizeSetTime > 60000) {
                     prevVisionListSize--;

@@ -547,7 +547,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     if (xf.isCancelled() || cancelledDependant != null) {
                         setBackground(Color.YELLOW);
                         if (null != cancelledDependant) {
-                            setText(xf.getName() + " : " + cancelledDependant.cancelString());
+                            setText(xf.getName() + " : " + cancelledDependant.shortCancelString());
                         }
                     } else if (xf.isCompletedExceptionally()) {
                         setBackground(Color.RED);

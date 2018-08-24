@@ -1,7 +1,7 @@
 #!killNeo4J
-#!waitfor Remote interface ready
+#!waitfor Mounting static content at /browser
 ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
-#!waitfor Remote interface ready
+#!waitfor Mounting static content at /browser
 ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
 #!stop
 #!killNeo4J
