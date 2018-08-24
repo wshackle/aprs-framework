@@ -1211,7 +1211,7 @@ public class Supervisor {
             disallowToggles(blockerName, r.getSystems());
             logEvent(r.getName() + ", comment=" + comment);
 
-            return XFuture.supplyAsync(r.getName(), r, supervisorExecutorService)
+            return XFuture.supplyAsync(r.getName(), r,XFuture::rethrow, supervisorExecutorService)
                     .thenComposeToVoid(x -> x)
                     .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
         } else {
@@ -3184,6 +3184,12 @@ public class Supervisor {
         private void submitTeachItems(List<PhysicalItem> teachItems) {
             if(futureCompleted) {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
+                return;
+            }
+            if(closedSupplier.get()) {
+                futureCompleted= true;
+                object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
+                future.cancelAll(false);
                 return;
             }
             if (!object2DOuterJPanel1.isUserMouseDown()) {

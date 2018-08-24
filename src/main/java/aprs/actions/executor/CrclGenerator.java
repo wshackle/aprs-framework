@@ -3997,7 +3997,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             if (null != pose) {
                 for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-                    if (entry.getKey().equals(posename)) {
+                     String entryKey = entry.getKey();
+                    if (entryKey.equals(posename)) {
                         continue;
                     }
                     PointType point = pose.getPoint();
@@ -4010,7 +4011,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     }
                     double diff = CRCLPosemath.diffPoints(point, entryPoint);
                     if (diff < 15.0) {
-                        String errMsg = "two poses in cache are too close : diff=" + diff + " posename=" + posename + ",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
+                       
+                        String errMsg = "two poses in cache are too close : diff=" + diff + " posename=" + posename + ",entry.getKey()="+entryKey+",pose=" + CRCLPosemath.toString(point) + ", entry=" + entry + ", entryPoint=" + CRCLPosemath.toString(entryPoint);
                         takeSnapshots("err", errMsg, pose, posename);
                         throw new IllegalStateException(errMsg);
                     }

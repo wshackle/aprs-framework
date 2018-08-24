@@ -5227,7 +5227,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 chooser.setCurrentDirectory(parentFile);
             }
         }
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 File f = chooser.getSelectedFile();
                 recordCsvName = f.getCanonicalPath();
