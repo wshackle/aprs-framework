@@ -313,7 +313,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         trayAttachOffsetsCachedTable = new CachedTable(jTableTrayAttachOffsets);
         positionCacheCachedTable = new CachedTable(jTablePositionCache);
         indexCachedTextField = new CachedTextField(jTextFieldIndex);
-        
+
     }
 
     public JMenu getToolMenu() {
@@ -2386,19 +2386,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
         if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
-            String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
-            logDebug("relPath = " + relPath);
-            File chkFile = new File(relPath);
-            if (!chkFile.isDirectory()) {
-                propsMap.put(REVERSE_PDDLOUTPUT, relPath);
+            if (!isTempDir(reverseActionsFileString)) {
+                String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
+                logDebug("relPath = " + relPath);
+                File chkFile = new File(relPath);
+                if (!chkFile.isDirectory()) {
+                    propsMap.put(REVERSE_PDDLOUTPUT, relPath);
+                }
             }
         }
         if (actionsFileString != null && actionsFileString.length() > 0) {
-            String relPath = makeShortPath(propertiesFile, actionsFileString);
-            logDebug("relPath = " + relPath);
-            File chkFile = new File(relPath);
-            if (!chkFile.isDirectory()) {
-                propsMap.put(PDDLOUTPUT, relPath);
+            if (!isTempDir(actionsFileString)) {
+                String relPath = makeShortPath(propertiesFile, actionsFileString);
+                logDebug("relPath = " + relPath);
+                File chkFile = new File(relPath);
+                if (!chkFile.isDirectory()) {
+                    propsMap.put(PDDLOUTPUT, relPath);
+                }
             }
         }
         propsMap.put(REVERSE_FLAG, Boolean.toString(reverseFlag));
@@ -2598,7 +2602,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private final CachedTextField indexCachedTextField;
-    
+
     private void finishLoadActionsList(String canonName) {
         setReplanFromIndex(0);
         autoResizeTableColWidthsPddlOutput();
@@ -4155,11 +4159,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -5660,7 +5664,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (rpi < 0 || rpi > actionsList.size()) {
             setReplanFromIndex(0);
         }
-        crclGenerator.setPositionMaps(getPositionMaps());
+        syncCrclGeneratorPositionMaps();
         if (enableOptaplannerCachedCheckBox.isSelected()) {
             if (null == solver) {
                 synchronized (solverFactory) {
@@ -5858,7 +5862,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         slot // arg
                 );
         placePartActionsList.add(placePartAction);
-        crclGenerator.setPositionMaps(getPositionMaps());
+        syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
         crclGenerator.setManualAction(true);
         List<MiddleCommandType> cmds = crclGenerator.generate(placePartActionsList, 0, options, safeAbortRequestCount.get());
@@ -5882,7 +5886,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 part
         );
         testPartPositionActionList.add(takePartAction);
-        crclGenerator.setPositionMaps(getPositionMaps());
+        syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = crclGenerator.generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get());
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
@@ -5932,7 +5936,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         part // arg
                 );
         takePartActionsList.add(takePartAction);
-        crclGenerator.setPositionMaps(getPositionMaps());
+        syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = crclGenerator.generate(takePartActionsList, 0, options, safeAbortRequestCount.get());
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
@@ -6008,6 +6012,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     public void addPositionMap(PositionMap pm) {
         positionMapJPanel1.addPositionMap(pm);
+        syncCrclGeneratorPositionMaps();
+    }
+
+    private void syncCrclGeneratorPositionMaps() {
+        if(isRunningProgram()) {
+            throw new IllegalStateException("Attempting to change position maps when program running.");
+        }
         crclGenerator.setPositionMaps(getPositionMaps());
     }
 
@@ -6018,7 +6029,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     public void removePositionMap(PositionMap pm) {
         positionMapJPanel1.removePositionMap(pm);
-        crclGenerator.setPositionMaps(getPositionMaps());
+        syncCrclGeneratorPositionMaps();
     }
 
     /**
@@ -6591,7 +6602,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     public Map<String, String> getTableOptions() {
         Map<String, String> options = new HashMap<>();
-        @Nullable Object[][] optionsData = optionsCachedTable.getData();
+        @Nullable
+        Object[][] optionsData = optionsCachedTable.getData();
         for (int i = 0; i < optionsData.length; i++) {
             Object key = optionsData[i][0];
             Object val = optionsData[i][1];
@@ -6749,6 +6761,30 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return fullfilename;
     }
 
+    @Nullable
+    private static final String TEMP_DIR;
+
+    static {
+        String tempDirName = null;
+        try {
+            tempDirName = File.createTempFile("test_temp", ".txt").getParentFile().getCanonicalPath();
+            if (tempDirName.endsWith("\\1")
+                    || tempDirName.endsWith("\\2")
+                    || tempDirName.endsWith("\\3")
+                    || tempDirName.endsWith("\\4")
+                    || tempDirName.endsWith("\\5")
+                    || tempDirName.endsWith("\\6")
+                    || tempDirName.endsWith("\\7")
+                    || tempDirName.endsWith("\\8")
+                    || tempDirName.endsWith("\\9")) {
+                tempDirName = tempDirName.substring(0,tempDirName.length()-1);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        TEMP_DIR = tempDirName;
+    }
+
     public void loadProperties() throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             if (propertiesFile.isDirectory()) {
@@ -6764,10 +6800,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 props.load(fr);
             }
             loadComboModels(props);
-            this.actionsFileString = propsGetFileName(props, PDDLOUTPUT);
-            checkFilename(actionsFileString);
-            this.reverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
-            checkFilename(reverseActionsFileString);
+            String propsActionsFileString = propsGetFileName(props, PDDLOUTPUT);
+            if (isTempDir(propsActionsFileString)) {
+                propsActionsFileString = null;
+            } else {
+                checkFilename(propsActionsFileString);
+            }
+            this.actionsFileString = propsActionsFileString;
+
+            String propsReverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
+            if (isTempDir(propsReverseActionsFileString)) {
+                propsReverseActionsFileString = null;
+            } else {
+                checkFilename(propsReverseActionsFileString);
+            }
+            this.reverseActionsFileString = propsReverseActionsFileString;
             boolean reverseFlagFromProperty = false;
             String reverseFlagProperty = props.getProperty(REVERSE_FLAG);
             if (null != reverseFlagProperty) {
@@ -6826,6 +6873,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             Utils.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
         }
+    }
+
+    private static boolean isTempDir(String propsReverseActionsFileString) {
+        return null != TEMP_DIR
+                && TEMP_DIR.length() > 0
+                && null != propsReverseActionsFileString
+                && propsReverseActionsFileString.startsWith(TEMP_DIR);
     }
 
     @UIEffect
