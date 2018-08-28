@@ -1211,7 +1211,7 @@ public class Supervisor {
             disallowToggles(blockerName, r.getSystems());
             logEvent(r.getName() + ", comment=" + comment);
 
-            return XFuture.supplyAsync(r.getName(), r,XFuture::rethrow, supervisorExecutorService)
+            return XFuture.supplyAsync(r.getName(), r, XFuture::rethrow, supervisorExecutorService)
                     .thenComposeToVoid(x -> x)
                     .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
         } else {
@@ -2277,10 +2277,6 @@ public class Supervisor {
             lastFutureReturned = null;
         }
         firstEventTime = -1;
-        XFutureVoid xf = togglesAllowedXfuture.getAndSet(null);
-        if (null != xf) {
-            xf.cancelAll(true);
-        }
         clearAllToggleBlockers();
         clearAllErrors();
         setPauseSelected(false);
@@ -3139,7 +3135,7 @@ public class Supervisor {
         private final XFutureVoid future;
         private final Object2DOuterJPanel object2DOuterJPanel1;
         private final Supplier<Boolean> closedSupplier;
-        private volatile boolean futureCompleted=false;
+        private volatile boolean futureCompleted = false;
 
         public boolean isUseTeachCameraSelected() {
             return useTeachCameraSelected;
@@ -3170,7 +3166,7 @@ public class Supervisor {
                 List<String> startingKitStrings = Collections.unmodifiableList(new ArrayList<>(aprsSys.getLastCreateActionListFromVisionKitToCheckStrings()));
                 origStartingStringsMap.put(aprsSys.getTaskName(), startingKitStrings);
             }
-            if(useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
+            if (useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
                 submitTeachItems(object2DOuterJPanel1.getItems());
             }
         }
@@ -3182,12 +3178,12 @@ public class Supervisor {
         private final Consumer<List<PhysicalItem>> teachItemsConsumer = this::submitTeachItems;
 
         private void submitTeachItems(List<PhysicalItem> teachItems) {
-            if(futureCompleted) {
+            if (futureCompleted) {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 return;
             }
-            if(closedSupplier.get()) {
-                futureCompleted= true;
+            if (closedSupplier.get()) {
+                futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
                 return;
@@ -3198,11 +3194,11 @@ public class Supervisor {
         }
 
         private void handleTeachItems(List<PhysicalItem> teachItems) {
-            if(futureCompleted) {
+            if (futureCompleted) {
                 return;
             }
             if (closedSupplier.get()) {
-                futureCompleted= true;
+                futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
             }
@@ -3279,7 +3275,7 @@ public class Supervisor {
                         Thread thread = gl.getSetLastCreateActionListFromVisionKitToCheckStringsThread();
                         StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
                         long time = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTime();
-                        long diffTime = System.currentTimeMillis()-time;
+                        long diffTime = System.currentTimeMillis() - time;
                         System.out.println("");
                         System.err.println("");
                         System.out.flush();
@@ -3326,7 +3322,7 @@ public class Supervisor {
             }
             last_time = now;
             if (anyChanged) {
-                futureCompleted= true;
+                futureCompleted = true;
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.complete();
@@ -3584,14 +3580,12 @@ public class Supervisor {
             showTogglesEnabled(true);
             setRobotEnableToggleBlockerText(blockerList);
         });
-        if (togglesAllowed) {
-            XFutureVoid xf = togglesAllowedXfuture.get();
-            if (null != xf) {
-                xf.complete((Void) null);
-            }
-            while ((xf = waitForTogglesFutures.poll()) != null) {
-                xf.complete((Void) null);
-            }
+        XFutureVoid xf = togglesAllowedXfuture.get();
+        if (null != xf) {
+            xf.complete((Void) null);
+        }
+        while ((xf = waitForTogglesFutures.poll()) != null) {
+            xf.complete((Void) null);
         }
     }
 
