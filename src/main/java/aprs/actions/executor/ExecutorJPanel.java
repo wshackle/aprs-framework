@@ -106,7 +106,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableModel;
 import javax.xml.bind.JAXBException;
 import java.awt.event.ActionEvent;
 import java.nio.file.Paths;
@@ -530,7 +529,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile StackTraceElement setReverseFlagTrace @Nullable []  = null;
 
-    public void setReverseFlag(boolean reverseFlag) {
+    public synchronized void setReverseFlag(boolean reverseFlag) {
+        warnIfNewActionsNotReady();
         this.reverseFlag = reverseFlag;
         setReverseFlagTrace = Thread.currentThread().getStackTrace();
     }
@@ -2262,6 +2262,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private List<Action> resetReadOnlyActionsList(boolean newReverseFlag) {
         final Thread curThread = Thread.currentThread();
+
         if (null == resetReadOnlyActionsListThread) {
             resetReadOnlyActionsListThread = curThread;
             resetReadOnlyActionsListTrace = curThread.getStackTrace();
@@ -2269,6 +2270,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             LOGGER.log(Level.FINE, "resetReadOnlyActionsList from new thread {0}", curThread.getName());
         }
         List<Action> newReadOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
+        if (newReadOnlyActionsList.isEmpty()) {
+            warnIfNewActionsNotReady();
+        }
         this.readOnlyActionsList = newReadOnlyActionsList;
         resetReadOnlyActionsListReverseFlag = newReverseFlag;
         checkReverse();
@@ -2289,6 +2293,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @Override
     public void clearActionsList() {
+        warnIfNewActionsNotReady();
         synchronized (actionsList) {
             if (actionsList.size() > 0) {
                 actionsList.clear();
@@ -2534,8 +2539,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     public void warnIfNewActionsNotReady() {
         if (!readyForNewActionsList()) {
-            LOGGER.log(Level.WARNING,
-                    "loading new actions when not ready");
+            System.err.println("readOnlyActionsList = " + readOnlyActionsList);
+            System.err.println("crclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
+            System.err.println("crclGenerator.atLastIndex() = " + crclGenerator.atLastIndex());
+            System.err.println("lastReadyReturnPos=" + lastReadyReturnPos);
+            throw new IllegalStateException(
+                    "loading new actions when not ready ");
         }
     }
 
@@ -6016,7 +6025,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void syncCrclGeneratorPositionMaps() {
-        if(isRunningProgram()) {
+        if (isRunningProgram()) {
             throw new IllegalStateException("Attempting to change position maps when program running.");
         }
         crclGenerator.setPositionMaps(getPositionMaps());
@@ -6777,7 +6786,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     || tempDirName.endsWith("\\7")
                     || tempDirName.endsWith("\\8")
                     || tempDirName.endsWith("\\9")) {
-                tempDirName = tempDirName.substring(0,tempDirName.length()-1);
+                tempDirName = tempDirName.substring(0, tempDirName.length() - 1);
             }
         } catch (IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
