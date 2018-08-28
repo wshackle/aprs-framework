@@ -947,17 +947,17 @@ public class Supervisor {
                                                     return "";
                                                 }
                                             })
-                                            .thenComposeToVoid("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
-                                                    (String x) -> {
-                                                        if (x == null || x.length() < 1) {
-                                                            return XFutureVoid.completedFutureWithName(
-                                                                    "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete");
-                                                        } else {
+                                    .thenComposeToVoid("setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions",
+                                            (String x) -> {
+                                                if (x == null || x.length() < 1) {
+                                                    return XFutureVoid.completedFutureWithName(
+                                                            "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete");
+                                                } else {
 //                                                            System.err.println("Returning xfuture which will never complete. x=" + x);
 //                                                            Thread.dumpStack();
-                                                            return new XFutureVoid(x + ".neverComplete");
-                                                        }
-                                                    }),
+                                                    return new XFutureVoid(x + ".neverComplete");
+                                                }
+                                            }),
                                     cancelFuture);
 
                         } finally {
@@ -1013,18 +1013,18 @@ public class Supervisor {
                                                 return t.toString();
                                             }
                                         })
-                                        .thenComposeToVoid("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
-                                                x -> {
-                                                    if (x == null || x.length() < 1) {
-                                                        return XFutureVoid.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2");
-                                                    } else {
-                                                        System.err.println("Returning xfuture which will never complete x=\"" + x + "\"");
-                                                        if (!x.contains("CancellationException")) {
-                                                            Thread.dumpStack();
-                                                        }
-                                                        return new XFuture<>(x + ".neverComplete");
-                                                    }
-                                                }),
+                                .thenComposeToVoid("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
+                                        x -> {
+                                            if (x == null || x.length() < 1) {
+                                                return XFutureVoid.completedFutureWithName("setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2");
+                                            } else {
+                                                System.err.println("Returning xfuture which will never complete x=\"" + x + "\"");
+                                                if (!x.contains("CancellationException")) {
+                                                    Thread.dumpStack();
+                                                }
+                                                return new XFuture<>(x + ".neverComplete");
+                                            }
+                                        }),
                                 cancelFuture);
                         //.thenComposeToVoid(x -> checkStealRobotFuture(null)));
                     } finally {
@@ -1211,7 +1211,7 @@ public class Supervisor {
             disallowToggles(blockerName, r.getSystems());
             logEvent(r.getName() + ", comment=" + comment);
 
-            return XFuture.supplyAsync(r.getName(), r,XFuture::rethrow, supervisorExecutorService)
+            return XFuture.supplyAsync(r.getName(), r, XFuture::rethrow, supervisorExecutorService)
                     .thenComposeToVoid(x -> x)
                     .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
         } else {
@@ -1264,7 +1264,7 @@ public class Supervisor {
                 XFutureVoid callResult = r.call();
                 XFutureVoid allowTogglesFuture
                         = callResult
-                                .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
+                        .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
                 return allowTogglesFuture;
             } catch (Exception ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
@@ -1473,13 +1473,13 @@ public class Supervisor {
 
         return showErrorSplash("Not all robots\n could be enabled.")
                 .thenRun(() -> Utils.runOnDispatchThread(() -> {
-            setContinuousDemoSelected(false);
-            setContinuousDemoRevFirstSelected(false);
-            if (null != ContinuousDemoFuture) {
-                ContinuousDemoFuture.cancelAll(true);
-                ContinuousDemoFuture = null;
-            }
-        }));
+                    setContinuousDemoSelected(false);
+                    setContinuousDemoRevFirstSelected(false);
+                    if (null != ContinuousDemoFuture) {
+                        ContinuousDemoFuture.cancelAll(true);
+                        ContinuousDemoFuture = null;
+                    }
+                }));
     }
 
     private XFutureVoid showErrorSplash(String errMsgString) {
@@ -1607,20 +1607,20 @@ public class Supervisor {
         logEvent("    and starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFrom);
         stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
-                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
+                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn)
-                        .thenComposeAsync("showDisabledMessage." + stealForRobotName,
-                                x -> {
-                                    logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
-                                    writeToColorTextSocket("0xFF0000, 0x00FF00\r\n".getBytes());
-                                    if (null != gd) {
-                                        return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
-                                                SplashScreen.getDisableImageImage(),
-                                                SplashScreen.getRedYellowColorList(), gd);
-                                    } else {
-                                        return XFutureVoid.completedFutureWithName("showMessageFullScreen " + stealForRobotName + " Disabled");
-                                    }
-                                }, supervisorExecutorService));
+                .thenComposeAsync("showDisabledMessage." + stealForRobotName,
+                        x -> {
+                            logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
+                            writeToColorTextSocket("0xFF0000, 0x00FF00\r\n".getBytes());
+                            if (null != gd) {
+                                return showMessageFullScreen(stealForRobotName + "\n Disabled", 80.0f,
+                                        SplashScreen.getDisableImageImage(),
+                                        SplashScreen.getRedYellowColorList(), gd);
+                            } else {
+                                return XFutureVoid.completedFutureWithName("showMessageFullScreen " + stealForRobotName + " Disabled");
+                            }
+                        }, supervisorExecutorService));
 
         XFuture<Boolean> part1 = stealAbortFuture.thenComposeAsync(
                 "transfer" + " : srn=" + srn, x -> {
@@ -1691,7 +1691,7 @@ public class Supervisor {
 
         return part1.thenComposeToVoid(
                 "startSafeAbortAfterSwitch" + " : srn=" + srn, x -> stealFor.startSafeAbort("startSafeAbortAfterSwitch" + " : srn=" + srn)
-                        .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn)))
+                .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn)))
                 .thenComposeAsync(
                         "showReturning" + " : srn=" + srn, x -> {
                             return showMessageFullScreen("Returning \n" + stealFromRobotName, 80.0f,
@@ -1777,30 +1777,30 @@ public class Supervisor {
                     checkRunningOrDoingActions(stealFrom, srn);
                     logEvent("Disconnect robot from " + stealFor);
                     return stealFor.disconnectRobot()
-                            .thenComposeAsync(
-                                    "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
-                                    x -> {
-                                        logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
-                                        logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                        return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
-                                    }, supervisorExecutorService)
-                            .thenComposeAsync("returnRobot.transferOption",
-                                    x -> {
-                                        logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
-                                        for (String opt : transferrableOptions) {
-                                            if (stealForOptions.containsKey(opt)) {
-                                                stealFor.setExecutorOption(opt, stealForOptions.get(opt));
-                                            }
-                                        }
-                                        stealFor.setToolHolderOperationEnabled(true);
-                                        stealFor.removePositionMap(pm);
-                                        logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                                        return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
-                                    }, supervisorExecutorService)
-                            .thenRun(() -> {
-                                logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
-                                checkRobotsUniquePorts();
-                            });
+                    .thenComposeAsync(
+                            "returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn,
+                            x -> {
+                                logEvent(stealForRobotName + " disconnnected from " + stealFor + " : srn=" + srn);
+                                logEvent("start returnRobot." + stealFrom.getTaskName() + " connect to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                return stealFrom.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort);
+                            }, supervisorExecutorService)
+                    .thenComposeAsync("returnRobot.transferOption",
+                            x -> {
+                                logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at " + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn);
+                                for (String opt : transferrableOptions) {
+                                    if (stealForOptions.containsKey(opt)) {
+                                        stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                                    }
+                                }
+                                stealFor.setToolHolderOperationEnabled(true);
+                                stealFor.removePositionMap(pm);
+                                logEvent("start returnRobot." + stealFor.getTaskName() + " connect to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                                return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort);
+                            }, supervisorExecutorService)
+                    .thenRun(() -> {
+                        logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at " + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn);
+                        checkRobotsUniquePorts();
+                    });
                 }, stealFor, stealFrom);
     }
 
@@ -1830,22 +1830,22 @@ public class Supervisor {
         logEvent("    and starting safe abort and disconnect for" + stealFrom + " : srn=" + srn);
         unstealAbortFuture = XFuture.allOfWithName("unStealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFrom" + stealFrom + " : srn=" + srn)
-                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
+                .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " : srn=" + srn), supervisorExecutorService),
                 stealFor.startSafeAbortAndDisconnect("unStealAbortAllOf.stealFor " + stealFor + " : srn=" + srn)
-                        .thenComposeAsync("unstealShowReenable", x -> {
-                            logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
-                            boolean stillAborting = stealFor.isAborting();
-                            if (stillAborting) {
-                                String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
-                                logEvent(msg);
-                                boolean doubleCheck = stealFor.isAborting();
-                                throw new IllegalStateException(msg);
-                            }
-                            writeToColorTextSocket("0x00FF00, 0x00FF00\r\n".getBytes());
-                            return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
-                                    SplashScreen.getDisableImageImage(),
-                                    SplashScreen.getBlueWhiteGreenColorList(), gd);
-                        }, supervisorExecutorService));
+                .thenComposeAsync("unstealShowReenable", x -> {
+                    logEvent("Safe abort and disconnect completed for " + stealFor + " : srn=" + srn);
+                    boolean stillAborting = stealFor.isAborting();
+                    if (stillAborting) {
+                        String msg = "still aborting after safe abort and disconnect" + " : srn=" + srn;
+                        logEvent(msg);
+                        boolean doubleCheck = stealFor.isAborting();
+                        throw new IllegalStateException(msg);
+                    }
+                    writeToColorTextSocket("0x00FF00, 0x00FF00\r\n".getBytes());
+                    return showMessageFullScreen(stealForRobotName + "\n Enabled", 80.0f,
+                            SplashScreen.getDisableImageImage(),
+                            SplashScreen.getBlueWhiteGreenColorList(), gd);
+                }, supervisorExecutorService));
         return unstealAbortFuture
                 .thenComposeAsync("unsteal.returnRobots1" + " : srn=" + srn, x -> {
                     return returnRobotsDirect("unsteal.returnRobots1" + " : srn=" + srn);
@@ -1884,17 +1884,17 @@ public class Supervisor {
                                         });
                             }, supervisorExecutorService),
                             stealFor.continueActionList("unsteal.stealFor" + " : srn=" + srn)
-                                    .thenComposeAsync(x3 -> {
-                                        logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
-                                        return finishAction(stealFrom)
-                                                .thenApply(x4 -> {
-                                                    logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
-                                                    if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
-                                                        completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
-                                                    }
-                                                    return x3;
-                                                });
-                                    }, supervisorExecutorService)
+                            .thenComposeAsync(x3 -> {
+                                logEvent("unsteal.stealFor " + stealFor.getRunName() + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn);
+                                return finishAction(stealFrom)
+                                        .thenApply(x4 -> {
+                                            logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3 + " : srn=" + srn);
+                                            if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
+                                                completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag());
+                                            }
+                                            return x3;
+                                        });
+                            }, supervisorExecutorService)
                     );
                 });
     }
@@ -2277,10 +2277,6 @@ public class Supervisor {
             lastFutureReturned = null;
         }
         firstEventTime = -1;
-        XFutureVoid xf = togglesAllowedXfuture.getAndSet(null);
-        if (null != xf) {
-            xf.cancelAll(true);
-        }
         clearAllToggleBlockers();
         clearAllErrors();
         setPauseSelected(false);
@@ -2782,22 +2778,22 @@ public class Supervisor {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                                    .thenComposeToVoid(x -> {
-                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                            try {
-                                                clearAllErrors();
-                                                connectAll();
-                                                return startRandomTestFirstActionReversed2();
-                                            } catch (Exception e) {
-                                                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                                                showMessageDialog("Exception occurred: " + e);
-                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                                ret.completeExceptionally(e);
-                                                return ret;
-                                            }
-                                        }).thenComposeToVoid(x3 -> x3);
-                                        return innerRet;
-                                    });
+                            .thenComposeToVoid(x -> {
+                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                    try {
+                                        clearAllErrors();
+                                        connectAll();
+                                        return startRandomTestFirstActionReversed2();
+                                    } catch (Exception e) {
+                                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
+                                        showMessageDialog("Exception occurred: " + e);
+                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                        ret.completeExceptionally(e);
+                                        return ret;
+                                    }
+                                }).thenComposeToVoid(x3 -> x3);
+                                return innerRet;
+                            });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
@@ -3041,7 +3037,7 @@ public class Supervisor {
     private double getClosestSlotDist(Collection<PhysicalItem> kitTrays, PhysicalItem item) {
         return kitTrays.stream()
                 .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
-                .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
+                        .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
                 .mapToDouble(item::dist)
                 .min().orElse(Double.POSITIVE_INFINITY);
     }
@@ -3139,7 +3135,7 @@ public class Supervisor {
         private final XFutureVoid future;
         private final Object2DOuterJPanel object2DOuterJPanel1;
         private final Supplier<Boolean> closedSupplier;
-        private volatile boolean futureCompleted=false;
+        private volatile boolean futureCompleted = false;
 
         public boolean isUseTeachCameraSelected() {
             return useTeachCameraSelected;
@@ -3170,7 +3166,7 @@ public class Supervisor {
                 List<String> startingKitStrings = Collections.unmodifiableList(new ArrayList<>(aprsSys.getLastCreateActionListFromVisionKitToCheckStrings()));
                 origStartingStringsMap.put(aprsSys.getTaskName(), startingKitStrings);
             }
-            if(useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
+            if (useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
                 submitTeachItems(object2DOuterJPanel1.getItems());
             }
         }
@@ -3182,12 +3178,12 @@ public class Supervisor {
         private final Consumer<List<PhysicalItem>> teachItemsConsumer = this::submitTeachItems;
 
         private void submitTeachItems(List<PhysicalItem> teachItems) {
-            if(futureCompleted) {
+            if (futureCompleted) {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 return;
             }
-            if(closedSupplier.get()) {
-                futureCompleted= true;
+            if (closedSupplier.get()) {
+                futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
                 return;
@@ -3198,11 +3194,11 @@ public class Supervisor {
         }
 
         private void handleTeachItems(List<PhysicalItem> teachItems) {
-            if(futureCompleted) {
+            if (futureCompleted) {
                 return;
             }
             if (closedSupplier.get()) {
-                futureCompleted= true;
+                futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
             }
@@ -3211,9 +3207,9 @@ public class Supervisor {
             }
             long kitTrays
                     = teachItems
-                            .stream()
-                            .filter((PhysicalItem item) -> item.getType().equals("KT"))
-                            .count();
+                    .stream()
+                    .filter((PhysicalItem item) -> item.getType().equals("KT"))
+                    .count();
             if (max_kitTrays < kitTrays) {
                 max_kitTrays = kitTrays;
             } else if (kitTrays < max_kitTrays) {
@@ -3273,24 +3269,22 @@ public class Supervisor {
                 if (null == startingKitStrings) {
                     System.err.println("null == startingKitStrings");
                     startingKitStrings = lastCreateActionListFromVisionKitToCheckStrings;
-                } else {
-                    if (!GoalLearner.kitToCheckStringsEqual(startingKitStrings, lastCreateActionListFromVisionKitToCheckStrings)) {
-                        GoalLearner gl = aprsSys.getGoalLearner();
-                        Thread thread = gl.getSetLastCreateActionListFromVisionKitToCheckStringsThread();
-                        StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
-                        long time = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTime();
-                        long diffTime = System.currentTimeMillis()-time;
-                        System.out.println("");
-                        System.err.println("");
-                        System.out.flush();
-                        System.err.flush();
-                        System.err.println("trace = " + Arrays.toString(trace));
-                        System.err.println("thread = " + thread);
-                        System.err.println("diffTime = " + diffTime);
-                        Thread currentThread = Thread.currentThread();
-                        System.err.println("currentThread = " + currentThread);
-                        logEventErr("completeScanTillNewInternal : " + startingKitStrings + " != " + lastCreateActionListFromVisionKitToCheckStrings);
-                    }
+                } else if (!GoalLearner.kitToCheckStringsEqual(startingKitStrings, lastCreateActionListFromVisionKitToCheckStrings)) {
+                    GoalLearner gl = aprsSys.getGoalLearner();
+                    Thread thread = gl.getSetLastCreateActionListFromVisionKitToCheckStringsThread();
+                    StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
+                    long time = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTime();
+                    long diffTime = System.currentTimeMillis() - time;
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.err.flush();
+                    System.err.println("trace = " + Arrays.toString(trace));
+                    System.err.println("thread = " + thread);
+                    System.err.println("diffTime = " + diffTime);
+                    Thread currentThread = Thread.currentThread();
+                    System.err.println("currentThread = " + currentThread);
+                    logEventErr("completeScanTillNewInternal : " + startingKitStrings + " != " + lastCreateActionListFromVisionKitToCheckStrings);
                 }
                 aprsSys.setCorrectionMode(true);
                 File actionListFile;
@@ -3326,7 +3320,7 @@ public class Supervisor {
             }
             last_time = now;
             if (anyChanged) {
-                futureCompleted= true;
+                futureCompleted = true;
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.complete();
@@ -3423,10 +3417,10 @@ public class Supervisor {
                         xf[3] = startCheckAndEnableXF;
                         XFutureVoid scanAll2XF
                                 = startCheckAndEnableXF
-                                        .thenComposeAsyncToVoid("scanAll2",
-                                                ok -> {
-                                                    return checkOkElseToVoid(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash);
-                                                }, supervisorExecutorService);
+                                .thenComposeAsyncToVoid("scanAll2",
+                                        ok -> {
+                                            return checkOkElseToVoid(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash);
+                                        }, supervisorExecutorService);
                         xf[4] = scanAll2XF;
                         return scanAll2XF;
                     });
@@ -3584,14 +3578,12 @@ public class Supervisor {
             showTogglesEnabled(true);
             setRobotEnableToggleBlockerText(blockerList);
         });
-        if (togglesAllowed) {
-            XFutureVoid xf = togglesAllowedXfuture.get();
-            if (null != xf) {
-                xf.complete((Void) null);
-            }
-            while ((xf = waitForTogglesFutures.poll()) != null) {
-                xf.complete((Void) null);
-            }
+        XFutureVoid xf = togglesAllowedXfuture.get();
+        if (null != xf) {
+            xf.complete((Void) null);
+        }
+        while ((xf = waitForTogglesFutures.poll()) != null) {
+            xf.complete((Void) null);
         }
     }
 
@@ -3947,11 +3939,11 @@ public class Supervisor {
         final XFuture<?> lfr = this.lastFutureReturned;
         ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                        .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                        .thenComposeAsync("startContinuousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
-                        .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                        .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                        .thenComposeAsyncToVoid("startContinuousDemoRevFirst", ok -> checkOkElseToVoid(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                .thenComposeAsyncToVoid("startContinuousDemoRevFirst", ok -> checkOkElseToVoid(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
         return ContinuousDemoFuture;
     }
 
@@ -3970,7 +3962,7 @@ public class Supervisor {
         }
         ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                        .thenComposeToVoid("startContinuousScanAndRun", ok -> checkOkElse(ok, this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash));
+                .thenComposeToVoid("startContinuousScanAndRun", ok -> checkOkElse(ok, this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash));
         return ContinuousDemoFuture;
     }
 
@@ -3986,7 +3978,7 @@ public class Supervisor {
         connectAll();
         ContinuousDemoFuture
                 = startCheckAndEnableAllRobots()
-                        .thenComposeToVoid("startContinuousDemo", ok -> checkOkElse(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash));
+                .thenComposeToVoid("startContinuousDemo", ok -> checkOkElse(ok, this::continueContinuousDemo, this::showCheckEnabledErrorSplash));
         return ContinuousDemoFuture;
     }
 
@@ -4003,8 +3995,8 @@ public class Supervisor {
         connectAll();
         XFutureVoid ret
                 = startCheckAndEnableAllRobots()
-                        .thenComposeToVoid("startIndContinuousDemo",
-                                ok -> checkOkElseToVoid(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash));
+                .thenComposeToVoid("startIndContinuousDemo",
+                        ok -> checkOkElseToVoid(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash));
         ContinuousDemoFuture = ret;
         if (null != randomTestFuture && isIndRandomToggleTestSelected()) {
             resetMainRandomTestFuture();
@@ -4100,13 +4092,13 @@ public class Supervisor {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFutureVoid ret
                             = startCheckAndEnableAllRobots()
-                                    .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousScanAndRun.startAllActions1", x -> startAllActions("continueContinuousScanAndRun", false), supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                                    .thenComposeToVoid("continueContinuousScanAndRun.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
-                                    .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                                    .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElseToVoid(ok && checkMaxCycles(), this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                            .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal", x -> scanTillNewInternal(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.startAllActions1", x -> startAllActions("continueContinuousScanAndRun", false), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeToVoid("continueContinuousScanAndRun.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
+                            .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                            .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElseToVoid(ok && checkMaxCycles(), this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
@@ -4143,17 +4135,17 @@ public class Supervisor {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFutureVoid ret
                             = startCheckAndEnableAllRobots()
-                                    .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
-                                        XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + ContinuousDemoCycle.get(), false);
-                                        allowToggles(blockerName, sysArray);
-                                        return startAllActionsRet;
-                                    }, supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousDemo.startReverseActions", x -> startContinuousDemoReversActions(), supervisorExecutorService)
-                                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                                    .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
-                                    .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                            .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
+                                XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + ContinuousDemoCycle.get(), false);
+                                allowToggles(blockerName, sysArray);
+                                return startAllActionsRet;
+                            }, supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.startReverseActions", x -> startContinuousDemoReversActions(), supervisorExecutorService)
+                            .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
+                            .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
+                            .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
+                            .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElse(ok && checkMaxCycles(), this::continueContinuousDemo, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
@@ -4331,13 +4323,13 @@ public class Supervisor {
                 }, supervisorExecutorService);
         XFuture<Boolean> step3Future
                 = step2Future
-                        .thenComposeToVoid(() -> {
-                            cancelAllStealUnsteal(false);
-                            XFutureVoid rrF = returnRobots("enableAndCheckAllRobots");
-                            rrF.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
-                            return rrF;
-                        })
-                        .thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService);
+                .thenComposeToVoid(() -> {
+                    cancelAllStealUnsteal(false);
+                    XFutureVoid rrF = returnRobots("enableAndCheckAllRobots");
+                    rrF.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
+                    return rrF;
+                })
+                .thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService);
         return step3Future
                 .alwaysAsync(() -> {
                     allowToggles(blockerName, sysArray);
@@ -4598,8 +4590,8 @@ public class Supervisor {
                     try {
                         if (null != v) {
                             List<XFutureVoid> l = Arrays.stream(v)
-                                    .filter(f2 -> !f2.isDone())
-                                    .collect(Collectors.toList());
+                            .filter(f2 -> !f2.isDone())
+                            .collect(Collectors.toList());
                             l.add(f);
                             return l.toArray(new XFutureVoid[0]);
                         } else {
@@ -4642,8 +4634,8 @@ public class Supervisor {
                     try {
                         if (null != v) {
                             List<XFutureVoid> l = Arrays.stream(v)
-                                    .filter(f2 -> !f2.isDone())
-                                    .collect(Collectors.toList());
+                            .filter(f2 -> !f2.isDone())
+                            .collect(Collectors.toList());
                             if (l.size() < 1) {
                                 return new XFutureVoid[0];
                             }
@@ -5432,7 +5424,7 @@ public class Supervisor {
         }
         XFutureVoid f
                 = waitTogglesAllowed()
-                        .thenComposeToVoid(x -> safeAbortAll());
+                .thenComposeToVoid(x -> safeAbortAll());
         setLastSafeAbortAllFuture(f);
         XFutureVoid f2 = f.always(() -> {
             if (null != safeAbortReturnRobot) {
