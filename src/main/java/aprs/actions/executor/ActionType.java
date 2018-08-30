@@ -44,5 +44,6 @@ public enum ActionType {
     CLEAR_KITS_TO_CHECK,
     ADD_KIT_TO_CHECK,
     CHECK_KITS,
+    SET_CORRECTION_MODE,
     END_PROGRAM
 }

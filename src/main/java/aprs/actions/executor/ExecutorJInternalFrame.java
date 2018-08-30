@@ -59,6 +59,14 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         initComponents();
     }
 
+    public boolean recheckKitsOnly() {
+        return executorJPanel1.recheckKitsOnly();
+    }
+    
+    public boolean isReverseFlag() {
+        return executorJPanel1.isReverseFlag();
+    }
+    
     /**
      * Creates new form ActionsToCrclJInternalFrame
      */
@@ -160,9 +168,17 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getSafeAbortRequestCount();
     }
 
+    public int getActionSetsStarted() {
+        return executorJPanel1.getActionSetsStarted();
+    }
+    
     @Override
     public List<Action> getActionsList() {
         return this.executorJPanel1.getActionsList();
+    }
+    
+    public boolean atLastAction() {
+        return executorJPanel1.atLastAction();
     }
 
     public boolean completeActionList(String comment, int startAbortCount) {

@@ -586,7 +586,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.takeSnapshots = takeSnapshots;
     }
 
-    private volatile List<PositionMap>  positionMaps = Collections.emptyList();
+    private volatile List<PositionMap> positionMaps = Collections.emptyList();
 
     /**
      * Get the list of PositionMap's used to transform or correct poses from the
@@ -1565,17 +1565,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         pause(action, cmds);
                         break;
 
-                    case INSPECT_KIT: {
-                        assert (gparams.startingIndex == idx) : "inspect-kit startingIndex(" + gparams.startingIndex + ") != lastIndex(" + idx + ")";
-                        if (doInspectKit) {
-                            try {
-                                inspectKit(action, cmds);
-                            } catch (Exception ex) {
-                                logger.log(Level.SEVERE, "", ex);
-                            }
-                        }
-                    }
-                    break;
+//                    case INSPECT_KIT: {
+//                        assert (gparams.startingIndex == idx) : "inspect-kit startingIndex(" + gparams.startingIndex + ") != lastIndex(" + idx + ")";
+//                        if (doInspectKit) {
+//                            try {
+//                                inspectKit(action, cmds);
+//                            } catch (Exception ex) {
+//                                logger.log(Level.SEVERE, "", ex);
+//                            }
+//                        }
+//                    }
+//                    break;
 
                     case CLEAR_KITS_TO_CHECK:
                         clearKitsToCheck(action, cmds);
@@ -1583,6 +1583,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                     case ADD_KIT_TO_CHECK:
                         addKitToCheck(action, cmds);
+                        break;
+
+                    case SET_CORRECTION_MODE:
+                        aprsSystem.setCorrectionMode(Boolean.valueOf(action.getArgs()[0]));
                         break;
 
                     case CHECK_KITS:
@@ -2003,13 +2007,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2033,15 +2037,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("ES")
+                            .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2169,8 +2173,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     @SuppressWarnings("unused")
-    private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds) {
-        kitsToCheck.clear();
+    private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds)
+            throws InterruptedException, IOException, ExecutionException {
+        if (!kitsToCheck.isEmpty()) {
+            if (!recheckKitsOnly()) {
+                throw new IllegalStateException("clearing kits to check that do not recheck");
+            }
+            kitsToCheck.clear();
+        }
     }
 
     private void checkedPause() {
@@ -2207,8 +2217,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2288,15 +2298,33 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return Collections.emptyList();
     }
 
+    public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
+        List<PhysicalItem> newItems = checkKitsNewItems("recheckKitsOnly");
+        List<PhysicalItem> parts = checkKitsItemsToParts(newItems);
+        Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
+
+        Set<String> matchedKitInstanceNames = new HashSet<>();
+        List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+        if (!kitsToFix.isEmpty()) {
+            System.out.println("kitsToFix = " + kitsToFix);
+            for (KitToCheck kit : kitsToFix) {
+                Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
+                for(Entry<String,KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
+                    KitToCheckInstanceInfo info = entry.getValue();
+                    System.out.println("info.failedAbsSlotPrpName = " + info.failedAbsSlotPrpName);
+                    System.out.println("info.failedItemSkuName = " + info.failedItemSkuName);
+                    System.out.println("info.failedSlots = " + info.failedSlots);
+                }
+            }
+            kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+        }
+        return kitsToFix.isEmpty();
+    }
+
     @SuppressWarnings("unused")
     private void checkKits(Action action, List<MiddleCommandType> cmds)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
-        List<PhysicalItem> newItems;
-        if (null == externalPoseProvider) {
-            newItems = waitForCompleteVisionUpdates("checkKits", lastRequiredPartsMap, 15_000);
-        } else {
-            newItems = externalPoseProvider.getNewPhysicalItems();
-        }
+        List<PhysicalItem> newItems = checkKitsNewItems("checkKits");
         assert (newItems != null) : "newItems == null : @AssumeAssertion(nullness)";
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
@@ -2310,80 +2338,28 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         takeSnapshots("plan", "checkKits-", null, "");
 
+        List<PhysicalItem> parts = checkKitsItemsToParts(newItems);
         synchronized (this) {
             List<String> newItemsFullNames = newItems
                     .stream()
                     .map(PhysicalItem::getFullName)
                     .collect(Collectors.toList());
-            List<PhysicalItem> parts = newItems.stream()
-                    .filter(x -> !x.getName().startsWith("empty_slot"))
-                    .filter(x -> !x.getName().contains("vessel"))
-                    .collect(Collectors.toList());
+
             List<String> partsFullNames
                     = parts
-                    .stream()
-                    .map(PhysicalItem::getFullName)
-                    .collect(Collectors.toList());
+                            .stream()
+                            .map(PhysicalItem::getFullName)
+                            .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
             logDebug("checkKits: parts = " + parts);
-            Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
-
-            List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
-            Set<String> matchedKitInstanceNames = new HashSet<>();
 
             try {
-                for (KitToCheck kit : kitsToCheck) {
-                    kit.kitInstanceNames = getKitInstanceNames(kit.name);
-                    Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = new HashMap<>();
-                    kit.instanceInfoMap = kitInstanceInfoMap;
-                    for (String kitInstanceName : kit.kitInstanceNames) {
+                Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
-                        List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                                (String n) -> getAbsSlotListForKitInstance(kit.name, n));
-                        KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots);
-                        kitInstanceInfoMap.put(kitInstanceName, info);
-                        if (matchedKitInstanceNames.contains(kitInstanceName)) {
-                            continue;
-                        }
-                        if (snapshotsEnabled()) {
-                            takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
-                        }
-                        boolean allSlotsCorrect = true;
-                        for (Slot absSlot : absSlots) {
-                            String absSlotPrpName = absSlot.getPrpName();
-                            PhysicalItem closestItem = parts.stream()
-                                    .min(Comparator.comparing(absSlot::distFromXY))
-                                    .orElse(null);
-                            if (null == closestItem) {
-                                logger.log(Level.SEVERE, "closetItem == null in checkKits");
-                                break;
-                            }
-                            info.closestItemMap.put(absSlotPrpName, closestItem);
-                            String itemSkuName = "empty";
-                            if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
-                                itemSkuName = closestItem.origName;
-                            }
-                            info.itemSkuMap.put(absSlotPrpName, itemSkuName);
-                            if (!Objects.equals(kit.slotMap.get(absSlotPrpName), itemSkuName)) {
-                                info.failedAbsSlotPrpName = absSlotPrpName;
-                                info.failedItemSkuName = itemSkuName;
-                                info.failedSlots++;
-                                allSlotsCorrect = false;
-                            }
-                        }
-                        if (allSlotsCorrect) {
-                            kitsToFix.remove(kit);
-                            matchedKitInstanceNames.add(kitInstanceName);
-                            break;
-                        }
-                    }
-                    if (debug) {
-                        logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
-                        logDebug("kitsToFix = " + kitsToFix);
-                    }
-                }
+                Set<String> matchedKitInstanceNames = new HashSet<>();
+                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
 
                 if (optoThread == null) {
                     optoThread = Thread.currentThread();
@@ -2495,10 +2471,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                                 name2 -> name2.contains(finalShortSkuName));
                                                 logError("recalcPartNames = " + recalcPartNames);
                                                 throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
-                                                        + ",slotItemSkuName = " + slotItemSkuName
-                                                        + ",itemSkuName = " + itemSkuName
-                                                        + ",newItems = " + newItems
-                                                        + ",itemsNameMap = " + itemsNameMap);
+                                                        +", absSlotPrpName="+absSlotPrpName
+                                                        + ", slotItemSkuName=" + slotItemSkuName
+                                                        + ", itemSkuName=" + itemSkuName);
                                             }
 //                                        String partNamePrefix = shortSkuName + "_in_pt";
 //                                        int count = prefixCountMap.compute(partNamePrefix,
@@ -2514,25 +2489,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                             correctiveActions.add(new Action(TAKE_PART, partName));
                                             String slotName = absSlot.getFullName();
                                             logDebug("checkKits: slotName = " + slotName);
-//                                        boolean inCache = poseCache.keySet().contains(slotName);
-//                                        if(!inCache) {
-//                                                logDebug("poseCache.keySet() = " + poseCache.keySet());
-//                                                logDebug("inCache = " + inCache);
-//                                                
-//                                        }
-                                            PoseType slotPose = visionToRobotPose(absSlot.getPose());
+                                            PoseType absSlotPose = absSlot.getPose();
+                                            PoseType slotPose = visionToRobotPose(absSlotPose);
                                             double min_dist = Double.POSITIVE_INFINITY;
                                             String closestKey = null;
                                             for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-                                                double dist = CRCLPosemath.diffPosesTran(slotPose, entry.getValue());
+                                                double dist = CRCLPosemath.diffPosesTran(absSlotPose, entry.getValue());
                                                 if (dist < min_dist) {
                                                     closestKey = entry.getKey();
                                                     min_dist = dist;
                                                 }
                                             }
-                                            if (closestKey == null || min_dist > 10.0) {
+                                            if (closestKey == null || min_dist > 15.0) {
                                                 logError("checkKits: slotName = " + slotName);
-                                                logError("checkKits: absSlot.getPose() = " + CRCLPosemath.poseToString(absSlot.getPose()));
+                                                logError("checkKits: absSlot.getPose() = " + CRCLPosemath.poseToString(absSlotPose));
                                                 logError("checkKits: slotPose = " + CRCLPosemath.poseToString(slotPose));
                                                 logError("checkKits: postitionMaps = " + getPositionMaps());
                                                 logError("closestKey = " + closestKey);
@@ -2540,9 +2510,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 for (Entry<String, PoseType> entry : poseCache.entrySet()) {
                                                     PoseType entryValue = entry.getValue();
                                                     double dist = CRCLPosemath.diffPosesTran(slotPose, entryValue);
-                                                    double absSlotDiff = CRCLPosemath.diffPosesTran(absSlot.getPose(), entryValue);
+                                                    double absSlotDiff = CRCLPosemath.diffPosesTran(absSlotPose, entryValue);
                                                     PointType entryPoint = entryValue.getPoint();
-                                                    logError("entry.getKey = " + entry.getKey() + ",x="+entryPoint.getX()+",y="+entryPoint.getY()+", dist=" + dist+", absSlotPoseDiff="+absSlotDiff);
+                                                    if (null != entryPoint) {
+                                                        logError("entry.getKey = " + entry.getKey() + ",x=" + entryPoint.getX() + ",y=" + entryPoint.getY() + ", dist=" + dist + ", absSlotPoseDiff=" + absSlotDiff);
+                                                    }
                                                 }
                                                 throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
                                             }
@@ -2561,6 +2533,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         List<Action> optimizedCorrectiveActions
                                 = optimizePddlActionsWithOptaPlanner(correctiveActions, 0, newItems);
+                        int startingGetLastIndex = getLastIndex();
                         CORRECT_ACTIONS_LOOP:
                         for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
                             Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
@@ -2583,7 +2556,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                                 case PLACE_PART:
                                     String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                    placePartBySlotName(slotName, cmds, correctiveAction);  //ByName(slotName, null, cmds);
+                                    placePartBySlotName(slotName, cmds, correctiveAction,action,startingGetLastIndex);  //ByName(slotName, null, cmds);
                                     break;
                             }
                         }
@@ -2596,20 +2569,112 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private static List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
-        return newItems.stream()
-                .filter(item -> item.getType().equals("P"))
-                .flatMap(item -> {
-                    String fullName = item.getFullName();
-                    if (null != fullName) {
-                        return Stream.of(fullName);
-                    }
-                    return Stream.empty();
-                })
-                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-                .sorted()
+    private List<PhysicalItem> checkKitsItemsToParts(List<PhysicalItem> newItems) {
+        List<PhysicalItem> parts = newItems.stream()
+                .filter(x -> !x.getName().startsWith("empty_slot"))
+                .filter(x -> !x.getName().contains("vessel"))
                 .collect(Collectors.toList());
+        return parts;
     }
+
+    private List<PhysicalItem> checkKitsNewItems(String label) throws InterruptedException, ExecutionException {
+        List<PhysicalItem> newItems;
+        if (null == externalPoseProvider) {
+            newItems = waitForCompleteVisionUpdates(label, lastRequiredPartsMap, 15_000);
+        } else {
+            newItems = externalPoseProvider.getNewPhysicalItems();
+        }
+        return newItems;
+    }
+
+    @Nullable private volatile List<KitToCheck> lastKitsToCheckCopy = null;
+
+    private List<KitToCheck> scanKitsToCheck(boolean newCheck, Map<String, List<Slot>> kitInstanceAbsSlotMap, Set<String> matchedKitInstanceNames, List<PhysicalItem> parts) throws IOException {
+        List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
+
+        if (kitsToFix.isEmpty()) {
+            if (!newCheck && null != lastKitsToCheckCopy && !lastKitsToCheckCopy.isEmpty()) {
+                kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
+            } else {
+                throw new IllegalStateException("kitsToCheck is empty");
+            }
+        }
+        List<KitToCheck> kitsToCheckCopy;
+        if (newCheck) {
+            kitsToCheckCopy = new ArrayList<>(kitsToFix);
+            lastKitsToCheckCopy  = kitsToCheckCopy;
+        } else if(lastKitsToCheckCopy != null) {
+            kitsToCheckCopy = lastKitsToCheckCopy;
+        } else {
+            throw new IllegalStateException("no lastKitsToCheckCopy to reuse");
+        }
+        for (KitToCheck kit : kitsToCheckCopy) {
+            kit.kitInstanceNames = getKitInstanceNames(kit.name);
+            Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = new HashMap<>();
+            kit.instanceInfoMap = kitInstanceInfoMap;
+            for (String kitInstanceName : kit.kitInstanceNames) {
+
+                List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
+                        (String n) -> getAbsSlotListForKitInstance(kit.name, n));
+                KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots);
+                kitInstanceInfoMap.put(kitInstanceName, info);
+                if (matchedKitInstanceNames.contains(kitInstanceName)) {
+                    continue;
+                }
+                if (snapshotsEnabled()) {
+                    takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
+                }
+                boolean allSlotsCorrect = true;
+                for (Slot absSlot : absSlots) {
+                    String absSlotPrpName = absSlot.getPrpName();
+                    PhysicalItem closestItem = parts.stream()
+                            .min(Comparator.comparing(absSlot::distFromXY))
+                            .orElse(null);
+                    if (null == closestItem) {
+                        logger.log(Level.SEVERE, "closetItem == null in checkKits");
+                        break;
+                    }
+                    info.closestItemMap.put(absSlotPrpName, closestItem);
+                    String itemSkuName = "empty";
+                    if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
+                        itemSkuName = closestItem.origName;
+                    }
+                    info.itemSkuMap.put(absSlotPrpName, itemSkuName);
+                    if (!Objects.equals(kit.slotMap.get(absSlotPrpName), itemSkuName)) {
+                        info.failedAbsSlotPrpName = absSlotPrpName;
+                        info.failedItemSkuName = itemSkuName;
+                        info.failedSlots++;
+                        allSlotsCorrect = false;
+                    }
+                }
+                if (allSlotsCorrect) {
+                    kitsToFix.remove(kit);
+                    matchedKitInstanceNames.add(kitInstanceName);
+                    break;
+                }
+            }
+            if (debug) {
+                logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
+                logDebug("kitsToFix = " + kitsToFix);
+            }
+        }
+        return kitsToFix;
+    }
+
+//    private static List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
+//        return newItems.stream()
+//                .filter(item -> item.getType().equals("P"))
+//                .flatMap(item -> {
+//                    String fullName = item.getFullName();
+//                    if (null != fullName) {
+//                        return Stream.of(fullName);
+//                    }
+//                    return Stream.empty();
+//                })
+//                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
+//                .sorted()
+//                .collect(Collectors.toList());
+//    }
 
     private void printLastOptoInfo() {
         try {
@@ -3169,235 +3234,235 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    /**
-     * Inspects a finished kit to check if it is complete
-     *
-     * @param action PDDL Action
-     * @param out list of commands to append to
-     * @throws IllegalStateException if database is not connected
-     * @throws SQLException if query fails
-     * @throws java.lang.InterruptedException interrupted with
-     * Thread.interrupt()
-     * @throws java.util.concurrent.ExecutionException wrapped exception in
-     * another thread servicing waitForCompleteVisionUpdates
-     */
-    private void inspectKit(Action action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
-        checkDbReady();
-        checkSettings();
-        if (action.getArgs().length < 2) {
-            throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
-        }
-        if (PlacePartSlotPoseList.isEmpty()) {
-            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
-            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
-            takeSnapshots("plan", "PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
-            return;
-        }
-        if (null == externalPoseProvider) {
-            waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap, 15_000);
-        }
-        takeSnapshots("plan", "inspect-kit-", null, "");
-
-//        addTakeSnapshots(out, "inspect-kit-", null, "");
-        String kitSku = action.getArgs()[0];
-        String inspectionID = action.getArgs()[1];
-        MessageType msg = new MessageType();
-        msg.setMessage("inspect-kit " + kitSku + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-        setCommandId(msg);
-        out.add(msg);
-
-        //-- inspect-kit takes an sku as argument
-        //-- We want to identify which was just built
-        //-- To do so, we use the poses stored in PlacePartSlotPoseList and
-        //-- we look for the kit tray in the database for which one of the slots
-        //-- has at least one pose in the list
-        if (null == correctPartsTray) {
-            correctPartsTray = findCorrectKitTray(kitSku);
-        }
-        PartsTray tray = this.correctPartsTray;
-        if (null != tray) {
-            try {
-                PoseType trayPose = tray.getPartsTrayPose();
-                if (null != trayPose) {
-                    PointType trayPosePoint = trayPose.getPoint();
-                    if (null != trayPosePoint) {
-                        takeSimViewSnapshot("inspectKit.correctPartsTray.partsTrayPose",
-                                new PmCartesian(
-                                        trayPosePoint.getX(),
-                                        trayPosePoint.getY(), 0),
-                                tray.getPartsTrayName());
-                    }
-                }
-                takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
-                        tray.getSlotList());
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, "", ex);
-            }
-            EmptySlotSet = new HashSet<>();
-            int numberOfPartsInKit = 0;
-
-            logDebug("\n\n---Inspecting kit tray " + tray.getPartsTrayName());
-            int partDesignPartCount = getPartDesignPartCount(kitSku);
-
-            //-- replace all _pt from TakenPartList with _kt
-            //-- Get all part that contains "in_kt" in their names
-            //-- from the database
-            for (int i = 0; i < TakenPartList.size(); i++) {
-                String part_in_pt = TakenPartList.get(i);
-                String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
-                int indexLastUnderscore = tmpPartName.lastIndexOf("_");
-                assert (indexLastUnderscore >= 0) :
-                        ("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
-
-                String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
-                assert (part_in_kt.indexOf('_') > 0) :
-                        ("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
-
-                TakenPartList.set(i, part_in_kt);
-            }
-
-            //-- Get all the slots for the current parts tray
-            List<Slot> slotList = tray.getSlotList();
-            for (Slot slot : slotList) {
-                PoseType slotPose = slot.getSlotPose();
-                PointType slotPosePoint = slotPose.getPoint();
-                if (null == slotPosePoint) {
-                    throw new IllegalStateException("pose for slot=" + slot + " has null point property");
-                }
-                double slotx = slotPosePoint.getX();
-                double sloty = slotPosePoint.getY();
-                //logDebug(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
-                logDebug("++++++ " + slot.getSlotName() + ":(" + slotx + "," + sloty + ")");
-
-                //-- we want to filter out from TakenPartList parts that
-                //-- do not match slot part sku
-                //-- e.g., In TakenPartList keep only parts that contain part_large_gear
-                //-- if part sku for this slot is sku_part_large_gear
-                String partSKU = slot.getPartSKU();
-                if (null == partSKU) {
-                    logger.log(Level.WARNING, "slot has null partSKU : slot={0}", slot);
-                    continue;
-                }
-                if (partSKU.startsWith("sku_")) {
-                    partSKU = partSKU.substring(4).concat("_in_kt");
-                }
-                if (checkPartTypeInSlot(partSKU, slot) == 1) {
-                    numberOfPartsInKit++;
-                } else {
-                    EmptySlotSet.add(slot);
-                }
-            }
-            if (null != kitInspectionJInternalFrame) {
-                if (!EmptySlotSet.isEmpty()) {
-                    kitInspectionJInternalFrame.setKitImage(getKitResultImage(EmptySlotSet));
-                } else {
-                    kitInspectionJInternalFrame.setKitImage("complete");
-                }
-            }
-            setCorrectKitImage();
-            if (numberOfPartsInKit == partDesignPartCount) {
-                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
-            } else {
-                try {
-                    if (snapshotsEnabled()) {
-                        takeSimViewSnapshot(createImageTempFile("inspectKit-slotList"), slotList);
-                        if (null != EmptySlotSet) {
-                            takeSimViewSnapshot(createImageTempFile("inspectKit-EmptySlotSet"), EmptySlotSet);
-                        }
-                    }
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, "", ex);
-                }
-                //if (part_in_kt_found) {
-                TakenPartList.clear();
-                int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
-                addToInspectionResultJTextPane("<h3 style=\"background-color: #ffb5b5; color: #ffffff\">&nbsp;&nbsp;The kit is missing " + nbofmissingparts + " part(s)</h3>");
-                if (null != EmptySlotSet) {
-                    for (Slot s : EmptySlotSet) {
-                        addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
-                    }
-                }
-                if (nbofmissingparts == 1) {
-                    kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " part. Getting the new part.");
-                } else {
-                    kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " parts. Getting the new parts.");
-                }
-                addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Recovering from failures</h2>");
-                Map<String, List<String>> partSkuMap = new HashMap<>();
-
-                //-- Build a map where the key is the part sku for a slot
-                //-- and the value is an arraylist of part_in_pt
-                for (Slot s : EmptySlotSet) {
-
-                    List<String> allPartsInPt = new ArrayList<>();
-                    String partSKU = s.getPartSKU();
-                    if (null == partSKU) {
-                        logger.log(Level.WARNING, "slot has null partSKU : slot={0}", s);
-                        continue;
-                    }
-                    if (partSKU.startsWith("sku_")) {
-                        partSKU = partSKU.substring(4).concat("_in_pt");
-                    }
-                    //-- Querying the database 20 times for part_in_pt
-                    for (int i = 0; i < 20; i++) {
-                        if (allPartsInPt.isEmpty()) {
-                            allPartsInPt = getAllPartsInPt(partSKU);
-                        }
-                    }
-                    partSkuMap.put(partSKU, allPartsInPt);
-                }
-
-                if (partSkuMap.size() > 0) {
-                    for (Slot s : EmptySlotSet) {
-                        String partSKU = s.getPartSKU();
-                        if (null == partSKU) {
-                            logger.log(Level.WARNING, "slot has null partSKU : slot={0}", s);
-                            continue;
-                        }
-                        if (partSKU.startsWith("sku_")) {
-                            partSKU = partSKU.substring(4).concat("_in_pt");
-                        }
-                        addToInspectionResultJTextPane("&nbsp;&nbsp;Getting a list of part_in_pt for sku " + partSKU + "<br>");
-
-                        //-- get list of part_in_pt based on the part sku
-                        List<String> listOfParts = partSkuMap.get(partSKU);
-                        //-- get the first element in this list and then remove it from the list
-                        if (null != listOfParts && listOfParts.size() > 0) {
-                            String partInPt = listOfParts.get(0);
-                            //--remove the first element
-                            listOfParts.remove(0);
-                            //-- update the list in the map with the modified list
-                            partSkuMap.put(partSKU, listOfParts);
-                            //-- perform pick-and-place actions
-                            takePartRecovery(partInPt, out);
-                            Action takepartrecoveryaction = Action.parse("(place-part " + s.getSlotName() + ")");
-                            placePartRecovery(takepartrecoveryaction, s, out);
-                        } else {
-                            // addToInspectionResultJTextPane("Could not find part_in_pt for sku " + partSKU + " from the database<b
-                            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find part_in_pt for sku " + partSKU + " from the database</h3><br>");
-                            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
-                        }
-                    }
-                } else {
-                    addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find parts in_pt from the database</h3><br>");
-                    addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
-                }
-                addToInspectionResultJTextPane("<br>");
-            }
-        } else {
-            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built. (kitSku=" + kitSku + ") </h3><br>");
-            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
-            System.err.println("Trying to get correctPartsTray again ...");
-            correctPartsTray = findCorrectKitTray(kitSku);
-            logDebug("msg = " + msg);
-        }
-        if (inspectionID.contains("0")) {
-            if (null != PlacePartSlotPoseList) {
-                PlacePartSlotPoseList.clear();
-            }
-            correctPartsTray = null;
-        }
-    }
+//    /**
+//     * Inspects a finished kit to check if it is complete
+//     *
+//     * @param action PDDL Action
+//     * @param out list of commands to append to
+//     * @throws IllegalStateException if database is not connected
+//     * @throws SQLException if query fails
+//     * @throws java.lang.InterruptedException interrupted with
+//     * Thread.interrupt()
+//     * @throws java.util.concurrent.ExecutionException wrapped exception in
+//     * another thread servicing waitForCompleteVisionUpdates
+//     */
+//    private void inspectKit(Action action, List<MiddleCommandType> out) throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
+//        checkDbReady();
+//        checkSettings();
+//        if (action.getArgs().length < 2) {
+//            throw new IllegalArgumentException("action = " + action + " needs at least two arguments: kitSku inspectionID");
+//        }
+//        if (PlacePartSlotPoseList.isEmpty()) {
+//            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;No place part slots added. </h3><br>");
+//            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+//            takeSnapshots("plan", "PlacePartSlotPoseList.isEmpty()-inspect-kit-", null, "");
+//            return;
+//        }
+//        if (null == externalPoseProvider) {
+//            waitForCompleteVisionUpdates("inspectKit", lastRequiredPartsMap, 15_000);
+//        }
+//        takeSnapshots("plan", "inspect-kit-", null, "");
+//
+////        addTakeSnapshots(out, "inspect-kit-", null, "");
+//        String kitSku = action.getArgs()[0];
+//        String inspectionID = action.getArgs()[1];
+//        MessageType msg = new MessageType();
+//        msg.setMessage("inspect-kit " + kitSku + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
+//        setCommandId(msg);
+//        out.add(msg);
+//
+//        //-- inspect-kit takes an sku as argument
+//        //-- We want to identify which was just built
+//        //-- To do so, we use the poses stored in PlacePartSlotPoseList and
+//        //-- we look for the kit tray in the database for which one of the slots
+//        //-- has at least one pose in the list
+//        if (null == correctPartsTray) {
+//            correctPartsTray = findCorrectKitTray(kitSku);
+//        }
+//        PartsTray tray = this.correctPartsTray;
+//        if (null != tray) {
+//            try {
+//                PoseType trayPose = tray.getPartsTrayPose();
+//                if (null != trayPose) {
+//                    PointType trayPosePoint = trayPose.getPoint();
+//                    if (null != trayPosePoint) {
+//                        takeSimViewSnapshot("inspectKit.correctPartsTray.partsTrayPose",
+//                                new PmCartesian(
+//                                        trayPosePoint.getX(),
+//                                        trayPosePoint.getY(), 0),
+//                                tray.getPartsTrayName());
+//                    }
+//                }
+//                takeSimViewSnapshot("inspectKit.correctPartsTray.slotList",
+//                        tray.getSlotList());
+//            } catch (IOException ex) {
+//                logger.log(Level.SEVERE, "", ex);
+//            }
+//            EmptySlotSet = new HashSet<>();
+//            int numberOfPartsInKit = 0;
+//
+//            logDebug("\n\n---Inspecting kit tray " + tray.getPartsTrayName());
+//            int partDesignPartCount = getPartDesignPartCount(kitSku);
+//
+//            //-- replace all _pt from TakenPartList with _kt
+//            //-- Get all part that contains "in_kt" in their names
+//            //-- from the database
+//            for (int i = 0; i < TakenPartList.size(); i++) {
+//                String part_in_pt = TakenPartList.get(i);
+//                String tmpPartName = part_in_pt.replace("in_pt", "in_kt");
+//                int indexLastUnderscore = tmpPartName.lastIndexOf("_");
+//                assert (indexLastUnderscore >= 0) :
+//                        ("TakenPartList=" + TakenPartList + " contains invalid tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt);
+//
+//                String part_in_kt = tmpPartName.substring(0, indexLastUnderscore);
+//                assert (part_in_kt.indexOf('_') > 0) :
+//                        ("part_in_kt=" + part_in_kt + ",tmpPartName=" + tmpPartName + " from part_in_pt=" + part_in_pt + ", indexLastUnderscore=" + indexLastUnderscore);
+//
+//                TakenPartList.set(i, part_in_kt);
+//            }
+//
+//            //-- Get all the slots for the current parts tray
+//            List<Slot> slotList = tray.getSlotList();
+//            for (Slot slot : slotList) {
+//                PoseType slotPose = slot.getSlotPose();
+//                PointType slotPosePoint = slotPose.getPoint();
+//                if (null == slotPosePoint) {
+//                    throw new IllegalStateException("pose for slot=" + slot + " has null point property");
+//                }
+//                double slotx = slotPosePoint.getX();
+//                double sloty = slotPosePoint.getY();
+//                //logDebug(slot.getSlotName() + ":(" + x_offset + "," + y_offset + ")");
+//                logDebug("++++++ " + slot.getSlotName() + ":(" + slotx + "," + sloty + ")");
+//
+//                //-- we want to filter out from TakenPartList parts that
+//                //-- do not match slot part sku
+//                //-- e.g., In TakenPartList keep only parts that contain part_large_gear
+//                //-- if part sku for this slot is sku_part_large_gear
+//                String partSKU = slot.getPartSKU();
+//                if (null == partSKU) {
+//                    logger.log(Level.WARNING, "slot has null partSKU : slot={0}", slot);
+//                    continue;
+//                }
+//                if (partSKU.startsWith("sku_")) {
+//                    partSKU = partSKU.substring(4).concat("_in_kt");
+//                }
+//                if (checkPartTypeInSlot(partSKU, slot) == 1) {
+//                    numberOfPartsInKit++;
+//                } else {
+//                    EmptySlotSet.add(slot);
+//                }
+//            }
+//            if (null != kitInspectionJInternalFrame) {
+//                if (!EmptySlotSet.isEmpty()) {
+//                    kitInspectionJInternalFrame.setKitImage(getKitResultImage(EmptySlotSet));
+//                } else {
+//                    kitInspectionJInternalFrame.setKitImage("complete");
+//                }
+//            }
+//            setCorrectKitImage();
+//            if (numberOfPartsInKit == partDesignPartCount) {
+//                addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #7ef904\">&nbsp;&nbsp;The kit is complete</h3><br>");
+//            } else {
+//                try {
+//                    if (snapshotsEnabled()) {
+//                        takeSimViewSnapshot(createImageTempFile("inspectKit-slotList"), slotList);
+//                        if (null != EmptySlotSet) {
+//                            takeSimViewSnapshot(createImageTempFile("inspectKit-EmptySlotSet"), EmptySlotSet);
+//                        }
+//                    }
+//                } catch (IOException ex) {
+//                    logger.log(Level.SEVERE, "", ex);
+//                }
+//                //if (part_in_kt_found) {
+//                TakenPartList.clear();
+//                int nbofmissingparts = partDesignPartCount - numberOfPartsInKit;
+//                addToInspectionResultJTextPane("<h3 style=\"background-color: #ffb5b5; color: #ffffff\">&nbsp;&nbsp;The kit is missing " + nbofmissingparts + " part(s)</h3>");
+//                if (null != EmptySlotSet) {
+//                    for (Slot s : EmptySlotSet) {
+//                        addToInspectionResultJTextPane("&nbsp;&nbsp;Slot " + s.getSlotName() + " is missing a part of type " + s.getPartSKU() + "<br>");
+//                    }
+//                }
+//                if (nbofmissingparts == 1) {
+//                    kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " part. Getting the new part.");
+//                } else {
+//                    kitInspectionJInternalFrameKitTitleLabelSetText("Missing " + nbofmissingparts + " parts. Getting the new parts.");
+//                }
+//                addToInspectionResultJTextPane("<h2 style=\"BACKGROUND-COLOR: " + messageColorH3 + "\">&nbsp;&nbsp;Recovering from failures</h2>");
+//                Map<String, List<String>> partSkuMap = new HashMap<>();
+//
+//                //-- Build a map where the key is the part sku for a slot
+//                //-- and the value is an arraylist of part_in_pt
+//                for (Slot s : EmptySlotSet) {
+//
+//                    List<String> allPartsInPt = new ArrayList<>();
+//                    String partSKU = s.getPartSKU();
+//                    if (null == partSKU) {
+//                        logger.log(Level.WARNING, "slot has null partSKU : slot={0}", s);
+//                        continue;
+//                    }
+//                    if (partSKU.startsWith("sku_")) {
+//                        partSKU = partSKU.substring(4).concat("_in_pt");
+//                    }
+//                    //-- Querying the database 20 times for part_in_pt
+//                    for (int i = 0; i < 20; i++) {
+//                        if (allPartsInPt.isEmpty()) {
+//                            allPartsInPt = getAllPartsInPt(partSKU);
+//                        }
+//                    }
+//                    partSkuMap.put(partSKU, allPartsInPt);
+//                }
+//
+//                if (partSkuMap.size() > 0) {
+//                    for (Slot s : EmptySlotSet) {
+//                        String partSKU = s.getPartSKU();
+//                        if (null == partSKU) {
+//                            logger.log(Level.WARNING, "slot has null partSKU : slot={0}", s);
+//                            continue;
+//                        }
+//                        if (partSKU.startsWith("sku_")) {
+//                            partSKU = partSKU.substring(4).concat("_in_pt");
+//                        }
+//                        addToInspectionResultJTextPane("&nbsp;&nbsp;Getting a list of part_in_pt for sku " + partSKU + "<br>");
+//
+//                        //-- get list of part_in_pt based on the part sku
+//                        List<String> listOfParts = partSkuMap.get(partSKU);
+//                        //-- get the first element in this list and then remove it from the list
+//                        if (null != listOfParts && listOfParts.size() > 0) {
+//                            String partInPt = listOfParts.get(0);
+//                            //--remove the first element
+//                            listOfParts.remove(0);
+//                            //-- update the list in the map with the modified list
+//                            partSkuMap.put(partSKU, listOfParts);
+//                            //-- perform pick-and-place actions
+//                            takePartRecovery(partInPt, out);
+//                            Action takepartrecoveryaction = Action.parse("(place-part " + s.getSlotName() + ")");
+//                            placePartRecovery(takepartrecoveryaction, s, out);
+//                        } else {
+//                            // addToInspectionResultJTextPane("Could not find part_in_pt for sku " + partSKU + " from the database<b
+//                            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find part_in_pt for sku " + partSKU + " from the database</h3><br>");
+//                            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
+//                        }
+//                    }
+//                } else {
+//                    addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Could not find parts in_pt from the database</h3><br>");
+//                    addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Recovery Aborted</h3><br>");
+//                }
+//                addToInspectionResultJTextPane("<br>");
+//            }
+//        } else {
+//            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;The system could not identify the kit tray that was built. (kitSku=" + kitSku + ") </h3><br>");
+//            addToInspectionResultJTextPane("<h3 style=\"BACKGROUND-COLOR: #ff0000\">&nbsp;&nbsp;Inspection Aborted</h3><br>");
+//            System.err.println("Trying to get correctPartsTray again ...");
+//            correctPartsTray = findCorrectKitTray(kitSku);
+//            logDebug("msg = " + msg);
+//        }
+//        if (inspectionID.contains("0")) {
+//            if (null != PlacePartSlotPoseList) {
+//                PlacePartSlotPoseList.clear();
+//            }
+//            correctPartsTray = null;
+//        }
+//    }
 
     private double getVisionToDBRotationOffset() {
         assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
@@ -5900,6 +5965,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public static class PlacePartInfo {
 
+        private final Action parentAction;
+        private final int parentActionIndex;
         private final Action action;
         private final int pddlActionIndex;
         private final int outIndex;
@@ -5907,11 +5974,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private CrclCommandWrapper wrapper = null;
         private final int startSafeAbortRequestCount;
 
-        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount) {
+        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount,Action parentAction, int parentActionIndex) {
             this.action = action;
             this.pddlActionIndex = pddlActionIndex;
             this.outIndex = outIndex;
             this.startSafeAbortRequestCount = startSafeAbortRequestCount;
+            this.parentAction = parentAction;
+            this.parentActionIndex = parentActionIndex;
         }
 
         @Nullable
@@ -5939,9 +6008,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return startSafeAbortRequestCount;
         }
 
+        public Action getParentAction() {
+            return parentAction;
+        }
+
+        public int getParentActionIndex() {
+            return parentActionIndex;
+        }
+
         @Override
         public String toString() {
-            return "{action(" + pddlActionIndex + ")=" + outIndex + ":" + action + '}';
+            return "PlacePartInfo{" + "parentAction=" + parentAction + ", parentActionIndex=" + parentActionIndex + ", action=" + action + ", pddlActionIndex=" + pddlActionIndex + ", outIndex=" + outIndex + ", startSafeAbortRequestCount=" + startSafeAbortRequestCount + '}';
         }
 
     }
@@ -6016,6 +6093,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile int startSafeAbortRequestCount;
 
     private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action) throws IllegalStateException, SQLException {
+        placePartBySlotName(slotName, out, action, null, -1);
+    }
+    
+    private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action, Action parentAction, int parentActionIndex) throws IllegalStateException, SQLException {
         PoseType pose = getPose(slotName);
         if (null != pose) {
             PlacePartSlotPoseList.add(pose);
@@ -6037,7 +6118,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,parentAction,parentActionIndex);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
                                 addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -6054,7 +6135,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
+        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,parentAction,parentActionIndex);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -6070,36 +6151,36 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        logDebug("poseCheck = " + poseCheck);
     }
 
-    private void placePartRecovery(Action action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException {
-        checkDbReady();
-        checkSettings();
-        String slotName = action.getArgs()[0];
-        PoseType pose = slot.getSlotPose();
-
-        final String msg = "placed part (recovery) in " + slotName;
-        if (takeSnapshots) {
-            if (takeSnapshots) {
-                takeSnapshots("plan", "place-part-recovery-in-" + slotName + "", pose, slotName);
-            }
-        }
-        if (pose == null) {
-            throw new IllegalStateException("getPose(" + slotName + ") returned null");
-        }
-
-        pose = visionToRobotPose(pose);
-        pose.setXAxis(xAxis);
-        pose.setZAxis(zAxis);
-        PlacePartSlotPoseList.add(pose);
-        placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount);
-        addMarkerCommand(out, msg,
-                ((CrclCommandWrapper wrapper) -> {
-                    logDebug(msg + " completed at " + new Date());
-                    ppi.setWrapper(wrapper);
-                    notifyPlacePartConsumers(ppi);
-                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-                }));
-    }
+//    private void placePartRecovery(Action action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException {
+//        checkDbReady();
+//        checkSettings();
+//        String slotName = action.getArgs()[0];
+//        PoseType pose = slot.getSlotPose();
+//
+//        final String msg = "placed part (recovery) in " + slotName;
+//        if (takeSnapshots) {
+//            if (takeSnapshots) {
+//                takeSnapshots("plan", "place-part-recovery-in-" + slotName + "", pose, slotName);
+//            }
+//        }
+//        if (pose == null) {
+//            throw new IllegalStateException("getPose(" + slotName + ") returned null");
+//        }
+//
+//        pose = visionToRobotPose(pose);
+//        pose.setXAxis(xAxis);
+//        pose.setZAxis(zAxis);
+//        PlacePartSlotPoseList.add(pose);
+//        placePartByPose(out, pose);
+//        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,null,-1);
+//        addMarkerCommand(out, msg,
+//                ((CrclCommandWrapper wrapper) -> {
+//                    logDebug(msg + " completed at " + new Date());
+//                    ppi.setWrapper(wrapper);
+//                    notifyPlacePartConsumers(ppi);
+//                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
+//                }));
+//    }
 
     @Nullable
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {

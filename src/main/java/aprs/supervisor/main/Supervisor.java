@@ -3147,6 +3147,7 @@ public class Supervisor {
 
         private final Map<String, List<String>> origStartingStringsMap = new HashMap<>();
 
+        @SuppressWarnings("initialization")
         public TeachScanMonitor(List<AprsSystem> aprsSystems,
                 AtomicInteger abortCount,
                 boolean continuousDemoSelected,
@@ -3167,7 +3168,10 @@ public class Supervisor {
                 origStartingStringsMap.put(aprsSys.getTaskName(), startingKitStrings);
             }
             if (useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
-                submitTeachItems(object2DOuterJPanel1.getItems());
+                List<PhysicalItem> startingItems = object2DOuterJPanel1.getItems();
+                if(null != startingItems) {
+                    submitTeachItems(startingItems);
+                }
             }
         }
 
@@ -3175,9 +3179,10 @@ public class Supervisor {
             return future;
         }
 
+        @SuppressWarnings({"initialization","nullness"})
         private final Consumer<List<PhysicalItem>> teachItemsConsumer = this::submitTeachItems;
 
-        private void submitTeachItems(List<PhysicalItem> teachItems) {
+        private void submitTeachItems(@Nullable List<PhysicalItem> teachItems) {
             if (futureCompleted) {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 return;
@@ -3188,8 +3193,12 @@ public class Supervisor {
                 future.cancelAll(false);
                 return;
             }
+            if(null == teachItems) {
+                return;
+            }
+            List<PhysicalItem> nonNullTeachItems = teachItems;
             if (!object2DOuterJPanel1.isUserMouseDown()) {
-                supervisorExecutorService.submit(() -> handleTeachItems(teachItems));
+                supervisorExecutorService.submit(() -> handleTeachItems(nonNullTeachItems));
             }
         }
 

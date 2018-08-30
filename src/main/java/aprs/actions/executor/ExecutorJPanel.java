@@ -22,6 +22,7 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.ActionType.CHECK_KITS;
 import static aprs.actions.executor.ActionType.DROP_TOOL_ANY;
 
 import aprs.cachedcomponents.CachedCheckBox;
@@ -527,12 +528,38 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTableTrayAttachOffsets.getModel().removeTableModelListener(trayAttachOffsetsModelListener);
     }
 
-    private volatile StackTraceElement setReverseFlagTrace @Nullable []  = null;
+    private final AtomicInteger setReverseTrueCount = new AtomicInteger();
+    private final AtomicInteger setReverseFalseCount = new AtomicInteger();
+
+    private volatile StackTraceElement setReverseFlagTrueTrace @Nullable []  = null;
+    private volatile StackTraceElement setReverseFlagFalseTrace @Nullable []  = null;
 
     public synchronized void setReverseFlag(boolean reverseFlag) {
-        warnIfNewActionsNotReady();
-        this.reverseFlag = reverseFlag;
-        setReverseFlagTrace = Thread.currentThread().getStackTrace();
+        try {
+            if (this.reverseFlag != reverseFlag) {
+                warnIfNewActionsNotReady();
+                if (reverseFlag) {
+                    
+                    int tc = setReverseTrueCount.incrementAndGet();
+                    if (tc > 1) {
+                        System.out.println("tc = " + tc);
+                        
+                    }
+                    setReverseFlagTrueTrace = Thread.currentThread().getStackTrace();
+                } else {
+                    setReverseFalseCount.incrementAndGet();
+                    setReverseFlagFalseTrace = Thread.currentThread().getStackTrace();
+                }
+                this.reverseFlag = reverseFlag;
+            }
+        } catch (Exception e) {
+            System.err.println("setReverseFlagTrueTrace = " + Arrays.toString(setReverseFlagTrueTrace));
+            System.err.println("setReverseFlagFalseTrace = " + Arrays.toString(setReverseFlagFalseTrace));
+            System.err.println("setReverseTrueCount = " + setReverseTrueCount);
+            System.err.println("setReverseFalseCount = " + setReverseFalseCount);
+            throw new RuntimeException(e);
+        }
+
     }
 
     @UIType
@@ -658,6 +685,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 l.remove(programIndex + 1);
             }
             crclGenerator.addMoveToLookForPosition(l, false);
+            Action parentAction = ppi.getParentAction();
+            if(null != parentAction && parentAction.getType() == CHECK_KITS) {
+                setReplanFromIndex(ppi.getParentActionIndex(), true);
+            }
             setReplanFromIndex(ppi.getPddlActionIndex() + 1, true);
         }
     }
@@ -2207,7 +2238,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
 
         if (revFlag != resetReadOnlyActionsListReverseFlag) {
-            System.err.println("setReverseFlagTrace = " + Arrays.toString(setReverseFlagTrace));
+            System.err.println("setReverseFlagTrueTrace = " + Arrays.toString(setReverseFlagTrueTrace));
+            System.err.println("setReverseFlagFalseTrace = " + Arrays.toString(setReverseFlagFalseTrace));
             System.err.println("revFlag = " + revFlag);
             System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
             System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
@@ -2390,9 +2422,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (HeadlessException | IllegalStateException | IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
-        if (reverseActionsFileString != null && reverseActionsFileString.length() > 0) {
-            if (!isTempDir(reverseActionsFileString)) {
-                String relPath = makeShortPath(propertiesFile, reverseActionsFileString);
+        final String reversActionsPath = reverseActionsFileString;
+        if (reversActionsPath != null && reversActionsPath.length() > 0) {
+            if (!isTempDir(reversActionsPath)) {
+                String relPath = makeShortPath(propertiesFile, reversActionsPath);
                 logDebug("relPath = " + relPath);
                 File chkFile = new File(relPath);
                 if (!chkFile.isDirectory()) {
@@ -2400,9 +2433,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             }
         }
-        if (actionsFileString != null && actionsFileString.length() > 0) {
-            if (!isTempDir(actionsFileString)) {
-                String relPath = makeShortPath(propertiesFile, actionsFileString);
+        final String actionsPath = actionsFileString;
+        if (actionsPath != null && actionsPath.length() > 0) {
+            if (!isTempDir(actionsPath)) {
+                String relPath = makeShortPath(propertiesFile, actionsPath);
                 logDebug("relPath = " + relPath);
                 File chkFile = new File(relPath);
                 if (!chkFile.isDirectory()) {
@@ -3961,6 +3995,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public int getSafeAbortRequestCount() {
         return safeAbortRequestCount.get();
     }
+    
+    public int getActionSetsStarted() {
+        return actionSetsStarted.get();
+    }
 
     public boolean completeActionList(String comment, int startSafeAbortRequestCount) {
         try {
@@ -4168,11 +4206,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -5626,14 +5664,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private boolean atLastAction() {
+    public boolean atLastAction() {
         boolean ret = crclGenerator.atLastIndex();
 //        if (ret) {
 //            logDebug("crclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
 //            logDebug("actionsList.size() = " + actionsList.size());
 //        }
         return ret;
-
     }
 
     private XFuture<Boolean> generateCrclAsync() throws IllegalStateException {
@@ -6244,6 +6281,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             throw new RuntimeException(ex);
         }
     }
+    
+    public boolean recheckKitsOnly() {
+         try {
+           return crclGenerator.recheckKitsOnly();
+         } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
 
     private CRCLProgramType createLookForPartsProgramInternal() throws ExecutionException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, SQLException, IllegalStateException, CRCLException, PmException {
         checkDbSupplierPublisher();
@@ -6776,7 +6822,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     static {
         String tempDirName = null;
         try {
-            tempDirName = File.createTempFile("test_temp", ".txt").getParentFile().getCanonicalPath();
+            File parentFile = File.createTempFile("test_temp", ".txt").getParentFile();
+            if(null == parentFile) {
+                throw new IllegalStateException("null == parentFile");
+            }
+            tempDirName = parentFile.getCanonicalPath();
             if (tempDirName.endsWith("\\1")
                     || tempDirName.endsWith("\\2")
                     || tempDirName.endsWith("\\3")
@@ -6884,7 +6934,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private static boolean isTempDir(String propsReverseActionsFileString) {
+    private static boolean isTempDir(@Nullable String propsReverseActionsFileString) {
         return null != TEMP_DIR
                 && TEMP_DIR.length() > 0
                 && null != propsReverseActionsFileString

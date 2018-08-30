@@ -1,7 +1,7 @@
 package aprs.cachedcomponents;
 
-import aprs.misc.Utils;
 import com.google.common.base.Objects;
+import crcl.ui.XFutureVoid;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -12,7 +12,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.util.Vector;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 public class CachedTable extends CachedComponentBase {
 
@@ -154,13 +153,14 @@ public class CachedTable extends CachedComponentBase {
         return data[row][col];
     }
 
-    public void setValueAt(@Nullable Object value, int row, int col) {
+    public XFutureVoid setValueAt(@Nullable Object value, int row, int col) {
         if (!Objects.equal(value, getValueAt(row, col))) {
             data[row][col] = value;
             if (null != model) {
-                runOnDispatchThread(() -> setModelValueAt(value, row, col));
+                return runOnDispatchThread(() -> setModelValueAt(value, row, col));
             }
         }
+        return XFutureVoid.completedFuture();
     }
 
     @UIEffect
