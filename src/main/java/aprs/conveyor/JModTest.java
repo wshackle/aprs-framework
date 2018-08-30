@@ -32,6 +32,7 @@ import java.util.logging.Level;
  *
  * @author shackle
  */
+@SuppressWarnings({"nullness","initialization"})
 public class JModTest {
 
     protected static ModbusTCPMaster master;
@@ -42,10 +43,10 @@ public class JModTest {
         try {
             master = new ModbusTCPMaster("192.168.1.50");
             master.connect();
-            master.writeSingleRegister(0x8001, new SimpleRegister(0)); // set direction forward
-            master.writeSingleRegister(0x8002, new SimpleRegister(2000)); // set the speed, 0 = off, 32768 = max
+            master.writeSingleRegister(0x8001, new SimpleRegister(1)); // set direction forward
+            master.writeSingleRegister(0x8002, new SimpleRegister(1000)); // set the speed, 0 = off, 32768 = max
             master.writeSingleRegister(0x8000, new SimpleRegister(1)); // make it go
-            Thread.sleep(1000);
+            Thread.sleep(500);
             master.writeSingleRegister(0x8000, new SimpleRegister(0)); // make it go
             
             System.out.println("connected");

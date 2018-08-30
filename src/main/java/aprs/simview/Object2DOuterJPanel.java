@@ -2109,14 +2109,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             selectModel.setSelectionInterval(minIndex, minIndex);
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
-        if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
-            List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
-            this.draggedItemsList = newDragItems;
-        } else if (null != closestItem && !"P".equals(closestItem.getType())) {
-            System.out.println("Hold SHIFT to move trays : closestItem=" + draggedItem.getFullName());
-            draggedItem = null;
-            this.draggedItemsList = null;
-            return;
+        if (null != closestItem) {
+            if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
+                List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
+                this.draggedItemsList = newDragItems;
+            } else if ( !"P".equals(closestItem.getType())) {
+                System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
+                draggedItem = null;
+                this.draggedItemsList = null;
+                return;
+            }
         }
         draggedItem = closestItem;
         mouseDown = true;
@@ -2619,6 +2621,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jCheckBoxToolsActionPerformed
 
+    @UIEffect
     private void jComboBoxHandleRotationsEnumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxHandleRotationsEnumActionPerformed
         Object selectedObject = jComboBoxHandleRotationsEnum.getSelectedItem();
         HandleRotationEnum newHandleRotationEnum;
@@ -3066,7 +3069,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            visionSocketClient.setZeroRotations(handleRotationEnum == HandleRotationEnum.IGNORE);
 //        }
 //    }
-    private HandleRotationEnum handleRotationEnum= HandleRotationEnum.RADIANS;
+    private HandleRotationEnum handleRotationEnum = HandleRotationEnum.RADIANS;
 
     /**
      * Get the value of handleRotationEnum

@@ -112,8 +112,8 @@ public class GoalLearner {
      * @param commonItems list of kits and parts with positions to learn from
      * @param allEmptyA optional boolean array to receive flag if all trays were
      * empty
-     * @return list of Action's that can be used to recreate the
- configuration of the example data.
+     * @return list of Action's that can be used to recreate the configuration
+     * of the example data.
      */
     public List<Action> createActionListFromVision(List<PhysicalItem> commonItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
         return createActionListFromVision(commonItems, commonItems, allEmptyA, overrideRotationOffset, newRotationOffset);
@@ -124,27 +124,25 @@ public class GoalLearner {
     public List<String> getLastCreateActionListFromVisionKitToCheckStrings() {
         return new ArrayList<>(lastCreateActionListFromVisionKitToCheckStrings);
     }
-    
-    private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable[] = null;
+
+    private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable []  = null;
     @Nullable private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
     private volatile long setLastCreateActionListFromVisionKitToCheckStringsTime;
-    
-    public StackTraceElement[] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
+
+    public StackTraceElement @Nullable [] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
         return setLastCreateActionListFromVisionKitToCheckStringsTrace;
     }
 
-    public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
+    @Nullable public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
         return setLastCreateActionListFromVisionKitToCheckStringsThread;
     }
 
     public long getSetLastCreateActionListFromVisionKitToCheckStringsTime() {
         return setLastCreateActionListFromVisionKitToCheckStringsTime;
     }
-    
-    
-    
+
     public void setLastCreateActionListFromVisionKitToCheckStrings(List<String> strings) {
-        if(null == strings) {
+        if (null == strings) {
             throw new IllegalArgumentException("null == strings");
         }
         setLastCreateActionListFromVisionKitToCheckStringsTime = System.currentTimeMillis();
@@ -213,8 +211,8 @@ public class GoalLearner {
     public List<Action> createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
-                .filter(this::isWithinLimits)
-                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                        .filter(this::isWithinLimits)
+                        .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
 
         SlotOffsetProvider localSlotOffsetProvider = this.slotOffsetProvider;
         if (null == localSlotOffsetProvider) {
@@ -223,10 +221,10 @@ public class GoalLearner {
 
         String requiredItemsString
                 = requiredItemsMap
-                .entrySet()
-                .stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .collect(Collectors.joining(" "));
+                        .entrySet()
+                        .stream()
+                        .map(entry -> entry.getKey() + "=" + entry.getValue())
+                        .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = teachItems.stream()
                 .filter(x -> "KT".equals(x.getType()))
                 .collect(Collectors.toList());
@@ -238,7 +236,8 @@ public class GoalLearner {
 
         boolean allEmpty = true;
 
-        if(!correctionMode) {
+        l.add(Action.parse("(set-correction-mode " + correctionMode + ")"));
+        if (!correctionMode) {
             l.add(Action.parse("(clear-kits-to-check)"));
         }
         l.add(Action.parse("(look-for-parts 0 " + requiredItemsString + ")"));
@@ -318,9 +317,9 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                    .sorted(Comparators.byFunction(Map.Entry<String,String>::getKey))
-                    .map(e -> e.getKey() + "=" + e.getValue())
-                    .collect(Collectors.joining(" "))
+                            .sorted(Comparators.byFunction(Map.Entry<String, String>::getKey))
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .collect(Collectors.joining(" "))
                     + ")");
         }
         if (!correctionMode) {
@@ -331,9 +330,8 @@ public class GoalLearner {
             l.add(Action.parse(kitToCheckString));
         }
         l.add(Action.parse("(check-kits)"));
-        if (!correctionMode) {
-            l.add(Action.parse("(clear-kits-to-check)"));
-        }
+        l.add(Action.parse("(look-for-parts 2)"));
+        l.add(Action.parse("(clear-kits-to-check)"));
         l.add(Action.parse("(end-program)"));
         if (null != allEmptyA && allEmptyA.length > 0) {
             allEmptyA[0] = allEmpty;
