@@ -1191,6 +1191,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
         }
+
+        @Override
+        public String toString() {
+            return "GenerateParams{" + "actions=" + actions + ",\n startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n\n  replan=" + replan + ",\n optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n newItems=" + newItems + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
+        }
+        
+        
     }
 
     private boolean manualAction;
@@ -1576,13 +1583,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                        }
 //                    }
 //                    break;
-
                     case CLEAR_KITS_TO_CHECK:
-                        clearKitsToCheck(action, cmds);
+                        clearKitsToCheck(action, cmds, gparams);
                         break;
 
                     case ADD_KIT_TO_CHECK:
-                        addKitToCheck(action, cmds);
+                        addKitToCheck(action, cmds, gparams);
                         break;
 
                     case SET_CORRECTION_MODE:
@@ -2007,13 +2013,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2037,15 +2043,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2172,13 +2178,27 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return actions;
     }
 
+    @Nullable
+    private volatile GenerateParams lastClearKitsToCheckGenerateParams = null;
+    private volatile int lastClearKitsToCheckGenerateParamsIndex = -1;
+
     @SuppressWarnings("unused")
-    private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds)
+    private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams)
             throws InterruptedException, IOException, ExecutionException {
+
         if (!kitsToCheck.isEmpty()) {
             if (!recheckKitsOnly()) {
+                System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
+                System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
+                System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
+                System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
+                System.err.println("kitsToCheck = " + kitsToCheck);
+                lastClearKitsToCheckGenerateParams = gparams;
+                lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
                 throw new IllegalStateException("clearing kits to check that do not recheck");
             }
+            lastClearKitsToCheckGenerateParams = gparams;
+            lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
             kitsToCheck.clear();
         }
     }
@@ -2211,14 +2231,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMarkerCommand(cmds, "clearWayToHolder" + holder, x -> clearWayToHolder(holder));
     }
 
-    @SuppressWarnings("unused")
-    private void addKitToCheck(Action action, List<MiddleCommandType> cmds) {
+    @Nullable
+    private volatile GenerateParams lastAddKitToCheckGenerateParams = null;
+    private volatile int lastAddKitToCheckGenerateIndex = -1;
 
+    @SuppressWarnings("unused")
+    private void addKitToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams) {
+
+        lastAddKitToCheckGenerateParams = gparams;
+        lastAddKitToCheckGenerateIndex = getLastIndex();
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2305,11 +2331,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         Set<String> matchedKitInstanceNames = new HashSet<>();
         List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
-        if (!kitsToFix.isEmpty()) {
+        boolean empty = kitsToFix.isEmpty();
+        if (!empty) {
             System.out.println("kitsToFix = " + kitsToFix);
             for (KitToCheck kit : kitsToFix) {
                 Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
-                for(Entry<String,KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
+                for (Entry<String, KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
                     KitToCheckInstanceInfo info = entry.getValue();
                     System.out.println("info.failedAbsSlotPrpName = " + info.failedAbsSlotPrpName);
                     System.out.println("info.failedItemSkuName = " + info.failedItemSkuName);
@@ -2318,7 +2345,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
         }
-        return kitsToFix.isEmpty();
+        return empty;
     }
 
     @SuppressWarnings("unused")
@@ -2347,9 +2374,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             List<String> partsFullNames
                     = parts
-                            .stream()
-                            .map(PhysicalItem::getFullName)
-                            .collect(Collectors.toList());
+                    .stream()
+                    .map(PhysicalItem::getFullName)
+                    .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
@@ -2471,7 +2498,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                                 name2 -> name2.contains(finalShortSkuName));
                                                 logError("recalcPartNames = " + recalcPartNames);
                                                 throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
-                                                        +", absSlotPrpName="+absSlotPrpName
+                                                        + ", absSlotPrpName=" + absSlotPrpName
                                                         + ", slotItemSkuName=" + slotItemSkuName
                                                         + ", itemSkuName=" + itemSkuName);
                                             }
@@ -2556,7 +2583,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                                 case PLACE_PART:
                                     String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                    placePartBySlotName(slotName, cmds, correctiveAction,action,startingGetLastIndex);  //ByName(slotName, null, cmds);
+                                    placePartBySlotName(slotName, cmds, correctiveAction, action, startingGetLastIndex);  //ByName(slotName, null, cmds);
                                     break;
                             }
                         }
@@ -2587,7 +2614,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return newItems;
     }
 
-    @Nullable private volatile List<KitToCheck> lastKitsToCheckCopy = null;
+    @Nullable
+    private volatile List<KitToCheck> lastKitsToCheckCopy = null;
 
     private List<KitToCheck> scanKitsToCheck(boolean newCheck, Map<String, List<Slot>> kitInstanceAbsSlotMap, Set<String> matchedKitInstanceNames, List<PhysicalItem> parts) throws IOException {
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
@@ -2602,8 +2630,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         List<KitToCheck> kitsToCheckCopy;
         if (newCheck) {
             kitsToCheckCopy = new ArrayList<>(kitsToFix);
-            lastKitsToCheckCopy  = kitsToCheckCopy;
-        } else if(lastKitsToCheckCopy != null) {
+            lastKitsToCheckCopy = kitsToCheckCopy;
+        } else if (lastKitsToCheckCopy != null) {
             kitsToCheckCopy = lastKitsToCheckCopy;
         } else {
             throw new IllegalStateException("no lastKitsToCheckCopy to reuse");
@@ -2675,7 +2703,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                .sorted()
 //                .collect(Collectors.toList());
 //    }
-
     private void printLastOptoInfo() {
         try {
             if (null != lastSkippedPddlActionsList) {
@@ -3463,7 +3490,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            correctPartsTray = null;
 //        }
 //    }
-
     private double getVisionToDBRotationOffset() {
         assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
         return this.aprsSystem.getVisionToDBRotationOffset();
@@ -5974,7 +6000,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private CrclCommandWrapper wrapper = null;
         private final int startSafeAbortRequestCount;
 
-        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount,Action parentAction, int parentActionIndex) {
+        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, Action parentAction, int parentActionIndex) {
             this.action = action;
             this.pddlActionIndex = pddlActionIndex;
             this.outIndex = outIndex;
@@ -6095,7 +6121,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action) throws IllegalStateException, SQLException {
         placePartBySlotName(slotName, out, action, null, -1);
     }
-    
+
     private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action, Action parentAction, int parentActionIndex) throws IllegalStateException, SQLException {
         PoseType pose = getPose(slotName);
         if (null != pose) {
@@ -6118,7 +6144,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,parentAction,parentActionIndex);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
                                 addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -6135,7 +6161,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         placePartByPose(out, pose);
-        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,parentAction,parentActionIndex);
+        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
                     addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -6181,7 +6207,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
 //                }));
 //    }
-
     @Nullable
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
