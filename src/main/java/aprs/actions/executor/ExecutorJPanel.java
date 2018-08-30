@@ -688,8 +688,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Action parentAction = ppi.getParentAction();
             if(null != parentAction && parentAction.getType() == CHECK_KITS) {
                 setReplanFromIndex(ppi.getParentActionIndex(), true);
+            } else {
+                setReplanFromIndex(ppi.getPddlActionIndex() + 1, true);
             }
-            setReplanFromIndex(ppi.getPddlActionIndex() + 1, true);
         }
     }
 
