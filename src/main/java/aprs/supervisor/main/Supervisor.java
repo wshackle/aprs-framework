@@ -2269,8 +2269,12 @@ public class Supervisor {
             lastSafeAbortAllFuture = null;
         }
         if (null != lastSafeAbortAllFuture2) {
-            lastSafeAbortAllFuture2.cancelAll(true);
+            XFutureVoid xfv = lastSafeAbortAllFuture2;
+            if(xfv == mainFuture) {
+                mainFuture = null;
+            }
             lastSafeAbortAllFuture2 = null;
+            xfv.cancelAll(true);
         }
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
@@ -2379,12 +2383,14 @@ public class Supervisor {
             lastFutureReturned = null;
         }
         if (null != lastSafeAbortAllFuture) {
-            lastSafeAbortAllFuture.cancelAll(true);
+            XFutureVoid xfv = lastSafeAbortAllFuture;
             lastSafeAbortAllFuture = null;
+            xfv.cancelAll(true);
         }
         if (null != lastSafeAbortAllFuture2) {
-            lastSafeAbortAllFuture2.cancelAll(true);
+            XFutureVoid xfv = lastSafeAbortAllFuture2;
             lastSafeAbortAllFuture2 = null;
+            xfv.cancelAll(true);
         }
         XFutureVoid xf = togglesAllowedXfuture.getAndSet(null);
         if (null != xf) {
@@ -2586,6 +2592,11 @@ public class Supervisor {
             }
         }
         if (null != mainFuture) {
+            XFuture<?> xf = mainFuture;
+            mainFuture = null;
+            if (xf == lastSafeAbortAllFuture2) {
+                lastSafeAbortAllFuture2 = null;
+            }
             mainFuture.cancelAll(true);
         }
         if (null != randomTestFuture) {
@@ -3169,7 +3180,7 @@ public class Supervisor {
             }
             if (useTeachCameraSelected && !object2DOuterJPanel1.isUserMouseDown()) {
                 List<PhysicalItem> startingItems = object2DOuterJPanel1.getItems();
-                if(null != startingItems) {
+                if (null != startingItems) {
                     submitTeachItems(startingItems);
                 }
             }
@@ -3179,7 +3190,7 @@ public class Supervisor {
             return future;
         }
 
-        @SuppressWarnings({"initialization","nullness"})
+        @SuppressWarnings({"initialization", "nullness"})
         private final Consumer<List<PhysicalItem>> teachItemsConsumer = this::submitTeachItems;
 
         private void submitTeachItems(@Nullable List<PhysicalItem> teachItems) {
@@ -3187,13 +3198,13 @@ public class Supervisor {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 return;
             }
-            if (closedSupplier.get()) {
+            if (closedSupplier.get() || abortCount.get() != startingAbortCount) {
                 futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
                 return;
             }
-            if(null == teachItems) {
+            if (null == teachItems) {
                 return;
             }
             List<PhysicalItem> nonNullTeachItems = teachItems;
@@ -3206,7 +3217,7 @@ public class Supervisor {
             if (futureCompleted) {
                 return;
             }
-            if (closedSupplier.get()) {
+            if (closedSupplier.get() || abortCount.get() != startingAbortCount) {
                 futureCompleted = true;
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 future.cancelAll(false);
