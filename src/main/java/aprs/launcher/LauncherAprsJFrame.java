@@ -451,6 +451,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             supervisor.setVisible(true);
             if (null == args || args.length < 1) {
                 supervisor.browseOpenSetup();
+                supervisor.browseOpenAll();
                 completeOpenSupevisor(supervisor);
             } else {
                 supervisor.loadSetupFile(new File(args[0]))

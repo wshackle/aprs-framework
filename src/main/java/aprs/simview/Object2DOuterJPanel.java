@@ -138,6 +138,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (setItemsListeners.isEmpty()) {
             return;
         }
+        if (captured_item_index > 0) {
+            return;
+        }
+        if (null != draggedItem) {
+            return;
+        }
+        if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
+            return;
+        }
         long startTime = System.currentTimeMillis();
         int c = notifyItemsTableCount.incrementAndGet();
         List<Consumer<List<PhysicalItem>>> notifyList
@@ -370,6 +379,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItemsInternal(items);
             settingItems = false;
         });
+        if (captured_item_index > 0) {
+            return;
+        }
+        if (null != draggedItem) {
+            return;
+        }
+        if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
+            return;
+        }
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
             if (null != srv && !pauseCachedCheckBox.isSelected()) {
@@ -1928,6 +1946,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (forceOutputFlag) {
             return;
         }
+        if (captured_item_index > 0) {
+            return;
+        }
+        if (null != draggedItem) {
+            return;
+        }
+        if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
+            return;
+        }
         VisionSocketServer srv = this.visionSocketServer;
         if (null == srv) {
             throw new IllegalStateException("visionSocketServer is null");
@@ -2113,7 +2140,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
                 List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
                 this.draggedItemsList = newDragItems;
-            } else if ( !"P".equals(closestItem.getType())) {
+            } else if (!"P".equals(closestItem.getType())) {
                 System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
                 draggedItem = null;
                 this.draggedItemsList = null;

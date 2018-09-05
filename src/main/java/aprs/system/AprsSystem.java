@@ -5879,12 +5879,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
         List<StackTraceElement[]> loadPropertiesTracesCopy
                 = new ArrayList<>(loadPropertiesTraces);
-        if (loadPropertiesTracesCopy.size() > 1) {
-            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
-                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
-            }
-            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
-        }
+//        if (loadPropertiesTracesCopy.size() > 1) {
+//            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
+//                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
+//            }
+//            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
+//        }
         loadPropertiesTraces.add(Thread.currentThread().getStackTrace());
         IOException exA[] = new IOException[1];
         try {
@@ -5911,12 +5911,12 @@ public class AprsSystem implements SlotOffsetProvider {
     private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
         List<StackTraceElement[]> loadPropertiesTracesCopy
                 = new ArrayList<>(loadPropertiesOnDisplayTraces);
-        if (loadPropertiesTracesCopy.size() > 1) {
-            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
-                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
-            }
-            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
-        }
+//        if (loadPropertiesTracesCopy.size() > 1) {
+//            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
+//                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
+//            }
+//            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
+//        }
         loadPropertiesOnDisplayTraces.add(Thread.currentThread().getStackTrace());
         try {
             List<XFuture<?>> futures = new ArrayList<>();

@@ -66,4 +66,6 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
     
     public XFutureVoid connectVision();
+    
+    public void updatePerformanceLine();
 }

@@ -60,6 +60,11 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
     }
 
     @Override
+    public void updatePerformanceLine() {
+        visionToDBJPanel.updatePerformanceLine();
+    }
+    
+    @Override
     public XFutureVoid connectVision() {
         return visionToDBJPanel.connectVision();
     }

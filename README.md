@@ -75,20 +75,25 @@ downloaded by going to
 1.  Go to https://neo4j.com/
 2.  Follow "Download" link on the top-right
 3.  Follow "Other releases" link to https://neo4j.com/download/other-releases/
-4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column in the center at the bottom
+4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column/tab in the center at the bottom
 of the page with the latest 2.3.?? version. Using the tar or zip file will make it
 easier to setup multiple instances. 
+
+  (These were the links on 9/4/2018. )
+  https://go.neo4j.com/download-thanks.html?edition=community&release=2.3.12&flavour=unix&_ga=2.168339553.1327877516.1536067407-1405908250.1536067407
+  https://go.neo4j.com/download-thanks.html?edition=community&release=2.3.12&flavour=winzip&_ga=2.235439297.1327877516.1536067407-1405908250.1536067407
+
 5.  Extract the tar or zip into two separate directories. (One for Motoman, and one for Fanuc or their simulations)
 
         mkdir motoman-neo4j-database
         cd motoman-neo4j-database/
-        tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz 
+        tar -xzf ~/Downloads/neo4j-community-2.3.12-unix.tar.gz 
         cd ..
         mkdir fanuc-neo4j-database
         cd fanuc-neo4j-database/
-        tar -xzf ~/Downloads/neo4j-community-2.3.11-unix.tar.gz 
+        tar -xzf ~/Downloads/neo4j-community-2.3.12-unix.tar.gz 
 
-6.  Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
+6.  Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
     
     Replace
 
@@ -138,22 +143,23 @@ easier to setup multiple instances.
 9.  Extract the data from the zip file into the fanuc data directory
 
     
-    cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/data
-    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip 
+    cd ~/fanuc-neo4j-database/neo4j-community-2.3.12/data
+    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-04-august-2017.zip 
 
 
 10.  Extract the data from the zip file into the motoman data directory
 
     
-    cd ~/motoman-neo4j-database/neo4j-community-2.3.11/data
-    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-28-feb-2017.zip 
+    cd ~/motoman-neo4j-database/neo4j-community-2.3.12/data
+    unzip ~/aprs-framework/neo4j-database-backup/motomanworkcell-04-august-2017.zip
+
 
 11. Start the fanuc database.
 
     On Linux 
 
 
-         cd ~/fanuc-neo4j-database/neo4j-community-2.3.11/
+         cd ~/fanuc-neo4j-database/neo4j-community-2.3.12/
          bin/neo4j start
 
     On  Windows
@@ -170,7 +176,7 @@ easier to setup multiple instances.
     On Linux
 
 
-         cd ~/motoman-neo4j-database/neo4j-community-2.3.11/
+         cd ~/motoman-neo4j-database/neo4j-community-2.3.12/
          bin/neo4j start
 
     On  Windows

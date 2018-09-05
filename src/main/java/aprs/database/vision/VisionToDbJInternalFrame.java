@@ -332,4 +332,9 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public Map<String, UpdateResults> getUpdatesResultMap() {
         return visionToDBJPanel.getUpdatesResultMap();
     }
+
+    @Override
+    public void updatePerformanceLine() {
+        visionToDBJPanel.updatePerformanceLine();
+    }
 }

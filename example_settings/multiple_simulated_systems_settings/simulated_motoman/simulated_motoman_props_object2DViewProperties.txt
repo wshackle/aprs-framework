@@ -1,7 +1,7 @@
 #  Automatically saved 
 --visionhost=agility
 --visionport=4001
-addPosNoise=true
+addPosNoise=false
 alternativeRotation=180.00
 autoscale=false
 connected=true
@@ -21,7 +21,7 @@ shuffleSimulatedUpdates=true
 simRefreshMillis=500
 simulated=true
 simulatedDropRate=0.000
-simulationUpdateAsNeeded=false
+simulationUpdateAsNeeded=true
 tools=true
 trackcurrentpos=true
 viewDetails=false
