@@ -1718,6 +1718,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 }
             }
             if (!edu) {
+                if(null != displayInterface) {
+                    displayInterface.updatePerformanceLine();
+                }
                 return returnedList;
             }
             long t1_nanos = System.nanoTime();

@@ -1322,7 +1322,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
     }
-    @MonotonicNonNull private Map<String, Boolean> robotEnableMap;
+    @MonotonicNonNull
+    private Map<String, Boolean> robotEnableMap;
 
     @Nullable
     public Map<String, Boolean> getRobotEnableMap() {
@@ -1409,6 +1410,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemSavePosMaps = new javax.swing.JMenuItem();
         jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
         jMenuItemSaveAll = new javax.swing.JMenuItem();
+        jMenuItemOpenAll = new javax.swing.JMenuItem();
         jMenuActions = new javax.swing.JMenu();
         jMenuItemStartAll = new javax.swing.JMenuItem();
         jMenuItemSafeAbortAll = new javax.swing.JMenuItem();
@@ -2094,6 +2096,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuFile.add(jMenuItemSaveAll);
+
+        jMenuItemOpenAll.setText("Open All ... ");
+        jMenuItemOpenAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemOpenAllActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemOpenAll);
 
         jMenuBar1.add(jMenuFile);
 
@@ -3539,6 +3549,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemSaveAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAllActionPerformed
+        saveAll();
+    }//GEN-LAST:event_jMenuItemSaveAllActionPerformed
+
+    private void saveAll() throws IllegalStateException {
         try {
             if (null == supervisor) {
                 throw new IllegalStateException("null == supervisor");
@@ -3578,7 +3592,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
-    }//GEN-LAST:event_jMenuItemSaveAllActionPerformed
+    }
 
     @UIEffect
     private void jComboBoxTeachSystemViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxTeachSystemViewActionPerformed
@@ -3696,6 +3710,53 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         syncToolsFromRobots();
     }//GEN-LAST:event_jButtonSyncToolsFromRobotsActionPerformed
 
+    @UIEffect
+    private void jMenuItemOpenAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemOpenAllActionPerformed
+        openAll();
+    }//GEN-LAST:event_jMenuItemOpenAllActionPerformed
+
+    void openAll() throws IllegalStateException {
+        try {
+            if (null == supervisor) {
+                throw new IllegalStateException("null == supervisor");
+            }
+            Map<String, String> filesMapIn = new HashMap<>();
+            filesMapIn.put("Setup", supervisor.getSetupFilePathString());
+            filesMapIn.put("PosMap", supervisor.getPosMapFilePathString());
+            filesMapIn.put("SimTeach", supervisor.getSimTeachFilePathString());
+            filesMapIn.put("TeachProps", supervisor.getTeachPropsFilePathString());
+            filesMapIn.put("SharedTools", supervisor.getSharedToolsFilePathString());
+
+            Map<String, String> filesMapOut = MultiFileDialogJPanel.showMultiFileDialog(this, "Open All ...", true, filesMapIn);
+            if (null != filesMapOut) {
+                String setup = filesMapOut.get("Setup");
+                if (null != setup) {
+                    loadSetupFile(new File(setup));
+                }
+                String mapsFile = filesMapOut.get("PosMap");
+                if (null != mapsFile) {
+                    loadPositionMaps(new File(mapsFile));
+                }
+
+                String simTeach = filesMapOut.get("SimTeach");
+                if (null != simTeach) {
+                    loadSimTeach(new File(simTeach));
+                }
+
+                String teachProps = filesMapOut.get("TeachProps");
+                if (null != teachProps) {
+                    loadTeachProps(new File(teachProps));
+                }
+                String sharedTools = filesMapOut.get("SharedTools");
+                if (null != sharedTools) {
+                    loadSharedTools(new File(sharedTools));
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
     public void setShowFullScreenMessages(boolean showFullScreenMessages) {
         jCheckBoxMenuItemShowSplashMessages.setSelected(showFullScreenMessages);
     }
@@ -3775,7 +3836,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try (PrintStream ps = new PrintStream(baos)) {
+                try ( PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -4366,7 +4427,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void saveJTable(File f, JTable jtable, Iterable<Integer> columnIndexes) throws IOException {
         String headers[] = tableHeaders(jtable, columnIndexes);
         CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
             for (int i = 0; i < jtable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (Integer colIndex : columnIndexes) {
@@ -4404,7 +4465,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private void saveJTable(File f, JTable jtable, CSVFormat csvFormat) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
             for (int i = 0; i < jtable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < jtable.getColumnCount(); j++) {
@@ -4512,6 +4573,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.saveSimTeach(f);
     }
 
+    private void loadSimTeach(File f) throws IOException {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        supervisor.loadSimTeach(f);
+    }
+
     private void saveLastPosMapFile(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -4526,11 +4594,25 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.saveTeachProps(f);
     }
 
+    private XFutureVoid loadTeachProps(File f) throws IOException {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.loadTeachProps(f);
+    }
+
     private void saveSharedTools(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         supervisor.saveSharedTools(f);
+    }
+
+    private void loadSharedTools(File f) throws IOException {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        supervisor.loadSharedTools(f);
     }
 
     /**
@@ -5094,6 +5176,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
     private javax.swing.JMenuItem jMenuItemLoadSetup;
+    private javax.swing.JMenuItem jMenuItemOpenAll;
     private javax.swing.JMenuItem jMenuItemRandomTestReverseFirst;
     private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemResetAll;

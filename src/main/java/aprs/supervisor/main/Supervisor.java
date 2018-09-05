@@ -693,7 +693,7 @@ public class Supervisor {
      * @param f file to read
      * @throws IOException file can not be read
      */
-    private void loadSimTeachFile(File f) throws IOException {
+    public void loadSimTeachFile(File f) throws IOException {
         object2DOuterJPanel1.loadFile(f);
     }
 
@@ -2105,6 +2105,12 @@ public class Supervisor {
         }
     }
 
+    public void browseOpenAll() {
+        if(null != displayJFrame) {
+            displayJFrame.openAll();
+        }
+    }
+    
     /**
      * Add a system to show and update the tasks and robots tables.
      *
@@ -2159,9 +2165,9 @@ public class Supervisor {
         if (null != setupFile) {
             return setupFile.getCanonicalPath();
         }
-        File f = Supervisor.getLastSetupFile();
-        String dirName = getDirNameOrHome(f);
-        return canonicalPathOrBuildPath(f, dirName, "setup.txt");
+        File lastFile = Supervisor.getLastSetupFile();
+        String dirName = getDirNameOrHome(lastFile);
+        return canonicalPathOrBuildPath(lastFile, dirName, "setup.txt");
     }
 
     public String getPosMapFilePathString() throws IOException {
@@ -2597,7 +2603,7 @@ public class Supervisor {
             if (xf == lastSafeAbortAllFuture2) {
                 lastSafeAbortAllFuture2 = null;
             }
-            mainFuture.cancelAll(true);
+            xf.cancelAll(true);
         }
         if (null != randomTestFuture) {
             randomTestFuture.cancelAll(true);
@@ -5345,6 +5351,11 @@ public class Supervisor {
         saveLastSimTeachFile(f);
     }
 
+     void loadSimTeach(File f) throws IOException {
+        object2DOuterJPanel1.loadFile(f);
+        saveLastSimTeachFile(f);
+    }
+
     private void saveLastSimTeachFile(File f) throws IOException {
         lastSimTeachFile = f;
         savePathInLastFileFile(f, LAST_SIM_TEACH_FILE_FILE);
@@ -5364,6 +5375,13 @@ public class Supervisor {
         saveLastSharedToolsFile(f);
     }
 
+    
+    public void loadSharedTools(File f) throws IOException {
+        Utils.readCsvFileToTable(sharedToolCachedTable,f);
+        sharedToolsFile = f;
+        saveLastSharedToolsFile(f);
+    }
+    
     @Nullable
     private File lastPosMapFile = null;
 
@@ -5488,6 +5506,13 @@ public class Supervisor {
                 .thenRun(() -> saveLastTeachPropsFile(f));
     }
 
+    XFutureVoid loadTeachProps(File f) throws IOException {
+        object2DOuterJPanel1.setPropertiesFile(f);
+        return object2DOuterJPanel1.loadProperties()
+                .thenRun(() -> saveLastTeachPropsFile(f));
+    }
+
+    
     private final List<AprsSystem> aprsSystems = new ArrayList<>();
 
     /**

@@ -444,7 +444,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private java.sql.@MonotonicNonNull Connection dbConnection;
     private @MonotonicNonNull
     DbSetup dbSetup;
-    @SuppressWarnings("CanBeFinal")
+
     private boolean closeDbConnection = true;
     private @MonotonicNonNull
     QuerySet qs;
@@ -478,18 +478,47 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.pauseInsteadOfRecover = pauseInsteadOfRecover;
     }
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    static private class KitToCheckFailedItemInfo {
+
+        final private @Nullable
+        String failedAbsSlotPrpName;
+
+        final private @Nullable
+        String failedItemSkuName;
+
+        final private @Nullable
+        PhysicalItem failedClosestItem;
+
+        final private @Nullable
+        Slot failedAbsSlot;
+
+        private final double failedClosestItemDist;
+
+        public KitToCheckFailedItemInfo(String failedAbsSlotPrpName, String failedItemSkuName, PhysicalItem failedClosestItem, Slot failedAbsSlot, double failedClosestItemDist) {
+            this.failedAbsSlotPrpName = failedAbsSlotPrpName;
+            this.failedItemSkuName = failedItemSkuName;
+            this.failedClosestItem = failedClosestItem;
+            this.failedAbsSlot = failedAbsSlot;
+            this.failedClosestItemDist = failedClosestItemDist;
+        }
+
+        @Override
+        public String toString() {
+            return "KitToCheckFailedItemInfo{" + "failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", failedItemSkuName=" + failedItemSkuName + ", failedClosestItem=" + failedClosestItem + ", failedAbsSlot=" + failedAbsSlot + ", failedClosestItemDist=" + failedClosestItemDist + '}';
+        }
+
+    };
+
     static private class KitToCheckInstanceInfo {
 
         final String instanceName;
         final Map<String, PhysicalItem> closestItemMap;
+        final Map<String, String> closestItemNameMap;
         final List<Slot> absSlots;
         final Map<String, String> itemSkuMap;
 
-        private @Nullable
-        String failedAbsSlotPrpName;
-        private @Nullable
-        String failedItemSkuName;
+        final List<KitToCheckFailedItemInfo> failedItems;
+
         int failedSlots;
 
         int getFailedSlots() {
@@ -501,11 +530,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             this.absSlots = absSlots;
             closestItemMap = new HashMap<>();
             itemSkuMap = new HashMap<>();
+            closestItemNameMap = new HashMap<>();
+            failedItems = new ArrayList<>();
         }
 
         @Override
         public String toString() {
-            return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", failedItemSkuName=" + failedItemSkuName + '}';
+            return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", closestItemNameMap=" + closestItemNameMap + ", itemSkuMap=" + itemSkuMap + ", failedSlots=" + failedSlots + '}';
         }
 
     }
@@ -1196,8 +1227,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         public String toString() {
             return "GenerateParams{" + "actions=" + actions + ",\n startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n\n  replan=" + replan + ",\n optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n newItems=" + newItems + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
         }
-        
-        
+
     }
 
     private boolean manualAction;
@@ -1623,8 +1653,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
             if (null != gparams.newItems) {
-                System.err.println("newItems.size()=" + gparams.newItems.size());
-                System.err.println("newItems=");
+                System.err.println("gparams.newItems.size()=" + gparams.newItems.size());
+                System.err.println("gparams.newItems=" + gparams.newItems);
                 for (PhysicalItem newItem : gparams.newItems) {
                     System.err.println(newItem.getName() + " : " + newItem.x + "," + newItem.y);
                 }
@@ -2013,13 +2043,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2043,15 +2073,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                    .select(item -> item.getType().equals("ES")
+                            .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2243,8 +2273,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2333,14 +2363,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
         boolean empty = kitsToFix.isEmpty();
         if (!empty) {
-            System.out.println("kitsToFix = " + kitsToFix);
+            logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
+            logError("recheckKitsOnly: matchedKitInstanceNames = " + matchedKitInstanceNames);
+            logError("recheckKitsOnly: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
             for (KitToCheck kit : kitsToFix) {
                 Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
                 for (Entry<String, KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
                     KitToCheckInstanceInfo info = entry.getValue();
-                    System.out.println("info.failedAbsSlotPrpName = " + info.failedAbsSlotPrpName);
-                    System.out.println("info.failedItemSkuName = " + info.failedItemSkuName);
-                    System.out.println("info.failedSlots = " + info.failedSlots);
+                    for (KitToCheckFailedItemInfo failedItemInfo : info.failedItems) {
+                        logError("recheckKitsOnly: failedItemInfo = " + failedItemInfo);
+                        logError("recheckKitsOnly: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
+                        logError("recheckKitsOnly: failedItemInfo.failedItemSkuName = " + failedItemInfo.failedItemSkuName);
+                    }
+                    logError("recheckKitsOnly: info.failedSlots = " + info.failedSlots);
                 }
             }
             kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
@@ -2374,9 +2409,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             List<String> partsFullNames
                     = parts
-                    .stream()
-                    .map(PhysicalItem::getFullName)
-                    .collect(Collectors.toList());
+                            .stream()
+                            .map(PhysicalItem::getFullName)
+                            .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
@@ -2398,22 +2433,47 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     logDebug("kitsToFix = " + kitsToFix);
                     printLastOptoInfo();
                     if (pauseInsteadOfRecover && !aprsSystem.isCorrectionMode()) {
+                        StringBuilder errMsgSb = new StringBuilder();
+                        takeSimViewSnapshot("checkKitsFailed", newItems);
+                        String errMsgStart = aprsSystem.getRunName();
+                        errMsgSb.append(errMsgStart);
+                        logError("checkKits: errMsgStart=" + errMsgStart);
+                        logError("checkKits: newItems = " + newItems);
+                        logError("checkKits: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
+                        logError("checkKits: parts = " + parts);
+                        logError("checkKits: matchedKitInstanceNames = " + matchedKitInstanceNames);
+                        logError("checkKits: kitsToFix.size() = " + kitsToFix.size());
+                        logError("checkKits: kitsToFix = " + kitsToFix);
                         for (KitToCheck kit : kitsToFix) {
+                            logError("checkKits: kit = " + kit);
+                            logError("checkKits: kit.slotMap = " + kit.slotMap);
+                            String errMsgKitStart = " : " + kit.name + " needs ";
+                            errMsgSb.append(errMsgKitStart);
+                            logError("checkKits: errMsgKitStart=" + errMsgKitStart);
                             for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
-                                if (null != info.failedAbsSlotPrpName && null != info.failedItemSkuName) {
-                                    String errmsg = aprsSystem.getRunName() + " : " + kit.name + " needs " + kit.slotMap.get(info.failedAbsSlotPrpName) + " instead of " + info.failedItemSkuName + " in " + info.failedAbsSlotPrpName;
-                                    logger.log(Level.SEVERE, errmsg);
-//                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg); 
-                                    CRCLProgramType program = new CRCLProgramType();
-                                    program.setInitCanon(new InitCanonType());
-                                    program.setEndCanon(new EndCanonType());
-                                    program.getMiddleCommand().addAll(cmds);
-                                    aprsSystem.logCrclProgFile(program);
-                                    throw new IllegalStateException(errmsg);
+
+                                logError("checkKits: info = " + info);
+                                for (KitToCheckFailedItemInfo failedItemInfo : info.failedItems) {
+                                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " ";
+                                    errMsgSb.append(fiString);
+                                    logError("checkKits: failedItemInfo. = " + failedItemInfo);
+                                    logError("checkKits: failedItemInfo.failedClosestItem = " + failedItemInfo.failedClosestItem);
+                                    logError("checkKits: failedItemInfo.failedClosestItemDist = " + failedItemInfo.failedClosestItemDist);
+                                    logError("checkKits: failedItemInfo.failedAbsSlot = " + failedItemInfo.failedAbsSlot);
                                 }
+
+//                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg); 
                             }
                         }
-                        checkedPause();
+                        CRCLProgramType program = new CRCLProgramType();
+                        program.setInitCanon(new InitCanonType());
+                        program.setEndCanon(new EndCanonType());
+                        program.getMiddleCommand().addAll(cmds);
+                        aprsSystem.logCrclProgFile(program);
+                        String errMsg = errMsgSb.toString();
+                        aprsSystem.setTitleErrorString(errMsg);
+                        throw new IllegalStateException(errMsg);
+//                        checkedPause();
                     } else {
                         Map<String, Integer> prefixCountMap = new HashMap<>();
                         Map<String, List<String>> itemsNameMap = new HashMap<>();
@@ -2663,14 +2723,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         break;
                     }
                     info.closestItemMap.put(absSlotPrpName, closestItem);
+                    info.closestItemNameMap.put(absSlotPrpName, closestItem.getFullName());
                     String itemSkuName = "empty";
-                    if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
+                    double closestItemDist = closestItem.distFromXY(absSlot);
+                    if (closestItemDist < absSlot.getDiameter() / 2.0) {
                         itemSkuName = closestItem.origName;
                     }
                     info.itemSkuMap.put(absSlotPrpName, itemSkuName);
                     if (!Objects.equals(kit.slotMap.get(absSlotPrpName), itemSkuName)) {
-                        info.failedAbsSlotPrpName = absSlotPrpName;
-                        info.failedItemSkuName = itemSkuName;
+                        KitToCheckFailedItemInfo failedItemInfo
+                                = new KitToCheckFailedItemInfo(
+                                        absSlotPrpName,
+                                        itemSkuName,
+                                        closestItem,
+                                        absSlot,
+                                        closestItemDist);
+                        info.failedItems.add(failedItemInfo);
                         info.failedSlots++;
                         allSlotsCorrect = false;
                     }

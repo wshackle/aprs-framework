@@ -495,17 +495,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             .addComponent(jButtonDisconnectVision, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jTextFieldVisionPort)
                             .addComponent(jTextFieldVisionHost)))
-                    .addComponent(jTextFieldPerformance)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3))
-                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextFieldPerformance, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jCheckBoxAddRepeatCountsToDatabaseNames)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -2813,11 +2813,23 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 entry.getValue().getTotalUpdateCount(),});
         }
         resultsMap = _map;
+        updatePerformanceLine();
+    }
+
+    public void updatePerformanceLine() {
+        String dbPerf = "DB: NA";
         if (null != dpu && dpu.getTotalListUpdates() > 0) {
-            this.jTextFieldPerformance.setText("Avg update time:"
+            dbPerf = "DB: Avg="
                     + (dpu.getTotalUpdateTimeMillis() / dpu.getTotalListUpdates())
-                    + " ms, worst=" + dpu.getMaxUpdateTimeMillis() + " ms");
+                    + " ms, max=" + dpu.getMaxUpdateTimeMillis() + " ms";
         }
+        String clntPerf = " Input : NA";
+        if(null != visionClient) {
+            clntPerf = " Input : "
+                    + "count=" + visionClient.getLineCount() + ", "
+                    + "skipped=" + visionClient.getSkippedLineCount();
+        }
+        this.jTextFieldPerformance.setText(dbPerf+clntPerf);
     }
 
     @Override
