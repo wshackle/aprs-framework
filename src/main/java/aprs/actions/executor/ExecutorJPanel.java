@@ -4015,7 +4015,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
-            throw new RuntimeException(ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         } finally {
             doingActionsFinished.incrementAndGet();
         }

@@ -972,18 +972,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @return options
      */
-    @Nullable
     public Map<String, String> getOptions() {
-        return options;
+        if(options == null) {
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap(options);
     }
 
+    private volatile boolean settingsChecked = false;
     /**
      * Set the options with a name to value map.
      *
      * @param options new value of options map
      */
-    public void setOptions(Map<String, String> options) {
-        this.options = options;
+    public synchronized void setOptions(Map<String, String> options) {
+        this.options = new HashMap<>(options);
+        settingsChecked = false;
     }
 
     private volatile boolean toolHolderOperationEnabled = true;
@@ -1302,7 +1306,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
      */
-    private List<MiddleCommandType> generate(GenerateParams gparams)
+    private synchronized  List<MiddleCommandType> generate(GenerateParams gparams)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
 
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
@@ -1363,7 +1367,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         try {
 
-            this.options = gparams.options;
+            setOptions(gparams.options);
             final int currentCrclNumber = this.crclNumber.incrementAndGet();
 
             if (null == actionToCrclIndexes || actionToCrclIndexes.length != gparams.actions.size()) {
@@ -1659,7 +1663,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
             System.err.println();
-            throw new IllegalStateException(ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new IllegalStateException(ex);
+            }
         } finally {
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);
         }
@@ -1873,7 +1881,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         int rc = ropCount.incrementAndGet();
 //        logDebug("runOptaPlanner: rc = " + rc);
         long t0 = System.currentTimeMillis();
-        this.options = options1;
+        setOptions(options1);
         if (actions.size() < 1) {
             throw new IllegalArgumentException("actions.size() = " + actions.size() + ",rc=" + rc);
         }
@@ -4712,6 +4720,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void checkSettings() {
+        if(settingsChecked || options ==null) {
+            return;
+        }
+        settingsChecked = true;
         String rpyString = options.get("rpy");
         if (null != rpyString && rpyString.length() > 0) {
             try {
@@ -5027,6 +5039,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMessageCommand(cmds, message);
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
+        if(Math.abs(Math.abs(pose.getXAxis().getI()) -0.7) < 0.1 ) {
+            System.out.println("pose="+CRCLPosemath.poseToString(pose));
+        }
         if (!checkPose(pose)) {
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
         }
@@ -5983,7 +5998,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
                 int simViewPublishCountDiff = simViewPublishCount - startSimViewPublishCount;
                 System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
-
                 String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
                 System.err.println(errMsg);
                 throw new RuntimeException(errMsg);
