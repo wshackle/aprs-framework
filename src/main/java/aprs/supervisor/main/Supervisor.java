@@ -1189,7 +1189,18 @@ public class Supervisor {
     }
 
     XFutureVoid returnRobots(String comment) {
-        return returnRobots(returnRobotRunnable.getAndSet(null), comment);
+        try {
+            return returnRobots(returnRobotRunnable.getAndSet(null), comment);
+        } catch (Exception exception) {
+            logEventErr(exception.getMessage());
+            Logger.getLogger(Supervisor.class
+                    .getName()).log(Level.SEVERE, "", exception);
+            if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
+            }
+        }
     }
 
     public XFutureVoid returnRobotsDirect(String comment) {
@@ -1199,7 +1210,7 @@ public class Supervisor {
 
     private final AtomicInteger returnRobotsNumber = new AtomicInteger();
 
-    private XFutureVoid returnRobots(@Nullable NamedCallable<XFutureVoid> r, String comment) {
+    private XFutureVoid returnRobots(@Nullable NamedCallable<XFutureVoid> r, String comment) throws Exception {
         checkRobotsUniquePorts();
         this.stealingRobots = false;
         if (r != null) {
@@ -1208,12 +1219,13 @@ public class Supervisor {
             returnRobotsTime = System.currentTimeMillis();
             returnRobotsStackTrace = curThread.getStackTrace();
             String blockerName = "returnRobots" + returnRobotsNumber.incrementAndGet();
-            disallowToggles(blockerName, r.getSystems());
-            logEvent(r.getName() + ", comment=" + comment);
-
-            return XFuture.supplyAsync(r.getName(), r, XFuture::rethrow, supervisorExecutorService)
-                    .thenComposeToVoid(x -> x)
-                    .alwaysAsync(() -> allowToggles(blockerName), supervisorExecutorService);
+            try {
+                disallowToggles(blockerName, r.getSystems());
+                logEvent(r.getName() + ", comment=" + comment);
+                return r.call();
+            } finally {
+                allowToggles(blockerName);
+            }
         } else {
             logReturnRobotsNullRunnable(comment);
             return XFutureVoid.completedFuture();
@@ -1806,14 +1818,30 @@ public class Supervisor {
 
     private void checkRunningOrDoingActions(AprsSystem sys, int srn) throws IllegalStateException {
         if (sys.isRunningCrclProgram()) {
+            printSysDoingError(sys);
             String msg = sys.getTaskName() + " is running crcl program when trying to return robot" + " : srn=" + srn;
             logEvent(msg);
             throw new IllegalStateException(msg);
         }
         if (sys.isDoingActions()) {
+            printSysDoingError(sys);
             String msg = sys.getTaskName() + " is doing actions when trying to return robot" + " : srn=" + srn;
             logEvent(msg);
             throw new IllegalStateException(msg);
+        }
+    }
+
+    private void printSysDoingError(AprsSystem sys) {
+        System.out.println("sys = " + sys);
+        XFuture<Boolean> startFuture = sys.getLastStartActionsFuture();
+        System.err.println("sys.getLastStartActionsFuture() = " + startFuture);
+        if (null != startFuture && !startFuture.isDone()) {
+            System.err.println("startFuture.forExceptionString() = " + startFuture.forExceptionString());
+        }
+        XFuture<Boolean> continueFuture = sys.getContinueActionListFuture();
+        System.err.println("sys.getContinueActionListFuture() = " + continueFuture);
+        if (null != continueFuture && !continueFuture.isDone()) {
+            System.err.println("continueFuture.forExceptionString() = " + continueFuture.forExceptionString());
         }
     }
 
@@ -2106,11 +2134,11 @@ public class Supervisor {
     }
 
     public void browseOpenAll() {
-        if(null != displayJFrame) {
+        if (null != displayJFrame) {
             displayJFrame.openAll();
         }
     }
-    
+
     /**
      * Add a system to show and update the tasks and robots tables.
      *
@@ -2276,7 +2304,7 @@ public class Supervisor {
         }
         if (null != lastSafeAbortAllFuture2) {
             XFutureVoid xfv = lastSafeAbortAllFuture2;
-            if(xfv == mainFuture) {
+            if (xfv == mainFuture) {
                 mainFuture = null;
             }
             lastSafeAbortAllFuture2 = null;
@@ -4335,25 +4363,21 @@ public class Supervisor {
         XFutureVoid step1Future = updateRobotsTableFromMapsAndEnableAll();
         boolean KeepAndDisplayXFutureProfilesSelected = isKeepAndDisplayXFutureProfilesSelected();
         step1Future.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
-        XFutureVoid step2Future = step1Future
-                .thenRunAsync("sendEnableToColorTextSocket", () -> {
+        XFuture<Boolean> step2Future = step1Future
+                .thenComposeToVoid("startCheckAndEnableAllRobots.2", () -> {
                     try {
                         initColorTextSocket();
                         writeToColorTextSocket("0x00FF00, 0x00FF000\r\n".getBytes());
                     } catch (IOException ex) {
                         log(Level.SEVERE, "", ex);
                     }
-                }, supervisorExecutorService);
-        XFuture<Boolean> step3Future
-                = step2Future
-                .thenComposeToVoid(() -> {
                     cancelAllStealUnsteal(false);
                     XFutureVoid rrF = returnRobots("enableAndCheckAllRobots");
                     rrF.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
                     return rrF;
                 })
                 .thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService);
-        return step3Future
+        return step2Future
                 .alwaysAsync(() -> {
                     allowToggles(blockerName, sysArray);
                 }, supervisorExecutorService)
@@ -5348,7 +5372,7 @@ public class Supervisor {
         saveLastSimTeachFile(f);
     }
 
-     void loadSimTeach(File f) throws IOException {
+    void loadSimTeach(File f) throws IOException {
         object2DOuterJPanel1.loadFile(f);
         saveLastSimTeachFile(f);
     }
@@ -5372,13 +5396,12 @@ public class Supervisor {
         saveLastSharedToolsFile(f);
     }
 
-    
     public void loadSharedTools(File f) throws IOException {
-        Utils.readCsvFileToTable(sharedToolCachedTable,f);
+        Utils.readCsvFileToTable(sharedToolCachedTable, f);
         sharedToolsFile = f;
         saveLastSharedToolsFile(f);
     }
-    
+
     @Nullable
     private File lastPosMapFile = null;
 
@@ -5509,7 +5532,6 @@ public class Supervisor {
                 .thenRun(() -> saveLastTeachPropsFile(f));
     }
 
-    
     private final List<AprsSystem> aprsSystems = new ArrayList<>();
 
     /**
