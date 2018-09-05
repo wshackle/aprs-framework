@@ -817,10 +817,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             "PddlActionToCrclGenerator.handleDbConnect",
                             (java.sql.Connection c, Throwable ex) -> {
                                 if (null != c) {
-                                    Utils.runOnDispatchThread(() -> {
-                                        setDbConnection(c);
-                                        ret.complete(null);
-                                    });
+                                    setDbConnection(c);
+                                    ret.complete(null);
                                 }
                                 if (null != ex) {
                                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);

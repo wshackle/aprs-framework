@@ -732,7 +732,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             currentActionIndex = actionInfo.getActionIndex() + 1;
             updateSelectionInterval();
             if (null != aprsSystem) {
-                Utils.runOnDispatchThread(aprsSystem::updateTitle);
+                aprsSystem.updateTitle();
                 if (stepping) {
                     pause();
                 }

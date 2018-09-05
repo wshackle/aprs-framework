@@ -3470,12 +3470,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return null;
     }
 
-    /**
-     * Update the title based on the current state.
-     */
-    public void updateTitle() {
-        Utils.runOnDispatchThread(this::updateTitleOnDisplay);
-    }
 
     @Nullable
     private CommandStatusType getCommandStatus() {
@@ -3488,7 +3482,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return null;
     }
 
-    private void updateTitleOnDisplay() {
+    public void updateTitle() {
         if (null != crclClientJInternalFrame) {
             CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
                     .map(CRCLStatusType::getCommandStatus)
