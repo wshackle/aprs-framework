@@ -3482,9 +3482,6 @@ public class Supervisor {
 
     private XFutureVoid startRandomTestStep2() {
         int c = srts2Count.incrementAndGet();
-        if (c > 1) {
-            throw new IllegalStateException("c=" + c);
-        }
         logEvent("Start Random Test Step 2 :" + c);
         XFutureVoid f1;
         if (!isContinuousDemoRevFirstSelected()) {
