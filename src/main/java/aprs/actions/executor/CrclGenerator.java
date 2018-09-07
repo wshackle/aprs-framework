@@ -1419,6 +1419,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     addMessageCommand(cmds, "OptaPlanner: " + outputLabel + ", " + inputLabel);
                 }
             }
+            checkSettings();
             for (this.setLastActionsIndex(gparams.actions, gparams.startingIndex); getLastIndex() < gparams.actions.size(); incLastActionsIndex()) {
 
                 final int idx = getLastIndex();
@@ -2050,13 +2051,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2080,15 +2081,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(items)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2230,6 +2231,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
                 System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
                 System.err.println("kitsToCheck = " + kitsToCheck);
+                System.err.println("gparams = " + gparams);
+                System.out.println("getLastIndex() = " + getLastIndex());
                 lastClearKitsToCheckGenerateParams = gparams;
                 lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
                 throw new IllegalStateException("clearing kits to check that do not recheck");
@@ -2280,8 +2283,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2393,6 +2396,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @SuppressWarnings("unused")
     private void checkKits(Action action, List<MiddleCommandType> cmds)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
+        checkSettings();
         List<PhysicalItem> newItems = checkKitsNewItems("checkKits");
         assert (newItems != null) : "newItems == null : @AssumeAssertion(nullness)";
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
@@ -2416,9 +2420,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             List<String> partsFullNames
                     = parts
-                            .stream()
-                            .map(PhysicalItem::getFullName)
-                            .collect(Collectors.toList());
+                    .stream()
+                    .map(PhysicalItem::getFullName)
+                    .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
@@ -3983,6 +3987,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void takePartByName(String partName, @Nullable Action nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
+        checkSettings();
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
@@ -4382,11 +4387,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String lastPartTaken = getLastTakenPart();
         int lastIndex = getLastIndex();
         Action act = lastActionsList.get(lastIndex);
-        String imgLabel = "openGripper"+lastIndex+act.asPddlLine()+"partTaken="+lastPartTaken;
+        String imgLabel = "openGripper" + lastIndex + act.asPddlLine() + "partTaken=" + lastPartTaken;
         addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
-            
+
             if (af.isObjectViewSimulated()) {
                 double distToPart = af.getClosestRobotPartDistance();
                 if (distToPart < dropOffMin) {
@@ -4588,13 +4593,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
 
+        checkRobotPoseRotation(poseWithToolOffset, "poseWithToolOffset");
+
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
 
         addOpenGripper(cmds);
 
         checkSettings();
         PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
-
+        checkRobotPoseRotation(approachPose, "approachPose");
         lastTestApproachPose = null;
 
         PoseType takePose = CRCLPosemath.copy(poseWithToolOffset);
@@ -4654,6 +4661,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addSettleDwell(cmds);
         addSetFastSpeed(cmds);
         addMoveTo(cmds, approachPose, true, "takePartByPose.approachPose.return." + name);
+    }
+
+    private void checkRobotPoseRotation(PoseType approachPose, String poseName) throws IllegalStateException {
+        if ((Math.abs(Math.abs(approachPose.getXAxis().getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman"))
+                || (Math.abs(Math.abs(approachPose.getXAxis().getI()) - 1.0) < 0.1 && aprsSystem.getRobotName().contains("anuc"))) {
+            String errmsg = "aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
+                    + ", " + poseName + ".getXAxis()=" + CRCLPosemath.vectorToPmCartesian(approachPose.getXAxis())
+                    + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
+                    + ", options.get(\"rpy\")=" + options.get("rpy")
+                    + ", settingsChecked=" + settingsChecked;
+            aprsSystem.setTitleErrorString(errmsg);
+            checkedPause();
+            throw new IllegalStateException(errmsg);
+        }
     }
 
     /**
@@ -4750,6 +4771,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         throw new IllegalStateException("null == xAxisVector");
                     }
                     xAxis = xAxisVector;
+                    if ((Math.abs(Math.abs(xAxis.getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman"))
+                            || (Math.abs(Math.abs(xAxis.getI()) - 1.0) < 0.1 && aprsSystem.getRobotName().contains("anuc"))) {
+                        String errmsg = "aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
+                                + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
+                                + ", options.get(\"rpy\")=" + options.get("rpy")
+                                + ", settingsChecked=" + settingsChecked;
+                        aprsSystem.setTitleErrorString(errmsg);
+                        checkedPause();
+                        throw new IllegalStateException(errmsg);
+                    }
                     VectorType zAxisVector = pose.getZAxis();
                     if (null == zAxisVector) {
                         throw new IllegalStateException("null == zAxisVector");
@@ -5047,14 +5078,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMessageCommand(cmds, message);
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
-        if (Math.abs(Math.abs(pose.getXAxis().getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman")) {
-            throw new IllegalStateException("aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
-                    + ", pose.getXAxis()=" + CRCLPosemath.vectorToPmCartesian(pose.getXAxis())
-                    + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
-                    + ", options.get(\"rpy\")=" + options.get("rpy")
-                    + ", settingsChecked=" + settingsChecked
-            );
-        }
+        checkRobotPoseRotation(pose, "pose");
         if (!checkPose(pose)) {
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
         }

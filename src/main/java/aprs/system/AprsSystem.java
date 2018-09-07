@@ -730,6 +730,10 @@ public class AprsSystem implements SlotOffsetProvider {
         this.runName = ret;
         return ret;
     }
+    
+    public long getRunNumber() {
+        return runNumber.get();
+    }
 
     /**
      * Checks whether there is currently a CRCL program that is loaded but
