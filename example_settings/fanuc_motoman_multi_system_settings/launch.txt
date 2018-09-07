@@ -1,7 +1,7 @@
 #!killNeo4J
-#!waitfor Mounting static content at /browser
+#!waitfor Successfully started database
 ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
-#!waitfor Mounting static content at /browser
+#!waitfor Successfully started database
 ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
 #!stop
 #!killNeo4J
