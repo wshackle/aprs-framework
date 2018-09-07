@@ -973,13 +973,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @return options
      */
     public Map<String, String> getOptions() {
-        if(options == null) {
+        if (options == null) {
             return Collections.emptyMap();
         }
         return Collections.unmodifiableMap(options);
     }
 
     private volatile boolean settingsChecked = false;
+
     /**
      * Set the options with a name to value map.
      *
@@ -1306,7 +1307,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
      */
-    private synchronized  List<MiddleCommandType> generate(GenerateParams gparams)
+    private synchronized List<MiddleCommandType> generate(GenerateParams gparams)
             throws IllegalStateException, SQLException, InterruptedException, PendantClientInner.ConcurrentBlockProgramsException, ExecutionException, CRCLException, PmException {
 
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
@@ -1663,7 +1664,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
             System.err.println();
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new IllegalStateException(ex);
@@ -4378,18 +4379,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
+        String lastPartTaken = getLastTakenPart();
+        int lastIndex = getLastIndex();
+        Action act = lastActionsList.get(lastIndex);
+        String imgLabel = "openGripper"+lastIndex+act.asPddlLine()+"partTaken="+lastPartTaken;
         addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
+            
             if (af.isObjectViewSimulated()) {
                 double distToPart = af.getClosestRobotPartDistance();
                 if (distToPart < dropOffMin) {
+                    af.takeSnapshots(imgLabel);
                     String errString
-                            = "Can't take part when distance of " + distToPart + "  less than  " + dropOffMin;
+                            = "Can't take part when distance to another part of " + distToPart + "  less than  " + dropOffMin;
                     double recheckDistance = af.getClosestRobotPartDistance();
                     logDebug("recheckDistance = " + recheckDistance);
                     setTitleErrorString(errString);
                     checkedPause();
+                    throw new IllegalStateException(errString);
                 }
             }
         });
@@ -4720,7 +4728,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void checkSettings() {
-        if(settingsChecked || options ==null) {
+        if (settingsChecked || options == null) {
             return;
         }
         settingsChecked = true;
@@ -5039,8 +5047,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMessageCommand(cmds, message);
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
-        if(Math.abs(Math.abs(pose.getXAxis().getI()) -0.7) < 0.1 ) {
-            System.out.println("pose="+CRCLPosemath.poseToString(pose));
+        if (Math.abs(Math.abs(pose.getXAxis().getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman")) {
+            throw new IllegalStateException("aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
+                    + ", pose.getXAxis()=" + CRCLPosemath.vectorToPmCartesian(pose.getXAxis())
+                    + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
+                    + ", options.get(\"rpy\")=" + options.get("rpy")
+                    + ", settingsChecked=" + settingsChecked
+            );
         }
         if (!checkPose(pose)) {
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));

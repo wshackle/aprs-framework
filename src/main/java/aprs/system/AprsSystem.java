@@ -6807,9 +6807,6 @@ public class AprsSystem implements SlotOffsetProvider {
      * @throws IOException directory doesn't exist etc.
      */
     public File createTempFile(String prefix, String suffix) throws IOException {
-        if (suffix.endsWith(".PNG")) {
-            System.out.println("suffix = " + suffix);
-        }
         return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getLogDir());
     }
 

@@ -26,7 +26,6 @@ import aprs.launcher.LauncherAprsJFrame;
 import aprs.misc.Utils;
 import aprs.misc.MultiFileDialogJPanel;
 import static aprs.misc.Utils.runTimeToString;
-import static aprs.misc.Utils.tableHeaders;
 
 import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel;
 import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
@@ -37,6 +36,7 @@ import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapEntry;
 import aprs.launcher.ProcessLauncherJFrame;
 import aprs.misc.Utils.UiSupplier;
+import static aprs.misc.Utils.tableHeaders;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
@@ -127,6 +127,7 @@ import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -1054,13 +1055,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.printReturnRobotTraceInfo();
     }
 
-    private XFuture<@Nullable Void> returnRobots(String comment) {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.returnRobots(comment);
-    }
-
+//    private XFuture<@Nullable Void> returnRobots(String comment) {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        return supervisor.returnRobotsAsyncOnSupervisorExecutor(comment);
+//    }
     private @Nullable
     XFutureVoid getContinuousDemoFuture() {
         if (null != supervisor) {
@@ -1382,6 +1382,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxShowUnnamedFutures = new javax.swing.JCheckBox();
         jButtonFuturesCancelAll = new javax.swing.JButton();
         jCheckBoxFutureLongForm = new javax.swing.JCheckBox();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTextAreaFutureDetails = new javax.swing.JTextArea();
         jPanelEvents = new javax.swing.JPanel();
         jScrollPaneEventsTable = new javax.swing.JScrollPane();
         jTableEvents = new javax.swing.JTable();
@@ -1750,6 +1752,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         jTreeSelectedFuture.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        jTreeSelectedFuture.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                jTreeSelectedFutureValueChanged(evt);
+            }
+        });
         jScrollPaneTreeSelectedFuture.setViewportView(jTreeSelectedFuture);
 
         jCheckBoxUpdateFutureAutomatically.setText("Update Automatically");
@@ -1796,6 +1803,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
 
+        jTextAreaFutureDetails.setColumns(20);
+        jTextAreaFutureDetails.setRows(5);
+        jScrollPane3.setViewportView(jTextAreaFutureDetails);
+
         javax.swing.GroupLayout jPanelFutureLayout = new javax.swing.GroupLayout(jPanelFuture);
         jPanelFuture.setLayout(jPanelFutureLayout);
         jPanelFutureLayout.setHorizontalGroup(
@@ -1807,12 +1818,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 255, Short.MAX_VALUE)
                     .addComponent(jLabel3)
                     .addComponent(jScrollPaneListFuturesKey))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneTreeSelectedFuture)
-                    .addGroup(jPanelFutureLayout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelFutureLayout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jCheckBoxShowUnnamedFutures)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxShowDoneFutures)
@@ -1821,7 +1831,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
                         .addGap(91, 91, 91)
-                        .addComponent(jButtonFuturesCancelAll)))
+                        .addComponent(jButtonFuturesCancelAll))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelFutureLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 839, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane3))
                 .addContainerGap())
         );
         jPanelFutureLayout.setVerticalGroup(
@@ -1838,13 +1852,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jCheckBoxFutureLongForm))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE)
-                    .addGroup(jPanelFutureLayout.createSequentialGroup()
-                        .addComponent(jScrollPaneListFutures)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPaneListFuturesKey, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPaneTreeSelectedFuture)
+                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane3)
+                    .addComponent(jScrollPaneListFuturesKey, javax.swing.GroupLayout.DEFAULT_SIZE, 152, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -3715,6 +3730,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         openAll();
     }//GEN-LAST:event_jMenuItemOpenAllActionPerformed
 
+    private void jTreeSelectedFutureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_jTreeSelectedFutureValueChanged
+        TreePath path = evt.getNewLeadSelectionPath();
+        if (null != path) {
+            Object o = path.getLastPathComponent();
+
+            if (o instanceof DefaultMutableTreeNode) {
+                DefaultMutableTreeNode tn = (DefaultMutableTreeNode) o;
+                Object userObject = tn.getUserObject();
+                if (userObject instanceof XFuture) {
+                    XFuture<?> xf = (XFuture) userObject;
+                    String xffes = xf.forExceptionString();
+                    System.err.println(xffes);
+                    jTextAreaFutureDetails.setText(xffes);
+                }
+            }
+        }
+    }//GEN-LAST:event_jTreeSelectedFutureValueChanged
+
     void openAll() throws IllegalStateException {
         try {
             if (null == supervisor) {
@@ -3836,7 +3869,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try ( PrintStream ps = new PrintStream(baos)) {
+                try (PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -4427,7 +4460,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void saveJTable(File f, JTable jtable, Iterable<Integer> columnIndexes) throws IOException {
         String headers[] = tableHeaders(jtable, columnIndexes);
         CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
             for (int i = 0; i < jtable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (Integer colIndex : columnIndexes) {
@@ -4465,7 +4498,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private void saveJTable(File f, JTable jtable, CSVFormat csvFormat) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
             for (int i = 0; i < jtable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < jtable.getColumnCount(); j++) {
@@ -5206,6 +5239,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelTools;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPaneEventsTable;
     private javax.swing.JScrollPane jScrollPaneListFutures;
     private javax.swing.JScrollPane jScrollPaneListFuturesKey;
@@ -5220,6 +5254,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JTable jTableSelectedPosMapFile;
     private javax.swing.JTable jTableSharedTools;
     private javax.swing.JTable jTableTasks;
+    private javax.swing.JTextArea jTextAreaFutureDetails;
     private javax.swing.JTextField jTextFieldEventsMax;
     private javax.swing.JTextField jTextFieldRobotEnableToggleBlockers;
     private javax.swing.JTextField jTextFieldRunningTime;
