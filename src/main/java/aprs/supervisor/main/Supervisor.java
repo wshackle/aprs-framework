@@ -1631,6 +1631,7 @@ public class Supervisor {
         stealingRobots = true;
         logEvent("Starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFor);
         logEvent("    and starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFrom);
+        int startingStealRobotsInternalAbortCount = abortCount.get();
         stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
                 stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
                 .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
@@ -1684,6 +1685,13 @@ public class Supervisor {
                     }
 
                     logEvent("Continue actions after switch for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
+                    int curAbortCount = abortCount.get();
+                    if(curAbortCount != startingStealRobotsInternalAbortCount) {
+                        logEvent("curAbortCount="+curAbortCount+", startingStealRobotsInternalAbortCount="+startingStealRobotsInternalAbortCount);
+                        XFuture<Boolean> xfb = new XFuture<>("abortedSteal");
+                        xfb.cancelAll(false);
+                        return xfb;
+                    }
                     return stealFor.continueActionList("stealFor.continueAfterSwitch" + " : srn=" + srn)
                             .thenComposeAsync(x4 -> {
                                 logEvent("continueAfterSwitch " + stealFor.getRunName() + " completed action list after robot switch " + x4 + " : srn=" + srn);
@@ -1731,6 +1739,13 @@ public class Supervisor {
                         supervisorExecutorService)
                 .thenComposeToVoid("continueAfterReturn" + " : srn=" + srn, x -> {
                     logEvent("Continue actions for " + stealFor.getTaskName() + " with " + stealFor.getRobotName() + " : srn=" + srn);
+                    int curAbortCount = abortCount.get();
+                    if(curAbortCount != startingStealRobotsInternalAbortCount) {
+                        logEvent("curAbortCount="+curAbortCount+", startingStealRobotsInternalAbortCount="+startingStealRobotsInternalAbortCount);
+                        XFutureVoid xfv = new XFutureVoid("abortedSteal");
+                        xfv.cancelAll(false);
+                        return xfv;
+                    }
                     return stealFrom.continueActionList("stealFrom.continueAfterReturn" + " : srn=" + srn)
                             .thenComposeAsync((Boolean x5) -> {
                                 logEvent("stealFrom.continueAfterReturn " + stealFrom.getRunName() + " completed action list after return " + x5 + " : srn=" + srn);
