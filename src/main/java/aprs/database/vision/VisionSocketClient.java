@@ -447,6 +447,68 @@ public class VisionSocketClient implements AutoCloseable {
         this.zeroRotations = zeroRotations;
     }
 
+    private boolean updateListenersOnIgnoredLine = false;
+
+    /**
+     * Get the value of updateListenersOnIgnoredLine
+     *
+     * @return the value of updateListenersOnIgnoredLine
+     */
+    public boolean isUpdateListenersOnIgnoredLine() {
+        return updateListenersOnIgnoredLine;
+    }
+
+    /**
+     * Set the value of updateListenersOnIgnoredLine
+     *
+     * @param updateListenersOnIgnoredLine new value of
+     * updateListenersOnIgnoredLine
+     */
+    public void setUpdateListenersOnIgnoredLine(boolean updateListenersOnIgnoredLine) {
+        this.updateListenersOnIgnoredLine = updateListenersOnIgnoredLine;
+    }
+
+    private int prevListSizeDecrementInterval = 6000;
+
+    /**
+     * Get the value of prevListSizeDecrementInterval
+     *
+     * @return the value of prevListSizeDecrementInterval
+     */
+    public int getPrevListSizeDecrementInterval() {
+        return prevListSizeDecrementInterval;
+    }
+
+    /**
+     * Set the value of prevListSizeDecrementInterval
+     *
+     * @param prevListSizeDecrementInterval new value of
+     * prevListSizeDecrementInterval
+     */
+    public void setPrevListSizeDecrementInterval(int prevListSizeDecrementInterval) {
+        this.prevListSizeDecrementInterval = prevListSizeDecrementInterval;
+    }
+
+    private boolean ignoreLosingItemsLists = true;
+
+    /**
+     * Get the value of ignoreLosingItemsLists
+     *
+     * @return the value of ignoreLosingItemsLists
+     */
+    public boolean isIgnoreLosingItemsLists() {
+        return ignoreLosingItemsLists;
+    }
+
+    /**
+     * Set the value of ignoreLosingItemsLists
+     *
+     * @param ignoreLosingItemsLists new value of ignoreLosingItemsLists
+     */
+    public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
+        this.ignoreLosingItemsLists = ignoreLosingItemsLists;
+    }
+
     public void parseVisionLine(final String line) {
         try {
             long t0 = System.nanoTime();
@@ -456,15 +518,18 @@ public class VisionSocketClient implements AutoCloseable {
                 visionList = new ArrayList<>();
             }
             List<PhysicalItem> newVisionList = lineToList(line, displayInterface, convertRotToRadians, zeroRotations);
-            if (null == newVisionList || newVisionList.size() < prevVisionListSize) {
+            if (null == newVisionList || (newVisionList.size() < prevVisionListSize && ignoreLosingItemsLists)) {
                 this.lastIgnoredVisionList = newVisionList;
                 ignoreCount++;
                 consecutiveIgnoreCount++;
                 if (consecutiveIgnoreCount > 2
                         && consecutiveIgnoreCount % 3 == 0
-                        && System.currentTimeMillis() - prevListSizeSetTime > 60000) {
+                        && System.currentTimeMillis() - prevListSizeSetTime > prevListSizeDecrementInterval) {
                     prevVisionListSize--;
                     prevListSizeSetTime = System.currentTimeMillis();
+                }
+                if (updateListenersOnIgnoredLine) {
+                    updateListeners();
                 }
                 return;
             }
