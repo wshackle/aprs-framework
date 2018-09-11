@@ -83,6 +83,9 @@ import crcl.ui.XFutureVoid;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import static java.lang.Double.parseDouble;
+import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 import java.util.Collection;
 import java.util.Enumeration;
 import static java.util.Objects.requireNonNull;
@@ -408,7 +411,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void setItemsInternal(List<PhysicalItem> items) {
         if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
-            object2DJPanel1.setRotationOffset(aprsSystem.getVisionToDBRotationOffset());
+            double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
+            if (Math.abs(object2DJPanel1.getRotationOffset() - visionToDBRotationOffset) > 0.001) {
+                jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(visionToDBRotationOffset)));
+            }
+            object2DJPanel1.setRotationOffset(visionToDBRotationOffset);
         }
         object2DJPanel1.setItems(items);
         updateItemsTableOnDisplay(items);
@@ -515,7 +522,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 String name = (String) nameObject;
                 double x = (double) xObject;
                 double y = (double) yObject;
-                double rot = Math.toRadians((double) rotObject);
+                double rot = toRadians((double) rotObject);
                 if (null != slotOffsetProvider) {
                     Tray trayItem = new Tray(name, rot, x, y);
                     List<Slot> l = slotOffsetProvider.getSlotOffsets(name, true);
@@ -571,7 +578,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
             PhysicalItem item = items.get(i);
-            Object rowObjects[] = new Object[]{i, item.getName(), item.x, item.y, Math.toDegrees(item.getRotation()), item.getType(), item.getScore()};
+            Object rowObjects[] = new Object[]{i, item.getName(), item.x, item.y, toDegrees(item.getRotation()), item.getType(), item.getScore()};
             model.addRow(rowObjects);
         }
         autoResizeTableColWidths(jtable);
@@ -638,7 +645,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         autoscaleCachedCheckBox = new CachedCheckBox(jCheckBoxAutoscale);
         pickupDistCachedTextField = new CachedTextField(jTextFieldPickupDist);
         dropOffThresholdCachedTextField = new CachedTextField(jTextFieldDropOffThreshold);
-
+        jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(object2DJPanel1.getRotationOffset())));
     }
 
     private final TableModelListener itemsTableModelListener = new TableModelListener() {
@@ -722,11 +729,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             double score = scoreValue;
                             item = newPhysicalItemNameRotXYScoreType(name, rotation, x, y, score, type);
                         }
-                        item.x = Double.parseDouble(xValue.toString());
-                        item.y = Double.parseDouble(yValue.toString());
-                        item.setRotation(Math.toRadians(rotationValue));
+                        item.x = parseDouble(xValue.toString());
+                        item.y = parseDouble(yValue.toString());
+                        item.setRotation(toRadians(rotationValue));
                         item.setType(Objects.toString(valueAtI5));
-                        item.setScore(Double.parseDouble(scoreValue.toString()));
+                        item.setScore(parseDouble(scoreValue.toString()));
                         while (l.size() < listIndex) {
                             l.add(new Part("placeHolder" + l.size()));
                         }
@@ -862,11 +869,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jCheckBoxPause = new javax.swing.JCheckBox();
         jButtonRefresh = new javax.swing.JButton();
-        jLabel11 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextAreaConnectDetails = new javax.swing.JTextArea();
         jLabel12 = new javax.swing.JLabel();
         jComboBoxHandleRotationsEnum = new javax.swing.JComboBox<>();
+        jLabel13 = new javax.swing.JLabel();
+        jTextFieldRotationOffset = new javax.swing.JTextField();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -1188,8 +1196,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
-        jLabel11.setText("Details:");
-
         jTextAreaConnectDetails.setEditable(false);
         jTextAreaConnectDetails.setColumns(20);
         jTextAreaConnectDetails.setRows(5);
@@ -1202,6 +1208,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jComboBoxHandleRotationsEnum.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxHandleRotationsEnumActionPerformed(evt);
+            }
+        });
+
+        jLabel13.setText("Rot Offset: ");
+
+        jTextFieldRotationOffset.setText("0");
+        jTextFieldRotationOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldRotationOffsetActionPerformed(evt);
             }
         });
 
@@ -1227,21 +1242,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane3)
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel11)
-                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                        .addComponent(jCheckBoxSimulated)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                        .addComponent(jCheckBoxDebug)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jCheckBoxPause)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jLabel12)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addComponent(jCheckBoxSimulated)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel13)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                .addComponent(jCheckBoxDebug)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxPause)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel12)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jComboBoxHandleRotationsEnum, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1250,7 +1266,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxSimulated)
-                    .addComponent(jCheckBoxConnected))
+                    .addComponent(jCheckBoxConnected)
+                    .addComponent(jLabel13)
+                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -1265,9 +1283,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jLabel12)
                     .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel11)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1691,13 +1707,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void updateTextFieldDouble(double value, JTextField textField, double threshold) {
-        if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
+        if (Math.abs(value - parseDouble(textField.getText().trim())) > threshold) {
             textField.setText(String.format("%.3f", value));
         }
     }
 
     private void updateTextFieldDouble(double value, CachedTextField textField, double threshold) {
-        if (Math.abs(value - Double.parseDouble(textField.getText().trim())) > threshold) {
+        if (Math.abs(value - parseDouble(textField.getText().trim())) > threshold) {
             textField.setText(String.format("%.3f", value));
         }
     }
@@ -1782,14 +1798,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
-        jButtonReset.setEnabled(false);
-        if (this.jCheckBoxConnected.isSelected()) {
-            connect();
-        } else {
-            if (simulatedCachedCheckBox.isSelected()) {
-                jButtonReset.setEnabled(true);
+        try {
+            jButtonReset.setEnabled(false);
+            if (this.jCheckBoxConnected.isSelected()) {
+                connect();
+            } else {
+                if (simulatedCachedCheckBox.isSelected()) {
+                    jButtonReset.setEnabled(true);
+                }
+                disconnect();
             }
-            disconnect();
+        } catch (Exception exception) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
+            JOptionPane.showMessageDialog(this, exception.getMessage());
+            if (null == visionSocketClient || !visionSocketClient.isConnected()) {
+                jCheckBoxConnected.setSelected(false);
+            }
         }
     }//GEN-LAST:event_jCheckBoxConnectedActionPerformed
 
@@ -1844,6 +1868,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
             VisionSocketClient clnt = new VisionSocketClient();
+            clnt.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
             this.visionSocketClient = clnt;
             Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
             argsMap.put("--visionport", portCachedTextField.getText().trim());
@@ -1937,7 +1962,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private double nextRotNoise() {
-        return nextLimitedGaussian() * Math.toRadians(rotNoise);
+        return nextLimitedGaussian() * toRadians(rotNoise);
     }
 
     private final CachedCheckBox shuffleSimulatedUpdatesCachedCheckBox;
@@ -2239,8 +2264,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setMaxXMaxYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
-            double newMaxX = Double.parseDouble(vals[0]);
-            double newMaxY = Double.parseDouble(vals[1]);
+            double newMaxX = parseDouble(vals[0]);
+            double newMaxY = parseDouble(vals[1]);
             object2DJPanel1.setMaxX(newMaxX);
             object2DJPanel1.setMaxY(newMaxY);
         } else {
@@ -2256,11 +2281,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jCheckBoxDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxDebugActionPerformed
+        boolean debugSelected = this.jCheckBoxDebug.isSelected();
         if (null != visionSocketServer) {
-            visionSocketServer.setDebug(this.jCheckBoxDebug.isSelected());
+            visionSocketServer.setDebug(debugSelected);
         }
         if (null != visionSocketClient) {
-            visionSocketClient.setDebug(this.jCheckBoxDebug.isSelected());
+            visionSocketClient.setDebug(debugSelected);
+            visionSocketClient.setUpdateListenersOnIgnoredLine(debugSelected);
         }
     }//GEN-LAST:event_jCheckBoxDebugActionPerformed
 
@@ -2542,12 +2569,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jTextFieldRotNoiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotNoiseActionPerformed
-        setRotNoise(Double.parseDouble(jTextFieldRotNoise.getText().trim()));
+        setRotNoise(parseDouble(jTextFieldRotNoise.getText().trim()));
     }//GEN-LAST:event_jTextFieldRotNoiseActionPerformed
 
     @UIEffect
     private void jTextFieldPosNoiseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPosNoiseActionPerformed
-        setPosNoise(Double.parseDouble(jTextFieldPosNoise.getText().trim()));
+        setPosNoise(parseDouble(jTextFieldPosNoise.getText().trim()));
     }//GEN-LAST:event_jTextFieldPosNoiseActionPerformed
 
     @UIEffect
@@ -2583,17 +2610,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jTextFieldSimDropRateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldSimDropRateActionPerformed
-        setSimulatedDropRate(Double.parseDouble(jTextFieldSimDropRate.getText().trim()));
+        setSimulatedDropRate(parseDouble(jTextFieldSimDropRate.getText().trim()));
     }//GEN-LAST:event_jTextFieldSimDropRateActionPerformed
 
     @UIEffect
     private void jTextFieldPickupDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPickupDistActionPerformed
-        setPickupDist(Double.parseDouble(jTextFieldPickupDist.getText().trim()));
+        setPickupDist(parseDouble(jTextFieldPickupDist.getText().trim()));
     }//GEN-LAST:event_jTextFieldPickupDistActionPerformed
 
     @UIEffect
     private void jTextFieldDropOffThresholdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDropOffThresholdActionPerformed
-        setDropOffThreshold(Double.parseDouble(jTextFieldDropOffThreshold.getText().trim()));
+        setDropOffThreshold(parseDouble(jTextFieldDropOffThreshold.getText().trim()));
     }//GEN-LAST:event_jTextFieldDropOffThresholdActionPerformed
 
     @UIEffect
@@ -2661,6 +2688,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         setHandleRotationEnum(newHandleRotationEnum);
     }//GEN-LAST:event_jComboBoxHandleRotationsEnumActionPerformed
+
+    private void jTextFieldRotationOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotationOffsetActionPerformed
+        object2DJPanel1.setRotationOffset(toRadians(parseDouble(jTextFieldRotationOffset.getText().trim())));
+    }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
@@ -2742,9 +2773,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 double y = 0;
                 for (String s : fa) {
                     if (s.startsWith("x=")) {
-                        x = Double.parseDouble(s.substring(2));
+                        x = parseDouble(s.substring(2));
                     } else if (s.startsWith("y=")) {
-                        y = Double.parseDouble(s.substring(2));
+                        y = parseDouble(s.substring(2));
                     }
                 }
                 if (fa.length >= 2) {
@@ -2780,8 +2811,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setMinXMinYText(String txt) throws NumberFormatException {
         String vals[] = txt.split(",");
         if (vals.length == 2) {
-            double newMinX = Double.parseDouble(vals[0]);
-            double newMinY = Double.parseDouble(vals[1]);
+            double newMinX = parseDouble(vals[0]);
+            double newMinY = parseDouble(vals[1]);
             object2DJPanel1.setMinX(newMinX);
             object2DJPanel1.setMinY(newMinY);
         } else {
@@ -2818,8 +2849,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JComboBox<Object2DOuterJPanel.HandleRotationEnum> jComboBoxHandleRotationsEnum;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2855,6 +2886,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldPort;
     private javax.swing.JTextField jTextFieldPosNoise;
     private javax.swing.JTextField jTextFieldRotNoise;
+    private javax.swing.JTextField jTextFieldRotationOffset;
     private javax.swing.JTextField jTextFieldSimDropRate;
     private javax.swing.JTextField jTextFieldSimulationUpdateTime;
     private aprs.simview.Object2DJPanel object2DJPanel1;
@@ -2922,7 +2954,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 parentFile.mkdirs();
             }
             Properties props = new Properties();
-            props.put("alternativeRotation", String.format("%.2f", Math.toDegrees(object2DJPanel1.getAlternativeRotation())));
+            props.put("alternativeRotation", String.format("%.2f", toDegrees(object2DJPanel1.getAlternativeRotation())));
             props.put("--visionport", portCachedTextField.getText().trim());
             props.put("--visionhost", hostCachedTextField.getText().trim());
             props.put("simulated", Boolean.toString(simulatedCachedCheckBox.isSelected()));
@@ -3142,14 +3174,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.handleRotationEnum = HandleRotationEnum.valueOf(handleRotationEnumString);
         }
         if (null != itemsLine && itemsLine.length() > 0) {
-            List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
+            List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine,
+                    handleRotationEnum == HandleRotationEnum.DEGREES,
+                    handleRotationEnum == HandleRotationEnum.IGNORE);
             if (null != l && l.size() > 0) {
                 setItems(l);
             }
         }
         String alternativeRotationString = props.getProperty("alternativeRotation");
         if (null != alternativeRotationString) {
-            object2DJPanel1.setAlternativeRotation(Math.toRadians(Double.parseDouble(alternativeRotationString)));
+            object2DJPanel1.setAlternativeRotation(toRadians(parseDouble(alternativeRotationString)));
         }
 
         String portString = props.getProperty("--visionport");
@@ -3198,7 +3232,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         String simulatedDropRateString = props.getProperty("simulatedDropRate");
         if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
-            double simDropRate = Double.parseDouble(simulatedDropRateString);
+            double simDropRate = parseDouble(simulatedDropRateString);
             if (simDropRate < 0.001) {
                 simDropRate = 0;
             }
@@ -3207,25 +3241,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         String pickupDistString = props.getProperty("pickupDist");
         if (null != pickupDistString && pickupDistString.length() > 0) {
-            double simPickupDist = Double.parseDouble(pickupDistString);
+            double simPickupDist = parseDouble(pickupDistString);
             setPickupDist(simPickupDist);
         }
 
         String dropOffThresholdString = props.getProperty("dropOffThreshold");
         if (null != dropOffThresholdString && dropOffThresholdString.length() > 0) {
-            double simDropOffThreshold = Double.parseDouble(dropOffThresholdString);
+            double simDropOffThreshold = parseDouble(dropOffThresholdString);
             setDropOffThreshold(simDropOffThreshold);
         }
 
         String posNoiseString = props.getProperty("posNoise");
         if (null != posNoiseString && posNoiseString.length() > 0) {
-            double simPosNoise = Double.parseDouble(posNoiseString);
+            double simPosNoise = parseDouble(posNoiseString);
             setPosNoise(simPosNoise);
         }
 
         String rotNoiseString = props.getProperty("rotNoise");
         if (null != rotNoiseString && rotNoiseString.length() > 0) {
-            double simRotNoise = Double.parseDouble(rotNoiseString);
+            double simRotNoise = parseDouble(rotNoiseString);
             setRotNoise(simRotNoise);
         }
         String simRefreshMillisString = props.getProperty("simRefreshMillis");
@@ -3392,6 +3426,34 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public File getPropertiesFile() {
         return propertiesFile;
+    }
+
+    private boolean ignoreLosingItemsLists = true;
+
+    /**
+     * Get the value of ignoreLosingItemsLists
+     *
+     * @return the value of ignoreLosingItemsLists
+     */
+    public boolean isIgnoreLosingItemsLists() {
+        if(null != visionSocketClient) {
+            boolean ret = visionSocketClient.isIgnoreLosingItemsLists();
+            this.ignoreLosingItemsLists = ret;
+            return ret;
+        }
+        return ignoreLosingItemsLists;
+    }
+
+    /**
+     * Set the value of ignoreLosingItemsLists
+     *
+     * @param ignoreLosingItemsLists new value of ignoreLosingItemsLists
+     */
+    public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
+         if(null != visionSocketClient) {
+            visionSocketClient.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
+        }
+        this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
 
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();

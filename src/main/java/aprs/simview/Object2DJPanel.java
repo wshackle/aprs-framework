@@ -1986,7 +1986,6 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.y = maxY;
             double infoXOffset = info.xoffset;
             double infoYOffset = info.yoffset;
-            double displayRot = 0;
             double xo = infoXOffset;
             double yo = infoYOffset;
             if (info.ignoreRotations) {
