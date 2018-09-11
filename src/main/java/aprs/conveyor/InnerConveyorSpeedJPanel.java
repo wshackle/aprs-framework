@@ -34,6 +34,67 @@ import javax.swing.JPanel;
  */
 public class InnerConveyorSpeedJPanel extends JPanel {
 
+    private long maxPosition = 10000;
+
+    /**
+     * Get the value of maxPosition
+     *
+     * @return the value of maxPosition
+     */
+    public long getMaxPosition() {
+        return maxPosition;
+    }
+
+    /**
+     * Set the value of maxPosition
+     *
+     * @param maxPosition new value of maxPosition
+     */
+    public void setMaxPosition(long maxPosition) {
+        this.maxPosition = maxPosition;
+    }
+
+    private long minPosition = -10000;
+
+    /**
+     * Get the value of minPosition
+     *
+     * @return the value of minPosition
+     */
+    public long getMinPosition() {
+        return minPosition;
+    }
+
+    /**
+     * Set the value of minPosition
+     *
+     * @param minPosition new value of minPosition
+     */
+    public void setMinPosition(long minPosition) {
+        this.minPosition = minPosition;
+    }
+
+    private long estimatedPosition = 0;
+
+    /**
+     * Get the value of estimatedPosition
+     *
+     * @return the value of estimatedPosition
+     */
+    public long getEstimatedPosition() {
+        return estimatedPosition;
+    }
+
+    /**
+     * Set the value of estimatedPosition
+     *
+     * @param estimatedPosition new value of estimatedPosition
+     */
+    public void setEstimatedPosition(long estimatedPosition) {
+        this.estimatedPosition = estimatedPosition;
+        this.repaint();
+    }
+
     private boolean horizontal;
 
     /**
@@ -142,28 +203,28 @@ public class InnerConveyorSpeedJPanel extends JPanel {
     public void setForwardColor(Color forwardColor) {
         this.forwardColor = forwardColor;
     }
-    
+
     public boolean isPointForward(Point point) {
         Dimension dim = super.getSize();
-        if(dim.width < 1 || dim.height < 1) {
-            throw new IllegalStateException("bad dimensions "+dim);
+        if (dim.width < 1 || dim.height < 1) {
+            throw new IllegalStateException("bad dimensions " + dim);
         }
-        if(horizontal) {
-            return point.x > dim.width/2;
+        if (horizontal) {
+            return point.x > dim.width / 2;
         } else {
-            return point.y > dim.height/2;
+            return point.y > dim.height / 2;
         }
     }
 
     public int pointToSpeed(Point point) {
         Dimension dim = super.getSize();
-        if(dim.width < 1 || dim.height < 1) {
-            throw new IllegalStateException("bad dimensions "+dim);
+        if (dim.width < 1 || dim.height < 1) {
+            throw new IllegalStateException("bad dimensions " + dim);
         }
-        if(horizontal) {
-            return Math.abs(point.x-dim.width/2)*maxSpeed/(dim.width/2);
+        if (horizontal) {
+            return Math.abs(point.x - dim.width / 2) * maxSpeed / (dim.width / 2);
         } else {
-            return Math.abs(point.x-dim.height/2)*maxSpeed/(dim.height/2);
+            return Math.abs(point.x - dim.height / 2) * maxSpeed / (dim.height / 2);
         }
     }
     private Color reverseColor = Color.red;
@@ -205,14 +266,28 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                 g.setColor(reverseColor);
                 g.fillRect(dim.width / 2 - barWidth, 0, barWidth, dim.height);
             }
+            if(estimatedPosition > minPosition && estimatedPosition < maxPosition) {
+                g.setColor(Color.black);
+                
+                int xpos = (int) (dim.width *(estimatedPosition - minPosition)/(maxPosition-minPosition));
+                g.drawLine(xpos, 0, xpos, dim.height);
+                g.drawString(Long.toString(estimatedPosition), xpos, dim.height/2);
+            }
         } else {
             int barHeight = dim.height * currentSpeed / (2 * maxSpeed);
             if (forwardDirection) {
                 g.setColor(forwardColor);
-                g.fillRect(0,dim.height / 2, dim.width, barHeight);
+                g.fillRect(0, dim.height / 2, dim.width, barHeight);
             } else {
                 g.setColor(reverseColor);
-                g.fillRect(0,dim.height / 2 - barHeight, dim.width, barHeight);
+                g.fillRect(0, dim.height / 2 - barHeight, dim.width, barHeight);
+            }
+            if(estimatedPosition > minPosition && estimatedPosition < maxPosition) {
+                g.setColor(Color.black);
+                
+                int ypos = (int) (dim.height*(estimatedPosition - minPosition)/(maxPosition-minPosition));
+                g.drawLine(0,ypos,dim.width,ypos);
+                g.drawString(Long.toString(estimatedPosition), dim.width/2, ypos);
             }
         }
     }

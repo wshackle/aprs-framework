@@ -29,9 +29,14 @@ import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
 import crcl.ui.XFutureVoid;
 import java.awt.HeadlessException;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
 
 /**
  *
@@ -59,6 +64,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         jLabel1 = new javax.swing.JLabel();
         jTextFieldModBusHost = new javax.swing.JTextField();
         jCheckBoxConnect = new javax.swing.JCheckBox();
+        jCheckBoxSimulated = new javax.swing.JCheckBox();
 
         conveyorSpeedJPanel1.setHorizontal(true);
         conveyorSpeedJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -100,6 +106,13 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             }
         });
 
+        jCheckBoxSimulated.setText("Similated");
+        jCheckBoxSimulated.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxSimulatedActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -110,9 +123,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                         .addContainerGap()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jTextFieldModBusHost, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
+                        .addComponent(jTextFieldModBusHost, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxConnect))
+                        .addComponent(jCheckBoxConnect)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxSimulated))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(14, 14, 14)
                         .addComponent(conveyorSpeedJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -127,7 +142,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jTextFieldModBusHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jCheckBoxConnect)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(jCheckBoxSimulated))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -143,16 +159,15 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jCheckBoxConnectActionPerformed
 
-    
     public XFutureVoid connectMaster() {
         return Utils.runOnDispatchThread(this::connectMasterOnDisplay);
     }
-    
+
     private void connectMasterOnDisplay() throws HeadlessException {
         try {
             master = new ModbusTCPMaster(jTextFieldModBusHost.getText());
             master.connect();
-            System.out.println("master.connect() succeeded : master="+master);
+            System.out.println("master.connect() succeeded : master=" + master);
         } catch (Exception ex) {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, ex.getMessage());
@@ -164,6 +179,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_conveyorSpeedJPanel1MousePressed
 
     private void setConveyorSpeedFromMouseEvent(MouseEvent evt) {
+        updateEstimatedPosition();
+        notifyConveyorStateListeners();
+        if(!positionUpdateTimer.isRunning()) {
+            positionUpdateTimer.start();
+        }
         boolean forward = conveyorSpeedJPanel1.isPointForward(evt.getPoint());
         conveyorSpeedJPanel1.setForwardDirection(forward);
         int newSpeed = conveyorSpeedJPanel1.pointToSpeed(evt.getPoint());
@@ -191,8 +211,21 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setConveyorSpeedFromMouseEvent(evt);
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseDragged
 
+    private void jCheckBoxSimulatedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxSimulatedActionPerformed
+        stopConveyor();
+        if (null != master) {
+            master.disconnect();
+            master = null;
+        }
+        boolean simulatedSelected = jCheckBoxSimulated.isSelected();
+        jCheckBoxConnect.setSelected(false);
+        jCheckBoxConnect.setEnabled(!simulatedSelected);
+    }//GEN-LAST:event_jCheckBoxSimulatedActionPerformed
+
     private void stopConveyor() {
+        updateEstimatedPosition();
         conveyorSpeedJPanel1.setCurrentSpeed(0);
+//        positionUpdateTimer.stop();
         if (null != master) {
             try {
                 master.writeSingleRegister(0x8000, new SimpleRegister(0)); // make it NOT go
@@ -203,11 +236,73 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }
 
+    private final javax.swing.Timer positionUpdateTimer = new Timer(500, e -> {
+        updateEstimatedPosition();
+        notifyConveyorStateListeners();
+    });
+
+    private volatile long estimatedPosition = 0;
+    private volatile long lastEstimatedPositionTime = System.currentTimeMillis();
+
+    private double speedScale = 0.001;
+
+    /**
+     * Get the value of speedScale
+     *
+     * @return the value of speedScale
+     */
+    public double getSpeedScale() {
+        return speedScale;
+    }
+
+    /**
+     * Set the value of speedScale
+     *
+     * @param speedScale new value of speedScale
+     */
+    public void setSpeedScale(double speedScale) {
+        this.speedScale = speedScale;
+    }
+
+    private synchronized void updateEstimatedPosition() {
+        int speed = conveyorSpeedJPanel1.getCurrentSpeed();
+        boolean forward = conveyorSpeedJPanel1.isForwardDirection();
+        long time = System.currentTimeMillis();
+        long timeDiff = time - lastEstimatedPositionTime;
+        double scaledSpeed = speed*speedScale;
+        long positionInc = (long) ((forward ? 1 : -1) * scaledSpeed * timeDiff);
+        estimatedPosition += positionInc;
+        conveyorSpeedJPanel1.setEstimatedPosition(estimatedPosition);
+        lastEstimatedPositionTime = time;
+    }
+
+    public long getEstimatedPosition() {
+        return estimatedPosition;
+    }
+
+    private final ConcurrentLinkedDeque<Consumer<ConveyorState>> conveyorStateListeners = new ConcurrentLinkedDeque<>();
+
+    public void addConveyorStateListener(Consumer<ConveyorState> listener) {
+        conveyorStateListeners.add(listener);
+    }
+
+    public void removerConveyorStateListener(Consumer<ConveyorState> listener) {
+        conveyorStateListeners.remove(listener);
+    }
+
+    private void notifyConveyorStateListeners() {
+        ConveyorState cs = new ConveyorState(conveyorSpeedJPanel1.isForwardDirection(), conveyorSpeedJPanel1.getCurrentSpeed());
+        for (Consumer<ConveyorState> listener : conveyorStateListeners) {
+            listener.accept(cs);
+        }
+    }
+
     private ModbusTCPMaster master;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.conveyor.InnerConveyorSpeedJPanel conveyorSpeedJPanel1;
     private javax.swing.JCheckBox jCheckBoxConnect;
+    private javax.swing.JCheckBox jCheckBoxSimulated;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JTextField jTextFieldModBusHost;
     // End of variables declaration//GEN-END:variables
