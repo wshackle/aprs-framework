@@ -1,17 +1,14 @@
-#!onfail ../../../motoman-neo4j-database/neo4j-community-2.3.11/bin/neo4j start
+#!onfail ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 #!waitfor Neo4j Server is running
 #!recoverWaitFor is ready
 #!checkfail Neo4j Server is not running
-../../../motoman-neo4j-database/neo4j-community-2.3.11/bin/neo4j status
+${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
-#!onfail ../../../fanuc-neo4j-database/neo4j-community-2.3.11/bin/neo4j start
+#!onfail ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 #!checkfail Neo4j Server is not running
 #!waitfor Neo4j Server is running
 #!recoverWaitFor is ready
-../../../fanuc-neo4j-database/neo4j-community-2.3.11/bin/neo4j status
+${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
 
-#!stop
-#../../../fanuc-neo4j-database/neo4j-community-2.3.11/bin/neo4j stop
-#../../../motoman-neo4j-database/neo4j-community-2.3.11/bin/neo4j stop
 
