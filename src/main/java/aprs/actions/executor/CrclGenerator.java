@@ -4386,8 +4386,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         String lastPartTaken = getLastTakenPart();
         int lastIndex = getLastIndex();
-        Action act = lastActionsList.get(lastIndex);
-        String imgLabel = "openGripper" + lastIndex + act.asPddlLine() + "partTaken=" + lastPartTaken;
+        
+        String imgLabel; 
+        if(null != lastActionsList) {
+            Action act = lastActionsList.get(lastIndex);
+            imgLabel = "openGripper" + lastIndex + act.asPddlLine() + "partTaken=" + lastPartTaken;
+        } else {
+            imgLabel = "openGripper" + lastIndex + "partTaken=" + lastPartTaken;
+        }
         addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
@@ -4593,7 +4599,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
 
-        checkRobotPoseRotation(poseWithToolOffset, "poseWithToolOffset");
 
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
 
@@ -4601,7 +4606,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         checkSettings();
         PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
-        checkRobotPoseRotation(approachPose, "approachPose");
         lastTestApproachPose = null;
 
         PoseType takePose = CRCLPosemath.copy(poseWithToolOffset);
@@ -4663,19 +4667,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMoveTo(cmds, approachPose, true, "takePartByPose.approachPose.return." + name);
     }
 
-    private void checkRobotPoseRotation(PoseType approachPose, String poseName) throws IllegalStateException {
-        if ((Math.abs(Math.abs(approachPose.getXAxis().getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman"))
-                || (Math.abs(Math.abs(approachPose.getXAxis().getI()) - 1.0) < 0.1 && aprsSystem.getRobotName().contains("anuc"))) {
-            String errmsg = "aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
-                    + ", " + poseName + ".getXAxis()=" + CRCLPosemath.vectorToPmCartesian(approachPose.getXAxis())
-                    + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
-                    + ", options.get(\"rpy\")=" + options.get("rpy")
-                    + ", settingsChecked=" + settingsChecked;
-            aprsSystem.setTitleErrorString(errmsg);
-            checkedPause();
-            throw new IllegalStateException(errmsg);
-        }
-    }
+    
 
     /**
      * Add commands to the list that will go through the motions to take a part
@@ -4771,16 +4763,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         throw new IllegalStateException("null == xAxisVector");
                     }
                     xAxis = xAxisVector;
-                    if ((Math.abs(Math.abs(xAxis.getI()) - 0.7) < 0.1 && aprsSystem.getRobotName().contains("otoman"))
-                            || (Math.abs(Math.abs(xAxis.getI()) - 1.0) < 0.1 && aprsSystem.getRobotName().contains("anuc"))) {
-                        String errmsg = "aprsSystem.getRobotName()=" + aprsSystem.getRobotName()
-                                + ", xAxis=" + CRCLPosemath.vectorToPmCartesian(xAxis)
-                                + ", options.get(\"rpy\")=" + options.get("rpy")
-                                + ", settingsChecked=" + settingsChecked;
-                        aprsSystem.setTitleErrorString(errmsg);
-                        checkedPause();
-                        throw new IllegalStateException(errmsg);
-                    }
                     VectorType zAxisVector = pose.getZAxis();
                     if (null == zAxisVector) {
                         throw new IllegalStateException("null == zAxisVector");
@@ -5078,7 +5060,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMessageCommand(cmds, message);
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
-        checkRobotPoseRotation(pose, "pose");
         if (!checkPose(pose)) {
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
         }
@@ -6108,8 +6089,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public static class PlacePartInfo {
 
-        private final Action parentAction;
+        @Nullable private final Action parentAction;
         private final int parentActionIndex;
+        
         private final Action action;
         private final int pddlActionIndex;
         private final int outIndex;
@@ -6117,7 +6099,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private CrclCommandWrapper wrapper = null;
         private final int startSafeAbortRequestCount;
 
-        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, Action parentAction, int parentActionIndex) {
+        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, @Nullable Action parentAction, int parentActionIndex) {
             this.action = action;
             this.pddlActionIndex = pddlActionIndex;
             this.outIndex = outIndex;
@@ -6151,7 +6133,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return startSafeAbortRequestCount;
         }
 
-        public Action getParentAction() {
+        @Nullable public Action getParentAction() {
             return parentAction;
         }
 
@@ -6239,7 +6221,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         placePartBySlotName(slotName, out, action, null, -1);
     }
 
-    private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action, Action parentAction, int parentActionIndex) throws IllegalStateException, SQLException {
+    private void placePartBySlotName(String slotName, List<MiddleCommandType> out, Action action, @Nullable Action parentAction, int parentActionIndex) throws IllegalStateException, SQLException {
         PoseType pose = getPose(slotName);
         if (null != pose) {
             PlacePartSlotPoseList.add(pose);

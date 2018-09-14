@@ -441,11 +441,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     @Nullable
     private volatile XFutureVoid waitForFuture = null;
 
-    @Nullable
-    private volatile StringBuffer stringBuffer = null;
+    
 
     @Nullable
-    private WrappedProcess parseLaunchFileLine(String line, List<XFutureVoid> futures) throws IOException {
+    private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
         if (line.length() < 1) {
             return null;
         }
@@ -456,8 +455,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
         line = line.trim();
         if (line.length() < 1) {
-            if (null != stringBuffer) {
-                stringBuffer.append("\n");
+            if (null != stringBuilder) {
+                stringBuilder.append("\n");
             }
             return null;
         }
@@ -470,10 +469,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
         if (stopLineSeen) {
             stopLines.add(line);
-            if (null != stringBuffer) {
-                stringBuffer.append("\t\tSTOP_LINE:\t\t");
-                stringBuffer.append(line);
-                stringBuffer.append("\n");
+            if (null != stringBuilder) {
+                stringBuilder.append("\t\tSTOP_LINE:\t\t");
+                stringBuilder.append(line);
+                stringBuilder.append("\n");
             }
             return null;
         }
@@ -541,6 +540,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                                             }
                                         } catch (Exception ex) {
                                             Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                                            if(ex instanceof RuntimeException) {
+                                                throw (RuntimeException) ex;
+                                            } else {
+                                                throw new RuntimeException(ex);
+                                            }
                                         }
                                         lineConsumers = origLineConsumers;
                                     });
@@ -592,9 +596,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 }
             }
         } finally {
-            if (null != stringBuffer) {
-                stringBuffer.append(line);
-                stringBuffer.append("\n");
+            if (null != stringBuilder) {
+                stringBuilder.append(line);
+                stringBuilder.append("\n");
             }
         }
 
@@ -646,23 +650,26 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
-        List<XFutureVoid> futures = new ArrayList<>();
+        List<XFuture<?>> futures = new ArrayList<>();
         stopLineSeen = false;
         processLaunchDirectory = f.getParentFile();
         File jpsCommandFile = Neo4JKiller.getJpsCommandFile();
         if (null == jpsCommandFile) {
             jpsCommandFile = new File(processLaunchDirectory, JPS_COMMAND_FILENAME_STRING);
         }
-        stringBuffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
-                parseLaunchFileLine(line, futures);
+                WrappedProcess p = parseLaunchFileLine(line, futures,stringBuilder);
+                if(null != p) {
+                    futures.add(p.getProcessStartXFuture());
+                }
             }
-            jTextAreaLauncherFile.setText(stringBuffer.toString());
-            stringBuffer = null;
+            jTextAreaLauncherFile.setText(stringBuilder.toString());
+            stringBuilder = null;
         }
-        return XFuture.allOf(futures.toArray(new XFuture<?>[0]))
+        return XFuture.allOf(futures)
                 .always(WrappedProcess::shutdownStarterService);
     }
 
@@ -704,12 +711,12 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private void completeClose() {
         List<WrappedProcess> stopProcesses = new ArrayList<>();
-        List<XFutureVoid> futures = new ArrayList<>();
+        List<XFuture<?>> futures = new ArrayList<>();
         stopLineSeen = false;
         processLaunchDirectory = null;
         for (String line : stopLines) {
             try {
-                WrappedProcess p = parseLaunchFileLine(line, futures);
+                WrappedProcess p = parseLaunchFileLine(line, futures,null);
                 if (null != p) {
                     stopProcesses.add(p);
 

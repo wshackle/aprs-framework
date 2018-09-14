@@ -70,6 +70,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import crcl.ui.XFutureVoid;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -585,6 +586,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @UIEffect
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter txtExtensionFilter = new FileNameExtensionFilter("txt", "txt");
+        chooser.addChoosableFileFilter(txtExtensionFilter);
+        chooser.setFileFilter(txtExtensionFilter);
         if (null == propertiesFile) {
             throw new IllegalStateException("null == propertiesFile");
         }
@@ -617,6 +621,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             throw new IllegalStateException("null == propertiesFile");
         }
         JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter txtExtensionFilter = new FileNameExtensionFilter("txt", "txt");
+        chooser.addChoosableFileFilter(txtExtensionFilter);
+        chooser.setFileFilter(txtExtensionFilter);
         File parentFile = propertiesFile.getParentFile();
         if (null != parentFile) {
             chooser.setCurrentDirectory(parentFile);

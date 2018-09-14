@@ -22,15 +22,19 @@
  */
 package aprs.conveyor;
 
+import org.checkerframework.checker.guieffect.qual.UIType;
+
 /**
  *
  * @author shackle
  */
+@UIType
 public class ConveyorVisTestJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form ConveyorVisTestJFrame
      */
+    @SuppressWarnings("initialization")
     public ConveyorVisTestJFrame() {
         initComponents();
     }
@@ -71,6 +75,7 @@ public class ConveyorVisTestJFrame extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
+    @SuppressWarnings("guieffect")
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">

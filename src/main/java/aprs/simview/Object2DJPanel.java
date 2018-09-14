@@ -2066,24 +2066,8 @@ public class Object2DJPanel extends JPanel {
             }
         }
         if (null != info) {
-//            ImageObserver observer = new ImageObserver() {
-//                @Override
-//                public boolean imageUpdate(Image img, int infoflags, int x, int y, int w, int h) {
-//                    if ((infoflags & ImageObserver.WIDTH) == ImageObserver.WIDTH
-//                            && (infoflags & ImageObserver.HEIGHT) == ImageObserver.HEIGHT) {
-//                        Rectangle2D.Double itemDisplayRect
-//                                = new Rectangle2D.Double(
-//                                        -w / 2, -h / 2, // x,y
-//                                        w, h// w,h
-//                                );
-//                        item.setDisplayRect(itemDisplayRect);
-//                        return false;
-//                    }
-//                    return true;
-//                }
-//            };
-            int w = info.scaledImage.getWidth(null);
-            int h = info.scaledImage.getHeight(null);
+            int w = info.getScaledImageWidth();
+            int h = info.getScaledImageHeight();
             if (w > 0 && h > 0) {
                 Rectangle2D.Double itemDisplayRect
                         = new Rectangle2D.Double(
