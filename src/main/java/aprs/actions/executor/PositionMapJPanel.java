@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
@@ -388,6 +389,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @UIEffect
     private void jButtonErrorMapFileBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrorMapFileBrowseActionPerformed
         JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter csvExtensionFilter = new FileNameExtensionFilter("csv", "csv");
+        chooser.addChoosableFileFilter(csvExtensionFilter);
+        chooser.setFileFilter(csvExtensionFilter);
         if (null != startingDirectory) {
             chooser.setCurrentDirectory(startingDirectory);
         }
@@ -403,6 +407,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @UIEffect
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter csvExtensionFilter = new FileNameExtensionFilter("csv", "csv");
+        chooser.addChoosableFileFilter(csvExtensionFilter);
+        chooser.setFileFilter(csvExtensionFilter);
         if (null != startingDirectory) {
             chooser.setCurrentDirectory(startingDirectory);
         }

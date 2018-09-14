@@ -52,11 +52,16 @@ public class WrappedProcess {
     private final PrintStream errorPrintStream;
     private volatile Process process;
     private volatile boolean closed = false;
-    private final XFuture<Process> xf;
+    private final XFuture<Process> processStartXFuture;
     private final String cmdLine;
 
     @MonotonicNonNull private Component displayComponent;
 
+    public XFuture<Process> getProcessStartXFuture() {
+        return processStartXFuture;
+    }
+
+    
     /**
      * Get the value of displayComponent
      *
@@ -124,12 +129,19 @@ public class WrappedProcess {
         errorReaderThread.start();
     }
 
+    @Nullable private volatile Exception processStartException = null;
+    
     private Process internalStart(ProcessBuilder pb) {
         try {
             return pb.start();
         } catch (Exception ex) {
+            processStartException = ex;
             ex.printStackTrace(errorPrintStream);
-            throw new RuntimeException(ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -152,8 +164,8 @@ public class WrappedProcess {
         outputReaderThread.setDaemon(true);
         errorReaderThread = new Thread(this::readErrorStream, "errorReader:" + myNum + cmdLine);
         errorReaderThread.setDaemon(true);
-        xf = XFuture.supplyAsync(cmdLine, ()->internalStart(pb), processStarterService);
-        xf.thenAccept(this::setProcess);
+        processStartXFuture = XFuture.supplyAsync(cmdLine, ()->internalStart(pb), processStarterService);
+        processStartXFuture.thenAccept(this::setProcess);
     }
 
     public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) {
@@ -197,7 +209,7 @@ public class WrappedProcess {
 
     public void close() {
         this.closed = true;
-        xf.cancelAll(true);
+        processStartXFuture.cancelAll(true);
         if (null != process) {
             try {
                 if (!process.waitFor(50, TimeUnit.MILLISECONDS)) {

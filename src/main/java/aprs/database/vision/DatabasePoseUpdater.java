@@ -1341,18 +1341,18 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     private static List<PhysicalItem> addEmptyTraySlots(
-            Iterable<? extends PhysicalItem> inputItems,
+            List<PhysicalItem> inputItems,
             SlotOffsetProvider sop,
             @Nullable List<PhysicalItem> prevParts) {
 
         List<Tray> kitTrays
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "KT".equals(item.getType()))
                 .filter(Tray.class::isInstance)
                 .map(Tray.class::cast)
                 .collect(Collectors.toList());
         List<Tray> partTrays
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "PT".equals(item.getType()))
                 .filter(Tray.class::isInstance)
                 .map(Tray.class::cast)
@@ -1777,25 +1777,25 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return returnedList;
     }
 
-    public static List<PhysicalItem> processItemList(Iterable<? extends PhysicalItem> inputItems, SlotOffsetProvider sop) {
+    public static List<PhysicalItem> processItemList(List<PhysicalItem> inputItems, SlotOffsetProvider sop) {
         List<PhysicalItem> listWithEmptySlots
                 = DatabasePoseUpdater.addEmptyTraySlots(inputItems, sop, null);
         return DatabasePoseUpdater.preProcessItemList(listWithEmptySlots);
     }
 
-    private static List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems) {
+    private static List<PhysicalItem> preProcessItemList(List<PhysicalItem> inputItems) {
         return preProcessItemList(inputItems, true, false, true, true, null);
     }
 
-    private static List<PhysicalItem> preProcessItemList(Iterable<? extends PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
+    private static List<PhysicalItem> preProcessItemList(List<PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
         List<Tray> partsTrays
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "PT".equals(item.getType()))
                 .filter(Tray.class::isInstance)
                 .map(Tray.class::cast)
                 .collect(Collectors.toList());
         List<Tray> kitTrays
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "KT".equals(item.getType()))
                 .filter(Tray.class::isInstance)
                 .map(Tray.class::cast)
@@ -1883,13 +1883,13 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    private static List<PhysicalItem> filterEmptySlots(Iterable<? extends PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
+    private static List<PhysicalItem> filterEmptySlots(List<PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
         List<PhysicalItem> parts
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "P".equals(item.getType()))
                 .collect(Collectors.toList());
         List<PhysicalItem> emptySlots
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                 .filter((PhysicalItem item) -> "ES".equals(item.getType()))
                 .collect(Collectors.toList());
         Comparator<PhysicalItem> kitComparator

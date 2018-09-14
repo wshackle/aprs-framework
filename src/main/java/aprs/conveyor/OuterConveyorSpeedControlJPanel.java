@@ -30,25 +30,31 @@ import crcl.ui.XFutureVoid;
 import java.awt.HeadlessException;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
+import org.checkerframework.checker.guieffect.qual.UIType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author shackle
  */
+@UIType
 public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form ConveyorSpeedControlJPanel
      */
+    @SuppressWarnings("initialization")
     public OuterConveyorSpeedControlJPanel() {
         initComponents();
+        positionUpdateTimer = new Timer(500, e -> {
+            updateEstimatedPosition();
+            notifyConveyorStateListeners();
+        });
     }
 
     /**
@@ -170,7 +176,10 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             System.out.println("master.connect() succeeded : master=" + master);
         } catch (Exception ex) {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+            String message = ex.getMessage();
+            if(null != message) {
+                JOptionPane.showMessageDialog(this, message);
+            }
         }
     }
 
@@ -181,7 +190,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private void setConveyorSpeedFromMouseEvent(MouseEvent evt) {
         updateEstimatedPosition();
         notifyConveyorStateListeners();
-        if(!positionUpdateTimer.isRunning()) {
+        if (!positionUpdateTimer.isRunning()) {
             positionUpdateTimer.start();
         }
         boolean forward = conveyorSpeedJPanel1.isPointForward(evt.getPoint());
@@ -236,10 +245,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }
 
-    private final javax.swing.Timer positionUpdateTimer = new Timer(500, e -> {
-        updateEstimatedPosition();
-        notifyConveyorStateListeners();
-    });
+    private final javax.swing.Timer positionUpdateTimer;
 
     private volatile long estimatedPosition = 0;
     private volatile long lastEstimatedPositionTime = System.currentTimeMillis();
@@ -269,7 +275,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         boolean forward = conveyorSpeedJPanel1.isForwardDirection();
         long time = System.currentTimeMillis();
         long timeDiff = time - lastEstimatedPositionTime;
-        double scaledSpeed = speed*speedScale;
+        double scaledSpeed = speed * speedScale;
         long positionInc = (long) ((forward ? 1 : -1) * scaledSpeed * timeDiff);
         estimatedPosition += positionInc;
         conveyorSpeedJPanel1.setEstimatedPosition(estimatedPosition);
@@ -297,6 +303,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }
 
+    @Nullable
     private ModbusTCPMaster master;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

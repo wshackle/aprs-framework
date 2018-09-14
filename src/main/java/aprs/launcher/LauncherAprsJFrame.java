@@ -32,6 +32,8 @@ import aprs.actions.optaplanner.display.OptaplannerTest;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import java.awt.Component;
+import java.awt.Frame;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
@@ -49,17 +51,17 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused","guieffect"})
+@SuppressWarnings({"unused", "guieffect"})
 public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     /**
@@ -387,7 +389,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @UIEffect
     private static XFutureVoid completePrevMulti(Supervisor supervisor) {
         supervisor.startColorTextReader();
-        return supervisor.loadAllPrevFiles()
+        return supervisor.loadAllPrevFiles(null)
                 .thenRun(() -> {
                     supervisor.setVisible(true);
                     PlayAlert();
@@ -411,7 +413,35 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
         try {
-            openMulti(null);
+            boolean getLauncher = JOptionPane.showConfirmDialog(this, "Select a launcher text file?") == JOptionPane.YES_OPTION;
+            
+            if (getLauncher) {
+                File launcherFile = null;
+                try {
+                    launcherFile = getLastLaunchFile();
+                } catch (IOException iOException) {
+                    Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", iOException);
+                }
+                JFileChooser launcherFileChooser;
+                if(null != launcherFile) {
+                    launcherFileChooser = new JFileChooser(launcherFile);
+                } else {
+                    launcherFileChooser = new JFileChooser();
+                }
+                FileNameExtensionFilter txtExtensionFilter = new FileNameExtensionFilter("txt", "txt");
+                launcherFileChooser.addChoosableFileFilter(txtExtensionFilter);
+                launcherFileChooser.setFileFilter(txtExtensionFilter);
+                launcherFileChooser.setDialogTitle("Choose launch text file for Aprs.");
+                if (launcherFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                    launcherFile = launcherFileChooser.getSelectedFile();
+                    saveLastLaunchFile(launcherFile);
+                    openMultiWithLaunchFile(launcherFile,null, this);
+                } else {
+                    openMultiWithoutLaunchFile(null,this,null);
+                }
+            } else {
+                openMultiWithoutLaunchFile(null,this,null);
+            }
             this.setVisible(false);
             this.dispose();
         } catch (IOException ex) {
@@ -419,52 +449,69 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
 
+    @UIEffect
     private static void openMulti(String args @Nullable []) throws IOException {
-        Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
-        if (null != args && args.length > 1) {
-            try {
-                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
-                processLauncher.setVisible(true);
-                processLauncher.run(new File(args[1]))
-                        .thenRun(() -> {
-                            try {
-                                supervisor.setProcessLauncher(processLauncher);
-                                supervisor.startColorTextReader();
-                                supervisor.setVisible(true);
-                                if (null == args || args.length < 1) {
-                                    supervisor.browseOpenSetup();
-                                    completeOpenSupevisor(supervisor);
-                                } else {
-                                    supervisor.loadSetupFile(new File(args[0]))
-                                            .thenRun(() -> completeOpenSupevisor(supervisor));
-                                }
-
-                            } catch (IOException iOException) {
-                                iOException.printStackTrace();
-                            }
-                        });
-            } catch (IOException ex) {
-                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        File launcherFile = null;
+        File setupFile = null;
+        if (null != args && args.length > 0) {
+            setupFile = new File(args[0]);
+            if (args.length > 1) {
+                launcherFile = new File(args[1]);
+                openMultiWithLaunchFile(launcherFile, setupFile,null);
+            } else {
+                openMultiWithoutLaunchFile(setupFile,null,null);
             }
         } else {
-            supervisor.startColorTextReader();
-            supervisor.setVisible(true);
-            if (null == args || args.length < 1) {
-                supervisor.browseOpenSetup();
-                supervisor.browseOpenAll();
-                completeOpenSupevisor(supervisor);
-            } else {
-                supervisor.loadSetupFile(new File(args[0]))
-                        .thenRun(() -> completeOpenSupevisor(supervisor));
-            }
-
+            openMultiWithoutLaunchFile(setupFile,null,null);
         }
     }
 
-    private static void completeOpenSupevisor(Supervisor supervisor) {
-        supervisor.loadPrevPosMapFile();
+    @UIEffect
+    private static void openMultiWithLaunchFile(File launcherFile, @Nullable File setupFile, @Nullable Frame parent) throws IOException {
+
+        try {
+            ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
+            processLauncher.setVisible(true);
+            processLauncher.run(launcherFile)
+                    .thenRun(() -> {
+                        try {
+                            XFuture<Supervisor> supervisorFuture = openMultiWithoutLaunchFile(setupFile,parent, launcherFile.getParent());
+                            supervisorFuture.thenAccept((Supervisor supervisor) -> {
+                                supervisor.setProcessLauncher(processLauncher);
+                            });
+                        } catch (Exception iOException) {
+                            iOException.printStackTrace();
+                        }
+                    });
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    @UIEffect
+    private static XFuture<Supervisor> openMultiWithoutLaunchFile(@Nullable File setupFile, @Nullable Frame parent,@Nullable String dirName) throws IOException {
+        if (null == setupFile) {
+            return Supervisor.openAll(null, parent, dirName)
+                    .thenApply((Supervisor supervisor) -> {
+                        supervisor.startColorTextReader();
+                        supervisor.setVisible(true);
+                        return supervisor;
+                    });
+        } else {
+            Supervisor supervisor
+                    = createAprsSupervisorWithSwingDisplay();
+            supervisor.startColorTextReader();
+            supervisor.setVisible(true);
+            return supervisor.loadSetupFile(setupFile)
+                    .thenRun(() -> completeOpenSupevisor(supervisor,setupFile.getParent()))
+                    .thenApply(x -> supervisor);
+        }
+    }
+
+    private static void completeOpenSupevisor(Supervisor supervisor, @Nullable String dirName) {
+        supervisor.loadPrevPosMapFile(dirName);
         supervisor.loadPrevSimTeach();
-        supervisor.loadPrevTeachProperties()
+        supervisor.loadPrevTeachProperties(dirName)
                 .thenRun(() -> PlayAlert());
     }
 
@@ -736,9 +783,24 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemSetLaunchFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetLaunchFileActionPerformed
-        JFileChooser chooser = new JFileChooser();
+        File oldFile = null;
         try {
-            File oldFile = getLastLaunchFile();
+            oldFile= getLastLaunchFile();
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        JFileChooser chooser;
+        if(null !=oldFile) {
+            chooser = new JFileChooser(oldFile);
+        } else {
+            chooser = new JFileChooser();
+        }
+        FileNameExtensionFilter txtExtensionFilter = new FileNameExtensionFilter("txt", "txt");
+        chooser.addChoosableFileFilter(txtExtensionFilter);
+        chooser.setFileFilter(txtExtensionFilter);
+        chooser.setDialogTitle("Choose launch text file for Aprs.");
+        try {
+            
             if (null != oldFile) {
                 File parentFile = oldFile.getParentFile();
                 if (null != parentFile) {
@@ -788,7 +850,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         f = null;
         try {
-            f = Supervisor.getLastSetupFile();
+            f = Supervisor.getLastSetupFile(null);
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }

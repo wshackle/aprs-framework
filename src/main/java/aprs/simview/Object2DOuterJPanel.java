@@ -1810,7 +1810,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         } catch (Exception exception) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
-            JOptionPane.showMessageDialog(this, exception.getMessage());
+            String message = exception.getMessage();
+            if (null != message) {
+                JOptionPane.showMessageDialog(this, message);
+            }
             if (null == visionSocketClient || !visionSocketClient.isConnected()) {
                 jCheckBoxConnected.setSelected(false);
             }
@@ -2689,6 +2692,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setHandleRotationEnum(newHandleRotationEnum);
     }//GEN-LAST:event_jComboBoxHandleRotationsEnumActionPerformed
 
+    @UIEffect
     private void jTextFieldRotationOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotationOffsetActionPerformed
         object2DJPanel1.setRotationOffset(toRadians(parseDouble(jTextFieldRotationOffset.getText().trim())));
     }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
@@ -3436,7 +3440,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * @return the value of ignoreLosingItemsLists
      */
     public boolean isIgnoreLosingItemsLists() {
-        if(null != visionSocketClient) {
+        if (null != visionSocketClient) {
             boolean ret = visionSocketClient.isIgnoreLosingItemsLists();
             this.ignoreLosingItemsLists = ret;
             return ret;
@@ -3450,7 +3454,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * @param ignoreLosingItemsLists new value of ignoreLosingItemsLists
      */
     public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
-         if(null != visionSocketClient) {
+        if (null != visionSocketClient) {
             visionSocketClient.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
         }
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;

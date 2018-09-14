@@ -35,6 +35,7 @@ import aprs.database.PhysicalItem;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapEntry;
 import aprs.launcher.ProcessLauncherJFrame;
+import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.Utils.UiSupplier;
 import static aprs.misc.Utils.tableHeaders;
 import aprs.supervisor.screensplash.SplashScreen;
@@ -48,6 +49,7 @@ import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Frame;
 import java.awt.GraphicsDevice;
 import java.awt.HeadlessException;
 import java.awt.Image;
@@ -166,7 +168,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public void setSupervisor(Supervisor supervisor) {
         this.supervisor = supervisor;
+    }
 
+    public void setSupervisorAndShow(Supervisor supervisor) {
+        setSupervisor(supervisor);
+        setVisible(true);
+        updateRobotsTable();
     }
 
     private ExecutorService getSupervisorExecutorService() {
@@ -806,7 +813,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.loadAllPrevFiles();
+        return supervisor.loadAllPrevFiles(null);
     }
 
     JPanel blankPanel = new JPanel();
@@ -2396,7 +2403,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * Query the user to select a file to save setup data in.
      */
     private void browseSaveSetupAs() throws IOException {
-        File chosenFile = chooseFileForSaveAs(Supervisor.getLastSetupFile());
+        File chosenFile = chooseFileForSaveAs(Supervisor.getLastSetupFile(null));
         if (null != chosenFile) {
             saveSetupFile(chosenFile);
         }
@@ -2429,11 +2436,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     /**
      * Query the user to select a setup file to read.
      */
-    private void browseOpenSetup() throws IOException {
-        File prevChosenFile = Supervisor.getLastSetupFile();
+    private XFutureVoid browseOpenSetup() throws IOException {
+        File prevChosenFile = Supervisor.getLastSetupFile(null);
         File chosenFile = chooseSetupFileToOpen(prevChosenFile);
         if (null != chosenFile) {
-            loadSetupFile(chosenFile);
+            return loadSetupFile(chosenFile);
+        } else {
+            throw new RuntimeException("User cancelled choosing file.");
         }
     }
 
@@ -2576,7 +2585,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSavePosMapsActionPerformed
 
     private void browseAndSavePositionMappings() throws HeadlessException, IOException {
-        File chosenFile = choosePositionMappingsFileForSaveAs(Supervisor.getLastPosMapFile());
+        File chosenFile = choosePositionMappingsFileForSaveAs(Supervisor.getLastPosMapFile(null));
         if (null != chosenFile) {
             savePositionMaps(chosenFile);
         }
@@ -2633,7 +2642,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * coordinates from one robot to another.
      */
     public void browseOpenPosMapsFile() throws IOException {
-        File chosenFile = choosePosMapsFileToOpen(Supervisor.getLastPosMapFile());
+        File chosenFile = choosePosMapsFileToOpen(Supervisor.getLastPosMapFile(null));
         if (null != chosenFile) {
             loadPositionMaps(chosenFile);
         }
@@ -3572,12 +3581,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (null == supervisor) {
                 throw new IllegalStateException("null == supervisor");
             }
-            Map<String, String> filesMapIn = new HashMap<>();
-            filesMapIn.put("Setup", supervisor.getSetupFilePathString());
-            filesMapIn.put("PosMap", supervisor.getPosMapFilePathString());
-            filesMapIn.put("SimTeach", supervisor.getSimTeachFilePathString());
-            filesMapIn.put("TeachProps", supervisor.getTeachPropsFilePathString());
-            filesMapIn.put("SharedTools", supervisor.getSharedToolsFilePathString());
+            Map<String, MultiFileDialogInputFileInfo> filesMapIn = new HashMap<>();
+            filesMapIn.put("Setup", new MultiFileDialogInputFileInfo(supervisor.getSetupFilePathString()));
+            filesMapIn.put("PosMap", new MultiFileDialogInputFileInfo(supervisor.getPosMapFilePathString()));
+            filesMapIn.put("SimTeach", new MultiFileDialogInputFileInfo(supervisor.getSimTeachFilePathString()));
+            filesMapIn.put("TeachProps", new MultiFileDialogInputFileInfo(supervisor.getTeachPropsFilePathString()));
+            filesMapIn.put("SharedTools", new MultiFileDialogInputFileInfo(supervisor.getSharedToolsFilePathString()));
 
             Map<String, String> filesMapOut = MultiFileDialogJPanel.showMultiFileDialog(this, "Save All ...", true, filesMapIn);
             if (null != filesMapOut) {
@@ -3727,7 +3736,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemOpenAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemOpenAllActionPerformed
-        openAll();
+        try {
+            openAll(supervisor, this, null);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jMenuItemOpenAllActionPerformed
 
     private void jTreeSelectedFutureValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_jTreeSelectedFutureValueChanged
@@ -3748,46 +3761,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jTreeSelectedFutureValueChanged
 
-    void openAll() throws IllegalStateException {
-        try {
-            if (null == supervisor) {
-                throw new IllegalStateException("null == supervisor");
-            }
-            Map<String, String> filesMapIn = new HashMap<>();
-            filesMapIn.put("Setup", supervisor.getSetupFilePathString());
-            filesMapIn.put("PosMap", supervisor.getPosMapFilePathString());
-            filesMapIn.put("SimTeach", supervisor.getSimTeachFilePathString());
-            filesMapIn.put("TeachProps", supervisor.getTeachPropsFilePathString());
-            filesMapIn.put("SharedTools", supervisor.getSharedToolsFilePathString());
-
-            Map<String, String> filesMapOut = MultiFileDialogJPanel.showMultiFileDialog(this, "Open All ...", true, filesMapIn);
-            if (null != filesMapOut) {
-                String setup = filesMapOut.get("Setup");
-                if (null != setup) {
-                    loadSetupFile(new File(setup));
-                }
-                String mapsFile = filesMapOut.get("PosMap");
-                if (null != mapsFile) {
-                    loadPositionMaps(new File(mapsFile));
-                }
-
-                String simTeach = filesMapOut.get("SimTeach");
-                if (null != simTeach) {
-                    loadSimTeach(new File(simTeach));
-                }
-
-                String teachProps = filesMapOut.get("TeachProps");
-                if (null != teachProps) {
-                    loadTeachProps(new File(teachProps));
-                }
-                String sharedTools = filesMapOut.get("SharedTools");
-                if (null != sharedTools) {
-                    loadSharedTools(new File(sharedTools));
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
-        }
+    @UIEffect
+    public static XFuture<Supervisor> openAll(@Nullable Supervisor supervisor, Frame owner, @Nullable String dirName) throws IOException {
+        return Supervisor.openAll(supervisor, owner, dirName);
     }
 
     public void setShowFullScreenMessages(boolean showFullScreenMessages) {
@@ -4654,11 +4630,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * @param f setup file to load
      * @throws IOException file could not be read
      */
-    private void loadSetupFile(File f) throws IOException {
+    private XFutureVoid loadSetupFile(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.loadSetupFile(f);
+        return supervisor.loadSetupFile(f);
     }
 
     private String lastUpdateTaskTableTaskNames @Nullable []  = null;

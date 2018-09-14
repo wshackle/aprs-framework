@@ -174,6 +174,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -5327,6 +5328,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void newLogFileName() throws HeadlessException {
         recordCsvName = jTextFieldLogFilename.getText();
         JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter csvExtensionFilter = new FileNameExtensionFilter("csv", "csv");
+        chooser.addChoosableFileFilter(csvExtensionFilter);
+        chooser.setFileFilter(csvExtensionFilter);
         if (null != propertiesFile) {
             File parentFile = propertiesFile.getParentFile();
             if (null != parentFile) {
@@ -5759,14 +5763,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     
     private final CachedCheckBox enableOptaplannerCachedCheckBox;
     
-    private volatile File generateAbortLogFile = null;
+    @Nullable private volatile File generateAbortLogFile = null;
     
+    @SuppressWarnings({"nullness","guieffect"})
     private void appendGenerateAbortLog(String type, int actionsSize, boolean reverse, int startingIndex, int startSafeAbortRequestCount, int sectionNumber) {
         try {
             initGenerateAbortLogFile();
+            File logFile = generateAbortLogFile;
+            if(logFile == null) {
+                return;
+            }
             Object[] rowValues = new Object[]{type,  reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(),aprsSystem.getRobotName()};
             try (
-                    FileWriter fw = new FileWriter(generateAbortLogFile,true);
+                    FileWriter fw = new FileWriter(logFile,true);
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
@@ -7026,13 +7035,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
     
+    @SuppressWarnings("guieffect")
     private void initGenerateAbortLogFile() throws IOException {
         if (null == generateAbortLogFile) {
             generateAbortLogFile = Utils.createTempFile("generateAbortLog"+aprsSystem.getTaskName(), ".csv");
             try (
                     FileWriter fw = new FileWriter(generateAbortLogFile);
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
-                
+                csvp.getOut(); // use it for nothing to avoid warning
             }
             System.out.println("generateAbortLogFile = " + generateAbortLogFile);
         }

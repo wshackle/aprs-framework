@@ -27,11 +27,13 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import javax.swing.JPanel;
+import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
  *
  * @author shackle
  */
+@UIType
 public class InnerConveyorSpeedJPanel extends JPanel {
 
     private long maxPosition = 10000;

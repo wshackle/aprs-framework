@@ -22,15 +22,19 @@
  */
 package aprs.conveyor;
 
+import org.checkerframework.checker.guieffect.qual.UIType;
+
 /**
  *
  * @author shackle
  */
+@UIType
 public class ConveyorVisJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form ConveyorVisJPanel
      */
+    @SuppressWarnings("initialization")
     public ConveyorVisJPanel() {
         initComponents();
     }
