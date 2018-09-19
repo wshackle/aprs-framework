@@ -42,7 +42,9 @@
     </Component>
     <Component class="aprs.simview.Object2DOuterJPanel" name="object2DOuterJPanel1">
       <Properties>
+        <Property name="autoscale" type="boolean" value="false"/>
         <Property name="ignoreLosingItemsLists" type="boolean" value="false"/>
+        <Property name="simulated" type="boolean" value="true"/>
       </Properties>
     </Component>
   </SubComponents>

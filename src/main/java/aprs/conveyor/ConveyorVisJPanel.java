@@ -37,8 +37,18 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
     @SuppressWarnings("initialization")
     public ConveyorVisJPanel() {
         initComponents();
+        outerConveyorSpeedControlJPanel1.addConveyorPositionListener(object2DOuterJPanel1::handleConveyorPositionUpdate);
     }
 
+    public boolean isSimulated() {
+        return object2DOuterJPanel1.isSimulated() && outerConveyorSpeedControlJPanel1.isSimulated();
+    }
+    
+    public void setSimulated(boolean simulated) {
+        object2DOuterJPanel1.setSimulated(simulated);
+        outerConveyorSpeedControlJPanel1.setSimulated(simulated);
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -51,7 +61,9 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
         outerConveyorSpeedControlJPanel1 = new aprs.conveyor.OuterConveyorSpeedControlJPanel();
         object2DOuterJPanel1 = new aprs.simview.Object2DOuterJPanel();
 
+        object2DOuterJPanel1.setAutoscale(false);
         object2DOuterJPanel1.setIgnoreLosingItemsLists(false);
+        object2DOuterJPanel1.setSimulated(true);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
