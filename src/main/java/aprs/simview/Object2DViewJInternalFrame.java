@@ -249,6 +249,6 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     public void setSimulatedAndDisconnect() {
-        this.object2DOuterJPanel1.setSimulatedAndDisconnect();
+        this.object2DOuterJPanel1.setSimulated(true);
     }
 }

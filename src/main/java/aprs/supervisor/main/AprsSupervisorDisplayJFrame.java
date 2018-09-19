@@ -3882,7 +3882,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
         } else {
             object2DOuterJPanel1.setForceOutputFlag(true);
-            object2DOuterJPanel1.setSimulatedAndDisconnect();
+            object2DOuterJPanel1.setSimulated(true);
             object2DOuterJPanel1.setShowOutputItems(true);
             object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
         }

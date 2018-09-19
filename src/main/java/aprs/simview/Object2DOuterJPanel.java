@@ -24,6 +24,7 @@ package aprs.simview;
 
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedTextField;
+import aprs.conveyor.ConveyorPosition;
 import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
@@ -115,7 +116,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         panel.setViewLimits(minX, minY, maxX, maxY);
         panel.setSlotOffsetProvider(sop);
         panel.setItems(itemsIn);
-        panel.setSimulatedAndDisconnect();
+        panel.setSimulated(true);
         diag.add(panel);
         diag.pack();
         diag.setVisible(true);
@@ -1784,10 +1785,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final CachedCheckBox connectedCachedCheckBox;
 
-    public void setSimulatedAndDisconnect() {
+    public void setSimulated(boolean simulated) {
         connectedCachedCheckBox.setSelected(false);
-        simulatedCachedCheckBox.setSelected(true);
-        setSimulatedInternal(true);
+        simulatedCachedCheckBox.setSelected(simulated);
+        setSimulatedInternal(simulated);
         disconnect();
     }
 
@@ -2531,6 +2532,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
 
+    
+    public boolean isAutoscale() {
+        return object2DJPanel1.isAutoscale() && jCheckBoxAutoscale.isSelected();
+    }
+    
+    public void setAutoscale(boolean autoscale) {
+        object2DJPanel1.setAutoscale(autoscale);
+        jCheckBoxAutoscale.setSelected(autoscale);
+    }
+    
     private PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
         PointType current = aprsSystem.getCurrentPosePoint();
@@ -3791,6 +3802,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Nullable
     private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+
+    @Nullable
+    private volatile ConveyorPosition lastConveyorPosition = null;
+
+    public synchronized void handleConveyorPositionUpdate(ConveyorPosition newConveyorPosition) {
+        if (null != lastConveyorPosition
+                && Double.isFinite(lastConveyorPosition.x) 
+                && Double.isFinite(lastConveyorPosition.y) 
+                && null != newConveyorPosition
+                && Double.isFinite(newConveyorPosition.x)
+                && Double.isFinite(newConveyorPosition.y)
+                && isSimulated()) {
+            double xinc = newConveyorPosition.x - lastConveyorPosition.x;
+            double yinc = newConveyorPosition.y - lastConveyorPosition.y;
+            List<PhysicalItem> itemsCopy = new ArrayList<>(getItems());
+            for (int i = 0; i < itemsCopy.size(); i++) {
+                if (i != captured_item_index) {
+                    PhysicalItem item = itemsCopy.get(i);
+                    item.x += xinc;
+                    item.y += yinc;
+                }
+            }
+            setItems(itemsCopy, true);
+        }
+        lastConveyorPosition = newConveyorPosition;
+    }
 
     @Override
     public void handlePoseUpdate(
