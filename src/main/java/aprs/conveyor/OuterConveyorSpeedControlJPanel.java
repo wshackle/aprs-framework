@@ -325,6 +325,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     private void conveyorSpeedJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_conveyorSpeedJPanel1MouseReleased
         stopConveyor();
+         if (evt.isPopupTrigger()) {
+            popupMenu.show(this.conveyorSpeedJPanel1, evt.getX(), evt.getY());
+        }
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseReleased
 
     private void conveyorSpeedJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_conveyorSpeedJPanel1MouseExited
