@@ -51,6 +51,7 @@ import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
+import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
 
 import java.io.File;
@@ -170,6 +171,11 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    
+    public Object2DOuterJPanel getObjectViewPanel() {
+        return object2DViewJInternalFrame.getObjectViewPanel();
+    }
+    
     /**
      * Creates new AprsSystem using a default properties file.
      */

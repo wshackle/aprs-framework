@@ -28,25 +28,31 @@ public class CachedTextField extends CachedComponentBase {
         @Override
         public void actionPerformed(ActionEvent e) {
             actionCount.incrementAndGet();
-            text = jTextField.getText();
+            syncText();
         }
     }
 
     private final CachedTextFieldActionListener actionListener
             = new CachedTextFieldActionListener();
-
-    @SuppressWarnings("guieffect")
-    private void checkMatch() {
-        String textCopy = text;
-        String jTextFieldCopy = jTextField.getText();
-        int dc = getDispatchCount();
-        int sc = getStartCount();
-        int fc = getFinishCount();
-        int ac = actionCount.get();
-        if (!Objects.equals(textCopy, jTextFieldCopy) && (dc <= fc)) {
-            throw new IllegalStateException("text=" + textCopy + ", jTextField.getText()=" + jTextFieldCopy + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
-        }
+    
+    
+    @UIEffect
+    public final void syncText() {
+        text = jTextField.getText();
     }
+
+//    @SuppressWarnings("guieffect")
+//    private void checkMatch() {
+//        String textCopy = text;
+//        String jTextFieldCopy = jTextField.getText();
+//        int dc = getDispatchCount();
+//        int sc = getStartCount();
+//        int fc = getFinishCount();
+//        int ac = actionCount.get();
+//        if (!Objects.equals(textCopy, jTextFieldCopy) && (dc <= fc)) {
+//            throw new IllegalStateException("text=" + textCopy + ", jTextField.getText()=" + jTextFieldCopy + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
+//        }
+//    }
 
     @UIEffect
     public CachedTextField(JTextField textField) {
@@ -56,7 +62,7 @@ public class CachedTextField extends CachedComponentBase {
     }
 
     public String getText() {
-        checkMatch();
+//        checkMatch();
         return text;
     }
 
@@ -70,7 +76,7 @@ public class CachedTextField extends CachedComponentBase {
     @UIEffect
     private void setTextComponentText(String newText) {
         jTextField.setText(newText);
-        checkMatch();
+//        checkMatch();
     }
 
 }

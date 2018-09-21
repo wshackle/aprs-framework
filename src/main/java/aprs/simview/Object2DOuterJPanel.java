@@ -80,6 +80,7 @@ import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
+import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
@@ -833,33 +834,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanelTopRow = new javax.swing.JPanel();
-        jTextFieldFilename = new javax.swing.JTextField();
-        jButtonSave = new javax.swing.JButton();
-        jButtonLoad = new javax.swing.JButton();
         jPanelBottomMain = new javax.swing.JPanel();
-        jPanelRightSide = new javax.swing.JPanel();
+        object2DJPanel1 = new aprs.simview.Object2DJPanel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanelOptionsTab = new javax.swing.JPanel();
-        jTextFieldCurrentXY = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        jButtonOffsetAll = new javax.swing.JButton();
-        jButtonReset = new javax.swing.JButton();
-        jCheckBoxShowRotations = new javax.swing.JCheckBox();
-        jButtonCurrent = new javax.swing.JButton();
-        jCheckBoxShowCurrent = new javax.swing.JCheckBox();
-        jComboBoxDisplayAxis = new javax.swing.JComboBox<>();
-        jButtonAdd = new javax.swing.JButton();
-        jTextFieldMaxXMaxY = new javax.swing.JTextField();
-        jCheckBoxSeparateNames = new javax.swing.JCheckBox();
-        jCheckBoxAutoscale = new javax.swing.JCheckBox();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        jTextFieldMinXMinY = new javax.swing.JTextField();
-        jButtonDelete = new javax.swing.JButton();
-        jCheckBoxAddSlots = new javax.swing.JCheckBox();
-        jCheckBoxDetails = new javax.swing.JCheckBox();
-        jCheckBoxTools = new javax.swing.JCheckBox();
         jPanelConnectionsTab = new javax.swing.JPanel();
         jCheckBoxSimulated = new javax.swing.JCheckBox();
         jTextFieldHost = new javax.swing.JTextField();
@@ -876,6 +853,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jComboBoxHandleRotationsEnum = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
         jTextFieldRotationOffset = new javax.swing.JTextField();
+        jCheckBoxCloning = new javax.swing.JCheckBox();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -898,259 +876,78 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableTraySlots = new javax.swing.JTable();
         jScrollPaneProperties = new javax.swing.JScrollPane();
         jTableProperties = new javax.swing.JTable();
+        jPanelTopRow = new javax.swing.JPanel();
+        jTextFieldFilename = new javax.swing.JTextField();
+        jButtonSave = new javax.swing.JButton();
+        jButtonLoad = new javax.swing.JButton();
+        jPanelItems = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableItems = new javax.swing.JTable();
-        object2DJPanel1 = new aprs.simview.Object2DJPanel();
+        jPanelItemsButtons = new javax.swing.JPanel();
+        jButtonAdd = new javax.swing.JButton();
+        jButtonCurrent = new javax.swing.JButton();
+        jButtonDelete = new javax.swing.JButton();
+        jPanelOptionsTab = new javax.swing.JPanel();
+        jTextFieldCurrentXY = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        jButtonOffsetAll = new javax.swing.JButton();
+        jButtonReset = new javax.swing.JButton();
+        jCheckBoxShowRotations = new javax.swing.JCheckBox();
+        jCheckBoxShowCurrent = new javax.swing.JCheckBox();
+        jComboBoxDisplayAxis = new javax.swing.JComboBox<>();
+        jTextFieldMaxXMaxY = new javax.swing.JTextField();
+        jCheckBoxSeparateNames = new javax.swing.JCheckBox();
+        jCheckBoxAutoscale = new javax.swing.JCheckBox();
+        jLabel3 = new javax.swing.JLabel();
+        jTextFieldMinXMinY = new javax.swing.JTextField();
+        jCheckBoxAddSlots = new javax.swing.JCheckBox();
+        jCheckBoxDetails = new javax.swing.JCheckBox();
+        jCheckBoxTools = new javax.swing.JCheckBox();
+        jLabel4 = new javax.swing.JLabel();
 
-        jButtonSave.setText("Save");
-        jButtonSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonSaveActionPerformed(evt);
+        setLayout(new java.awt.GridLayout(1, 0));
+
+        jPanelBottomMain.setLayout(new java.awt.GridLayout(1, 0));
+
+        object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseDragged(evt);
+            }
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseMoved(evt);
+            }
+        });
+        object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseExited(evt);
+            }
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MousePressed(evt);
+            }
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseReleased(evt);
             }
         });
 
-        jButtonLoad.setText("Load");
-        jButtonLoad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonLoadActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanelTopRowLayout = new javax.swing.GroupLayout(jPanelTopRow);
-        jPanelTopRow.setLayout(jPanelTopRowLayout);
-        jPanelTopRowLayout.setHorizontalGroup(
-            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTopRowLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 624, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonSave)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonLoad)
-                .addContainerGap())
+        javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
+        object2DJPanel1.setLayout(object2DJPanel1Layout);
+        object2DJPanel1Layout.setHorizontalGroup(
+            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 351, Short.MAX_VALUE)
         );
-        jPanelTopRowLayout.setVerticalGroup(
-            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelTopRowLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonSave)
-                    .addComponent(jButtonLoad))
-                .addContainerGap())
-        );
-
-        jPanelRightSide.setMinimumSize(new java.awt.Dimension(350, 0));
-
-        jTextFieldCurrentXY.setText("0.0,0.0");
-        jTextFieldCurrentXY.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldCurrentXYActionPerformed(evt);
-            }
-        });
-
-        jLabel2.setText("Xmin,Ymin : ");
-
-        jButtonOffsetAll.setText("Offset All");
-        jButtonOffsetAll.setEnabled(false);
-        jButtonOffsetAll.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonOffsetAllActionPerformed(evt);
-            }
-        });
-
-        jButtonReset.setText("Reset");
-        jButtonReset.setEnabled(false);
-        jButtonReset.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonResetActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxShowRotations.setSelected(true);
-        jCheckBoxShowRotations.setText("Show Rotations/Images");
-        jCheckBoxShowRotations.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxShowRotationsActionPerformed(evt);
-            }
-        });
-
-        jButtonCurrent.setText("Current");
-        jButtonCurrent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonCurrentActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxShowCurrent.setText("Show");
-        jCheckBoxShowCurrent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxShowCurrentActionPerformed(evt);
-            }
-        });
-
-        jComboBoxDisplayAxis.setModel(new DefaultComboBoxModel<>(DisplayAxis.values()));
-        jComboBoxDisplayAxis.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBoxDisplayAxisActionPerformed(evt);
-            }
-        });
-
-        jButtonAdd.setText("Add");
-        jButtonAdd.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddActionPerformed(evt);
-            }
-        });
-
-        jTextFieldMaxXMaxY.setText("700.0, 315.0");
-        jTextFieldMaxXMaxY.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldMaxXMaxYActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxSeparateNames.setSelected(true);
-        jCheckBoxSeparateNames.setText("Names");
-        jCheckBoxSeparateNames.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxSeparateNamesActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxAutoscale.setSelected(true);
-        jCheckBoxAutoscale.setText("Auto Scale");
-        jCheckBoxAutoscale.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxAutoscaleActionPerformed(evt);
-            }
-        });
-
-        jLabel4.setText("Current");
-
-        jLabel3.setText("Xmax,Ymax");
-
-        jTextFieldMinXMinY.setText("200.0, -315.0");
-        jTextFieldMinXMinY.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldMinXMinYActionPerformed(evt);
-            }
-        });
-
-        jButtonDelete.setText("Delete");
-        jButtonDelete.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDeleteActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxAddSlots.setText("Slots");
-        jCheckBoxAddSlots.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxAddSlotsActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxDetails.setText("Details");
-        jCheckBoxDetails.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxDetailsActionPerformed(evt);
-            }
-        });
-
-        jCheckBoxTools.setText("Tools");
-        jCheckBoxTools.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxToolsActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
-        jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
-        jPanelOptionsTabLayout.setHorizontalGroup(
-            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                            .addComponent(jCheckBoxShowRotations)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                            .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jLabel2)
-                                .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                                    .addComponent(jCheckBoxShowCurrent)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jLabel4))
-                                .addComponent(jLabel3))
-                            .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxDetails)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxTools)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxAddSlots)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxSeparateNames)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxAutoscale))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jButtonOffsetAll)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonReset)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonCurrent)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDelete)
-                        .addGap(4, 4, 4)
-                        .addComponent(jButtonAdd)))
-                .addContainerGap())
-        );
-        jPanelOptionsTabLayout.setVerticalGroup(
-            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxAutoscale)
-                    .addComponent(jCheckBoxSeparateNames)
-                    .addComponent(jCheckBoxAddSlots)
-                    .addComponent(jCheckBoxDetails)
-                    .addComponent(jCheckBoxTools))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxShowRotations)
-                    .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jCheckBoxShowCurrent))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonDelete)
-                    .addComponent(jButtonAdd)
-                    .addComponent(jButtonReset)
-                    .addComponent(jButtonCurrent)
-                    .addComponent(jButtonOffsetAll))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        object2DJPanel1Layout.setVerticalGroup(
+            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 443, Short.MAX_VALUE)
         );
 
-        jPanelOptionsTabLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonAdd, jButtonDelete});
-
-        jTabbedPane1.addTab("Options", jPanelOptionsTab);
+        jPanelBottomMain.add(object2DJPanel1);
 
         jPanelConnectionsTab.setMaximumSize(new java.awt.Dimension(407, 32767));
 
@@ -1221,6 +1018,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxCloning.setText("Cloning");
+        jCheckBoxCloning.setEnabled(false);
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1229,36 +1029,41 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabelHost)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonRefresh)
-                        .addGap(0, 35, Short.MAX_VALUE))
+                        .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabelHost)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel12)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButtonRefresh))
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane3)
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addComponent(jCheckBoxSimulated)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel13)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addComponent(jCheckBoxDebug)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBoxPause)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel12)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBoxHandleRotationsEnum, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jCheckBoxDebug)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxPause)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel13)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jCheckBoxSimulated)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxCloning)))
+                                .addGap(0, 85, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1268,29 +1073,33 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxSimulated)
                     .addComponent(jCheckBoxConnected)
-                    .addComponent(jLabel13)
-                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jCheckBoxCloning))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabelHost)
-                    .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonRefresh))
+                    .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxDebug)
                     .addComponent(jCheckBoxPause)
+                    .addComponent(jLabel13)
+                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
                     .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
+                .addComponent(jButtonRefresh)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Connections", jPanelConnectionsTab);
 
-        jLabel5.setText("Simulated Frequency (in ms)  :");
+        jLabel5.setText("Frequency (in ms)  :");
 
         jTextFieldSimulationUpdateTime.setEditable(false);
         jTextFieldSimulationUpdateTime.setText("50   ");
@@ -1305,7 +1114,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxShuffleSimulatedUpdates.setEnabled(false);
 
         jCheckBoxSimulationUpdateAsNeeded.setSelected(true);
-        jCheckBoxSimulationUpdateAsNeeded.setText("Simulate Updates only as needed.");
+        jCheckBoxSimulationUpdateAsNeeded.setText("Update only as needed.");
         jCheckBoxSimulationUpdateAsNeeded.setEnabled(false);
         jCheckBoxSimulationUpdateAsNeeded.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1313,7 +1122,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
-        jLabel6.setText("Simulated Drop Out Rate ( 0.0 to 1.0)  : ");
+        jLabel6.setText("Drop Out Rate  : ");
 
         jTextFieldSimDropRate.setEditable(false);
         jTextFieldSimDropRate.setText("0.0    ");
@@ -1391,40 +1200,35 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jCheckBoxSimulationUpdateAsNeeded)
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel9)
+                        .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jCheckBoxShuffleSimulatedUpdates)
+                    .addComponent(jCheckBoxAddPosNoise)
+                    .addComponent(jCheckBoxViewOutput)
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addComponent(jLabel10)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCheckBoxSimulationUpdateAsNeeded)
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                                .addComponent(jLabel7)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel8))
-                            .addComponent(jCheckBoxShuffleSimulatedUpdates))
+                        .addComponent(jLabel9)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCheckBoxAddPosNoise)
-                            .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
-                            .addComponent(jLabel6)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextFieldSimDropRate))
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelSimulationTabLayout.createSequentialGroup()
-                            .addComponent(jLabel5)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jCheckBoxViewOutput))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(150, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1432,31 +1236,36 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
-                    .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jCheckBoxViewOutput))
+                    .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxSimulationUpdateAsNeeded)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxShuffleSimulatedUpdates)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxViewOutput)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxAddPosNoise)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxShuffleSimulatedUpdates)
-                    .addComponent(jCheckBoxAddPosNoise))
-                .addGap(3, 3, 3)
-                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
                     .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel7))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel9)
-                    .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10)
                     .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel9)
+                    .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(88, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -1495,14 +1304,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelTraysLayout.setVerticalGroup(
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 209, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Trays", jPanelTrays);
@@ -1535,13 +1344,52 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Properties", jScrollPaneProperties);
 
+        jButtonSave.setText("Save");
+        jButtonSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSaveActionPerformed(evt);
+            }
+        });
+
+        jButtonLoad.setText("Load");
+        jButtonLoad.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLoadActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelTopRowLayout = new javax.swing.GroupLayout(jPanelTopRow);
+        jPanelTopRow.setLayout(jPanelTopRowLayout);
+        jPanelTopRowLayout.setHorizontalGroup(
+            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopRowLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
+                    .addGroup(jPanelTopRowLayout.createSequentialGroup()
+                        .addComponent(jButtonSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLoad)))
+                .addGap(15, 15, 15))
+        );
+        jPanelTopRowLayout.setVerticalGroup(
+            jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTopRowLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTextFieldFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonSave)
+                    .addComponent(jButtonLoad))
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Files", jPanelTopRow);
+
         jTableItems.setAutoCreateRowSorter(true);
         jTableItems.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null}
+
             },
             new String [] {
                 "Index", "Name", "X", "Y", "Rotation", "Type", "Score"
@@ -1565,105 +1413,266 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableItems.setMaximumSize(new java.awt.Dimension(400, 64));
         jScrollPane1.setViewportView(jTableItems);
 
-        javax.swing.GroupLayout jPanelRightSideLayout = new javax.swing.GroupLayout(jPanelRightSide);
-        jPanelRightSide.setLayout(jPanelRightSideLayout);
-        jPanelRightSideLayout.setHorizontalGroup(
-            jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelRightSideLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        jPanelRightSideLayout.setVerticalGroup(
-            jPanelRightSideLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelRightSideLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 266, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-
-        object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseDragged(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseDragged(evt);
-            }
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseMoved(evt);
-            }
-        });
-        object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseClicked(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseEntered(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseExited(evt);
-            }
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MousePressed(evt);
-            }
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseReleased(evt);
+        jButtonAdd.setText("Add");
+        jButtonAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
-        object2DJPanel1.setLayout(object2DJPanel1Layout);
-        object2DJPanel1Layout.setHorizontalGroup(
-            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 395, Short.MAX_VALUE)
-        );
-        object2DJPanel1Layout.setVerticalGroup(
-            object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 546, Short.MAX_VALUE)
-        );
+        jButtonCurrent.setText("Current");
+        jButtonCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonCurrentActionPerformed(evt);
+            }
+        });
 
-        javax.swing.GroupLayout jPanelBottomMainLayout = new javax.swing.GroupLayout(jPanelBottomMain);
-        jPanelBottomMain.setLayout(jPanelBottomMainLayout);
-        jPanelBottomMainLayout.setHorizontalGroup(
-            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelBottomMainLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
-                .addComponent(jPanelRightSide, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanelBottomMainLayout.setVerticalGroup(
-            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelBottomMainLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelRightSide, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
+        jButtonDelete.setText("Delete");
+        jButtonDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteActionPerformed(evt);
+            }
+        });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelItemsButtonsLayout = new javax.swing.GroupLayout(jPanelItemsButtons);
+        jPanelItemsButtons.setLayout(jPanelItemsButtonsLayout);
+        jPanelItemsButtonsLayout.setHorizontalGroup(
+            jPanelItemsButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelItemsButtonsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanelTopRow, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanelTopRow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jButtonCurrent)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jButtonDelete)
+                .addGap(4, 4, 4)
+                .addComponent(jButtonAdd)
+                .addContainerGap())
         );
+        jPanelItemsButtonsLayout.setVerticalGroup(
+            jPanelItemsButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelItemsButtonsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelItemsButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonDelete)
+                    .addComponent(jButtonAdd)
+                    .addComponent(jButtonCurrent))
+                .addContainerGap())
+        );
+
+        jPanelItemsButtonsLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jButtonAdd, jButtonDelete});
+
+        javax.swing.GroupLayout jPanelItemsLayout = new javax.swing.GroupLayout(jPanelItems);
+        jPanelItems.setLayout(jPanelItemsLayout);
+        jPanelItemsLayout.setHorizontalGroup(
+            jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelItemsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
+                    .addGroup(jPanelItemsLayout.createSequentialGroup()
+                        .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 137, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanelItemsLayout.setVerticalGroup(
+            jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        jTabbedPane1.addTab("Items", jPanelItems);
+
+        jTextFieldCurrentXY.setText("0.0,0.0");
+        jTextFieldCurrentXY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldCurrentXYActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setText("Xmin,Ymin : ");
+
+        jButtonOffsetAll.setText("Offset All");
+        jButtonOffsetAll.setEnabled(false);
+        jButtonOffsetAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonOffsetAllActionPerformed(evt);
+            }
+        });
+
+        jButtonReset.setText("Reset");
+        jButtonReset.setEnabled(false);
+        jButtonReset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonResetActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxShowRotations.setSelected(true);
+        jCheckBoxShowRotations.setText("Show Rots/Images");
+        jCheckBoxShowRotations.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowRotationsActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxShowCurrent.setText("Show Current: ");
+        jCheckBoxShowCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowCurrentActionPerformed(evt);
+            }
+        });
+
+        jComboBoxDisplayAxis.setModel(new DefaultComboBoxModel<>(DisplayAxis.values()));
+        jComboBoxDisplayAxis.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxDisplayAxisActionPerformed(evt);
+            }
+        });
+
+        jTextFieldMaxXMaxY.setText("700.0, 315.0");
+        jTextFieldMaxXMaxY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldMaxXMaxYActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxSeparateNames.setSelected(true);
+        jCheckBoxSeparateNames.setText("Names");
+        jCheckBoxSeparateNames.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxSeparateNamesActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxAutoscale.setSelected(true);
+        jCheckBoxAutoscale.setText("Auto Scale");
+        jCheckBoxAutoscale.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxAutoscaleActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Xmax,Ymax");
+
+        jTextFieldMinXMinY.setText("200.0, -315.0");
+        jTextFieldMinXMinY.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldMinXMinYActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxAddSlots.setText("Slots");
+        jCheckBoxAddSlots.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxAddSlotsActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxDetails.setText("Details");
+        jCheckBoxDetails.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxDetailsActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxTools.setText("Tools");
+        jCheckBoxTools.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxToolsActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Axis: ");
+
+        javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
+        jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
+        jPanelOptionsTabLayout.setHorizontalGroup(
+            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                .addGap(16, 16, 16)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
+                            .addComponent(jCheckBoxDetails)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jCheckBoxTools)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jCheckBoxAddSlots)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jCheckBoxSeparateNames)
+                            .addGap(92, 92, 92))
+                        .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                            .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelOptionsTabLayout.createSequentialGroup()
+                                    .addComponent(jLabel4)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                    .addComponent(jCheckBoxShowRotations)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addComponent(jCheckBoxAutoscale)))
+                            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                        .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jButtonOffsetAll)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonReset))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jCheckBoxShowCurrent)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jTextFieldCurrentXY)
+                                    .addComponent(jTextFieldMaxXMaxY)
+                                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
+        jPanelOptionsTabLayout.setVerticalGroup(
+            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxSeparateNames)
+                    .addComponent(jCheckBoxAddSlots)
+                    .addComponent(jCheckBoxDetails)
+                    .addComponent(jCheckBoxTools))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxShowRotations)
+                    .addComponent(jCheckBoxAutoscale))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxShowCurrent))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonReset)
+                    .addComponent(jButtonOffsetAll))
+                .addContainerGap(178, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Options", jPanelOptionsTab);
+
+        jPanelBottomMain.add(jTabbedPane1);
+
+        add(jPanelBottomMain);
     }// </editor-fold>//GEN-END:initComponents
 
     private double posNoise = 1.0;
@@ -1760,7 +1769,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (simulated) {
             jTextFieldHost.setEditable(false);
             jTextFieldHost.setEnabled(false);
-            jLabelHost.setEnabled(false);
             setupSimUpdateTimer();
         } else {
             jTextFieldHost.setEditable(true);
@@ -1792,6 +1800,45 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }
 
+    private Object2DOuterJPanel objectPanelToClone = null;
+
+    /**
+     * Get the value of objectPanelToClone
+     *
+     * @return the value of objectPanelToClone
+     */
+    public Object2DOuterJPanel getObjectPanelToClone() {
+        return objectPanelToClone;
+    }
+
+    /**
+     * Set the value of objectPanelToClone
+     *
+     * @param objectPanelToClone new value of objectPanelToClone
+     */
+    public XFutureVoid setObjectPanelToClone(Object2DOuterJPanel objectPanelToClone) {
+        this.objectPanelToClone = objectPanelToClone;
+        boolean cloning = null != objectPanelToClone;
+        jCheckBoxCloning.setSelected(cloning);
+        jCheckBoxConnected.setEnabled(!cloning);
+        jCheckBoxSimulated.setEnabled(!cloning);
+        if (null != objectPanelToClone) {
+            disconnect();
+            jCheckBoxConnected.setSelected(objectPanelToClone.isConnected());
+            jCheckBoxSimulated.setSelected(objectPanelToClone.isSimulated());
+            hostCachedTextField.setText(objectPanelToClone.getHost());
+            portCachedTextField.setText(Integer.toString(objectPanelToClone.getPort()));
+            setAprsSystem(objectPanelToClone.getAprsSystem());
+            return objectPanelToClone.getProperties()
+                    .thenAccept(this::loadProperties)
+                    .thenRun( () -> {
+                        objectPanelToClone.addSetItemsListener(this::setItems);
+                    });
+        } else {
+            return XFutureVoid.completedFuture();
+        }
+    }
+
     @Nullable
     private VisionSocketServer visionSocketServer = null;
     @Nullable
@@ -1800,6 +1847,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
         try {
+            hostCachedTextField.syncText();
+            portCachedTextField.syncText();
             jButtonReset.setEnabled(false);
             if (this.jCheckBoxConnected.isSelected()) {
                 connect();
@@ -1841,6 +1890,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final CachedTextField portCachedTextField;
     private final CachedCheckBox debugCachedCheckBox;
 
+    public String getHost() {
+        return hostCachedTextField.getText();
+    }
+    
+    public int getPort() {
+        return Integer.parseInt(portCachedTextField.getText());
+    }
+    
     private void connect() throws NumberFormatException {
         if (simulatedCachedCheckBox.isSelected()) {
             try {
@@ -2532,16 +2589,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
 
-    
     public boolean isAutoscale() {
         return object2DJPanel1.isAutoscale() && jCheckBoxAutoscale.isSelected();
     }
-    
+
     public void setAutoscale(boolean autoscale) {
         object2DJPanel1.setAutoscale(autoscale);
         jCheckBoxAutoscale.setSelected(autoscale);
     }
-    
+
     private PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
         PointType current = aprsSystem.getCurrentPosePoint();
@@ -2848,6 +2904,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxAddPosNoise;
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
+    private javax.swing.JCheckBox jCheckBoxCloning;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxDetails;
@@ -2877,8 +2934,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabelHost;
     private javax.swing.JPanel jPanelBottomMain;
     private javax.swing.JPanel jPanelConnectionsTab;
+    private javax.swing.JPanel jPanelItems;
+    private javax.swing.JPanel jPanelItemsButtons;
     private javax.swing.JPanel jPanelOptionsTab;
-    private javax.swing.JPanel jPanelRightSide;
     private javax.swing.JPanel jPanelSimulationTab;
     private javax.swing.JPanel jPanelTopRow;
     private javax.swing.JPanel jPanelTrays;
@@ -2968,55 +3026,65 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (null != parentFile) {
                 parentFile.mkdirs();
             }
-            Properties props = new Properties();
-            props.put("alternativeRotation", String.format("%.2f", toDegrees(object2DJPanel1.getAlternativeRotation())));
-            props.put("--visionport", portCachedTextField.getText().trim());
-            props.put("--visionhost", hostCachedTextField.getText().trim());
-            props.put("simulated", Boolean.toString(simulatedCachedCheckBox.isSelected()));
-            props.put("viewOutput", Boolean.toString(viewOutputCachedCheckBox.isSelected()));
-            props.put("simulationUpdateAsNeeded", Boolean.toString(simulationUpdateAsNeededCachedCheckBox.isSelected()));
-            props.put("shuffleSimulatedUpdates", Boolean.toString(shuffleSimulatedUpdatesCachedCheckBox.isSelected()));
-            props.put("simulatedDropRate", String.format("%.3f", simulatedDropRate));
-            props.put("addPosNoise", Boolean.toString(addPosNoiseCachedCheckBox.isSelected()));
-            props.put("pickupDist", String.format("%.2f", pickupDist));
-            props.put("dropOffThreshold", String.format("%.2f", dropOffThreshold));
-            props.put("posNoise", String.format("%.2f", posNoise));
-            props.put("rotNoise", String.format("%.2f", rotNoise));
-            props.put("simRefreshMillis", Integer.toString(simRefreshMillis));
-            props.put("connected", Boolean.toString(connectedCachedCheckBox.isSelected()));
-            props.put("autoscale", Boolean.toString(autoscaleCachedCheckBox.isSelected()));
-            props.put("tools", Boolean.toString(jCheckBoxTools.isSelected()));
-            props.put("trackcurrentpos", Boolean.toString(showCurrentCachedCheckBox.isSelected()));
-            props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
-            props.put("viewDetails", Boolean.toString(jCheckBoxDetails.isSelected()));
-            props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
-            props.put("xmaxymax", jTextFieldMaxXMaxY.getText().trim());
-            props.put("xminymin", jTextFieldMinXMinY.getText().trim());
-            if (reverseFlag) {
-                this.reverseDataFileString = filenameCachedTextField.getText().trim();
-            } else {
-                this.dataFileString = filenameCachedTextField.getText().trim();
-            }
-            if (null != reverseDataFileString && reverseDataFileString.length() > 0) {
-                String datafileShort = makeShortPath(propertiesFile, reverseDataFileString);
-                props.put("reverse_datafile", datafileShort);
-            }
-            if (null != dataFileString && dataFileString.length() > 0) {
-                String datafileShort = makeShortPath(propertiesFile, dataFileString);
-                props.put("datafile", datafileShort);
-            }
-            props.put("reverseFlag", Boolean.toString(reverseFlag));
-            DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
-            props.put("displayAxis", displayAxis.toString());
-            List<PhysicalItem> l = getItems();
-            if (null != l && l.size() > 0) {
-                props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
-            }
+            Properties props = getPropertiesOnDisplay();
 //            try (FileWriter fw = new FileWriter(propertiesFile)) {
 //                props.store(fw, "");
 //            }
             Utils.saveProperties(propertiesFile, props);
         }
+    }
+
+    public XFuture<Properties> getProperties() {
+        return Utils.supplyOnDispatchThread(this::getPropertiesOnDisplay);
+    }
+    
+    @UIEffect
+    private Properties getPropertiesOnDisplay() {
+        Properties props = new Properties();
+        props.put("alternativeRotation", String.format("%.2f", toDegrees(object2DJPanel1.getAlternativeRotation())));
+        props.put("--visionport", portCachedTextField.getText().trim());
+        props.put("--visionhost", hostCachedTextField.getText().trim());
+        props.put("simulated", Boolean.toString(simulatedCachedCheckBox.isSelected()));
+        props.put("viewOutput", Boolean.toString(viewOutputCachedCheckBox.isSelected()));
+        props.put("simulationUpdateAsNeeded", Boolean.toString(simulationUpdateAsNeededCachedCheckBox.isSelected()));
+        props.put("shuffleSimulatedUpdates", Boolean.toString(shuffleSimulatedUpdatesCachedCheckBox.isSelected()));
+        props.put("simulatedDropRate", String.format("%.3f", simulatedDropRate));
+        props.put("addPosNoise", Boolean.toString(addPosNoiseCachedCheckBox.isSelected()));
+        props.put("pickupDist", String.format("%.2f", pickupDist));
+        props.put("dropOffThreshold", String.format("%.2f", dropOffThreshold));
+        props.put("posNoise", String.format("%.2f", posNoise));
+        props.put("rotNoise", String.format("%.2f", rotNoise));
+        props.put("simRefreshMillis", Integer.toString(simRefreshMillis));
+        props.put("connected", Boolean.toString(connectedCachedCheckBox.isSelected()));
+        props.put("autoscale", Boolean.toString(autoscaleCachedCheckBox.isSelected()));
+        props.put("tools", Boolean.toString(jCheckBoxTools.isSelected()));
+        props.put("trackcurrentpos", Boolean.toString(showCurrentCachedCheckBox.isSelected()));
+        props.put("showrotations", Boolean.toString(jCheckBoxShowRotations.isSelected()));
+        props.put("viewDetails", Boolean.toString(jCheckBoxDetails.isSelected()));
+        props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
+        props.put("xmaxymax", jTextFieldMaxXMaxY.getText().trim());
+        props.put("xminymin", jTextFieldMinXMinY.getText().trim());
+        if (reverseFlag) {
+            this.reverseDataFileString = filenameCachedTextField.getText().trim();
+        } else {
+            this.dataFileString = filenameCachedTextField.getText().trim();
+        }
+        if (null != reverseDataFileString && reverseDataFileString.length() > 0) {
+            String datafileShort = makeShortPath(propertiesFile, reverseDataFileString);
+            props.put("reverse_datafile", datafileShort);
+        }
+        if (null != dataFileString && dataFileString.length() > 0) {
+            String datafileShort = makeShortPath(propertiesFile, dataFileString);
+            props.put("datafile", datafileShort);
+        }
+        props.put("reverseFlag", Boolean.toString(reverseFlag));
+        DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
+        props.put("displayAxis", displayAxis.toString());
+        List<PhysicalItem> l = getItems();
+        if (null != l && l.size() > 0) {
+            props.put(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
+        }
+        return props;
     }
     private static final String ITEMS_PROPERTY_NAME = "items";
 
@@ -3047,11 +3115,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            return Utils.runOnDispatchThread(() -> {
-                completeLoadPropertiesOnDisplay(props);
-            });
+            return loadProperties(props);
         }
         return XFutureVoid.completedFutureWithName("Object2D.propertiesFile=" + propertiesFile);
+    }
+
+    public XFutureVoid loadProperties(Properties props) {
+        return Utils.runOnDispatchThread(() -> {
+            completeLoadPropertiesOnDisplay(props);
+        });
     }
 
     @UIEffect
@@ -3808,8 +3880,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public synchronized void handleConveyorPositionUpdate(ConveyorPosition newConveyorPosition) {
         if (null != lastConveyorPosition
-                && Double.isFinite(lastConveyorPosition.x) 
-                && Double.isFinite(lastConveyorPosition.y) 
+                && Double.isFinite(lastConveyorPosition.x)
+                && Double.isFinite(lastConveyorPosition.y)
                 && null != newConveyorPosition
                 && Double.isFinite(newConveyorPosition.x)
                 && Double.isFinite(newConveyorPosition.y)
