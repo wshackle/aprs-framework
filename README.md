@@ -91,7 +91,9 @@ easier to setup multiple instances.
         cd ..
         mkdir fanuc-neo4j-database
         cd fanuc-neo4j-database/
-        tar -xzf ~/Downloads/neo4j-community-2.3.12-unix.tar.gz 
+        tar -xzf ~/Downloads/neo4j-community-2.3.12-unix.tar.gz
+        cd ..
+
 
 6.  Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
     

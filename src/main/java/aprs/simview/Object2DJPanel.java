@@ -77,10 +77,8 @@ public class Object2DJPanel extends JPanel {
 //    public void setDebugTimes(boolean debugTimes) {
 //        this.debugTimes = debugTimes;
 //    }
-
 //    private volatile long repaintTime = 0;
 //    private final AtomicInteger repaintCount = new AtomicInteger();
-
 //    private final ConcurrentHashMap<String,Integer> repaintCallersMap 
 //            = new ConcurrentHashMap<>();
 //    
@@ -101,7 +99,6 @@ public class Object2DJPanel extends JPanel {
 //            repaintTime = System.currentTimeMillis();
 //        }
 //    }
-
     @UIEffect
     public Object2DJPanel() {
         partImageMap = new HashMap<>();
@@ -935,16 +932,16 @@ public class Object2DJPanel extends JPanel {
         Point2D.Double t = toScreenPoint(displayAxis, itemx, itemy, tempMinMax, currentScale);
         if (width > 0 && height > 0) {
             if (t.x < 0) {
-                throw new IllegalArgumentException("t.x < 0 : t.x =" + t.x + ", width="+width+", height="+height+", size="+getSize());
+                throw new IllegalArgumentException("t.x < 0 : t.x =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
             }
             if (t.y < 0) {
-                throw new IllegalArgumentException("t.y < 0 : t.y =" + t.x + ", width="+width+", height="+height+", size="+getSize());
+                throw new IllegalArgumentException("t.y < 0 : t.y =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
             }
             if (t.x > width) {
-                throw new IllegalArgumentException("t.x > width : t.x =" + t.x + ", width="+width+", height="+height+", size="+getSize());
+                throw new IllegalArgumentException("t.x > width : t.x =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
             }
             if (t.y > height) {
-                throw new IllegalArgumentException("t.x > width : t.y =" + t.x + ", width="+width+", height="+height+", size="+getSize());
+                throw new IllegalArgumentException("t.x > width : t.y =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
             }
         }
         g2d.translate(t.x, t.y);
@@ -1116,7 +1113,7 @@ public class Object2DJPanel extends JPanel {
         Dimension dim = this.getSize();
         int w = dim.width;
         int h = dim.height;
-        if(w < 10 || h < 10) {
+        if (w < 10 || h < 10) {
             return;
         }
         ViewOptions opts = new ViewOptions();
@@ -1366,8 +1363,8 @@ public class Object2DJPanel extends JPanel {
             scale = 1.0;
             scaledImageWidth = image.getWidth();
             scaledImageHeight = image.getHeight();
-            if(ratio <= Double.MIN_NORMAL) {
-                throw new IllegalArgumentException("ratio must be strictly  greater than 0. ratio="+ratio);
+            if (ratio <= Double.MIN_NORMAL) {
+                throw new IllegalArgumentException("ratio must be strictly  greater than 0. ratio=" + ratio);
             }
             scaledImage = image.getScaledInstance(scaledImageWidth, scaledImageHeight, Image.SCALE_DEFAULT);
         }
@@ -1381,8 +1378,8 @@ public class Object2DJPanel extends JPanel {
         }
 
         Image getScaledImage(double scale) {
-            if(scale <= Double.MIN_NORMAL) {
-                throw new IllegalArgumentException("scale must be strictly  greater than 0. scale="+scale);
+            if (scale <= Double.MIN_NORMAL) {
+                throw new IllegalArgumentException("scale must be strictly  greater than 0. scale=" + scale);
             }
             int old_w = (int) (ratio * this.scale * image.getWidth());
             int old_h = (int) (ratio * this.scale * image.getHeight());
@@ -1391,11 +1388,11 @@ public class Object2DJPanel extends JPanel {
             if (new_w == old_w && new_h == old_h) {
                 return scaledImage;
             }
-            if(new_w < 2 ) {
-                new_w=2;
+            if (new_w < 2) {
+                new_w = 2;
             }
-            if(new_h < 2) {
-                new_h=2;
+            if (new_h < 2) {
+                new_h = 2;
             }
             this.scale = scale;
             scaledImageWidth = new_w;
@@ -1476,8 +1473,10 @@ public class Object2DJPanel extends JPanel {
             @Nullable PhysicalItem selectedItem,
             MinMax minmaxParam,
             @Nullable ViewOptions opts) {
-        if(opts.w < 10 || opts.h < 10) {
-            return;
+        if (null != opts) {
+            if (opts.w < 10 || opts.h < 10) {
+                return;
+            }
         }
         final double minX = minmaxParam.min.x;
         final double minY = minmaxParam.min.y;
@@ -2060,7 +2059,8 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    @Nullable private PartImageInfo getPartImageInfo(PhysicalItem item) {
+    @Nullable
+    private PartImageInfo getPartImageInfo(PhysicalItem item) {
         PartImageInfo info = partImageMap.get(item.getName());
         if (null == info) {
             if (item.getName().startsWith("sku_part_")) {
