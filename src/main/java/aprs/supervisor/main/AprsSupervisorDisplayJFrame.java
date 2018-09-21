@@ -1366,14 +1366,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTablePositionMappings = new javax.swing.JTable();
         jPanelPosMapSelectedFile = new javax.swing.JPanel();
-        jButtonSetInFromCurrent = new javax.swing.JButton();
-        jButtonAddLine = new javax.swing.JButton();
-        jButtonDeleteLine = new javax.swing.JButton();
-        jButtonSetOutFromCurrent = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableSelectedPosMapFile = new javax.swing.JTable();
-        jButtonSaveSelectedPosMap = new javax.swing.JButton();
         jTextFieldSelectedPosMapFilename = new javax.swing.JTextField();
+        jPanelSelectedPosMapFileTopButtons = new javax.swing.JPanel();
+        jButtonSetOutFromCurrent = new javax.swing.JButton();
+        jButtonAddLine = new javax.swing.JButton();
+        jButtonDeleteLine = new javax.swing.JButton();
+        jButtonSaveSelectedPosMap = new javax.swing.JButton();
+        jButtonSetInFromCurrent = new javax.swing.JButton();
         jPanelFuture = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jScrollPaneListFutures = new javax.swing.JScrollPane();
@@ -1408,6 +1409,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jTableSharedTools = new javax.swing.JTable();
         jButtonSyncToolsFromRobots = new javax.swing.JButton();
         jButtonSyncToolsToRobots = new javax.swing.JButton();
+        conveyorVisJPanel1 = new aprs.conveyor.ConveyorVisJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveSetup = new javax.swing.JMenuItem();
@@ -1454,17 +1456,19 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemKeepAndDisplayXFutureProfiles = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetMaxCycles = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRecordLiveImageMovie = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemSetConveyorViewCloneSystem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                formWindowClosing(evt);
-            }
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
             }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
         });
+        getContentPane().setLayout(new java.awt.GridLayout(1, 0));
 
         jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1498,11 +1502,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTasksLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneTasks))
+                .addComponent(jScrollPaneTasks)
+                .addContainerGap())
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -1543,7 +1548,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 574, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)
                     .addGroup(jPanelRobotsLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1567,16 +1572,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelTasksAndRobotsLayout.setHorizontalGroup(
             jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                .addGroup(jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
-                        .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(1, 1, 1)))
-                .addContainerGap())
+                .addContainerGap()
+                .addComponent(jPanelRobots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(colorTextJPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(6, 6, 6))
+            .addGroup(jPanelTasksAndRobotsLayout.createSequentialGroup()
+                .addComponent(jPanelTasks, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(1, 1, 1))
         );
         jPanelTasksAndRobotsLayout.setVerticalGroup(
             jPanelTasksAndRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1591,6 +1594,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         );
 
         jTabbedPane2.addTab("Tasks and Robots", jPanelTasksAndRobots);
+
+        jPanelPositionMappings.setLayout(new java.awt.GridLayout(2, 1));
 
         jPanelPosMapFiles.setBorder(javax.swing.BorderFactory.createTitledBorder("Files"));
 
@@ -1613,47 +1618,19 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 718, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
+        jPanelPositionMappings.add(jPanelPosMapFiles);
+
         jPanelPosMapSelectedFile.setBorder(javax.swing.BorderFactory.createTitledBorder("Selected File"));
-
-        jButtonSetInFromCurrent.setText("Set In From Selected Row System");
-        jButtonSetInFromCurrent.setEnabled(false);
-        jButtonSetInFromCurrent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonSetInFromCurrentActionPerformed(evt);
-            }
-        });
-
-        jButtonAddLine.setText("Add Line");
-        jButtonAddLine.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddLineActionPerformed(evt);
-            }
-        });
-
-        jButtonDeleteLine.setText("Delete Line");
-        jButtonDeleteLine.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDeleteLineActionPerformed(evt);
-            }
-        });
-
-        jButtonSetOutFromCurrent.setText("Set Out From Selected Column System");
-        jButtonSetOutFromCurrent.setEnabled(false);
-        jButtonSetOutFromCurrent.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonSetOutFromCurrentActionPerformed(evt);
-            }
-        });
 
         jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1680,12 +1657,47 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(jTableSelectedPosMapFile);
 
+        jButtonSetOutFromCurrent.setText("Set Out From Selected Column System");
+        jButtonSetOutFromCurrent.setEnabled(false);
+        jButtonSetOutFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSetOutFromCurrentActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonSetOutFromCurrent);
+
+        jButtonAddLine.setText("Add Line");
+        jButtonAddLine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddLineActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonAddLine);
+
+        jButtonDeleteLine.setText("Delete Line");
+        jButtonDeleteLine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteLineActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonDeleteLine);
+
         jButtonSaveSelectedPosMap.setText("Save");
         jButtonSaveSelectedPosMap.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonSaveSelectedPosMapActionPerformed(evt);
             }
         });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonSaveSelectedPosMap);
+
+        jButtonSetInFromCurrent.setText("Set In From Selected Row System");
+        jButtonSetInFromCurrent.setEnabled(false);
+        jButtonSetInFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSetInFromCurrentActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonSetInFromCurrent);
 
         javax.swing.GroupLayout jPanelPosMapSelectedFileLayout = new javax.swing.GroupLayout(jPanelPosMapSelectedFile);
         jPanelPosMapSelectedFile.setLayout(jPanelPosMapSelectedFileLayout);
@@ -1695,54 +1707,22 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
-                    .addGroup(jPanelPosMapSelectedFileLayout.createSequentialGroup()
-                        .addComponent(jButtonSetInFromCurrent)
-                        .addGap(50, 50, 50)
-                        .addComponent(jButtonAddLine)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDeleteLine)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonSaveSelectedPosMap)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 208, Short.MAX_VALUE)
-                        .addComponent(jButtonSetOutFromCurrent))
-                    .addComponent(jTextFieldSelectedPosMapFilename))
+                    .addComponent(jTextFieldSelectedPosMapFilename)
+                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 712, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanelPosMapSelectedFileLayout.setVerticalGroup(
             jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapSelectedFileLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonSetInFromCurrent)
-                    .addComponent(jButtonAddLine)
-                    .addComponent(jButtonDeleteLine)
-                    .addComponent(jButtonSetOutFromCurrent)
-                    .addComponent(jButtonSaveSelectedPosMap))
+                .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 285, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        javax.swing.GroupLayout jPanelPositionMappingsLayout = new javax.swing.GroupLayout(jPanelPositionMappings);
-        jPanelPositionMappings.setLayout(jPanelPositionMappingsLayout);
-        jPanelPositionMappingsLayout.setHorizontalGroup(
-            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPositionMappingsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanelPosMapSelectedFile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        jPanelPositionMappingsLayout.setVerticalGroup(
-            jPanelPositionMappingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelPositionMappingsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanelPosMapFiles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanelPosMapSelectedFile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
+        jPanelPositionMappings.add(jPanelPosMapSelectedFile);
 
         jTabbedPane2.addTab("Position Mapping", jPanelPositionMappings);
 
@@ -1766,7 +1746,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jScrollPaneTreeSelectedFuture.setViewportView(jTreeSelectedFuture);
 
-        jCheckBoxUpdateFutureAutomatically.setText("Update Automatically");
+        jCheckBoxUpdateFutureAutomatically.setText("Update");
         jCheckBoxUpdateFutureAutomatically.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxUpdateFutureAutomaticallyActionPerformed(evt);
@@ -1782,14 +1762,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jScrollPaneListFuturesKey.setViewportView(jListFuturesKey);
 
-        jCheckBoxShowDoneFutures.setText("Show Completed");
+        jCheckBoxShowDoneFutures.setText("Completed");
         jCheckBoxShowDoneFutures.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxShowDoneFuturesActionPerformed(evt);
             }
         });
 
-        jCheckBoxShowUnnamedFutures.setText("Show Unnamed");
+        jCheckBoxShowUnnamedFutures.setText("Unnamed");
         jCheckBoxShowUnnamedFutures.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxShowUnnamedFuturesActionPerformed(evt);
@@ -1803,7 +1783,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
 
-        jCheckBoxFutureLongForm.setText("Long Form");
+        jCheckBoxFutureLongForm.setText("Long");
         jCheckBoxFutureLongForm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jCheckBoxFutureLongFormActionPerformed(evt);
@@ -1829,7 +1809,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelFutureLayout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                         .addComponent(jCheckBoxShowUnnamedFutures)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxShowDoneFutures)
@@ -1837,11 +1817,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addGap(91, 91, 91)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 53, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelFutureLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 839, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
                 .addContainerGap())
         );
@@ -1859,8 +1837,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jCheckBoxFutureLongForm))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneTreeSelectedFuture)
-                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1916,7 +1894,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelEventsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelEventsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1051, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
                     .addGroup(jPanelEventsLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1937,11 +1915,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jLabel5)
                     .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE)
+                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane2.addTab("Events", jPanelEvents);
+
+        object2DOuterJPanel1.setMinimumSize(new java.awt.Dimension(0, 0));
 
         jComboBoxTeachSystemView.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         jComboBoxTeachSystemView.addActionListener(new java.awt.event.ActionListener() {
@@ -1957,7 +1937,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1051, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1967,7 +1947,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE))
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Teach", jPanelTeachTable);
@@ -2021,7 +2001,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1076, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2043,11 +2023,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSyncToolsFromRobots)
                     .addComponent(jButtonSyncToolsToRobots))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE)
+                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane2.addTab("Shared Tools", jPanelTools);
+        jTabbedPane2.addTab("Conveyor", conveyorVisJPanel1);
+
+        getContentPane().add(jTabbedPane2);
 
         jMenuFile.setText("File");
 
@@ -2366,26 +2349,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuOptions.add(jCheckBoxMenuItemRecordLiveImageMovie);
 
+        jMenuItemSetConveyorViewCloneSystem.setText("Set Conveyor View Clone System ...");
+        jMenuItemSetConveyorViewCloneSystem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSetConveyorViewCloneSystemActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemSetConveyorViewCloneSystem);
+
         jMenuBar1.add(jMenuOptions);
 
         setJMenuBar(jMenuBar1);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTabbedPane2)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jTabbedPane2)
-                .addContainerGap())
-        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -3761,6 +3735,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jTreeSelectedFutureValueChanged
 
+    private void jMenuItemSetConveyorViewCloneSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
+        String taskName = JOptionPane.showInputDialog("System View to clone for conveyor");
+        AprsSystem sys  =  supervisor.getSysByTask(taskName);
+        conveyorVisJPanel1.setClonedSystem(sys);
+    }//GEN-LAST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
+
     @UIEffect
     public static XFuture<Supervisor> openAll(@Nullable Supervisor supervisor, Frame owner, @Nullable String dirName) throws IOException {
         return Supervisor.openAll(supervisor, owner, dirName);
@@ -5134,6 +5114,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.supervisor.colortextdisplay.ColorTextJPanel colorTextJPanel1;
+    private aprs.conveyor.ConveyorVisJPanel conveyorVisJPanel1;
     private javax.swing.JButton jButtonAddLine;
     private javax.swing.JButton jButtonAddSharedToolsRow;
     private javax.swing.JButton jButtonDeleteLine;
@@ -5196,6 +5177,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSaveSetup;
     private javax.swing.JMenuItem jMenuItemSaveSetupAs;
     private javax.swing.JMenuItem jMenuItemScanAll;
+    private javax.swing.JMenuItem jMenuItemSetConveyorViewCloneSystem;
     private javax.swing.JMenuItem jMenuItemSetMaxCycles;
     private javax.swing.JMenuItem jMenuItemStartAll;
     private javax.swing.JMenuItem jMenuItemStartAllReverse;
@@ -5209,6 +5191,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelPosMapSelectedFile;
     private javax.swing.JPanel jPanelPositionMappings;
     private javax.swing.JPanel jPanelRobots;
+    private javax.swing.JPanel jPanelSelectedPosMapFileTopButtons;
     private javax.swing.JPanel jPanelTasks;
     private javax.swing.JPanel jPanelTasksAndRobots;
     private javax.swing.JPanel jPanelTeachTable;

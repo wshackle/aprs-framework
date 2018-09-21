@@ -44,6 +44,10 @@ import rcs.posemath.PmCartesian;
  */
 public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame implements Object2DJFrameInterface {
 
+     public Object2DOuterJPanel getObjectViewPanel() {
+         return object2DOuterJPanel1;
+     }
+     
     /**
      * Creates new form Object2DViewJInternalFrame
      */

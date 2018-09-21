@@ -80,22 +80,22 @@ public class CachedCheckBox extends CachedComponentBase {
         checkBoxMenuItem.addActionListener(actionListener);
     }
 
-    @SuppressWarnings("guieffect")
-    private void checkMatch() {
-        if (null != abstractButton) {
-            int dc = getDispatchCount();
-            int sc = getStartCount();
-            int fc = getFinishCount();
-            int ac = actionCount.get();
-            boolean abstractButtonIsSelected = abstractButton.isSelected();
-            if (selected != abstractButtonIsSelected && (dc <= fc)) {
-                throw new IllegalStateException("selected=" + selected + ", abstractButtonIsSelected=" + abstractButtonIsSelected + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
-            }
-        }
-    }
+//    @SuppressWarnings("guieffect")
+//    private void checkMatch() {
+//        if (null != abstractButton) {
+//            int dc = getDispatchCount();
+//            int sc = getStartCount();
+//            int fc = getFinishCount();
+//            int ac = actionCount.get();
+//            boolean abstractButtonIsSelected = abstractButton.isSelected();
+//            if (selected != abstractButtonIsSelected && (dc <= fc)) {
+//                throw new IllegalStateException("selected=" + selected + ", abstractButtonIsSelected=" + abstractButtonIsSelected + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
+//            }
+//        }
+//    }
 
     public boolean isSelected() {
-        checkMatch();
+//        checkMatch();
         return selected;
     }
 
@@ -121,7 +121,7 @@ public class CachedCheckBox extends CachedComponentBase {
         if (null != abstractButton && selected != abstractButton.isSelected()) {
             abstractButton.setSelected(selected);
         }
-        checkMatch();
+//        checkMatch();
     }
 
     public boolean isEnabled() {
