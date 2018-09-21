@@ -1800,14 +1800,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }
 
-    private Object2DOuterJPanel objectPanelToClone = null;
+    @Nullable private Object2DOuterJPanel objectPanelToClone = null;
 
     /**
      * Get the value of objectPanelToClone
      *
      * @return the value of objectPanelToClone
      */
-    public Object2DOuterJPanel getObjectPanelToClone() {
+    @Nullable public Object2DOuterJPanel getObjectPanelToClone() {
         return objectPanelToClone;
     }
 
@@ -1816,6 +1816,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @param objectPanelToClone new value of objectPanelToClone
      */
+    @UIEffect
     public XFutureVoid setObjectPanelToClone(Object2DOuterJPanel objectPanelToClone) {
         this.objectPanelToClone = objectPanelToClone;
         boolean cloning = null != objectPanelToClone;
@@ -2589,10 +2590,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setAutoscale(this.jCheckBoxAutoscale.isSelected());
     }//GEN-LAST:event_jCheckBoxAutoscaleActionPerformed
 
+    @UIEffect
     public boolean isAutoscale() {
         return object2DJPanel1.isAutoscale() && jCheckBoxAutoscale.isSelected();
     }
 
+    @UIEffect
     public void setAutoscale(boolean autoscale) {
         object2DJPanel1.setAutoscale(autoscale);
         jCheckBoxAutoscale.setSelected(autoscale);
@@ -3879,15 +3882,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile ConveyorPosition lastConveyorPosition = null;
 
     public synchronized void handleConveyorPositionUpdate(ConveyorPosition newConveyorPosition) {
-        if (null != lastConveyorPosition
-                && Double.isFinite(lastConveyorPosition.x)
-                && Double.isFinite(lastConveyorPosition.y)
+        final ConveyorPosition oldConveyorPosition = this.lastConveyorPosition;
+        if (null != oldConveyorPosition
+                && Double.isFinite(oldConveyorPosition.x)
+                && Double.isFinite(oldConveyorPosition.y)
                 && null != newConveyorPosition
                 && Double.isFinite(newConveyorPosition.x)
                 && Double.isFinite(newConveyorPosition.y)
                 && isSimulated()) {
-            double xinc = newConveyorPosition.x - lastConveyorPosition.x;
-            double yinc = newConveyorPosition.y - lastConveyorPosition.y;
+            double xinc = newConveyorPosition.x - oldConveyorPosition.x;
+            double yinc = newConveyorPosition.y - oldConveyorPosition.y;
             List<PhysicalItem> itemsCopy = new ArrayList<>(getItems());
             for (int i = 0; i < itemsCopy.size(); i++) {
                 if (i != captured_item_index) {
@@ -3898,7 +3902,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             setItems(itemsCopy, true);
         }
-        lastConveyorPosition = newConveyorPosition;
+        this.lastConveyorPosition = newConveyorPosition;
     }
 
     @Override

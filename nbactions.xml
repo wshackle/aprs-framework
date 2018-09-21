@@ -79,5 +79,28 @@
                 <activatedProfile>with_checkers</activatedProfile>
             </activatedProfiles>
         </action>
+    <action>
+            <actionName>CUSTOM-compile_with_checkers</actionName>
+            <displayName>compile_with_checkers</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>compile</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>with_checkers</activatedProfile>
+            </activatedProfiles>
+        </action>
+    <action>
+            <actionName>CUSTOM-clean_and_check</actionName>
+            <displayName>clean_and_check</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>clean</goal>
+                <goal>compile</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>with_checkers</activatedProfile>
+            </activatedProfiles>
+        </action>
     
 </actions>
