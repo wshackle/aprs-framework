@@ -22,21 +22,52 @@
  */
 package aprs.conveyor;
 
+import aprs.database.PhysicalItem;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.JPanel;
 import org.checkerframework.checker.guieffect.qual.UIType;
+import org.eclipse.collections.impl.block.factory.Comparators;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
 public class InnerConveyorSpeedJPanel extends JPanel {
 
-    private double maxPosition = 700;
+    private double goalPosition;
+
+    /**
+     * Get the value of goalPosition
+     *
+     * @return the value of goalPosition
+     */
+    public double getGoalPosition() {
+        return goalPosition;
+    }
+
+    /**
+     * Set the value of goalPosition
+     *
+     * @param goalPosition new value of goalPosition
+     */
+    public void setGoalPosition(double goalPosition) {
+        if(goalPosition < minPosition) {
+            this.goalPosition = minPosition;
+        } else if(goalPosition > maxPosition) {
+            this.goalPosition = maxPosition;
+        } else {
+            this.goalPosition = goalPosition;
+        }
+    }
+
+    private double maxPosition = 800;
 
     /**
      * Get the value of maxPosition
@@ -56,7 +87,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         this.maxPosition = maxPosition;
     }
 
-    private double minPosition = 200;
+    private double minPosition = 100;
 
     /**
      * Get the value of minPosition
@@ -76,7 +107,27 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         this.minPosition = minPosition;
     }
 
-    private double estimatedPosition = 450.0;
+    private double scale = 0.00001;
+
+    /**
+     * Get the value of scale
+     *
+     * @return the value of scale
+     */
+    public double getScale() {
+        return scale;
+    }
+
+    /**
+     * Set the value of scale
+     *
+     * @param scale new value of scale
+     */
+    public void setScale(double scale) {
+        this.scale = scale;
+    }
+
+    private volatile double estimatedPosition = 450.0;
 
     /**
      * Get the value of estimatedPosition
@@ -98,6 +149,51 @@ public class InnerConveyorSpeedJPanel extends JPanel {
     }
 
     private boolean horizontal;
+
+    private volatile List<PhysicalItem> items = Collections.emptyList();
+
+    /**
+     * Get the value of items
+     *
+     * @return the value of items
+     */
+    public List<PhysicalItem> getItems() {
+        return items;
+    }
+
+    private volatile List<PhysicalItem> sortedKitTrays = Collections.emptyList();
+
+    /**
+     * Get the value of sortedKitTrays
+     *
+     * @return the value of sortedKitTrays
+     */
+    public List<PhysicalItem> getSortedKitTrays() {
+        return sortedKitTrays;
+    }
+
+    /**
+     * Set the value of items
+     *
+     * @param items new value of items
+     */
+    public void setItems(List<PhysicalItem> items) {
+        this.items = items;
+        List<PhysicalItem> newSortedTrays = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            PhysicalItem item = items.get(i);
+            if (item == null) {
+                continue;
+            }
+            String type = item.getType();
+            if ("KT".equals(type)) {
+                newSortedTrays.add(item);
+            }
+        }
+        Collections.sort(newSortedTrays, Comparators.byDoubleFunction(this::positionOfItem));
+        this.sortedKitTrays = newSortedTrays;
+        this.repaint();
+    }
 
     /**
      * Get the value of horizontal
@@ -223,28 +319,48 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         if (dim.width < 1 || dim.height < 1) {
             throw new IllegalStateException("bad dimensions " + dim);
         }
-        
+
         if (horizontal) {
-            int pointpos =  point.x;
-            if(pointpos <1) {
+            int pointpos = point.x;
+            if (pointpos < 1) {
                 pointpos = 1;
             }
-            if(pointpos > dim.width-1) {
-                pointpos = dim.width-1;
+            if (pointpos > dim.width - 1) {
+                pointpos = dim.width - 1;
             }
             return Math.abs(pointpos - dim.width / 2) * maxSpeed / (dim.width / 2);
         } else {
-            int pointpos =  point.y;
-            if(pointpos <1) {
+            int pointpos = point.y;
+            if (pointpos < 1) {
                 pointpos = 1;
             }
-            if(pointpos > dim.height-1) {
-                pointpos = dim.height-1;
+            if (pointpos > dim.height - 1) {
+                pointpos = dim.height - 1;
             }
             return Math.abs(pointpos - dim.height / 2) * maxSpeed / (dim.height / 2);
         }
     }
     private Color reverseColor = Color.red;
+
+    private boolean goalSet;
+
+    /**
+     * Get the value of goalSet
+     *
+     * @return the value of goalSet
+     */
+    public boolean isGoalSet() {
+        return goalSet;
+    }
+
+    /**
+     * Set the value of goalSet
+     *
+     * @param goalSet new value of goalSet
+     */
+    public void setGoalSet(boolean goalSet) {
+        this.goalSet = goalSet;
+    }
 
     /**
      * Get the value of reverseColor
@@ -264,6 +380,45 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         this.reverseColor = reverseColor;
     }
 
+    private double axisX = 0.0;
+    private double axisY = -1.0;
+
+    public double getAxisX() {
+        return axisX;
+    }
+
+    public void setAxisX(double axisX) {
+        this.axisX = axisX;
+    }
+
+    public double getAxisY() {
+        return axisY;
+    }
+
+    public void setAxisY(double axisY) {
+        this.axisY = axisY;
+    }
+
+    private double itemPostionOffset = 450;
+
+    /**
+     * Get the value of itemPostionOffset
+     *
+     * @return the value of itemPostionOffset
+     */
+    public double getItemPostionOffset() {
+        return itemPostionOffset;
+    }
+
+    /**
+     * Set the value of itemPostionOffset
+     *
+     * @param itemPostionOffset new value of itemPostionOffset
+     */
+    public void setItemPostionOffset(double itemPostionOffset) {
+        this.itemPostionOffset = itemPostionOffset;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -272,6 +427,45 @@ public class InnerConveyorSpeedJPanel extends JPanel {
             return;
         }
 
+        paintSpeedBar(dim, g);
+        paintPositionMarke(g, Color.BLACK, dim, this.estimatedPosition, "");
+        if (goalSet) {
+            paintPositionMarke(g, Color.GREEN, dim, this.goalPosition, "goal");
+        }
+        List<PhysicalItem> itemsToPaint = this.items;
+        if (null != itemsToPaint) {
+            for (int i = 0; i < itemsToPaint.size(); i++) {
+                PhysicalItem item = itemsToPaint.get(i);
+                if (item == null) {
+                    continue;
+                }
+                String type = item.getType();
+                if ("PT".equals(type) || "KT".equals(type)) {
+                    double position = positionOfItem(item);
+                    paintPositionMarke(g, Color.LIGHT_GRAY, dim, position, item.getName());
+                }
+            }
+        }
+    }
+
+    public double positionOfItem(PhysicalItem item) {
+        return axisX * item.x + axisY * item.y + itemPostionOffset;
+    }
+
+    private void paintPositionMarke(Graphics g, Color lineColor, Dimension dim, double pos, String label) {
+        g.setColor(lineColor);
+        if (horizontal) {
+            int xpos = 15 + ((int) ((dim.width - 30) * (pos - minPosition) / (maxPosition - minPosition)));
+            g.drawLine(xpos, 0, xpos, dim.height);
+            g.drawString(String.format("%.0f %s", pos, label), xpos, dim.height / 2);
+        } else {
+            int ypos = 15 + (int) ((dim.height - 30) * (pos - minPosition) / (maxPosition - minPosition));
+            g.drawLine(0, ypos, dim.width, ypos);
+            g.drawString(String.format("%.0f %s", pos, label), dim.width / 2, ypos);
+        }
+    }
+
+    private void paintSpeedBar(Dimension dim, Graphics g) {
         if (horizontal) {
             if (currentSpeed > 0) {
                 int barWidth = dim.width * currentSpeed / (2 * maxSpeed);
@@ -283,11 +477,6 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                     g.fillRect(dim.width / 2 - barWidth, 0, barWidth, dim.height);
                 }
             }
-            g.setColor(Color.black);
-
-            int xpos = 15 + ((int) ((dim.width - 30) * (estimatedPosition - minPosition) / (maxPosition - minPosition)));
-            g.drawLine(xpos, 0, xpos, dim.height);
-            g.drawString(String.format("%.0f", estimatedPosition), xpos, dim.height / 2);
         } else {
             if (currentSpeed > 0) {
                 int barHeight = dim.height * currentSpeed / (2 * maxSpeed);
@@ -299,10 +488,6 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                     g.fillRect(0, dim.height / 2 - barHeight, dim.width, barHeight);
                 }
             }
-            g.setColor(Color.black);
-            int ypos = 15 + (int) ((dim.height - 30) * (estimatedPosition - minPosition) / (maxPosition - minPosition));
-            g.drawLine(0, ypos, dim.width, ypos);
-            g.drawString(String.format("%.0f", estimatedPosition), dim.width / 2, ypos);
         }
     }
 

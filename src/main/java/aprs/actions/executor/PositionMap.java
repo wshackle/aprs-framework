@@ -42,7 +42,7 @@ import rcs.posemath.Posemath;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class PositionMap {
 

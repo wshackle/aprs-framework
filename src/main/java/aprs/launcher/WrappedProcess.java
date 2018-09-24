@@ -42,7 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class WrappedProcess {
 

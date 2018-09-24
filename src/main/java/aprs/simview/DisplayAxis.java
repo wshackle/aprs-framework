@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum DisplayAxis {
     POS_X_POS_Y("(X+,Y+)"),

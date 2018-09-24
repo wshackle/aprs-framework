@@ -26,7 +26,7 @@ import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
 public class ConveyorVisTestJFrame extends javax.swing.JFrame {
