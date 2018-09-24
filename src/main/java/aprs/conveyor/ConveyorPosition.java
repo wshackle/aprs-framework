@@ -26,7 +26,7 @@ import java.awt.geom.Point2D;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class ConveyorPosition extends Point2D.Double {
 

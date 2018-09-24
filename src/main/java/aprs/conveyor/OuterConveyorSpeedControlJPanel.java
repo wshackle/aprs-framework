@@ -22,6 +22,7 @@
  */
 package aprs.conveyor;
 
+import aprs.database.PhysicalItem;
 import aprs.misc.Utils;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
@@ -30,6 +31,7 @@ import crcl.ui.XFutureVoid;
 import java.awt.Component;
 import java.awt.HeadlessException;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -47,7 +49,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
 public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
@@ -68,18 +70,90 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             editProperties();
         });
         popupMenu.add(propertiesMenuItem);
-        JMenuItem cancelMenuItem = new JMenuItem("Cancel");
         checkBoxMenuItemConnected.addActionListener(e -> {
             handleConnectedCheckBoxEvent();
         });
+        
+//        JMenuItem nextTrayMenuItem = new JMenuItem("NextTray");
+//        nextTrayMenuItem.addActionListener(e -> nextTray());
+//        popupMenu.add(nextTrayMenuItem);
+//        JMenuItem previousTrayMenuItem = new JMenuItem("PreviousTray");
+//        previousTrayMenuItem.addActionListener(e -> previousTray());
+//        popupMenu.add(previousTrayMenuItem);
+        JMenuItem cancelMenuItem = new JMenuItem("Cancel");
         cancelMenuItem.addActionListener(e -> popupMenu.setVisible(false));
         popupMenu.add(cancelMenuItem);
+        
         positionUpdateTimer = new Timer(250, e -> {
             handlePostionUpateTimerEvent();
         });
-        estimatedPosition = conveyorSpeedJPanel1.getEstimatedPosition();
     }
 
+    /**
+     * Get the value of goalPostion
+     *
+     * @return the value of goalPostion
+     */
+    public double getGoalPostion() {
+        return conveyorSpeedJPanel1.getGoalPosition();
+    }
+
+    /**
+     * Get the value of goalSet
+     *
+     * @return the value of goalSet
+     */
+    public boolean isGoalSet() {
+        return conveyorSpeedJPanel1.isGoalSet();
+    }
+
+    /**
+     * Set the value of goalSet
+     *
+     * @param goalSet new value of goalSet
+     */
+    public void setGoalSet(boolean goalSet) {
+        conveyorSpeedJPanel1.setGoalSet(goalSet);
+    }
+
+    /**
+     * Set the value of goalPostion
+     *
+     * @param goalPostion new value of goalPostion
+     */
+    public void setGoalPostion(double goalPostion) {
+        conveyorSpeedJPanel1.setGoalPosition(goalPostion);
+    }
+    
+    private volatile double trayDiff;
+    
+    private void previousTray() {
+        computeTrayDiff();
+        setGoalSet(false);
+        updateEstimatedPosition();
+        setGoalPostion(getEstimatedPosition() - trayDiff);
+        setGoalSet(true);
+        setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
+    }
+    
+    private void computeTrayDiff() {
+        List<PhysicalItem> kits = conveyorSpeedJPanel1.getSortedKitTrays();
+        if (kits.size() > 1) {
+            double lastPos = conveyorSpeedJPanel1.positionOfItem(kits.get(kits.size() - 1));
+            double nextPos = conveyorSpeedJPanel1.positionOfItem(kits.get(0));
+            trayDiff = (lastPos - nextPos)/kits.size();
+        }
+    }
+    
+    private void nextTray() {
+        computeTrayDiff();
+        setGoalSet(false);
+        updateEstimatedPosition();
+        setGoalPostion(getEstimatedPosition() + trayDiff);
+        setGoalSet(true);
+        setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
+    }
+    
     @Nullable
     private JFrame getOwner() {
         Component c = this;
@@ -91,7 +165,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
         return null;
     }
-
+    
     public double getMaxPosition() {
         return conveyorSpeedJPanel1.getMaxPosition();
     }
@@ -122,7 +196,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     public void setMinPosition(double minPosition) {
         conveyorSpeedJPanel1.setMinPosition(minPosition);
     }
-
+    
     private void editProperties() {
         Map<String, String> map0 = propertiesToMap();
         Map<String, String> map1 = EditPropertiesJPanel.editProperties(getOwner(), "Properties", true, map0);
@@ -130,22 +204,22 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             mapToProperties(map1);
         }
     }
-
+    
     private static double parseDouble(@Nullable String txt, double defaultVal) {
-        if(txt == null) {
+        if (txt == null) {
             return defaultVal;
         }
         return Double.parseDouble(txt);
     }
     
     private void mapToProperties(Map<String, String> map1) throws NumberFormatException {
-        setScale(parseDouble(map1.get(SCALE),scale));
-        setAxisX(parseDouble(map1.get(AXIS_X),axisX));
-        setAxisY(parseDouble(map1.get(AXIS_Y),axisY));
-        setMaxPosition(parseDouble(map1.get(MAX_POSITION),getMaxPosition()));
-        setMinPosition(parseDouble(map1.get(MIN_POSITION),getMinPosition()));
+        setScale(parseDouble(map1.get(SCALE), getScale()));
+        setAxisX(parseDouble(map1.get(AXIS_X), getAxisX()));
+        setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
+        setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
+        setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
     }
-
+    
     private Map<String, String> propertiesToMap() {
         Map<String, String> map0 = new TreeMap<>();
         map0.put(SCALE, Double.toString(getScale()));
@@ -160,12 +234,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private static final String AXIS_Y = "AxisY";
     private static final String AXIS_X = "AxisX";
     private static final String SCALE = "Scale";
-
+    
     private void handlePostionUpateTimerEvent() {
         updateEstimatedPosition();
         notifyConveyorStateListeners();
     }
-
+    
     private void handleConnectedCheckBoxEvent() throws HeadlessException {
         if (null != master) {
             master.disconnect();
@@ -186,6 +260,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         conveyorSpeedJPanel1 = new aprs.conveyor.InnerConveyorSpeedJPanel();
+        jButtonNextTray = new javax.swing.JButton();
+        jButtonPrevTray = new javax.swing.JButton();
 
         conveyorSpeedJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseDragged(java.awt.event.MouseEvent evt) {
@@ -193,17 +269,17 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             }
         });
         conveyorSpeedJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                conveyorSpeedJPanel1MouseClicked(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                conveyorSpeedJPanel1MouseExited(evt);
-            }
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 conveyorSpeedJPanel1MousePressed(evt);
             }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 conveyorSpeedJPanel1MouseReleased(evt);
+            }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                conveyorSpeedJPanel1MouseClicked(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                conveyorSpeedJPanel1MouseExited(evt);
             }
         });
 
@@ -215,16 +291,37 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         );
         conveyorSpeedJPanel1Layout.setVerticalGroup(
             conveyorSpeedJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 287, Short.MAX_VALUE)
+            .addGap(0, 259, Short.MAX_VALUE)
         );
+
+        jButtonNextTray.setText("Next Tray");
+        jButtonNextTray.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonNextTrayActionPerformed(evt);
+            }
+        });
+
+        jButtonPrevTray.setText("Prev Tray");
+        jButtonPrevTray.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPrevTrayActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(14, 14, 14)
-                .addComponent(conveyorSpeedJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addComponent(conveyorSpeedJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jButtonPrevTray)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonNextTray)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -232,6 +329,10 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(conveyorSpeedJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonPrevTray)
+                    .addComponent(jButtonNextTray))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -239,20 +340,20 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     public XFutureVoid connectMaster() {
         return Utils.runOnDispatchThread(this::connectMasterOnDisplay);
     }
-
+    
     private final JPopupMenu popupMenu;
     private final JCheckBoxMenuItem checkBoxMenuItemConnected;
-
+    
     private final JCheckBoxMenuItem checkBoxMenuItemSimulated;
-
+    
     public boolean isSimulated() {
         return checkBoxMenuItemSimulated.isSelected();
     }
-
+    
     public void setSimulated(boolean simulated) {
         checkBoxMenuItemSimulated.setSelected(simulated);
     }
-
+    
     private String modBusHost = "192.168.1.50";
 
     /**
@@ -272,7 +373,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     public void setModBusHost(String modBusHost) {
         this.modBusHost = modBusHost;
     }
-
+    
     private void connectMasterOnDisplay() throws HeadlessException {
         try {
             String newModBustHost = JOptionPane.showInputDialog(this, "ModBus Host:", modBusHost);
@@ -299,22 +400,35 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             setConveyorSpeedFromMouseEvent(evt);
         }
     }//GEN-LAST:event_conveyorSpeedJPanel1MousePressed
-
+    
     private void setConveyorSpeedFromMouseEvent(MouseEvent evt) {
         updateEstimatedPosition();
         notifyConveyorStateListeners();
-        if (!positionUpdateTimer.isRunning()) {
-            positionUpdateTimer.start();
-        }
+        
         boolean forward = conveyorSpeedJPanel1.isPointForward(evt.getPoint());
         conveyorSpeedJPanel1.setForwardDirection(forward);
         int newSpeed = conveyorSpeedJPanel1.pointToSpeed(evt.getPoint());
+        double estimatedPosition = getEstimatedPosition();
         if (forward && newSpeed > 0 && estimatedPosition >= getMaxPosition()) {
             newSpeed = 0;
         } else if (!forward && newSpeed > 0 && estimatedPosition <= getMinPosition()) {
             newSpeed = 0;
         }
+        setSpeedAndDirection(newSpeed, forward);
+    }
+    
+    private void setSpeedAndDirection(int newSpeed, boolean forward) {
         conveyorSpeedJPanel1.setCurrentSpeed(newSpeed);
+        conveyorSpeedJPanel1.setForwardDirection(forward);
+        if (newSpeed > 0) {
+            if (!positionUpdateTimer.isRunning()) {
+                positionUpdateTimer.start();
+            }
+        } else {
+            if (positionUpdateTimer.isRunning()) {
+                positionUpdateTimer.stop();
+            }
+        }
         if (null != master) {
             try {
                 master.writeSingleRegister(0x8001, new SimpleRegister(forward ? 1 : 0)); // set direction forward
@@ -322,7 +436,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 if (newSpeed > 0) {
                     master.writeSingleRegister(0x8000, new SimpleRegister(1)); // make it go
                 } else {
-                    master.writeSingleRegister(0x8000, new SimpleRegister(0)); // make it go
+                    master.writeSingleRegister(0x8000, new SimpleRegister(0)); // make NOT it go
                 }
             } catch (ModbusException ex) {
                 Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -331,14 +445,21 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }
 
     private void conveyorSpeedJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_conveyorSpeedJPanel1MouseReleased
-        stopConveyor();
-         if (evt.isPopupTrigger()) {
+        
+        if (evt.isPopupTrigger()) {
             popupMenu.show(this.conveyorSpeedJPanel1, evt.getX(), evt.getY());
+        } else {
+            if (!isGoalSet() && conveyorSpeedJPanel1.getCurrentSpeed() > 0) {
+                stopConveyor();
+            }
         }
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseReleased
 
     private void conveyorSpeedJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_conveyorSpeedJPanel1MouseExited
-        stopConveyor();
+        
+        if (!isGoalSet() && conveyorSpeedJPanel1.getCurrentSpeed() > 0) {
+            stopConveyor();
+        }
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseExited
 
     private void conveyorSpeedJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_conveyorSpeedJPanel1MouseDragged
@@ -351,7 +472,13 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseClicked
 
-    private double axisX = 0.0;
+    private void jButtonPrevTrayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevTrayActionPerformed
+        previousTray();
+    }//GEN-LAST:event_jButtonPrevTrayActionPerformed
+
+    private void jButtonNextTrayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNextTrayActionPerformed
+        nextTray();
+    }//GEN-LAST:event_jButtonNextTrayActionPerformed
 
     /**
      * Get the value of axisX
@@ -359,7 +486,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @return the value of axisX
      */
     public double getAxisX() {
-        return axisX;
+        return conveyorSpeedJPanel1.getAxisX();
     }
 
     /**
@@ -368,10 +495,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @param axisX new value of axisX
      */
     public void setAxisX(double axisX) {
-        this.axisX = axisX;
+        conveyorSpeedJPanel1.setAxisX(axisX);
     }
-
-    private double axisY = -1.0;
 
     /**
      * Get the value of axisY
@@ -379,7 +504,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @return the value of axisY
      */
     public double getAxisY() {
-        return axisY;
+        return conveyorSpeedJPanel1.getAxisY();
     }
 
     /**
@@ -388,15 +513,18 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @param axisY new value of axisY
      */
     public void setAxisY(double axisY) {
-        this.axisY = axisY;
+        conveyorSpeedJPanel1.setAxisY(axisY);
     }
-
+    
     private void stopConveyor() {
         updateEstimatedPosition();
         stopConveyorNoPosEstimate();
     }
-
+    
     private void stopConveyorNoPosEstimate() {
+        if (isGoalSet()) {
+            System.out.println("wtf");
+        }
         conveyorSpeedJPanel1.setCurrentSpeed(0);
         if (null != master) {
             try {
@@ -406,13 +534,14 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        if (positionUpdateTimer.isRunning()) {
+            positionUpdateTimer.stop();
+        }
     }
-
+    
     private final javax.swing.Timer positionUpdateTimer;
-
-    private volatile double estimatedPosition;
+    
     private volatile long lastEstimatedPositionTime = System.currentTimeMillis();
-    private double scale = 0.00001;
 
     /**
      * Get the value of scale
@@ -420,7 +549,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @return the value of scale
      */
     public double getScale() {
-        return scale;
+        return conveyorSpeedJPanel1.getScale();
     }
 
     /**
@@ -429,76 +558,112 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      * @param scale new value of scale
      */
     public void setScale(double scale) {
-        this.scale = scale;
+        conveyorSpeedJPanel1.setScale(scale);
     }
-
+    
+    public void setEstimatedPosition(double newEstimatedPosition) {
+        conveyorSpeedJPanel1.setEstimatedPosition(newEstimatedPosition);
+    }
+    
     private synchronized void updateEstimatedPosition() {
         int speed = conveyorSpeedJPanel1.getCurrentSpeed();
         boolean forward = conveyorSpeedJPanel1.isForwardDirection();
         long time = System.currentTimeMillis();
         long timeDiff = time - lastEstimatedPositionTime;
+        final double scale = getScale();
         double scaledSpeed = speed * scale;
         double positionInc = ((forward ? 1 : -1) * scaledSpeed * timeDiff);
-
+        
         if (Math.abs(positionInc) > 0.0001) {
-            estimatedPosition += positionInc;
-            conveyorSpeedJPanel1.setEstimatedPosition(estimatedPosition);
+            setEstimatedPosition(getEstimatedPosition() + positionInc);
             lastEstimatedPositionTime = time;
             notifyConveyorPositionListeners();
         }
         lastEstimatedPositionTime = time;
         if (speed > 0) {
+            final double estimatedPosition = getEstimatedPosition();
             if (forward && estimatedPosition > getMaxPosition()) {
                 stopConveyorNoPosEstimate();
-            } else if(!forward && estimatedPosition < getMinPosition()) {
+            } else if (!forward && estimatedPosition < getMinPosition()) {
                 stopConveyorNoPosEstimate();
             }
+            final boolean goalSet = isGoalSet();
+            if (goalSet) {
+                final double goalPosition = this.getGoalPostion();
+                if (forward && estimatedPosition > goalPosition) {
+                    setGoalSet(false);
+                    stopConveyorNoPosEstimate();
+                } else if (!forward && estimatedPosition < goalPosition) {
+                    setGoalSet(false);
+                    stopConveyorNoPosEstimate();
+                }
+            }
         }
-
     }
-
+    
     public double getEstimatedPosition() {
-        return estimatedPosition;
+        return conveyorSpeedJPanel1.getEstimatedPosition();
     }
-
+    
     private final ConcurrentLinkedDeque<Consumer<ConveyorState>> conveyorStateListeners = new ConcurrentLinkedDeque<>();
-
+    
     public void addConveyorStateListener(Consumer<ConveyorState> listener) {
         conveyorStateListeners.add(listener);
     }
-
+    
     public void removerConveyorStateListener(Consumer<ConveyorState> listener) {
         conveyorStateListeners.remove(listener);
     }
-
+    
     private void notifyConveyorStateListeners() {
         ConveyorState cs = new ConveyorState(conveyorSpeedJPanel1.isForwardDirection(), conveyorSpeedJPanel1.getCurrentSpeed());
         for (Consumer<ConveyorState> listener : conveyorStateListeners) {
             listener.accept(cs);
         }
     }
-
+    
     private final ConcurrentLinkedDeque<Consumer<ConveyorPosition>> conveyorPositionListeners = new ConcurrentLinkedDeque<>();
-
+    
     public void addConveyorPositionListener(Consumer<ConveyorPosition> listener) {
         conveyorPositionListeners.add(listener);
     }
-
+    
     public void removerConveyorPositionListener(Consumer<ConveyorPosition> listener) {
         conveyorPositionListeners.remove(listener);
     }
-
+    
     private void notifyConveyorPositionListeners() {
-        ConveyorPosition cs = new ConveyorPosition(axisX * estimatedPosition, axisY * estimatedPosition);
+        final double estimatedPosition = getEstimatedPosition();
+        ConveyorPosition cs = new ConveyorPosition(getAxisX() * estimatedPosition, getAxisY() * estimatedPosition);
         for (Consumer<ConveyorPosition> listener : conveyorPositionListeners) {
             listener.accept(cs);
         }
     }
 
+    /**
+     * Get the value of items
+     *
+     * @return the value of items
+     */
+    public List<PhysicalItem> getItems() {
+        return conveyorSpeedJPanel1.getItems();
+    }
+
+    /**
+     * Set the value of items
+     *
+     * @param items new value of items
+     */
+    public void setItems(List<PhysicalItem> items) {
+        conveyorSpeedJPanel1.setItems(items);
+    }
+    
     @Nullable
     private ModbusTCPMaster master;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.conveyor.InnerConveyorSpeedJPanel conveyorSpeedJPanel1;
+    private javax.swing.JButton jButtonNextTray;
+    private javax.swing.JButton jButtonPrevTray;
     // End of variables declaration//GEN-END:variables
 }

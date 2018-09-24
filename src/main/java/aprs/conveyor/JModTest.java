@@ -30,7 +30,7 @@ import java.util.logging.Level;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings({"nullness","initialization"})
 public class JModTest {
