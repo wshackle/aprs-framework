@@ -1,13 +1,13 @@
-#!onfail ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-#!waitfor Neo4j Server is running
-#!recoverWaitFor is ready
-#!checkfail Neo4j Server is not running
+plj-onfail ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+plj-waitfor Neo4j Server is running
+plj-recoverWaitFor is ready
+plj-checkfail Neo4j Server is not running
 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
-#!onfail ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-#!checkfail Neo4j Server is not running
-#!waitfor Neo4j Server is running
-#!recoverWaitFor is ready
+plj-onfail ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+plj-checkfail Neo4j Server is not running
+plj-waitfor Neo4j Server is running
+plj-recoverWaitFor is ready
 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
 
