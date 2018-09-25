@@ -1,7 +1,16 @@
-#!killNeo4J
-#!waitfor Successfully started database
+
+if!connectOK localhost 7484
+plj-waitfor Successfully started database
 ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
-#!waitfor Successfully started database
+endif
+
+if!connectOK localhost 7474
+plj-waitfor Successfully started database
 ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
-#!stop
-#!killNeo4J
+endif
+
+if!connectOK localhost 6001
+cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
+C:\Windows\System32\cmd.exe /k start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
+endif
+
