@@ -458,6 +458,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     }
 
     @Nullable
+    @SuppressWarnings("nullness")
     private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
         if (line.length() < 1) {
             if (null != stringBuilder) {
@@ -524,7 +525,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 if (tabs.length() > 4) {
                     newTabs = tabs.substring(4);
                     tabs = newTabs;
-                } else if(tabs.length() == 4) {
+                } else if (tabs.length() == 4) {
                     newTabs = "";
                     tabs = newTabs;
                 }
@@ -660,15 +661,13 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             } else if (firstWord.startsWith("plj-")) {
                 throw new IllegalArgumentException("line starts with plj- but is not recognized : firstWord=" + firstWord + ", line=" + line);
             } else if (!line.startsWith("#") && !firstWord.startsWith("plj-")) {
-                if (ifStack.peek()) {
-                    errorLineConsumers = new ArrayList<>();
-                    waitForFuture = null;
-                    onFailLine = null;
-                    if (null != processLaunchDirectory) {
-                        return addProcess(processLaunchDirectory, parseCommandLine(line));
-                    } else {
-                        return addProcess(parseCommandLine(line));
-                    }
+                errorLineConsumers = new ArrayList<>();
+                waitForFuture = null;
+                onFailLine = null;
+                if (null != processLaunchDirectory) {
+                    return addProcess(processLaunchDirectory, parseCommandLine(line));
+                } else {
+                    return addProcess(parseCommandLine(line));
                 }
             }
         } finally {

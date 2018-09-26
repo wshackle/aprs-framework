@@ -49,7 +49,7 @@ Build
 
 
 To build one needs:
-  * JDK 1.8+ (http://www.oracle.com/technetwork/java/javase/downloads/index.html)  and
+  * JDK 1.8+ (https://adoptopenjdk.net/)  and
   * maven 3.5.0+ (https://maven.apache.org/download.cgi) 
   
 Use the command:

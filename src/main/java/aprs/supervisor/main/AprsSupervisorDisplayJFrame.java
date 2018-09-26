@@ -86,6 +86,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -883,6 +884,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         }
     }
+    
+    
+    public XFutureVoid loadProperties(Properties props) {
+        return XFutureVoid.completedFuture();
+    } 
+    
 
     private void setRobotEnabled(String robotName, Boolean enabled) {
         if (null == supervisor) {
@@ -1548,7 +1555,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 244, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanelRobotsLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1809,7 +1816,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelFutureLayout.createSequentialGroup()
                         .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jCheckBoxShowUnnamedFutures)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxShowDoneFutures)
@@ -2036,6 +2043,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         jMenuItemSaveSetup.setText("Save Setup");
         jMenuItemSaveSetup.setEnabled(false);
+        jMenuItemSaveSetup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveSetupActionPerformed(evt);
+            }
+        });
         jMenuFile.add(jMenuItemSaveSetup);
 
         jMenuItemSaveSetupAs.setText("Save Setup As ...");
@@ -3613,10 +3625,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jComboBoxTeachSystemViewActionPerformed
 
-    public void saveSharedToolsTable(File f) throws IOException {
-        Utils.saveJTable(f, jTableSharedTools);
-    }
-
     private final String INIT_CUSTOM_CODE = "package custom;\n"
             + "import aprs.framework.*; \n"
             + "import java.util.function.Consumer;\n\n"
@@ -3737,10 +3745,27 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private void jMenuItemSetConveyorViewCloneSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
         String taskName = JOptionPane.showInputDialog("System View to clone for conveyor");
-        AprsSystem sys  =  supervisor.getSysByTask(taskName);
-        conveyorVisJPanel1.setClonedSystem(sys);
+        supervisor.setConveyorClonedViewSystemTaskName(taskName);
+        setConveyorClonedViewSystemTaskName(taskName);
     }//GEN-LAST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
 
+    private void jMenuItemSaveSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupActionPerformed
+        try {
+            supervisor.saveSetupFile(supervisor.getSetupFile());
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemSaveSetupActionPerformed
+
+    public void setConveyorClonedViewSystemTaskName(String taskName) {
+        AprsSystem sys  =  supervisor.getSysByTask(taskName);
+        conveyorVisJPanel1.setClonedSystem(sys);
+    }
+
+    public Map<String,String> getPropertiesMap() {
+        return Collections.emptyMap();
+    }
+    
     @UIEffect
     public static XFuture<Supervisor> openAll(@Nullable Supervisor supervisor, Frame owner, @Nullable String dirName) throws IOException {
         return Supervisor.openAll(supervisor, owner, dirName);
@@ -4409,82 +4434,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * @throws IOException file can not be written to
      */
     public void saveSetupFile(File f) throws IOException {
-        saveJTable(f, jTableTasks, Arrays.asList(0, 1, 2, 6));
-        setSetupFile(f);
-    }
-
-    private void saveJTable(File f, JTable jtable, Iterable<Integer> columnIndexes) throws IOException {
-        String headers[] = tableHeaders(jtable, columnIndexes);
-        CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
-            for (int i = 0; i < jtable.getRowCount(); i++) {
-                List<Object> l = new ArrayList<>();
-                for (Integer colIndex : columnIndexes) {
-                    if (null == colIndex) {
-                        continue;
-                    }
-                    int j = (int) colIndex;
-                    if (j > jtable.getColumnCount()) {
-                        break;
-                    }
-                    Object o = jtable.getValueAt(i, j);
-                    if (o instanceof File) {
-                        File parentFile = f.getParentFile();
-                        if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                                l.add(rel);
-                            } else {
-                                l.add(o);
-                            }
-                        } else {
-                            l.add(o);
-                        }
-                    } else {
-                        if (o == null) {
-                            l.add("");
-                        } else {
-                            l.add(o);
-                        }
-                    }
-                }
-                printer.printRecord(l);
-            }
-        }
-    }
-
-    private void saveJTable(File f, JTable jtable, CSVFormat csvFormat) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
-            for (int i = 0; i < jtable.getRowCount(); i++) {
-                List<Object> l = new ArrayList<>();
-                for (int j = 0; j < jtable.getColumnCount(); j++) {
-                    if (j == 3) {
-                        continue;
-                    }
-                    Object o = jtable.getValueAt(i, j);
-                    if (o instanceof File) {
-                        File parentFile = f.getParentFile();
-                        if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                                l.add(rel);
-                            } else {
-                                l.add(o);
-                            }
-                        } else {
-                            l.add(o);
-                        }
-                    } else {
-                        if (null != o) {
-                            l.add(o);
-                        } else {
-                            l.add("");
-                        }
-                    }
-                }
-                printer.printRecord(l);
-            }
-        }
+        supervisor.saveSetupFile(f);
     }
 
     /**
@@ -4496,8 +4446,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * @throws IOException file could not be written to
      */
     public void savePositionMaps(File f) throws IOException {
-        saveJTable(f, jTablePositionMappings, CSVFormat.RFC4180);
-        saveLastPosMapFile(f);
+        supervisor.savePositionMaps(f);
     }
 
     /**
