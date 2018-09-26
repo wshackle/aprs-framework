@@ -1830,6 +1830,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             hostCachedTextField.setText(objectPanelToClone.getHost());
             portCachedTextField.setText(Integer.toString(objectPanelToClone.getPort()));
             setAprsSystem(objectPanelToClone.getAprsSystem());
+            setPropertiesFile(objectPanelToClone.getPropertiesFile());
             return objectPanelToClone.getProperties()
                     .thenAccept(this::loadProperties)
                     .thenRun( () -> {
@@ -1902,6 +1903,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void connect() throws NumberFormatException {
         if (simulatedCachedCheckBox.isSelected()) {
             try {
+                if(getObjectPanelToClone() != null) {
+                    return;
+                }
                 int port = Integer.parseInt(portCachedTextField.getText().trim());
                 if (null != visionSocketServer && visionSocketServer.getPort() != port) {
                     disconnect();
@@ -2040,6 +2044,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return;
         }
         if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
+            return;
+        }
+        if(null != getObjectPanelToClone()) {
             return;
         }
         VisionSocketServer srv = this.visionSocketServer;
@@ -3492,6 +3499,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 filenameCachedTextField.setText(f.getCanonicalPath());
                 loadFile(f);
             } else {
+                if(null == propertiesFile) {
+                       throw new IllegalStateException("currentDataFileString = " + currentDataFileString + " does not exist and propertiesFile=" + propertiesFile);
+                }
                 File parentFile = propertiesFile.getParentFile();
                 if (null == parentFile) {
                     throw new IllegalStateException("currentDataFileString = " + currentDataFileString + " does not exist and propertiesFile=" + propertiesFile + " has no parent");

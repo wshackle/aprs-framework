@@ -34,7 +34,10 @@ import aprs.learninggoals.GoalLearner;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapJPanel;
 import aprs.cachedcomponents.CachedTable;
+import aprs.database.DbSetupBuilder;
+import aprs.database.DbSetupPublisher;
 import aprs.launcher.ProcessLauncherJFrame;
+import aprs.misc.ActiveWinEnum;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.MultiFileDialogJPanel;
 import aprs.misc.Utils.UiSupplier;
@@ -60,6 +63,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -89,6 +93,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -139,6 +144,7 @@ import org.jcodec.api.awt.AWTSequenceEncoder;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
+import rcs.posemath.PmCartesian;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -2213,7 +2219,6 @@ public class Supervisor {
         }
     }
 
-
     /**
      * Add a system to show and update the tasks and robots tables.
      *
@@ -2352,7 +2357,7 @@ public class Supervisor {
             }
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -5248,15 +5253,45 @@ public class Supervisor {
      * @param f file to save setup to
      * @throws IOException file can not be written to
      */
-    private void saveSetupFile(File f) throws IOException {
-        saveCachedTable(f, tasksCachedTable, Arrays.asList(0, 1, 2, 6));
+    public void saveSetupFile(File f) throws IOException {
+        if (null == propertiesFile) {
+            propertiesFile = new File(f.getParentFile(), "supervisor_properties.txt");
+        }
+        saveProperties(this.propertiesFile);
+        saveCachedTable(f, tasksCachedTable,
+                Arrays.asList(-99, "supervisor", "supervisor", fileToRelString(propertiesFile, f)),
+                Arrays.asList(0, 1, 2, 6)
+        );
+
         setSetupFile(f);
     }
 
-    private void saveCachedTable(File f, CachedTable cachedTable, Iterable<Integer> columnIndexes) throws IOException {
+    private String fileToRelString(File inputFile, File referenceFile) throws IOException {
+        if (null == inputFile) {
+            throw new IllegalArgumentException("null===o");
+        }
+        if (null == referenceFile) {
+            return inputFile.toString();
+        }
+        File parentFile = referenceFile.getParentFile();
+        if (null != parentFile) {
+            final String oCanonicalPath = inputFile.getCanonicalPath();
+            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(oCanonicalPath)).normalize();
+            if (rel.toString().length() < oCanonicalPath.length()) {
+                return rel.toString();
+            } else {
+                return inputFile.toString();
+            }
+        } else {
+            return inputFile.toString();
+        }
+    }
+
+    private void saveCachedTable(File f, CachedTable cachedTable, List<Object> firstRecord, Iterable<Integer> columnIndexes) throws IOException {
         String headers[] = tableHeaders(cachedTable, columnIndexes);
         CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
         try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
+            printer.printRecord(firstRecord);
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (Integer colIndex : columnIndexes) {
@@ -5269,17 +5304,7 @@ public class Supervisor {
                     }
                     Object o = cachedTable.getValueAt(i, j);
                     if (o instanceof File) {
-                        File parentFile = f.getParentFile();
-                        if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                                l.add(rel);
-                            } else {
-                                l.add(o);
-                            }
-                        } else {
-                            l.add(o);
-                        }
+                        l.add(fileToRelString((File) o, f));
                     } else if (o != null) {
                         l.add(o);
                     } else {
@@ -5291,73 +5316,6 @@ public class Supervisor {
         }
     }
 
-//    private void saveJTable(File f, JTable jtable, Iterable<Integer> columnIndexes) throws IOException {
-//        String headers[] = tableHeaders(jtable, columnIndexes);
-//        CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-//        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
-//            TableModel tm = jtable.getModel();
-//            for (int i = 0; i < tm.getRowCount(); i++) {
-//                List<Object> l = new ArrayList<>();
-//                for (Integer colIndex : columnIndexes) {
-//                    if (null == colIndex) {
-//                        continue;
-//                    }
-//                    int j = colIndex;
-//                    if (j > tm.getColumnCount()) {
-//                        break;
-//                    }
-//                    Object o = tm.getValueAt(i, j);
-//                    if (o instanceof File) {
-//                        File parentFile = f.getParentFile();
-//                        if (null != parentFile) {
-//                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-//                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-//                                l.add(rel);
-//                            } else {
-//                                l.add(o);
-//                            }
-//                        } else {
-//                            l.add(o);
-//                        }
-//                    } else {
-//                        l.add(o);
-//                    }
-//                }
-//                printer.printRecord(l);
-//            }
-//        }
-//    }
-//
-//    private void saveJTable(File f, JTable jtable, CSVFormat csvFormat) throws IOException {
-//        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
-//            TableModel tm = jtable.getModel();
-//            for (int i = 0; i < tm.getRowCount(); i++) {
-//                List<Object> l = new ArrayList<>();
-//                for (int j = 0; j < tm.getColumnCount(); j++) {
-//                    if (j == 3) {
-//                        continue;
-//                    }
-//                    Object o = tm.getValueAt(i, j);
-//                    if (o instanceof File) {
-//                        File parentFile = f.getParentFile();
-//                        if (null != parentFile) {
-//                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-//                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-//                                l.add(rel);
-//                            } else {
-//                                l.add(o);
-//                            }
-//                        } else {
-//                            l.add(o);
-//                        }
-//                    } else {
-//                        l.add(o);
-//                    }
-//                }
-//                printer.printRecord(l);
-//            }
-//        }
-//    }
     private void saveCachedTable(File f, CachedTable cachedTable, CSVFormat csvFormat) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
@@ -5398,7 +5356,7 @@ public class Supervisor {
      * @param f file to safe posmaps in
      * @throws IOException file could not be written to
      */
-    private void savePositionMaps(File f) throws IOException {
+    public void savePositionMaps(File f) throws IOException {
         saveCachedTable(f, positionMappingsCachedTable, CSVFormat.RFC4180);
         saveLastPosMapFile(f);
     }
@@ -5566,7 +5524,7 @@ public class Supervisor {
         String newFilePath = f.getCanonicalPath();
         String relativeNewFilePath = newFilePath;
         File parentFile = lastFileFile.getParentFile();
-        if(null == parentFile) {
+        if (null == parentFile) {
             return;
         }
         String lastFileFileParentPath = parentFile.getCanonicalPath();
@@ -5852,6 +5810,139 @@ public class Supervisor {
         Utils.readCsvFileToTable(sharedToolCachedTable, f);
     }
 
+    private File propertiesFile;
+
+    /**
+     * Get the value of propertiesFile
+     *
+     * @return the value of propertiesFile
+     */
+    public File getPropertiesFile() {
+        return propertiesFile;
+    }
+
+    /**
+     * Set the value of propertiesFile
+     *
+     * @param propertiesFile new value of propertiesFile
+     */
+    public final XFutureVoid loadProperties() {
+        return loadPropertiesFile(this.propertiesFile);
+    }
+
+    private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesTraces = new ConcurrentLinkedDeque<>();
+
+    public XFutureVoid loadPropertiesFile(File propertiesFile) {
+        this.propertiesFile = propertiesFile;
+
+        List<StackTraceElement[]> loadPropertiesTracesCopy
+                = new ArrayList<>(loadPropertiesTraces);
+        loadPropertiesTraces.add(Thread.currentThread().getStackTrace());
+        IOException exA[] = new IOException[1];
+        try {
+            Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
+                    () -> {
+                        return loadPropertiesOnDisplay(exA);
+                    });
+            return ret.thenComposeToVoid(x -> x);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public XFutureVoid saveProperties() throws IOException {
+        return saveProperties(this.propertiesFile);
+    }
+
+    public XFutureVoid saveProperties(File propertiesFile) throws IOException {
+        this.propertiesFile = propertiesFile;
+        File propsParent = propertiesFile.getParentFile();
+        List<XFutureVoid> futures = new ArrayList<>();
+        if (propsParent == null) {
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFile);
+            return XFutureVoid.completedFuture();
+        }
+        if (!propsParent.exists()) {
+            System.out.println("Directory " + propsParent + " does not exist. (Creating it now.)");
+            propsParent.mkdirs();
+        }
+        Map<String, String> propsMap = new HashMap<>();
+        if (null != displayJFrame) {
+            propsMap.putAll(displayJFrame.getPropertiesMap());
+        }
+        if (null != this.conveyorClonedViewSystemTaskName) {
+            propsMap.put("conveyorClonedViewSystemTaskName", conveyorClonedViewSystemTaskName);
+        }
+        Properties props = new Properties();
+        props.putAll(propsMap);
+        System.out.println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
+        Utils.saveProperties(propertiesFile, props);
+        return XFutureVoid.allOf(futures);
+    }
+
+    private String conveyorClonedViewSystemTaskName;
+
+    /**
+     * Get the value of conveyorClonedViewSystemTaskName
+     *
+     * @return the value of conveyorClonedViewSystemTaskName
+     */
+    public String getConveyorClonedViewSystemTaskName() {
+        return conveyorClonedViewSystemTaskName;
+    }
+
+    /**
+     * Set the value of conveyorClonedViewSystemTaskName
+     *
+     * @param conveyorClonedViewSystemTaskName new value of
+     * conveyorClonedViewSystemTaskName
+     */
+    public void setConveyorClonedViewSystemTaskName(String conveyorClonedViewSystemTaskName) {
+        this.conveyorClonedViewSystemTaskName = conveyorClonedViewSystemTaskName;
+    }
+
+    private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesOnDisplayTraces = new ConcurrentLinkedDeque<>();
+
+    private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
+        List<StackTraceElement[]> loadPropertiesTracesCopy
+                = new ArrayList<>(loadPropertiesOnDisplayTraces);
+        loadPropertiesOnDisplayTraces.add(Thread.currentThread().getStackTrace());
+        try {
+            List<XFuture<?>> futures = new ArrayList<>();
+            Properties props = new Properties();
+            System.out.println("Supervisot loading properties from " + propertiesFile.getCanonicalPath());
+            try (FileReader fr = new FileReader(propertiesFile)) {
+                props.load(fr);
+            }
+            XFutureVoid displayLoadPropertiesFuture = null;
+            if (null != displayJFrame) {
+                displayLoadPropertiesFuture = displayJFrame.loadProperties(props);
+                futures.add(displayLoadPropertiesFuture);
+            }
+            String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
+            if(null != convTaskName) {
+                setConveyorClonedViewSystemTaskName(convTaskName);
+            }
+            if (futures.isEmpty()) {
+                return XFutureVoid.completedFutureWithName("loadPropertiesOnDisplay_allComplete");
+            } else {
+                return XFutureVoid.allOf(futures);
+            }
+        } catch (IOException exception) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            exA[0] = exception;
+            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay IOException");
+            xfv.completeExceptionally(exception);
+            return xfv;
+        } catch (Exception exception) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
+            xfv.completeExceptionally(exception);
+            return xfv;
+        }
+    }
+
     /**
      * Load the given setup file.
      *
@@ -5879,15 +5970,30 @@ public class Supervisor {
                 File propertiesFile = new File(csvRecord.get(3));
                 File parentFile = f.getParentFile();
                 if (null != parentFile) {
-                    File altPropFile = parentFile.toPath().toRealPath().resolve(fileString).toFile();
+                    Path parentRealPath = parentFile.toPath().toRealPath();
+                    File altPropFile = parentRealPath.resolve(fileString).toFile();
                     if (altPropFile.exists()) {
                         propertiesFile = altPropFile;
                     }
                 }
+
                 System.out.println("propertiesFile = " + propertiesFile);
-                XFuture<AprsSystem> futureSys = AprsSystem.createSystem(propertiesFile);
+
                 final String taskName = csvRecord.get(1);
                 final String robotName = csvRecord.get(2);
+                XFutureVoid loadPropertiesFileFuture = null;
+                if (priority == -99 || taskName.equalsIgnoreCase("supervisor") || robotName.equalsIgnoreCase("supervisor")) {
+                    loadPropertiesFileFuture = loadPropertiesFile(propertiesFile);
+                    continue;
+                }
+                XFuture<AprsSystem> futureSys;
+                if (null == loadPropertiesFileFuture) {
+                    futureSys = AprsSystem.createSystem(propertiesFile);
+                } else {
+                    final File sysPropertiesFile = propertiesFile;
+                    futureSys = loadPropertiesFileFuture
+                            .thenCompose(() -> AprsSystem.createSystem(sysPropertiesFile));
+                }
                 XFuture<?> futureToAdd = futureSys.
                         thenAcceptAsync((AprsSystem aprsSys) -> completeLoadSys(aprsSys, priority, taskName, robotName), supervisorExecutorService);
                 sysFutures.add(futureToAdd);
@@ -5911,7 +6017,10 @@ public class Supervisor {
                         try {
                             clearPosTable();
                             setSetupFile(f);
-
+                            String convTaskName = getConveyorClonedViewSystemTaskName();
+                            if (null != convTaskName && convTaskName.length() > 0 && null != displayJFrame) {
+                                displayJFrame.setConveyorClonedViewSystemTaskName(convTaskName);
+                            }
                         } catch (Exception exception) {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
                             throw new RuntimeException(exception);
