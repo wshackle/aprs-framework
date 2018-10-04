@@ -1833,12 +1833,12 @@ public class AprsSystem implements SlotOffsetProvider {
             setProgram(program);
             assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
             ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
-            if(!ret) {
+            if (!ret) {
                 System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Arrays.toString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
             }
             int origSize = progCopy.getMiddleCommand().size();
             int curSize = program.getMiddleCommand().size();
-            String origSizeString = (origSize != curSize)?("\n origSize="+origSize):"";
+            String origSizeString = (origSize != curSize) ? ("\n origSize=" + origSize) : "";
             logEvent("end runCrclProgram",
                     "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + curSize + ")"
                     + origSizeString
@@ -4193,6 +4193,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return slot with absolute position
      */
     @Nullable
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
@@ -4218,6 +4219,22 @@ public class AprsSystem implements SlotOffsetProvider {
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
     }
 
+    public void showFilledKitTrays() {
+        List<PhysicalItem> filledkitTraysList = createFilledKitsList(false, 0);
+        object2DViewJInternalFrame.setItems(filledkitTraysList);
+    }
+
+    public XFuture<Boolean> fillKitTrays() throws IOException {
+        return fillKitTrays(false, 0);
+    }
+
+    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset) throws IOException {
+        List<PhysicalItem> filledkitTraysList = createFilledKitsList(false, 0);
+        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset);
+        loadActionsFile(actionFile, false);
+        return startActions("fillKItTrays", false);
+    }
+
     public List<PhysicalItem> createFilledKitsList(boolean overrideRotationOffset, double newRotationOffset) {
         List<PhysicalItem> items = getObjectViewItems();
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
@@ -4226,14 +4243,27 @@ public class AprsSystem implements SlotOffsetProvider {
         outputList.addAll(fillInfo.getPartTrays());
         outputList.addAll(fillInfo.getPartsInKit());
         List<PhysicalItem> partsInPartsTrays = new ArrayList<>(fillInfo.getPartsInPartsTrays());
+        System.out.println("partsInPartsTrays = " + partsInPartsTrays);
         List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
+        System.out.println("emptyKitSlots = " + emptyKitSlots);
+        List<PhysicalItem> movedPartsList = new ArrayList<>();
         for (TraySlotListItem emptySlotItem : emptyKitSlots) {
             int itemFoundIndex = -1;
             for (int i = 0; i < partsInPartsTrays.size(); i++) {
                 PhysicalItem item = partsInPartsTrays.get(i);
-                if (Objects.equals(item.getPrpName(), emptySlotItem.getSlotOffset().getPrpName())) {
+                String itemName = item.getName();
+                System.out.println("itemName = " + itemName);
+                if(itemName.startsWith("sku_")) {
+                    itemName = itemName.substring(4);
+                }
+                if(itemName.startsWith("part_")) {
+                    itemName = itemName.substring(5);
+                }
+                String slotName = emptySlotItem.getSlotOffset().getSlotName();
+                System.out.println("slotName = " + slotName);
+                if (Objects.equals(itemName, slotName)) {
                     PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
-                    outputList.add(newItem);
+                    movedPartsList.add(newItem);
                     itemFoundIndex = i;
                     break;
                 }
@@ -4242,9 +4272,10 @@ public class AprsSystem implements SlotOffsetProvider {
                 partsInPartsTrays.remove(itemFoundIndex);
             }
         }
+        System.out.println("movedPartsList = " + movedPartsList);
+        outputList.addAll(movedPartsList);
         outputList.addAll(partsInPartsTrays);
         return outputList;
-
     }
 
     /**
@@ -5543,7 +5574,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);

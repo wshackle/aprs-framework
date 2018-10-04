@@ -263,6 +263,9 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     @Override
     public String toString() {
+        if(null == fullName) {
+            String.format("PhysicalItem{fullName=null(name=%s), x=%.3f, y=%.3f }",name,x,y);
+        }
         return String.format("PhysicalItem{fullName=%s, x=%.3f, y=%.3f }",fullName,x,y);
     }
 
