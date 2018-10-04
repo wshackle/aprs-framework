@@ -136,35 +136,15 @@ public class TrayFillInfo {
             }
             PhysicalItem closestPart = findClosestPart(absSlot.x, absSlot.y, unassignedParts);
             if (null == closestPart) {
-                slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
-                listPairing.getList().add(new TraySlotListItem(slotOffset, absSlot, closestPart));
+                listPairing.addEmptyTraySlotItem(slotOffset, absSlot);
                 continue;
             }
             double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
             if (minDist < 20 + slotOffset.getDiameter() / 2.0) {
                 unassignedParts.remove(closestPart);
-                listPairing.getList().add(new TraySlotListItem(slotOffset, absSlot, closestPart));
-                partsInKit.add(closestPart);
-                String shortPartName = closestPart.getName();
-                if (shortPartName.startsWith("sku_")) {
-                    shortPartName = shortPartName.substring(4);
-                }
-                String indexString = slotOffset.getSlotIndexString();
-                if (null == indexString) {
-                    String prpName = slotOffset.getPrpName();
-                    if (null != prpName) {
-                        indexString = prpName.substring(prpName.lastIndexOf("_") + 1);
-                        slotOffset.setSlotIndexString(indexString);
-                    } else {
-                        throw new IllegalStateException("slotOffset has neither slotIndexString nor prpName :" + slotOffset.getName());
-                    }
-                }
-                slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
-            } else {
-                TraySlotListItem traySlotListItem = new TraySlotListItem(slotOffset, absSlot, null);
-                listPairing.getList().add(traySlotListItem);
-                listPairing.getEmptySlots().add(traySlotListItem);
-                slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
+                listPairing.addPartTraySlotItem(slotOffset, absSlot, closestPart);
+           } else {
+                listPairing.addEmptyTraySlotItem(slotOffset, absSlot);
             }
         }
         return listPairing;

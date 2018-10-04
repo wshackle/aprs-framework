@@ -26,7 +26,6 @@ import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

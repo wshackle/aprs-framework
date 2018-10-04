@@ -471,6 +471,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemLookFor = new javax.swing.JMenuItem();
         jMenuItemClearErrors = new javax.swing.JMenuItem();
         jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemFillKitTrays = new javax.swing.JMenuItem();
+        jMenuItemShowFilledKitTrays = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -827,6 +829,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuExecute.add(jCheckBoxMenuItemStepping);
+
+        jMenuItemFillKitTrays.setText("Fill Kit Trays");
+        jMenuItemFillKitTrays.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemFillKitTraysActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemFillKitTrays);
+
+        jMenuItemShowFilledKitTrays.setText("Show Filled Kit Trays");
+        jMenuExecute.add(jMenuItemShowFilledKitTrays);
 
         jMenuBar1.add(jMenuExecute);
 
@@ -1758,6 +1771,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemUseTeachTableActionPerformed
 
+    private void jMenuItemFillKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFillKitTraysActionPerformed
+        try {
+            aprsSystem.fillKitTrays();
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemFillKitTraysActionPerformed
+
     CachedCheckBox connectDatabaseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
     }
@@ -1853,6 +1874,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
     private javax.swing.JMenuItem jMenuItemDebugAction;
     private javax.swing.JMenuItem jMenuItemExit;
+    private javax.swing.JMenuItem jMenuItemFillKitTrays;
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
@@ -1862,6 +1884,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenuItem jMenuItemSetPoseMaxLimits;
     private javax.swing.JMenuItem jMenuItemSetPoseMinLimits;
+    private javax.swing.JMenuItem jMenuItemShowFilledKitTrays;
     private javax.swing.JMenuItem jMenuItemStartActionList;
     private javax.swing.JMenu jMenuWindow;
     private javax.swing.JPopupMenu.Separator jSeparator1;
