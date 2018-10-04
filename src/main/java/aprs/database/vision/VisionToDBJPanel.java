@@ -92,6 +92,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
@@ -122,6 +123,26 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public List<PartsTray> getPartsTrayList() {
         assert (null != dpu) : "dpu == null";
         return dpu.getPartsTrayList();
+    }
+
+    private final ConcurrentLinkedDeque<Consumer<Integer>> incrementCountListeners = new ConcurrentLinkedDeque<>();
+
+    public void addLineCountListener(Consumer<Integer> l) {
+        if (null != visionClient) {
+            visionClient.addCountListener(l);
+        } else {
+            incrementCountListeners.add(l);
+        }
+    }
+
+    public void removeLineCountListener(Consumer<Integer> l) {
+        if (null != visionClient) {
+            visionClient.removeCountListener(l);
+        }
+    }
+
+    public int getLineCount() {
+        return (null != visionClient) ? visionClient.getLineCount() : -1;
     }
 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
@@ -1682,7 +1703,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
         XFuture<List<PhysicalItem>> ret = new XFuture<>("getSingleUpdate " + updateNotifyCountInfo() + " database=" + getDpuUrl() + " visionSocket=" + visionClient);
         synchronized (singleUpdateListeners) {
-            setEnableDatabaseUpdates(true);
+//            setEnableDatabaseUpdates(true);
             singleUpdateListeners.add(ret);
         }
         return ret;
@@ -1827,6 +1848,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
+                    notifySingleUpdateListeners(l);
                     runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 }
                 updating = false;
@@ -1850,6 +1872,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         visionClient.setDebug(isDebug());
         visionClient.setReplyPs(System.out);
         visionClient.addListener(this);
+        for(Consumer<Integer> l : this.incrementCountListeners) {
+            visionClient.addCountListener(l);
+        }
         return visionClient.start(argsMap)
                 .thenComposeToVoid(() -> Utils.runOnDispatchThread(this::finishConnectVision));
     }
@@ -2514,7 +2539,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         debugCachedCheckBox.setSelected(isDebug);
     }
 
-    @Nullable private DbType oldDbType;
+    @Nullable
+    private DbType oldDbType;
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2589,13 +2615,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @MonotonicNonNull private File propertiesFile = null;
+    @MonotonicNonNull
+    private File propertiesFile = null;
 
     public void setPropertiesFile(File f) {
         propertiesFile = f;
     }
 
-    @Nullable public File getPropertiesFile() {
+    @Nullable
+    public File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
@@ -2642,7 +2670,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             props.put("--visionport", visionPortCachedTextField.getText());
             props.put("--visionhost", visionHostCachedTextField.getText());
             props.put("rotationOffset", rotationOffsetCachedTextField.getText());
-            props.put("--commandport",cmdPortCachedTextField.getText());
+            props.put("--commandport", cmdPortCachedTextField.getText());
 //            try (FileWriter fw = new FileWriter(propertiesFile)) {
 //                props.store(fw, "");
 //            } catch (IOException ex) {
@@ -2824,12 +2852,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     + " ms, max=" + dpu.getMaxUpdateTimeMillis() + " ms";
         }
         String clntPerf = " Input : NA";
-        if(null != visionClient) {
+        if (null != visionClient) {
             clntPerf = " Input : "
                     + "count=" + visionClient.getLineCount() + ", "
                     + "skipped=" + visionClient.getSkippedLineCount();
         }
-        this.jTextFieldPerformance.setText(dbPerf+clntPerf);
+        this.jTextFieldPerformance.setText(dbPerf + clntPerf);
     }
 
     @Override

@@ -1247,9 +1247,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         List<PhysicalItem> newPrevParts
                 = (prevParts == null) ? new ArrayList<>()
                         : prevParts.stream()
-                        .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                        .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(ArrayList::new));
+                                .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                                .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                                .collect(Collectors.toCollection(ArrayList::new));
         newPrevParts.addAll(parts);
         if (null != prevParts) {
             prevParts.clear();
@@ -1347,20 +1347,20 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
         List<Tray> kitTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<Tray> partTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<PhysicalItem> parts
                 = StreamSupport.stream(inputItems.spliterator(), false)
-                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
         List<Slot> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts, sop, prevParts);
         List<Slot> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts, sop, prevParts);
@@ -1443,6 +1443,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
      */
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
         this.enableDatabaseUpdates = enableDatabaseUpdates;
+        if (enableDatabaseUpdates) {
+            System.out.println("enableDatabaseUpdates = " + enableDatabaseUpdates);
+        }
         updateResultsMap.clear();
         try {
             if (null != dbQueryLogPrintStream) {
@@ -1567,8 +1570,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             updateCount++;
             List<PhysicalItem> list = inList;
             list = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, addRepeatCountsToName, partsTrayList);
-            for(PhysicalItem item : inList) {
-                if("P".equals(item.getType()) && !item.isInsideKitTray() && !item.isInsidePartsTray()) {
+            for (PhysicalItem item : inList) {
+                if ("P".equals(item.getType()) && !item.isInsideKitTray() && !item.isInsidePartsTray()) {
                     item.z += noTrayOffsetZ;
                 }
             }
@@ -1718,7 +1721,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 }
             }
             if (!edu) {
-                if(null != displayInterface) {
+                if (null != displayInterface) {
                     displayInterface.updatePerformanceLine();
                 }
                 return returnedList;
@@ -1790,16 +1793,16 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private static List<PhysicalItem> preProcessItemList(List<PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
         List<Tray> partsTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<Tray> kitTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         normalizeNames(inputItems, kitTrays, keepNames, keepFullNames, partsTrays);
         List<PhysicalItem> outList = null;
         if (doPrefEmptySlotsFiltering) {
@@ -1886,12 +1889,12 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private static List<PhysicalItem> filterEmptySlots(List<PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
         List<PhysicalItem> parts
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<PhysicalItem> emptySlots
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "ES".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "ES".equals(item.getType()))
+                        .collect(Collectors.toList());
         Comparator<PhysicalItem> kitComparator
                 = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
         kitTrays.sort(kitComparator);
@@ -1923,10 +1926,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
                 PhysicalItem bestSlotFiller
                         = firstSortParts.stream()
-                        .filter(PhysicalItem::isInsidePartsTray)
-                        .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                        .findFirst()
-                        .orElse(null);
+                                .filter(PhysicalItem::isInsidePartsTray)
+                                .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                .findFirst()
+                                .orElse(null);
                 if (null != bestSlotFiller) {
                     slotFillers.add(bestSlotFiller);
                     firstSortParts.remove(bestSlotFiller);

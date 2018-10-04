@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
@@ -57,6 +58,18 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public VisionToDbJInternalFrame() {
         initComponents();
 //        DbMain.setDisplayInterface(this);
+    }
+
+    public void addLineCountListener(Consumer<Integer> l) {
+        visionToDBJPanel.addLineCountListener(l);
+    }
+
+    public void removeLineCountListener(Consumer<Integer> l) {
+        visionToDBJPanel.removeLineCountListener(l);
+    }
+
+    public int getLineCount() {
+        return visionToDBJPanel.getLineCount();
     }
 
     @Override
@@ -131,7 +144,6 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setAprsSystem(aprsSystemInterface);
     }
 
-
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system.
@@ -200,7 +212,6 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setAquiring(s);
     }
 
-
     @Override
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list) {
         this.visionToDBJPanel.updataPoseQueryInfo(_list);
@@ -221,12 +232,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setVisionConnected(_val);
     }
 
-
     @Override
     public void setLastCommand(String c) {
         this.visionToDBJPanel.setLastCommand(c);
     }
-
 
     public void startCommand(Map<String, String> argsMap) {
         visionToDBJPanel.startCommand(argsMap);
@@ -252,7 +261,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         this.visionToDBJPanel.setPropertiesFile(f);
     }
 
-    @Nullable public File getPropertiesFile() {
+    @Nullable
+    public File getPropertiesFile() {
         return this.visionToDBJPanel.getPropertiesFile();
     }
 

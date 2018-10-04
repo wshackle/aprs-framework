@@ -1699,10 +1699,21 @@ public class Supervisor {
         logEvent("Starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFor);
         logEvent("    and starting safe abort and disconnect for " + " : srn=" + srn + " " + stealFrom);
         int startingStealRobotsInternalAbortCount = abortCount.get();
-        stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
-                stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
-                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService),
-                stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn)
+        XFutureVoid stealFromFuture1
+                = stealFrom.startSafeAbortAndDisconnect("stealAbortAllOf.stealFrom" + " : srn=" + srn)
+                        .thenRun(() -> {
+                            logEvent("stealFromAborted");
+                        });
+        XFutureVoid stealFromSafeAbortFuture
+                = stealFromFuture1
+                        .thenRunAsync(() -> logEvent("Safe abort and disconnect completed for " + stealFrom + " " + stealFromRobotName + " needed for " + stealFor + " : srn=" + srn), supervisorExecutorService);
+        XFutureVoid stealForFuture1
+                = stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn)
+                        .thenRun(() -> {
+                            logEvent("stealForAborted");
+                        });
+        XFuture<Void> stealForAbortAndDisconnectFuture
+                = stealForFuture1
                         .thenComposeAsync("showDisabledMessage." + stealForRobotName,
                                 x -> {
                                     logEvent("Safe abort and disconnect completed for " + stealFor + ", " + stealForRobotName + " being disabled. " + " : srn=" + srn);
@@ -1714,7 +1725,10 @@ public class Supervisor {
                                     } else {
                                         return XFutureVoid.completedFutureWithName("showMessageFullScreen " + stealForRobotName + " Disabled");
                                     }
-                                }, supervisorExecutorService));
+                                }, supervisorExecutorService);
+        stealAbortFuture = XFuture.allOfWithName("stealAbortAllOf",
+                stealFromSafeAbortFuture,
+                stealForAbortAndDisconnectFuture);
 
         XFuture<Boolean> part1 = stealAbortFuture.thenComposeAsync(
                 "transfer" + " : srn=" + srn, x -> {
@@ -5921,7 +5935,7 @@ public class Supervisor {
                 futures.add(displayLoadPropertiesFuture);
             }
             String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
-            if(null != convTaskName) {
+            if (null != convTaskName) {
                 setConveyorClonedViewSystemTaskName(convTaskName);
             }
             if (futures.isEmpty()) {

@@ -33,9 +33,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -198,6 +200,17 @@ public class VisionSocketClient implements AutoCloseable {
         return consecutiveIgnoreCount;
     }
 
+    private final ConcurrentLinkedDeque<Consumer<Integer>> 
+            incrementCountListeners = new ConcurrentLinkedDeque<>();
+    
+    public void addCountListener(Consumer<Integer> l) {
+        incrementCountListeners.add(l);
+    }
+    
+    public void removeCountListener(Consumer<Integer> l) {
+        incrementCountListeners.remove(l);
+    }
+    
     public XFutureVoid start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -225,8 +238,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (execSrv == null) {
                 throw new IllegalArgumentException("visionExecServ is null, already closed");
             }
-            visionSlr = SocketLineReader.startClient(
-                    hostf,
+            visionSlr = SocketLineReader.startClient(hostf,
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
@@ -235,7 +247,7 @@ public class VisionSocketClient implements AutoCloseable {
 
                 @Override
                 public void call(final String line, PrintStream os) {
-                    lineCount.incrementAndGet();
+                    incrementLineCount();
 //                    System.out.println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
                         parsing_line = line;
@@ -279,6 +291,13 @@ public class VisionSocketClient implements AutoCloseable {
                 System.err.println("Caused by " + exception.getCause());
             }
             throw new RuntimeException("Failed to connect to vision " + host + ":" + port + " : " + exception.getMessage(), exception);
+        }
+    }
+
+    private void incrementLineCount() {
+        int count = lineCount.incrementAndGet();
+        for(Consumer<Integer> l : incrementCountListeners) {
+            l.accept(count);
         }
     }
 
