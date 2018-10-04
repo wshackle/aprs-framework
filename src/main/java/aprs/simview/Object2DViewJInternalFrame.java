@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
@@ -44,10 +45,10 @@ import rcs.posemath.PmCartesian;
  */
 public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame implements Object2DJFrameInterface {
 
-     public Object2DOuterJPanel getObjectViewPanel() {
-         return object2DOuterJPanel1;
-     }
-     
+    public Object2DOuterJPanel getObjectViewPanel() {
+        return object2DOuterJPanel1;
+    }
+
     /**
      * Creates new form Object2DViewJInternalFrame
      */
@@ -95,6 +96,14 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public int getPublishCount() {
         return object2DOuterJPanel1.getPublishCount();
+    }
+
+    public void addPublishCountListener(Consumer<Integer> l) {
+        object2DOuterJPanel1.addPublishCountListener(l);
+    }
+
+    public void removePublishCountListener(Consumer<Integer> l) {
+        object2DOuterJPanel1.removePublishCountListener(l);
     }
 
     /**

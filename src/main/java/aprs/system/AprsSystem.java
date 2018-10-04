@@ -46,6 +46,8 @@ import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
+import aprs.database.TrayFillInfo;
+import aprs.database.TraySlotListItem;
 import aprs.pddl_planner.PddlPlannerJInternalFrame;
 import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
@@ -83,9 +85,9 @@ import crcl.base.MoveToType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.SetEndEffectorType;
+import crcl.ui.ConcurrentBlockProgramsException;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
-import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.ui.client.UpdateTitleListener;
 import crcl.ui.server.SimServerJInternalFrame;
@@ -143,7 +145,6 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
@@ -815,7 +816,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * another call to has occurred start/stopBlockingCrclPrograms since the
      * corresponding call to startBlockingCrclProgram
      */
-    public void stopBlockingCrclPrograms(int count) throws PendantClientInner.ConcurrentBlockProgramsException {
+    public void stopBlockingCrclPrograms(int count) throws ConcurrentBlockProgramsException {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("pendantClientJInternalFrame is null");
         }
@@ -1204,7 +1205,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 safeAbortFuture = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortAndDisconnectFuture = safeAbortFuture;
             }
-            return safeAbortAndDisconnectFuture.always(() -> logEvent("finished startSafeAbortAndDisconnect", comment));
+            return safeAbortAndDisconnectFuture.always(() -> {
+                logEvent("finished startSafeAbortAndDisconnect", comment);
+            });
         } catch (Exception e) {
             setTitleErrorString(e.toString());
             XFutureVoid ret = new XFutureVoid("startSafeAbortAndDisconnect." + e.toString());
@@ -1816,23 +1819,40 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @param program CRCL program to run
      * @return whether the program completed successfully
-     * @throws JAXBException the program did not meet schema requirements
      */
-    public boolean runCRCLProgram(CRCLProgramType program) throws JAXBException {
-        if (enableCheckedAlready && checkNoMoves(program)) {
-            logEvent("skipping runCrclProgram", programToString(program));
-            processWrapperCommands(program);
-            return true;
+    public boolean runCRCLProgram(CRCLProgramType program) {
+        boolean ret = false;
+        try {
+            if (enableCheckedAlready && checkNoMoves(program)) {
+                logEvent("skipping runCrclProgram", programToString(program));
+                processWrapperCommands(program);
+                return true;
+            }
+            long startTime = logEvent("start runCrclProgram", programToString(program));
+            CRCLProgramType progCopy = CRCLPosemath.copy(program);
+            setProgram(program);
+            assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+            ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
+            if(!ret) {
+                System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Arrays.toString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
+            }
+            int origSize = progCopy.getMiddleCommand().size();
+            int curSize = program.getMiddleCommand().size();
+            String origSizeString = (origSize != curSize)?("\n origSize="+origSize):"";
+            logEvent("end runCrclProgram",
+                    "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + curSize + ")"
+                    + origSizeString
+                    + "\n started at" + startTime
+                    + "\n timeDiff=" + (startTime - System.currentTimeMillis())
+            );
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
-        long startTime = logEvent("start runCrclProgram", programToString(program));
-        setProgram(program);
-        assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
-        boolean ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
-        logEvent("end runCrclProgram",
-                "(" + crclClientJInternalFrame.getCurrentProgramLine() + "/" + program.getMiddleCommand().size() + ")"
-                + "\n started at" + startTime
-                + "\n timeDiff=" + (startTime - System.currentTimeMillis())
-        );
         return ret;
     }
 
@@ -1981,6 +2001,9 @@ public class AprsSystem implements SlotOffsetProvider {
                     pause();
                 }
             }
+            sb.append("simVisionDiff=").append(simVisionDiff).append(", ");
+            sb.append("simVisionTimeDiff=").append(simVisionTimeDiff).append(", ");
+            sb.append("maxSimVisionDiff=").append(maxSimVisionDiff).append("\r\n");
 //        sb.append("                                                                                                                                                                                                                                                                                        \r\n");
 
             String currentTitleErrorString = this.titleErrorString;
@@ -2169,6 +2192,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
         if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
             if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
+                System.err.println("details=" + getDetailsString());
                 logEvent("setTitleErrorString", newTitleErrorString);
                 titleErrorStringCommandStatus = getCommandStatus();
                 if (null != this.titleErrorString
@@ -2467,6 +2491,43 @@ public class AprsSystem implements SlotOffsetProvider {
         connectDatabaseCheckBox.setSelected(selected);
     }
 
+    private volatile int visionLineCount = 0;
+    private volatile int simVisionDiff = 0;
+    private volatile int maxSimVisionDiff = -99;
+    private volatile int simLineCount = 0;
+    private volatile long simVisionTimeDiff = -1;
+
+    public int getVisionLineCount() {
+        return visionLineCount;
+    }
+
+    public int getSimLineCount() {
+        return simLineCount;
+    }
+
+    public long getSimVisionTimeDiff() {
+        return simVisionTimeDiff;
+    }
+
+    synchronized private void visionLineCounter(int count) {
+        this.visionLineCount = count;
+        simVisionDiff = simLineCount - count;
+        while (publishTimes.size() > simVisionDiff + 1) {
+            publishTimes.remove(0);
+        }
+        if (publishTimes.size() > 0) {
+            long pubTime = publishTimes.remove(0);
+            long visTime = System.currentTimeMillis();
+            simVisionTimeDiff = visTime - pubTime;
+        }
+        if (maxSimVisionDiff < simVisionDiff) {
+            maxSimVisionDiff = simVisionDiff;
+            System.out.println("maxSimVisionDiff = " + maxSimVisionDiff);
+        }
+    }
+
+    private final Consumer<Integer> visionLineListener = this::visionLineCounter;
+
     public XFutureVoid connectVision() {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect vision when already closing.");
@@ -2475,7 +2536,13 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("null == visionToDbJInternalFrame");
         }
         return Utils.supplyOnDispatchThread(visionToDbJInternalFrame::connectVision)
-                .thenComposeToVoid(x -> x);
+                .thenComposeToVoid(x -> x)
+                .thenRun(() -> {
+                    if (null != object2DViewJInternalFrame) {
+                        object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
+                    }
+                    visionToDbJInternalFrame.addLineCountListener(visionLineListener);
+                });
     }
 
     public void disconnectVision() {
@@ -4031,9 +4098,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 enableCheckedAlready = true;
             }
             return ret;
-        } catch (JAXBException jAXBException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", jAXBException);
-            throw new RuntimeException(jAXBException);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -4149,6 +4216,35 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
+    }
+
+    public List<PhysicalItem> createFilledKitsList(boolean overrideRotationOffset, double newRotationOffset) {
+        List<PhysicalItem> items = getObjectViewItems();
+        TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
+        List<PhysicalItem> outputList = new ArrayList<>();
+        outputList.addAll(fillInfo.getKitTrays());
+        outputList.addAll(fillInfo.getPartTrays());
+        outputList.addAll(fillInfo.getPartsInKit());
+        List<PhysicalItem> partsInPartsTrays = new ArrayList<>(fillInfo.getPartsInPartsTrays());
+        List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
+        for (TraySlotListItem emptySlotItem : emptyKitSlots) {
+            int itemFoundIndex = -1;
+            for (int i = 0; i < partsInPartsTrays.size(); i++) {
+                PhysicalItem item = partsInPartsTrays.get(i);
+                if (Objects.equals(item.getPrpName(), emptySlotItem.getSlotOffset().getPrpName())) {
+                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
+                    outputList.add(newItem);
+                    itemFoundIndex = i;
+                    break;
+                }
+            }
+            if (-1 != itemFoundIndex) {
+                partsInPartsTrays.remove(itemFoundIndex);
+            }
+        }
+        outputList.addAll(partsInPartsTrays);
+        return outputList;
+
     }
 
     /**
@@ -5446,7 +5542,12 @@ public class AprsSystem implements SlotOffsetProvider {
             System.err.println("newReverseFlag = " + newReverseFlag);
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
+            setTitleErrorString(ex.getMessage());
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
         return ret;
     }
@@ -5895,12 +5996,34 @@ public class AprsSystem implements SlotOffsetProvider {
                     () -> {
                         return loadPropertiesOnDisplay(exA);
                     });
-            return ret.thenComposeToVoid(x -> x);
+            return ret.thenComposeToVoid(x -> {
+                if (null != object2DViewJInternalFrame) {
+                    object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
+                }
+                if (null != visionToDbJInternalFrame) {
+                    visionToDbJInternalFrame.addLineCountListener(visionLineListener);
+                }
+                return x;
+            });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
+
+    private final List<Long> publishTimes = new ArrayList<>();
+
+    synchronized private void setSimPublishCount(int count) {
+        this.simLineCount = count;
+        simVisionDiff = count - visionLineCount;
+        publishTimes.add(System.currentTimeMillis());
+        if (simVisionDiff > maxSimVisionDiff) {
+            maxSimVisionDiff = simVisionDiff;
+            System.out.println("maxSimVisionDiff = " + maxSimVisionDiff);
+        }
+    }
+
+    private final Consumer<Integer> simPublishCountListener = this::setSimPublishCount;
 
     private static void propertyToCheckBox(Properties props, String propertyName, CachedCheckBox checkbox) {
         String valueString = props.getProperty(propertyName);

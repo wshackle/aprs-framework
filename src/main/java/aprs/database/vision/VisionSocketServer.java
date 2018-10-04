@@ -32,14 +32,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -50,7 +51,6 @@ public class VisionSocketServer implements AutoCloseable {
 
     private volatile ServerSocket serverSocket;
     private final ExecutorService executorService;
-    private final ExecutorService publishService;
     private final boolean shutdownServiceOnClose;
 
     public int getPort() {
@@ -72,13 +72,11 @@ public class VisionSocketServer implements AutoCloseable {
     }
     private static final DaemonThreadFactory daemonThreadFactory = new DaemonThreadFactory();
 
-    
     @SuppressWarnings("initialization")
     private VisionSocketServer(ServerSocket serverSocket, ExecutorService executorService, boolean shutdownServiceOnClose) {
         this.serverSocket = serverSocket;
         this.executorService = executorService;
         this.shutdownServiceOnClose = shutdownServiceOnClose;
-        this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
         start();
     }
 
@@ -88,7 +86,6 @@ public class VisionSocketServer implements AutoCloseable {
             this.shutdownServiceOnClose = true;
             serverSocket = new ServerSocket(port, backlog, bindAddr);
             this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
-            this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
 
             start();
         } catch (IOException iOException) {
@@ -102,16 +99,15 @@ public class VisionSocketServer implements AutoCloseable {
             this.shutdownServiceOnClose = true;
             serverSocket = new ServerSocket(port);
             this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
-            this.publishService = Executors.newSingleThreadExecutor(daemonThreadFactory);
             start();
         } catch (IOException iOException) {
             throw new IOException("Can't bind to port=" + port, iOException);
         }
     }
 
-    private final List<Socket> clients = Collections.synchronizedList(new ArrayList<>());
+    private final ConcurrentLinkedDeque<Socket> clients = new ConcurrentLinkedDeque<>();
 
-    @SuppressWarnings({"DefaultAnnotationParam","initialization"})
+    @SuppressWarnings({"DefaultAnnotationParam", "initialization"})
     private void start() {
         if (null == executorService) {
             throw new IllegalStateException("exectorService is null, VisionSocketServer not fully initialized.");
@@ -128,10 +124,6 @@ public class VisionSocketServer implements AutoCloseable {
                 if (null == serverSocket) {
                     throw new IllegalStateException("serverSocket is null, VisionSocketServer not fully initialized.");
                 }
-                List<Socket> localClients = clients;
-                if (null == localClients) {
-                    throw new IllegalStateException("clients is null, VisionSocketServer not fully initialized.");
-                }
                 String origThreadName = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName("VisionSocketServer_accepting_for_port_" + serverSocket.getLocalPort());
@@ -140,11 +132,7 @@ public class VisionSocketServer implements AutoCloseable {
                         if (debug) {
                             System.out.println("clientSocket = " + clientSocket);
                         }
-                        byte bytes[] = bytesToSend;
-                        if (null != bytes) {
-                            clientSocket.getOutputStream().write(bytes);
-                        }
-                        localClients.add(clientSocket);
+                        clients.add(clientSocket);
                     }
                 } catch (IOException ex) {
                     if (!closing) {
@@ -217,55 +205,65 @@ public class VisionSocketServer implements AutoCloseable {
         String line = listToLine(list);
         byte ba[] = line.getBytes();
         this.bytesToSend = ba;
-        if (null != publishService) {
-            StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
-            publishService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    Thread.currentThread().setName("VisionSocketServer.publishList.serverSocket=" + serverSocket + ".clients.size=" + clients.size());
-                    for (int i = 0; i < clients.size() && !closing; i++) {
-                        Socket client = clients.get(i);
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                        if (null != client) {
-                            if (client.isClosed() || client.isInputShutdown() || client.isOutputShutdown()) {
-                                clients.remove(i);
-                                continue;
-                            }
-                            try {
-                                if (debug) {
-                                    InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
-                                    if (null != remoteAddress) {
-                                        System.out.println(String.format("Sending %d bytes to %s:%d : %s",
-                                                ba.length,
-                                                remoteAddress.getHostString(),
-                                                remoteAddress.getPort(),
-                                                line));
-                                    }
-                                }
-                                client.getOutputStream().write(ba);
-                            } catch (IOException ex) {
-                                try {
-                                    client.close();
-                                } catch (IOException ex1) {
-                                    if (!closing) {
-                                        System.err.println("callerTrace=" + Arrays.toString(callerTrace));
-                                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex1);
-                                    }
-                                }
-                                clients.remove(i);
-                                if (!closing) {
-                                    System.err.println("callerTrace=" + Arrays.toString(callerTrace));
-                                    Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex);
-                                }
-                            }
+        for (Socket client : clients) {
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+            if (null != client) {
+                if (client.isClosed() || client.isInputShutdown() || client.isOutputShutdown()) {
+                    clients.remove(client);
+                    continue;
+                }
+                try {
+                    if (debug) {
+                        InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
+                        if (null != remoteAddress) {
+                            System.out.println(String.format("Sending %d bytes to %s:%d : %s",
+                                    ba.length,
+                                    remoteAddress.getHostString(),
+                                    remoteAddress.getPort(),
+                                    line));
                         }
                     }
-                    lastPublishListTime = System.currentTimeMillis();
-                    publishCount.incrementAndGet();
+                    client.getOutputStream().write(ba);
+                } catch (IOException ex) {
+                    try {
+                        client.close();
+                    } catch (IOException ex1) {
+                        if (!closing) {
+                            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex1);
+                        }
+                    }
+                    clients.remove(client);
+                    if (!closing) {
+                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex);
+                    }
                 }
-            });
+            }
+        }
+        lastPublishListTime = System.currentTimeMillis();
+        if (clients.size() != 1) {
+            System.out.println("clients.size() = " + clients.size());
+        }
+        if (!clients.isEmpty() && !closing) {
+            incrementPublishCount();
+        }
+    }
+
+    private final ConcurrentLinkedDeque<Consumer<Integer>> incrementPublishCountListeners = new ConcurrentLinkedDeque<>();
+
+    public void addPublishCountListener(Consumer<Integer> l) {
+        incrementPublishCountListeners.add(l);
+    }
+
+    public void removePublishCountListener(Consumer<Integer> l) {
+        incrementPublishCountListeners.remove(l);
+    }
+
+    private void incrementPublishCount() {
+        int count = publishCount.incrementAndGet();
+        for (Consumer<Integer> l : incrementPublishCountListeners) {
+            l.accept(count);
         }
     }
 
@@ -286,14 +284,6 @@ public class VisionSocketServer implements AutoCloseable {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex);
                 }
-            }
-        }
-        if (null != publishService) {
-            publishService.shutdownNow();
-            try {
-                publishService.awaitTermination(100, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
 

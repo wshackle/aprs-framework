@@ -98,7 +98,7 @@ public class GoalLearner {
     }
 
     @Nullable
-    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    public static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -208,7 +208,12 @@ public class GoalLearner {
      * @return a list of actions than can be run to move parts from trays to
      * recreate the same configuration
      */
-    public List<Action> createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean allEmptyA[], boolean overrideRotationOffset, double newRotationOffset) {
+    public List<Action> createActionListFromVision(
+            List<PhysicalItem> requiredItems, 
+            List<PhysicalItem> teachItems, 
+            boolean allEmptyA[], 
+            boolean overrideRotationOffset, 
+            double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
                         .filter(this::isWithinLimits)
@@ -225,22 +230,20 @@ public class GoalLearner {
                         .stream()
                         .map(entry -> entry.getKey() + "=" + entry.getValue())
                         .collect(Collectors.joining(" "));
-        List<PhysicalItem> kitTrays = teachItems.stream()
-                .filter(x -> "KT".equals(x.getType()))
-                .collect(Collectors.toList());
+        List<PhysicalItem> kitTrays = filterForKitTrays(teachItems);
         if (!checkKitTrays(kitTrays)) {
             return Collections.emptyList();
         }
 
         List<Action> l = new ArrayList<>();
 
-        boolean allEmpty = true;
-
+        
         l.add(Action.parse("(set-correction-mode " + correctionMode + ")"));
         if (!correctionMode) {
             l.add(Action.parse("(clear-kits-to-check)"));
         }
         l.add(Action.parse("(look-for-parts 0 " + requiredItemsString + ")"));
+        boolean allEmpty = true;
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
         ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
         List<String> kitToCheckStrings = new ArrayList<>();
@@ -340,4 +343,15 @@ public class GoalLearner {
         return l;
     }
 
+    static public List<PhysicalItem> filterForKitTrays(List<PhysicalItem> teachItems) {
+        return teachItems.stream()
+                .filter(x -> "KT".equals(x.getType()))
+                .collect(Collectors.toList());
+    }
+
+    static public List<PhysicalItem> filterForPartsTrays(List<PhysicalItem> teachItems) {
+        return teachItems.stream()
+                .filter(x -> "PT".equals(x.getType()))
+                .collect(Collectors.toList());
+    }
 }

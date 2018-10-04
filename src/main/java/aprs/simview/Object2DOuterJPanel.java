@@ -328,6 +328,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return (null != visionSocketServer) ? visionSocketServer.getPublishCount() : -1;
     }
 
+    private final ConcurrentLinkedDeque<Consumer<Integer>> incrementPublishCountListeners = new ConcurrentLinkedDeque<>();
+
+    public void addPublishCountListener(Consumer<Integer> l) {
+        if (null != visionSocketServer) {
+            visionSocketServer.addPublishCountListener(l);
+        } else {
+            incrementPublishCountListeners.add(l);
+        }
+    }
+
+    public void removePublishCountListener(Consumer<Integer> l) {
+        if (null != visionSocketServer) {
+            visionSocketServer.removePublishCountListener(l);
+        }
+    }
+
     private final CachedCheckBox simulatedCachedCheckBox;
     private final CachedTextField filenameCachedTextField;
     private final CachedCheckBox pauseCachedCheckBox;
@@ -1800,14 +1816,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }
 
-    @Nullable private Object2DOuterJPanel objectPanelToClone = null;
+    @Nullable
+    private Object2DOuterJPanel objectPanelToClone = null;
 
     /**
      * Get the value of objectPanelToClone
      *
      * @return the value of objectPanelToClone
      */
-    @Nullable public Object2DOuterJPanel getObjectPanelToClone() {
+    @Nullable
+    public Object2DOuterJPanel getObjectPanelToClone() {
         return objectPanelToClone;
     }
 
@@ -1833,7 +1851,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setPropertiesFile(objectPanelToClone.getPropertiesFile());
             return objectPanelToClone.getProperties()
                     .thenAccept(this::loadProperties)
-                    .thenRun( () -> {
+                    .thenRun(() -> {
                         objectPanelToClone.addSetItemsListener(this::setItems);
                     });
         } else {
@@ -1895,15 +1913,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public String getHost() {
         return hostCachedTextField.getText();
     }
-    
+
     public int getPort() {
         return Integer.parseInt(portCachedTextField.getText());
     }
-    
+
     private void connect() throws NumberFormatException {
         if (simulatedCachedCheckBox.isSelected()) {
             try {
-                if(getObjectPanelToClone() != null) {
+                if (getObjectPanelToClone() != null) {
                     return;
                 }
                 int port = Integer.parseInt(portCachedTextField.getText().trim());
@@ -1912,6 +1930,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 if (null == visionSocketServer) {
                     visionSocketServer = new VisionSocketServer(port);
+                    for (Consumer<Integer> l : this.incrementPublishCountListeners) {
+                        visionSocketServer.addPublishCountListener(l);
+                    }
                 }
                 visionSocketServer.setDebug(debugCachedCheckBox.isSelected());
                 publishCurrentItems();
@@ -2046,7 +2067,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
             return;
         }
-        if(null != getObjectPanelToClone()) {
+        if (null != getObjectPanelToClone()) {
             return;
         }
         VisionSocketServer srv = this.visionSocketServer;
@@ -3047,7 +3068,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public XFuture<Properties> getProperties() {
         return Utils.supplyOnDispatchThread(this::getPropertiesOnDisplay);
     }
-    
+
     @UIEffect
     private Properties getPropertiesOnDisplay() {
         Properties props = new Properties();
@@ -3499,8 +3520,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 filenameCachedTextField.setText(f.getCanonicalPath());
                 loadFile(f);
             } else {
-                if(null == propertiesFile) {
-                       throw new IllegalStateException("currentDataFileString = " + currentDataFileString + " does not exist and propertiesFile=" + propertiesFile);
+                if (null == propertiesFile) {
+                    throw new IllegalStateException("currentDataFileString = " + currentDataFileString + " does not exist and propertiesFile=" + propertiesFile);
                 }
                 File parentFile = propertiesFile.getParentFile();
                 if (null == parentFile) {
