@@ -1865,17 +1865,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private XFutureVoid startVisionInternal(Map<String, String> argsMap) {
         closeVision();
-        if (null == visionClient) {
-            visionClient = new VisionSocketClient();
+        VisionSocketClient visionClientLocal = this.visionClient;
+        if (null == visionClientLocal) {
+            visionClientLocal = new VisionSocketClient();
+            this.visionClient = visionClientLocal;
         }
-        visionClient.setDisplayInterface(this);
-        visionClient.setDebug(isDebug());
-        visionClient.setReplyPs(System.out);
-        visionClient.addListener(this);
+        visionClientLocal.setDisplayInterface(this);
+        visionClientLocal.setDebug(isDebug());
+        visionClientLocal.setReplyPs(System.out);
+        visionClientLocal.addListener(this);
         for(Consumer<Integer> l : this.incrementCountListeners) {
-            visionClient.addCountListener(l);
+            visionClientLocal.addCountListener(l);
         }
-        return visionClient.start(argsMap)
+        return visionClientLocal.start(argsMap)
                 .thenComposeToVoid(() -> Utils.runOnDispatchThread(this::finishConnectVision));
     }
 

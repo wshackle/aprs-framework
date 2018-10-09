@@ -309,9 +309,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 getReverseFlag());
     }
 
-    private volatile StackTraceElement[] setLastTakenPartTrace = null;
+    private volatile StackTraceElement @Nullable [] setLastTakenPartTrace = null;
 
-    public void setLastTakenPart(String lastTakenPart) {
+    public void setLastTakenPart(@Nullable String lastTakenPart) {
         this.lastTakenPart = lastTakenPart;
         setLastTakenPartTrace = Thread.currentThread().getStackTrace();
     }
@@ -453,6 +453,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
+    @Nullable
     private PoseType getPose(List<PhysicalItem> items, String partName) {
         return (items == null) ? null : items.stream().filter((PhysicalItem item) -> item.getFullName().equals(partName)).map(PhysicalItem::getPose).findFirst().orElse(null);
     }
@@ -1679,10 +1680,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } catch (Exception ex) {
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
-            if (null != physicalItems) {
-                System.err.println("physicalItems.size()=" + physicalItems.size());
-                System.err.println("physicalItems=" + physicalItems);
-                for (PhysicalItem newItem : physicalItems) {
+            List<PhysicalItem> physicalItemsLocal = physicalItems;
+            if (null != physicalItemsLocal) {
+                System.err.println("physicalItems.size()=" + physicalItemsLocal.size());
+                System.err.println("physicalItems=" + physicalItemsLocal);
+                for (PhysicalItem newItem : physicalItemsLocal) {
                     System.err.println(newItem.getName() + " : " + newItem.x + "," + newItem.y);
                 }
             }
@@ -1834,6 +1836,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
+    @Nullable
     public List<PhysicalItem> getPhysicalItems() {
         return physicalItems;
     }
@@ -2080,9 +2083,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (Thread.currentThread() != optoThread) {
             throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
         }
+        List<PhysicalItem> physicalItemsLocal = physicalItems;
+        if(null == physicalItemsLocal) {
+            throw new NullPointerException("physicalItems");
+        }
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
-                    = Lists.mutable.ofAll(physicalItems)
+                    = Lists.mutable.ofAll(physicalItemsLocal)
                             .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
                             .groupBy(item -> posNameToType(item.getName()));
 
@@ -2104,15 +2111,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     }
                 }
             }
-            Set<String> typeSet = physicalItems
-                    .stream()
-                    .map(PhysicalItem::getType)
-                    .collect(Collectors.toSet());
+            Set<String> typeSet
+                    = physicalItemsLocal
+                            .stream()
+                            .map(PhysicalItem::getType)
+                            .collect(Collectors.toSet());
             if (debug) {
                 logDebug("typeSet = " + typeSet);
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
-                    = Lists.mutable.ofAll(physicalItems)
+                    = Lists.mutable.ofAll(physicalItemsLocal)
                             .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
@@ -2147,7 +2155,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logDebug("skippedPddlActionsList.size() = " + skippedPddlActionsList.size());
             logDebug("skippedPddlActionsList = " + skippedPddlActionsList);
             logDebug("skippedOpActionsList = " + skippedOpActionsList);
-            logDebug("physicalItems = " + physicalItems);
+            logDebug("physicalItems = " + physicalItemsLocal);
             logDebug("itemNames = " + physicalItemNames);
             if (debug || skippedActionsCount % 2 == 1) {
                 System.err.println("actions.size() = " + actions.size() + ", skippedActions=" + skippedActionsCount);
@@ -2224,7 +2232,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 lastSkippedOpActionsList = skippedOpActionsList;
                 lastSkippedPddlActionsList = skippedPddlActionsList;
                 lastOpActionsList = opActions;
-                lastOptimizePddlItems = physicalItems;
+                lastOptimizePddlItems = physicalItemsLocal;
                 lastOptimizePreStartPddlActions = preStartPddlActions;
                 lastOptimizeReplacedPddlActions = replacedPddlActions;
                 lastOptimizeNewPddlActions = newPddlActions;
@@ -2238,7 +2246,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            System.err.println("opActionsCopy = " + opActionsCopy);
             System.err.println("actions = " + actions);
             System.err.println("startingIndex = " + startingIndex);
-            System.err.println("physicalItems = " + physicalItems);
+            System.err.println("physicalItems = " + physicalItemsLocal);
             System.out.println("solverToRun = " + solverToRun);
             System.out.println("solveCount = " + solveCount);
             System.out.println("solverRunCount.get() = " + solverRunCount.get());
@@ -2249,6 +2257,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private List<String> getPhysicalItemNames() {
+        if(null == physicalItems) {
+            return Collections.emptyList();
+        }
         return physicalItems.stream()
                 .flatMap(nonNullFunction(PhysicalItem::getFullName))
                 .collect(Collectors.toList());
@@ -2409,6 +2420,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
         checkNewItems("recheckKitsOnly");
+        if(null ==physicalItems) {
+            throw new NullPointerException("physicalItems");
+        }
         List<PhysicalItem> parts = checkKitsItemsToParts(physicalItems);
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
@@ -2450,14 +2464,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         int postPubs = aprsSystem.getSimLineCount();
         int postVis = aprsSystem.getVisionLineCount();
         long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
-        assert (physicalItems != null) : "newItems == null : @AssumeAssertion(nullness)";
+        List<PhysicalItem> physicalItemsLocal = physicalItems;
+        assert (physicalItemsLocal != null) : "newItems == null : @AssumeAssertion(nullness)";
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
         takeSnapshots("plan", "checkKits-", null, "");
 
-        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItems);
+        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
         synchronized (this) {
-            List<String> newItemsFullNames = physicalItems
+            List<String> newItemsFullNames = physicalItemsLocal
                     .stream()
                     .map(PhysicalItem::getFullName)
                     .collect(Collectors.toList());
@@ -2489,11 +2504,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     printLastOptoInfo();
                     if (pauseInsteadOfRecover && !aprsSystem.isCorrectionMode()) {
                         StringBuilder errMsgSb = new StringBuilder();
-                        takeSimViewSnapshot("checkKitsFailed", physicalItems);
+                        takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
                         String errMsgStart = aprsSystem.getRunName();
                         errMsgSb.append(errMsgStart);
                         logError("checkKits: errMsgStart=" + errMsgStart);
-                        logError("checkKits: newItems = " + physicalItems);
+                        logError("checkKits: newItems = " + physicalItemsLocal);
                         logError("checkKits: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
                         logError("checkKits: parts = " + parts);
                         logError("checkKits: matchedKitInstanceNames = " + matchedKitInstanceNames);
@@ -2539,7 +2554,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         program.getMiddleCommand().addAll(cmds);
                         aprsSystem.logCrclProgFile(program);
                         String errMsg = errMsgSb.toString();
-                        takeSimViewSnapshot(errMsg, physicalItems);
+                        takeSimViewSnapshot(errMsg, physicalItemsLocal);
                         aprsSystem.setTitleErrorString(errMsg);
                         throw new IllegalStateException(errMsg);
 //                        checkedPause();
@@ -2614,7 +2629,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 logError("No partnames for finalShortSkuName=" + finalShortSkuName);
                                                 logError("fixLogList=" + fixLogList);
                                                 logError("kit.slotMap = " + kit.slotMap);
-                                                logError("newItems = " + physicalItems);
+                                                logError("newItems = " + physicalItemsLocal);
                                                 logError("newItemsFullNames = " + newItemsFullNames);
                                                 logError("itemsNameMap = " + itemsNameMap);
                                                 logError("removedItemsMap=" + removedItemsNameMap);
@@ -3310,6 +3325,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return commandId.incrementAndGet();
     }
 
+    @Nullable
     public PoseType getPose(String name) {
         return poseCache.get(name);
     }
@@ -6028,6 +6044,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private final AtomicInteger visionUpdateCount = new AtomicInteger();
 
     private volatile boolean enableDatabaseUpdates = false;
+    @Nullable
     private volatile List<PhysicalItem> physicalItems = null;
 
     @SuppressWarnings("SameParameterValue")
@@ -6308,24 +6325,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != pose) {
             PlacePartSlotPoseList.add(pose);
         }
-        if (skipMissingParts && lastTakenPart == null) {
+        String lastTakenPartLocal = lastTakenPart;
+        
+        if (skipMissingParts && lastTakenPartLocal == null) {
             recordSkipPlacePart(slotName, pose);
             return;
+        }
+        if(null == lastTakenPartLocal) {
+            throw new IllegalStateException("null == lastTakenPart");
         }
         final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
         if (takeSnapshots) {
             takeSnapshots("plan", "place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
         }
         if (pose == null) {
-            if (skipMissingParts && null != lastTakenPart) {
-                PoseType origPose = poseCache.get(lastTakenPart);
+            if (skipMissingParts && null != lastTakenPartLocal) {
+                PoseType origPose = poseCache.get(lastTakenPartLocal);
                 if (null != origPose) {
                     origPose = visionToRobotPose(origPose);
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
-                    takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPart);
-                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, "returned." + lastTakenPart, "skipped." + slotName);
+                    takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPartLocal);
+                    final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, "returned." + lastTakenPartLocal, "skipped." + slotName);
                     addMarkerCommand(out, msg,
                             ((CrclCommandWrapper wrapper) -> {
                                 addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
@@ -6341,7 +6363,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pose = visionToRobotPose(pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
-        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, lastTakenPart, slotName);
+        final PlacePartInfo ppi = new PlacePartInfo(
+                action,
+                getLastIndex(),
+                out.size(),
+                startSafeAbortRequestCount,
+                parentAction,
+                parentActionIndex,
+                lastTakenPartLocal,
+                slotName);
         placePartByPose(out, pose);
         addMarkerCommand(out, msg,
                 ((CrclCommandWrapper wrapper) -> {
