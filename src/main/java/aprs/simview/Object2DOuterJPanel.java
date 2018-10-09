@@ -2017,6 +2017,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     for (Consumer<Integer> l : this.incrementPublishCountListeners) {
                         visionSocketServerLocal.addPublishCountListener(l);
                     }
+                    this.visionSocketServer = visionSocketServerLocal;
                 }
                 visionSocketServerLocal.setDebug(debugCachedCheckBox.isSelected());
                 publishCurrentItems();
