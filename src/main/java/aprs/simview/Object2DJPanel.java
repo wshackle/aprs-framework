@@ -50,9 +50,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
-import java.awt.image.ImageObserver;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
@@ -70,35 +67,6 @@ public class Object2DJPanel extends JPanel {
 
     private volatile boolean debugTimes = false;
 
-//    public boolean isDebugTimes() {
-//        return debugTimes;
-//    }
-//
-//    public void setDebugTimes(boolean debugTimes) {
-//        this.debugTimes = debugTimes;
-//    }
-//    private volatile long repaintTime = 0;
-//    private final AtomicInteger repaintCount = new AtomicInteger();
-//    private final ConcurrentHashMap<String,Integer> repaintCallersMap 
-//            = new ConcurrentHashMap<>();
-//    
-//    @Override
-//    public void repaint() {
-//        if(debugTimes) {
-//            int c = repaintCount.incrementAndGet();
-//            String caller = Thread.currentThread().getStackTrace()[2].toString();
-//            repaintCallersMap.compute(caller, (k,v) -> (v==null)?1:(v+1));
-//            if(c%10 == 1) {
-//                System.out.println("Object2DJPanel repaintCount = " + c+", repaintCallersMap="+repaintCallersMap);
-//            }
-//            
-//        }
-//        long t = System.currentTimeMillis();
-//        if (t - repaintTime > 50) {
-//            super.repaint();
-//            repaintTime = System.currentTimeMillis();
-//        }
-//    }
     @UIEffect
     public Object2DJPanel() {
         partImageMap = new HashMap<>();
@@ -130,6 +98,43 @@ public class Object2DJPanel extends JPanel {
         } catch (IOException ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
+    }
+
+    private double senseMinX = Double.NaN;
+    private double senseMaxX = Double.NaN;
+    private double senseMinY = Double.NaN;
+    private double senseMaxY = Double.NaN;
+
+    public double getSenseMinX() {
+        return senseMinX;
+    }
+
+    public void setSenseMinX(double senseMinX) {
+        this.senseMinX = senseMinX;
+    }
+
+    public double getSenseMaxX() {
+        return senseMaxX;
+    }
+
+    public void setSenseMaxX(double senseMaxX) {
+        this.senseMaxX = senseMaxX;
+    }
+
+    public double getSenseMinY() {
+        return senseMinY;
+    }
+
+    public void setSenseMinY(double senseMinY) {
+        this.senseMinY = senseMinY;
+    }
+
+    public double getSenseMaxY() {
+        return senseMaxY;
+    }
+
+    public void setSenseMaxY(double senseMaxY) {
+        this.senseMaxY = senseMaxY;
     }
 
     private double rotationOffset;
@@ -795,7 +800,7 @@ public class Object2DJPanel extends JPanel {
                         namey = minY - (maxY - minY) / 10.0;
                         break;
                 }
-                this.translate(g2d, namex, namey, minX, minY, maxX, maxY, width, height, currentScale);
+                this.translate(g2d, namex, namey, minmaxParam, width, height, currentScale);
                 g2d.setColor(Color.GREEN);
                 Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), TO_SCREEN_Y_OFFSET);
                 g2d.fill(rect);
@@ -810,7 +815,7 @@ public class Object2DJPanel extends JPanel {
                                 toScreenPoint(displayAxis, x, y, minmaxParam, currentScale)
                         ));
             }
-            this.translate(g2d, x, y, minX, minY, maxX, maxY, width, height, currentScale);
+            this.translate(g2d, x, y, minmaxParam, width, height, currentScale);
             g2d.setColor(Color.GREEN);
             Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : label.length()), TO_SCREEN_Y_OFFSET);
             g2d.fill(rect);
@@ -921,6 +926,10 @@ public class Object2DJPanel extends JPanel {
 //    }
     private MinMax minmax = new MinMax();
 
+    public MinMax getMinmax() {
+        return minmax;
+    }
+    
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
 
@@ -929,6 +938,11 @@ public class Object2DJPanel extends JPanel {
         tempMinMax.max.x = maxX;
         tempMinMax.min.y = minY;
         tempMinMax.max.y = maxY;
+        translate(g2d, itemx, itemy, tempMinMax, width, height, currentScale);
+    }
+
+    @SuppressWarnings("guieffect")
+    private void translate(Graphics2D g2d, double itemx, double itemy, MinMax tempMinMax, int width, int height, double currentScale) throws IllegalArgumentException {
         Point2D.Double t = toScreenPoint(displayAxis, itemx, itemy, tempMinMax, currentScale);
         if (width > 0 && height > 0) {
             if (t.x < 0) {
@@ -945,6 +959,10 @@ public class Object2DJPanel extends JPanel {
             }
         }
         g2d.translate(t.x, t.y);
+    }
+    
+    public  Point2D.Double worldToScreenPoint(double itemx, double itemy) {
+        return toScreenPoint(getDisplayAxis(), itemx, itemy, getMinmax(), getScale());
     }
 
     private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double itemx, double itemy, MinMax minmax, double currentScale) {
@@ -1656,7 +1674,7 @@ public class Object2DJPanel extends JPanel {
                             namey = minY - (maxY - minY) / 5.0;
                             break;
                     }
-                    this.translate(g2d, namex, namey, minX, minY, maxX, maxY, width, height, new_scale);
+                    this.translate(g2d, namex, namey, minmaxParam, width, height, new_scale);
                     if (item == selectedItem) {
                         g2d.setColor(Color.WHITE);
                         Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.getName().length(), TO_SCREEN_Y_OFFSET);
@@ -1829,7 +1847,7 @@ public class Object2DJPanel extends JPanel {
                     Point2D.Double currentScreenPt = toScreenPoint(displayAxis, currentX, currentY, minmaxParam, new_scale);
                     g2d.draw(new Line2D.Double(currentScreenPt, captureScreenPt));
                 }
-                this.translate(g2d, currentX, currentY, minX, minY, maxX, maxY, -1, -1, new_scale);
+                this.translate(g2d, currentX, currentY, minmaxParam, -1, -1, new_scale);
                 if (endEffectorClosed) {
                     g2d.setColor(Color.black);
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
@@ -1843,23 +1861,30 @@ public class Object2DJPanel extends JPanel {
                 g2d.setColor(origColor);
                 g2d.setTransform(origTransform);
             }
+            drawSenseLimitsRectangle(g2d, minmaxParam, new_scale);
         } catch (Exception exception) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", exception);
             g2d.drawString(exception.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
 
-//    private volatile double last_scale_x;
-//    private volatile double last_scale_y;
-//    private volatile boolean last_useSeperateNamesThisTime;
-//    private volatile int last_width;
-//    private volatile int last_borderWidth;
-//    private volatile double last_maxX1;
-//    private volatile double last_minX1;
-//    private volatile int last_height;
-//    private volatile int last_borderHeight;
-//    private volatile double last_maxY1;
-//    private volatile double last_minY1;
+    private void drawSenseLimitsRectangle(Graphics2D g2d, MinMax tempMinMax, double new_scale) {
+        if (Double.isFinite(senseMaxX)
+                && Double.isFinite(senseMinX)
+                && Double.isFinite(senseMinY)
+                && Double.isFinite(senseMaxY)) {
+            g2d.setColor(Color.black);
+
+            Point2D.Double minSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
+            Point2D.Double maxSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
+            g2d.draw(new Rectangle.Double(
+                    Math.min(minSensePoint.x, maxSensePoint.x),
+                    Math.min(minSensePoint.y, maxSensePoint.y),
+                    Math.abs(minSensePoint.x - maxSensePoint.x),
+                    Math.abs(minSensePoint.y - maxSensePoint.y)));
+        }
+    }
+
     private static class MinMax {
 
         Point2D.Double min;

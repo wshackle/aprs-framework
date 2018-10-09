@@ -168,6 +168,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
     }
 
+    public void setSimSenseLimits(double minX, double minY, double maxX, double maxY) {
+        object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
+    }
+    
     @Override
     public void setItems(List<PhysicalItem> items) {
         object2DOuterJPanel1.setItems(items);
