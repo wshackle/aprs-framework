@@ -3412,6 +3412,21 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    /**
+     * Set limits on the area that should be visible in the Object 2D view.
+     *
+     * @param minX minimum X
+     * @param minY minimum Y
+     * @param maxX maximum X
+     * @param maxY maximum Y
+     */
+    public void setSimSenseLimits(double minX, double minY, double maxX, double maxY) {
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.setViewLimits(minX, minY, maxX, maxY);
+        }
+    }
+
+    
     private final AtomicInteger so2dCount = new AtomicInteger();
 
     /**

@@ -849,6 +849,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        java.awt.GridBagConstraints gridBagConstraints;
 
         jPanelBottomMain = new javax.swing.JPanel();
         object2DJPanel1 = new aprs.simview.Object2DJPanel();
@@ -890,8 +891,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
-        jScrollPaneProperties = new javax.swing.JScrollPane();
-        jTableProperties = new javax.swing.JTable();
         jPanelTopRow = new javax.swing.JPanel();
         jTextFieldFilename = new javax.swing.JTextField();
         jButtonSave = new javax.swing.JButton();
@@ -920,6 +919,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxDetails = new javax.swing.JCheckBox();
         jCheckBoxTools = new javax.swing.JCheckBox();
         jLabel4 = new javax.swing.JLabel();
+        jPanelProperties = new javax.swing.JPanel();
+        jScrollPaneProperties = new javax.swing.JScrollPane();
+        jTableProperties = new javax.swing.JTable();
+        jPanelBottomPropertiesButtons = new javax.swing.JPanel();
+        jButtonReadProperties = new javax.swing.JButton();
+        jButtonSetProperies = new javax.swing.JButton();
 
         setLayout(new java.awt.GridLayout(1, 0));
 
@@ -956,7 +961,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 351, Short.MAX_VALUE)
+            .addGap(0, 384, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1079,7 +1084,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                         .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxCloning)))
-                                .addGap(0, 85, Short.MAX_VALUE)))
+                                .addGap(0, 67, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1320,7 +1325,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelTraysLayout.setVerticalGroup(
@@ -1331,34 +1336,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         );
 
         jTabbedPane1.addTab("Trays", jPanelTrays);
-
-        jTableProperties.setAutoCreateRowSorter(true);
-        jTableProperties.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Key", "Value"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jScrollPaneProperties.setViewportView(jTableProperties);
-
-        jTabbedPane1.addTab("Properties", jScrollPaneProperties);
 
         jButtonSave.setText("Save");
         jButtonSave.addActionListener(new java.awt.event.ActionListener() {
@@ -1381,7 +1358,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelTopRowLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
+                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 339, Short.MAX_VALUE)
                     .addGroup(jPanelTopRowLayout.createSequentialGroup()
                         .addComponent(jButtonSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1483,10 +1460,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 341, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
                     .addGroup(jPanelItemsLayout.createSequentialGroup()
                         .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 137, Short.MAX_VALUE)))
+                        .addGap(0, 164, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelItemsLayout.setVerticalGroup(
@@ -1500,14 +1477,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Items", jPanelItems);
 
+        jPanelOptionsTab.setLayout(new java.awt.GridBagLayout());
+
         jTextFieldCurrentXY.setText("0.0,0.0");
         jTextFieldCurrentXY.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextFieldCurrentXYActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridwidth = 8;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.ipadx = 89;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 6, 0, 0);
+        jPanelOptionsTab.add(jTextFieldCurrentXY, gridBagConstraints);
 
         jLabel2.setText("Xmin,Ymin : ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 8;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 16, 0, 0);
+        jPanelOptionsTab.add(jLabel2, gridBagConstraints);
 
         jButtonOffsetAll.setText("Offset All");
         jButtonOffsetAll.setEnabled(false);
@@ -1516,6 +1511,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jButtonOffsetAllActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 16, 178, 0);
+        jPanelOptionsTab.add(jButtonOffsetAll, gridBagConstraints);
 
         jButtonReset.setText("Reset");
         jButtonReset.setEnabled(false);
@@ -1524,6 +1526,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jButtonResetActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 10;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 3, 178, 0);
+        jPanelOptionsTab.add(jButtonReset, gridBagConstraints);
 
         jCheckBoxShowRotations.setSelected(true);
         jCheckBoxShowRotations.setText("Show Rots/Images");
@@ -1532,6 +1541,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxShowRotationsActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 11;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 16, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxShowRotations, gridBagConstraints);
 
         jCheckBoxShowCurrent.setText("Show Current: ");
         jCheckBoxShowCurrent.addActionListener(new java.awt.event.ActionListener() {
@@ -1539,6 +1555,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxShowCurrentActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridwidth = 4;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(9, 16, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxShowCurrent, gridBagConstraints);
 
         jComboBoxDisplayAxis.setModel(new DefaultComboBoxModel<>(DisplayAxis.values()));
         jComboBoxDisplayAxis.addActionListener(new java.awt.event.ActionListener() {
@@ -1546,6 +1569,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jComboBoxDisplayAxisActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 11;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.ipadx = 119;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 12, 0, 0);
+        jPanelOptionsTab.add(jComboBoxDisplayAxis, gridBagConstraints);
 
         jTextFieldMaxXMaxY.setText("700.0, 315.0");
         jTextFieldMaxXMaxY.addActionListener(new java.awt.event.ActionListener() {
@@ -1553,6 +1585,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jTextFieldMaxXMaxYActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridwidth = 8;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.ipadx = 89;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 6, 0, 0);
+        jPanelOptionsTab.add(jTextFieldMaxXMaxY, gridBagConstraints);
 
         jCheckBoxSeparateNames.setSelected(true);
         jCheckBoxSeparateNames.setText("Names");
@@ -1561,6 +1602,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxSeparateNamesActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 7;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 6, 0, 92);
+        jPanelOptionsTab.add(jCheckBoxSeparateNames, gridBagConstraints);
 
         jCheckBoxAutoscale.setSelected(true);
         jCheckBoxAutoscale.setText("Auto Scale");
@@ -1569,8 +1617,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxAutoscaleActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 7;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 27;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 6, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxAutoscale, gridBagConstraints);
 
         jLabel3.setText("Xmax,Ymax");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 6;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 16, 0, 0);
+        jPanelOptionsTab.add(jLabel3, gridBagConstraints);
 
         jTextFieldMinXMinY.setText("200.0, -315.0");
         jTextFieldMinXMinY.addActionListener(new java.awt.event.ActionListener() {
@@ -1578,6 +1640,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jTextFieldMinXMinYActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 4;
+        gridBagConstraints.gridy = 8;
+        gridBagConstraints.gridwidth = 8;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.ipadx = 89;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(6, 6, 0, 0);
+        jPanelOptionsTab.add(jTextFieldMinXMinY, gridBagConstraints);
 
         jCheckBoxAddSlots.setText("Slots");
         jCheckBoxAddSlots.addActionListener(new java.awt.event.ActionListener() {
@@ -1585,6 +1656,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxAddSlotsActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 6;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 4, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxAddSlots, gridBagConstraints);
 
         jCheckBoxDetails.setText("Details");
         jCheckBoxDetails.addActionListener(new java.awt.event.ActionListener() {
@@ -1592,6 +1669,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxDetailsActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 16, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxDetails, gridBagConstraints);
 
         jCheckBoxTools.setText("Tools");
         jCheckBoxTools.addActionListener(new java.awt.event.ActionListener() {
@@ -1599,92 +1683,90 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jCheckBoxToolsActionPerformed(evt);
             }
         });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 6;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 3, 0, 0);
+        jPanelOptionsTab.add(jCheckBoxTools, gridBagConstraints);
 
         jLabel4.setText("Axis: ");
-
-        javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
-        jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
-        jPanelOptionsTabLayout.setHorizontalGroup(
-            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                .addGap(16, 16, 16)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOptionsTabLayout.createSequentialGroup()
-                            .addComponent(jCheckBoxDetails)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jCheckBoxTools)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jCheckBoxAddSlots)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jCheckBoxSeparateNames)
-                            .addGap(92, 92, 92))
-                        .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                            .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelOptionsTabLayout.createSequentialGroup()
-                                    .addComponent(jLabel4)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                                    .addComponent(jCheckBoxShowRotations)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jCheckBoxAutoscale)))
-                            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                                .addComponent(jButtonOffsetAll)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonReset))
-                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jCheckBoxShowCurrent)
-                                    .addComponent(jLabel3)
-                                    .addComponent(jLabel2))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jTextFieldCurrentXY)
-                                    .addComponent(jTextFieldMaxXMaxY)
-                                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-        );
-        jPanelOptionsTabLayout.setVerticalGroup(
-            jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxSeparateNames)
-                    .addComponent(jCheckBoxAddSlots)
-                    .addComponent(jCheckBoxDetails)
-                    .addComponent(jCheckBoxTools))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jCheckBoxShowRotations)
-                    .addComponent(jCheckBoxAutoscale))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jCheckBoxShowCurrent))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonReset)
-                    .addComponent(jButtonOffsetAll))
-                .addContainerGap(178, Short.MAX_VALUE))
-        );
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 16, 0, 0);
+        jPanelOptionsTab.add(jLabel4, gridBagConstraints);
 
         jTabbedPane1.addTab("Options", jPanelOptionsTab);
+
+        jTableProperties.setAutoCreateRowSorter(true);
+        jTableProperties.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Key", "Value"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneProperties.setViewportView(jTableProperties);
+
+        jPanelBottomPropertiesButtons.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+
+        jButtonReadProperties.setText("Read");
+        jButtonReadProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonReadPropertiesActionPerformed(evt);
+            }
+        });
+        jPanelBottomPropertiesButtons.add(jButtonReadProperties);
+
+        jButtonSetProperies.setText("Set");
+        jButtonSetProperies.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSetProperiesActionPerformed(evt);
+            }
+        });
+        jPanelBottomPropertiesButtons.add(jButtonSetProperies);
+
+        javax.swing.GroupLayout jPanelPropertiesLayout = new javax.swing.GroupLayout(jPanelProperties);
+        jPanelProperties.setLayout(jPanelPropertiesLayout);
+        jPanelPropertiesLayout.setHorizontalGroup(
+            jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPropertiesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneProperties)
+                    .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanelPropertiesLayout.setVerticalGroup(
+            jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPropertiesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 403, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("tab8", jPanelProperties);
 
         jPanelBottomMain.add(jTabbedPane1);
 
@@ -2008,11 +2090,33 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final Random dropRandom = new Random();
 
-    private boolean dropFilter(Object x) {
+    private boolean dropFilter(PhysicalItem physicalItem) {
         if (simulatedDropRate < 0.001) {
             return true;
         }
         return dropRandom.nextDouble() > simulatedDropRate;
+    }
+
+    private boolean limitsFilter(PhysicalItem physicalItem) {
+        double itemX = physicalItem.x;
+        double minX = object2DJPanel1.getSenseMinX();
+        if (Double.isFinite(minX) && itemX < minX) {
+            return false;
+        }
+        double maxX = object2DJPanel1.getSenseMaxX();
+        if (Double.isFinite(maxX) && itemX > maxX) {
+            return false;
+        }
+        double itemY = physicalItem.y;
+        double minY = object2DJPanel1.getSenseMinY();
+        if (Double.isFinite(minY) && itemY < minY) {
+            return false;
+        }
+        double maxY = object2DJPanel1.getSenseMaxY();
+        if (Double.isFinite(maxY) && itemY > maxY) {
+            return false;
+        }
+        return true;
     }
 
     private final Random posRandom = new Random();
@@ -2080,6 +2184,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             List<PhysicalItem> l = new ArrayList<>(origList);
             if (simulatedDropRate > 0.01 || addPosNoise) {
                 l = l.stream()
+                        .filter(this::dropFilter)
                         .filter(this::dropFilter)
                         .map(this::noiseFilter)
                         .collect(Collectors.toList());
@@ -2234,7 +2339,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int x = evt.getX();
         int y = evt.getY();
         int minIndex = -1;
-        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
+        boolean includeTrays = !evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown();
+        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex, includeTrays);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
         if (!evt.isShiftDown() && null != closestItem && !"P".equals(closestItem.getType())) {
@@ -2252,7 +2358,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setSelectedItemIndex(minIndex);
         }
         if (null != closestItem) {
-            if (!evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown()) {
+            if (includeTrays) {
                 List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
                 this.draggedItemsList = newDragItems;
             } else if (!"P".equals(closestItem.getType())) {
@@ -2349,6 +2455,45 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setMaxXMaxYText(maxXMaxYString);
         autoscaleCachedCheckBox.setSelected(false);
         object2DJPanel1.setAutoscale(false);
+    }
+
+    public double getSenseMinX() {
+        return object2DJPanel1.getSenseMinX();
+    }
+
+    public void setSenseMinX(double senseMinX) {
+        object2DJPanel1.setSenseMinX(senseMinX);
+    }
+
+    public double getSenseMaxX() {
+        return object2DJPanel1.getSenseMaxX();
+    }
+
+    public void setSenseMaxX(double senseMaxX) {
+        object2DJPanel1.setSenseMaxX(senseMaxX);
+    }
+
+    public double getSenseMinY() {
+        return object2DJPanel1.getSenseMinY();
+    }
+
+    public void setSenseMinY(double senseMinY) {
+        object2DJPanel1.setSenseMinY(senseMinY);
+    }
+
+    public double getSenseMaxY() {
+        return object2DJPanel1.getSenseMaxY();
+    }
+
+    public void setSenseMaxY(double senseMaxY) {
+        object2DJPanel1.setSenseMaxY(senseMaxY);
+    }
+
+    public void setSimSenseLimits(double minX, double minY, double maxX, double maxY) {
+        setSenseMinX(minX);
+        setSenseMaxX(maxX);
+        setSenseMinY(minY);
+        setSenseMaxY(maxY);
     }
 
     private void setMaxXMaxYText(String txt) throws NumberFormatException {
@@ -2740,7 +2885,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int x = evt.getX();
         int y = evt.getY();
         int minIndex = -1;
-        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex);
+        boolean includeTrays = !evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown();
+        ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex, includeTrays);
 //        PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
         if (minIndex >= 0) {
@@ -2794,6 +2940,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jTextFieldRotationOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldRotationOffsetActionPerformed
         object2DJPanel1.setRotationOffset(toRadians(parseDouble(jTextFieldRotationOffset.getText().trim())));
     }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
+
+    private void jButtonReadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReadPropertiesActionPerformed
+        Properties props = getPropertiesOnDisplay();
+        loadPropertiesTableOnDisplay(props);
+    }//GEN-LAST:event_jButtonReadPropertiesActionPerformed
+
+    private void jButtonSetProperiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetProperiesActionPerformed
+        Properties props = this.tableLoadedProperties;
+        if (null == props) {
+            props = new Properties();
+        }
+
+        updateDisplayFromPropsTable(0, jTableProperties.getRowCount(), props, true);
+    }//GEN-LAST:event_jButtonSetProperiesActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
@@ -2929,9 +3089,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonOffsetAll;
+    private javax.swing.JButton jButtonReadProperties;
     private javax.swing.JButton jButtonRefresh;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonSave;
+    private javax.swing.JButton jButtonSetProperies;
     private javax.swing.JCheckBox jCheckBoxAddPosNoise;
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
@@ -2964,10 +3126,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelHost;
     private javax.swing.JPanel jPanelBottomMain;
+    private javax.swing.JPanel jPanelBottomPropertiesButtons;
     private javax.swing.JPanel jPanelConnectionsTab;
     private javax.swing.JPanel jPanelItems;
     private javax.swing.JPanel jPanelItemsButtons;
     private javax.swing.JPanel jPanelOptionsTab;
+    private javax.swing.JPanel jPanelProperties;
     private javax.swing.JPanel jPanelSimulationTab;
     private javax.swing.JPanel jPanelTopRow;
     private javax.swing.JPanel jPanelTrays;
@@ -3095,6 +3259,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.put("separatenames", Boolean.toString(jCheckBoxSeparateNames.isSelected()));
         props.put("xmaxymax", jTextFieldMaxXMaxY.getText().trim());
         props.put("xminymin", jTextFieldMinXMinY.getText().trim());
+        props.put("senseMinX", getSenseMinX());
+        props.put("senseMinY", getSenseMinY());
+        props.put("senseMaxX", getSenseMaxX());
+        props.put("senseMaxY", getSenseMaxY());
         if (reverseFlag) {
             this.reverseDataFileString = filenameCachedTextField.getText().trim();
         } else {
@@ -3182,25 +3350,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (e.getType() == TableModelEvent.UPDATE && e.getColumn() == 1) {
                 int firstRow = e.getFirstRow();
                 int lastRow = e.getLastRow();
-                DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
-                for (int i = Math.max(firstRow, 0); i < Math.min(lastRow + 1, model.getRowCount()); i++) {
-                    Object key = model.getValueAt(i, 0);
-                    Object value = model.getValueAt(i, 1);
-                    if (null != key && null != value) {
-                        props.put(key, value);
-                    }
-                    propschanged = true;
-                }
-                if (!propschanged) {
-                    return;
-                }
-                if (loadingProperties || loadingTableProperties || updatingDisplayFromProperties) {
-                    return;
-                }
-                updateDisplayFromProperties(props);
+                updateDisplayFromPropsTable(firstRow, lastRow, props, propschanged);
             }
         }
+
     };
+
+    private void updateDisplayFromPropsTable(int firstRow, int lastRow, Properties props, boolean propschanged) {
+        DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
+        for (int i = Math.max(firstRow, 0); i < Math.min(lastRow + 1, model.getRowCount()); i++) {
+            Object key = model.getValueAt(i, 0);
+            Object value = model.getValueAt(i, 1);
+            if (null != key && null != value) {
+                props.put(key, value);
+            }
+            propschanged = true;
+        }
+        if (!propschanged) {
+            return;
+        }
+        if (loadingProperties || loadingTableProperties || updatingDisplayFromProperties) {
+            return;
+        }
+        updateDisplayFromProperties(props);
+    }
 
     @MonotonicNonNull
     private volatile Properties tableLoadedProperties = null;
@@ -3348,6 +3521,31 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             boolean addPosNoise = Boolean.valueOf(addPosNoiseString);
             addPosNoiseCachedCheckBox.setSelected(addPosNoise);
         }
+
+        String senseMaxXString = props.getProperty("senseMaxX");
+        if (null != senseMaxXString && senseMaxXString.length() > 0) {
+            double senseMaxX = parseDouble(senseMaxXString);
+            setSenseMaxX(senseMaxX);
+        }
+
+        String senseMinXString = props.getProperty("senseMinX");
+        if (null != senseMinXString && senseMinXString.length() > 0) {
+            double senseMinX = parseDouble(senseMinXString);
+            setSenseMinX(senseMinX);
+        }
+
+        String senseMaxYString = props.getProperty("senseMaxY");
+        if (null != senseMaxYString && senseMaxYString.length() > 0) {
+            double senseMaxY = parseDouble(senseMaxYString);
+            setSenseMaxY(senseMaxY);
+        }
+
+        String senseMinYString = props.getProperty("senseMinY");
+        if (null != senseMinYString && senseMinYString.length() > 0) {
+            double senseMinY = parseDouble(senseMinYString);
+            setSenseMinY(senseMinY);
+        }
+
         String simulatedDropRateString = props.getProperty("simulatedDropRate");
         if (null != simulatedDropRateString && simulatedDropRateString.length() > 0) {
             double simDropRate = parseDouble(simulatedDropRateString);
@@ -4105,27 +4303,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         private final int x;
         private final int y;
+        private final boolean includeTrays;
+
         @Nullable
         private PhysicalItem closestItem;
         private int minIndex;
 
-        ClosestItemInfo(int x, int y, int minIndex) {
+        ClosestItemInfo(int x, int y, int minIndex, boolean includeTrays) {
             this.x = x;
             this.y = y;
             this.minIndex = minIndex;
+            this.includeTrays = includeTrays;
             List<PhysicalItem> items = Object2DOuterJPanel.this.getItems();
-            double scale = object2DJPanel1.getScale();
-            double min_x = object2DJPanel1.getMinX();
-            double max_y = object2DJPanel1.getMaxY();
             double minDist = Double.POSITIVE_INFINITY;
             PhysicalItem localClosestItem = null;
             for (int i = 0; i < items.size(); i++) {
                 PhysicalItem item = items.get(i);
-                double rel_x = (item.x - min_x) * scale + 15;
-                double rel_y = (max_y - item.y) * scale + 20;
+                if (!includeTrays) {
+                    if (item.getType().equals("PT") || item.getType().equals("KT")) {
+                        continue;
+                    }
+                }
+                Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y);
+                object2DJPanel1.takeSnapshot(propertiesFile, items);
 
-                double diff_x = rel_x - x;
-                double diff_y = rel_y - y;
+                double diff_x = screenItemPoint.x - x;
+                double diff_y = screenItemPoint.y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
                 if (dist < minDist) {
                     minDist = dist;
