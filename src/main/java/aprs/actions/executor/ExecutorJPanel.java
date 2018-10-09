@@ -5253,26 +5253,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             manualObjectCachedComboBox.removeAllElements();
             manualSlotCachedComboBox.removeAllElements();
             List<PhysicalItem> newItems = crclGenerator.getPhysicalItems();
-            newItems = new ArrayList<>(newItems);
-            newItems.sort(Comparators.fromFunctions(PhysicalItem::getFullName));
-            for (PhysicalItem item : newItems) {
-                String fullName = item.getFullName();
-                if (null != fullName) {
-                    switch (item.getType()) {
-                        case "P":
-                        case "KT":
-                        case "PT":
-                            manualObjectCachedComboBox.addElement(fullName);
-                            break;
+            if (newItems != null) {
+                newItems = new ArrayList<>(newItems);
+                newItems.sort(Comparators.fromFunctions(PhysicalItem::getFullName));
+                for (PhysicalItem item : newItems) {
+                    String fullName = item.getFullName();
+                    if (null != fullName) {
+                        switch (item.getType()) {
+                            case "P":
+                            case "KT":
+                            case "PT":
+                                manualObjectCachedComboBox.addElement(fullName);
+                                break;
 
-                        case "ES":
-                        case "SLOT":
-                            manualSlotCachedComboBox.addElement(fullName);
-                            break;
+                            case "ES":
+                            case "SLOT":
+                                manualSlotCachedComboBox.addElement(fullName);
+                                break;
+                        }
                     }
                 }
+                updatePositionCacheTable();
             }
-            updatePositionCacheTable();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }

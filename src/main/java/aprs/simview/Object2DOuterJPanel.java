@@ -2007,16 +2007,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     return;
                 }
                 int port = Integer.parseInt(portCachedTextField.getText().trim());
-                if (null != visionSocketServer && visionSocketServer.getPort() != port) {
+                VisionSocketServer visionSocketServerLocal = visionSocketServer;
+                if (null != visionSocketServerLocal && visionSocketServerLocal.getPort() != port) {
                     disconnect();
+                    visionSocketServerLocal = null;
                 }
-                if (null == visionSocketServer) {
-                    visionSocketServer = new VisionSocketServer(port);
+                if (null == visionSocketServerLocal) {
+                    visionSocketServerLocal = new VisionSocketServer(port);
                     for (Consumer<Integer> l : this.incrementPublishCountListeners) {
-                        visionSocketServer.addPublishCountListener(l);
+                        visionSocketServerLocal.addPublishCountListener(l);
                     }
                 }
-                visionSocketServer.setDebug(debugCachedCheckBox.isSelected());
+                visionSocketServerLocal.setDebug(debugCachedCheckBox.isSelected());
                 publishCurrentItems();
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);

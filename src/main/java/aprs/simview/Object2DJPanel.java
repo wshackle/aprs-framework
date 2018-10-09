@@ -1868,6 +1868,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @UIEffect
     private void drawSenseLimitsRectangle(Graphics2D g2d, MinMax tempMinMax, double new_scale) {
         if (Double.isFinite(senseMaxX)
                 && Double.isFinite(senseMinX)
