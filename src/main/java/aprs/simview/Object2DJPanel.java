@@ -1877,7 +1877,7 @@ public class Object2DJPanel extends JPanel {
             g2d.setColor(Color.black);
 
             Point2D.Double minSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
-            Point2D.Double maxSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
+            Point2D.Double maxSensePoint = toScreenPoint(displayAxis, senseMaxX, senseMaxY, tempMinMax, new_scale);
             g2d.draw(new Rectangle.Double(
                     Math.min(minSensePoint.x, maxSensePoint.x),
                     Math.min(minSensePoint.y, maxSensePoint.y),

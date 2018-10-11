@@ -1883,6 +1883,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public XFutureVoid connectVision() {
         String visionPortString = visionPortCachedTextField.getText();
+        System.out.println("Starting connectVision ... (port = "+visionPortString+") ");
         XFutureVoid ret = new XFutureVoid("connectVision" + visionPortString);
         Thread connectThread = Thread.currentThread();
         StackTraceElement connectTrace[] = connectThread.getStackTrace();

@@ -189,8 +189,12 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.saveProperties();
     }
 
+    private volatile XFutureVoid loadPropertiesFuture=null;
+    
     public XFutureVoid loadProperties() throws IOException {
-        return object2DOuterJPanel1.loadProperties();
+        XFutureVoid ret = object2DOuterJPanel1.loadProperties();
+        loadPropertiesFuture = ret;
+        return ret;
     }
 
     public void setAprsSystem(AprsSystem aprsSystemInterface) {
@@ -251,6 +255,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public boolean isConnected() {
         return this.object2DOuterJPanel1.isConnected();
+    }
+    
+    public int getPort() {
+        return this.object2DOuterJPanel1.getPort();
     }
 
     @Override

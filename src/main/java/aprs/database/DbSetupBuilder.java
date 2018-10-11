@@ -753,7 +753,7 @@ public class DbSetupBuilder {
                 ret.completeExceptionally(ex);
                 LOGGER.log(Level.SEVERE, "", ex);
             }
-        }, "connectionSetupThread").start();
+        }, "dbConnectionSetupThread:"+host+":"+port).start();
         return ret;
     }
 

@@ -2982,6 +2982,17 @@ public class AprsSystem implements SlotOffsetProvider {
             if (isObject2DViewStartupSelected()) {
                 object2DViewFuture = startObject2DJinternalFrame();
                 futures.add(object2DViewFuture);
+                object2DViewFuture.always(() -> {
+                    boolean connected = object2DViewJInternalFrame.isConnected();
+                    System.out.println("object2DViewJInternalFrame.isConnected() = " + connected);
+                    System.out.println("object2DViewJInternalFrame.getPort() = " + object2DViewJInternalFrame.getPort());
+                    if(!connected) {
+                        System.out.println("startObject2DJinternalFrameFuture = " + startObject2DJinternalFrameFuture);
+                        System.out.println("startObject2DJinternalFrameOnDisplayFuture = " + startObject2DJinternalFrameOnDisplayFuture);
+                        System.out.println("BAD");
+                        connected = object2DViewJInternalFrame.isConnected();
+                    }
+                });
             }
             XFutureVoid serverFuture = null;
             if (isRobotCrclSimServerStartupSelected()) {
@@ -3434,13 +3445,18 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private final AtomicInteger so2dCount = new AtomicInteger();
 
+    private volatile XFutureVoid startObject2DJinternalFrameFuture=null;
     /**
      * Make the Object 2D view visible and create underlying components.
      */
     public XFutureVoid startObject2DJinternalFrame() {
-        return Utils.composeToVoidOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
+        XFutureVoid ret = Utils.composeToVoidOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
+        startObject2DJinternalFrameFuture = ret;
+        return ret;
     }
 
+    private volatile XFutureVoid startObject2DJinternalFrameOnDisplayFuture=null;
+    
     @UIEffect
     private XFutureVoid startObject2DJinternalFrameOnDisplay() {
         try {
@@ -3458,7 +3474,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
             addInternalFrame(newObject2DViewJInternalFrame);
             this.object2DViewJInternalFrame = newObject2DViewJInternalFrame;
-            return newObject2DViewJInternalFrame.loadProperties();
+            XFutureVoid ret = newObject2DViewJInternalFrame.loadProperties();
+            startObject2DJinternalFrameOnDisplayFuture=ret;
+            return ret;
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
