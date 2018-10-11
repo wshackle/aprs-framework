@@ -3270,18 +3270,18 @@ public class Supervisor {
         }
     }
 
-    private void setTeachSystemFilter(@Nullable AprsSystem sys) {
-        if (null == sys) {
-            object2DOuterJPanel1.setForceOutputFlag(false);
-            object2DOuterJPanel1.setShowOutputItems(false);
-            object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
-        } else {
-            object2DOuterJPanel1.setForceOutputFlag(true);
-            object2DOuterJPanel1.setSimulated(true);
-            object2DOuterJPanel1.setShowOutputItems(true);
-            object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
-        }
-    }
+//    private XFutureVoid setTeachSystemFilter(@Nullable AprsSystem sys) {
+//        if (null == sys) {
+//            object2DOuterJPanel1.setForceOutputFlag(false);
+//            object2DOuterJPanel1.setShowOutputItems(false);
+//            return object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
+//        } else {
+//            object2DOuterJPanel1.setForceOutputFlag(true);
+//            object2DOuterJPanel1.setSimulated(true);
+//            object2DOuterJPanel1.setShowOutputItems(true);
+//            return object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
+//        }
+//    }
 
     @Nullable
     private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {

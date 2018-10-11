@@ -3880,26 +3880,26 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void setTeachSystemFilter(@Nullable AprsSystem sys) {
+    private XFutureVoid setTeachSystemFilter(@Nullable AprsSystem sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
             object2DOuterJPanel1.setShowOutputItems(false);
-            object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
+            return object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
         } else {
             object2DOuterJPanel1.setForceOutputFlag(true);
             object2DOuterJPanel1.setSimulated(true);
             object2DOuterJPanel1.setShowOutputItems(true);
-            object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
+            return object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
         }
     }
 
-    @Nullable
-    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
-        return items.stream()
-                .filter(x -> x.getType().equals("P"))
-                .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
-                .orElse(null);
-    }
+//    @Nullable
+//    private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+//        return items.stream()
+//                .filter(x -> x.getType().equals("P"))
+//                .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
+//                .orElse(null);
+//    }
 
     private List<PhysicalItem> filterForSystem(AprsSystem sys, List<PhysicalItem> listIn) {
         if (null == supervisor) {

@@ -660,11 +660,16 @@ public class Utils {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
-            for (String name : names) {
-                String value = props.getProperty(name);
+            for (int i = 0; i < names.size(); i++) {
+                String name = names.get(i);
+                Object value = props.get(name);
                 if (null != value) {
-                    value = value.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
+                    if (value instanceof String) {
+                        value = ((String)value).replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
+                    }
                     pw.println(name + "=" + value);
+                } else {
+                    pw.println("# " + name + "=null");
                 }
             }
         } catch (IOException ex) {
@@ -927,7 +932,7 @@ public class Utils {
         return out;
     }
 
-    @SuppressWarnings({"guieffect","nullness"})
+    @SuppressWarnings({"guieffect", "nullness"})
     public static void showMessageDialog(@Nullable Component component, String message) {
         if (null == message || message.trim().length() < 1) {
             throw new IllegalArgumentException("message=" + message);

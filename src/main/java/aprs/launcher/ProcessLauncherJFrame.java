@@ -457,6 +457,26 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return true;
     }
 
+    private boolean debug;
+
+    /**
+     * Get the value of debug
+     *
+     * @return the value of debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * Set the value of debug
+     *
+     * @param debug new value of debug
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
     @Nullable
     @SuppressWarnings("nullness")
     private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
@@ -467,8 +487,10 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             return null;
         }
 
-        System.out.println("line = " + line);
-        System.out.println("ifStack.size() = " + ifStack.size());
+        if (debug) {
+            System.out.println("line = " + line);
+            System.out.println("ifStack.size() = " + ifStack.size());
+        }
         String currentOnFailLine = onFailLine;
         XFutureVoid currentWaitForFuture = waitForFuture;
         List<LineConsumer> currentErrorLineConsumers = errorLineConsumers;
@@ -658,6 +680,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             } else if (firstWord.equals("plj-stop")) {
                 stopLineSeen = true;
                 stopLines = new ArrayList<>();
+            } else if (firstWord.equals("plj-debug")) {
+                setDebug(true);
             } else if (firstWord.startsWith("plj-")) {
                 throw new IllegalArgumentException("line starts with plj- but is not recognized : firstWord=" + firstWord + ", line=" + line);
             } else if (!line.startsWith("#") && !firstWord.startsWith("plj-")) {

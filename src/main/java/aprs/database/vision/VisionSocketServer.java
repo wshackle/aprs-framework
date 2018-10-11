@@ -243,7 +243,7 @@ public class VisionSocketServer implements AutoCloseable {
         }
         lastPublishListTime = System.currentTimeMillis();
         if (clients.size() != 1) {
-            System.out.println("clients.size() = " + clients.size());
+            System.out.println("VisionSocketServer publishList : clients.size() = " + clients.size());
         }
         if (!clients.isEmpty() && !closing) {
             incrementPublishCount();
