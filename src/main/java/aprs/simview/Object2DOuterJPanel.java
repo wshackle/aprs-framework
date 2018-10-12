@@ -229,10 +229,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             saveFile(new File(csvDir, f.getName() + ".csv"));
-            if (null != aprsSystem) {
+            AprsSystem aprsSystemLocal = aprsSystem;
+            if (null != aprsSystemLocal) {
                 File xmlDir = new File(f.getParentFile(), "crclStatusXml");
                 xmlDir.mkdirs();
-                CRCLStatusType status = aprsSystem.getCurrentStatus();
+                CRCLStatusType status = aprsSystemLocal.getCurrentStatus();
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
@@ -273,9 +274,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             saveFile(new File(csvDir, f.getName() + ".csv"));
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
-            AprsSystem af = this.aprsSystem;
-            if (null != af) {
-                CRCLStatusType status = aprsSystem.getCurrentStatus();
+            AprsSystem aprsSystemLocal = this.aprsSystem;
+            if (null != aprsSystemLocal) {
+                CRCLStatusType status = aprsSystemLocal.getCurrentStatus();
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
@@ -389,25 +390,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile @Nullable
     Map<String, Integer> origNamesMap = null;
 
-    private void setItems(List<PhysicalItem> items, boolean publish) {
+    private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
         settingItems = true;
-//        for (PhysicalItem item : items) {
-//            if (item.x < 100 || item.y > 300) {
-//                System.out.println("item = " + item);
-//            }
-//        }
         XFutureVoid future = Utils.runOnDispatchThread(() -> {
             setItemsInternal(items);
             settingItems = false;
         });
         if (captured_item_index > 0) {
-            return;
+            return XFutureVoid.completedFutureWithName("captured_item_index > 0");
         }
         if (null != draggedItem) {
-            return;
+            return XFutureVoid.completedFutureWithName("null != draggedItem");
         }
         if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
-            return;
+            return XFutureVoid.completedFutureWithName("null != draggedItemsList && !draggedItemsList.isEmpty()");
         }
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
@@ -415,7 +411,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 srv.publishList(items);
             }
         }
-        future.thenRun(() -> notifySetItemsListeners(items));
+        return future.thenRun(() -> notifySetItemsListeners(items));
     }
 
     public XFutureVoid setOutputItems(List<PhysicalItem> items) {
@@ -428,16 +424,37 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void setItemsInternal(List<PhysicalItem> items) {
-        if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
-            double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
-            if (Math.abs(object2DJPanel1.getRotationOffset() - visionToDBRotationOffset) > 0.001) {
-                jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(visionToDBRotationOffset)));
+        try {
+            if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
+                double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
+                if (Math.abs(object2DJPanel1.getRotationOffset() - visionToDBRotationOffset) > 0.001) {
+                    jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(visionToDBRotationOffset)));
+                }
+                object2DJPanel1.setRotationOffset(visionToDBRotationOffset);
             }
-            object2DJPanel1.setRotationOffset(visionToDBRotationOffset);
+            object2DJPanel1.setItems(items);
+            updateItemsTableOnDisplay(items);
+            loadTraySlotInfo(items);
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            showException(ex);
+            try {
+                disconnect();
+            } catch (Exception ex2) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex2);
+            }
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
-        object2DJPanel1.setItems(items);
-        updateItemsTableOnDisplay(items);
-        loadTraySlotInfo(items);
+    }
+
+    private void showException(Exception ex) {
+        if (null != aprsSystem) {
+            aprsSystem.showException(ex);
+        }
     }
 
     private final AtomicInteger updateItemsTableCount = new AtomicInteger();
@@ -1919,7 +1936,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jCheckBoxSimulated.setSelected(objectPanelToClone.isSimulated());
             hostCachedTextField.setText(objectPanelToClone.getHost());
             portCachedTextField.setText(Integer.toString(objectPanelToClone.getPort()));
-            setAprsSystem(objectPanelToClone.getAprsSystem());
+            AprsSystem copiedSys = objectPanelToClone.getAprsSystem();
+            if (null != copiedSys) {
+                setAprsSystem(copiedSys);
+            }
             setPropertiesFile(objectPanelToClone.getPropertiesFile());
             return objectPanelToClone.getProperties()
                     .thenAccept(this::loadProperties)
@@ -1975,6 +1995,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != visionSocketServer) {
             visionSocketServer.close();
             visionSocketServer = null;
+        }
+        if (null != connectedCachedCheckBox && connectedCachedCheckBox.isSelected()) {
+            connectedCachedCheckBox.setSelected(false);
         }
     }
 
@@ -2090,7 +2113,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return dropRandom.nextDouble() > simulatedDropRate;
     }
 
-    
     private boolean limitsFilter(PhysicalItem physicalItem) {
         double itemX = physicalItem.x;
         double minX = object2DJPanel1.getSenseMinX();
@@ -2154,7 +2176,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final CachedCheckBox shuffleSimulatedUpdatesCachedCheckBox;
 
-
     /**
      * Get the value of enforceSensorLimits
      *
@@ -2194,16 +2215,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             throw new IllegalStateException("visionSocketServer is null");
         }
         boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
-        if (shuffleSimulatedUpdatesCachedCheckBox.isSelected() 
+        if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()
                 || isEnforceSensorLimits()
                 || simulatedDropRate > 0.01 || addPosNoise) {
             List<PhysicalItem> origList = getItems();
             List<PhysicalItem> l = new ArrayList<>(origList);
-                l = l.stream()
-                        .filter(this::dropFilter)
-                        .filter(this::limitsFilter)
-                        .map(this::noiseFilter)
-                        .collect(Collectors.toList());
+            l = l.stream()
+                    .filter(this::dropFilter)
+                    .filter(this::limitsFilter)
+                    .map(this::noiseFilter)
+                    .collect(Collectors.toList());
             if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()) {
                 Collections.shuffle(l);
             }
@@ -2706,6 +2727,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private double currentX = 0.0;
     private double currentY = 0.0;
 
+    @MonotonicNonNull
     private AprsSystem aprsSystem;
 
     /**
@@ -2713,6 +2735,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      *
      * @return the value of aprsSystemInterface
      */
+    @Nullable
     public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
@@ -2792,17 +2815,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private PmCartesian getMinOffset() {
         PmCartesian minDiffCart = new PmCartesian();
-        PointType current = aprsSystem.getCurrentPosePoint();
-        double min_diff = Double.POSITIVE_INFINITY;
-        if (null != current) {
-            PmCartesian currentCart = CRCLPosemath.toPmCartesian(current);
-            for (PhysicalItem item : this.getItems()) {
-                PmCartesian diffCart = item.subtract(currentCart);
-                diffCart.z = 0;
-                double diffMag = diffCart.mag();
-                if (min_diff > diffMag) {
-                    min_diff = diffMag;
-                    minDiffCart = diffCart;
+        if (null != aprsSystem) {
+            PointType current = aprsSystem.getCurrentPosePoint();
+            double min_diff = Double.POSITIVE_INFINITY;
+            if (null != current) {
+                PmCartesian currentCart = CRCLPosemath.toPmCartesian(current);
+                for (PhysicalItem item : this.getItems()) {
+                    PmCartesian diffCart = item.subtract(currentCart);
+                    diffCart.z = 0;
+                    double diffMag = diffCart.mag();
+                    if (min_diff > diffMag) {
+                        min_diff = diffMag;
+                        minDiffCart = diffCart;
+                    }
                 }
             }
         }
@@ -2957,11 +2982,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setRotationOffset(toRadians(parseDouble(jTextFieldRotationOffset.getText().trim())));
     }//GEN-LAST:event_jTextFieldRotationOffsetActionPerformed
 
+    @UIEffect
     private void jButtonReadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReadPropertiesActionPerformed
         Properties props = getPropertiesOnDisplay();
         loadPropertiesTableOnDisplay(props);
     }//GEN-LAST:event_jButtonReadPropertiesActionPerformed
 
+    @UIEffect
     private void jButtonSetProperiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetProperiesActionPerformed
         Properties props = this.tableLoadedProperties;
         if (null == props) {
@@ -2971,6 +2998,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateDisplayFromPropsTable(0, jTableProperties.getRowCount(), props, true);
     }//GEN-LAST:event_jButtonSetProperiesActionPerformed
 
+    @UIEffect
     private void jButtonForceUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonForceUpdateActionPerformed
         refresh(false);
     }//GEN-LAST:event_jButtonForceUpdateActionPerformed
@@ -3004,12 +3032,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final CachedCheckBox simulationUpdateAsNeededCachedCheckBox;
 
+    @UIEffect
     private void simUpdateAction(ActionEvent evt) {
-        if (simulationUpdateAsNeededCachedCheckBox.isSelected()) {
-            return;
-        }
-        if (!forceOutputFlag) {
-            refresh(false);
+        try {
+            if (simulationUpdateAsNeededCachedCheckBox.isSelected()) {
+                return;
+            }
+            if (!forceOutputFlag) {
+                refresh(false);
+            }
+        } catch (Exception e) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", e);
+            stopSimUpdateTimerOnDisplay();
+            showException(e);
+            disconnect();
         }
     }
 
@@ -3340,11 +3376,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             return loadProperties(props);
         }
-        throw new IllegalStateException("propertiesFile="+propertiesFile+" is null or does not exist");
+        if (null == propertiesFile) {
+            throw new IllegalStateException("propertiesFile=" + propertiesFile);
+        }
+        throw new IllegalStateException("propertiesFile=" + propertiesFile + " does not exist");
     }
 
+    @Nullable
     private volatile XFutureVoid loadPropertiesFuture2 = null;
-    
+
     public XFutureVoid loadProperties(Properties props) {
         XFutureVoid ret = Utils.runOnDispatchThread(() -> {
             completeLoadPropertiesOnDisplay(props);
@@ -3384,6 +3424,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     };
 
+    @UIEffect
     private void updateDisplayFromPropsTable(int firstRow, int lastRow, Properties props, boolean propschanged) {
         propschanged = loadPropsFromTable(firstRow, lastRow, props, propschanged);
         if (!propschanged) {
@@ -3395,17 +3436,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateDisplayFromProperties(props);
     }
 
+    @UIEffect
     private boolean loadPropsFromTable(Properties props) {
         return loadPropsFromTable(0, jTableProperties.getRowCount(), props, true);
     }
-    
+
+    @UIEffect
     private boolean loadPropsFromTable(int firstRow, int lastRow, Properties props, boolean propschanged) {
         DefaultTableModel model = (DefaultTableModel) jTableProperties.getModel();
         for (int i = Math.max(firstRow, 0); i < Math.min(lastRow + 1, model.getRowCount()); i++) {
             Object key = model.getValueAt(i, 0);
             Object value = model.getValueAt(i, 1);
-            if (key instanceof String  && null != value) {
-                props.setProperty((String)key, value.toString());
+            if (key instanceof String && null != value) {
+                props.setProperty((String) key, value.toString());
             }
             propschanged = true;
         }
@@ -3576,7 +3619,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             double senseMaxY = parseDouble(senseMaxYString);
             setSenseMaxY(senseMaxY);
         }
-        
+
         String enforceSensorLimitsString = props.getProperty("enforceSensorLimits");
         if (null != enforceSensorLimitsString && enforceSensorLimitsString.length() > 0) {
             boolean enforceSensorLimits = Boolean.parseBoolean(enforceSensorLimitsString);
@@ -3729,10 +3772,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public boolean isConnected() {
-        if(!connectedCachedCheckBox.isSelected()) {
+        if (!connectedCachedCheckBox.isSelected()) {
             return false;
         }
-        if(simulatedCachedCheckBox.isSelected()) {
+        if (simulatedCachedCheckBox.isSelected()) {
             return visionSocketServer != null;
         } else {
             return visionSocketClient != null && visionSocketClient.isConnected();
@@ -3831,28 +3874,50 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line) {
-        long now = System.currentTimeMillis();
+        try {
+            long now = System.currentTimeMillis();
 
-        String detailsMessage = null;
-        if (null != visionSocketClient) {
-            detailsMessage
-                    = "size=" + l.size() + "\n"
-                    + "count=" + visionSocketClient.getLineCount() + "\n"
-                    + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
-                    + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
-                    + "consecutive=" + visionSocketClient.getConsecutiveIgnoreCount() + "\n"
-                    + "time=" + (now - lastVisionUpdateTime) + "\n";
+            String detailsMessage = null;
+            if (null != visionSocketClient) {
+                detailsMessage
+                        = "size=" + l.size() + "\n"
+                        + "count=" + visionSocketClient.getLineCount() + "\n"
+                        + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
+                        + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
+                        + "consecutive=" + visionSocketClient.getConsecutiveIgnoreCount() + "\n"
+                        + "time=" + (now - lastVisionUpdateTime) + "\n";
+            }
+            final String finalDetailsMessage = detailsMessage;
+            lastVisionUpdateTime = now;
+            return Utils.runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            showException(ex);
+            disconnect();
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
-        final String finalDetailsMessage = detailsMessage;
-        lastVisionUpdateTime = now;
-        return Utils.runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
     }
 
     @UIEffect
     private void handleClientUpdateOnDisplay(List<PhysicalItem> l, @Nullable String detailsMessage) {
-        setItems(l);
-        if (null != detailsMessage) {
-            jTextAreaConnectDetails.setText(detailsMessage);
+        try {
+            setItems(l);
+            if (null != detailsMessage) {
+                jTextAreaConnectDetails.setText(detailsMessage);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            showException(ex);
+            disconnect();
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -3957,6 +4022,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private double getClosestUncorrectedDistance(PointType ptIn) {
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>(getItems());
         return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l).dist;
@@ -4045,6 +4113,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         CRCLCommandType cmd = item.cmd;
         long cmdId = -1;
         String cmdName = "";
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         if (null != cmd) {
             cmdClassName = cmd.getClass().getSimpleName();
             if (cmdClassName.startsWith("crcl.base.")) {
@@ -4193,161 +4264,183 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             @Nullable CRCLCommandType cmd,
             boolean isHoldingObjectExpected,
             long statRecievTime) {
-        if (!showCurrentCachedCheckBox.isSelected()) {
-            return;
-        }
-        PoseType pose = CRCLPosemath.getPose(stat);
-        if (null == pose) {
-            return;
-        }
-        PointType ptIn = requireNonNull(pose.getPoint(), "pose.getPoint()");
-
-        boolean takeSnapshots = isSnapshotsEnabled();
-        PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
-        currentX = uncorrectedPoint.getX();
-        currentY = uncorrectedPoint.getY();
-        jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
-        object2DJPanel1.setCurrentX(currentX);
-        object2DJPanel1.setCurrentY(currentY);
-        object2DJPanel1.setEndEffectorClosed(isHoldingObjectExpected);
-        List<PhysicalItem> l = new ArrayList<>(getItems());
-        DistIndex di = getClosestDistanceIndex(currentX, currentY, l);
-        double min_dist = di.dist;
-        int min_dist_index = di.index;
-
-        long time = System.currentTimeMillis();
-        poseUpdateHistoryTime = time;
-        PoseUpdateHistoryItem currentUpdate
-                = new PoseUpdateHistoryItem(
-                        stat,
-                        cmd,
-                        isHoldingObjectExpected,
-                        time,
-                        object2DJPanel1.getCapturedPartPoint(),
-                        captured_item_index,
-                        di,
-                        (min_dist_index >= 0 && min_dist_index < l.size()) ? l.get(min_dist_index) : null,
-                        statRecievTime
-                );
-        poseUpdateHistory.add(currentUpdate);
-        if (poseUpdateHistory.size() > 25) {
-            poseUpdateHistory.removeFirst();
-        }
-
-        if (isHoldingObjectExpected) {
-            lastIsHoldingObjectExpectedTime = time;
-        } else {
-            lastNotIsHoldingObjectExpectedTime = time;
-        }
-
-        if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
-            object2DJPanel1.setCapturedPartPoint(new Point2D.Double(currentX, currentY));
-        } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
-            object2DJPanel1.setCapturedPartPoint(null);
-        }
-        if (simulatedCachedCheckBox.isSelected()) {
-            if (min_dist < dropOffThreshold
-                    && lastIsHoldingObjectExpected && !isHoldingObjectExpected
-                    && min_dist_index != captured_item_index) {
-                PhysicalItem captured_item = (captured_item_index >= 0 && captured_item_index < l.size()) ? l.get(captured_item_index) : null;
-                System.out.println("captured_item = " + captured_item);
-                System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
-                System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
-                String errString
-                        = "Dropping item on to another item min_dist=" + min_dist
-                        + ", min_dist_index=" + min_dist_index
-                        + ", captured_item_index=" + captured_item_index
-                        + ", bottom item at min_dist_index =" + l.get(min_dist_index)
-                        + ", captured_item  =" + captured_item;
-                try {
-                    printHandlePoseErrorInfo(errString, stat, pose, cmd);
-                } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                }
-                this.aprsSystem.setTitleErrorString(errString);
-                this.aprsSystem.pause();
+        try {
+            if (null == aprsSystem) {
+                throw new NullPointerException("aprsSystem");
             }
-            if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
-                if (min_dist < pickupDist && min_dist_index >= 0) {
-                    captured_item_index = min_dist_index;
-                    if (true) {
-                        try {
-                            System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
-                            if (takeSnapshots) {
-                                takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
-                            }
-                        } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                        }
-                    }
-                } else {
-                    try {
-                        System.out.println("di = " + di);
-                        if (null != di && di.index >= 0 && di.index < l.size()) {
-                            PhysicalItem closestItem = l.get(di.index);
-                            System.out.println("closestItem = " + closestItem);
-                            System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
-                            System.out.println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
-                        }
-                        String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
-                        printHandlePoseErrorInfo(err, stat, pose, cmd);
-                        if (takeSnapshots) {
-                            takeSnapshot(createTempFile(err, ".PNG"), (PmCartesian) null, "");
-                        }
-                        System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+            if (!showCurrentCachedCheckBox.isSelected()) {
+                return;
+            }
+            PoseType pose = CRCLPosemath.getPose(stat);
+            if (null == pose) {
+                return;
+            }
+            PointType ptIn = requireNonNull(pose.getPoint(), "pose.getPoint()");
 
-                    } catch (Exception ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                    }
-                    this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
-                }
+            boolean takeSnapshots = isSnapshotsEnabled();
+            PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
+            currentX = uncorrectedPoint.getX();
+            currentY = uncorrectedPoint.getY();
+            jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));
+            object2DJPanel1.setCurrentX(currentX);
+            object2DJPanel1.setCurrentY(currentY);
+            object2DJPanel1.setEndEffectorClosed(isHoldingObjectExpected);
+            List<PhysicalItem> l = new ArrayList<>(getItems());
+            DistIndex di = getClosestDistanceIndex(currentX, currentY, l);
+            double min_dist = di.dist;
+            int min_dist_index = di.index;
+
+            long time = System.currentTimeMillis();
+            poseUpdateHistoryTime = time;
+            PoseUpdateHistoryItem currentUpdate
+                    = new PoseUpdateHistoryItem(
+                            stat,
+                            cmd,
+                            isHoldingObjectExpected,
+                            time,
+                            object2DJPanel1.getCapturedPartPoint(),
+                            captured_item_index,
+                            di,
+                            (min_dist_index >= 0 && min_dist_index < l.size()) ? l.get(min_dist_index) : null,
+                            statRecievTime
+                    );
+            poseUpdateHistory.add(currentUpdate);
+            if (poseUpdateHistory.size() > 25) {
+                poseUpdateHistory.removeFirst();
+            }
+
+            if (isHoldingObjectExpected) {
+                lastIsHoldingObjectExpectedTime = time;
+            } else {
+                lastNotIsHoldingObjectExpectedTime = time;
+            }
+
+            if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
+                object2DJPanel1.setCapturedPartPoint(new Point2D.Double(currentX, currentY));
             } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
-                if (true) {
-                    System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
-                    if (takeSnapshots) {
-                        try {
-                            takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
-                        } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                        }
-                    }
-                }
-                if (captured_item_index < 0) {
-                    String err = "Should be dropping item but no item captured";
+                object2DJPanel1.setCapturedPartPoint(null);
+            }
+            if (simulatedCachedCheckBox.isSelected()) {
+                if (min_dist < dropOffThreshold
+                        && lastIsHoldingObjectExpected && !isHoldingObjectExpected
+                        && min_dist_index != captured_item_index) {
+                    PhysicalItem captured_item = (captured_item_index >= 0 && captured_item_index < l.size()) ? l.get(captured_item_index) : null;
+                    System.out.println("captured_item = " + captured_item);
+                    System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
+                    System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
+                    String errString
+                            = "Dropping item on to another item min_dist=" + min_dist
+                            + ", min_dist_index=" + min_dist_index
+                            + ", captured_item_index=" + captured_item_index
+                            + ", bottom item at min_dist_index =" + l.get(min_dist_index)
+                            + ", captured_item  =" + captured_item;
                     try {
-                        printHandlePoseErrorInfo(err, stat, pose, cmd);
+                        printHandlePoseErrorInfo(errString, stat, pose, cmd);
                     } catch (IOException ex) {
                         Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
-                    System.out.println("lastDropUpdate = " + lastDropUpdate);
-                    this.aprsSystem.setTitleErrorString(err);
+                    this.aprsSystem.setTitleErrorString(errString);
+                    this.aprsSystem.pause();
+                }
+                if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
+                    if (min_dist < pickupDist && min_dist_index >= 0) {
+                        captured_item_index = min_dist_index;
+                        if (true) {
+                            try {
+                                System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                                if (takeSnapshots) {
+                                    takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                            }
+                        }
+                    } else {
+                        try {
+                            System.out.println("di = " + di);
+                            if (null != di && di.index >= 0 && di.index < l.size()) {
+                                PhysicalItem closestItem = l.get(di.index);
+                                System.out.println("closestItem = " + closestItem);
+                                System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
+                                System.out.println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
+                            }
+                            String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
+                            printHandlePoseErrorInfo(err, stat, pose, cmd);
+                            if (takeSnapshots) {
+                                takeSnapshot(createTempFile(err, ".PNG"), (PmCartesian) null, "");
+                            }
+                            System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+
+                        } catch (Exception ex) {
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                        }
+                        this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                    }
+                } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
+                    if (true) {
+                        System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                        if (takeSnapshots) {
+                            try {
+                                takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                            } catch (IOException ex) {
+                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                            }
+                        }
+                    }
+                    if (captured_item_index < 0) {
+                        String err = "Should be dropping item but no item captured";
+                        try {
+                            printHandlePoseErrorInfo(err, stat, pose, cmd);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                        }
+                        System.out.println("lastDropUpdate = " + lastDropUpdate);
+                        this.aprsSystem.setTitleErrorString(err);
+                    }
                 }
             }
-        }
-        if (!isHoldingObjectExpected && captured_item_index >= 0) {
-            lastDropUpdate = currentUpdate;
-            captured_item_index = -1;
-        }
-        if (simulatedCachedCheckBox.isSelected()) {
-            if (captured_item_index >= 0 && captured_item_index < l.size()) {
-                PhysicalItem item = l.get(captured_item_index);
-                item.x = currentX;
-                item.y = currentY;
-                setItems(l, (isHoldingObjectExpected != lastIsHoldingObjectExpected) && simulationUpdateAsNeededCachedCheckBox.isSelected());
-            } else if (isHoldingObjectExpected != lastIsHoldingObjectExpected) {
-                setItems(l);
+            if (!isHoldingObjectExpected && captured_item_index >= 0) {
+                lastDropUpdate = currentUpdate;
+                captured_item_index = -1;
+            }
+            if (simulatedCachedCheckBox.isSelected()) {
+                if (captured_item_index >= 0 && captured_item_index < l.size()) {
+                    PhysicalItem item = l.get(captured_item_index);
+                    item.x = currentX;
+                    item.y = currentY;
+                    setItems(l, (isHoldingObjectExpected != lastIsHoldingObjectExpected) && simulationUpdateAsNeededCachedCheckBox.isSelected());
+                } else if (isHoldingObjectExpected != lastIsHoldingObjectExpected) {
+                    setItems(l);
+                }
+            }
+            lastIsHoldingObjectExpected = isHoldingObjectExpected;
+        } catch (Exception exception) {
+            disconnectCurrentPosition();
+            if (showCurrentCachedCheckBox.isSelected()) {
+                showCurrentCachedCheckBox.setSelected(false);
+            }
+            disconnect();
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
+            showException(exception);
+            if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
             }
         }
-        lastIsHoldingObjectExpected = isHoldingObjectExpected;
     }
 
     private void printHandlePoseErrorInfo(String err, CRCLStatusType stat, PoseType pose, @Nullable CRCLCommandType cmd) throws IOException {
         System.out.println("poseUpdateHistory = " + printPoseUpdateHistory(err));
-        System.out.println("statFile = " + aprsSystem.logCrclStatus(err, stat));
-        System.out.println("pose = " + CRCLPosemath.toString(pose));
-        if (null != cmd) {
-            System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
-            System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
+        if (null == aprsSystem) {
+            System.out.println("aprsSystem = null");
+        } else {
+            System.out.println("statFile = " + aprsSystem.logCrclStatus(err, stat));
+            System.out.println("pose = " + CRCLPosemath.toString(pose));
+            if (null != cmd) {
+                System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
+            }
         }
     }
 

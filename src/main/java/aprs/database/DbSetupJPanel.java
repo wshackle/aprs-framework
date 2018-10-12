@@ -178,6 +178,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jTextFieldDBPort.setText("-99");
 
         jComboBoxDbType.setModel(getDbTypeComboModel());
+        jComboBoxDbType.setSelectedIndex(getDbTypeComboDefaultIndex());
+        jComboBoxDbType.setSelectedItem(getDbTypeComboDefaultITem());
         jComboBoxDbType.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxDbTypeActionPerformed(evt);
@@ -262,10 +264,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 "Type", "Text"
             }
         ) {
-            final Class[] types = new Class [] {
+            Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-            final boolean[] canEdit = new boolean [] {
+            boolean[] canEdit = new boolean [] {
                 false, true
             };
 
@@ -283,7 +285,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jRadioButtonResourceDir.setSelected(true);
         jRadioButtonResourceDir.setText("Resource Directory: ");
 
-        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "none", "mysql", "mysql_simple", "neo4j/v1", "neo4j/v2", " " }));
+        jComboBoxResourceDir.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "none", "neo4j/v2", " " }));
         jComboBoxResourceDir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxResourceDirActionPerformed(evt);
@@ -1424,6 +1426,13 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         return dbTypeComboModel;
     }
 
+    private DbType getDbTypeComboDefaultITem() {
+        return DbType.NEO4J;
+    }
+    private int  getDbTypeComboDefaultIndex() {
+        return DbType.NEO4J.ordinal();
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroupQueryDirType;
     private javax.swing.JButton jButtonBrowse;

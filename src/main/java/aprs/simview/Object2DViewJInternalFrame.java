@@ -189,7 +189,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.saveProperties();
     }
 
-    private volatile XFutureVoid loadPropertiesFuture=null;
+    @Nullable private volatile XFutureVoid loadPropertiesFuture=null;
     
     public XFutureVoid loadProperties() throws IOException {
         XFutureVoid ret = object2DOuterJPanel1.loadProperties();
@@ -205,7 +205,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
-    public AprsSystem getAprsSystem() {
+    @Nullable public AprsSystem getAprsSystem() {
         return object2DOuterJPanel1.getAprsSystem();
     }
 

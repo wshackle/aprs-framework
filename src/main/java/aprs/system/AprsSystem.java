@@ -158,7 +158,6 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("SameReturnValue")
 public class AprsSystem implements SlotOffsetProvider {
 
     /**
@@ -173,14 +172,16 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public Object2DOuterJPanel getObjectViewPanel() {
-        assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         return object2DViewJInternalFrame.getObjectViewPanel();
     }
 
     /**
      * Creates new AprsSystem using a default properties file.
      */
-    @SuppressWarnings({"initialization", "guieffect"})
+    @SuppressWarnings({"guieffect"})
     private AprsSystem() {
         this(null);
     }
@@ -190,8 +191,8 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
      */
-    @SuppressWarnings("initialization")
     @UIEffect
+    @SuppressWarnings({"initialization"})
     private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1) {
         this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
         visionLineListener = this::visionLineCounter;
@@ -286,7 +287,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private final CachedCheckBox useTeachTableCheckBox;
     private final CachedCheckBox connectVisionCheckBox;
 
-    @MonotonicNonNull
+    @Nullable
     private final AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
 
     @MonotonicNonNull
@@ -316,7 +317,7 @@ public class AprsSystem implements SlotOffsetProvider {
     @MonotonicNonNull
     private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
-    private String taskName;
+    private String taskName = "NoTaskName";
 
     private volatile long lastStartRunTime = -1;
     private volatile long lastStopRunTime = -1;
@@ -360,7 +361,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private String origRobotName;
+    private String origRobotName = "";
 
     /**
      * Get the value of origRobotName
@@ -372,7 +373,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return origRobotName;
     }
 
-    private Image scanImage;
+    @Nullable
+    private volatile Image scanImage = null;
 
     /**
      * Get the most recent image created when scanning for desired part
@@ -380,6 +382,7 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @return image of most recent scan
      */
+    @Nullable
     public Image getScanImage() {
         return scanImage;
     }
@@ -391,7 +394,9 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @Nullable
     public PoseProvider getPddlExecExternalPoseProvider() {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         return pddlExecutorJInternalFrame1.getExternalPoseProvider();
     }
 
@@ -401,7 +406,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param externalPoseProvider new value of externalGetPoseFunction
      */
     public void setPddlExecExternalPoseProvider(PoseProvider externalPoseProvider) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1  ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         this.pddlExecutorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
     }
 
@@ -460,7 +467,6 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     private String printListToString(List<String> l, int itemsPerLine) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < l.size(); i += itemsPerLine) {
@@ -492,7 +498,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * vision
      */
     public XFuture<List<PhysicalItem>> getSingleVisionToDbUpdate() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         long startTime = logEvent("start getSingleVisionToDbUpdate", null);
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
@@ -506,12 +514,16 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public long getLastSingleVisionToDbUpdateTime() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getLastUpdateTime();
     }
 
     public long getSingleVisionToDbNotifySingleUpdateListenersTime() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getNotifySingleUpdateListenersTime();
     }
 
@@ -536,7 +548,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return list of trays
      */
     public List<PartsTray> getPartsTrayList() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getPartsTrayList();
     }
 
@@ -622,7 +636,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(name, ignoreEmpty);
         }
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return this.visionToDbJInternalFrame.getSlotOffsets(name, ignoreEmpty);
     }
 
@@ -634,7 +650,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return future with information on when the operation is complete.
      */
     public XFutureVoid startVisionToDbNewItemsImageSave(File f) {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return this.visionToDbJInternalFrame.startNewItemsImageSave(f);
     }
 
@@ -648,7 +666,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
         }
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return this.visionToDbJInternalFrame.getSlots(tray);
     }
 
@@ -659,7 +679,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param v should the position be displayed.
      */
     public void setSimViewTrackCurrentPos(boolean v) {
-        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function.");
+        }
         this.object2DViewJInternalFrame.setTrackCurrentPos(v);
     }
 
@@ -680,7 +702,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return rotational offset in radians
      */
     public double getVisionToDBRotationOffset() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return this.visionToDbJInternalFrame.getRotationOffset();
     }
 
@@ -779,7 +803,9 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @Nullable
     public XFuture<Boolean> getCrclRunProgramFuture() {
-        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("CRCL Client View must be open to use this function.");
+        }
         return crclClientJInternalFrame.getRunProgramFuture();
     }
 
@@ -1131,7 +1157,9 @@ public class AprsSystem implements SlotOffsetProvider {
         startSafeAbortStackTrace = curThread.getStackTrace();
 
         takeSnapshots("startSafeAbort." + comment);
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort(comment)
                 .thenRun(() -> {
                     if (null != continuousDemoFuture) {
@@ -1149,13 +1177,10 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace@Nullable []  = null;
 
     @Nullable
-    @SuppressWarnings({"unused"})
     private volatile Thread startSafeAbortThread = null;
 
-    @SuppressWarnings({"unused"})
     private volatile long startSafeAbortTime = -1;
 
-    @SuppressWarnings({"unused"})
     private volatile StackTraceElement startSafeAbortStackTrace@Nullable []  = null;
 
     /**
@@ -1186,7 +1211,9 @@ public class AprsSystem implements SlotOffsetProvider {
             startSafeAbortAndDisconnectTime = System.currentTimeMillis();
             startSafeAbortAndDisconnectStackTrace = curThread.getStackTrace();
             if (isConnected()) {
-                assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                if (null == pddlExecutorJInternalFrame1) {
+                    throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                }
 
                 XFutureVoid localSafeAbortFuture
                         = this.pddlExecutorJInternalFrame1.startSafeAbort(comment);
@@ -1242,7 +1269,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return map of results
      */
     public Map<String, UpdateResults> getDbUpdatesResultMap() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getUpdatesResultMap();
     }
 
@@ -1329,7 +1358,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile String origCrclRobotHost;
+    private volatile String origCrclRobotHost = "";
 
     /**
      * Get the value of origCrclRobotHost
@@ -1470,10 +1499,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile XFuture<Boolean> lastContinueActionListFuture = null;
 
     @Nullable
-    @SuppressWarnings({"unused"})
     private volatile String lastContinueActionListFutureComment = null;
 
-    @SuppressWarnings({"unused"})
     private volatile int lastContinueStartAbortCount = -1;
 
     /**
@@ -1490,7 +1517,9 @@ public class AprsSystem implements SlotOffsetProvider {
     public XFuture<Boolean> continueActionList(String comment) {
         setStartRunTime();
         lastContinueActionListFutureComment = comment;
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
         logEvent("continueActionList", comment);
@@ -1500,7 +1529,9 @@ public class AprsSystem implements SlotOffsetProvider {
                                 x -> {
                                     setThreadName();
                                     takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                                    if (null == pddlExecutorJInternalFrame1) {
+                                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                    }
                                     if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
                                         return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
@@ -1516,7 +1547,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return closest distance
      */
     public double getClosestRobotPartDistance() {
-        assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         return this.object2DViewJInternalFrame.getClosestRobotPartDistance();
     }
 
@@ -1526,7 +1559,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return if object view is simulated
      */
     public boolean isObjectViewSimulated() {
-        assert (null != object2DViewJInternalFrame) : "null == object2DViewJInternalFrame ";
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         return this.object2DViewJInternalFrame.isSimulated();
     }
 
@@ -1620,7 +1655,6 @@ public class AprsSystem implements SlotOffsetProvider {
         useTeachTableCheckBox.setSelected(useTeachTable);
     }
 
-    @SuppressWarnings("unused")
     private void checkReadyToDisconnect() throws IllegalStateException {
         if (closing) {
             return;
@@ -1765,11 +1799,12 @@ public class AprsSystem implements SlotOffsetProvider {
         setThreadName();
         takeSnapshots("startCRCLProgram(" + program.getName() + ")");
         setProgram(program);
-        assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("CRCL Client View must be open to use this function.");
+        }
         return crclClientJInternalFrame.runCurrentProgram(isStepMode());
     }
 
-    @SuppressWarnings("RedundantIfStatement")
     private boolean isMove(MiddleCommandType midCmd) {
         if (midCmd instanceof MoveToType) {
             return true;
@@ -1833,7 +1868,9 @@ public class AprsSystem implements SlotOffsetProvider {
             long startTime = logEvent("start runCrclProgram", programToString(program));
             CRCLProgramType progCopy = CRCLPosemath.copy(program);
             setProgram(program);
-            assert (null != crclClientJInternalFrame) : "null == pendantClientJInternalFrame ";
+            if (null == crclClientJInternalFrame) {
+                throw new IllegalStateException("CRCL Client View must be open to use this function.");
+            }
             ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
             if (!ret) {
                 System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Arrays.toString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
@@ -2264,6 +2301,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File motomanPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return motomanPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -2305,7 +2345,6 @@ public class AprsSystem implements SlotOffsetProvider {
     @Nullable
     private volatile String lastLogEvent = null;
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public long logEvent(String s, @Nullable Object arg) {
         try {
             if (closing) {
@@ -2406,7 +2445,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFuture<Boolean> startConnectDatabase() {
-        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+        if (null == dbSetupJInternalFrame) {
+            throw new IllegalStateException("DB Setup View must be open to use this function.");
+        }
         XFuture<Boolean> f = waitDbConnected();
         if (closing) {
             throw new IllegalStateException("Attempt to start connect database when already closing.");
@@ -2430,7 +2471,9 @@ public class AprsSystem implements SlotOffsetProvider {
 //                xf.cancelAll(false);
 //                return xf;
 //            }
-            assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+            if (null == dbSetupJInternalFrame) {
+                throw new IllegalStateException("DB Setup View must be open to use this function.");
+            }
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
             String startScript = dbSetupJInternalFrame.getStartScript();
             if (null != startScript && startScript.length() > 0) {
@@ -2477,6 +2520,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    @Nullable
     public File getPropertiesDirectory() {
         return propertiesDirectory;
     }
@@ -2750,13 +2794,19 @@ public class AprsSystem implements SlotOffsetProvider {
     private final AtomicInteger commonInitCount = new AtomicInteger();
 
     private XFutureVoid commonInit() {
-        System.out.println("commonInitCount = " + commonInitCount.incrementAndGet());
+        int currentCommonInitCout = commonInitCount.incrementAndGet();
+        if (debug) {
+            System.out.println("commonInitCount = " + currentCommonInitCout);
+        }
         return startWindowsFromMenuCheckBoxes()
                 .thenRun(this::completeCommonInit);
     }
 
     private void headlessEmptyCommonInit() {
-        System.out.println("commonInitCount = " + commonInitCount.incrementAndGet());
+        int currentCommonInitCout = commonInitCount.incrementAndGet();
+        if (debug) {
+            System.out.println("commonInitCount = " + currentCommonInitCout);
+        }
         this.completeCommonInit();
     }
 
@@ -2982,17 +3032,17 @@ public class AprsSystem implements SlotOffsetProvider {
             if (isObject2DViewStartupSelected()) {
                 object2DViewFuture = startObject2DJinternalFrame();
                 futures.add(object2DViewFuture);
-                object2DViewFuture.always(() -> {
-                    boolean connected = object2DViewJInternalFrame.isConnected();
-                    System.out.println("object2DViewJInternalFrame.isConnected() = " + connected);
-                    System.out.println("object2DViewJInternalFrame.getPort() = " + object2DViewJInternalFrame.getPort());
-                    if(!connected) {
-                        System.out.println("startObject2DJinternalFrameFuture = " + startObject2DJinternalFrameFuture);
-                        System.out.println("startObject2DJinternalFrameOnDisplayFuture = " + startObject2DJinternalFrameOnDisplayFuture);
-                        System.out.println("BAD");
-                        connected = object2DViewJInternalFrame.isConnected();
-                    }
-                });
+//                object2DViewFuture.always(() -> {
+//                    boolean connected = object2DViewJInternalFrame.isConnected();
+//                    System.out.println("object2DViewJInternalFrame.isConnected() = " + connected);
+//                    System.out.println("object2DViewJInternalFrame.getPort() = " + object2DViewJInternalFrame.getPort());
+//                    if (!connected) {
+//                        System.out.println("startObject2DJinternalFrameFuture = " + startObject2DJinternalFrameFuture);
+//                        System.out.println("startObject2DJinternalFrameOnDisplayFuture = " + startObject2DJinternalFrameOnDisplayFuture);
+//                        System.out.println("BAD");
+//                        connected = object2DViewJInternalFrame.isConnected();
+//                    }
+//                });
             }
             XFutureVoid serverFuture = null;
             if (isRobotCrclSimServerStartupSelected()) {
@@ -3257,6 +3307,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void showDatabaseSetupWindowOnDisplay() {
+        if (null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
         createDbSetupFrame();
         DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
         if (null != dbSetupFrame) {
@@ -3445,7 +3498,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private final AtomicInteger so2dCount = new AtomicInteger();
 
-    private volatile XFutureVoid startObject2DJinternalFrameFuture=null;
+    @Nullable
+    private volatile XFutureVoid startObject2DJinternalFrameFuture = null;
+
     /**
      * Make the Object 2D view visible and create underlying components.
      */
@@ -3455,8 +3510,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return ret;
     }
 
-    private volatile XFutureVoid startObject2DJinternalFrameOnDisplayFuture=null;
-    
+    @Nullable
+    private volatile XFutureVoid startObject2DJinternalFrameOnDisplayFuture = null;
+
     @UIEffect
     private XFutureVoid startObject2DJinternalFrameOnDisplay() {
         try {
@@ -3470,13 +3526,22 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != externalSlotOffsetProvider) {
                 newObject2DViewJInternalFrame.setSlotOffsetProvider(externalSlotOffsetProvider);
             }
-            newObject2DViewJInternalFrame.setPropertiesFile(object2DViewPropertiesFile());
+            File object2DViewPropertiesFile = object2DViewPropertiesFile();
+            newObject2DViewJInternalFrame.setPropertiesFile(object2DViewPropertiesFile);
 
             addInternalFrame(newObject2DViewJInternalFrame);
             this.object2DViewJInternalFrame = newObject2DViewJInternalFrame;
-            XFutureVoid ret = newObject2DViewJInternalFrame.loadProperties();
-            startObject2DJinternalFrameOnDisplayFuture=ret;
-            return ret;
+            if (object2DViewPropertiesFile.exists()) {
+                XFutureVoid ret = newObject2DViewJInternalFrame.loadProperties();
+                startObject2DJinternalFrameOnDisplayFuture = ret;
+                return ret;
+            } else {
+                if (newPropertiesFile) {
+                    return XFutureVoid.completedFutureWithName(object2DViewPropertiesFile + " does not exist");
+                } else {
+                    throw new IllegalStateException(object2DViewPropertiesFile + " does not exist");
+                }
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -3484,6 +3549,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File object2DViewPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return object2DViewPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -3668,6 +3736,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File crclClientPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return crclClientPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -3708,6 +3779,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File crclSimServerPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return crclSimServerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -3715,7 +3789,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
         public DbSetupPublisher call() {
             createDbSetupFrame();
-            assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+            if (null == dbSetupJInternalFrame) {
+                throw new IllegalStateException("DB Setup View must be open to use this function.");
+            }
             return dbSetupJInternalFrame.getDbSetupPublisher();
         }
     };
@@ -3797,6 +3873,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File visionToDbPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return visionToDbPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -3833,8 +3912,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 this.pddlExecutorJInternalFrame1 = newExecFrame;
             }
 
-            assert (null != newExecFrame) : "";
-//                            execFrame.setAprsSystem(this);
+            if (null == newExecFrame) {
+                throw new IllegalStateException("PDDL Executor View must be open to use this function. newExecFrame=null");
+            }
             addInternalFrame(newExecFrame);
             newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
             newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
@@ -3874,6 +3954,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File actionsToCrclPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return actionsToCrclPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -3900,6 +3983,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private File pddlPlannerPropetiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return pddlPlannerPropetiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
@@ -4135,7 +4221,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean lookForPartsOnDisplay() {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         try {
             CRCLProgramType lfpProgram = pddlExecutorJInternalFrame1.createLookForPartsProgram();
             boolean ret = runCRCLProgram(lfpProgram);
@@ -4243,7 +4331,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
         }
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
@@ -4260,7 +4350,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
         }
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
     }
 
@@ -4273,7 +4365,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    public XFuture<Boolean> fillKitTrays() throws IOException {
+    public XFuture<Boolean> fillKitTrays() {
         return fillKitTrays(false, 0);
     }
 
@@ -4366,7 +4458,6 @@ public class AprsSystem implements SlotOffsetProvider {
         });
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void updateScanImageWithRotationOffset(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
         Utils.runOnDispatchThread(() -> {
             updateScanImageWithRotationOffsetOnDisplay(requiredItems, autoScale, rotationOffset);
@@ -4378,7 +4469,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (!isConnected()) {
             return null;
         }
-        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
         opts.w = 170;
@@ -4392,7 +4485,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void updateScanImageOnDisplay(List<PhysicalItem> requiredItems, boolean autoScale) {
-        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
         opts.w = 170;
@@ -4407,7 +4502,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (requiredItems.isEmpty()) {
             return;
         }
-        assert (null != object2DViewJInternalFrame) : ("null == object2DViewJInternalFrame  ");
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
         Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
         opts.h = 170;
         opts.w = 170;
@@ -4420,13 +4517,15 @@ public class AprsSystem implements SlotOffsetProvider {
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
-    private GoalLearner goalLearner;
+    @Nullable
+    private volatile GoalLearner goalLearner = null;
 
     /**
      * Get the value of goalLearner
      *
      * @return the value of goalLearner
      */
+    @Nullable
     public GoalLearner getGoalLearner() {
         return goalLearner;
     }
@@ -4463,7 +4562,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame, message);
     }
 
-    @SuppressWarnings("SameReturnValue")
     private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrays.isEmpty()) {
             Thread.dumpStack();
@@ -4520,36 +4618,42 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param teachItems list of trays and items in the trays as they should be
      * when complete.
      */
-    @SuppressWarnings("unused")
     @Nullable
     public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
 
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
-        assert (null != pddlExecutorJInternalFrame1) : ("null == pddlExecutorJInternalFrame1  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Executor View must be open to use this function.");
+        }
+
         long t0 = System.currentTimeMillis();
         long t1 = t0;
         File ret = null;
         try {
             List<String> startingList = this.getLastCreateActionListFromVisionKitToCheckStrings();
-            if (goalLearner == null) {
-                goalLearner = new GoalLearner();
+            GoalLearner goalLearnerLocal = this.goalLearner;
+            if (goalLearnerLocal == null) {
+                goalLearnerLocal = new GoalLearner();
+                this.goalLearner = goalLearnerLocal;
             }
             if (teachItems.isEmpty()) {
                 return null;
             }
-            goalLearner.setItemPredicate(this::isWithinLimits);
-            if (goalLearner.isCorrectionMode()) {
-                goalLearner.setKitTrayListPredicate(null);
+            goalLearnerLocal.setItemPredicate(this::isWithinLimits);
+            if (goalLearnerLocal.isCorrectionMode()) {
+                goalLearnerLocal.setKitTrayListPredicate(null);
             } else {
-                goalLearner.setKitTrayListPredicate(this::checkKitTrays);
+                goalLearnerLocal.setKitTrayListPredicate(this::checkKitTrays);
             }
-            goalLearner.setSlotOffsetProvider(visionToDbJInternalFrame);
+            goalLearnerLocal.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
-            List<Action> actions = goalLearner.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
+            List<Action> actions = goalLearnerLocal.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             t1 = System.currentTimeMillis();
             boolean allEmpty = allEmptyA[0];
-            if (!goalLearner.isCorrectionMode()) {
+            if (!goalLearnerLocal.isCorrectionMode()) {
                 if (allEmpty || actions == null || actions.isEmpty()) {
                     System.out.println("requiredItems = " + requiredItems);
                     System.out.println("teachItems = " + teachItems);
@@ -4562,9 +4666,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
             }
 
-            List<String> endingList = goalLearner.getLastCreateActionListFromVisionKitToCheckStrings();
+            List<String> endingList = goalLearnerLocal.getLastCreateActionListFromVisionKitToCheckStrings();
             boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
-            if (!equal || !goalLearner.isCorrectionMode()) {
+            if (!equal || !goalLearnerLocal.isCorrectionMode()) {
                 boolean startingReverseFlag = isReverseFlag();
                 File f = createTempFile("actionList", ".txt");
                 saveActionsListToFile(f, actions);
@@ -4592,13 +4696,10 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         long t2 = System.currentTimeMillis();
         return ret;
-//        System.out.println("createActionListFromVision: (t1-t0) = " +(t1-t0));
-//        System.out.println("createActionListFromVision: (t2-t0) = " +(t2-t0));
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
         try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
-            assert actions != null;
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -4606,7 +4707,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
-        assert (null != pddlExecutorJInternalFrame1) : ("null == pddlExecutorJInternalFrame1  ");
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Executor View must be open to use this function.");
+        }
         pddlExecutorJInternalFrame1.loadActionsFile(f, newReverseFlag);
     }
 
@@ -4864,7 +4967,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * fails.
      */
     public XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         logEvent("startContinuousDemo", null);
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
@@ -4873,7 +4978,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
             System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
         }
@@ -4894,7 +5001,9 @@ public class AprsSystem implements SlotOffsetProvider {
                         new Callable<Boolean>() {
 
                     public Boolean call() {
-                        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                        if (null == pddlExecutorJInternalFrame1) {
+                            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                        }
                         AprsSystem.this.setReverseFlag(reverseFirst, true, true);
                         boolean r0 = pddlExecutorJInternalFrame1.readyForNewActionsList();
                         if (!r0) {
@@ -4914,7 +5023,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) throws IllegalStateException {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         int cdCurLocal = 1;
         while (x && !isAborting()
                 && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
@@ -4983,7 +5094,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean doActionsWithReverse(String comment, Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount) throws IllegalStateException {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         if (isReverseFlag() != reverseFirst) {
             System.err.println("Reverse flag changed as starting continuous demo.");
             setTitleErrorString("Reverse flag changed as starting continuous demo.");
@@ -5035,7 +5148,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * fails.
      */
     public XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount);
@@ -5043,7 +5158,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> startPreCheckedContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         int safeAbortRequestCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
         if (startAbortCount != safeAbortRequestCount || isAborting()) {
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount=" + safeAbortRequestCount, false);
@@ -5059,7 +5176,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
                 () -> {
-                    assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+                    if (null == pddlExecutorJInternalFrame1) {
+                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                    }
                     this.setReverseFlag(reverseFirst, true, true);
                     if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
                         return false;
@@ -5388,8 +5507,12 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean doCheckEnabled(int startAbortCount, String startRobotName) {
-        assert (null != pddlExecutorJInternalFrame1) : ("null == pendantClientJInternalFrame  ");
-        assert (null != crclClientJInternalFrame) : ("null == crclClientJInternalFrame  ");
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Executor View must be open to use this function.");
+        }
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("CRCL Client View must be open to use this function.");
+        }
         if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
             startingCheckEnabled = false;
             return false;
@@ -5442,9 +5565,10 @@ public class AprsSystem implements SlotOffsetProvider {
     private final AtomicInteger emptyProgramCount = new AtomicInteger();
     private final AtomicInteger consecutiveEmptyProgramCount = new AtomicInteger();
 
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private void setProgram(CRCLProgramType program) throws JAXBException {
-        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("CRCL Client View must be open to use this function.");
+        }
         PendantClientJInternalFrame clntJiF = crclClientJInternalFrame;
         synchronized (clntJiF) {
             if (program.getMiddleCommand().isEmpty()) {
@@ -5528,7 +5652,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, boolean newReverseFlag) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         List<Action> actionsCopy = new ArrayList<>();
         for (Action action : actions) {
             actionsCopy.add(action);
@@ -5543,7 +5669,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return is executor ready for new actions.
      */
     public boolean readyForNewActionsList() {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         return pddlExecutorJInternalFrame1.readyForNewActionsList();
     }
 
@@ -5565,7 +5693,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> startActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         setStartRunTime();
 
         long startRunNumber = runNumber.incrementAndGet();
@@ -5596,7 +5726,9 @@ public class AprsSystem implements SlotOffsetProvider {
             boolean newReverseFlag,
             boolean reloadSimFiles,
             @Nullable List<Action> actionsToLoad) throws IllegalStateException {
-        assert (null != pddlExecutorJInternalFrame1) : "null == pddlExecutorJInternalFrame1 ";
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         long currentRunNumber = runNumber.get();
         if (currentRunNumber != startRunNumber) {
             throw new IllegalStateException("runNumbeChanged");
@@ -5676,7 +5808,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void startExploreGraphDbOnDisplay() {
-        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+        if (null == dbSetupJInternalFrame) {
+            throw new IllegalStateException("DB Setup View must be open to use this function.");
+        }
         try {
             if (null == this.exploreGraphDbJInternalFrame) {
                 this.exploreGraphDbJInternalFrame = new ExploreGraphDbJInternalFrame();
@@ -5713,14 +5847,19 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return current line
      */
     public int getCrclProgramLine() {
-        assert (null != crclClientJInternalFrame) : ("null == pendantClientJInternalFrame  ");
+        if (null == crclClientJInternalFrame) {
+            throw new IllegalStateException("CRCL Client View must be open to use this function.");
+        }
         return this.crclClientJInternalFrame.getCurrentProgramLine();
     }
 
-    private File propertiesFile;
-    private File propertiesDirectory;
+    @MonotonicNonNull
+    private File propertiesFile = null;
+    @MonotonicNonNull
+    private File propertiesDirectory = null;
     private static final String APRS_DEFAULT_PROPERTIES_FILENAME = "aprs_properties.txt";
-    private File lastAprsPropertiesFileFile;
+    @MonotonicNonNull
+    private File lastAprsPropertiesFileFile = null;
 
     void reloadForReverse(boolean reverseFlag) {
         setReverseFlag(reverseFlag, true, true);
@@ -6076,13 +6215,14 @@ public class AprsSystem implements SlotOffsetProvider {
 
         List<StackTraceElement[]> loadPropertiesTracesCopy
                 = new ArrayList<>(loadPropertiesTraces);
-//        if (loadPropertiesTracesCopy.size() > 1) {
-//            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
-//                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
-//            }
-//            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
-//        }
         loadPropertiesTraces.add(Thread.currentThread().getStackTrace());
+        if (null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
+        if (!propertiesFile.exists()) {
+            throw new IllegalStateException("File " + propertiesFile + " does not exist");
+        }
+        newPropertiesFile = false;
         IOException exA[] = new IOException[1];
         try {
             Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
@@ -6133,16 +6273,14 @@ public class AprsSystem implements SlotOffsetProvider {
     private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
         List<StackTraceElement[]> loadPropertiesTracesCopy
                 = new ArrayList<>(loadPropertiesOnDisplayTraces);
-//        if (loadPropertiesTracesCopy.size() > 1) {
-//            for (int i = 0; i < loadPropertiesTracesCopy.size(); i++) {
-//                System.err.println("loadPropertiesTracesCopy.get(i) = " + Arrays.toString(loadPropertiesTracesCopy.get(i)));
-//            }
-//            throw new IllegalStateException("loadPropertiesTracesCopy.size() = " + loadPropertiesTracesCopy.size());
-//        }
         loadPropertiesOnDisplayTraces.add(Thread.currentThread().getStackTrace());
         try {
+            if(null == propertiesFile) {
+                throw new NullPointerException("propertiesFile");
+            }
             List<XFuture<?>> futures = new ArrayList<>();
             Properties props = new Properties();
+            newPropertiesFile = false;
             System.out.println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
@@ -6413,6 +6551,10 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFutureVoid saveProperties() throws IOException {
+        newPropertiesFile = false;
+        if(null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
         File propsParent = propertiesFile.getParentFile();
         List<XFutureVoid> futures = new ArrayList<>();
         if (propsParent == null) {
@@ -6610,15 +6752,20 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @return properties file
      */
-    public File getPropertiesFile() {
+    @Nullable public File getPropertiesFile() {
         return propertiesFile;
     }
+
+    private boolean newPropertiesFile = true;
 
     public final void setPropertiesFile(File propertiesFile) {
         this.propertiesFile = propertiesFile;
         if (null == propertiesFile) {
             System.err.println("propertiesFile == null");
             return;
+        }
+        if (propertiesFile.exists()) {
+            newPropertiesFile = false;
         }
         File propertiesFileParent = propertiesFile.getParentFile();
         if (null == propertiesFileParent) {
@@ -6658,6 +6805,12 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void updateSubPropertiesFiles(String base) throws IOException {
+        if(null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
+        if(null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
         propertiesFileBaseString = base;
         if (null != this.pddlPlannerJInternalFrame) {
             this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropetiesFile(propertiesDirectory, base));
@@ -6730,6 +6883,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private String propertiesFileBaseString() {
+        if(null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
         String base = propertiesFile.getName();
         int pindex = base.indexOf('.');
         if (pindex > 0) {
@@ -6758,7 +6914,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == dbSetupJInternalFrame) {
             return;
         }
-//        assert (null != dbSetupJInternalFrame) : "null == dbSetupJInternalFrame ";
+//        if (null == dbSetupJInternalFrame) {            throw new IllegalStateException("DB Setup View must be open to use this function.");        }
         try {
             dbConnected = false;
             if (null != connectDatabaseFuture) {
@@ -6884,7 +7040,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return current setting for enableDatabaseUpdates
      */
     public boolean isEnableVisionToDatabaseUpdates() {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.isEnableDatabaseUpdates();
     }
 
@@ -6896,7 +7054,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * type
      */
     public void setEnableVisionToDatabaseUpdates(boolean enableDatabaseUpdates, Map<String, Integer> requiredParts) {
-        assert (null != visionToDbJInternalFrame) : ("null == visionToDbJInternalFrame  ");
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         visionToDbJInternalFrame.setEnableDatabaseUpdates(enableDatabaseUpdates, requiredParts);
         if (enableDatabaseUpdates && null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);

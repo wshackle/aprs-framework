@@ -2454,6 +2454,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void checkKits(Action action, List<MiddleCommandType> cmds)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
         checkSettings();
+        if(null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         int prePubs = aprsSystem.getSimLineCount();
         int preVis = aprsSystem.getVisionLineCount();
         long preTimeDiff = aprsSystem.getSimVisionTimeDiff();
@@ -2465,9 +2468,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         int postVis = aprsSystem.getVisionLineCount();
         long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
         List<PhysicalItem> physicalItemsLocal = physicalItems;
-        assert (physicalItemsLocal != null) : "newItems == null : @AssumeAssertion(nullness)";
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-
+        if(null == physicalItemsLocal) {
+            throw new NullPointerException("physicalItemsLocal");
+        }
         takeSnapshots("plan", "checkKits-", null, "");
 
         List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
@@ -3131,14 +3134,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return pout;
     }
 
-    private final AprsSystem aprsSystem;
+    @Nullable private final AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    public AprsSystem getAprsSystem() {
+    @Nullable public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 

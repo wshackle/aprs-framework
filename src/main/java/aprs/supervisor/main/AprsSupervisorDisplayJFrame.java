@@ -884,12 +884,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         }
     }
-    
-    
+
     public XFutureVoid loadProperties(Properties props) {
         return XFutureVoid.completedFuture();
-    } 
-    
+    }
 
     private void setRobotEnabled(String robotName, Boolean enabled) {
         if (null == supervisor) {
@@ -1292,14 +1290,23 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public void updateRunningTime() {
-        if (getFirstEventTime() > 0 && !jCheckBoxMenuItemPause.isSelected()) {
+        try {
+            if (getFirstEventTime() > 0 && !jCheckBoxMenuItemPause.isSelected()) {
 
-            long runningTimeMillis = System.currentTimeMillis() - getFirstEventTime();
-            if (getFirstEventTime() < getAbortEventTime()) {
-                runningTimeMillis = getAbortEventTime() - getFirstEventTime();
+                long runningTimeMillis = System.currentTimeMillis() - getFirstEventTime();
+                if (getFirstEventTime() < getAbortEventTime()) {
+                    runningTimeMillis = getAbortEventTime() - getFirstEventTime();
+                }
+                String s = runTimeToString(runningTimeMillis);
+                jTextFieldRunningTime.setText(s);
             }
-            String s = runTimeToString(runningTimeMillis);
-            jTextFieldRunningTime.setText(s);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+            if(null != runTimeTimer) {
+                runTimeTimer.stop();
+                runTimeTimer = null;
+            }
         }
     }
 
@@ -1451,6 +1458,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemRunCustom = new javax.swing.JMenuItem();
         jMenuItemStartContinuousScanAndRun = new javax.swing.JMenuItem();
         jMenuItemStartScanAllThenContinuousDemoRevFirst = new javax.swing.JMenuItem();
+        jMenuItemConveyorTest = new javax.swing.JMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
         jMenuItemStartColorTextDisplay = new javax.swing.JMenuItem();
@@ -1514,7 +1522,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -1625,13 +1633,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 718, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 745, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 166, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1715,7 +1723,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addGroup(jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
                     .addComponent(jTextFieldSelectedPosMapFilename)
-                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 712, Short.MAX_VALUE))
+                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 727, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanelPosMapSelectedFileLayout.setVerticalGroup(
@@ -1724,7 +1732,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -1824,7 +1832,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 53, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
@@ -1845,7 +1853,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 202, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1901,7 +1909,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelEventsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelEventsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
                     .addGroup(jPanelEventsLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1922,7 +1930,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jLabel5)
                     .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
+                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1944,7 +1952,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1954,7 +1962,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE))
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Teach", jPanelTeachTable);
@@ -2008,7 +2016,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2030,7 +2038,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSyncToolsFromRobots)
                     .addComponent(jButtonSyncToolsToRobots))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 382, Short.MAX_VALUE)
+                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2288,6 +2296,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuActionsAdditionalTests.add(jMenuItemStartScanAllThenContinuousDemoRevFirst);
+
+        jMenuItemConveyorTest.setText("Conveyor Test");
+        jMenuItemConveyorTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemConveyorTestActionPerformed(evt);
+            }
+        });
+        jMenuActionsAdditionalTests.add(jMenuItemConveyorTest);
 
         jMenuActions.add(jMenuActionsAdditionalTests);
 
@@ -3757,15 +3773,30 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemSaveSetupActionPerformed
 
+    private void jMenuItemConveyorTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemConveyorTestActionPerformed
+        conveyorTest();
+    }//GEN-LAST:event_jMenuItemConveyorTestActionPerformed
+
+    private XFutureVoid conveyorTest() {
+        AprsSystem sys = conveyorVisJPanel1.getClonedSystem();
+        return fillTraysAndNext(sys)
+                .thenComposeToVoid(() -> fillTraysAndNext(sys));
+    }
+
+    private XFutureVoid fillTraysAndNext(AprsSystem sys) {
+        return sys.fillKitTrays()
+                .thenComposeToVoid(x -> conveyorVisJPanel1.nextTray());
+    }
+
     public void setConveyorClonedViewSystemTaskName(String taskName) {
-        AprsSystem sys  =  supervisor.getSysByTask(taskName);
+        AprsSystem sys = supervisor.getSysByTask(taskName);
         conveyorVisJPanel1.setClonedSystem(sys);
     }
 
-    public Map<String,String> getPropertiesMap() {
+    public Map<String, String> getPropertiesMap() {
         return Collections.emptyMap();
     }
-    
+
     @UIEffect
     public static XFuture<Supervisor> openAll(@Nullable Supervisor supervisor, Frame owner, @Nullable String dirName) throws IOException {
         return Supervisor.openAll(supervisor, owner, dirName);
@@ -3900,7 +3931,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //                .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
 //                .orElse(null);
 //    }
-
     private List<PhysicalItem> filterForSystem(AprsSystem sys, List<PhysicalItem> listIn) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -5111,6 +5141,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemAddNewSystem;
     private javax.swing.JMenuItem jMenuItemConnectAll;
     private javax.swing.JMenuItem jMenuItemContinueAll;
+    private javax.swing.JMenuItem jMenuItemConveyorTest;
     private javax.swing.JMenuItem jMenuItemDbgAction;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
