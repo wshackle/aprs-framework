@@ -1018,7 +1018,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         browseOpenPropertiesFile();
     }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
 
-    private File getPropertiesDirectory() {
+    @Nullable private File getPropertiesDirectory() {
         if (null != aprsSystem) {
             return aprsSystem.getPropertiesDirectory();
         } else {
@@ -1029,7 +1029,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     @Nullable
     File choosePropertiesFileToOpen() {
-        JFileChooser chooser = new JFileChooser(getPropertiesDirectory());
+        File dir = getPropertiesDirectory();
+        JFileChooser chooser;
+        if(null != dir) {
+            chooser = new JFileChooser(dir);
+        } else {
+            chooser = new JFileChooser();
+        }
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
         chooser.addChoosableFileFilter(filter);
         chooser.setFileFilter(filter);
@@ -1265,7 +1271,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @Nullable
     @UIEffect
     private File choosePropertiesFileToSaveAs() {
-        JFileChooser chooser = new JFileChooser(getPropertiesDirectory());
+        File dir = getPropertiesDirectory();
+        JFileChooser chooser;
+        if(null != dir) {
+            chooser = new JFileChooser(dir);
+        } else {
+            chooser = new JFileChooser();
+        }
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
         chooser.addChoosableFileFilter(filter);
         chooser.setFileFilter(filter);
@@ -1777,7 +1789,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             if (null != aprsSystem) {
                 aprsSystem.fillKitTrays();
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemFillKitTraysActionPerformed

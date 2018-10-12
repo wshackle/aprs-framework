@@ -1178,7 +1178,7 @@ public class Object2DJPanel extends JPanel {
     };
 
     @MonotonicNonNull
-    private AprsSystem aprsSysInterface;
+    private AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
@@ -1187,7 +1187,7 @@ public class Object2DJPanel extends JPanel {
      */
     @Nullable
     public AprsSystem getAprsSystem() {
-        return aprsSysInterface;
+        return aprsSystem;
     }
 
     /**
@@ -1196,7 +1196,7 @@ public class Object2DJPanel extends JPanel {
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
     public void setAprsSystem(AprsSystem aprsSystemInterface) {
-        this.aprsSysInterface = aprsSystemInterface;
+        this.aprsSystem = aprsSystemInterface;
         setSlotOffsetProvider(aprsSystemInterface);
     }
 
@@ -1244,17 +1244,17 @@ public class Object2DJPanel extends JPanel {
     }
 
     private List<PhysicalItem> getAvailableToolHolders() {
-        if (null == aprsSysInterface) {
+        if (null == aprsSystem) {
             throw new IllegalStateException("null == aprsSysInterface");
         }
-        return aprsSysInterface.getAvailableToolHolders();
+        return aprsSystem.getAvailableToolHolders();
     }
 
     private List<PhysicalItem> getToolsInHolders() {
-        if (null == aprsSysInterface) {
+        if (null == aprsSystem) {
             throw new IllegalStateException("null == aprsSysInterface");
         }
-        return aprsSysInterface.getToolsInHolders();
+        return aprsSystem.getToolsInHolders();
     }
 
     private List<PhysicalItem> getToolsAndHolders() {

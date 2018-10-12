@@ -5437,6 +5437,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final ConcurrentLinkedDeque<Runnable> safeAbortRunnablesVector = new ConcurrentLinkedDeque<>();
 
+    
+    @UIEffect
     private void generateCrclAsyncWithCatch() {
         try {
             if (null != runningProgramFuture) {
@@ -5445,10 +5447,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             runningProgramFuture = generateCrclAsync();
         } catch (Exception ex) {
             replanStarted.set(false);
+            if(null != replanActionTimer) {
+                replanActionTimer.stop();
+            }
             abortProgram();
             showExceptionInProgram(ex);
 //            actionToCrclLabels[lastIndex] = "Error";
             LOGGER.log(Level.SEVERE, "", ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 

@@ -3489,53 +3489,7 @@ public class Supervisor {
             } else if (kitTrays < max_kitTrays) {
                 return;
             }
-
-//            Map<String, List<String>> origStartingStringsMap = new HashMap<>();
-//            for (AprsSystem aprsSys : aprsSystems) {
-//                List<String> startingKitStrings = Collections.unmodifiableList(new ArrayList<>(aprsSys.getLastCreateActionListFromVisionKitToCheckStrings()));
-//                origStartingStringsMap.put(aprsSys.getTaskName(), startingKitStrings);
-//            }
-//            OUTER_WHILE:
-//            while (!anyChanged
-//                    && abortCount.get() == startingAbortCount
-//                    && isContinuousDemoSelected()
-//                    && !closedSupplier.get()) {
-//                cycles++;
-//                List<PhysicalItem> teachItems = Collections.emptyList();
-//                if (isUseTeachCameraSelected()) {
-//                    if (object2DOuterJPanel1.isUserMouseDown()) {
-//                        try {
-//                            skips++;
-//                            Thread.sleep(50);
-//                        } catch (InterruptedException ex) {
-//                            if (!closedSupplier.get()) {
-//                                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
-//                            }
-//                            return;
-//                        }
-//                        continue OUTER_WHILE;
-//                    }
-//                    teachItems = object2DOuterJPanel1.getItems();
-//                    long kitTrays = teachItems
-//                            .stream()
-//                            .filter((PhysicalItem item) -> item.getType().equals("KT"))
-//                            .count();
-//                    if (max_kitTrays < kitTrays) {
-//                        max_kitTrays = kitTrays;
-//                    } else if (kitTrays < max_kitTrays) {
-//                        // lost a kitTray, here we assume the vision frame is bad
-//                        try {
-//                            skips++;
-//                            Thread.sleep(50);
-//                        } catch (InterruptedException ex) {
-//                            if (!closedSupplier.get()) {
-//                                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
-//                            }
-//                            return;
-//                        }
-//                        continue OUTER_WHILE;
-//                    }
-//                }
+            
             List<String> changedSystems = new ArrayList<>();
             for (AprsSystem aprsSys : aprsSystems) {
                 List<String> startingKitStrings = origStartingStringsMap.get(aprsSys.getTaskName());
@@ -3545,6 +3499,9 @@ public class Supervisor {
                     startingKitStrings = lastCreateActionListFromVisionKitToCheckStrings;
                 } else if (!GoalLearner.kitToCheckStringsEqual(startingKitStrings, lastCreateActionListFromVisionKitToCheckStrings)) {
                     GoalLearner gl = aprsSys.getGoalLearner();
+                    if(null == gl) {
+                        throw new NullPointerException("aprsSys.getGoalLearner() : aprsSys.getTaskName()="+aprsSys.getTaskName());
+                    }
                     Thread thread = gl.getSetLastCreateActionListFromVisionKitToCheckStringsThread();
                     StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
                     long time = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTime();

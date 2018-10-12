@@ -190,14 +190,19 @@ public class SplashScreen extends JFrame {
 
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            if (colorIndex < colors.size()) {
-                                Color color = colors.get(colorIndex);
-                                ss.setBackground(color);
-                                ss.panel.setBackground(color);
-                                ss.repaint();
-                                colorIndex++;
-                            } else {
-                                ss.close(gd, returnFuture);
+                            try {
+                                if (colorIndex < colors.size()) {
+                                    Color color = colors.get(colorIndex);
+                                    ss.setBackground(color);
+                                    ss.panel.setBackground(color);
+                                    ss.repaint();
+                                    colorIndex++;
+                                } else {
+                                    ss.close(gd, returnFuture);
+                                }
+                            } catch (Exception exception) {
+                                returnFuture.completeExceptionally(exception);
+                                Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "",exception);
                             }
                         }
                     });

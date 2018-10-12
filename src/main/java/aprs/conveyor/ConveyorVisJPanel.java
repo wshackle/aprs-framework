@@ -23,6 +23,7 @@
 package aprs.conveyor;
 
 import aprs.system.AprsSystem;
+import crcl.ui.XFutureVoid;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
@@ -66,6 +67,14 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
     
     public boolean isSimulated() {
         return object2DOuterJPanel1.isSimulated() && outerConveyorSpeedControlJPanel1.isSimulated();
+    }
+    
+    public XFutureVoid nextTray() {
+        return outerConveyorSpeedControlJPanel1.nextTray();
+    }
+    
+    public XFutureVoid previousTray() {
+        return outerConveyorSpeedControlJPanel1.previousTray();
     }
     
     public void setSimulated(boolean simulated) {
