@@ -4397,16 +4397,13 @@ public class AprsSystem implements SlotOffsetProvider {
         outputList.addAll(fillInfo.getPartTrays());
         outputList.addAll(fillInfo.getPartsInKit());
         List<PhysicalItem> partsInPartsTrays = new ArrayList<>(fillInfo.getPartsInPartsTrays());
-        System.out.println("partsInPartsTrays = " + partsInPartsTrays);
         List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
-        System.out.println("emptyKitSlots = " + emptyKitSlots);
         List<PhysicalItem> movedPartsList = new ArrayList<>();
         for (TraySlotListItem emptySlotItem : emptyKitSlots) {
             int itemFoundIndex = -1;
             for (int i = 0; i < partsInPartsTrays.size(); i++) {
                 PhysicalItem item = partsInPartsTrays.get(i);
                 String itemName = item.getName();
-                System.out.println("itemName = " + itemName);
                 if (itemName.startsWith("sku_")) {
                     itemName = itemName.substring(4);
                 }
@@ -4414,7 +4411,6 @@ public class AprsSystem implements SlotOffsetProvider {
                     itemName = itemName.substring(5);
                 }
                 String slotName = emptySlotItem.getSlotOffset().getSlotName();
-                System.out.println("slotName = " + slotName);
                 if (Objects.equals(itemName, slotName)) {
                     PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
                     movedPartsList.add(newItem);
@@ -4426,7 +4422,6 @@ public class AprsSystem implements SlotOffsetProvider {
                 partsInPartsTrays.remove(itemFoundIndex);
             }
         }
-        System.out.println("movedPartsList = " + movedPartsList);
         outputList.addAll(movedPartsList);
         outputList.addAll(partsInPartsTrays);
         return outputList;
