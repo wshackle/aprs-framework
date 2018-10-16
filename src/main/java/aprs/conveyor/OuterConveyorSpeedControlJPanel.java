@@ -245,9 +245,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         try {
             updateEstimatedPosition();
             notifyConveyorStateListeners();
-            
+
         } catch (Exception ex) {
-            if(null != positionUpdateTimer) {
+            if (null != positionUpdateTimer) {
                 positionUpdateTimer.stop();
             }
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -536,10 +536,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }
 
     private void stopConveyorNoPosEstimate() {
-        if (null != nextPrevTrayFuture) {
-            nextPrevTrayFuture.complete();
-            nextPrevTrayFuture = null;
-        }
+        XFutureVoid future = nextPrevTrayFuture;
+        nextPrevTrayFuture = null;
         conveyorSpeedJPanel1.setCurrentSpeed(0);
         if (null != master) {
             try {
@@ -551,6 +549,16 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
         if (positionUpdateTimer.isRunning()) {
             positionUpdateTimer.stop();
+        }
+        if (null != future) {
+            javax.swing.Timer timer =new javax.swing.Timer
+            (2500, e -> {
+                future.complete();
+            });
+            timer.setInitialDelay(2500);
+            timer.setRepeats(false);
+            
+            timer.start();
         }
     }
 

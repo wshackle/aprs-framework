@@ -253,7 +253,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         this.maxSpeed = maxSpeed;
     }
 
-    private int currentSpeed = 100;
+    private volatile int currentSpeed = 100;
 
     /**
      * Get the value of currentSpeed

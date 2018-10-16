@@ -164,6 +164,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.getItems();
     }
 
+    
+    public List<PhysicalItem> getOutputItems() {
+        return object2DOuterJPanel1.getOutputItems();
+    }
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
     }

@@ -23,6 +23,7 @@
 package aprs.misc;
 
 import aprs.cachedcomponents.CachedTable;
+import aprs.launcher.LauncherAprsJFrame;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
@@ -30,15 +31,19 @@ import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -58,6 +63,9 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
@@ -83,6 +91,74 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class Utils {
 
     private Utils() {
+    }
+
+    public static String traceToString(StackTraceElement trace @Nullable []) {
+        if (null == trace) {
+            return "";
+        }
+        try (StringWriter stringWriter = new StringWriter()) {
+            try (PrintWriter printWriter = new PrintWriter(stringWriter)) {
+                boolean first = true;
+                for (StackTraceElement traceElement : trace) {
+                    String traceString = traceElement.toString();
+                    if (first && traceString.contains("Thread.getStackTrace(")) {
+                        first = false;
+                        continue;
+                    }
+                    first = false;
+                    printWriter.println("\tat " + traceElement);
+                }
+            }
+            stringWriter.flush();
+            return stringWriter.toString();
+        } catch (IOException ex) {
+            Logger.getLogger(XFuture.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    static public void PlayAlert(String resourceName) {
+        try {
+            Toolkit.getDefaultToolkit().beep();
+            System.out.println("PlayAlert " + resourceName);
+            Thread.sleep(100);
+            URL url = LauncherAprsJFrame.class.getResource(resourceName);
+            if (null != url) {
+                Clip clip = AudioSystem.getClip();
+                InputStream inputStream
+                        = LauncherAprsJFrame.class.getResourceAsStream(resourceName);
+                if (null != inputStream) {
+                    AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
+                    clip.open(audioInputStream);
+                    clip.start();
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    static public void PlayAlert() {
+        PlayAlert("alert.wav");
+    }
+
+    static public void PlayAlert2() {
+        PlayAlert("alert2.wav");
+    }
+
+    public static URL getAprsIconUrl() {
+        URL url = null;
+        try {
+            url = Utils.class.getResource("aprs.png");
+        } catch (Exception e) {
+            throw new RuntimeException("Utils.class.getResource(\"aprs.png\") threw " + e.getMessage(), e);
+        }
+        if (null == url) {
+            throw new IllegalStateException("Utils.class.getResource(\"aprs.png\") returned null");
+        }
+        return url;
     }
 
     /**
@@ -665,7 +741,7 @@ public class Utils {
                 Object value = props.get(name);
                 if (null != value) {
                     if (value instanceof String) {
-                        value = ((String)value).replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
+                        value = ((String) value).replaceAll("\\\\", Matcher.quoteReplacement("\\\\"));
                     }
                     pw.println(name + "=" + value);
                 } else {

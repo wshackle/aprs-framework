@@ -22,7 +22,6 @@
  */
 package aprs.supervisor.main;
 
-import aprs.launcher.LauncherAprsJFrame;
 import aprs.misc.Utils;
 import aprs.misc.MultiFileDialogJPanel;
 import static aprs.misc.Utils.runTimeToString;
@@ -37,7 +36,7 @@ import aprs.actions.executor.PositionMapEntry;
 import aprs.launcher.ProcessLauncherJFrame;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.Utils.UiSupplier;
-import static aprs.misc.Utils.tableHeaders;
+import static aprs.misc.Utils.getAprsIconUrl;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
@@ -71,14 +70,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -138,8 +135,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -662,8 +657,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //    }
     public void setDefaultIconImage() {
         try {
-            URL url = LauncherAprsJFrame.class
-                    .getResource("aprs.png");
+            URL url = getAprsIconUrl();
             if (null != url) {
                 BufferedImage iconImg
                         = ImageIO.read(url);
@@ -676,6 +670,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .getName()).log(Level.SEVERE, "", ex);
         }
     }
+
+    
 
 //    private final List<JCheckBox> robotsEnableCelEditorCheckBoxList = new ArrayList<>();
     private final List<JCheckBox> robotsEnableCelRendererComponentList = new ArrayList<>();
@@ -3778,14 +3774,18 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemConveyorTestActionPerformed
 
     private XFutureVoid conveyorTest() {
-        AprsSystem sys = conveyorVisJPanel1.getClonedSystem();
-        return fillTraysAndNext(sys)
-                .thenComposeToVoid(() -> fillTraysAndNext(sys));
+        return supervisor.conveyorTest();
     }
 
-    private XFutureVoid fillTraysAndNext(AprsSystem sys) {
-        return sys.fillKitTrays()
-                .thenComposeToVoid(x -> conveyorVisJPanel1.nextTray());
+    @Nullable
+    public AprsSystem getConveyorVisClonedSystem() {
+        return conveyorVisJPanel1.getClonedSystem();
+    }
+
+    
+
+    public XFutureVoid conveyorVisNextTray() {
+        return conveyorVisJPanel1.nextTray();
     }
 
     public void setConveyorClonedViewSystemTaskName(String taskName) {

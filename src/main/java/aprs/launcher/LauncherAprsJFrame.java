@@ -29,26 +29,20 @@ import static aprs.misc.Utils.copyOfRangeNonNullsOnly;
 import static aprs.misc.Utils.readFirstLine;
 import aprs.learninggoals.GoalLearnerTest;
 import aprs.actions.optaplanner.display.OptaplannerTest;
+import static aprs.misc.Utils.PlayAlert;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
-import java.awt.Component;
 import java.awt.Frame;
 
 import java.awt.GraphicsEnvironment;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -614,7 +608,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
-                        LauncherAprsJFrame.PlayAlert();
+                        PlayAlert();
                         System.out.println();
                         System.out.println("===============================================================");
                         System.out.println();
@@ -745,7 +739,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
-                        LauncherAprsJFrame.PlayAlert();
+                        PlayAlert();
                         System.out.println();
                         System.out.println("===============================================================");
                         System.out.println();
@@ -879,36 +873,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static public void PlayAlert(String resourceName) {
-        try {
-            Toolkit.getDefaultToolkit().beep();
-            System.out.println("PlayAlert " + resourceName);
-            Thread.sleep(100);
-            URL url = LauncherAprsJFrame.class.getResource(resourceName);
-            if (null != url) {
-                Clip clip = AudioSystem.getClip();
-                InputStream inputStream
-                        = LauncherAprsJFrame.class.getResourceAsStream(resourceName);
-                if (null != inputStream) {
-                    AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
-                    clip.open(audioInputStream);
-                    clip.start();
-                }
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
-        }
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    static public void PlayAlert() {
-        PlayAlert("alert.wav");
-    }
-
-    static public void PlayAlert2() {
-        PlayAlert("alert2.wav");
-    }
+    
 
 //    static public void PlayBeep() {
 //        URL url = LauncherAprsJFrame.class.getResource("alert.wav");
