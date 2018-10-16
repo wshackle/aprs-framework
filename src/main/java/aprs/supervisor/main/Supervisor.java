@@ -34,10 +34,7 @@ import aprs.learninggoals.GoalLearner;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapJPanel;
 import aprs.cachedcomponents.CachedTable;
-import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupPublisher;
 import aprs.launcher.ProcessLauncherJFrame;
-import aprs.misc.ActiveWinEnum;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.MultiFileDialogJPanel;
 import aprs.misc.Utils.UiSupplier;
@@ -144,7 +141,6 @@ import org.jcodec.api.awt.AWTSequenceEncoder;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
-import rcs.posemath.PmCartesian;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -3282,7 +3278,6 @@ public class Supervisor {
 //            return object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
 //        }
 //    }
-
     @Nullable
     private static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
@@ -3489,7 +3484,7 @@ public class Supervisor {
             } else if (kitTrays < max_kitTrays) {
                 return;
             }
-            
+
             List<String> changedSystems = new ArrayList<>();
             for (AprsSystem aprsSys : aprsSystems) {
                 List<String> startingKitStrings = origStartingStringsMap.get(aprsSys.getTaskName());
@@ -3499,8 +3494,8 @@ public class Supervisor {
                     startingKitStrings = lastCreateActionListFromVisionKitToCheckStrings;
                 } else if (!GoalLearner.kitToCheckStringsEqual(startingKitStrings, lastCreateActionListFromVisionKitToCheckStrings)) {
                     GoalLearner gl = aprsSys.getGoalLearner();
-                    if(null == gl) {
-                        throw new NullPointerException("aprsSys.getGoalLearner() : aprsSys.getTaskName()="+aprsSys.getTaskName());
+                    if (null == gl) {
+                        throw new NullPointerException("aprsSys.getGoalLearner() : aprsSys.getTaskName()=" + aprsSys.getTaskName());
                     }
                     Thread thread = gl.getSetLastCreateActionListFromVisionKitToCheckStringsThread();
                     StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
@@ -3681,6 +3676,58 @@ public class Supervisor {
         return startCheckAndEnableAllRobots()
                 .thenComposeToVoid("startRandomTest.checkOk" + c,
                         ok -> checkOkElseToVoid(ok, this::startRandomTestStep2, this::showCheckEnabledErrorSplash));
+    }
+
+    public XFutureVoid conveyorTest() {
+        logEvent("Start ConveyorTest");
+        AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
+        return fillTraysAndNextRepeating(sys)
+                .always(this::finishConveyorTest);
+    }
+
+    @Nullable private static volatile XFutureVoid fillTraysAndNextRepeatingFuture = null;
+    @Nullable private static volatile AprsSystem fillTraysAndNextRepeatingSys = null;
+    
+    private XFutureVoid fillTraysAndNextRepeating(AprsSystem sys) {
+        fillTraysAndNextRepeatingSys = sys;
+        logEvent("request vision update");
+        sys.clearVisionRequiredParts();
+        XFutureVoid ret = sys.getSingleVisionToDbUpdate()
+                .thenComposeToVoid((List<PhysicalItem> l) -> {
+                    logEvent("l = "+l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
+                    if (!l.isEmpty()) {
+                        return fillTraysAndNext(sys)
+                                .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys));
+                    } else {
+                        return XFutureVoid.completedFutureWithName("fillTraysAndNextRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
+                    }
+                });
+        logEvent("refreshSimView");
+        sys.refreshSimView();
+        fillTraysAndNextRepeatingFuture = ret;
+        return ret;
+    }
+
+    private void finishConveyorTest() {
+        logEvent("ConveyorTest finished");
+    }
+
+    private XFutureVoid fillTraysAndNext(AprsSystem sys) {
+        logEvent("Fill Kit Trays");
+        sys.clearVisionRequiredParts();
+        return sys.fillKitTrays()
+                .thenRun(() -> sys.clearVisionRequiredParts())
+                .thenComposeToVoid(x -> conveyorVisNext());
+    }
+
+    private XFutureVoid conveyorVisNext() {
+        logEvent("Conveyor Next Starting");
+        return displayJFrame.conveyorVisNextTray()
+                .thenRun(this::conveyorVisNextFinish);
+    }
+    
+    private void conveyorVisNextFinish() {
+        logEvent("Conveyor Next finished.");
     }
 
     private final AtomicInteger srts2Count = new AtomicInteger();

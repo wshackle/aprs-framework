@@ -198,7 +198,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return object2DJPanel1.getItems();
     }
 
-    private List<PhysicalItem> getOutputItems() {
+    public List<PhysicalItem> getOutputItems() {
         return object2DJPanel1.getOutputItems();
     }
 
@@ -367,7 +367,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 if (!fileLoaded && null != visionSocketServer && !pauseCachedCheckBox.isSelected()) {
                     this.setItems(object2DJPanel1.getItems());
-                    publishCurrentItems();
                 }
             }
         } catch (Exception e) {
@@ -380,6 +379,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void loadFile(File f) throws IOException {
         loadFile(f, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
+    }
+    
+    public boolean isViewingOutput() {
+        return viewOutputCachedCheckBox.isSelected();
+    }
+    
+    public void setViewingOutput(boolean viewingOutput) {
+        viewOutputCachedCheckBox.setSelected(viewingOutput);
+    }
+    
+    private void setItemsFromClone(List<PhysicalItem> items) {
+        setItems(items, !pauseCachedCheckBox.isSelected());
+        if(isViewingOutput()) {
+            setOutputItems(objectPanelToClone.getOutputItems());
+        }
     }
 
     @Override
@@ -408,7 +422,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
             if (null != srv && !pauseCachedCheckBox.isSelected()) {
-                srv.publishList(items);
+                publishCurrentItems();
             }
         }
         return future.thenRun(() -> notifySetItemsListeners(items));
@@ -1941,10 +1955,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 setAprsSystem(copiedSys);
             }
             setPropertiesFile(objectPanelToClone.getPropertiesFile());
+            setViewingOutput(objectPanelToClone.isViewingOutput());
             return objectPanelToClone.getProperties()
                     .thenAccept(this::loadProperties)
                     .thenRun(() -> {
-                        objectPanelToClone.addSetItemsListener(this::setItems);
+                        objectPanelToClone.addSetItemsListener(this::setItemsFromClone);
                     });
         } else {
             return XFutureVoid.completedFuture();

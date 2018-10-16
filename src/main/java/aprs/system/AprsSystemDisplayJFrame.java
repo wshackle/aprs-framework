@@ -84,7 +84,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private volatile boolean showingException = false;
 
     @SafeEffect
-    public void showException(Exception ex) {
+    public void showException(Throwable ex) {
         if (!showingException) {
             showingException = true;
             javax.swing.SwingUtilities.invokeLater(() -> showExceptionInternal(ex));
@@ -92,7 +92,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
-    private void showExceptionInternal(Exception ex) {
+    private void showExceptionInternal(Throwable ex) {
         StringWriter sw = new StringWriter();
         try (PrintWriter pw = new PrintWriter(sw, true)) {
             ex.printStackTrace(pw);
@@ -237,11 +237,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void commonInit() {
         try {
-            URL aprsPngUrl = AprsSystemDisplayJFrame.class.getResource("aprs.png");
+            URL aprsPngUrl = Utils.getAprsIconUrl();
             if (null != aprsPngUrl) {
                 setIconImage(ImageIO.read(aprsPngUrl));
             } else {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.WARNING, "getResource(\"aprs.png\") returned null");
+                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.WARNING, "Utils.getAprsIconUrl() returned null");
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);

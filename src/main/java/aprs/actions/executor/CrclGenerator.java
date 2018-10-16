@@ -6059,9 +6059,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String runName = getRunName();
         visionUpdateCount.incrementAndGet();
 
-        XFuture<List<PhysicalItem>> xfl = aprsSystem.getSingleVisionToDbUpdate();
+        XFuture<List<PhysicalItem>> xfl = aprsSystem.getNewSingleVisionToDbUpdate();
         int startSimViewRefreshCount = aprsSystem.getSimViewRefreshCount();
         int startSimViewPublishCount = aprsSystem.getSimViewPublishCount();
+        int startVisLineCount = aprsSystem.getVisionLineCount();
         aprsSystem.refreshSimView();
         long t0 = System.currentTimeMillis();
         int waitCycle = 0;
@@ -6095,8 +6096,24 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
                 int simViewPublishCountDiff = simViewPublishCount - startSimViewPublishCount;
                 System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
+                int visLineCount = aprsSystem.getVisionLineCount();
+                int visLineCountDiff = visLineCount - startVisLineCount;
+                System.err.println("visLineCountDiff = " + visLineCountDiff);
+                boolean completedExceptionally = xfl.isCompletedExceptionally();
+                System.out.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
+                Throwable []ta = new Throwable[1];
                 String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
                 System.err.println(errMsg);
+                if(completedExceptionally) {
+                    xfl.exceptionally((Throwable t) -> {
+                        ta[0] = t;
+                        throw (RuntimeException) t;
+                    });
+                    if(null != ta[0]) {
+                        throw new RuntimeException(ta[0].getMessage() +" causing " +errMsg,ta[0]);
+                    }
+                }
+                
                 throw new RuntimeException(errMsg);
             }
             last_t1 = t1;
