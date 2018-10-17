@@ -2390,11 +2390,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int x = evt.getX();
         int y = evt.getY();
         int minIndex = -1;
-        boolean includeTrays = !evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown();
+        boolean includeTrays = evt.isShiftDown();
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex, includeTrays);
         PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
-        if (!evt.isShiftDown() && null != closestItem && !"P".equals(closestItem.getType())) {
+        if (!includeTrays && null != closestItem && !"P".equals(closestItem.getType())) {
             draggedItem = null;
             System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
             return;
@@ -2941,7 +2941,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int x = evt.getX();
         int y = evt.getY();
         int minIndex = -1;
-        boolean includeTrays = !evt.isShiftDown() && !evt.isAltDown() && !evt.isControlDown();
+        boolean includeTrays = evt.isShiftDown();
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex, includeTrays);
 //        PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
@@ -4485,7 +4485,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y);
-                object2DJPanel1.takeSnapshot(propertiesFile, items);
 
                 double diff_x = screenItemPoint.x - x;
                 double diff_y = screenItemPoint.y - y;

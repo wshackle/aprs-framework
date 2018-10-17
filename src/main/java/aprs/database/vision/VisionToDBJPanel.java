@@ -1516,7 +1516,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private volatile  StackTraceElement setRequiredPartsTrace @Nullable [] = null;
+    private volatile StackTraceElement setRequiredPartsTrace @Nullable []  = null;
+
     /**
      * Set the value of requiredParts
      *
@@ -1732,12 +1733,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
 
-        if(null != lastVisItemsData) {
+        if (null != lastVisItemsData) {
             return XFuture.completedFuture(lastVisItemsData);
         }
         return getNewSingleUpdate();
     }
-    
+
     private String updateNotifyCountInfo() {
         return notifySingleListenersUpdateBeginCount.get() + "," + notifySingleListenersUpdateEndCount.get();
     }
@@ -1795,7 +1796,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void notifySingleUpdateListenersExceptionally(Throwable ex) {
         List<XFuture<List<PhysicalItem>>> listeners = copyListenersAndDisableUpdates();
-        System.err.println("notifySingleUpdateListenersExceptionally : listeners.size()="+listeners.size());
+        System.err.println("notifySingleUpdateListenersExceptionally : listeners.size()=" + listeners.size());
         for (XFuture<List<PhysicalItem>> future : listeners) {
             future.completeExceptionally(ex);
         }
@@ -1810,11 +1811,48 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @Nullable
     private volatile String lastVisionClientUpdateLine = null;
 
+    private final AtomicInteger visionClientUpdateCount = new AtomicInteger();
+    private final AtomicInteger visionClientUpdateAquireOffCount = new AtomicInteger();
+    private final AtomicInteger visionClientUpdateNoCheckRequiredPartsCount = new AtomicInteger();
+    private final AtomicInteger visionClientUpdateSingleUpdateListenersEmptyCount = new AtomicInteger();
+
+    public int getVisionClientSkippedCount() {
+        if(null == visionClient) {
+            return 0;
+        }
+        return visionClient.getSkippedLineCount();
+    }
+    
+    public int getVisionClientIgnoreCount() {
+        if(null == visionClient) {
+            return 0;
+        }
+        return visionClient.getIgnoreCount();
+    }
+    
+    public int getVisionClientUpdateCount() {
+        return visionClientUpdateCount.get();
+    }
+
+    public int getVisionClientUpdateAquireOffCount() {
+        return visionClientUpdateAquireOffCount.get();
+    }
+
+    public int getVisionClientUpdateNoCheckRequiredPartsCount() {
+        return visionClientUpdateNoCheckRequiredPartsCount.get();
+    }
+
+    public int getVisionClientUpdateSingleUpdateListenersEmptyCount() {
+        return visionClientUpdateSingleUpdateListenersEmptyCount.get();
+    }
+
     @Override
     @SafeEffect
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line) {
         try {
+            visionClientUpdateCount.incrementAndGet();
             if (acquire == AcquireEnum.OFF) {
+                visionClientUpdateAquireOffCount.incrementAndGet();
                 return XFutureVoid.completedFuture();
             }
             if (acquire == AcquireEnum.ONCE) {
@@ -1834,6 +1872,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         boolean chkAgain = checkRequiredParts(visionList);
                         chkAgain = checkRequiredParts(transformedVisionList);
                         List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
+                        System.err.println("checkRequiredPart(" + visionList + ") false");
+                        visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                         return XFutureVoid.completedFuture();
                     }
                 }
@@ -1845,6 +1885,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     if (!checkRequiredParts(visionListWithEmptySlots)) {
                         System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                         System.err.println("checkRequiredPart(" + visionListWithEmptySlots + ") false but checkRequiredParts(" + visionList + ") true");
+                        visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                         return XFutureVoid.completedFuture();
                     }
                 }
@@ -1854,6 +1895,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         if (!checkRequiredParts(transformedVisionList)) {
                             System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                             System.err.println("checkRequiredPart(" + transformedVisionList + ") false but checkRequiredParts(" + visionList + ") true");
+                            visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                             return XFutureVoid.completedFuture();
                         }
                     }
@@ -1866,6 +1908,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             boolean chkAgain = checkRequiredParts(l);
                             chkAgain = checkRequiredParts(transformedVisionList);
                             List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
+                            visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                             return XFutureVoid.completedFuture();
                         }
                     }
@@ -1874,10 +1917,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             boolean chkAgain = checkRequiredParts(l);
                             chkAgain = checkRequiredParts(transformedVisionList);
                             List<PhysicalItem> l2 = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
+                            visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
+                            System.err.println("checkRequiredPart(" + l + ") false");
                             return XFutureVoid.completedFuture();
                         }
                         notifySingleUpdateListeners(l);
                     } else {
+                        visionClientUpdateSingleUpdateListenersEmptyCount.incrementAndGet();
                         lastVisItemsData = Collections.unmodifiableList(new ArrayList(l));
                     }
                     runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
@@ -1894,7 +1940,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             notifySingleUpdateListenersExceptionally(exception);
             setTitleErrorString(exception.toString());
             aprsSystemInterface.showException(exception);
-            if(exception instanceof RuntimeException) {
+            if (exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;
             } else {
                 throw new RuntimeException(exception);
@@ -1923,6 +1969,34 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 .thenComposeToVoid(() -> Utils.runOnDispatchThread(this::finishConnectVision));
     }
 
+    private boolean ignoreLosingItemsLists = false;
+
+    /**
+     * Get the value of ignoreLosingItemsLists
+     *
+     * @return the value of ignoreLosingItemsLists
+     */
+    public boolean isIgnoreLosingItemsLists() {
+        if (null != visionClient) {
+            boolean ret = visionClient.isIgnoreLosingItemsLists();
+            this.ignoreLosingItemsLists = ret;
+            return ret;
+        }
+        return ignoreLosingItemsLists;
+    }
+
+    /**
+     * Set the value of ignoreLosingItemsLists
+     *
+     * @param ignoreLosingItemsLists new value of ignoreLosingItemsLists
+     */
+    public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
+        if (null != visionClient) {
+            visionClient.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
+        }
+        this.ignoreLosingItemsLists = ignoreLosingItemsLists;
+    }
+    
     public XFutureVoid connectVision() {
         String visionPortString = visionPortCachedTextField.getText();
         System.out.println("Starting connectVision ... (port = " + visionPortString + ") ");
@@ -1933,6 +2007,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
             argsMap.put("--visionhost", visionHostCachedTextField.getText());
             argsMap.put("--visionport", visionPortString);
+            argsMap.put("ignoreLosingItemsLists",Boolean.toString(ignoreLosingItemsLists));
             stopVisionStartThread();
             startVisionThread = new Thread(() -> {
                 try {
@@ -2889,6 +2964,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         updatePerformanceLine();
     }
 
+    private volatile String performanceLine = null;
+
+    public String getPerformanceLine() {
+        return performanceLine;
+    }
+    
     public void updatePerformanceLine() {
         String dbPerf = "DB: NA";
         if (null != dpu && dpu.getTotalListUpdates() > 0) {
@@ -2900,9 +2981,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != visionClient) {
             clntPerf = " Input : "
                     + "count=" + visionClient.getLineCount() + ", "
-                    + "skipped=" + visionClient.getSkippedLineCount();
+                    + "skipped=" + visionClient.getSkippedLineCount() + ", "
+                    + "ignored=" + visionClient.getIgnoreCount();
         }
-        this.jTextFieldPerformance.setText(dbPerf + clntPerf);
+        String pl = dbPerf + clntPerf;
+        this.performanceLine = pl;
+        this.jTextFieldPerformance.setText(pl);
     }
 
     @Override

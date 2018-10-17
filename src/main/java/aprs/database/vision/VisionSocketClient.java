@@ -200,17 +200,16 @@ public class VisionSocketClient implements AutoCloseable {
         return consecutiveIgnoreCount;
     }
 
-    private final ConcurrentLinkedDeque<Consumer<Integer>> 
-            incrementCountListeners = new ConcurrentLinkedDeque<>();
-    
+    private final ConcurrentLinkedDeque<Consumer<Integer>> incrementCountListeners = new ConcurrentLinkedDeque<>();
+
     public void addCountListener(Consumer<Integer> l) {
         incrementCountListeners.add(l);
     }
-    
+
     public void removeCountListener(Consumer<Integer> l) {
         incrementCountListeners.remove(l);
     }
-    
+
     public XFutureVoid start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -226,6 +225,11 @@ public class VisionSocketClient implements AutoCloseable {
             if (argsMapHost == null) {
                 throw new IllegalArgumentException("argsMap does not contain a value for --visionhost");
             }
+            String ignoreLosingItemsListsString = argsMap.get("ignoreLosingItemsLists");
+            if (ignoreLosingItemsListsString == null && ignoreLosingItemsListsString.length() > 0) {
+                setIgnoreLosingItemsLists(Boolean.parseBoolean(ignoreLosingItemsListsString));
+            }
+            
             host = argsMapHost;
             String argsMapPort = argsMap.get("--visionport");
             if (argsMapPort == null) {
@@ -296,7 +300,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     private void incrementLineCount() {
         int count = lineCount.incrementAndGet();
-        for(Consumer<Integer> l : incrementCountListeners) {
+        for (Consumer<Integer> l : incrementCountListeners) {
             l.accept(count);
         }
     }
@@ -508,7 +512,7 @@ public class VisionSocketClient implements AutoCloseable {
         this.prevListSizeDecrementInterval = prevListSizeDecrementInterval;
     }
 
-    private boolean ignoreLosingItemsLists = true;
+    private boolean ignoreLosingItemsLists = false;
 
     /**
      * Get the value of ignoreLosingItemsLists
