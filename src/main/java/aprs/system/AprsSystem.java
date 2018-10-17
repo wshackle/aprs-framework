@@ -1305,6 +1305,49 @@ public class AprsSystem implements SlotOffsetProvider {
         return visionToDbJInternalFrame.getUpdatesResultMap();
     }
 
+    public int getVisionClientSkippedCount() {
+        return visionToDbJInternalFrame.getVisionClientSkippedCount();
+    }
+
+    public int getVisionClientIgnoreCount() {
+        return visionToDbJInternalFrame.getVisionClientIgnoreCount();
+    }
+    
+    public String getVisionToDbPerformanceLine() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return visionToDbJInternalFrame.getPerformanceLine();
+    }
+    
+    public int getVisionClientUpdateCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return visionToDbJInternalFrame.getVisionClientUpdateCount();
+    }
+
+    public int getVisionClientUpdateAquireOffCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return visionToDbJInternalFrame.getVisionClientUpdateAquireOffCount();
+    }
+
+    public int getVisionClientUpdateNoCheckRequiredPartsCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return visionToDbJInternalFrame.getVisionClientUpdateNoCheckRequiredPartsCount();
+    }
+
+    public int getVisionClientUpdateSingleUpdateListenersEmptyCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return visionToDbJInternalFrame.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+    }
+
     @Nullable
     private volatile XFutureVoid disconnectRobotFuture = null;
 
@@ -4417,7 +4460,7 @@ public class AprsSystem implements SlotOffsetProvider {
             object2DViewJInternalFrame.refresh(false);
         }
         List<PhysicalItem> filledkitTraysList = createFilledKitsList(false, 0);
-        if(filledkitTraysList.isEmpty()) {
+        if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
         File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset);

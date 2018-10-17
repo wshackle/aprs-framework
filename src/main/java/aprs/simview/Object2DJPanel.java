@@ -62,11 +62,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class Object2DJPanel extends JPanel {
-
+    
     private DisplayAxis displayAxis = POS_X_POS_Y;
-
+    
     private volatile boolean debugTimes = false;
-
+    
     @UIEffect
     public Object2DJPanel() {
         partImageMap = new HashMap<>();
@@ -80,7 +80,7 @@ public class Object2DJPanel extends JPanel {
             addPartImage("motomanBackCenterRightHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
             addPartImage("shared_with_fanuc_holder", fanucToolHolder2Image, 115.0, true, false, 10.0, -60.0);
             BufferedImage pincherSmallVacTopImage = getImageFromResourceName("aprs/partImages/pincher_small_vac_top.png");
-
+            
             addPartImage("pincher", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
             addPartImage("small_vacuum", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
             addPartImage("big_gripper_holder", "aprs/partImages/big_gripper_holder2.png", 125.0, true, false, 0.0, 0.0);
@@ -99,44 +99,44 @@ public class Object2DJPanel extends JPanel {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
-
+    
     private double senseMinX = Double.NaN;
     private double senseMaxX = Double.NaN;
     private double senseMinY = Double.NaN;
     private double senseMaxY = Double.NaN;
-
+    
     public double getSenseMinX() {
         return senseMinX;
     }
-
+    
     public void setSenseMinX(double senseMinX) {
         this.senseMinX = senseMinX;
     }
-
+    
     public double getSenseMaxX() {
         return senseMaxX;
     }
-
+    
     public void setSenseMaxX(double senseMaxX) {
         this.senseMaxX = senseMaxX;
     }
-
+    
     public double getSenseMinY() {
         return senseMinY;
     }
-
+    
     public void setSenseMinY(double senseMinY) {
         this.senseMinY = senseMinY;
     }
-
+    
     public double getSenseMaxY() {
         return senseMaxY;
     }
-
+    
     public void setSenseMaxY(double senseMaxY) {
         this.senseMaxY = senseMaxY;
     }
-
+    
     private double rotationOffset;
 
     /**
@@ -156,7 +156,7 @@ public class Object2DJPanel extends JPanel {
     public void setRotationOffset(double rotationOffset) {
         this.rotationOffset = rotationOffset;
     }
-
+    
     private boolean viewDetails;
 
     /**
@@ -177,12 +177,12 @@ public class Object2DJPanel extends JPanel {
         this.viewDetails = viewDetails;
         this.repaint();
     }
-
+    
     private void addPartImage(@UnknownInitialization Object2DJPanel this,
             String partName, String resName, double realWidth) {
         addPartImage(partName, resName, realWidth, false, false, 0.0, 0.0);
     }
-
+    
     private void addPartImage(@UnknownInitialization Object2DJPanel this,
             String partName, String resName, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
         try {
@@ -192,7 +192,7 @@ public class Object2DJPanel extends JPanel {
             ex.printStackTrace();
         }
     }
-
+    
     private void addPartImage(@UnknownInitialization Object2DJPanel this,
             String partName, BufferedImage img, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
         try {
@@ -206,7 +206,7 @@ public class Object2DJPanel extends JPanel {
             ex.printStackTrace();
         }
     }
-
+    
     static private BufferedImage getImageFromResourceName(String resName) throws IOException {
         URL url = null;
         try {
@@ -275,13 +275,13 @@ public class Object2DJPanel extends JPanel {
             newPhysicalItemNameRotXYScoreType("sku_kit_m2l1_vessel", -1.57, 579.86, 170.14, 0.96, "KT")
     );
     private volatile List<PhysicalItem> items = EXAMPLES_ITEMS_LIST;
-
+    
     public void setItems(List<PhysicalItem> items) {
         this.items = items;
         updateAddedExtras();
         this.repaint();
     }
-
+    
     private void clearAddedSlotInfo() {
         if (null == addedSlots || !addedSlots.isEmpty()) {
             this.addedSlots = Collections.emptyList();
@@ -296,7 +296,7 @@ public class Object2DJPanel extends JPanel {
             this.itemsWithAddedExtras = Collections.emptyList();
         }
     }
-
+    
     private boolean showOutputItems = false;
 
     /**
@@ -317,7 +317,7 @@ public class Object2DJPanel extends JPanel {
         this.showOutputItems = showOutputItems;
         this.repaint();
     }
-
+    
     private List<PhysicalItem> outputItems = Collections.emptyList();
 
     /**
@@ -344,7 +344,7 @@ public class Object2DJPanel extends JPanel {
             this.repaint();
         }
     }
-
+    
     private List<PhysicalItem> addedOutputSlots = Collections.emptyList();
 
     /**
@@ -355,7 +355,7 @@ public class Object2DJPanel extends JPanel {
     public List<PhysicalItem> getAddedOutputSlots() {
         return addedOutputSlots;
     }
-
+    
     private List<PhysicalItem> addedSlots = Collections.emptyList();
 
     /**
@@ -366,7 +366,7 @@ public class Object2DJPanel extends JPanel {
     public List<PhysicalItem> getAddedSlots() {
         return addedSlots;
     }
-
+    
     private List<PhysicalItem> addedTools = Collections.emptyList();
 
     /**
@@ -377,7 +377,7 @@ public class Object2DJPanel extends JPanel {
     public List<PhysicalItem> getAddedTools() {
         return addedTools;
     }
-
+    
     private List<PhysicalItem> itemsWithAddedExtras = Collections.emptyList();
 
     /**
@@ -397,7 +397,7 @@ public class Object2DJPanel extends JPanel {
     public void setItemsWithAddedExtras(List<PhysicalItem> itemsWithAddedExtras) {
         this.itemsWithAddedExtras = itemsWithAddedExtras;
     }
-
+    
     private List<PhysicalItem> outputItemsWithAddedExtras = Collections.emptyList();
 
     /**
@@ -426,7 +426,7 @@ public class Object2DJPanel extends JPanel {
     public void setAddedSlots(List<PhysicalItem> addedSlots) {
         this.addedSlots = addedSlots;
     }
-
+    
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PoseType pose, String label) {
         final int w = this.getWidth();
@@ -437,7 +437,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, pose, label, w, h);
     }
-
+    
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PointType point, String label) {
         final int w = this.getWidth();
@@ -448,7 +448,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, point, label, w, h);
     }
-
+    
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         final int w = this.getWidth();
@@ -459,16 +459,16 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, point, label, w, h);
     }
-
+    
     private void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) {
         if (null != pose) {
             takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
             takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
-
+            
         }
     }
-
+    
     private void takeSnapshot(File f, @Nullable PointType point, String label, final int w, final int h) {
         if (null != point) {
             takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
@@ -476,7 +476,7 @@ public class Object2DJPanel extends JPanel {
             takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, final int w, final int h) {
         try {
@@ -492,7 +492,7 @@ public class Object2DJPanel extends JPanel {
             g2d.fillRect(0, 0, w, h);
             g2d.setColor(this.getForeground());
             List<PhysicalItem> itemsToPaint = getItemsToPaint();
-
+            
             if (autoscale) {
                 double minX = Double.POSITIVE_INFINITY;
                 double maxX = Double.NEGATIVE_INFINITY;
@@ -554,7 +554,7 @@ public class Object2DJPanel extends JPanel {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
-
+    
     private List<PhysicalItem> getItemsToPaint() {
         List<PhysicalItem> itemsToPaint = this.items;
         if ((showAddedSlotPositions || showAddedToolsAndToolHolders) && null != this.itemsWithAddedExtras) {
@@ -568,7 +568,7 @@ public class Object2DJPanel extends JPanel {
         }
         return itemsToPaint;
     }
-
+    
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         final int w = this.getWidth();
@@ -579,7 +579,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, itemsToPaint, w, h);
     }
-
+    
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
         try {
             Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
@@ -591,15 +591,18 @@ public class Object2DJPanel extends JPanel {
             if (pindex > 0) {
                 type = f.getName().substring(pindex + 1);
             }
-            ImageIO.write(img, type, f);
-            System.out.println("Saved snapshot to " + f.getCanonicalPath());
+            if (ImageIO.write(img, type, f)) {
+                System.out.println("Saved snapshot to " + f.getCanonicalPath());
+            } else {
+                System.out.println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
+            }
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
-
+    
     public static class ViewOptions {
-
+        
         public boolean disableLimitsLine;
         public boolean disableLabels;
         public boolean enableAutoscale;
@@ -614,11 +617,11 @@ public class Object2DJPanel extends JPanel {
         double scale;
         boolean paintingComponent;
     }
-
+    
     BufferedImage createSnapshotImage() {
         return createSnapshotImage(null);
     }
-
+    
     BufferedImage createSnapshotImage(@Nullable ViewOptions opts) {
         if (null != opts && opts.addExtras) {
             return createSnapshotImage(opts, itemsWithAddedExtras);
@@ -626,10 +629,10 @@ public class Object2DJPanel extends JPanel {
             return createSnapshotImage(opts, items);
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
-
+        
         Dimension dim = this.getSize();
         int w = (opts != null) ? opts.w : dim.width;
         int h = (opts != null) ? opts.h : dim.height;
@@ -654,7 +657,7 @@ public class Object2DJPanel extends JPanel {
         }
         return img;
     }
-
+    
     @SuppressWarnings("guieffect")
     private void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
         try {
@@ -664,12 +667,12 @@ public class Object2DJPanel extends JPanel {
             Dimension dim = getSize();
             int w = (null != opts) ? opts.w : dim.width;
             int h = (null != opts) ? opts.h : dim.height;
-
+            
             double minX = Double.POSITIVE_INFINITY;
             double maxX = Double.NEGATIVE_INFINITY;
             double minY = Double.POSITIVE_INFINITY;
             double maxY = Double.NEGATIVE_INFINITY;
-
+            
             if (this.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
                 minX = currentX;
                 maxX = currentX;
@@ -708,7 +711,7 @@ public class Object2DJPanel extends JPanel {
             g2d.drawString(e.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY, int w, int h, double currentScale, AffineTransform origTransform) {
         PointType point = pose.getPoint();
@@ -721,7 +724,7 @@ public class Object2DJPanel extends JPanel {
             paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, tempMinMax, w, h, currentScale, origTransform);
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     private void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, MinMax minmaxParam,
             int width,
@@ -743,36 +746,36 @@ public class Object2DJPanel extends JPanel {
             double displayMinY = minY;
             double displayMinX = minX;
             double displayMaxX = maxX;
-
+            
             switch (displayAxis) {
                 case POS_X_POS_Y:
                     displayMaxX = (width - TO_SCREEN_X_OFFSET) / currentScale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / currentScale + minX;
-
+                    
                     displayMinY = maxY - (height - TO_SCREEN_Y_OFFSET) / currentScale;
                     displayMaxY = maxY - (0 - TO_SCREEN_Y_OFFSET) / currentScale;
                     break;
-
+                
                 case POS_Y_NEG_X:
                     displayMaxX = (height - TO_SCREEN_Y_OFFSET) / currentScale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / currentScale + minX;
-
+                    
                     displayMinY = (width - TO_SCREEN_X_OFFSET) / currentScale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / currentScale + minY;
                     break;
-
+                
                 case NEG_X_NEG_Y:
                     displayMaxX = maxX - (width - TO_SCREEN_X_OFFSET) / currentScale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / currentScale;
-
+                    
                     displayMinY = (height - TO_SCREEN_Y_OFFSET) / currentScale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / currentScale + minY;
                     break;
-
+                
                 case NEG_Y_POS_X:
                     displayMaxX = maxX - (height - TO_SCREEN_Y_OFFSET) / currentScale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / currentScale;
-
+                    
                     displayMinY = (width - TO_SCREEN_X_OFFSET) / currentScale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / currentScale + minY;
                     break;
@@ -785,16 +788,16 @@ public class Object2DJPanel extends JPanel {
                 switch (displayAxis) {
                     case POS_X_POS_Y:
                         break;
-
+                    
                     case POS_Y_NEG_X:
                         namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
                         namey = maxY + (maxY - minY) / 10.0;
                         break;
-
+                    
                     case NEG_X_NEG_Y:
                         namex = minX - (maxX - minX) / 10.0;
                         break;
-
+                    
                     case NEG_Y_POS_X:
                         namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
                         namey = minY - (maxY - minY) / 10.0;
@@ -826,7 +829,7 @@ public class Object2DJPanel extends JPanel {
             }
         }
     }
-
+    
     private boolean autoscale = true;
 
     /**
@@ -848,7 +851,7 @@ public class Object2DJPanel extends JPanel {
         this.scale_set = false;
         this.repaint();
     }
-
+    
     private int selectedItemIndex = -1;
 
     /**
@@ -859,7 +862,7 @@ public class Object2DJPanel extends JPanel {
     int getSelectedItemIndex() {
         return selectedItemIndex;
     }
-
+    
     private boolean viewRotationsAndImages = true;
 
     /**
@@ -902,7 +905,7 @@ public class Object2DJPanel extends JPanel {
     public List<PhysicalItem> getItems() {
         return items;
     }
-
+    
     private double scale;
 
     /**
@@ -925,14 +928,14 @@ public class Object2DJPanel extends JPanel {
 //        return minCorner;
 //    }
     private MinMax minmax = new MinMax();
-
+    
     public MinMax getMinmax() {
         return minmax;
     }
     
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
-
+        
         MinMax tempMinMax = new MinMax();
         tempMinMax.min.x = minX;
         tempMinMax.max.x = maxX;
@@ -940,7 +943,7 @@ public class Object2DJPanel extends JPanel {
         tempMinMax.max.y = maxY;
         translate(g2d, itemx, itemy, tempMinMax, width, height, currentScale);
     }
-
+    
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, MinMax tempMinMax, int width, int height, double currentScale) throws IllegalArgumentException {
         Point2D.Double t = toScreenPoint(displayAxis, itemx, itemy, tempMinMax, currentScale);
@@ -961,10 +964,10 @@ public class Object2DJPanel extends JPanel {
         g2d.translate(t.x, t.y);
     }
     
-    public  Point2D.Double worldToScreenPoint(double itemx, double itemy) {
+    public Point2D.Double worldToScreenPoint(double itemx, double itemy) {
         return toScreenPoint(getDisplayAxis(), itemx, itemy, getMinmax(), getScale());
     }
-
+    
     private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double itemx, double itemy, MinMax minmax, double currentScale) {
         double minX = minmax.min.x;
         double maxX = minmax.max.x;
@@ -973,13 +976,13 @@ public class Object2DJPanel extends JPanel {
         switch (displayAxis) {
             case POS_X_POS_Y:
                 return new Point2D.Double((itemx - minX) * currentScale + TO_SCREEN_X_OFFSET, (maxY - itemy) * currentScale + TO_SCREEN_Y_OFFSET);
-
+            
             case POS_Y_NEG_X:
                 return new Point2D.Double((itemy - minY) * currentScale + TO_SCREEN_X_OFFSET, (itemx - minX) * currentScale + TO_SCREEN_Y_OFFSET);
-
+            
             case NEG_X_NEG_Y:
                 return new Point2D.Double((maxX - itemx) * currentScale + TO_SCREEN_X_OFFSET, (itemy - minY) * currentScale + TO_SCREEN_Y_OFFSET);
-
+            
             case NEG_Y_POS_X:
                 return new Point2D.Double((maxY - itemy) * currentScale + TO_SCREEN_X_OFFSET, (maxX - itemx) * currentScale + TO_SCREEN_Y_OFFSET);
         }
@@ -987,7 +990,7 @@ public class Object2DJPanel extends JPanel {
     }
     private static final int TO_SCREEN_Y_OFFSET = 20;
     private static final int TO_SCREEN_X_OFFSET = 15;
-
+    
     private boolean endEffectorClosed;
 
     /**
@@ -1007,7 +1010,7 @@ public class Object2DJPanel extends JPanel {
     void setEndEffectorClosed(boolean endEffectorClosed) {
         this.endEffectorClosed = endEffectorClosed;
     }
-
+    
     private double currentX = 0;
 
     /**
@@ -1028,7 +1031,7 @@ public class Object2DJPanel extends JPanel {
         this.currentX = currentX;
         this.repaint();
     }
-
+    
     private double currentY = 0;
 
     /**
@@ -1049,7 +1052,7 @@ public class Object2DJPanel extends JPanel {
         this.currentY = currentY;
         this.repaint();
     }
-
+    
     private boolean showCurrentXY;
 
     /**
@@ -1070,7 +1073,7 @@ public class Object2DJPanel extends JPanel {
         this.showCurrentXY = showCurrentXY;
         this.repaint();
     }
-
+    
     private boolean useSeparateNames = true;
 
     /**
@@ -1091,7 +1094,7 @@ public class Object2DJPanel extends JPanel {
         this.useSeparateNames = useSeparateNames;
         this.repaint();
     }
-
+    
     private int namesXPos = 100;
 
     /**
@@ -1115,14 +1118,14 @@ public class Object2DJPanel extends JPanel {
 //    @MonotonicNonNull
 //    private AffineTransform origTransform = null;
     private volatile boolean scale_set;
-
+    
     @SuppressWarnings("WeakerAccess")
     @Override
     @UIEffect
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-
+        
         List<PhysicalItem> itemsToPaint = getItemsToPaint();
         PhysicalItem selectedItem = null;
         if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
@@ -1152,7 +1155,7 @@ public class Object2DJPanel extends JPanel {
             this.scale_set = !this.autoscale;
         }
     }
-
+    
     private static String getItemType(PhysicalItem item) {
         if (item.getType() != null) {
             return item.getType();
@@ -1168,7 +1171,7 @@ public class Object2DJPanel extends JPanel {
             return item.getName().substring(0, 1);
         }
     }
-
+    
     private static final Color[] labelColors = new Color[]{
         Color.BLACK,
         Color.MAGENTA.darker(),
@@ -1176,7 +1179,7 @@ public class Object2DJPanel extends JPanel {
         Color.RED.darker(),
         Color.GREEN.darker()
     };
-
+    
     @MonotonicNonNull
     private AprsSystem aprsSystem;
 
@@ -1199,7 +1202,7 @@ public class Object2DJPanel extends JPanel {
         this.aprsSystem = aprsSystemInterface;
         setSlotOffsetProvider(aprsSystemInterface);
     }
-
+    
     private boolean showAddedToolsAndToolHolders = false;
 
     /**
@@ -1220,7 +1223,7 @@ public class Object2DJPanel extends JPanel {
     void setShowAddedToolsAndToolHolders(boolean showAddedToolsAndToolHolders) {
         this.showAddedToolsAndToolHolders = showAddedToolsAndToolHolders;
     }
-
+    
     private boolean showAddedSlotPositions;
 
     /**
@@ -1242,32 +1245,32 @@ public class Object2DJPanel extends JPanel {
         updateAddedExtras();
         repaint();
     }
-
+    
     private List<PhysicalItem> getAvailableToolHolders() {
         if (null == aprsSystem) {
             throw new IllegalStateException("null == aprsSysInterface");
         }
         return aprsSystem.getAvailableToolHolders();
     }
-
+    
     private List<PhysicalItem> getToolsInHolders() {
         if (null == aprsSystem) {
             throw new IllegalStateException("null == aprsSysInterface");
         }
         return aprsSystem.getToolsInHolders();
     }
-
+    
     private List<PhysicalItem> getToolsAndHolders() {
         List<PhysicalItem> l = new ArrayList<>(getAvailableToolHolders());
         l.addAll(getToolsInHolders());
         return l;
     }
-
+    
     private void updateAddedExtras() {
         if (showAddedSlotPositions || showAddedToolsAndToolHolders) {
             if (showAddedToolsAndToolHolders) {
                 this.addedTools = getToolsAndHolders();
-
+                
             } else {
                 if (null == this.addedTools || !this.addedTools.isEmpty()) {
                     this.addedTools = Collections.emptyList();
@@ -1276,7 +1279,7 @@ public class Object2DJPanel extends JPanel {
             if (null != items) {
                 this.itemsWithAddedExtras = new ArrayList<>();
                 this.itemsWithAddedExtras.addAll(items);
-
+                
                 if (showAddedToolsAndToolHolders) {
                     this.itemsWithAddedExtras.addAll(this.addedTools);
                 }
@@ -1293,7 +1296,7 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             if (null != outputItems) {
-
+                
                 this.outputItemsWithAddedExtras = new ArrayList<>();
                 this.outputItemsWithAddedExtras.addAll(outputItems);
                 if (showAddedToolsAndToolHolders) {
@@ -1312,7 +1315,7 @@ public class Object2DJPanel extends JPanel {
             clearAddedSlotInfo();
         }
     }
-
+    
     List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
         List<PhysicalItem> absSlotList = new ArrayList<>();
         for (PhysicalItem item : l) {
@@ -1322,19 +1325,19 @@ public class Object2DJPanel extends JPanel {
         }
         return absSlotList;
     }
-
+    
     @MonotonicNonNull
     private SlotOffsetProvider slotOffsetProvider = null;
-
+    
     @Nullable
     public SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
-
+    
     public void setSlotOffsetProvider(SlotOffsetProvider slotOffsetProvider) {
         this.slotOffsetProvider = slotOffsetProvider;
     }
-
+    
     private List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
         if (null == slotOffsetProvider) {
             throw new IllegalStateException("slotOffsetProvider is null");
@@ -1356,10 +1359,10 @@ public class Object2DJPanel extends JPanel {
         }
         return slotList;
     }
-
+    
     @UIType
     private static class PartImageInfo {
-
+        
         final BufferedImage image;
         final double ratio;
         final double width;
@@ -1370,7 +1373,7 @@ public class Object2DJPanel extends JPanel {
         Image scaledImage;
         int scaledImageWidth;
         int scaledImageHeight;
-
+        
         PartImageInfo(BufferedImage image, double ratio, double width, boolean ignoreRotations, double xoffset, double yoffset) {
             this.image = image;
             this.ratio = ratio;
@@ -1386,15 +1389,15 @@ public class Object2DJPanel extends JPanel {
             }
             scaledImage = image.getScaledInstance(scaledImageWidth, scaledImageHeight, Image.SCALE_DEFAULT);
         }
-
+        
         public int getScaledImageWidth() {
             return scaledImageWidth;
         }
-
+        
         public int getScaledImageHeight() {
             return scaledImageHeight;
         }
-
+        
         Image getScaledImage(double scale) {
             if (scale <= Double.MIN_NORMAL) {
                 throw new IllegalArgumentException("scale must be strictly  greater than 0. scale=" + scale);
@@ -1418,9 +1421,9 @@ public class Object2DJPanel extends JPanel {
             scaledImage = image.getScaledInstance(new_w, new_h, Image.SCALE_DEFAULT);
             return scaledImage;
         }
-
+        
     }
-
+    
     private @Nullable
     Image capturedPartImage;
 
@@ -1442,7 +1445,7 @@ public class Object2DJPanel extends JPanel {
     public void setCapturedPartImage(@Nullable Image capturedPartImage) {
         this.capturedPartImage = capturedPartImage;
     }
-
+    
     private Point2D.@Nullable Double capturedPartPoint;
 
     /**
@@ -1462,9 +1465,9 @@ public class Object2DJPanel extends JPanel {
     void setCapturedPartPoint(Point2D.@Nullable Double capturedPartPoint) {
         this.capturedPartPoint = capturedPartPoint;
     }
-
+    
     private final Map<String, PartImageInfo> partImageMap;
-
+    
     private boolean viewLimitsLine = true;
 
     /**
@@ -1484,7 +1487,7 @@ public class Object2DJPanel extends JPanel {
     public void setViewLimitsLine(boolean viewLimitsLine) {
         this.viewLimitsLine = viewLimitsLine;
     }
-
+    
     @SuppressWarnings("guieffect")
     private void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
@@ -1513,11 +1516,11 @@ public class Object2DJPanel extends JPanel {
                     = itemsToPaint.stream()
                             .mapToInt((PhysicalItem item) -> item.getName().length())
                             .max().orElse(1);
-
+            
             if (!Double.isFinite(maxX) || !Double.isFinite(minX) || !Double.isFinite(minY) || !Double.isFinite(maxY)) {
                 throw new IllegalArgumentException("Limits must be finite: (" + minX + "," + minY + "," + maxX + "," + maxY + ")");
             }
-
+            
             Dimension dim = getSize();
             int width = (null != opts) ? opts.w : dim.width;
             int height = (null != opts) ? opts.h : dim.height;
@@ -1538,36 +1541,36 @@ public class Object2DJPanel extends JPanel {
             double displayMinY = minY;
             double displayMinX = minX;
             double displayMaxX = maxX;
-
+            
             switch (displayAxis) {
                 case POS_X_POS_Y:
                     displayMaxX = (width - TO_SCREEN_X_OFFSET) / new_scale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / new_scale + minX;
-
+                    
                     displayMinY = maxY - (height - TO_SCREEN_Y_OFFSET) / new_scale;
                     displayMaxY = maxY - (0 - TO_SCREEN_Y_OFFSET) / new_scale;
                     break;
-
+                
                 case POS_Y_NEG_X:
                     displayMaxX = (height - TO_SCREEN_Y_OFFSET) / new_scale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / new_scale + minX;
-
+                    
                     displayMinY = (width - TO_SCREEN_X_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
-
+                
                 case NEG_X_NEG_Y:
                     displayMaxX = maxX - (width - TO_SCREEN_X_OFFSET) / new_scale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / new_scale;
-
+                    
                     displayMinY = (height - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
-
+                
                 case NEG_Y_POS_X:
                     displayMaxX = maxX - (height - TO_SCREEN_Y_OFFSET) / new_scale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / new_scale;
-
+                    
                     displayMinY = (width - TO_SCREEN_X_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
@@ -1586,7 +1589,7 @@ public class Object2DJPanel extends JPanel {
                     case NEG_X_NEG_Y:
                         displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> -item.y));
                         break;
-
+                    
                     case POS_Y_NEG_X:
                         displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> item.x));
                         break;
@@ -1595,9 +1598,9 @@ public class Object2DJPanel extends JPanel {
                         break;
                 }
             }
-
+            
             Font origFont = g2d.getFont();
-
+            
             float fsize = this.getWidth() / (2.2f * maxNameLength);
             if (fsize > 24.f) {
                 fsize = 24.f;
@@ -1611,7 +1614,7 @@ public class Object2DJPanel extends JPanel {
             }
             float newFontSize = g2d.getFont().getSize2D();
             int i = 0;
-
+            
             if (viewRotationsAndImages) {
                 for (PhysicalItem item : displayItems) {
                     if (null == item) {
@@ -1659,16 +1662,16 @@ public class Object2DJPanel extends JPanel {
                     switch (displayAxis) {
                         case POS_X_POS_Y:
                             break;
-
+                        
                         case POS_Y_NEG_X:
                             namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
                             namey = maxY + (maxY - minY) / 5.0;
                             break;
-
+                        
                         case NEG_X_NEG_Y:
                             namex = minX - (maxX - minX) / 5.0;
                             break;
-
+                        
                         case NEG_Y_POS_X:
                             namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
                             namey = minY - (maxY - minY) / 5.0;
@@ -1691,12 +1694,12 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             g2d.setFont(origFont);
-
+            
             for (PhysicalItem item : displayItems) {
                 if (null == item) {
                     continue;
                 }
-
+                
                 if (null != partImageMap && !partImageMap.isEmpty()) {
                     if (viewRotationsAndImages && null != getPartImageInfo(item)) {
                         continue;
@@ -1758,7 +1761,7 @@ public class Object2DJPanel extends JPanel {
                         g2d.drawString(item.getName().substring(0, 1), 0, 0);
                     }
                 }
-
+                
                 if (null != opts && opts.paintingComponent) {
                     AffineTransform itemDisplayTransform = g2d.getTransform();
                     item.setDisplayTransform(itemDisplayTransform);
@@ -1771,7 +1774,7 @@ public class Object2DJPanel extends JPanel {
                         Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
-
+                
                 if (!imageShown) {
                     int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
                     Rectangle2D.Double itemDisplayRect
@@ -1784,7 +1787,7 @@ public class Object2DJPanel extends JPanel {
                     g2d.setColor(item.getLabelColor());
                     g2d.draw(itemDisplayRect);
                 }
-
+                
                 try {
                     if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
                         List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
@@ -1867,7 +1870,7 @@ public class Object2DJPanel extends JPanel {
             g2d.drawString(exception.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
-
+    
     @UIEffect
     private void drawSenseLimitsRectangle(Graphics2D g2d, MinMax tempMinMax, double new_scale) {
         if (Double.isFinite(senseMaxX)
@@ -1875,7 +1878,7 @@ public class Object2DJPanel extends JPanel {
                 && Double.isFinite(senseMinY)
                 && Double.isFinite(senseMaxY)) {
             g2d.setColor(Color.black);
-
+            
             Point2D.Double minSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
             Point2D.Double maxSensePoint = toScreenPoint(displayAxis, senseMaxX, senseMaxY, tempMinMax, new_scale);
             g2d.draw(new Rectangle.Double(
@@ -1885,18 +1888,18 @@ public class Object2DJPanel extends JPanel {
                     Math.abs(minSensePoint.y - maxSensePoint.y)));
         }
     }
-
+    
     private static class MinMax {
-
+        
         Point2D.Double min;
         Point2D.Double max;
-
+        
         MinMax() {
             min = new Point2D.Double(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
             max = new Point2D.Double(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     private double computeNewScale(MinMax minmax, @Nullable ViewOptions opts) {
         boolean useSeperateNamesThisTime = useSeparateNames;
@@ -1907,7 +1910,7 @@ public class Object2DJPanel extends JPanel {
         }
         return computeNewScale(displayAxis, useSeperateNamesThisTime, getSize(), minmax, opts);
     }
-
+    
     private static double computeNewScale(DisplayAxis displayAxis, boolean useSeparateNames, Dimension dim, MinMax minmax, @Nullable ViewOptions opts) {
         Point2D.Double min = minmax.min;
         Point2D.Double max = minmax.max;
@@ -2001,14 +2004,14 @@ public class Object2DJPanel extends JPanel {
 //        }
         return new_scale;
     }
-
+    
     private boolean checkImageShown(PhysicalItem item) {
         return viewRotationsAndImages
                 && null != partImageMap
                 && !partImageMap.isEmpty()
                 && null != getPartImageInfo(item);
     }
-
+    
     @SuppressWarnings("guieffect")
     private void paintPartImage(Graphics2D g2d, double minX, double minY, double maxX, double maxY, PhysicalItem item, double rotationOffsetParam, double currentScale) {
         if (!viewRotationsAndImages) {
@@ -2080,10 +2083,10 @@ public class Object2DJPanel extends JPanel {
                 g2d.draw(new Rectangle2D.Double(0, 0, img_w + 2, img_h + 2));
             }
             g2d.setColor(Color.BLACK);
-
+            
         }
     }
-
+    
     @SuppressWarnings("guieffect")
     @Nullable
     private PartImageInfo getPartImageInfo(PhysicalItem item) {
@@ -2123,14 +2126,14 @@ public class Object2DJPanel extends JPanel {
         }
         return info;
     }
-
+    
     private void translateThenRotateItem(Graphics2D g2d, MinMax minMaxParam, PhysicalItem item, double rotationOffsetParam, double scaleParam, boolean ignoreRotation) {
         double itemx = item.x;
         double itemy = item.y;
         double rot = -rotationOffsetParam - item.getRotation();
         translateThenRotate(g2d, itemx, itemy, minMaxParam, scaleParam, ignoreRotation, rot);
     }
-
+    
     private double alternativeRotation = 0.0;
 
     /**
@@ -2151,7 +2154,7 @@ public class Object2DJPanel extends JPanel {
         this.alternativeRotation = alternativeRotation;
         this.repaint();
     }
-
+    
     @SuppressWarnings("guieffect")
     private void translateThenRotate(Graphics2D g2d, double itemx, double itemy, MinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
         Point2D.Double translatePoint = toScreenPoint(displayAxis, itemx, itemy, minMaxParam, scaleParam);
@@ -2160,15 +2163,15 @@ public class Object2DJPanel extends JPanel {
             switch (displayAxis) {
                 case POS_X_POS_Y:
                     break;
-
+                
                 case POS_Y_NEG_X:
                     g2d.rotate(Math.PI / 2.0);
                     break;
-
+                
                 case NEG_X_NEG_Y:
                     g2d.rotate(Math.PI);
                     break;
-
+                
                 case NEG_Y_POS_X:
                     g2d.rotate(3 * Math.PI / 2.0);
                     break;
@@ -2180,51 +2183,51 @@ public class Object2DJPanel extends JPanel {
             }
         }
     }
-
+    
     private double slotMaxDistExpansion = 1.5;
-
+    
     double getSlotMaxDistExpansion() {
         return slotMaxDistExpansion;
     }
-
+    
     public void setSlotMaxDistExpansion(double slotMaxDistExpansion) {
         this.slotMaxDistExpansion = slotMaxDistExpansion;
     }
-
+    
     public double getMaxX() {
         return minmax.max.x;
     }
-
+    
     public void setMaxX(double maxX) {
         this.minmax.max.x = maxX;
         this.scale_set = false;
         this.repaint();
     }
-
+    
     public double getMinX() {
         return minmax.min.x;
     }
-
+    
     public void setMinX(double minX) {
         this.minmax.min.x = minX;
         this.scale_set = false;
         this.repaint();
     }
-
+    
     public double getMaxY() {
         return minmax.max.y;
     }
-
+    
     public void setMaxY(double maxY) {
         this.minmax.max.y = maxY;
         this.scale_set = false;
         this.repaint();
     }
-
+    
     public double getMinY() {
         return minmax.min.y;
     }
-
+    
     public void setMinY(double minY) {
         this.minmax.min.y = minY;
         this.scale_set = false;
