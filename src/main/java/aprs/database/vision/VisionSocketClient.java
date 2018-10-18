@@ -226,7 +226,7 @@ public class VisionSocketClient implements AutoCloseable {
                 throw new IllegalArgumentException("argsMap does not contain a value for --visionhost");
             }
             String ignoreLosingItemsListsString = argsMap.get("ignoreLosingItemsLists");
-            if (ignoreLosingItemsListsString == null && ignoreLosingItemsListsString.length() > 0) {
+            if (ignoreLosingItemsListsString != null && ignoreLosingItemsListsString.length() > 0) {
                 setIgnoreLosingItemsLists(Boolean.parseBoolean(ignoreLosingItemsListsString));
             }
             

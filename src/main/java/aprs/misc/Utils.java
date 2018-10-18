@@ -118,6 +118,7 @@ public class Utils {
         }
     }
 
+    @UIEffect
     static public void PlayAlert(String resourceName) {
         try {
             Toolkit.getDefaultToolkit().beep();
@@ -139,11 +140,12 @@ public class Utils {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
+    @UIEffect
     static public void PlayAlert() {
         PlayAlert("alert.wav");
     }
 
+    @UIEffect
     static public void PlayAlert2() {
         PlayAlert("alert2.wav");
     }

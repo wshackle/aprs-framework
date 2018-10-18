@@ -291,7 +291,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.getVisionClientIgnoreCount();
     }
 
-    public String getPerformanceLine() {
+    @Nullable public String getPerformanceLine() {
         return visionToDBJPanel.getPerformanceLine();
     }
 

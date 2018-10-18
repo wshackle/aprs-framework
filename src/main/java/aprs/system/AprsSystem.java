@@ -747,7 +747,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.pauseCrclProgram();
-            PlayAlert2();
+            Utils.runOnDispatchThread(Utils::PlayAlert2);
         }
     }
 
@@ -1306,20 +1306,27 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public int getVisionClientSkippedCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getVisionClientSkippedCount();
     }
 
     public int getVisionClientIgnoreCount() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
         return visionToDbJInternalFrame.getVisionClientIgnoreCount();
     }
-    
+
+    @Nullable
     public String getVisionToDbPerformanceLine() {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
         }
         return visionToDbJInternalFrame.getPerformanceLine();
     }
-    
+
     public int getVisionClientUpdateCount() {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -2329,7 +2336,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         System.err.println("RunName=" + getRunName());
                         System.err.println(newTitleErrorString);
                         Thread.dumpStack();
-                        PlayAlert2();
+                        Utils.runOnDispatchThread(Utils::PlayAlert2);;
                         if (!snapshotsEnabled) {
                             snapshotsCheckBox.setSelected(true);
                         }
@@ -5421,7 +5428,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * cause future actions to wait until resume is called.
      */
     public void pause() {
-        PlayAlert2();
+        Utils.runOnDispatchThread(Utils::PlayAlert2);
         boolean badState = resuming;
         pauseOnDisplay();
         badState = badState || resuming;
