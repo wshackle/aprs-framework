@@ -390,9 +390,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
     
     private void setItemsFromClone(List<PhysicalItem> items) {
+        Object2DOuterJPanel objectPanelToCloneLocal = objectPanelToClone;
+        if(null == objectPanelToCloneLocal) {
+            throw new NullPointerException("objectToClone");
+        }
         setItems(items, !pauseCachedCheckBox.isSelected());
         if(isViewingOutput()) {
-            setOutputItems(objectPanelToClone.getOutputItems());
+            setOutputItems(objectPanelToCloneLocal.getOutputItems());
         }
     }
 
@@ -2121,11 +2125,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final Random dropRandom = new Random();
 
+    private int dropCount = 0;
+    
     private boolean dropFilter(PhysicalItem physicalItem) {
         if (simulatedDropRate < 0.001) {
             return true;
         }
-        return dropRandom.nextDouble() > simulatedDropRate;
+        boolean ret =  dropRandom.nextDouble() > simulatedDropRate;
+        if(!ret) {
+            dropCount++;
+        }
+        return ret;
     }
 
     private boolean limitsFilter(PhysicalItem physicalItem) {
@@ -2242,6 +2252,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .collect(Collectors.toList());
             if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()) {
                 Collections.shuffle(l);
+            }
+            if(l.size() != origList.size()) {
+                System.out.println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
+                System.out.println("dropCount = " + dropCount);
+                System.out.println("l.size() = " + l.size());
+                System.out.println("origList.size() = " + origList.size());
             }
             srv.publishList(l);
             setOutputItems(l);

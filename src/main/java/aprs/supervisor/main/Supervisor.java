@@ -3679,8 +3679,14 @@ public class Supervisor {
     }
 
     public XFutureVoid conveyorTest() {
+        if(null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
         logEvent("Start ConveyorTest");
         AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
+        if(null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
         return fillTraysAndNextRepeating(sys)
                 .always(this::finishConveyorTest);
     }
@@ -3721,6 +3727,9 @@ public class Supervisor {
     }
 
     private XFutureVoid conveyorVisNext() {
+        if(null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
         logEvent("Conveyor Next Starting");
         return displayJFrame.conveyorVisNextTray()
                 .thenRun(this::conveyorVisNextFinish);
