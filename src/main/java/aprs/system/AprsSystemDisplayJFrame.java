@@ -79,6 +79,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
+        setMaxLimitMenuDisplay(aprsSystem.getMaxLimit());
+        setMinLimitMenuDisplay(aprsSystem.getMinLimit());
     }
 
     private volatile boolean showingException = false;
@@ -177,6 +179,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     public AprsSystemDisplayJFrame() {
         try {
             initComponents();
+            setMaxLimitMenuDisplay(new PmCartesian(10000.0, 10000.0, 10000.0));
+            setMinLimitMenuDisplay(new PmCartesian(-10000.0, -10000.0, -10000.0));
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -1018,7 +1022,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         browseOpenPropertiesFile();
     }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
 
-    @Nullable private File getPropertiesDirectory() {
+    @Nullable
+    private File getPropertiesDirectory() {
         if (null != aprsSystem) {
             return aprsSystem.getPropertiesDirectory();
         } else {
@@ -1031,7 +1036,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     File choosePropertiesFileToOpen() {
         File dir = getPropertiesDirectory();
         JFileChooser chooser;
-        if(null != dir) {
+        if (null != dir) {
             chooser = new JFileChooser(dir);
         } else {
             chooser = new JFileChooser();
@@ -1273,7 +1278,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private File choosePropertiesFileToSaveAs() {
         File dir = getPropertiesDirectory();
         JFileChooser chooser;
-        if(null != dir) {
+        if (null != dir) {
             chooser = new JFileChooser(dir);
         } else {
             chooser = new JFileChooser();
@@ -1586,6 +1591,22 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         } else {
             throw new IllegalStateException("aprsSystem == null, this=" + this);
         }
+    }
+
+    public void setMaxLimitMenuDisplay(PmCartesian cart) {
+        String txt
+                = String.format(
+                        "Set Pose Max Limits ... (%+.0f,%+.0f,%+.0f)    ...",
+                        cart.x, cart.y, cart.z);
+        jMenuItemSetPoseMaxLimits.setText(txt);
+    }
+
+    public void setMinLimitMenuDisplay(PmCartesian cart) {
+        String txt
+                = String.format(
+                        "Set Pose Min Limits ... (%+.0f,%+.0f,%+.0f)    ...",
+                        cart.x, cart.y, cart.z);
+        jMenuItemSetPoseMinLimits.setText(txt);
     }
 
     private PmCartesian getMaxLimit() {

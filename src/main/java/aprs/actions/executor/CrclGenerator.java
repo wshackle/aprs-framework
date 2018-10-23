@@ -1849,10 +1849,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             loadNewItemsIntoPoseCache(physicalItems);
         }
     }
-    public static final long WAIT_FOR_VISION_TIMEOUT = 
-            getLongProperty("aprs.waitForVisionTimeout", 15_000);
+    public static final long WAIT_FOR_VISION_TIMEOUT
+            = getLongProperty("aprs.waitForVisionTimeout", 15_000);
 
-    private static double getDoubleProperty(String propName,double defaultValue) {
+    private static double getDoubleProperty(String propName, double defaultValue) {
         try {
             String propValueString = System.getProperty(propName);
             if (null != propValueString && propValueString.length() > 0) {
@@ -1865,8 +1865,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return defaultValue;
         }
     }
-    
-    private static long getLongProperty(String propName,long defaultValue) {
+
+    private static long getLongProperty(String propName, long defaultValue) {
         try {
             String propValueString = System.getProperty(propName);
             if (null != propValueString && propValueString.length() > 0) {
@@ -1879,7 +1879,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return defaultValue;
         }
     }
-    
+
     private static final AtomicInteger ropCount = new AtomicInteger();
 
     private boolean isLookForPartsAction(Action action) {
@@ -2120,13 +2120,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2143,23 +2143,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Set<String> typeSet
                     = physicalItemsLocal
-                            .stream()
-                            .map(PhysicalItem::getType)
-                            .collect(Collectors.toSet());
+                    .stream()
+                    .map(PhysicalItem::getType)
+                    .collect(Collectors.toSet());
             if (debug) {
                 logDebug("typeSet = " + typeSet);
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
-                            .select(item -> item.getType().equals("ES")
+                    .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
+                    .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2362,8 +2362,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                        .map(arg -> arg.split("="))
-                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                .map(arg -> arg.split("="))
+                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2512,9 +2512,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             List<String> partsFullNames
                     = parts
-                            .stream()
-                            .map(PhysicalItem::getFullName)
-                            .collect(Collectors.toList());
+                    .stream()
+                    .map(PhysicalItem::getFullName)
+                    .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
@@ -4839,8 +4839,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private boolean checkPose(PoseType pose) {
+        return checkPose(pose,false);
+    }
+    
+    private boolean checkPose(PoseType pose, boolean ignoreCartTran) {
         assert null != aprsSystem : "(null == aprsSystemInterface)";
-        return aprsSystem.checkPose(pose);
+        return aprsSystem.checkPose(pose,ignoreCartTran);
     }
 
     private void checkSettings() {
@@ -4858,7 +4862,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     rpy.p = Math.toRadians(Double.parseDouble(rpyFields[1]));
                     rpy.y = Math.toRadians(Double.parseDouble(rpyFields[2]));
                     PoseType pose = CRCLPosemath.toPoseType(new PmCartesian(), rpy);
-                    if (!checkPose(pose)) {
+                    if (!checkPose(pose,true)) {
                         throw new RuntimeException("invalid pose passed with rpy setting :" + CRCLPosemath.poseToString(pose));
                     }
                     VectorType xAxisVector = pose.getXAxis();
@@ -4902,14 +4906,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
             try {
                 takeZOffset = Double.parseDouble(takeZOffsetString);
-            } catch (NumberFormatException numberFormatException) {
-                logger.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String joint0DiffToleranceStringString = options.get("joint0DiffToleranceString");
-        if (null != joint0DiffToleranceStringString && joint0DiffToleranceStringString.length() > 0) {
-            try {
-                joint0DiffTolerance = Double.parseDouble(joint0DiffToleranceStringString);
             } catch (NumberFormatException numberFormatException) {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
@@ -6161,7 +6157,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.out.println("visClientSkippedCount = " + visClientSkippedCount);
 
                 System.err.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
-                Throwable[] ta = new Throwable[1];
                 String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
                 System.err.println(errMsg);
                 String visionToDbPerformanceLine = aprsSystem.getVisionToDbPerformanceLine();
@@ -6169,6 +6164,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     System.err.println(visionToDbPerformanceLine);
                 }
                 if (completedExceptionally) {
+                    Throwable[] ta = new Throwable[1];
                     xfl.exceptionally((Throwable t) -> {
                         ta[0] = t;
                         throw (RuntimeException) t;
@@ -6177,7 +6173,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
                     }
                 }
-
+                String titleErrorString = aprsSystem.getTitleErrorString();
+                if (null != titleErrorString && titleErrorString.length() > 1) {
+                    throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+                }
                 throw new RuntimeException(errMsg);
             }
             last_t1 = t1;
@@ -6193,10 +6192,40 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         enableDatabaseUpdates,
                         requiredPartsMap);
             }
+            if (xfl.isCompletedExceptionally()) {
+                Throwable[] ta = new Throwable[1];
+                xfl.exceptionally((Throwable t) -> {
+                    ta[0] = t;
+                    throw (RuntimeException) t;
+                });
+                if (null != ta[0]) {
+                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                    throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                }
+            }
+            String titleErrorString = aprsSystem.getTitleErrorString();
+            if (null != titleErrorString && titleErrorString.length() > 1) {
+                throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+            }
             if (xfl.isDone()) {
                 break;
             }
             Thread.sleep(50);
+            if (xfl.isCompletedExceptionally()) {
+                Throwable[] ta = new Throwable[1];
+                xfl.exceptionally((Throwable t) -> {
+                    ta[0] = t;
+                    throw (RuntimeException) t;
+                });
+                if (null != ta[0]) {
+                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                    throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                }
+            }
+            titleErrorString = aprsSystem.getTitleErrorString();
+            if (null != titleErrorString && titleErrorString.length() > 1) {
+                throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+            }
             if (xfl.isDone()) {
                 break;
             }
@@ -6207,6 +6236,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         if (aprsSystem.isClosing()) {
             return;
+        }
+        if (xfl.isCompletedExceptionally()) {
+            Throwable[] ta = new Throwable[1];
+            xfl.exceptionally((Throwable t) -> {
+                ta[0] = t;
+                throw (RuntimeException) t;
+            });
+            if (null != ta[0]) {
+                String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+            }
         }
         List<PhysicalItem> l = xfl.get();
         if (l.isEmpty()) {

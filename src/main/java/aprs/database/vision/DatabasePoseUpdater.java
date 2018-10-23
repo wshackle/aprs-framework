@@ -1858,7 +1858,11 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
             if ("P".equals(ci.getType())) {
                 if (ci.isInsideKitTray() || inside(kitTrays, ci, 10)) {
-                    name = name + "_in_kt";
+                    if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
+                        name = name + "_in_kt";
+                    } else {
+                        System.err.println("adding in_pt twice");
+                    }
                     if (!keepNames) {
                         ci.setName(name);
                     }
@@ -1867,7 +1871,11 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     }
                     ci.setInsideKitTray(true);
                 } else if (ci.isInsidePartsTray() || inside(partsTrays, ci, 10)) {
-                    name = name + "_in_pt";
+                    if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
+                        name = name + "_in_pt";
+                    } else {
+                        System.err.println("adding in_pt twice");
+                    }
                     if (!keepNames) {
                         ci.setName(name);
                     }
