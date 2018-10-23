@@ -118,10 +118,20 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         conveyorSpeedJPanel1.setGoalPosition(goalPostion);
     }
 
-    private volatile double trayDiff;
+    private volatile double trayDiff = 300.0;
+
+    public double getTrayDiff() {
+        return trayDiff;
+    }
+
+    public void setTrayDiff(double trayDiff) {
+        this.trayDiff = trayDiff;
+    }
+    
+    
 
     public XFutureVoid previousTray() {
-        computeTrayDiff();
+//        computeTrayDiff();
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPostion(getEstimatedPosition() - trayDiff);
@@ -134,20 +144,20 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return nextPrevTrayFuture;
     }
 
-    private void computeTrayDiff() {
-        List<PhysicalItem> kits = conveyorSpeedJPanel1.getSortedKitTrays();
-        if (kits.size() > 1) {
-            double lastPos = conveyorSpeedJPanel1.positionOfItem(kits.get(kits.size() - 1));
-            double nextPos = conveyorSpeedJPanel1.positionOfItem(kits.get(0));
-            trayDiff = (lastPos - nextPos) / kits.size();
-        }
-    }
+//    private void computeTrayDiff() {
+//        List<PhysicalItem> kits = conveyorSpeedJPanel1.getSortedKitTrays();
+//        if (kits.size() > 1) {
+//            double lastPos = conveyorSpeedJPanel1.positionOfItem(kits.get(kits.size() - 1));
+//            double nextPos = conveyorSpeedJPanel1.positionOfItem(kits.get(0));
+//            trayDiff = (lastPos - nextPos) / kits.size();
+//        }
+//    }
 
     @Nullable
     private volatile XFutureVoid nextPrevTrayFuture = null;
 
     public XFutureVoid nextTray() {
-        computeTrayDiff();
+//        computeTrayDiff();
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPostion(getEstimatedPosition() + trayDiff);
@@ -212,7 +222,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }
 
     private static double parseDouble(@Nullable String txt, double defaultVal) {
-        if (txt == null) {
+        if (txt == null || txt.length() <1) {
             return defaultVal;
         }
         return Double.parseDouble(txt);
@@ -224,6 +234,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
+        setTrayDiff(parseDouble(map1.get(TRAY_DIFF),getTrayDiff()));
+        setModBusHost(map1.get(MODBUS_HOST));
     }
 
     private Map<String, String> propertiesToMap() {
@@ -233,8 +245,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         map0.put(AXIS_Y, Double.toString(getAxisY()));
         map0.put(MAX_POSITION, Double.toString(getMaxPosition()));
         map0.put(MIN_POSITION, Double.toString(getMinPosition()));
+        map0.put(TRAY_DIFF, Double.toString(getTrayDiff()));
+        map0.put(MODBUS_HOST,getModBusHost());
         return map0;
     }
+    private static final String MODBUS_HOST = "modbusHost";
+    private static final String TRAY_DIFF = "trayDiff";
     private static final String MIN_POSITION = "MinPosition";
     private static final String MAX_POSITION = "MaxPosition";
     private static final String AXIS_Y = "AxisY";

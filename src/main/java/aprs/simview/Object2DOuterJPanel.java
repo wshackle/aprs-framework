@@ -82,6 +82,7 @@ import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import java.awt.Desktop;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -199,6 +200,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public List<PhysicalItem> getOutputItems() {
+        if(!isSimulated()) {
+            return object2DJPanel1.getItems();
+        }
         return object2DJPanel1.getOutputItems();
     }
 
@@ -962,6 +966,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jPanelBottomPropertiesButtons = new javax.swing.JPanel();
         jButtonReadProperties = new javax.swing.JButton();
         jButtonSetProperies = new javax.swing.JButton();
+        jPanelSnapshots = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTableSnapshotFiles = new javax.swing.JTable();
+        jButtonViewSnapshotImage = new javax.swing.JButton();
+        jButtonViewSnapshotCsv = new javax.swing.JButton();
 
         setLayout(new java.awt.GridLayout(1, 0));
 
@@ -998,11 +1007,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setLayout(object2DJPanel1Layout);
         object2DJPanel1Layout.setHorizontalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 422, Short.MAX_VALUE)
+            .addGap(0, 466, Short.MAX_VALUE)
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 481, Short.MAX_VALUE)
+            .addGap(0, 499, Short.MAX_VALUE)
         );
 
         jPanelBottomMain.add(object2DJPanel1);
@@ -1121,7 +1130,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                         .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxCloning)))
-                                .addGap(0, 105, Short.MAX_VALUE)))
+                                .addGap(0, 200, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1151,7 +1160,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1292,7 +1301,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jCheckBoxEnforceSensorLimits))
-                .addContainerGap(140, Short.MAX_VALUE))
+                .addContainerGap(202, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1331,7 +1340,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxEnforceSensorLimits)
-                .addContainerGap(73, Short.MAX_VALUE))
+                .addContainerGap(134, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -1370,14 +1379,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
+                .addComponent(jScrollPane2)
                 .addContainerGap())
         );
         jPanelTraysLayout.setVerticalGroup(
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Trays", jPanelTrays);
@@ -1403,7 +1412,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelTopRowLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTopRowLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+                    .addComponent(jTextFieldFilename, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
                     .addGroup(jPanelTopRowLayout.createSequentialGroup()
                         .addComponent(jButtonSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1513,7 +1522,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1)
                     .addGroup(jPanelItemsLayout.createSequentialGroup()
                         .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1524,7 +1533,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1775,7 +1784,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelPropertiesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 380, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneProperties)
                     .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1783,13 +1792,73 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPropertiesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
+                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Properties", jPanelProperties);
+
+        jTableSnapshotFiles.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Image File", "CSV File"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPane4.setViewportView(jTableSnapshotFiles);
+
+        jButtonViewSnapshotImage.setText("View Image");
+        jButtonViewSnapshotImage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonViewSnapshotImageActionPerformed(evt);
+            }
+        });
+
+        jButtonViewSnapshotCsv.setText("View CSV");
+        jButtonViewSnapshotCsv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonViewSnapshotCsvActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelSnapshotsLayout = new javax.swing.GroupLayout(jPanelSnapshots);
+        jPanelSnapshots.setLayout(jPanelSnapshotsLayout);
+        jPanelSnapshotsLayout.setHorizontalGroup(
+            jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSnapshotsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4)
+                    .addGroup(jPanelSnapshotsLayout.createSequentialGroup()
+                        .addComponent(jButtonViewSnapshotImage)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonViewSnapshotCsv)))
+                .addContainerGap())
+        );
+        jPanelSnapshotsLayout.setVerticalGroup(
+            jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSnapshotsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonViewSnapshotImage)
+                    .addComponent(jButtonViewSnapshotCsv))
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Snapshots", jPanelSnapshots);
 
         jPanelBottomMain.add(jTabbedPane1);
 
@@ -3034,6 +3103,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jButtonForceUpdateActionPerformed
 
+    private void jButtonViewSnapshotImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotImageActionPerformed
+        int selectedRow = jTableSnapshotFiles.getSelectedRow();
+        if(selectedRow >=0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
+            try {
+                DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
+                String filename = (String) dtm.getValueAt(selectedRow, 0);
+                Desktop.getDesktop().open(new File(filename));
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jButtonViewSnapshotImageActionPerformed
+
+    private void jButtonViewSnapshotCsvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotCsvActionPerformed
+        int selectedRow = jTableSnapshotFiles.getSelectedRow();
+        if(selectedRow >=0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
+            try {
+                DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
+                String filename = (String) dtm.getValueAt(selectedRow, 1);
+                Desktop.getDesktop().open(new File(filename));
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jButtonViewSnapshotCsvActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -3182,6 +3277,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JButton jButtonSetProperies;
+    private javax.swing.JButton jButtonViewSnapshotCsv;
+    private javax.swing.JButton jButtonViewSnapshotImage;
     private javax.swing.JCheckBox jCheckBoxAddPosNoise;
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
@@ -3222,15 +3319,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JPanel jPanelOptionsTab;
     private javax.swing.JPanel jPanelProperties;
     private javax.swing.JPanel jPanelSimulationTab;
+    private javax.swing.JPanel jPanelSnapshots;
     private javax.swing.JPanel jPanelTopRow;
     private javax.swing.JPanel jPanelTrays;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPaneProperties;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableItems;
     private javax.swing.JTable jTableProperties;
+    private javax.swing.JTable jTableSnapshotFiles;
     private javax.swing.JTable jTableTraySlots;
     private javax.swing.JTextArea jTextAreaConnectDetails;
     private javax.swing.JTextField jTextFieldCurrentXY;
@@ -3957,22 +4057,42 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
-        saveSnapshotCsv(f, itemsToPaint);
+        File csvFile = saveSnapshotCsv(f, itemsToPaint);
+        if(null != f && null != csvFile){
+            try {
+                DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
+                model.addRow(new Object[]{f.getCanonicalPath(),csvFile.getCanonicalPath()});
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
-    private void saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    private File saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+        File csvFile = null;
         try {
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            saveFile(new File(csvDir, f.getName() + ".csv"), itemsToPaint);
+            csvFile = new File(csvDir, f.getName() + ".csv");
+            saveFile(csvFile, itemsToPaint);
+            return csvFile;
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            return null;
         }
     }
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
-        saveSnapshotCsv(f, itemsToPaint);
+        File csvFile = saveSnapshotCsv(f, itemsToPaint);
+        if(null != f && null != csvFile){
+            try {
+                DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
+                model.addRow(new Object[]{f.getCanonicalPath(),csvFile.getCanonicalPath()});
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;

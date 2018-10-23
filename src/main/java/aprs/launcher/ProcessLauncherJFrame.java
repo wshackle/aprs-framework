@@ -812,8 +812,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         Thread closingThread = new Thread(this::completeClose, "closeProcessLauncherThread");
         closingThread.start();
-//        System.out.println("closingThread = " + closingThread);
-//        System.out.println("closingThread.getState() = " + closingThread.getState());
         return closingFuture;
     }
 

@@ -1,1 +1,7 @@
-Robot,Tools,Holders,Aborting Robots,Comment
+System,Holder/Current,Contents,PossibleContents,Comment
+Shared Table,Current,big_gripper,"[pincher, big_gripper, big_vacuum, small_vacuum]",
+Shared Table,big_gripper_holder,empty,[big_gripper],
+Shared Table,big_vacuum_holder,big_vacuum,[big_vacuum],
+Shared Table,toolChangerPose9,empty,[],
+Fanuc Cart,Current,pincher,"[pincher, small_vacuum]",
+Fanuc Cart,shared_gripper,small_vacuum,"[pincher, small_vacuum]",
