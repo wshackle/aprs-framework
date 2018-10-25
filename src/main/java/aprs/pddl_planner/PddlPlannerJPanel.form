@@ -278,7 +278,7 @@
     <Component class="javax.swing.JTextField" name="jTextFieldSshUser">
       <Properties>
         <Property name="editable" type="boolean" value="false"/>
-        <Property name="text" type="java.lang.String" value="user "/>
+        <Property name="text" type="java.lang.String" value="user"/>
         <Property name="enabled" type="boolean" value="false"/>
       </Properties>
     </Component>

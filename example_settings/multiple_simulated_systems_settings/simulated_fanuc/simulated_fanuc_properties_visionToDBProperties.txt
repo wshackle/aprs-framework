@@ -29,6 +29,7 @@ NEO4J.localhost_7486.user=neo4j
 NEO4J.localhost_7494.name=neo4j
 NEO4J.localhost_7494.passwd=password
 NEO4J.localhost_7494.user=neo4j
+ignoreLosingItemsLists=false
 rotationOffset=0.0
 transform.point.x=0.0
 transform.point.y=0.0

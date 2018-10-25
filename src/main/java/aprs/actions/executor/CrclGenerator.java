@@ -1690,6 +1690,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
             System.err.println();
+            aprsSystem.setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -5282,7 +5283,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (lookForXYZFields.length < 3) {
             return null;
         }
-        return point(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2]));
+        PmCartesian cart  = new PmCartesian(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2]));
+        if(!aprsSystem.isWithinLimits(cart)) {
+            throw new IllegalStateException("lookforXYZSring="+lookforXYZSring+", cart="+cart+" not within limits minLimit="+aprsSystem.getMinLimit()+", maxLimit="+aprsSystem.getMaxLimit());
+        }
+        return CRCLPosemath.toPointType(cart);
     }
 
     private final Logger logger = Logger.getLogger(CrclGenerator.class.getName());
