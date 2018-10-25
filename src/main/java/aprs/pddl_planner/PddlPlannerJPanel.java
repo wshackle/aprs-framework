@@ -201,7 +201,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         jLabel6.setText("User:");
 
         jTextFieldSshUser.setEditable(false);
-        jTextFieldSshUser.setText("user ");
+        jTextFieldSshUser.setText("user");
         jTextFieldSshUser.setEnabled(false);
 
         jLabel7.setText("Password:");

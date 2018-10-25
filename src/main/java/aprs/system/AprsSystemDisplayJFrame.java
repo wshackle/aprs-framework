@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -93,6 +94,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    private final AtomicInteger exceptionCount = new AtomicInteger();
+    
     @UIEffect
     private void showExceptionInternal(Throwable ex) {
         StringWriter sw = new StringWriter();
@@ -102,7 +105,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex1);
         }
         String exText = sw.toString();
-        MultiLineStringJPanel.showText(exText, this, "Exception from " + this.getTitle(), false).thenRun(() -> showingException = false);
+        MultiLineStringJPanel.showText(exText, this, "Exception from " + this.getTitle(), false,exceptionCount.incrementAndGet() < 2).thenRun(() -> showingException = false);
     }
 
     CachedCheckBox logCrclProgramsCheckBox() {

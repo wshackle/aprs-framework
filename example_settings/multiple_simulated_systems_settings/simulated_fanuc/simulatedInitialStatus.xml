@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CRCLStatus>
+    <CommandStatus>
+        <CommandID>8738</CommandID>
+        <StatusID>99151</StatusID>
+        <CommandState>CRCL_Done</CommandState>
+        <StateDescription></StateDescription>
+        <ProgramIndex>17</ProgramIndex>
+        <ProgramLength>17</ProgramLength>
+    </CommandStatus>
+    <JointStatuses>
+        <JointStatus>
+            <JointNumber>1</JointNumber>
+            <JointPosition>90.5797504603436</JointPosition>
+        </JointStatus>
+        <JointStatus>
+            <JointNumber>2</JointNumber>
+            <JointPosition>38.15978253567942</JointPosition>
+        </JointStatus>
+        <JointStatus>
+            <JointNumber>3</JointNumber>
+            <JointPosition>-23.418226713030407</JointPosition>
+        </JointStatus>
+        <JointStatus>
+            <JointNumber>4</JointNumber>
+            <JointPosition>180.0</JointPosition>
+        </JointStatus>
+        <JointStatus>
+            <JointNumber>5</JointNumber>
+            <JointPosition>0.0</JointPosition>
+        </JointStatus>
+        <JointStatus>
+            <JointNumber>6</JointNumber>
+            <JointPosition>-135.0</JointPosition>
+        </JointStatus>
+    </JointStatuses>
+    <PoseStatus>
+        <Pose>
+            <Point>
+                <X>149.99999999999991</X>
+                <Y>80.0</Y>
+                <Z>180.00000000000003</Z>
+            </Point>
+            <XAxis>
+                <I>-0.7071067811865475</I>
+                <J>-0.7071067811865477</J>
+                <K>-1.1314261122877003E-16</K>
+            </XAxis>
+            <ZAxis>
+                <I>1.1314261122877003E-16</I>
+                <J>4.686520405326299E-17</J>
+                <K>-1.0</K>
+            </ZAxis>
+        </Pose>
+    </PoseStatus>
+</CRCLStatus>
+

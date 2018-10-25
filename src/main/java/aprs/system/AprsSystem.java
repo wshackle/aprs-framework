@@ -52,7 +52,6 @@ import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
-import static aprs.misc.Utils.PlayAlert2;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
 
@@ -1970,6 +1969,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis())
             );
         } catch (Exception ex) {
+            setTitleErrorString(ex.getMessage());
+            showException(ex);
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -4329,7 +4330,12 @@ public class AprsSystem implements SlotOffsetProvider {
             return ret;
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
+            setTitleErrorString(ex.getMessage());
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -4369,7 +4375,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && cart.z >= minLimit.z;
     }
 
-    private boolean isWithinLimits(PmCartesian cart) {
+    public boolean isWithinLimits(PmCartesian cart) {
         return isWithinMaxLimits(cart) && isWithinMinLimits(cart);
     }
 
@@ -4629,6 +4635,8 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.enableAutoscale = autoScale;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
+        opts.disableRobotsReachLimitsRect = true;
+        opts.disableSensorLimitsRect = true;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
@@ -4646,6 +4654,8 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.enableAutoscale = autoScale;
         opts.overrideRotationOffset = true;
         opts.disableLimitsLine = true;
+        opts.disableRobotsReachLimitsRect = true;
+        opts.disableSensorLimitsRect = true;
         opts.disableShowCurrent = true;
         opts.rotationOffset = rotationOffset;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);

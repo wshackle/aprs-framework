@@ -1,5 +1,3 @@
 Holder Position Name,Contents,Possible Contents,Comment
 big_gripper_holder,big_gripper,big_gripper,
 big_vacuum_holder,big_vacuum,big_vacuum,
-sharedBackCenterHolder,pincher,"pincher, small_vacuum",
-motomanBackCenterRightHolder,empty,"pincher, small_vacuum",

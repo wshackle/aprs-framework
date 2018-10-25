@@ -13,7 +13,7 @@ Overview
 
 It is composed of the following modules each with its own directory and .JInternalFrame.
 
- * PDDL Planner Module -- copies a PDDL domain and problem file to remote host where pddl planner executes via SSH and receives the output to pass on to executor or display for the local user.   
+ * PDDL Planner Module -- (Note: PDDL planner module no longer used. Optiplanner is used within PDDL executor) copies a PDDL domain and problem file to remote host where pddl planner executes via SSH and receives the output to pass on to executor or display for the local user.   
  * PDDL Executor Module -- receives a PDDL action solution file and generates CRCL programs for subsets of the list of actions waits for programs to be completed before generating CRCL for the next set of actions. Some commands are generated based on both the action and data
 in the database.  
  * CRCL Client -- receives the CRCL program and sends the commands from the program one at a time to a CRCL server and monitors each commands status ( presently either the simulation or the fanuc servers )  
@@ -413,6 +413,9 @@ Code for this should be in following subdirectory:
 
 PDDL Planner
 ------------
+
+NOTE: PDDL planner module no longer used. Optiplanner is used within PDDL executor.
+
 
 ![Screenshot of GUI with  PDDL Planner Window](/Screenshots/Screenshot_PDDL_Planner.png?raw=true)
 

@@ -6420,6 +6420,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return createLookForPartsProgramInternal();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
+            aprsSystem.setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
