@@ -200,7 +200,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     public List<PhysicalItem> getOutputItems() {
-        if(!isSimulated()) {
+        if (!isSimulated()) {
             return object2DJPanel1.getItems();
         }
         return object2DJPanel1.getOutputItems();
@@ -232,7 +232,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.object2DJPanel1.takeSnapshot(f, point, label);
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            saveFile(new File(csvDir, f.getName() + ".csv"));
+            File csvFile = new File(csvDir, f.getName() + ".csv");
+            saveFile(csvFile);
+            updateSnapshotsTable(f, csvFile);
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
                 File xmlDir = new File(f.getParentFile(), "crclStatusXml");
@@ -248,6 +250,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    private final AtomicInteger snapshotsCount = new AtomicInteger();
+    
+    private void updateSnapshotsTable(File f, File csvFile) {
+        if (null != f && null != csvFile) {
+            try {
+                DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
+                while(model.getRowCount() > 200) {
+                    model.removeRow(0);
+                }
+                model.addRow(new Object[]{snapshotsCount.incrementAndGet(),Utils.getTimeString(), f.getCanonicalPath(), csvFile.getCanonicalPath()});
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -275,7 +293,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.object2DJPanel1.takeSnapshot(f, point, label, w, h);
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            saveFile(new File(csvDir, f.getName() + ".csv"));
+            File csvFile = new File(csvDir, f.getName() + ".csv");
+            saveFile(csvFile);
+            updateSnapshotsTable(f, csvFile);
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
             AprsSystem aprsSystemLocal = this.aprsSystem;
@@ -384,22 +404,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void loadFile(File f) throws IOException {
         loadFile(f, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
     }
-    
+
     public boolean isViewingOutput() {
         return viewOutputCachedCheckBox.isSelected();
     }
-    
+
     public void setViewingOutput(boolean viewingOutput) {
         viewOutputCachedCheckBox.setSelected(viewingOutput);
     }
-    
+
     private void setItemsFromClone(List<PhysicalItem> items) {
         Object2DOuterJPanel objectPanelToCloneLocal = objectPanelToClone;
-        if(null == objectPanelToCloneLocal) {
+        if (null == objectPanelToCloneLocal) {
             throw new NullPointerException("objectToClone");
         }
         setItems(items, !pauseCachedCheckBox.isSelected());
-        if(isViewingOutput()) {
+        if (isViewingOutput()) {
             setOutputItems(objectPanelToCloneLocal.getOutputItems());
         }
     }
@@ -1805,15 +1825,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
             },
             new String [] {
-                "Image File", "CSV File"
+                "Index", "Time", "Image File", "CSV File"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
             }
         });
         jScrollPane4.setViewportView(jTableSnapshotFiles);
@@ -2195,13 +2222,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final Random dropRandom = new Random();
 
     private int dropCount = 0;
-    
+
     private boolean dropFilter(PhysicalItem physicalItem) {
         if (simulatedDropRate < 0.001) {
             return true;
         }
-        boolean ret =  dropRandom.nextDouble() > simulatedDropRate;
-        if(!ret) {
+        boolean ret = dropRandom.nextDouble() > simulatedDropRate;
+        if (!ret) {
             dropCount++;
         }
         return ret;
@@ -2322,7 +2349,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()) {
                 Collections.shuffle(l);
             }
-            if(l.size() != origList.size()) {
+            if (l.size() != origList.size()) {
                 System.out.println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
                 System.out.println("dropCount = " + dropCount);
                 System.out.println("l.size() = " + l.size());
@@ -3105,10 +3132,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jButtonViewSnapshotImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotImageActionPerformed
         int selectedRow = jTableSnapshotFiles.getSelectedRow();
-        if(selectedRow >=0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
+        if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                String filename = (String) dtm.getValueAt(selectedRow, 0);
+                String filename = (String) dtm.getValueAt(selectedRow, 2);
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3118,10 +3145,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jButtonViewSnapshotCsvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotCsvActionPerformed
         int selectedRow = jTableSnapshotFiles.getSelectedRow();
-        if(selectedRow >=0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
+        if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                String filename = (String) dtm.getValueAt(selectedRow, 1);
+                String filename = (String) dtm.getValueAt(selectedRow, 3);
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -4058,14 +4085,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        if(null != f && null != csvFile){
-            try {
-                DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                model.addRow(new Object[]{f.getCanonicalPath(),csvFile.getCanonicalPath()});
-            } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        updateSnapshotsTable(f, csvFile);
     }
 
     private File saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
@@ -4085,14 +4105,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        if(null != f && null != csvFile){
-            try {
-                DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                model.addRow(new Object[]{f.getCanonicalPath(),csvFile.getCanonicalPath()});
-            } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+        updateSnapshotsTable(f, csvFile);
     }
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;
@@ -4428,7 +4441,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             PointType ptIn = requireNonNull(pose.getPoint(), "pose.getPoint()");
 
-            boolean takeSnapshots = isSnapshotsEnabled();
             PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
             currentX = uncorrectedPoint.getX();
             currentY = uncorrectedPoint.getY();
@@ -4499,6 +4511,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         if (true) {
                             try {
                                 System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                                boolean takeSnapshots = isSnapshotsEnabled();
                                 if (takeSnapshots) {
                                     takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                                 }
@@ -4517,6 +4530,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             }
                             String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
                             printHandlePoseErrorInfo(err, stat, pose, cmd);
+                            boolean takeSnapshots = isSnapshotsEnabled();
                             if (takeSnapshots) {
                                 takeSnapshot(createTempFile(err, ".PNG"), (PmCartesian) null, "");
                             }
@@ -4530,6 +4544,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                     if (true) {
                         System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                        boolean takeSnapshots = isSnapshotsEnabled();
                         if (takeSnapshots) {
                             try {
                                 takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
