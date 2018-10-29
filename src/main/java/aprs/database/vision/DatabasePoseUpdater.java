@@ -1176,7 +1176,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             if (offsetItemTray != tray) {
                 if (!Objects.equals(offsetItemTray.getName(), tray.getName())
                         && !Objects.equals("sku_" + offsetItemTray.getName(), tray.getName())) {
-                    throw new IllegalStateException("Offset seems to belong to the wrong tray : offsetItem=" + offsetItem + ", tray=" + tray);
+                    throw new IllegalStateException("Offset seems to belong to the wrong tray : offsetItem=" + offsetItem + ", offsetItemTray=" + offsetItemTray + ", tray=" + tray);
                 }
             }
 
@@ -1840,7 +1840,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     private static void normalizeNames(
-            Iterable<? extends PhysicalItem> inputItems,
+            List<? extends PhysicalItem> inputItems,
             List<Tray> kitTrays,
             boolean keepNames,
             boolean keepFullNames,
@@ -1861,7 +1861,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
                         name = name + "_in_kt";
                     } else {
-                        System.err.println("adding in_pt twice");
+                        throw new RuntimeException("adding in_kt twice name="+name);
                     }
                     if (!keepNames) {
                         ci.setName(name);
@@ -1874,7 +1874,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
                         name = name + "_in_pt";
                     } else {
-                        System.err.println("adding in_pt twice");
+                        throw new RuntimeException("adding in_pt twice name="+name);
                     }
                     if (!keepNames) {
                         ci.setName(name);

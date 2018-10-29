@@ -127,9 +127,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     public void setTrayDiff(double trayDiff) {
         this.trayDiff = trayDiff;
     }
-    
-    
 
+    private volatile long nextPrevTrayFutureStartTime=-1;
+    
     public XFutureVoid previousTray() {
 //        computeTrayDiff();
         setGoalSet(false);
@@ -140,6 +140,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         if (null != nextPrevTrayFuture) {
             nextPrevTrayFuture.cancelAll(true);
         }
+        nextPrevTrayFutureStartTime = System.currentTimeMillis();
         nextPrevTrayFuture = new XFutureVoid("nextTray");
         return nextPrevTrayFuture;
     }
@@ -152,7 +153,6 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 //            trayDiff = (lastPos - nextPos) / kits.size();
 //        }
 //    }
-
     @Nullable
     private volatile XFutureVoid nextPrevTrayFuture = null;
 
@@ -166,6 +166,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         if (null != nextPrevTrayFuture) {
             nextPrevTrayFuture.cancelAll(true);
         }
+        nextPrevTrayFutureStartTime = System.currentTimeMillis();
         nextPrevTrayFuture = new XFutureVoid("nextTray");
         return nextPrevTrayFuture;
     }
@@ -222,7 +223,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }
 
     private static double parseDouble(@Nullable String txt, double defaultVal) {
-        if (txt == null || txt.length() <1) {
+        if (txt == null || txt.length() < 1) {
             return defaultVal;
         }
         return Double.parseDouble(txt);
@@ -234,8 +235,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
-        setTrayDiff(parseDouble(map1.get(TRAY_DIFF),getTrayDiff()));
+        setTrayDiff(parseDouble(map1.get(TRAY_DIFF), getTrayDiff()));
         setModBusHost(map1.get(MODBUS_HOST));
+        setNextDelayMillis(Integer.parseInt(map1.get(NEXT_DELAY_MILLIS)));
     }
 
     private Map<String, String> propertiesToMap() {
@@ -246,7 +248,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         map0.put(MAX_POSITION, Double.toString(getMaxPosition()));
         map0.put(MIN_POSITION, Double.toString(getMinPosition()));
         map0.put(TRAY_DIFF, Double.toString(getTrayDiff()));
-        map0.put(MODBUS_HOST,getModBusHost());
+        map0.put(MODBUS_HOST, getModBusHost());
+        map0.put(NEXT_DELAY_MILLIS, Integer.toString(getNextDelayMillis()));
         return map0;
     }
     private static final String MODBUS_HOST = "modbusHost";
@@ -256,6 +259,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private static final String AXIS_Y = "AxisY";
     private static final String AXIS_X = "AxisX";
     private static final String SCALE = "Scale";
+    private static final String NEXT_DELAY_MILLIS = "nextDelayMillis";
 
     private void handlePostionUpateTimerEvent() {
         try {
@@ -454,10 +458,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             if (!positionUpdateTimer.isRunning()) {
                 positionUpdateTimer.start();
             }
-        } else {
-            if (positionUpdateTimer.isRunning()) {
-                positionUpdateTimer.stop();
-            }
+        } else if (positionUpdateTimer.isRunning()) {
+            positionUpdateTimer.stop();
         }
         if (null != master) {
             try {
@@ -478,10 +480,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
         if (evt.isPopupTrigger()) {
             popupMenu.show(this.conveyorSpeedJPanel1, evt.getX(), evt.getY());
-        } else {
-            if (!isGoalSet() && conveyorSpeedJPanel1.getCurrentSpeed() > 0) {
-                stopConveyor();
-            }
+        } else if (!isGoalSet() && conveyorSpeedJPanel1.getCurrentSpeed() > 0) {
+            stopConveyor();
         }
     }//GEN-LAST:event_conveyorSpeedJPanel1MouseReleased
 
@@ -551,6 +551,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         stopConveyorNoPosEstimate();
     }
 
+    private volatile long nextPrevTrayFutureCompletTime = -1;
+    private volatile long stopConveyorTime  = -1;
+    
     private void stopConveyorNoPosEstimate() {
         XFutureVoid future = nextPrevTrayFuture;
         nextPrevTrayFuture = null;
@@ -567,15 +570,41 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             positionUpdateTimer.stop();
         }
         if (null != future) {
-            javax.swing.Timer timer =new javax.swing.Timer
-            (2500, e -> {
+            javax.swing.Timer timer = new javax.swing.Timer(nextDelayMillis, e -> {
+                long tm = System.currentTimeMillis();
+                nextPrevTrayFutureCompletTime = tm;
+                long diff = tm - nextPrevTrayFutureStartTime;
+                System.out.println("next tray took "+diff+" ms");
+                long diff2 = tm - stopConveyorTime;
+                System.out.println("time since conveyor stop is "+diff2+" ms");
                 future.complete();
+                
             });
-            timer.setInitialDelay(2500);
+            timer.setInitialDelay(nextDelayMillis);
             timer.setRepeats(false);
-            
+            stopConveyorTime=System.currentTimeMillis();
             timer.start();
         }
+    }
+
+    private int nextDelayMillis = 10000;
+
+    /**
+     * Get the value of nextDelayMillis
+     *
+     * @return the value of nextDelayMillis
+     */
+    public int getNextDelayMillis() {
+        return nextDelayMillis;
+    }
+
+    /**
+     * Set the value of nextDelayMillis
+     *
+     * @param nextDelayMillis new value of nextDelayMillis
+     */
+    public void setNextDelayMillis(int nextDelayMillis) {
+        this.nextDelayMillis = nextDelayMillis;
     }
 
     private final javax.swing.Timer positionUpdateTimer;

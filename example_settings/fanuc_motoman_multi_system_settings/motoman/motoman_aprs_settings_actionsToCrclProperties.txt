@@ -17,6 +17,7 @@ lookDwellTime=0.1
 lookForJoints=54391.0,8565.0,-115949.0,9.0,-67139.0,-34333.0,-1.0,0.0
 lookForXYZ=240,435,-165
 pauseInsteadOfRecover=false
+pddl.output=..\\..\\..\\example_pddl\\fanuc_demo_actions.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_motoman_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0

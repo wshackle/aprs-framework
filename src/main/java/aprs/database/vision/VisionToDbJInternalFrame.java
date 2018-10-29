@@ -167,6 +167,18 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     public XFuture<List<PhysicalItem>> getSingleUpdate() {
         return visionToDBJPanel.getSingleUpdate();
     }
+    
+    /**
+     * Asynchronously get a list of PhysicalItems updated in one frame from the
+     * vision system.
+     *
+     * @return future with list of items updated in the next frame from the
+     * vision
+     */
+    @SafeEffect
+    public XFuture<List<PhysicalItem>> getRawUpdate() {
+        return visionToDBJPanel.getRawUpdate();
+    }
 
     public void clearVisionRequiredParts() {
         visionToDBJPanel.clearVisionRequiredParts();
