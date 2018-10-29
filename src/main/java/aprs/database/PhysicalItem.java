@@ -275,10 +275,16 @@ public class PhysicalItem extends PM_CARTESIAN {
     }
 
     public void setName(String name) {
+        if(name.contains("in_kt_in_kt") || name.contains("in_pt_in_pt")) {
+            throw new IllegalArgumentException("double in_kt_in_kt in name="+name);
+        }
         this.name = name;
     }
 
     public String getFullName() {
+        if(name.contains("in_kt_in_kt") || name.contains("in_pt_in_pt")) {
+            throw new IllegalArgumentException("double in_kt_in_kt in name="+name);
+        }
         if (fullName == null) {
             return name;
         }
@@ -290,6 +296,9 @@ public class PhysicalItem extends PM_CARTESIAN {
     }
 
     public void setFullName(String fullName) {
+        if(fullName.contains("in_kt_in_kt") || fullName.contains("in_pt_in_pt")) {
+            throw new IllegalArgumentException("double in_kt_in_kt in fullName="+fullName);
+        }
         this.fullName = fullName;
     }
 

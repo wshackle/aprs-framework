@@ -138,6 +138,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import javax.imageio.IIOException;
 import javax.swing.DesktopManager;
 import javax.swing.JDesktopPane;
 import javax.swing.SwingUtilities;
@@ -532,6 +533,30 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         long startTime = logEvent("start getSingleVisionToDbUpdate", null);
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
+        return ret.thenApply(x -> {
+            logEvent("end getSingleVisionToDbUpdate",
+                    printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
+                    + "\n started at" + startTime
+                    + "\n timeDiff=" + (startTime - System.currentTimeMillis())
+            );
+            return x;
+        });
+    }
+    
+    /**
+     * Asynchronously get a list of PhysicalItems updated in one frame from the
+     * vision system. The list will not be available until after the next frame
+     * is received from vision.
+     *
+     * @return future with list of items updated in the next frame from the
+     * vision
+     */
+    public XFuture<List<PhysicalItem>> getSingleRawVisionUpdate() {
+        if (null == visionToDbJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        long startTime = logEvent("start getSingleVisionToDbUpdate", null);
+        XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getRawUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
                     printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
@@ -4331,7 +4356,7 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -4465,12 +4490,17 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void showFilledKitTrays() {
-        List<PhysicalItem> filledkitTraysList = createFilledKitsList(false, 0);
-        if (null != filledkitTraysList) {
-            if (null != object2DViewJInternalFrame) {
-                object2DViewJInternalFrame.setItems(filledkitTraysList);
-            }
-        }
+        XFuture<List<PhysicalItem>> itemsFuture = getSingleVisionToDbUpdate();
+        itemsFuture
+                .thenApply(l -> l.stream().filter(this::isWithinLimits).collect(Collectors.toList()))
+                .thenApply(l -> createFilledKitsList(l, false, 0))
+                .thenAccept(filledkitTraysList -> {
+                    if (null != filledkitTraysList) {
+                        if (null != object2DViewJInternalFrame) {
+                            object2DViewJInternalFrame.setItems(filledkitTraysList);
+                        }
+                    }
+                });
     }
 
     public XFuture<Boolean> fillKitTrays() {
@@ -4481,7 +4511,13 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
-        List<PhysicalItem> items = getObjectViewOutputItems();
+        XFuture<List<PhysicalItem>> itemsFuture = getSingleVisionToDbUpdate();
+        return itemsFuture
+                .thenApply(l -> l.stream().filter(this::isWithinLimits).collect(Collectors.toList()))
+                .thenCompose(items -> fillKitTrays(items, overrideRotationOffset, newRotationOffset));
+    }
+
+    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (IOException ex) {
@@ -4525,11 +4561,6 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    public List<PhysicalItem> createFilledKitsList(boolean overrideRotationOffset, double newRotationOffset) {
-        List<PhysicalItem> items = getObjectViewOutputItems();
-        return createFilledKitsList(items, overrideRotationOffset, newRotationOffset);
-    }
-
     private List<PhysicalItem> createFilledKitsList(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) {
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
         List<PhysicalItem> outputList = new ArrayList<>();
@@ -4550,9 +4581,20 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (itemName.startsWith("part_")) {
                     itemName = itemName.substring(5);
                 }
+
                 String slotName = emptySlotItem.getSlotOffset().getSlotName();
+                if (!Objects.equals(itemName, slotName)) {
+                    int in_pt_index = itemName.indexOf("_in_pt");
+                    if (in_pt_index > 0) {
+                        itemName = itemName.substring(0, in_pt_index);
+                    }
+                    int in_kt_index = itemName.indexOf("_in_kt");
+                    if (in_kt_index > 0) {
+                        itemName = itemName.substring(0, in_kt_index);
+                    }
+                }
                 if (Objects.equals(itemName, slotName)) {
-                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
+                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(itemName, item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
                     movedPartsList.add(newItem);
                     itemFoundIndex = i;
                     break;
@@ -6835,7 +6877,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 return false;
             }
         }
-        return crclClientJInternalFrame.checkPose(goalPose,ignoreCartTran);
+        return crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran);
     }
 
     private static final String LOG_CRCL_PROGRAMS_ENABLED = "LogCrclProgramsEnabled";
@@ -7393,7 +7435,13 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public File createImageTempFile(String prefix) throws IOException {
-        return createTempFile(prefix, ".PNG", getLogImageDir());
+        File logImageDir1 = getLogImageDir();
+        try {
+            return createTempFile(prefix, ".PNG", logImageDir1);
+        } catch (IOException iOException) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "prefix=" + prefix + ",logImageDir1=" + logImageDir1, iOException);
+            throw new IOException("prefix=" + prefix + ",logImageDir1=" + logImageDir1, iOException);
+        }
     }
 
     private volatile String asString = "";

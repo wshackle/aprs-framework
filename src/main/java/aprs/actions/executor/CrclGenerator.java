@@ -2869,20 +2869,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return kitsToFix;
     }
 
-//    private static List<String> partNamesListForShortSkuName(List<PhysicalItem> newItems, final String finalShortSkuName) {
-//        return newItems.stream()
-//                .filter(item -> item.getType().equals("P"))
-//                .flatMap(item -> {
-//                    String fullName = item.getFullName();
-//                    if (null != fullName) {
-//                        return Stream.of(fullName);
-//                    }
-//                    return Stream.empty();
-//                })
-//                .filter(name2 -> name2.contains(finalShortSkuName) && !name2.contains("_in_kt_"))
-//                .sorted()
-//                .collect(Collectors.toList());
-//    }
     private void printLastOptoInfo() {
         try {
             if (null != lastSkippedPddlActionsList) {
@@ -6265,10 +6251,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } catch (IOException ioException) {
             logger.log(Level.SEVERE, "", ioException);
         }
+        List<PhysicalItem> filteredList = 
+                l.stream().filter(aprsSystem::isWithinLimits).collect(Collectors.toList());
         synchronized (this) {
             clearPoseCache();
-            physicalItems = l;
-            loadNewItemsIntoPoseCache(physicalItems);
+            physicalItems = filteredList;
+            loadNewItemsIntoPoseCache(filteredList);
         }
     }
 

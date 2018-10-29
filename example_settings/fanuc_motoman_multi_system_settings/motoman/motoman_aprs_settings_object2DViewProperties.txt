@@ -8,7 +8,7 @@ connected=true
 displayAxis=(X-,Y-)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.1,714.81,286.59,1.0,P,sku_part_large_gear,-0.15,769.67,-244.01,0.99,P,sku_part_large_gear,0.1,712.13,394.24,0.98,P,sku_part_small_gear,0.0,795.2,380.45,1.0,P,sku_part_small_gear,0.0,810.22,-424.04,0.99,P,sku_part_small_gear,0.0,796.41,301.57,0.97,P,sku_small_gear_vessel,0.0,631.31,-51.44,0.95,PT,sku_large_gear_vessel,-0.02,764.31,98.09,0.98,PT,sku_large_gear_vessel,0.0,764.11,-182.84,0.81,PT,sku_kit_s2l2_vessel,-0.02,738.96,336.62,0.74,KT,sku_kit_s2l2_vessel,-0.02,754.05,-465.91,0.7,KT,
+items=sku_part_large_gear,-0.15,769.74,-26.91,1.0,P,sku_part_large_gear,-0.15,769.98,-313.43,0.99,P,sku_part_large_gear,0.11,771.24,-138.8,0.98,P,sku_part_large_gear,-0.15,772.63,-425.52,0.98,P,sku_part_small_gear,0.0,605.57,-261.25,1.0,P,sku_part_small_gear,0.0,656.48,-197.33,0.99,P,sku_part_small_gear,0.0,598.92,-201.74,0.98,P,sku_part_small_gear,0.0,663.01,-255.56,0.98,P,sku_small_gear_vessel,0.02159265358979301,629.08,-227.63,0.47,PT,sku_large_gear_vessel,0.01,766.33,-369.83,0.7,PT,sku_large_gear_vessel,-0.03,767.29,-79.06,0.68,PT,sku_kit_s2l2_vessel,-0.06,748.33,157.94,0.77,KT,
 
 pickupDist=5.00
 posNoise=1.00
