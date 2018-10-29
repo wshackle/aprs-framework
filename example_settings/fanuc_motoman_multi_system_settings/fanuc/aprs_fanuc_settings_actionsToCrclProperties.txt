@@ -17,7 +17,6 @@ lookDwellTime=0.1
 lookForJoints=28.072489006139694,-41.03266879515683,-4.081189146798451,9.400504004456747E-6,-85.91880737642249,196.92752236559335
 lookForXYZ=150,80,180
 pauseInsteadOfRecover=false
-pddl.output=C:\\Users\\shackle\\AppData\\Local\\Temp\\2\\aprs_logs_2018-08-23_105513.747\\Fanuc-Cart-run-613-Fanuc\\110015.831_actionList_4174085816638031858.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
