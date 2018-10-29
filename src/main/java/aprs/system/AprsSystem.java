@@ -4511,7 +4511,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
-        XFuture<List<PhysicalItem>> itemsFuture = getSingleVisionToDbUpdate();
+        XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
         return itemsFuture
                 .thenApply(l -> l.stream().filter(this::isWithinLimits).collect(Collectors.toList()))
                 .thenCompose(items -> fillKitTrays(items, overrideRotationOffset, newRotationOffset));
@@ -4586,15 +4586,15 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (!Objects.equals(itemName, slotName)) {
                     int in_pt_index = itemName.indexOf("_in_pt");
                     if (in_pt_index > 0) {
-                        itemName = itemName.substring(0, in_pt_index);
+                        throw new IllegalStateException("bad itemName for item="+item);
                     }
                     int in_kt_index = itemName.indexOf("_in_kt");
                     if (in_kt_index > 0) {
-                        itemName = itemName.substring(0, in_kt_index);
+                        throw new IllegalStateException("bad itemName for item="+item);
                     }
                 }
                 if (Objects.equals(itemName, slotName)) {
-                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(itemName, item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
+                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
                     movedPartsList.add(newItem);
                     itemFoundIndex = i;
                     break;

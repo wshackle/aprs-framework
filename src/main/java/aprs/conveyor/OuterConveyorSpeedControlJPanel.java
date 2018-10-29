@@ -274,6 +274,15 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }
 
+    public void disconnect() {
+        checkBoxMenuItemConnected.setSelected(false);
+        stopConveyorNoPosEstimate();
+        if (null != master) {
+            master.disconnect();
+            master = null;
+        }
+    }
+    
     private void handleConnectedCheckBoxEvent() throws HeadlessException {
         if (null != master) {
             master.disconnect();

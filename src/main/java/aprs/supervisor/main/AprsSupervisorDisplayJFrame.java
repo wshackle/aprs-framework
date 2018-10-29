@@ -2945,6 +2945,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             runTimeTimer.stop();
             runTimeTimer = null;
         }
+        this.conveyorVisJPanel1.disconnect();
         this.colorTextJPanel1.stopReader();
         if (null != colorTextJFrame) {
             colorTextJFrame.setVisible(false);

@@ -9,7 +9,7 @@ maxLimit= { x=+830.000, y=+700.000, z=+1000.000 }
 minLimit= { x=-250.000, y=-400.000, z=-1000.000 } 
 motoman.crclLocalPort=64445
 reloadSimFilesOnReverse=false
-snapShotEnable=false
+snapShotEnable=true
 snapShotHeight=700
 snapShotWidth=900
 startup.connectdatabase=true
