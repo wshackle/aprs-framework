@@ -1954,24 +1954,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     }
                     notifyRawListeners(transformList(visionList, transform));
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
-                    if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
-                        if (!checkRequiredParts(l)) {
-                            System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
-                            System.err.println("checkRequiredPart(" + l + ") false but checkRequiredParts(" + visionList + ") true");
-                            boolean chkAgain = checkRequiredParts(l, true);
-                            chkAgain = checkRequiredParts(transformedVisionList, true);
-                            visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
-                            return XFutureVoid.completedFuture();
-                        }
-                    }
                     if (!singleUpdateListeners.isEmpty()) {
-                        if (!checkRequiredParts(l)) {
-                            boolean chkAgain = checkRequiredParts(l, true);
-                            chkAgain = checkRequiredParts(transformedVisionList, true);
-                            visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
-                            System.err.println("checkRequiredPart(" + l + ") false");
-                            return XFutureVoid.completedFuture();
-                        }
                         notifySingleUpdateListeners(l);
                     } else {
                         visionClientUpdateSingleUpdateListenersEmptyCount.incrementAndGet();

@@ -44,6 +44,9 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
         return clonedSystem;
     }
 
+    public void disconnect() {
+        outerConveyorSpeedControlJPanel1.disconnect();
+    }
     /**
      * Set the value of clonedSystem
      *
