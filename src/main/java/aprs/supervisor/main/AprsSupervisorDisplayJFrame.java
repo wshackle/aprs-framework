@@ -91,6 +91,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -200,6 +201,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private volatile int ignoreRobotTableChangesCount = 0;
     private volatile int handleRobotTableChangesCount = 0;
+    private final AtomicInteger tableChangeDisableCount = new AtomicInteger();
+    private final AtomicInteger tableChangeEnableCount = new AtomicInteger();
 
     private void handleRobotTableChange(int firstRow, int lastRow, int col, int type, Object source) {
 
@@ -235,7 +238,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             System.out.println("handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
             if (enabled != wasEnabled) {
                 final int fi = i;
-                if (isTogglesAllowed()) {
+                 boolean togglesAllowed = isTogglesAllowed();
+                if (enabled) {
+                    int enableCount = tableChangeEnableCount.incrementAndGet();
+                    supervisor.logEvent("handleRobotTableChange: enableCount=" + enableCount+",togglesAllowed="+togglesAllowed);
+                } else {
+                    int disableCount = tableChangeDisableCount.incrementAndGet();
+                    supervisor.logEvent("handleRobotTableChange: disableCount=" + disableCount+",togglesAllowed="+togglesAllowed);
+                }
+               
+                if (togglesAllowed) {
                     XFuture.runAsync(() -> {
                         if (isTogglesAllowed()) {
                             setRobotEnabled(checkedRobotName, enabled);
@@ -670,8 +682,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .getName()).log(Level.SEVERE, "", ex);
         }
     }
-
-    
 
 //    private final List<JCheckBox> robotsEnableCelEditorCheckBoxList = new ArrayList<>();
     private final List<JCheckBox> robotsEnableCelRendererComponentList = new ArrayList<>();
@@ -1299,7 +1309,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, ex.getMessage());
-            if(null != runTimeTimer) {
+            if (null != runTimeTimer) {
                 runTimeTimer.stop();
                 runTimeTimer = null;
             }
@@ -3288,8 +3298,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                        x -> continueAllActions());
+                        .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3354,24 +3364,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                                    .thenComposeToVoid(x -> {
-                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                            try {
-                                                clearAllErrors();
-                                                connectAll();
-                                                jCheckBoxMenuItemPause.setSelected(false);
-                                                resume();
-                                                return startRandomTestFirstActionReversed2();
-                                            } catch (Exception e) {
-                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                                ret.completeExceptionally(e);
-                                                return ret;
-                                            }
-                                        }).thenComposeToVoid(x3 -> x3);
-                                        return innerRet;
-                                    });
+                            .thenComposeToVoid(x -> {
+                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                    try {
+                                        clearAllErrors();
+                                        connectAll();
+                                        jCheckBoxMenuItemPause.setSelected(false);
+                                        resume();
+                                        return startRandomTestFirstActionReversed2();
+                                    } catch (Exception e) {
+                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                        ret.completeExceptionally(e);
+                                        return ret;
+                                    }
+                                }).thenComposeToVoid(x3 -> x3);
+                                return innerRet;
+                            });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3782,8 +3792,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public AprsSystem getConveyorVisClonedSystem() {
         return conveyorVisJPanel1.getClonedSystem();
     }
-
-    
 
     public XFutureVoid conveyorVisNextTray() {
         return conveyorVisJPanel1.nextTray();

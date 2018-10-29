@@ -2679,9 +2679,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                         + ", slotItemSkuName=" + slotItemSkuName
                                                         + ", itemSkuName=" + itemSkuName);
                                             }
-//                                        String partNamePrefix = shortSkuName + "_in_pt";
-//                                        int count = prefixCountMap.compute(partNamePrefix,
-//                                                (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                             String partName = partNames.remove(0);
                                             removedItemsNameMap.compute(finalShortSkuName, (k, v) -> {
                                                 if (v == null) {
