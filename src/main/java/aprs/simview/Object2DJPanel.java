@@ -1507,7 +1507,7 @@ public class Object2DJPanel extends JPanel {
         final double maxX = minmaxParam.max.x;
         final double maxY = minmaxParam.max.y;
         try {
-            if (itemsToPaint.isEmpty()) {
+            if (null == itemsToPaint || itemsToPaint.isEmpty()) {
                 return;
             }
             AffineTransform origTransform = g2d.getTransform();
