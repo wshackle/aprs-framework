@@ -1826,8 +1826,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         synchronized (rawUpdateListeners) {
             listeners = new ArrayList<>(rawUpdateListeners);
             rawUpdateListeners.clear();
-            setEnableDatabaseUpdates(false);
-            lastCopyListenersAndDisableUpdatesListeners = listeners;
         }
         return listeners;
     }
