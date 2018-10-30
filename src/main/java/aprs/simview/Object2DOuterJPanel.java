@@ -262,7 +262,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 while(model.getRowCount() > 200) {
                     model.removeRow(0);
                 }
-                model.addRow(new Object[]{snapshotsCount.incrementAndGet(),Utils.getTimeString(), f.getCanonicalPath(), csvFile.getCanonicalPath()});
+                String name = f.getName();
+                int uindex1 = name.indexOf('_');
+                if(uindex1 > 0 && uindex1 < (name.length()-1)) {
+                    name = name.substring(uindex1+1);
+                }
+                int uindex2 = name.lastIndexOf('_');
+                if(uindex2 > 0) {
+                    name = name.substring(0,uindex2);
+                }
+                int count = snapshotsCount.incrementAndGet();
+                model.addRow(new Object[]{count,Utils.getTimeString(), name,f.getCanonicalPath(), csvFile.getCanonicalPath()});
+                if(count %20 < 2) {
+                    Utils.autoResizeTableColWidths(jTableSnapshotFiles);
+                }
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1825,14 +1838,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
             },
             new String [] {
-                "Index", "Time", "Image File", "CSV File"
+                "Index", "Time", "Name", "Image File", "CSV File"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, true, true
+                false, false, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -3135,7 +3148,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                String filename = (String) dtm.getValueAt(selectedRow, 2);
+                String filename = (String) dtm.getValueAt(selectedRow, 3);
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3148,7 +3161,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                String filename = (String) dtm.getValueAt(selectedRow, 3);
+                String filename = (String) dtm.getValueAt(selectedRow, 4);
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);

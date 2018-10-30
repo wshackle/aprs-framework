@@ -3913,10 +3913,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final AtomicInteger safeAboutCount = new AtomicInteger(0);
     private final AtomicInteger safeAbortRequestCount = new AtomicInteger(0);
 
-    private void incSafeAbortCount() {
+    private void incSafeAbortCount(String label) {
         final int count = safeAboutCount.incrementAndGet();
-        appendGenerateAbortLog("incSafeAbortCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
-//        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortCount.setText(Integer.toString(count)));
+        appendGenerateAbortLog(label+ ".incSafeAbortCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
     }
 
     private void incSafeAbortRequestCount() {
@@ -3995,7 +3994,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
 
     private void completeSafeAbortFuture(XFutureVoid f) {
-        incSafeAbortCount();
+        incSafeAbortCount("completeSafeAbortFuture."+f);
         crclGenerator.takeSnapshots("", "completeSafeAbortFuture." + f, null, null);
         f.complete(null);
     }
@@ -4004,9 +4003,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final int startSafeAbortRequestCount = safeAbortRequestCount.get();
         startSafeAbortTime = System.currentTimeMillis();
         synchronized (this) {
-//            if (null != lastSafeAbortFuture && !lastSafeAbortFuture.isDone()) {
-//                return lastSafeAbortFuture;
-//            }
 
             startSafeAbortProgram = aprsSystem.getCrclProgram();
             if (null != startSafeAbortProgram) {
@@ -4024,15 +4020,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             incSafeAbortRequestCount();
             if (!startSafeAbortRunningProgram) {
-                incSafeAbortCount();
+                incSafeAbortCount("startSafeAbort!startSafeAbortRunningProgram."+name);
                 return XFutureVoid.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (startSafeAbortRunningProgramFutureDone) {
-                incSafeAbortCount();
+                incSafeAbortCount("startSafeAbort.startSafeAbortRunningProgramFutureDone."+name);
                 return XFutureVoid.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (!startSafeAbortIsRunningCrclProgram) {
-                incSafeAbortCount();
+                incSafeAbortCount("startSafeAbort!startSafeAbortIsRunningCrclProgram."+name);
                 return XFutureVoid.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
 
