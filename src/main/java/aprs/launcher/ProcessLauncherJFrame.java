@@ -153,10 +153,27 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         close();
     }//GEN-LAST:event_formWindowClosing
-
+    
     @UIEffect
     private void jCheckBoxMenuItemDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemDebugActionPerformed
         Neo4JKiller.setDebug(jCheckBoxMenuItemDebug.isSelected());
+        System.out.println("timoutMillis = " + timoutMillis);
+        if (timoutMillis > 0) {
+            System.out.println("timeoutStart = " + this.timeoutStart);
+            long t = System.currentTimeMillis();
+            long timeleft = timoutMillis - (t - timeoutStart);
+            System.out.println("timeleft = " + timeleft);
+        }
+        System.out.println("processes.size() = " + processes.size());
+        for (WrappedProcess proc : processes) {
+            System.out.println("");
+            proc.printInfo(System.out);
+            System.out.println("");
+        }
+        System.out.println("lineConsumers.size() = " + lineConsumers.size());
+        for (LineConsumer lc : lineConsumers) {
+            System.out.println("lc.isFinished() = " + lc.isFinished());
+        }
     }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
 
     /**
@@ -208,86 +225,80 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         });
     }
 
-    @SuppressWarnings("WeakerAccess")
-    private static abstract class LineConsumer implements Consumer<String> {
-
-        public abstract boolean isFinished();
-    }
-
-    static private class LogDisplayPanelOutputStream extends OutputStream {
-
-        final private LogDisplayJPanel logDisplayJPanel;
-
-        LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
-            this.logDisplayJPanel = logDisplayJInternalFrame;
-            if (null == logDisplayJInternalFrame) {
-                throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
-            }
-            this.lineConsumers = new ArrayList<>(lineConsumers);
-        }
-
-        private StringBuffer sb = new StringBuffer();
-
-        private final List<LineConsumer> lineConsumers;
-
-        private void notifiyLineConsumers(String line) {
-//            System.out.println("line = " + line);
-//            System.out.println("lineConsumers = " + lineConsumers);
-            for (int i = 0; i < lineConsumers.size(); i++) {
-                LineConsumer consumer = lineConsumers.get(i);
-                if (consumer.isFinished()) {
-                    lineConsumers.remove(consumer);
-                }
-            }
-            for (LineConsumer consumer : lineConsumers) {
-                consumer.accept(line);
-            }
-            for (int i = 0; i < lineConsumers.size(); i++) {
-                LineConsumer consumer = lineConsumers.get(i);
-                if (consumer.isFinished()) {
-                    lineConsumers.remove(consumer);
-                }
-            }
-        }
-
-        @Override
-        public void write(byte[] buf, int off, int len) {
-            if (null != logDisplayJPanel) {
-                final String s = new String(buf, off, len);
-                sb.append(s);
-                if (s.contains("\n")) {
-                    String fullString = sb.toString();
-                    notifiyLineConsumers(fullString);
-                    if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-                        logDisplayJPanel.appendText(fullString);
-                    } else {
-                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                logDisplayJPanel.appendText(fullString);
-                            }
-                        });
-                    }
-                    sb = new StringBuffer();
-                }
-            }
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            if (b < 0 || b > 255) {
-                throw new IOException("bad byte = " + b);
-            }
-            byte buf[] = new byte[1];
-            buf[0] = (byte) b;
-            this.write(buf, 0, 1);
-        }
-    }
+//    static private class LogDisplayPanelOutputStream extends OutputStream {
+//
+//        final private LogDisplayJPanel logDisplayJPanel;
+//
+//        LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
+//            this.logDisplayJPanel = logDisplayJInternalFrame;
+//            if (null == logDisplayJInternalFrame) {
+//                throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
+//            }
+//            this.lineConsumers = new ArrayList<>(lineConsumers);
+//        }
+//
+//        private StringBuffer sb = new StringBuffer();
+//
+//        private final List<LineConsumer> lineConsumers;
+//
+//        private void notifiyLineConsumers(String line) {
+////            System.out.println("line = " + line);
+////            System.out.println("lineConsumers = " + lineConsumers);
+//            for (int i = 0; i < lineConsumers.size(); i++) {
+//                LineConsumer consumer = lineConsumers.get(i);
+//                if (consumer.isFinished()) {
+//                    lineConsumers.remove(consumer);
+//                }
+//            }
+//            for (LineConsumer consumer : lineConsumers) {
+//                consumer.accept(line);
+//            }
+//            for (int i = 0; i < lineConsumers.size(); i++) {
+//                LineConsumer consumer = lineConsumers.get(i);
+//                if (consumer.isFinished()) {
+//                    lineConsumers.remove(consumer);
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void write(byte[] buf, int off, int len) {
+//            if (null != logDisplayJPanel) {
+//                final String s = new String(buf, off, len);
+//                sb.append(s);
+//                if (s.contains("\n")) {
+//                    String fullString = sb.toString();
+//                    notifiyLineConsumers(fullString);
+//                    if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+//                        logDisplayJPanel.appendText(fullString);
+//                    } else {
+//                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                logDisplayJPanel.appendText(fullString);
+//                            }
+//                        });
+//                    }
+//                    sb = new StringBuffer();
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void write(int b) throws IOException {
+//            if (b < 0 || b > 255) {
+//                throw new IOException("bad byte = " + b);
+//            }
+//            byte buf[] = new byte[1];
+//            buf[0] = (byte) b;
+//            this.write(buf, 0, 1);
+//        }
+//    }
     private final List<WrappedProcess> processes = new ArrayList<>();
-
+    
     private volatile List<LineConsumer> lineConsumers = new ArrayList<>();
     private volatile List<LineConsumer> errorLineConsumers = new ArrayList<>();
-
+    
     @SuppressWarnings("UnusedReturnValue")
     private WrappedProcess addProcess(String... command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
@@ -300,7 +311,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
-
+    
     private WrappedProcess addProcess(List<String> command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
@@ -312,7 +323,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
-
+    
     public WrappedProcess addProcess(File directory, String... command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String[] command2 = replaceDotDir(directory, command);
@@ -325,7 +336,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
-
+    
     private static String replaceDotDir(File dir, String in) {
         if (!in.startsWith(".")) {
             return in;
@@ -344,21 +355,21 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         return in;
     }
-
+    
     private static String[] replaceDotDir(File dir, String in[]) {
         for (int i = 0; i < in.length; i++) {
             in[i] = replaceDotDir(dir, in[i]);
         }
         return in;
     }
-
+    
     private static List<String> replaceDotDir(File dir, List<String> in) {
         for (int i = 0; i < in.size(); i++) {
             in.set(i, replaceDotDir(dir, in.get(i)));
         }
         return in;
     }
-
+    
     private WrappedProcess addProcess(File directory, List<String> command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         List<String> command2 = replaceDotDir(directory, command);
@@ -371,12 +382,12 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
-
+    
     public static String[] parseCommandLineToArray(String line) {
         List<String> args = parseCommandLine(line);
         return args.toArray(new String[0]);
     }
-
+    
     private static List<String> parseCommandLine(String line) {
         List<String> args = new ArrayList<>();
         int dquotes = 0;
@@ -396,7 +407,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         sb.append(c);
                     }
                     break;
-
+                
                 case '\"':
                     if (squotes % 2 == 0 && lastC != '\\') {
                         dquotes++;
@@ -404,7 +415,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         sb.append(c);
                     }
                     break;
-
+                
                 case '\'':
                     if (dquotes % 2 == 0 && lastC != '\\') {
                         squotes++;
@@ -412,14 +423,14 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                         sb.append(c);
                     }
                     break;
-
+                
                 case '\\':
                     if (lastC == '\\' || isWindows) {
                         sb.append(c);
                         c = 0;
                     }
                     break;
-
+                
                 default:
                     sb.append(c);
                     break;
@@ -432,22 +443,22 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         return args;
     }
-
+    
     private volatile boolean stopLineSeen = false;
-
+    
     private volatile List<String> stopLines = new ArrayList<>();
-
+    
     @Nullable
     private volatile File processLaunchDirectory = null;
-
+    
     @Nullable
     private volatile String onFailLine = null;
     @Nullable
     private volatile XFutureVoid waitForFuture = null;
-
+    
     private final Deque<Boolean> ifStack = new ArrayDeque<>();
     private String tabs = "";
-
+    
     private boolean allIfStack() {
         for (boolean val : ifStack) {
             if (!val) {
@@ -456,7 +467,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         return true;
     }
-
+    
     private boolean debug;
 
     /**
@@ -476,7 +487,27 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
+    
+    private int timoutMillis;
 
+    /**
+     * Get the value of timoutMillis
+     *
+     * @return the value of timoutMillis
+     */
+    public int getTimoutMillis() {
+        return timoutMillis;
+    }
+
+    /**
+     * Set the value of timoutMillis
+     *
+     * @param timoutMillis new value of timoutMillis
+     */
+    public void setTimoutMillis(int timoutMillis) {
+        this.timoutMillis = timoutMillis;
+    }
+    
     @Nullable
     @SuppressWarnings("nullness")
     private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
@@ -486,7 +517,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             }
             return null;
         }
-
+        
         if (debug) {
             System.out.println("line = " + line);
             System.out.println("ifStack.size() = " + ifStack.size());
@@ -494,7 +525,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         String currentOnFailLine = onFailLine;
         XFutureVoid currentWaitForFuture = waitForFuture;
         List<LineConsumer> currentErrorLineConsumers = errorLineConsumers;
-
+        
         line = line.trim();
         if (line.length() < 1) {
             if (null != stringBuilder) {
@@ -508,7 +539,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         line = replaceVarsInLine(line, "$", "\n");
         line = replaceVarsInLine(line, "$", "\r");
         line = replaceVarsInLine(line, "$", null);
-
+        
         if (stopLineSeen) {
             stopLines.add(line);
             if (null != stringBuilder) {
@@ -527,7 +558,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             }
             String firstWord = words[0];
             if (firstWord.equals("if!connectOK")) {
-
+                
                 String parts[] = Arrays.copyOfRange(words, 1, words.length);
                 if (parts.length >= 2) {
                     try {
@@ -555,18 +586,18 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 return null;
             }
             cmdsProcessed = true;
-
+            
             if (!allIfStack()) {
                 return null;
             }
-
+            
             if (firstWord.equals("plj-recoverWaitFor")) {
                 String text = afterFirstWord(line, firstWord);
                 final List<LineConsumer> containingList = errorLineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-
+                    
                     private volatile boolean finished = false;
-
+                    
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
@@ -576,7 +607,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                             finished = true;
                         }
                     }
-
+                    
                     @Override
                     public boolean isFinished() {
                         return finished;
@@ -590,9 +621,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 String text = afterFirstWord(line, firstWord);
                 final List<LineConsumer> containingList = lineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-
+                    
                     private volatile boolean finished = false;
-
+                    
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
@@ -606,7 +637,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                                         File dir = processLaunchDirectory;
                                         if (null != dir) {
                                             addProcess(dir, parseCommandLine(lineToParse));
-
+                                            
                                         } else {
                                             addProcess(parseCommandLine(lineToParse));
                                         }
@@ -624,21 +655,24 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                             finished = true;
                         }
                     }
-
+                    
                     @Override
                     public boolean isFinished() {
                         return finished;
                     }
                 };
                 containingList.add(consumer);
+            } else if (firstWord.equals("plj-timeout")) {
+                String text = afterFirstWord(line, firstWord);
+                setTimoutMillis(Integer.parseInt(text.trim()));
             } else if (firstWord.equals("plj-waitfor")) {
                 String text = afterFirstWord(line, firstWord);
                 XFutureVoid xf = new XFutureVoid("plj-waitfor " + text);
                 final List<LineConsumer> containingList = lineConsumers;
                 LineConsumer consumer = new LineConsumer() {
-
+                    
                     private volatile boolean finished = false;
-
+                    
                     @Override
                     public void accept(String s) {
                         if (s.contains(text)) {
@@ -646,7 +680,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                             finished = true;
                         }
                     }
-
+                    
                     @Override
                     public boolean isFinished() {
                         return finished;
@@ -703,20 +737,20 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             }
             tabs = newTabs;
         }
-
+        
         return null;
     }
-
+    
     private String afterFirstWord(String line, String firstWord) {
         return line.substring(line.indexOf(firstWord) + firstWord.length()).trim();
     }
-
+    
     private String replaceVarsInLine(String line, String startString, @Nullable String endString) {
         int varStartIndex = line.indexOf(startString);
         int endStringLength = (null != endString) ? endString.length() : 0;
         int startStringLength = startString.length();
         while (varStartIndex >= 0) {
-
+            
             int varEndIndex
                     = (endString != null)
                             ? line.indexOf(endString, varStartIndex + startStringLength)
@@ -753,7 +787,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         return line;
     }
-
+    
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
@@ -777,25 +811,50 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             jTextAreaLauncherFile.setText(stringBuilder.toString());
             stringBuilder = null;
         }
+        if (timoutMillis > 0) {
+            return XFutureVoid.anyOf(XFuture.allOf(futures), newTimeoutFuture())
+                    .thenRun(() -> {
+                        try {
+                            System.out.println(f.getCanonicalPath() + " complete.");
+                        } catch (IOException ex) {
+                            Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    })
+                    .always(WrappedProcess::shutdownStarterService);
+        }
         return XFuture.allOf(futures)
                 .always(WrappedProcess::shutdownStarterService);
     }
-
+    
+    private volatile long timeoutStart = -1;
+    
+    XFutureVoid newTimeoutFuture() {
+        XFutureVoid ret = new XFutureVoid("timeoutFuture");
+        timeoutStart = System.currentTimeMillis();
+        javax.swing.Timer timer = new Timer(this.timoutMillis, (evt) -> {
+            ret.complete();
+        });
+        timer.setRepeats(false);
+        timer.setInitialDelay(this.timoutMillis);
+        timer.start();
+        return ret;
+    }
+    
     private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
-
+    
     public void addOnCloseRunnable(Runnable r) {
         onCloseRunnables.add(r);
     }
-
+    
     public void removeOnCloseRunnable(Runnable r) {
         onCloseRunnables.remove(r);
     }
-
+    
     private final AtomicBoolean closing = new AtomicBoolean();
-
+    
     @SuppressWarnings("CanBeFinal")
     private volatile XFutureVoid closingFuture = new XFutureVoid("processLauncherClosingFuture");
-
+    
     public XFutureVoid close() {
         boolean wasClosing = closing.getAndSet(true);
         if (wasClosing) {
@@ -804,7 +863,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         for (Runnable r : onCloseRunnables) {
             try {
                 r.run();
-
+                
             } catch (Exception ex) {
                 Logger.getLogger(ProcessLauncherJFrame.class
                         .getName()).log(Level.SEVERE, "", ex);
@@ -814,7 +873,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         closingThread.start();
         return closingFuture;
     }
-
+    
     private void completeClose() {
         List<WrappedProcess> stopProcesses = new ArrayList<>();
         List<XFuture<?>> futures = new ArrayList<>();
@@ -825,7 +884,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                 WrappedProcess p = parseLaunchFileLine(line, futures, null);
                 if (null != p) {
                     stopProcesses.add(p);
-
+                    
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ProcessLauncherJFrame.class
@@ -836,7 +895,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
             try {
                 if (!p.waitFor(5, TimeUnit.SECONDS)) {
                     p.close();
-
+                    
                 }
             } catch (InterruptedException ex) {
                 Logger.getLogger(ProcessLauncherJFrame.class
@@ -849,7 +908,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         WrappedProcess.shutdownStarterService();
         Utils.runOnDispatchThread("coseProcessLauncher", this::finalFinishClose);
     }
-
+    
     private void finalFinishClose() {
         this.setVisible(false);
         closingFuture.complete(null);

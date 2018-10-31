@@ -213,15 +213,42 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //            System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
 //        }
         if (type != TableModelEvent.UPDATE) {
+            boolean enabled0 = getEnableFromRobotsTable(0);
+            String rname = (String) jTableRobots.getValueAt(0, 0);
+            boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
+            if (enabled0 != wasEnabled0) {
+                System.out.println("wasEnabled = " + wasEnabled0);
+                System.out.println("enabled = " + enabled0);
+            }
             System.out.println("handleRobotTableChange: ignoring event of type = " + type);
+            return;
         }
         if (col != 1) {
+            String rname = (String) jTableRobots.getValueAt(0, 0);
+            boolean enabled0 = getEnableFromRobotsTable(0);
+            boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
+            if (enabled0 != wasEnabled0) {
+                System.out.println("wasEnabled = " + wasEnabled0);
+                System.out.println("enabled = " + enabled0);
+            }
             System.out.println("handleRobotTableChange: ignoring event for col=  " + col);
+            return;
         }
         if (ignoreRobotTableChanges) {
             ignoreRobotTableChangesCount++;
-//            System.out.println("ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
-//            flushTableRobotEventDeque(false);
+
+            String rname = (String) jTableRobots.getValueAt(0, 0);
+            boolean enabled0 = getEnableFromRobotsTable(0);
+            boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
+            if (enabled0 != wasEnabled0) {
+                System.out.println("handleRobotTableChange: ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
+                System.out.println("handleRobotTableChange: wasEnabled = " + wasEnabled0);
+                System.out.println("handleRobotTableChange: enabled = " + enabled0);
+                if (null != disableRobotTableModelListenerTrace) {
+                    System.out.println("disableRobotTableModelListenerTrace = " + Arrays.toString(disableRobotTableModelListenerTrace));
+                }
+                jTableRobots.setValueAt(wasEnabled0, 0, 1);
+            }
             return;
         }
         handleRobotTableChangesCount++;
@@ -238,15 +265,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             System.out.println("handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
             if (enabled != wasEnabled) {
                 final int fi = i;
-                 boolean togglesAllowed = isTogglesAllowed();
+                boolean togglesAllowed = isTogglesAllowed();
                 if (enabled) {
                     int enableCount = tableChangeEnableCount.incrementAndGet();
-                    supervisor.logEvent("handleRobotTableChange: enableCount=" + enableCount+",togglesAllowed="+togglesAllowed);
+                    supervisor.logEvent("handleRobotTableChange: enableCount=" + enableCount + ",togglesAllowed=" + togglesAllowed);
                 } else {
                     int disableCount = tableChangeDisableCount.incrementAndGet();
-                    supervisor.logEvent("handleRobotTableChange: disableCount=" + disableCount+",togglesAllowed="+togglesAllowed);
+                    supervisor.logEvent("handleRobotTableChange: disableCount=" + disableCount + ",togglesAllowed=" + togglesAllowed);
                 }
-               
+
                 if (togglesAllowed) {
                     XFuture.runAsync(() -> {
                         if (isTogglesAllowed()) {
@@ -661,12 +688,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         //jTableRobots.getModel().addTableModelListener(robotTableModelListener);
     }
 
-//    private void flushTableRobotEventDeque(boolean val) {
-//        SetTableRobotEnabledEvent setTableRobotEnabledEvent = null;
-//        while (null != (setTableRobotEnabledEvent = setTableRobotEnabledEventDeque.pollFirst())) {
-//            setTableRobotEnabledEvent.getFuture().complete(val);
-//        }
-//    }
     public void setDefaultIconImage() {
         try {
             URL url = getAprsIconUrl();
@@ -683,7 +704,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-//    private final List<JCheckBox> robotsEnableCelEditorCheckBoxList = new ArrayList<>();
     private final List<JCheckBox> robotsEnableCelRendererComponentList = new ArrayList<>();
 
     private final ListSelectionListener jListFuturesSelectionListener
@@ -4736,11 +4756,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private volatile boolean ignoreRobotTableChanges = false;
+    private volatile StackTraceElement disableRobotTableModelListenerTrace[] = null;
 
     private void disableRobotTableModelListener() {
         ignoreRobotTableChanges = true;
-
-//        jTableRobots.getModel().removeTableModelListener(robotTableModelListener);
+        disableRobotTableModelListenerTrace = Thread.currentThread().getStackTrace();
     }
 
     private static void expandAllNodes(JTree tree, int startingIndex, int rowCount, int startExpandCount, int recurseDepth) {

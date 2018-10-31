@@ -26,6 +26,7 @@ import crcl.ui.XFuture;
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
@@ -48,26 +49,48 @@ public class WrappedProcess {
 
     private final Thread outputReaderThread;
     private final Thread errorReaderThread;
+    private final OutputStream outputStream;
+    private final OutputStream errorStream;
     private final PrintStream outputPrintStream;
     private final PrintStream errorPrintStream;
     private volatile Process process;
     private volatile boolean closed = false;
     private final XFuture<Process> processStartXFuture;
     private final String cmdLine;
-
-    @MonotonicNonNull private Component displayComponent;
+    
+    public void printInfo(PrintStream ps) {
+        ps.println("cmdLine = " + cmdLine);
+        ps.println("closed = " + closed);
+        ps.println("process = " + process);
+        ps.println("outputReaderThread = " + outputReaderThread);
+        ps.println("errorReaderThread = " + errorReaderThread);
+        ps.println("processStartXFuture = " + processStartXFuture);
+        String errorDebugString = getErrorDebugString();
+        ps.println("errorDebugString = " + errorDebugString);
+        String outputDebugString = getOutputDebugString();
+        ps.println("outputDebugString = " + outputDebugString);
+        System.out.println("displayComponent = " + displayComponent);
+        if(outputStream instanceof LogDisplayPanelOutputStream) {
+            LogDisplayPanelOutputStream ljpos = (LogDisplayPanelOutputStream)
+                    outputStream;
+            System.out.println("ljpos = " + ljpos);
+        }
+    }
+ 
+    @MonotonicNonNull
+    private Component displayComponent;
 
     public XFuture<Process> getProcessStartXFuture() {
         return processStartXFuture;
     }
 
-    
     /**
      * Get the value of displayComponent
      *
      * @return the value of displayComponent
      */
-    @Nullable public Component getDisplayComponent() {
+    @Nullable
+    public Component getDisplayComponent() {
         return displayComponent;
     }
 
@@ -80,10 +103,34 @@ public class WrappedProcess {
         this.displayComponent = displayComponent;
     }
 
+    private final char readOutputDebugBuff[] = new char[256];
+    private final AtomicInteger readOutputDebugCount = new AtomicInteger();
+
+    public String getOutputDebugString() {
+        int c = readOutputDebugCount.get();
+        int index = c % readOutputDebugBuff.length;
+        if (c < readOutputDebugBuff.length) {
+            if (index < 1) {
+                return "";
+            } else {
+                return new String(readOutputDebugBuff, 0, index);
+            }
+        } else if (index < 1) {
+            return new String(readOutputDebugBuff);
+        } else {
+            return new String(readOutputDebugBuff, index, (readOutputDebugBuff.length - index))
+                    + new String(readOutputDebugBuff, 0, index);
+        }
+    }
+
     private void readOutputStream() {
         try {
             int readRet = -1;
-            while (!closed && (-1 != (readRet = process.getInputStream().read()))) {
+            InputStream inputStream = process.getInputStream();
+            while (!closed && (-1 != (readRet = inputStream.read()))) {
+                int c = readOutputDebugCount.incrementAndGet();
+                int index = (c - 1) % readOutputDebugBuff.length;
+                readOutputDebugBuff[index] = (char) readRet;
                 outputPrintStream.write(readRet);
             }
         } catch (IOException ex) {
@@ -93,10 +140,28 @@ public class WrappedProcess {
         }
     }
 
+    private final char readErrorDebugBuff[] = new char[256];
+    private final AtomicInteger readErrorDebugCount = new AtomicInteger();
+
+    public String getErrorDebugString() {
+        int c = readErrorDebugCount.get();
+        int index = c % readErrorDebugBuff.length;
+        if (c < readErrorDebugBuff.length) {
+            return new String(readErrorDebugBuff, 0, index);
+        } else {
+            return new String(readErrorDebugBuff, index, (readErrorDebugBuff.length - index))
+                    + new String(readErrorDebugBuff, 0, index);
+        }
+    }
+
     private void readErrorStream() {
         try {
             int readRet = -1;
-            while (!closed && (-1 != (readRet = process.getErrorStream().read()))) {
+            InputStream errorStream = process.getErrorStream();
+            while (!closed && (-1 != (readRet = errorStream.read()))) {
+                int c = readErrorDebugCount.incrementAndGet();
+                int index = (c - 1) % readErrorDebugBuff.length;
+                readErrorDebugBuff[index] = (char) readRet;
                 errorPrintStream.write(readRet);
             }
         } catch (IOException ex) {
@@ -129,15 +194,16 @@ public class WrappedProcess {
         errorReaderThread.start();
     }
 
-    @Nullable private volatile Exception processStartException = null;
-    
+    @Nullable
+    private volatile Exception processStartException = null;
+
     private Process internalStart(ProcessBuilder pb) {
         try {
             return pb.start();
         } catch (Exception ex) {
             processStartException = ex;
             ex.printStackTrace(errorPrintStream);
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -147,24 +213,26 @@ public class WrappedProcess {
 
     @SuppressWarnings("initialization")
     private WrappedProcess(ProcessBuilder pb, String cmdLine,
-            OutputStream outputPrintStream, OutputStream errorPrintStream) {
+            OutputStream outputStream, OutputStream errorStream) {
         myNum = num.incrementAndGet();
         this.cmdLine = cmdLine;
         pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
         pb.redirectError(ProcessBuilder.Redirect.PIPE);
+        this.outputStream = outputStream;
+        this.errorStream = errorStream;
         this.errorPrintStream
-                = (errorPrintStream instanceof PrintStream)
-                        ? (PrintStream) errorPrintStream
-                        : new PrintStream(errorPrintStream);
+                = (errorStream instanceof PrintStream)
+                        ? (PrintStream) errorStream
+                        : new PrintStream(errorStream);
         this.outputPrintStream
-                = (outputPrintStream instanceof PrintStream)
-                        ? (PrintStream) outputPrintStream
-                        : new PrintStream(outputPrintStream);
+                = (outputStream instanceof PrintStream)
+                        ? (PrintStream) outputStream
+                        : new PrintStream(outputStream);
         outputReaderThread = new Thread(this::readOutputStream, "outputReader:" + myNum + cmdLine);
         outputReaderThread.setDaemon(true);
         errorReaderThread = new Thread(this::readErrorStream, "errorReader:" + myNum + cmdLine);
         errorReaderThread.setDaemon(true);
-        processStartXFuture = XFuture.supplyAsync(cmdLine, ()->internalStart(pb), processStarterService);
+        processStartXFuture = XFuture.supplyAsync(cmdLine, () -> internalStart(pb), processStarterService);
         processStartXFuture.thenAccept(this::setProcess);
     }
 

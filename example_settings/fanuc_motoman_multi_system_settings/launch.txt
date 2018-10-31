@@ -1,4 +1,6 @@
 
+plj-timeout 30000
+
 if!connectOK localhost 7484
 plj-waitfor Successfully started database
 ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
