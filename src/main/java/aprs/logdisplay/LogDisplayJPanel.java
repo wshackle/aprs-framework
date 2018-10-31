@@ -282,6 +282,10 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }
 
+    
+    
+    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonToExternal;
     private javax.swing.JCheckBox jCheckBoxPauseOutput;

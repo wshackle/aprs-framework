@@ -3994,7 +3994,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
 
     private void completeSafeAbortFuture(XFutureVoid f) {
-        incSafeAbortCount("completeSafeAbortFuture."+f);
+        incSafeAbortCount("completeSafeAbortFuture.");
         crclGenerator.takeSnapshots("", "completeSafeAbortFuture." + f, null, null);
         f.complete(null);
     }
