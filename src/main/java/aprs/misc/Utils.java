@@ -95,7 +95,10 @@ public class Utils {
 
     public static String traceToString(StackTraceElement trace @Nullable []) {
         if (null == trace) {
-            return "";
+            return "null";
+        }
+        if (trace.length==0) {
+            return "[]";
         }
         try (StringWriter stringWriter = new StringWriter()) {
             try (PrintWriter printWriter = new PrintWriter(stringWriter)) {

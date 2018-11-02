@@ -5,8 +5,8 @@ USETEACHTABLE=true
 aprs.robotName=Sim_Fanuc
 aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
-maxLimit= { x=+700.000, y=+200.000, z=+1000.000 } 
-minLimit= { x=+100.000, y=-200.000, z=-1000.000 } 
+maxLimit= { x=+700.000, y=+300.000, z=+1000.000 } 
+minLimit= { x=+100.000, y=-300.000, z=-1000.000 } 
 reloadSimFilesOnReverse=false
 snapShotEnable=true
 snapShotHeight=700

@@ -1133,6 +1133,21 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         gparams.options = options;
         gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
         gparams.replan = !aprsSystem.isCorrectionMode() && !lastProgramAborted;
+        generateCount.incrementAndGet();
+        if(gparams.startingIndex == 0) {
+            generateFromZeroCount.incrementAndGet();
+            generateSinceZeroCount.set(0);
+        } else {
+            generateSinceZeroCount.incrementAndGet();
+        }
+        final Thread curThread = Thread.currentThread();
+        if (null == genThread) {
+            genThread = curThread;
+            genThreadSetTrace = curThread.getStackTrace();
+        } else if (genThread != curThread) {
+            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+        }
         List<MiddleCommandType> cmds = generate(gparams);
         this.lastProgramAborted = false;
         return cmds;
@@ -1311,6 +1326,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
+    private final AtomicInteger generateCount = new AtomicInteger();
+    private final AtomicInteger generateFromZeroCount = new AtomicInteger();
+    private final AtomicInteger generateSinceZeroCount = new AtomicInteger();
+    
     /**
      * Generate a list of CRCL commands from a list of PddlActions starting with
      * the given index, using the provided optons.
@@ -1334,14 +1353,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
         }
-        final Thread curThread = Thread.currentThread();
-        if (null == genThread) {
-            genThread = curThread;
-            genThreadSetTrace = curThread.getStackTrace();
-        } else if (genThread != curThread) {
-            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
-            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
-        }
+        
         List<MiddleCommandType> cmds = new ArrayList<>();
         if (null != solver && gparams.replan) {
             return runOptaPlanner(gparams.actions, gparams.startingIndex, gparams.options, gparams.startSafeAbortRequestCount);
@@ -1953,7 +1965,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         gparams.runOptoToGenerateReturn = null;
         int rc = ropCount.incrementAndGet();
-//        logDebug("runOptaPlanner: rc = " + rc);
         long t0 = System.currentTimeMillis();
         setOptions(options1);
         if (actions.size() < 1) {
@@ -2086,6 +2097,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final AtomicInteger solverRunCount = new AtomicInteger();
 
+    private volatile int lastgfzc = -1;
+    
     private List<Action> optimizePddlActionsWithOptaPlanner(
             List<Action> actions,
             int startingIndex)
@@ -2217,6 +2230,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         HardSoftLongScore score = calculator.calculateScore(inputPlan);
         double inScore = (score.getSoftScore() / 1000.0);
         int solveCount = solverRunCount.incrementAndGet();
+        int gfzc = generateFromZeroCount.get();
+        if(lastgfzc ==  gfzc) {
+            System.out.println("solveCount = " + solveCount);
+            System.out.println("generateFromZeroCount.get() = " + gfzc);
+            System.out.println("lastgfzc = " + lastgfzc);
+            System.out.println("generateSinceZeroCount.get() = " + generateSinceZeroCount.get());
+        }
+        lastgfzc = gfzc;
         try {
             OpActionPlan solvedPlan;
             inputPlan.checkActionList();
@@ -2460,6 +2481,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
         boolean empty = kitsToFix.isEmpty();
         if (!empty) {
+            takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItems);
+            takeSimViewSnapshot("recheckKitsOnly: parts", parts);
             logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
             logError("recheckKitsOnly: matchedKitInstanceNames = " + matchedKitInstanceNames);
             logError("recheckKitsOnly: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
@@ -2471,6 +2494,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         logError("recheckKitsOnly: failedItemInfo = " + failedItemInfo);
                         logError("recheckKitsOnly: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
                         logError("recheckKitsOnly: failedItemInfo.failedItemSkuName = " + failedItemInfo.failedItemSkuName);
+                        takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedAbsSlot,"failedAbsSlot");
+                        if(null != failedItemInfo.failedClosestItem) {
+                            takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedClosestItem,"failedClosestItem");
+                        }
                     }
                     logError("recheckKitsOnly: info.failedSlots = " + info.failedSlots);
                 }

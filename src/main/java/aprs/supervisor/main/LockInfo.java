@@ -36,7 +36,7 @@ class LockInfo {
 
     public LockInfo(String name) {
         startTime = System.currentTimeMillis();
-        future = new XFutureVoid(name);
+        future = new XFutureVoid("toggleLockInfo."+name);
     }
 
     public long getStartTime() {

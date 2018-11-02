@@ -87,17 +87,19 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private volatile boolean showingException = false;
 
     @SafeEffect
-    public void showException(Throwable ex) {
+    public XFutureVoid showException(Throwable ex) {
         if (!showingException) {
             showingException = true;
-            javax.swing.SwingUtilities.invokeLater(() -> showExceptionInternal(ex));
+            return Utils.composeToVoidOnDispatchThread(() -> showExceptionInternal(ex));
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
     private final AtomicInteger exceptionCount = new AtomicInteger();
     
     @UIEffect
-    private void showExceptionInternal(Throwable ex) {
+    private XFutureVoid showExceptionInternal(Throwable ex) {
         StringWriter sw = new StringWriter();
         try (PrintWriter pw = new PrintWriter(sw, true)) {
             ex.printStackTrace(pw);
@@ -105,7 +107,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex1);
         }
         String exText = sw.toString();
-        MultiLineStringJPanel.showText(exText, this, "Exception from " + this.getTitle(), false,exceptionCount.incrementAndGet() < 2).thenRun(() -> showingException = false);
+        boolean forceShow = exceptionCount.incrementAndGet() < 2;
+        String dialogTitle = "Exception from " + this.getTitle();
+        XFuture<Boolean> showTextFuture 
+                = MultiLineStringJPanel.showText(exText, this, dialogTitle, false,forceShow);
+        return showTextFuture
+                .thenRun(() -> showingException = false);
     }
 
     CachedCheckBox logCrclProgramsCheckBox() {
