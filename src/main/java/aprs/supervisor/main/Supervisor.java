@@ -4733,6 +4733,15 @@ public class Supervisor {
             final AprsSupervisorDisplayJFrame checkedDisplayJFrame = displayJFrame;
             XFutureVoid step1Future = Utils.runOnDispatchThread(() -> {
                 checkedDisplayJFrame.updateRobotsTableFromMapsAndEnableAll(robotDisableCountMapCopy, robotDisableTotalTimeMapCopy);
+//                System.out.println("sleeping in updateRobotsTableFromMapsAndEnableAll");
+//                try {
+//                    Thread.sleep(20000);
+//                } catch (InterruptedException ex) {
+//                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+//                    throw new RuntimeException(ex);
+//                }
+//                System.out.println("sleep in updateRobotsTableFromMapsAndEnableAll");
+                
             });
             return step1Future;
         }

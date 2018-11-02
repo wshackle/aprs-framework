@@ -2564,6 +2564,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     printLastOptoInfo();
                     if (pauseInsteadOfRecover && !aprsSystem.isCorrectionMode()) {
                         StringBuilder errMsgSb = new StringBuilder();
+                        aprsSystem.setSnapshotsSelected(true);
                         takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
                         String errMsgStart = aprsSystem.getRunName();
                         errMsgSb.append(errMsgStart);
@@ -2701,6 +2702,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                                 partsInPartsTrayFullNames,
                                                                 name2 -> name2.contains(finalShortSkuName));
                                                 logError("recalcPartNames = " + recalcPartNames);
+                                                aprsSystem.setSnapshotsSelected(true);
+                                                takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
                                                 throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
                                                         + ", absSlotPrpName=" + absSlotPrpName
                                                         + ", slotItemSkuName=" + slotItemSkuName

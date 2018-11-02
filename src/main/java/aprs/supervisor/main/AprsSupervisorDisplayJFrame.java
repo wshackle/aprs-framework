@@ -191,10 +191,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         @Override
         public void tableChanged(TableModelEvent e) {
-            try {
-                handleRobotTableChange(e.getFirstRow(), e.getLastRow(), e.getColumn(), e.getType(), e.getSource());
-            } catch (Exception exception) {
-                log(Level.SEVERE, "", exception);
+            synchronized (jTableRobots) {
+                try {
+                    if (injTableRobotsSetValueAtCall) {
+                        return;
+                    }
+                    handleRobotTableChange(e.getFirstRow(), e.getLastRow(), e.getColumn(), e.getType(), e.getSource());
+                } catch (Exception exception) {
+                    log(Level.SEVERE, "", exception);
+                }
             }
         }
     }
@@ -204,14 +209,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private final AtomicInteger tableChangeDisableCount = new AtomicInteger();
     private final AtomicInteger tableChangeEnableCount = new AtomicInteger();
 
+    @UIEffect
     private void handleRobotTableChange(int firstRow, int lastRow, int col, int type, Object source) {
 
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
-//        if (jTableRobots.getRowCount() > 0) {
-//            System.out.println("handleRobotTableChange: firstRow=" + firstRow + ",lastRow=" + lastRow + ",jTableRobots.getValueAt(" + firstRow + ",1) = " + jTableRobots.getValueAt(firstRow, 1));
-//        }
         if (type != TableModelEvent.UPDATE) {
             boolean enabled0 = getEnableFromRobotsTable(0);
             String rname = (String) jTableRobots.getValueAt(0, 0);
@@ -247,7 +250,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (null != disableRobotTableModelListenerTrace) {
                     System.out.println("disableRobotTableModelListenerTrace = " + Arrays.toString(disableRobotTableModelListenerTrace));
                 }
-                jTableRobots.setValueAt(wasEnabled0, 0, 1);
+                jTableRobotsSetValueAt(wasEnabled0, 0, 1);
             }
             return;
         }
@@ -278,14 +281,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     XFuture.runAsync(() -> {
                         if (isTogglesAllowed()) {
                             setRobotEnabled(checkedRobotName, enabled);
-//                            flushTableRobotEventDeque(true);
                         } else {
                             javax.swing.SwingUtilities.invokeLater(() -> {
                                 logEvent("Attempt to toggle robot enabled ignored.");
                                 disableRobotTableModelListener();
-                                System.out.println("handleRobotTableChange calling jTableRobots.setValueAt(" + wasEnabled + "," + fi + ", 1)");
-                                jTableRobots.setValueAt(wasEnabled, fi, 1);
-//                                flushTableRobotEventDeque(false);
+                                System.out.println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
+                                jTableRobotsSetValueAt(wasEnabled, fi, 1);
                                 enableRobotTableModelListener();
                             });
                         }
@@ -293,17 +294,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 } else {
                     logEvent("Attempt to toggle robot enabled ignored.");
                     disableRobotTableModelListener();
-                    System.out.println("handleRobotTableChange calling jTableRobots.setValueAt(" + wasEnabled + "," + fi + ", 1)");
-                    jTableRobots.setValueAt(wasEnabled, fi, 1);
-//                    flushTableRobotEventDeque(false);
+                    System.out.println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
+                    jTableRobotsSetValueAt(wasEnabled, fi, 1);
                     enableRobotTableModelListener();
                 }
                 break;
             } else {
-//                System.err.println("event triggered no change.");
             }
         }
-//        flushTableRobotEventDeque(false);
         enableRobotTableModelListener();
     }
 
@@ -681,11 +679,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     };
 
+    @UIEffect
     private void enableRobotTableModelListener() {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            ignoreRobotTableChanges = false;
-        });
-        //jTableRobots.getModel().addTableModelListener(robotTableModelListener);
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalThreadStateException("call me from AWT event thread.");
+        }
+        if (!ignoreRobotTableChanges) {
+            throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+        }
+//        jTableRobots.getModel().addTableModelListener(robotTableModelListener);
+        ignoreRobotTableChanges = false;
     }
 
     public void setDefaultIconImage() {
@@ -1033,7 +1036,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (enabledInMap != enabledInTable) {
                     System.out.println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
                     disableRobotTableModelListener();
-                    jTableRobots.setValueAt(enabledInMap, i, 1);
+                    jTableRobotsSetValueAt(enabledInMap, i, 1);
                     enableRobotTableModelListener();
                 }
                 int mapDisableCount = robotDisableCountMap.getOrDefault(robotName, 0);
@@ -1041,12 +1044,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (mapDisableCount != tableDisableCount) {
                     System.out.println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
                     disableRobotTableModelListener();
-                    jTableRobots.setValueAt(mapDisableCount, i, 4);
+                    jTableRobotsSetValueAt(mapDisableCount, i, 4);
                     enableRobotTableModelListener();
                 }
                 if (mapDisableCount != tableDisableCount || !enabledInMap || !enabledInTable) {
                     disableRobotTableModelListener();
-                    jTableRobots.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+                    jTableRobotsSetValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
                     enableRobotTableModelListener();
                 }
             }
@@ -4716,12 +4719,40 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void setupRobotTableListener() {
         if (!robotTableListenerSetup) {
             robotTableListenerSetup = true;
-            jTableRobots.getModel().addTableModelListener(robotTableModelListener);
+            ignoreRobotTableChanges = true;
             for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                jTableRobots.setValueAt(true, i, 1);
+                jTableRobotsSetValueAt(true, i, 1);
             }
+            jTableRobots.getModel().addTableModelListener(robotTableModelListener);
         }
         enableRobotTableModelListener();
+    }
+
+    private volatile boolean injTableRobotsSetValueAtCall = false;
+
+    private void jTableRobotsSetValueAt(Object val, int row, int col) {
+        synchronized (jTableRobots) {
+            injTableRobotsSetValueAtCall = true;
+            try {
+                if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+                    throw new IllegalStateException("called from wrong thread");
+                }
+                if (!ignoreRobotTableChanges) {
+                    throw new IllegalStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+                }
+                jTableRobots.setValueAt(val, row, col);
+                Object chkVal = jTableRobots.getValueAt(row, col);
+                if (val != chkVal) {
+                    System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+                    System.out.println("chkVal = " + chkVal);
+                }
+                if (col == 1) {
+                    System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+                }
+            } finally {
+                injTableRobotsSetValueAtCall = false;
+            }
+        }
     }
 
     public void updateRobotsTableFromMapsAndEnableAll(Map<String, Integer> robotDisableCountMap, Map<String, Long> robotDisableTotalTimeMap) {
@@ -4730,35 +4761,57 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         logEvent("updateRobotsTableFromMapsAndEnableAll called.");
         disableRobotTableModelListener();
+        boolean valchanged = false;
+        boolean enableSets[] = new boolean[jTableRobots.getRowCount()];
         for (int i = 0; i < jTableRobots.getRowCount(); i++) {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
             boolean enableFromTable = getEnableFromRobotsTable(i);
             if (!enableFromTable) {
-                System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobots.setValueAt(true," + i + ", 1)");
-                jTableRobots.setValueAt(true, i, 1);
+                System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(true," + i + ", 1)");
+                jTableRobotsSetValueAt(true, i, 1);
+                valchanged = true;
+                enableSets[i] = true;
             }
             if (null != robotName) {
                 int countFromTable = getDisableCountFromRobotsTable(i);
                 int countFromMap = robotDisableCountMap.getOrDefault(robotName, 0);
                 if (countFromTable != countFromMap) {
-                    System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobots.setValueAt(" + countFromMap + "," + i + ", 4)");
-                    jTableRobots.setValueAt(countFromMap, i, 4);
+                    System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(" + countFromMap + "," + i + ", 4)");
+                    jTableRobotsSetValueAt(countFromMap, i, 4);
+                    valchanged = true;
                 }
                 if (countFromTable != countFromMap || !enableFromTable) {
-                    jTableRobots.setValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+                    jTableRobotsSetValueAt(runTimeToString(robotDisableTotalTimeMap.getOrDefault(robotName, 0L)), i, 5);
+                    valchanged = true;
                 }
             } else {
                 logEventErr("jTableRobots.getValueAt(i=" + i + ", 0) returned null");
             }
         }
-        Utils.autoResizeTableColWidths(jTableRobots);
+        for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+            if (!((boolean) jTableRobots.getValueAt(i, 1))) {
+                System.out.println("enableSets = " + Arrays.toString(enableSets));
+                System.err.println("bad value in row i=" + i + " jTableRobots.getValueAt(i, 1)=" + jTableRobots.getValueAt(i, 1));
+            }
+        }
+        if (valchanged) {
+            Utils.autoResizeTableColWidths(jTableRobots);
+        }
         enableRobotTableModelListener();
     }
 
     private volatile boolean ignoreRobotTableChanges = false;
     private volatile StackTraceElement disableRobotTableModelListenerTrace[] = null;
 
+    @UIEffect
     private void disableRobotTableModelListener() {
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalThreadStateException("call me from AWT event thread.");
+        }
+        if (ignoreRobotTableChanges) {
+            throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+        }
+//        jTableRobots.getModel().removeTableModelListener(robotTableModelListener);
         ignoreRobotTableChanges = true;
         disableRobotTableModelListenerTrace = Thread.currentThread().getStackTrace();
     }
@@ -4983,8 +5036,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //                        boolean enableFromTable = (Boolean) jTableRobots.getValueAt(i, 1);
 //                        if (enableFromTable != enable) {
 //                            disableRobotTableModelListener();
-//                            System.out.println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobots.setValueAt(" + enable + "," + i + ", 1)");
-//                            jTableRobots.setValueAt(enable, i, 1);
+//                            System.out.println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobotsSetValueAt(" + enable + "," + i + ", 1)");
+//                            jTableRobotsSetValueAt(enable, i, 1);
 //                            enableRobotTableModelListener();
 //                        }
 //                        return true;

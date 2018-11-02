@@ -5765,9 +5765,15 @@ public class AprsSystem implements SlotOffsetProvider {
 //            System.out.println("startCheckEnabled finishing with " + progRunRet);
             enableCheckedAlready = progRunRet;
             return progRunRet;
-        } catch (JAXBException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
+            setTitleErrorString(ex.getMessage());
+            showException(ex);
+            if(ex instanceof  RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -6290,6 +6296,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param itemsToPaint list of items to paint
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+        checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
         }
@@ -6417,6 +6424,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param h height of snapshot image
      */
     public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+        checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
         }
@@ -6433,8 +6441,26 @@ public class AprsSystem implements SlotOffsetProvider {
      * @throws java.io.IOException problem writing to the file
      */
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
+        checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, w, h);
+        }
+    }
+
+    private void checkPhysicalItemCollectionNames(Collection<? extends PhysicalItem> itemsToPaint) throws RuntimeException {
+        for(PhysicalItem pi : itemsToPaint) {
+            if(pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getFullName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getFullName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
         }
     }
 
@@ -7457,8 +7483,10 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             return createTempFile(prefix, ".PNG", logImageDir1);
         } catch (IOException iOException) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "prefix=" + prefix + ",logImageDir1=" + logImageDir1, iOException);
-            throw new IOException("prefix=" + prefix + ",logImageDir1=" + logImageDir1, iOException);
+            String errInfo = "prefix=" + prefix + ",logImageDir1=" + logImageDir1;
+            System.err.println(errInfo);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errInfo, iOException);
+            throw new IOException(errInfo, iOException);
         }
     }
 
