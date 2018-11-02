@@ -42,6 +42,12 @@ public class PoseQueryElem {
 //    }
 
     public PoseQueryElem(String name, double x, double y, double z, double vxx, double vxy, int visioncycle) {
+        if(name.contains("_in_pt_in_pt")) {
+            throw new IllegalArgumentException("bad name = "+name);
+        }
+        if(name.contains("_in_kt_in_kt")) {
+            throw new IllegalArgumentException("bad name = "+name);
+        }
         this.name = name;
         this.x = x;
         this.y = y;
@@ -62,6 +68,12 @@ public class PoseQueryElem {
      * @param name the name to set
      */
     public void setName(String name) {
+        if(name.contains("_in_pt_in_pt")) {
+            throw new IllegalArgumentException("bad name = "+name);
+        }
+        if(name.contains("_in_kt_in_kt")) {
+            throw new IllegalArgumentException("bad name = "+name);
+        }
         this.name = name;
     }
 

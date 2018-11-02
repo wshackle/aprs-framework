@@ -2556,8 +2556,36 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
     }
+    
+    private void checkPhysicalItemCollectionNames(Collection<? extends PhysicalItem> itemsToPaint) throws RuntimeException {
+        for(PhysicalItem pi : itemsToPaint) {
+            if(pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getFullName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getFullName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+        }
+    }
 
+    private void checkPoseQueryElemCollectionNames(Collection<? extends PoseQueryElem> itemsToPaint) throws RuntimeException {
+        for(PoseQueryElem pi : itemsToPaint) {
+            if(pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+            if(pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : "+pi);
+            }
+        }
+    }
     private List<PhysicalItem> poseQueryToPhysicalItemList(List<PoseQueryElem> listIn) {
+        checkPoseQueryElemCollectionNames(listIn);
         List<PhysicalItem> listOut = new ArrayList<>();
         for (PoseQueryElem pqe : listIn) {
             listOut.add(PhysicalItem.newPhysicalItemNameRotXY(pqe.getName(),
@@ -2565,6 +2593,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     pqe.getX(),
                     pqe.getY()));
         }
+        checkPhysicalItemCollectionNames(listOut);
         return listOut;
     }
 
