@@ -3915,7 +3915,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void incSafeAbortCount(String label) {
         final int count = safeAboutCount.incrementAndGet();
-        appendGenerateAbortLog(label+ ".incSafeAbortCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
+        appendGenerateAbortLog(label + ".incSafeAbortCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
     }
 
     private void incSafeAbortRequestCount() {
@@ -4020,15 +4020,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             incSafeAbortRequestCount();
             if (!startSafeAbortRunningProgram) {
-                incSafeAbortCount("startSafeAbort!startSafeAbortRunningProgram."+name);
+                incSafeAbortCount("startSafeAbort!startSafeAbortRunningProgram." + name);
                 return XFutureVoid.completedFutureWithName("!startSafeAbortRunningProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (startSafeAbortRunningProgramFutureDone) {
-                incSafeAbortCount("startSafeAbort.startSafeAbortRunningProgramFutureDone."+name);
+                incSafeAbortCount("startSafeAbort.startSafeAbortRunningProgramFutureDone." + name);
                 return XFutureVoid.completedFutureWithName("startSafeAbortRunningProgramFutureDone" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
             if (!startSafeAbortIsRunningCrclProgram) {
-                incSafeAbortCount("startSafeAbort!startSafeAbortIsRunningCrclProgram."+name);
+                incSafeAbortCount("startSafeAbort!startSafeAbortIsRunningCrclProgram." + name);
                 return XFutureVoid.completedFutureWithName("!startSafeAbortIsRunningCrclProgram" + startSafeAbortRequestCount + ":" + safeAboutCount.get() + ":" + name + ":pddlExecutorStartSafeAbort." + aprsSystem.getRunName());
             }
 
@@ -5433,7 +5433,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final ConcurrentLinkedDeque<Runnable> safeAbortRunnablesVector = new ConcurrentLinkedDeque<>();
 
-    
     @UIEffect
     private void generateCrclAsyncWithCatch() {
         try {
@@ -5443,14 +5442,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             runningProgramFuture = generateCrclAsync();
         } catch (Exception ex) {
             replanStarted.set(false);
-            if(null != replanActionTimer) {
+            if (null != replanActionTimer) {
                 replanActionTimer.stop();
             }
             abortProgram();
             showExceptionInProgram(ex);
 //            actionToCrclLabels[lastIndex] = "Error";
             LOGGER.log(Level.SEVERE, "", ex);
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -5637,12 +5636,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.generateCrclService = generateCrclService;
     }
 
+    private volatile boolean lastGenerateCrclGeneratedProgram = false;
+    private volatile boolean lastGenerateCrclRanProgram = false;
+
     private boolean generateCrcl(String comment, int startSafeAbortRequestCount)
             throws Exception {
-
+        boolean programGenerated = false;
+        lastGenerateCrclGeneratedProgram = programGenerated;
+        boolean programRan = false;
+        lastGenerateCrclRanProgram = programRan;
         checkReverse();
         boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
         if (doSafeAbort) {
+            if (!programRan) {
+                logDebug("programRan=false");
+            }
             return atLastAction();
         }
         checkDbSupplierPublisher();
@@ -5654,10 +5662,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final int li0 = crclGenerator.getLastIndex();
         lil.add(li0);
         final int rpi0 = getReplanFromIndex();
-//        if (rpi0 < li0 && (rpi0 != 0 || !readyForNewActionsList())) {
-//            logDebug("replanFromIndex less than lastIndex unexpectedly,  li0=" + li0 + ",rpi0=" + rpi0);
-//        }
+
         CRCLProgramType program = pddlActionSectionToCrcl(0);
+        programGenerated = true;
+        lastGenerateCrclGeneratedProgram = programGenerated;
         final int li1 = crclGenerator.getLastIndex();
         lil.add(li1);
         if (li1 < li0 && li1 < rpi0) {
@@ -5669,6 +5677,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         if (!autoStart) {
             setCrclProgram(crclProgram);
+            if (!programRan) {
+                logDebug("programRan=false");
+            }
             return true;
         }
         boolean replanAfterCrclBlock
@@ -5700,11 +5711,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             } else if (!runCrclProgram(program)) {
                 checkSafeAbort(startSafeAbortRequestCount);
+                if (!programRan) {
+                    logDebug("programRan=false");
+                }
                 return false;
+            } else {
+                programRan = true;
+                lastGenerateCrclRanProgram = programRan;
             }
 
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
+                if (!programRan) {
+                    logDebug("programRan=false");
+                }
                 return atLastAction();
             }
             if (rpi2 != getReplanFromIndex()) {
@@ -5730,15 +5750,27 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 setReplanFromIndex(abortReplanFromIndex, true);
+                if (!programRan) {
+                    logDebug("programRan=false");
+                }
                 return atLastAction();
             }
             if (!runCrclProgram(program)) {
                 checkSafeAbort(startSafeAbortRequestCount);
+                if (!programRan) {
+                    logDebug("programRan=false");
+                }
                 return false;
+            } else {
+                programRan = true;
+                lastGenerateCrclRanProgram = programRan;
             }
         }
         if (!checkSafeAbort(startSafeAbortRequestCount)) {
             warnIfNewActionsNotReady();
+        }
+        if (!programRan) {
+            logDebug("programRan=false");
         }
         return true;
     }
@@ -5810,8 +5842,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
-            ((DefaultTableModel) jTableLog.getModel()).addRow(rowValues);
-            Utils.autoResizeTableColWidths(jTableLog);
+            Utils.runOnDispatchThread(() -> {
+                try {
+                    ((DefaultTableModel) jTableLog.getModel()).addRow(rowValues);
+                    if ((jTableLog.getRowCount() % 20) < 2) {
+                        Utils.autoResizeTableColWidths(jTableLog);
+                    }
+                } catch (Exception e) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", e);
+                }
+            });
+
             System.out.println("rowValues = " + Arrays.toString(rowValues));
             System.out.println("generateAbortLogFile = " + generateAbortLogFile);
             aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));

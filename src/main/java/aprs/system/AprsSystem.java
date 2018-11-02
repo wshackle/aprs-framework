@@ -1036,6 +1036,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return false;
     }
 
+    private volatile StackTraceElement setConnectedTrace[] = null;
+    
     /**
      * Attempt to connect or disconnect the CRCL client from the CRCL server by
      * opening or closed the appropriate socket.
@@ -1050,6 +1052,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void setConnected(boolean connected) {
         logEvent("setConnected", connected);
+        setConnectedTrace = Thread.currentThread().getStackTrace();
         if (!connected || robotName == null || !isConnected()) {
             enableCheckedAlready = false;
         }
@@ -1709,6 +1712,21 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile StackTraceElement setRobotNameNonNullStackTrace@Nullable []  = null;
     private volatile long setRobotNameNonNullThreadTime = -1;
 
+    public void printRobotNameActivy(PrintStream ps) {
+        ps.println("robotName = " + robotName);
+        ps.println("setRobotNameNullThreadTime = " + setRobotNameNullThreadTime);
+        long t0 = System.currentTimeMillis();
+        ps.println("System.currentTimeMillis() = " + t0);
+        long td1 = t0 - setRobotNameNullThreadTime;
+        ps.println("(System.currentTimeMillis() - setRobotNameNullThreadTime) = " + td1);
+        ps.println("setRobotNameNullThreadTime = " + setRobotNameNullThreadTime);
+        long td2 = t0 - setRobotNameNonNullThreadTime;
+        ps.println("(System.currentTimeMillis() - setRobotNameNonNullThreadTime) = " + td2);
+        ps.println("setRobotNameNonNullStackTrace = " + Utils.traceToString(setRobotNameNonNullStackTrace));
+        ps.println("setRobotNameNullStackTrace = " + Utils.traceToString(setRobotNameNullStackTrace));
+        ps.println("setConnectedTrace = " + Utils.traceToString(setConnectedTrace));
+    }
+    
     /**
      * Set the value of robotName
      *

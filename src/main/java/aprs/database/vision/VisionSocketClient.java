@@ -512,7 +512,7 @@ public class VisionSocketClient implements AutoCloseable {
         this.prevListSizeDecrementInterval = prevListSizeDecrementInterval;
     }
 
-    private boolean ignoreLosingItemsLists = false;
+    private boolean ignoreLosingItemsLists = true;
 
     /**
      * Get the value of ignoreLosingItemsLists
