@@ -6302,7 +6302,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         List<PositionMap> l = getReversePositionMaps();
         for (PositionMap pm : l) {
             if (null != pm) {
-                pout = pm.correctPoint(ptIn);
+                pout = pm.correctPoint(pout);
             }
         }
         return pout;
