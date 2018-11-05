@@ -187,6 +187,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.isTogglesAllowed();
     }
 
+    private final AtomicInteger robotTableIgnoreCount = new AtomicInteger();
+    
     private class RobotTableModelListener implements TableModelListener {
 
         @Override
@@ -300,6 +302,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 break;
             } else {
+                if(i == 0) {
+                    System.out.println("no enable change :handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
+                }
             }
         }
         enableRobotTableModelListener();
@@ -1010,19 +1015,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemPause.setText("Pause (" + count + ") ");
     }
 
-//    private int getRobotDisableCount(String robotName) {
-//        if (null == supervisor) {
-//            throw new IllegalStateException("null == supervisor");
-//        }
-//        return supervisor.getRobotDisableCount(robotName);
-//    }
-//
-//    private long getRobotDisableTotalTime(String robotName) {
-//        if (null == supervisor) {
-//            throw new IllegalStateException("null == supervisor");
-//        }
-//        return supervisor.getRobotDisableTotalTime(robotName);
-//    }
     public void refreshRobotsTable(Map<String, Boolean> robotEnableMap, Map<String, Integer> robotDisableCountMap, Map<String, Long> robotDisableTotalTimeMap) {
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
@@ -4747,6 +4739,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     System.out.println("chkVal = " + chkVal);
                 }
                 if (col == 1) {
+                    String robotName = (String) jTableRobots.getValueAt(row, 0);
+                     boolean enabledInMap = robotEnableMap.getOrDefault(robotName, true);
+                     if(enabledInMap != ((boolean)val)) {
+                         System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+                         System.err.println("robotEnableMap="+robotEnableMap);
+                         throw new IllegalStateException("setting robots table value not to match map ");
+                     }
                     System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
                 }
             } finally {
