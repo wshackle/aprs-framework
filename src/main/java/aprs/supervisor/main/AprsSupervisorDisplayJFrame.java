@@ -2434,7 +2434,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @Nullable
     public File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
-        JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to create (save as).");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
         chooser.addChoosableFileFilter(filter);
@@ -2471,7 +2471,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @Nullable
     public File chooseSetupFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
-        JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to Open.");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
         chooser.addChoosableFileFilter(filter);
@@ -3592,7 +3592,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 return parentFile.getCanonicalPath();
             }
         }
-        return System.getProperty("user.home");
+        return Utils.getAprsUserHomeDir();
     }
 
     @UIEffect
@@ -3839,7 +3839,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         try {
 
             customCode = MultiLineStringJPanel.editText(customCode);
-            File customDir = Paths.get(System.getProperty("user.home"), ".aprs", "custom").toFile();
+            File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
             customDir.delete();
             customDir.mkdirs();
             File tmpFile = new File(customDir, "Custom.java");

@@ -6134,7 +6134,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != aprsPropsDir) {
                 tempPropDir = new File(aprsPropsDir);
             } else {
-                tempPropDir = new File(System.getProperty("user.home"), ".aprs");
+                tempPropDir = new File(Utils.getAprsUserHomeDir(), ".aprs");
             }
             lastAprsPropertiesFileFile = new File(tempPropDir, "lastPropsFileName.txt");
             if (lastAprsPropertiesFileFile.exists()) {
@@ -6164,7 +6164,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != tempPropDir) {
                 this.propDir = tempPropDir;
             } else {
-                this.propDir = new File(System.getProperty("user.home"));
+                this.propDir = new File(Utils.getAprsUserHomeDir());
             }
             this.propFile = tempPropFile;
         }
