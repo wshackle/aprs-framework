@@ -2242,12 +2242,12 @@ public class Supervisor {
 
     private final Map<String, Boolean> robotEnableMap = new HashMap<>();
 
-    private final static File LAST_SETUP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSetupFile", System.getProperty("user.home") + File.separator + ".lastAprsSetupFile.txt"));
-    private final static File LAST_SHARED_TOOLS_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSharedToolsFile", System.getProperty("user.home") + File.separator + ".lastAprsSharedToolsFile.txt"));
+    private final static File LAST_SETUP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSetupFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSetupFile.txt"));
+    private final static File LAST_SHARED_TOOLS_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSharedToolsFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSharedToolsFile.txt"));
     private static final String LAST_APRS_SIM_TEACH_FILETXT = ".lastAprsSimTeachFile.txt";
-    private final static File LAST_SIM_TEACH_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSimTeachFile", System.getProperty("user.home") + File.separator + LAST_APRS_SIM_TEACH_FILETXT));
-    private final static File LAST_SIM_TEACH_PROPERTIES_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemTeachPropertiesFile", System.getProperty("user.home") + File.separator + ".lastAprsTeachPropertiesFile.txt"));
-    private final static File LAST_POSMAP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemPosMapFile", System.getProperty("user.home") + File.separator + ".lastAprsPosMapFile.txt"));
+    private final static File LAST_SIM_TEACH_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSimTeachFile", Utils.getAprsUserHomeDir() + File.separator + LAST_APRS_SIM_TEACH_FILETXT));
+    private final static File LAST_SIM_TEACH_PROPERTIES_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemTeachPropertiesFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsTeachPropertiesFile.txt"));
+    private final static File LAST_POSMAP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemPosMapFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsPosMapFile.txt"));
 
     @Nullable
     private File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
@@ -3200,7 +3200,7 @@ public class Supervisor {
                 return parentFile.getCanonicalPath();
             }
         }
-        return System.getProperty("user.home");
+        return Utils.getAprsUserHomeDir();
     }
 
     /**
@@ -3243,7 +3243,7 @@ public class Supervisor {
         try {
 
             customCode = MultiLineStringJPanel.editText(customCode);
-            File customDir = Paths.get(System.getProperty("user.home"), ".aprs", "custom").toFile();
+            File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
             customDir.delete();
             customDir.mkdirs();
             File tmpFile = new File(customDir, "Custom.java");
@@ -5668,7 +5668,7 @@ public class Supervisor {
                     System.out.println("newFilePath = " + newFilePath);
                     System.out.println("lastFileFile = " + lastFileFile);
                     try (
-                            FileWriter fileWriter = new FileWriter(new File(System.getProperty("user.home"), ".lastFileChanges"), true);
+                            FileWriter fileWriter = new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);
                             PrintWriter pw = new PrintWriter(fileWriter, true)) {
                         pw.println("date=" + new Date()
                                 + ", oldPath = " + oldPath
@@ -5717,7 +5717,7 @@ public class Supervisor {
                     System.out.println("oldPath = " + oldPath);
                     System.out.println("newFilePath = " + newFilePath);
                     System.out.println("lastFileFile = " + lastFileFile);
-                    try (PrintWriter pw = new PrintWriter(new FileWriter(new File(System.getProperty("user.home"), ".lastFileChanges")), true)) {
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
                         pw.println("date=" + new Date()
                                 + ", oldPath = " + oldPath
                                 + ", newFilePath = " + newFilePath

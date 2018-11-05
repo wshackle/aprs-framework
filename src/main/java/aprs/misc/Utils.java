@@ -93,6 +93,10 @@ public class Utils {
     private Utils() {
     }
 
+    public static String getAprsUserHomeDir() {
+        return System.getProperty("aprs.user.home", System.getProperty("user.home"));
+    }
+    
     public static String traceToString(StackTraceElement trace @Nullable []) {
         if (null == trace) {
             return "null";

@@ -1234,7 +1234,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", iOException);
         }
     }
-    private final File recentSettingsFile = new File(System.getProperty("user.home"), ".dbsetup_recent.txt");
+    private final File recentSettingsFile = new File(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
     @MonotonicNonNull private File propertiesFile = null;
 
     private final CachedComboBox<String> propertiesFilesCachedComboBox;

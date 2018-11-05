@@ -330,7 +330,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
-    private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", System.getProperty("user.home") + File.separator + ".lastAprsLaunchFile.txt"));
+    private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsLaunchFile.txt"));
 
     /**
      * Get the location of the last text file with lines to execute in the
@@ -629,7 +629,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private static void updateTestLog(Supervisor supervisor, int cycle_count, long timeDiff) {
         long timeDiffPerCycle = cycle_count > 0 ? timeDiff / cycle_count : -1;
 
-        File f = new File(System.getProperty("user.home"),
+        File f = new File(Utils.getAprsUserHomeDir(),
                 "aprs_test_logs.csv");
         int disableCount = supervisor.getTotalDisableCount();
         System.out.println("disableCount = " + disableCount);

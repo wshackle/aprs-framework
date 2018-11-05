@@ -2809,7 +2809,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         String fname = jTextFieldFilename.getText().trim();
-        File dir = new File(System.getProperty("user.home"));
+        File dir = new File(Utils.getAprsUserHomeDir());
         File f = null;
         if (null != fname && fname.length() > 0) {
             f = new File(fname);
@@ -2835,7 +2835,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed
         String fname = jTextFieldFilename.getText().trim();
-        File dir = new File(System.getProperty("user.home"));
+        File dir = new File(Utils.getAprsUserHomeDir());
         File f = null;
         if (null != fname && fname.length() > 0) {
             f = new File(fname);
