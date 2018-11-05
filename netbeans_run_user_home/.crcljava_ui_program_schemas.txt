@@ -1,0 +1,5 @@
+C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home\crclSchemas\CRCLCommandInstance.xsd
+C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home\crclSchemas\CRCLCommands.xsd
+C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home\crclSchemas\CRCLProgramInstance.xsd
+C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home\crclSchemas\CRCLStatus.xsd
+C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home\crclSchemas\DataPrimitives.xsd
