@@ -308,9 +308,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         this.executorJPanel1.loadActionsFile(f, false, newReverseFlag);
     }
 
-    public void loadActionsList(Iterable<Action> newActions, boolean newReverseFlag) {
-        this.executorJPanel1.loadActionsList(newActions, newReverseFlag);
-    }
+//    public void loadActionsList(Iterable<Action> newActions, boolean newReverseFlag) {
+//        this.executorJPanel1.loadActionsList(newActions, newReverseFlag);
+//    }
 
 //    @Override
 //    public void setActionsList(List<PddlAction> actionsList) {

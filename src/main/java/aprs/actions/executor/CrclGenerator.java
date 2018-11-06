@@ -2320,7 +2320,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile GenerateParams lastClearKitsToCheckGenerateParams = null;
     private volatile int lastClearKitsToCheckGenerateParamsIndex = -1;
 
-    @SuppressWarnings("unused")
     private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams)
             throws InterruptedException, IOException, ExecutionException {
 
@@ -2339,6 +2338,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             lastClearKitsToCheckGenerateParams = gparams;
             lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
+            kitsToCheck.clear();
+        }
+    }
+    
+    public void clearKitsToCheckExternal()
+            throws InterruptedException, IOException, ExecutionException {
+
+        if (!kitsToCheck.isEmpty()) {
+            if (!recheckKitsOnly(false)) {
+                System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
+                System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
+                System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
+                System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
+                System.err.println("kitsToCheck = " + kitsToCheck);
+                throw new IllegalStateException("clearing kits to check that do not recheck");
+            }
             kitsToCheck.clear();
         }
     }
@@ -2470,7 +2485,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
-        checkNewItems("recheckKitsOnly");
+        return recheckKitsOnly(true);
+    }
+    public boolean recheckKitsOnly(boolean getNewItems) throws InterruptedException, ExecutionException, IOException {
+        if(getNewItems) {
+            checkNewItems("recheckKitsOnly");
+        }
         List<PhysicalItem> physicalItemsLocal = physicalItems;
         if (null == physicalItemsLocal) {
             throw new NullPointerException("physicalItems");
