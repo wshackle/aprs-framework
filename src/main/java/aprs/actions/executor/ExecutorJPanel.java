@@ -1975,20 +1975,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTableLog.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null}
+
             },
             new String [] {
-                "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run", "Robot"
+                "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run", "Robot", "Actions File"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.String.class
+                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -2238,6 +2235,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             if (ret && !checkSafeAbort(startAbortCount)) {
                 warnIfNewActionsNotReady();
+                crclGenerator.clearKitsToCheckExternal();
             }
             appendGenerateAbortLog("doActionsReturning" + comment + ret, actionsList.size(), rev, crclGenerator.getLastIndex(), safeAbortRequestCount.get(), -1);
             return ret;
@@ -2635,7 +2633,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public List<Action> loadActionsList(Iterable<? extends Action> newActions, boolean newReverseFlag) {
+    private List<Action> loadActionsList(Iterable<? extends Action> newActions, boolean newReverseFlag) {
         warnIfNewActionsNotReady();
         setReverseFlag(newReverseFlag);
         List<Action> ret;
@@ -4073,7 +4071,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (ret && atLastAction()) {
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
-            appendGenerateAbortLog("completeActionListReturning" + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
+            if(ret) {
+                crclGenerator.clearKitsToCheckExternal();
+            }
+            appendGenerateAbortLog("completeActionListReturning." + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
             return ret;
         } catch (Exception ex) {
             System.err.println("prevSetReplanFromIndexLastThread = " + prevSetReplanFromIndexLastThread);
@@ -5836,7 +5837,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (logFile == null) {
                 return;
             }
-            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), aprsSystem.getRobotName()};
+            String  actionsFileName = reverse?this.reverseActionsFileString:this.actionsFileString;
+            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), aprsSystem.getRobotName(),actionsFileName};
             try (
                     FileWriter fw = new FileWriter(logFile, true);
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {

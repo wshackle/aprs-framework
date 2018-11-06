@@ -5984,7 +5984,13 @@ public class AprsSystem implements SlotOffsetProvider {
         boolean ret;
         try {
             if (null != actionsToLoad) {
-                pddlExecutorJInternalFrame1.loadActionsList(actionsToLoad, newReverseFlag);
+                File f = createTempFile("actionsList_"+comment, ".txt");
+                try(PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                    for(Action action: actionsToLoad) {
+                        pw.println(action.asPddlLine());
+                    }
+                }
+                pddlExecutorJInternalFrame1.loadActionsFile(f, newReverseFlag);
             } else {
                 try {
                     reloadedActions = pddlExecutorJInternalFrame1.reloadActionsFile(newReverseFlag);
