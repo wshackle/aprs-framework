@@ -23,6 +23,7 @@
 package aprs.launcher;
 
 import aprs.logdisplay.LogDisplayJPanel;
+import aprs.misc.Utils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -81,16 +82,9 @@ public class LogDisplayPanelOutputStream extends OutputStream {
             if (s.contains("\n")) {
                 String fullString = sb.toString();
                 notifiyLineConsumers(fullString);
-                if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+                Utils.runOnDispatchThread(() -> {
                     logDisplayJPanel.appendText(fullString);
-                } else {
-                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            logDisplayJPanel.appendText(fullString);
-                        }
-                    });
-                }
+                });
                 sb = new StringBuffer();
             }
         }

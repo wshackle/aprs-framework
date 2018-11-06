@@ -1867,10 +1867,12 @@ public class Object2DJPanel extends JPanel {
                 g2d.setColor(origColor);
                 g2d.setTransform(origTransform);
             }
-            if (!opts.disableSensorLimitsRect) {
-                drawSenseLimitsRectangle(g2d, minmaxParam, new_scale);
+            if (null != opts) {
+                if (!opts.disableSensorLimitsRect) {
+                    drawSenseLimitsRectangle(g2d, minmaxParam, new_scale);
+                }
             }
-            if (null != aprsSystem && !opts.disableRobotsReachLimitsRect) {
+            if (null != aprsSystem && (null == opts || !opts.disableRobotsReachLimitsRect)) {
                 drawRobotReachLimitsRectangle(g2d, minmaxParam, new_scale);
             }
         } catch (Exception exception) {

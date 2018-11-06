@@ -2471,17 +2471,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
         checkNewItems("recheckKitsOnly");
-        if (null == physicalItems) {
+        List<PhysicalItem> physicalItemsLocal = physicalItems;
+        if (null == physicalItemsLocal) {
             throw new NullPointerException("physicalItems");
         }
-        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItems);
+        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
         Set<String> matchedKitInstanceNames = new HashSet<>();
         List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
         boolean empty = kitsToFix.isEmpty();
         if (!empty) {
-            takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItems);
+            takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItemsLocal);
             takeSimViewSnapshot("recheckKitsOnly: parts", parts);
             logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
             logError("recheckKitsOnly: matchedKitInstanceNames = " + matchedKitInstanceNames);
@@ -5288,6 +5289,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return null;
         }
         PmCartesian cart = new PmCartesian(Double.parseDouble(lookForXYZFields[0]), Double.parseDouble(lookForXYZFields[1]), Double.parseDouble(lookForXYZFields[2]));
+        if(null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         if (!aprsSystem.isWithinLimits(cart)) {
             throw new IllegalStateException("lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits minLimit=" + aprsSystem.getMinLimit() + ", maxLimit=" + aprsSystem.getMaxLimit());
         }

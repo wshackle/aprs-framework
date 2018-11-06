@@ -80,8 +80,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
-        setMaxLimitMenuDisplay(aprsSystem.getMaxLimit());
-        setMinLimitMenuDisplay(aprsSystem.getMinLimit());
+        PmCartesian maxLimit = aprsSystem.getMaxLimit();
+        PmCartesian minLimit = aprsSystem.getMinLimit();
+        Utils.runOnDispatchThread(() -> {
+            setMaxLimitMenuDisplay(maxLimit);
+            setMinLimitMenuDisplay(minLimit);
+        });
     }
 
     private volatile boolean showingException = false;
@@ -97,7 +101,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     private final AtomicInteger exceptionCount = new AtomicInteger();
-    
+
     @UIEffect
     private XFutureVoid showExceptionInternal(Throwable ex) {
         StringWriter sw = new StringWriter();
@@ -109,8 +113,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         String exText = sw.toString();
         boolean forceShow = exceptionCount.incrementAndGet() < 2;
         String dialogTitle = "Exception from " + this.getTitle();
-        XFuture<Boolean> showTextFuture 
-                = MultiLineStringJPanel.showText(exText, this, dialogTitle, false,forceShow);
+        XFuture<Boolean> showTextFuture
+                = MultiLineStringJPanel.showText(exText, this, dialogTitle, false, forceShow);
         return showTextFuture
                 .thenRun(() -> showingException = false);
     }
@@ -1603,6 +1607,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     public void setMaxLimitMenuDisplay(PmCartesian cart) {
         String txt
                 = String.format(
@@ -1611,6 +1616,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemSetPoseMaxLimits.setText(txt);
     }
 
+    @UIEffect
     public void setMinLimitMenuDisplay(PmCartesian cart) {
         String txt
                 = String.format(

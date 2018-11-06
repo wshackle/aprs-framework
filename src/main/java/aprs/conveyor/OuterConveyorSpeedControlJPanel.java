@@ -128,8 +128,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         this.trayDiff = trayDiff;
     }
 
-    private volatile long nextPrevTrayFutureStartTime=-1;
-    
+    private volatile long nextPrevTrayFutureStartTime = -1;
+
     public XFutureVoid previousTray() {
 //        computeTrayDiff();
         setGoalSet(false);
@@ -236,8 +236,14 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
         setTrayDiff(parseDouble(map1.get(TRAY_DIFF), getTrayDiff()));
-        setModBusHost(map1.get(MODBUS_HOST));
-        setNextDelayMillis(Integer.parseInt(map1.get(NEXT_DELAY_MILLIS)));
+        String modbusHostName = map1.get(MODBUS_HOST);
+        if (null != modbusHostName) {
+            setModBusHost(modbusHostName);
+        }
+        String nextDelayMillisString = map1.get(NEXT_DELAY_MILLIS);
+        if (null != nextDelayMillisString) {
+            setNextDelayMillis(Integer.parseInt(nextDelayMillisString));
+        }
     }
 
     private Map<String, String> propertiesToMap() {
@@ -282,7 +288,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             master = null;
         }
     }
-    
+
     private void handleConnectedCheckBoxEvent() throws HeadlessException {
         if (null != master) {
             master.disconnect();
@@ -561,8 +567,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     }
 
     private volatile long nextPrevTrayFutureCompletTime = -1;
-    private volatile long stopConveyorTime  = -1;
-    
+    private volatile long stopConveyorTime = -1;
+
     private void stopConveyorNoPosEstimate() {
         XFutureVoid future = nextPrevTrayFuture;
         nextPrevTrayFuture = null;
@@ -583,15 +589,15 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 long tm = System.currentTimeMillis();
                 nextPrevTrayFutureCompletTime = tm;
                 long diff = tm - nextPrevTrayFutureStartTime;
-                System.out.println("next tray took "+diff+" ms");
+                System.out.println("next tray took " + diff + " ms");
                 long diff2 = tm - stopConveyorTime;
-                System.out.println("time since conveyor stop is "+diff2+" ms");
+                System.out.println("time since conveyor stop is " + diff2 + " ms");
                 future.complete();
-                
+
             });
             timer.setInitialDelay(nextDelayMillis);
             timer.setRepeats(false);
-            stopConveyorTime=System.currentTimeMillis();
+            stopConveyorTime = System.currentTimeMillis();
             timer.start();
         }
     }
