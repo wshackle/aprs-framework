@@ -234,7 +234,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
             saveFile(csvFile);
-            updateSnapshotsTable(f, csvFile);
+            Utils.runOnDispatchThread(() -> {
+                updateSnapshotsTable(f, csvFile);
+            });
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
                 File xmlDir = new File(f.getParentFile(), "crclStatusXml");
@@ -254,26 +256,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private final AtomicInteger snapshotsCount = new AtomicInteger();
-    
+
+    @UIEffect
     private void updateSnapshotsTable(File f, File csvFile) {
         if (null != f && null != csvFile) {
             try {
                 DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
-                while(model.getRowCount() > 200) {
+                while (model.getRowCount() > 200) {
                     model.removeRow(0);
                 }
                 String name = f.getName();
                 int uindex1 = name.indexOf('_');
-                if(uindex1 > 0 && uindex1 < (name.length()-1)) {
-                    name = name.substring(uindex1+1);
+                if (uindex1 > 0 && uindex1 < (name.length() - 1)) {
+                    name = name.substring(uindex1 + 1);
                 }
                 int uindex2 = name.lastIndexOf('_');
-                if(uindex2 > 0) {
-                    name = name.substring(0,uindex2);
+                if (uindex2 > 0) {
+                    name = name.substring(0, uindex2);
                 }
                 int count = snapshotsCount.incrementAndGet();
-                model.addRow(new Object[]{count,Utils.getTimeString(), name,f.getCanonicalPath(), csvFile.getCanonicalPath()});
-                if(count %20 < 2) {
+                model.addRow(new Object[]{count, Utils.getTimeString(), name, f.getCanonicalPath(), csvFile.getCanonicalPath()});
+                if (count % 20 < 2) {
                     Utils.autoResizeTableColWidths(jTableSnapshotFiles);
                 }
             } catch (IOException ex) {
@@ -308,7 +311,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
             saveFile(csvFile);
-            updateSnapshotsTable(f, csvFile);
+            Utils.runOnDispatchThread(() -> {
+                updateSnapshotsTable(f, csvFile);
+            });
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
             AprsSystem aprsSystemLocal = this.aprsSystem;
@@ -3143,12 +3148,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         refresh(false);
     }//GEN-LAST:event_jButtonForceUpdateActionPerformed
 
+    @UIEffect
     private void jButtonViewSnapshotImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotImageActionPerformed
         int selectedRow = jTableSnapshotFiles.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
                 String filename = (String) dtm.getValueAt(selectedRow, 3);
+                if (null == filename) {
+                    throw new NullPointerException("jTableSnapshotFiles.getValueAt(" + selectedRow + ", 3)");
+                }
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3156,12 +3165,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonViewSnapshotImageActionPerformed
 
+    @UIEffect
     private void jButtonViewSnapshotCsvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonViewSnapshotCsvActionPerformed
         int selectedRow = jTableSnapshotFiles.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < jTableSnapshotFiles.getRowCount()) {
             try {
                 DefaultTableModel dtm = (DefaultTableModel) jTableSnapshotFiles.getModel();
                 String filename = (String) dtm.getValueAt(selectedRow, 4);
+                if (null == filename) {
+                    throw new NullPointerException("jTableSnapshotFiles.getValueAt(" + selectedRow + ", 4)");
+                }
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -4098,7 +4111,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        updateSnapshotsTable(f, csvFile);
+        Utils.runOnDispatchThread(() -> {
+            updateSnapshotsTable(f, csvFile);
+        });
     }
 
     private File saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
@@ -4111,14 +4126,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return csvFile;
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            return null;
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        updateSnapshotsTable(f, csvFile);
+        Utils.runOnDispatchThread(() -> {
+            updateSnapshotsTable(f, csvFile);
+        });
     }
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;

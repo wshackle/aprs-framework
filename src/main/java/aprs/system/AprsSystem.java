@@ -542,7 +542,7 @@ public class AprsSystem implements SlotOffsetProvider {
             return x;
         });
     }
-    
+
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
@@ -1036,8 +1036,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return false;
     }
 
-    private volatile StackTraceElement setConnectedTrace[] = null;
-    
+    private volatile StackTraceElement setConnectedTrace @Nullable []  = null;
+
     /**
      * Attempt to connect or disconnect the CRCL client from the CRCL server by
      * opening or closed the appropriate socket.
@@ -1283,10 +1283,10 @@ public class AprsSystem implements SlotOffsetProvider {
 //                                    }
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                        .thenRun(this::setStopRunTime)
-                        .thenCompose(x -> waitAllLastFutures())
-                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                        .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
+                                .thenRun(this::setStopRunTime)
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                                .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1632,19 +1632,19 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                .thenApplyAsync("AprsSystem.continueActionList" + comment,
-                        x -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            if (null == pddlExecutorJInternalFrame1) {
-                                throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
-                            }
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                        .thenApplyAsync("AprsSystem.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                                    if (null == pddlExecutorJInternalFrame1) {
+                                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                    }
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
 //                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
-                            }
-                            return false;
-                        }, runProgramService);
+                                    }
+                                    return false;
+                                }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1726,7 +1726,7 @@ public class AprsSystem implements SlotOffsetProvider {
         ps.println("setRobotNameNullStackTrace = " + Utils.traceToString(setRobotNameNullStackTrace));
         ps.println("setConnectedTrace = " + Utils.traceToString(setConnectedTrace));
     }
-    
+
     /**
      * Set the value of robotName
      *
@@ -1903,17 +1903,17 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            return runCRCLProgram(program);
-                        } catch (Exception ex) {
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            } else {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }, runProgramService);
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCRCLProgram(program);
+                                } catch (Exception ex) {
+                                    if (ex instanceof RuntimeException) {
+                                        throw (RuntimeException) ex;
+                                    } else {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -3224,12 +3224,12 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (null != object2DViewFuture) {
                     XFutureVoid connectVisionFuture
                             = XFutureVoid.allOf(object2DViewFuture, startVisionToDbFuture)
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 } else {
                     XFutureVoid connectVisionFuture
                             = startVisionToDbFuture
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 }
             }
@@ -4074,16 +4074,16 @@ public class AprsSystem implements SlotOffsetProvider {
             this.xf1 = loadPropertiesFuture;
             XFutureVoid setupWindowsFuture
                     = loadPropertiesFuture
-                    .thenComposeToVoid(() -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            if (!alreadySelected) {
-                                setupWindowsMenuOnDisplay();
-                            }
-                            if (null != aprsSystemDisplayJFrame) {
-                                aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
-                            }
-                        });
-                    });
+                            .thenComposeToVoid(() -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    if (!alreadySelected) {
+                                        setupWindowsMenuOnDisplay();
+                                    }
+                                    if (null != aprsSystemDisplayJFrame) {
+                                        aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
+                                    }
+                                });
+                            });
             this.xf2 = setupWindowsFuture;
             return setupWindowsFuture;
         } catch (Exception ex) {
@@ -4441,7 +4441,11 @@ public class AprsSystem implements SlotOffsetProvider {
     public void setMinLimit(PmCartesian minLimit) {
         this.minLimit = minLimit;
         if (null != this.aprsSystemDisplayJFrame) {
-            this.aprsSystemDisplayJFrame.setMinLimitMenuDisplay(minLimit);
+            Utils.runOnDispatchThread(() -> {
+                if (null != this.aprsSystemDisplayJFrame) {
+                    this.aprsSystemDisplayJFrame.setMinLimitMenuDisplay(minLimit);
+                }
+            });
         }
     }
 
@@ -4464,7 +4468,11 @@ public class AprsSystem implements SlotOffsetProvider {
     public void setMaxLimit(PmCartesian maxLimit) {
         this.maxLimit = maxLimit;
         if (null != this.aprsSystemDisplayJFrame) {
-            this.aprsSystemDisplayJFrame.setMaxLimitMenuDisplay(maxLimit);
+            Utils.runOnDispatchThread(() -> {
+                if (null != this.aprsSystemDisplayJFrame) {
+                    this.aprsSystemDisplayJFrame.setMaxLimitMenuDisplay(maxLimit);
+                }
+            });
         }
     }
 
@@ -4604,11 +4612,11 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (!Objects.equals(itemName, slotName)) {
                     int in_pt_index = itemName.indexOf("_in_pt");
                     if (in_pt_index > 0) {
-                        throw new IllegalStateException("bad itemName for item="+item);
+                        throw new IllegalStateException("bad itemName for item=" + item);
                     }
                     int in_kt_index = itemName.indexOf("_in_kt");
                     if (in_kt_index > 0) {
-                        throw new IllegalStateException("bad itemName for item="+item);
+                        throw new IllegalStateException("bad itemName for item=" + item);
                     }
                 }
                 if (Objects.equals(itemName, slotName)) {
@@ -4891,8 +4899,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 logEvent("createActionListFromVision",
                         equal + "\n"
                         + endingList
-                        .stream()
-                        .collect(Collectors.joining("\n")));
+                                .stream()
+                                .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
@@ -5718,7 +5726,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
+                        .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
     }
@@ -5769,7 +5777,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             showException(ex);
-            if(ex instanceof  RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -6448,18 +6456,18 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void checkPhysicalItemCollectionNames(Collection<? extends PhysicalItem> itemsToPaint) throws RuntimeException {
-        for(PhysicalItem pi : itemsToPaint) {
-            if(pi.getName().contains("_in_pt_in_pt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+        for (PhysicalItem pi : itemsToPaint) {
+            if (pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getFullName().contains("_in_pt_in_pt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getFullName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getName().contains("_in_kt_in_kt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getFullName().contains("_in_kt_in_kt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getFullName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
         }
     }
@@ -6915,7 +6923,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
         }
-        PmCartesian cart = CRCLPosemath.toPmCartesian(goalPose.getPoint());
+        PointType point = goalPose.getPoint();
+        if (null == point) {
+            throw new NullPointerException("goalPose.getPoint()");
+        }
+        PmCartesian cart = CRCLPosemath.toPmCartesian(point);
         if (!ignoreCartTran) {
             if (!isWithinLimits(cart)) {
                 return false;

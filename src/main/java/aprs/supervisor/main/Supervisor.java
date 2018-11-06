@@ -1652,8 +1652,8 @@ public class Supervisor {
         }
     }
 
-    private volatile XFutureVoid lastStealRobotsInternalBeforeAllowTogglesFuture = null;
-    private volatile XFuture<Boolean> lastStealRobotsInternalPart1 = null;
+    @Nullable private volatile XFutureVoid lastStealRobotsInternalBeforeAllowTogglesFuture = null;
+    @Nullable private volatile XFuture<Boolean> lastStealRobotsInternalPart1 = null;
 
     private XFutureVoid stealRobotsInternal(AprsSystem stealFrom, AprsSystem stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) throws IOException, PositionMap.BadErrorMapFormatException {
 
@@ -1773,9 +1773,9 @@ public class Supervisor {
 
     }
 
-    private volatile XFutureVoid lastStealRobotsInternalBeforeAllowToggles = null;
+    @Nullable private volatile XFutureVoid lastStealRobotsInternalBeforeAllowToggles = null;
 
-    private XFutureVoid stealRobotsInternalBeforeAllowToggles(GraphicsDevice gd, int srn, AprsSystem stealFrom, AprsSystem stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) {
+    private XFutureVoid stealRobotsInternalBeforeAllowToggles(@Nullable GraphicsDevice gd, int srn, AprsSystem stealFrom, AprsSystem stealFor, String stealForRobotName, String stealFromRobotName, String stealFromOrigCrclHost) {
         try {
 
             File f = getPosMapFile(stealForRobotName, stealFromRobotName);
@@ -4027,7 +4027,7 @@ public class Supervisor {
     private final AtomicInteger disallowTogglesCount = new AtomicInteger();
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
-    private volatile XFuture<LockInfo> lastDisallowTogglesFuture = null;
+    @Nullable private volatile XFuture<LockInfo> lastDisallowTogglesFuture = null;
 
     @SuppressWarnings("UnusedReturnValue")
     private XFuture<LockInfo> disallowToggles(String blockerName, AprsSystem... systems) {
