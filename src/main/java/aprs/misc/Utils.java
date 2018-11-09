@@ -94,7 +94,15 @@ public class Utils {
     }
 
     public static String getAprsUserHomeDir() {
-        return System.getProperty("aprs.user.home", System.getProperty("user.home"));
+        String dir = System.getProperty("aprs.user.home", System.getProperty("user.home"));
+        if(!dir.endsWith("netbeans_run_user_home")) {
+            System.out.println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
+            System.out.println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
+            System.out.println("dir = " + dir);
+            Properties props = System.getProperties();
+            props.list(System.out);
+        }
+        return dir;
     }
     
     public static String traceToString(StackTraceElement trace @Nullable []) {
