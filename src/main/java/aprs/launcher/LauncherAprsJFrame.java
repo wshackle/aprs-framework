@@ -370,25 +370,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
                             supervisor.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> completePrevMulti(supervisor));
+                            Utils.runOnDispatchThread(() -> supervisor.completePrevMulti());
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            completePrevMulti(supervisor);
+            supervisor.completePrevMulti();
         }
     }
 
-    @UIEffect
-    private static XFutureVoid completePrevMulti(Supervisor supervisor) {
-        supervisor.startColorTextReader();
-        return supervisor.loadAllPrevFiles(null)
-                .thenRun(() -> {
-                    supervisor.setVisible(true);
-                    PlayAlert();
-                });
-    }
+    
 
     @UIEffect
     private void jButtonNewMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewMultiActionPerformed
@@ -569,111 +561,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private static void tenCycleTestNoDisables() {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
-        XFutureVoid completePrevMultiFuture = completePrevMulti(supervisor);
-
-        supervisor.setShowFullScreenMessages(false);
-        supervisor.setMax_cycles(10);
-        XFutureVoid startScanAllFuture
-                = completePrevMultiFuture
-                        .thenComposeToVoid(supervisor::startScanAll);
-        XFuture<?> xf2 = startScanAllFuture
-                .thenRun(() -> {
-                    if (!startScanAllFuture.isDone()) {
-                        System.err.println("wtf");
-                    }
-                });
-        XFuture<?> xf3 = xf2
-                .thenCompose(x -> {
-                    if (!startScanAllFuture.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    if (!startScanAllFuture.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    return supervisor.startContinuousDemoRevFirst();
-                });
-        XFuture<?> xf4 = xf3
-                .always(() -> {
-                    long endTime = System.currentTimeMillis();
-                    long timeDiff = endTime - startTime;
-
-                    int cycle_count = supervisor.getContiousDemoCycleCount();
-                    updateTestLog(supervisor, cycle_count, timeDiff);
-                    if (!xf2.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    if (!xf3.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    Utils.runOnDispatchThread(() -> {
-
-                        System.out.println("timeDiff = " + timeDiff);
-                        PlayAlert();
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
-                        String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                                (timeDiff / 1000.0),
-                                (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
-                        System.out.println(msg);
-//                        JOptionPane.showMessageDialog(amsFrame,msg);
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
-                        supervisor.close();
-                        System.exit(0);
-                    });
-                });
+        supervisor.tenCycleTestNoDisables(startTime);
     }
-
-    private static void updateTestLog(Supervisor supervisor, int cycle_count, long timeDiff) {
-        long timeDiffPerCycle = cycle_count > 0 ? timeDiff / cycle_count : -1;
-
-        File f = new File(Utils.getAprsUserHomeDir(),
-                "aprs_test_logs.csv");
-        int disableCount = supervisor.getTotalDisableCount();
-        System.out.println("disableCount = " + disableCount);
-        long disableTime = supervisor.getTotalDisableTime();
-        System.out.println("disableTime = " + disableTime);
-        boolean alreadyExists = f.exists();
-        long totalRandomDelays = supervisor.getTotalRandomDelays();
-        System.out.println("totalRandomDelays = " + totalRandomDelays);
-        int ignoredToggles = supervisor.getIgnoredToggles();
-        System.out.println("ignoredToggles = " + ignoredToggles);
-        saveTestLogEntry(f, alreadyExists, cycle_count, timeDiff, timeDiffPerCycle, disableCount, disableTime, totalRandomDelays, ignoredToggles);
-    }
-
-    private static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff, long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
-        try (CSVPrinter printer = new CSVPrinter(
-                new FileWriter(f, true),
-                alreadyExists
-                        ? CSVFormat.DEFAULT
-                        : CSVFormat.DEFAULT.withHeader(
-                                "Date",
-                                "cycle_count",
-                                "timeDiff",
-                                "timeDiffPerCycle",
-                                "disableCount",
-                                "disableTime",
-                                "totalRandomDelays",
-                                "ignoredToggles"))) {
-            if (alreadyExists) {
-                printer.println();
-            }
-            printer.printRecord(
-                    Utils.getDateTimeString(),
-                    cycle_count,
-                    timeDiff,
-                    timeDiffPerCycle,
-                    disableCount,
-                    disableTime,
-                    totalRandomDelays,
-                    ignoredToggles);
-        } catch (IOException ex) {
-            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
-        }
-    }
-
+    
     private static void tenCycleTest(@Nullable File launchFile) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
@@ -685,76 +575,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
                             supervisor.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> completeTenCycleTest(supervisor, startTime));
+                            Utils.runOnDispatchThread(() -> supervisor.completeTenCycleTestWithPrevMulti(startTime));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            completeTenCycleTest(supervisor, startTime);
+            supervisor.completeTenCycleTestWithPrevMulti( startTime);
         }
     }
 
-    @SuppressWarnings("unused")
-    private static void completeTenCycleTest(final Supervisor supervisor, long startTime) {
-
-        XFutureVoid completePrevMultiFuture = completePrevMulti(supervisor);
-
-        supervisor.setShowFullScreenMessages(false);
-        supervisor.setMax_cycles(10);
-        XFutureVoid supervisorScanAllFuture
-                = completePrevMultiFuture
-                        .thenComposeToVoid(supervisor::startScanAll);
-        XFuture<?> xf2 = supervisorScanAllFuture
-                .thenRun(() -> {
-                    if (!supervisorScanAllFuture.isDone()) {
-                        System.err.println("wtf");
-                    }
-                });
-        XFuture<?> randomTestFirstActionReversedFuture
-                = xf2
-                        .thenCompose(x -> {
-                            if (!supervisorScanAllFuture.isDone()) {
-                                System.err.println("wtf");
-                            }
-                            if (!supervisorScanAllFuture.isDone()) {
-                                System.err.println("wtf");
-                            }
-                            return supervisor.startRandomTestFirstActionReversed();
-                        });
-        XFuture<?> xf4 = randomTestFirstActionReversedFuture
-                .always(() -> {
-                    System.out.println("supervisorScanAllFuture = " + supervisorScanAllFuture);
-                    System.out.println("randomTestFirstActionReversedFuture = " + randomTestFirstActionReversedFuture);
-                    int cycle_count = supervisor.getContiousDemoCycleCount();
-                    long endTime = System.currentTimeMillis();
-                    long timeDiff = endTime - startTime;
-                    updateTestLog(supervisor, cycle_count, timeDiff);
-                    if (!xf2.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    if (!randomTestFirstActionReversedFuture.isDone()) {
-                        System.err.println("wtf");
-                    }
-                    Utils.runOnDispatchThread(() -> {
-
-                        System.out.println("timeDiff = " + timeDiff);
-                        PlayAlert();
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
-                        String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                                (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
-                        System.out.println(msg);
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
-                        supervisor.close();
-                        System.exit(0);
-                    });
-                });
-    }
-
+    
     @UIEffect
     private void jMenuItemTenCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleMultiSystemTestActionPerformed
         this.setVisible(false);

@@ -88,6 +88,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
     }
 
+    
+    public boolean getPauseInsteadOfRecoverMenuCheckbox() {
+        return jCheckBoxMenuItemPauseInsteadOfRecover.isSelected();
+    }
+    
+    public void setPauseInsteadOfRecoverMenuCheckbox(boolean selected) {
+        jCheckBoxMenuItemPauseInsteadOfRecover.setSelected(selected);
+    }
+    
     private volatile boolean showingException = false;
 
     @SafeEffect
@@ -477,6 +486,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemLogCrclPrograms = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemPauseInsteadOfRecover = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -747,6 +757,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemLogCrclPrograms.setSelected(true);
         jCheckBoxMenuItemLogCrclPrograms.setText("Log CRCL Programs");
         jMenu4.add(jCheckBoxMenuItemLogCrclPrograms);
+
+        jCheckBoxMenuItemPauseInsteadOfRecover.setText("Executor Check Kits : Pause instead of Recover");
+        jCheckBoxMenuItemPauseInsteadOfRecover.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jCheckBoxMenuItemPauseInsteadOfRecover);
 
         jMenuBar1.add(jMenu4);
 
@@ -1435,9 +1453,27 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
     private void reloadForReverse(boolean reverseFlag) {
+        updateForceFakeTakeState(reverseFlag);
         if (null != aprsSystem) {
             aprsSystem.reloadForReverse(reverseFlag);
         }
+    }
+
+    public void updateForceFakeTakeState(boolean reverseFlag1) {
+        boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem 
+                &&  (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
+        if(!forceFakeTakeOk) {
+            setForceFakeTakeSelected(false);
+        }
+        setForceFakeTakeEnabled(forceFakeTakeOk);
+    }
+
+    public void setForceFakeTakeSelected(boolean selected) {
+        jCheckBoxMenuItemForceFakeTake.setSelected(selected);
+    }
+
+    public void setForceFakeTakeEnabled(boolean enabled) {
+        jCheckBoxMenuItemForceFakeTake.setEnabled(enabled);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -1831,6 +1867,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemFillKitTraysActionPerformed
 
+    private void jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
+        if(null != aprsSystem) {
+            aprsSystem.setPauseInsteadOfRecover(jCheckBoxMenuItemPauseInsteadOfRecover.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
+
     CachedCheckBox connectDatabaseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
     }
@@ -1900,6 +1942,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemLogCrclPrograms;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPauseInsteadOfRecover;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReloadSimFilesOnReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetupOnStartup;

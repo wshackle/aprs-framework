@@ -1288,43 +1288,54 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @MonotonicNonNull
     private volatile List<List<Action>> takePlaceActions = null;
 
-    private static void checkTakePlaceActions(@Nullable List<List<Action>> tplist, List<Action> fullList) {
-        if (null == tplist) {
-            return;
-        }
-        int tplistTotal = 0;
-        for (int i = 0; i < tplist.size() - 1; i++) {
-            List<Action> l = tplist.get(i);
-            for (Action act : l) {
-                if (act.getExecuted()) {
-                    tplistTotal++;
-                }
-            }
-        }
-        if (tplist.size() > 0) {
-            tplistTotal += tplist.get(tplist.size() - 1).size();
-        }
-        int fullListTotal = 0;
-        for (Action act : fullList) {
-            switch (act.getType()) {
-                case TAKE_PART:
-                case PLACE_PART:
-                    fullListTotal++;
-                    break;
-            }
-        }
-        if (tplistTotal > fullListTotal) {
-            long time = System.currentTimeMillis();
-            LOGGER.warning("tplistTotal > fullListTotal : redundant or repeated actions suspected");
-            for (int i = 0; i < tplist.size(); i++) {
-                LOGGER.info("i = " + i);
-                for (Action act : tplist.get(i)) {
-                    LOGGER.info((act.getExecuted() ? (time - act.getExecTime()) : "--") + " : " + act.asPddlLine());
-                }
-            }
-            LOGGER.warning("tplistTotal > fullListTotal : redundant or repeated actions suspected");
-        }
-    }
+//    private static void checkTakePlaceActions(@Nullable List<List<Action>> tplist, List<Action> fullList) {
+//        if (null == tplist) {
+//            return;
+//        }
+//        int tplistTotal = 0;
+//        int listsizes[] = new int[tplist.size()];
+//        int executedcounts[]  = new int[tplist.size()];
+//        for (int i = 0; i < tplist.size() - 1; i++) {
+//            List<Action> l = tplist.get(i);
+//            int executedcount = 0;
+//            for (Action act : l) {
+//                if (act.getExecuted()) {
+//                    tplistTotal++;
+//                    executedcount++;
+//                }
+//            }
+//            listsizes[i] = tplist.size();
+//            executedcounts[i] = executedcount;
+//        }
+//        if (tplist.size() > 0) {
+//            tplistTotal += tplist.get(tplist.size() - 1).size();
+//        }
+//        int fullListTotal = 0;
+//        for (Action act : fullList) {
+//            switch (act.getType()) {
+//                case TAKE_PART:
+//                case PLACE_PART:
+//                    fullListTotal++;
+//                    break;
+//            }
+//        }
+//        if (tplistTotal > fullListTotal) {
+//            long time = System.currentTimeMillis();
+//            LOGGER.warning("tplistTotal > fullListTotal : redundant or repeated actions suspected");
+//            LOGGER.warning("tplistTotal= "+tplistTotal);
+//            LOGGER.warning("fullListTotal= "+fullListTotal);
+//            LOGGER.warning("listsizes = " + Arrays.toString(listsizes));
+//            LOGGER.warning("executedcounts = " + Arrays.toString(executedcounts));
+//            for (int i = 0; i < tplist.size(); i++) {
+//                List<Action> tplisti = tplist.get(i);
+//                LOGGER.info("i = " + i+", tplisti.size()="+tplisti.size());
+//                for (Action act : tplisti) {
+//                    LOGGER.info((act.getExecuted() ? (time - act.getExecTime()) : "--") + " : " + act.asPddlLine());
+//                }
+//            }
+//            LOGGER.warning("END tplistTotal > fullListTotal : redundant or repeated actions suspected");
+//        }
+//    }
 
     private final AtomicInteger generateCount = new AtomicInteger();
     private final AtomicInteger generateFromZeroCount = new AtomicInteger();
@@ -1515,9 +1526,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 switch (action.getType()) {
                     case TAKE_PART:
                         newTakePlaceList.add(action);
-                        if (null != takePlaceActions) {
-                            checkTakePlaceActions(takePlaceActions, gparams.actions);
-                        }
+//                        if (null != takePlaceActions) {
+//                            checkTakePlaceActions(takePlaceActions, gparams.actions);
+//                        }
                         if (poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                         }
@@ -1621,7 +1632,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                     case PLACE_PART:
                         newTakePlaceList.add(action);
-                        checkTakePlaceActions(takePlaceActions, gparams.actions);
+//                        checkTakePlaceActions(takePlaceActions, gparams.actions);
                         if (poseCache.isEmpty()) {
                             throw new IllegalStateException("poseCache.isEmpty() on place-part for run " + getRunName());
                         }
@@ -2484,10 +2495,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return Collections.emptyList();
     }
 
+    private static final boolean IGNORE_KIT_CHECK_FAILURES = Boolean.getBoolean("aprs.ignoreKitCheckFailures");
+    
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
         return recheckKitsOnly(true);
     }
+    
     public boolean recheckKitsOnly(boolean getNewItems) throws InterruptedException, ExecutionException, IOException {
+        if(IGNORE_KIT_CHECK_FAILURES) {
+            return true;
+        }
         if(getNewItems) {
             checkNewItems("recheckKitsOnly");
         }
@@ -2532,6 +2549,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void checkKits(Action action, List<MiddleCommandType> cmds)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
         checkSettings();
+        boolean correctionMode = aprsSystem.isCorrectionMode();
+        if(IGNORE_KIT_CHECK_FAILURES) {
+            if(!correctionMode && pauseInsteadOfRecover) {
+                return;
+            }
+        }
         if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
@@ -2583,7 +2606,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (!kitsToFix.isEmpty()) {
                     logDebug("kitsToFix = " + kitsToFix);
                     printLastOptoInfo();
-                    if (pauseInsteadOfRecover && !aprsSystem.isCorrectionMode()) {
+                    if (pauseInsteadOfRecover && !correctionMode) {
                         StringBuilder errMsgSb = new StringBuilder();
                         aprsSystem.setSnapshotsSelected(true);
                         takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
@@ -2639,7 +2662,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         takeSimViewSnapshot(errMsg, physicalItemsLocal);
                         aprsSystem.setTitleErrorString(errMsg);
                         throw new IllegalStateException(errMsg);
-//                        checkedPause();
                     } else {
                         Map<String, Integer> prefixCountMap = new HashMap<>();
                         Map<String, List<String>> itemsNameMap = new HashMap<>();
@@ -4878,7 +4900,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return;
         }
         settingsChecked = true;
-        String rpyString = options.get("rpy");
+        Map<String, String> optionsMap = this.options;
+        loadOptionsMap(optionsMap);
+    }
+
+    public void loadOptionsMap(Map<String, String> optionsMap) throws NumberFormatException {
+        String rpyString = optionsMap.get("rpy");
         if (null != rpyString && rpyString.length() > 0) {
             try {
                 String rpyFields[] = rpyString.split("[, \t]+");
@@ -4912,7 +4939,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             xAxis = vector(1.0, 0.0, 0.0);
             zAxis = vector(0.0, 0.0, -1.0);
         }
-        String approachZOffsetString = options.get("approachZOffset");
+        String approachZOffsetString = optionsMap.get("approachZOffset");
         if (null != approachZOffsetString && approachZOffsetString.length() > 0) {
             try {
                 approachZOffset = Double.parseDouble(approachZOffsetString);
@@ -4920,7 +4947,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String placeZOffsetString = options.get("placeZOffset");
+        String placeZOffsetString = optionsMap.get("placeZOffset");
         if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
             try {
                 placeZOffset = Double.parseDouble(placeZOffsetString);
@@ -4928,7 +4955,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String takeZOffsetString = options.get("takeZOffset");
+        String takeZOffsetString = optionsMap.get("takeZOffset");
         if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
             try {
                 takeZOffset = Double.parseDouble(takeZOffsetString);
@@ -4936,7 +4963,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String joint0DiffToleranceString = options.get("joint0DiffTolerance");
+        String joint0DiffToleranceString = optionsMap.get("joint0DiffTolerance");
         if (null != joint0DiffToleranceString && joint0DiffToleranceString.length() > 0) {
             try {
                 joint0DiffTolerance = Double.parseDouble(joint0DiffToleranceString);
@@ -4944,7 +4971,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String settleDwellTimeString = options.get("settleDwellTime");
+        String settleDwellTimeString = optionsMap.get("settleDwellTime");
         if (null != settleDwellTimeString && settleDwellTimeString.length() > 0) {
             try {
                 settleDwellTime = Double.parseDouble(settleDwellTimeString);
@@ -4953,7 +4980,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String lookDwellTimeString = options.get("lookDwellTime");
+        String lookDwellTimeString = optionsMap.get("lookDwellTime");
         if (null != lookDwellTimeString && lookDwellTimeString.length() > 0) {
             try {
                 lookDwellTime = Double.parseDouble(lookDwellTimeString);
@@ -4962,7 +4989,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String skipLookDwellTimeString = options.get("skipLookDwellTime");
+        String skipLookDwellTimeString = optionsMap.get("skipLookDwellTime");
         if (null != skipLookDwellTimeString && skipLookDwellTimeString.length() > 0) {
             try {
                 skipLookDwellTime = Double.parseDouble(skipLookDwellTimeString);
@@ -4971,7 +4998,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String afterMoveToLookForDwellTimeString = options.get("afterMoveToLookForDwellTime");
+        String afterMoveToLookForDwellTimeString = optionsMap.get("afterMoveToLookForDwellTime");
         if (null != afterMoveToLookForDwellTimeString && afterMoveToLookForDwellTimeString.length() > 0) {
             try {
                 afterMoveToLookForDwellTime = Double.parseDouble(afterMoveToLookForDwellTimeString);
@@ -4981,7 +5008,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
 
         // afterMoveToLookForDwellTime
-        String firstLookDwellTimeString = options.get("firstLookDwellTime");
+        String firstLookDwellTimeString = optionsMap.get("firstLookDwellTime");
         if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
             try {
                 firstLookDwellTime = Double.parseDouble(firstLookDwellTimeString);
@@ -4989,7 +5016,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String lastLookDwellTimeString = options.get("lastLookDwellTime");
+        String lastLookDwellTimeString = optionsMap.get("lastLookDwellTime");
         if (null != lastLookDwellTimeString && lastLookDwellTimeString.length() > 0) {
             try {
                 lastLookDwellTime = Double.parseDouble(lastLookDwellTimeString);
@@ -4998,7 +5025,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String fastTransSpeedString = options.get("fastTransSpeed");
+        String fastTransSpeedString = optionsMap.get("fastTransSpeed");
         if (null != fastTransSpeedString && fastTransSpeedString.length() > 0) {
             try {
                 fastTransSpeed = Double.parseDouble(fastTransSpeedString);
@@ -5007,7 +5034,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String testTransSpeedString = options.get("testTransSpeed");
+        String testTransSpeedString = optionsMap.get("testTransSpeed");
         if (null != testTransSpeedString && testTransSpeedString.length() > 0) {
             try {
                 testTransSpeed = Double.parseDouble(testTransSpeedString);
@@ -5016,7 +5043,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String rotSpeedString = options.get("rotSpeed");
+        String rotSpeedString = optionsMap.get("rotSpeed");
         if (null != rotSpeedString && rotSpeedString.length() > 0) {
             try {
                 rotSpeed = Double.parseDouble(rotSpeedString);
@@ -5024,7 +5051,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String jointSpeedString = options.get("jointSpeed");
+        String jointSpeedString = optionsMap.get("jointSpeed");
         if (null != jointSpeedString && jointSpeedString.length() > 0) {
             try {
                 jointSpeed = Double.parseDouble(jointSpeedString);
@@ -5032,7 +5059,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String jointAccelString = options.get("jointAccel");
+        String jointAccelString = optionsMap.get("jointAccel");
         if (null != jointAccelString && jointAccelString.length() > 0) {
             try {
                 jointAccel = Double.parseDouble(jointAccelString);
@@ -5041,7 +5068,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String kitInspectDistThresholdString = options.get("kitInspectDistThreshold");
+        String kitInspectDistThresholdString = optionsMap.get("kitInspectDistThreshold");
         if (null != kitInspectDistThresholdString && kitInspectDistThresholdString.length() > 0) {
             try {
                 kitInspectDistThreshold = Double.parseDouble(kitInspectDistThresholdString);
@@ -5050,7 +5077,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
 
-        String slowTransSpeedString = options.get("slowTransSpeed");
+        String slowTransSpeedString = optionsMap.get("slowTransSpeed");
         if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
             try {
                 slowTransSpeed = Double.parseDouble(slowTransSpeedString);
@@ -5058,7 +5085,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String verySlowTransSpeedString = options.get("verySlowTransSpeed");
+        String verySlowTransSpeedString = optionsMap.get("verySlowTransSpeed");
         if (null != verySlowTransSpeedString && verySlowTransSpeedString.length() > 0) {
             try {
                 verySlowTransSpeed = Double.parseDouble(verySlowTransSpeedString);
@@ -5066,39 +5093,39 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        String takePartArgIndexString = options.get("takePartArgIndex");
+        String takePartArgIndexString = optionsMap.get("takePartArgIndex");
         if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
             this.takePartArgIndex = Integer.parseInt(takePartArgIndexString);
         }
-        String placePartSlotArgIndexString = options.get("placePartSlotArgIndex");
+        String placePartSlotArgIndexString = optionsMap.get("placePartSlotArgIndex");
         if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
             this.placePartSlotArgIndex = Integer.parseInt(placePartSlotArgIndexString);
         }
-        String takeSnapshotsString = options.get("takeSnapshots");
+        String takeSnapshotsString = optionsMap.get("takeSnapshots");
         if (null != takeSnapshotsString && takeSnapshotsString.length() > 0) {
             takeSnapshots = Boolean.valueOf(takeSnapshotsString);
         }
-        String pauseInsteadOfRecoverString = options.get("pauseInsteadOfRecover");
+        String pauseInsteadOfRecoverString = optionsMap.get("pauseInsteadOfRecover");
         if (null != pauseInsteadOfRecoverString && pauseInsteadOfRecoverString.length() > 0) {
             pauseInsteadOfRecover = Boolean.valueOf(pauseInsteadOfRecoverString);
         }
-        String doInspectKitString = options.get("doInspectKit");
+        String doInspectKitString = optionsMap.get("doInspectKit");
         if (null != doInspectKitString && doInspectKitString.length() > 0) {
             doInspectKit = Boolean.valueOf(doInspectKitString);
         }
-        String requireNewPosesString = options.get("requireNewPoses");
+        String requireNewPosesString = optionsMap.get("requireNewPoses");
         if (null != requireNewPosesString && requireNewPosesString.length() > 0) {
             requireNewPoses = Boolean.valueOf(requireNewPosesString);
         }
-        String skipMissingPartsString = options.get("skipMissingParts");
+        String skipMissingPartsString = optionsMap.get("skipMissingParts");
         if (null != skipMissingPartsString && skipMissingPartsString.length() > 0) {
             skipMissingParts = Boolean.valueOf(skipMissingPartsString);
         }
-        String useJointMovesForToolHolderApproachString = options.get("useJointMovesForToolHolderApproach");
+        String useJointMovesForToolHolderApproachString = optionsMap.get("useJointMovesForToolHolderApproach");
         if (null != useJointMovesForToolHolderApproachString && useJointMovesForToolHolderApproachString.length() > 0) {
             useJointMovesForToolHolderApproach = Boolean.valueOf(useJointMovesForToolHolderApproachString);
         }
-        String visionCycleNewDiffThresholdString = options.get("visionCycleNewDiffThreshold");
+        String visionCycleNewDiffThresholdString = optionsMap.get("visionCycleNewDiffThreshold");
         if (null != visionCycleNewDiffThresholdString && visionCycleNewDiffThresholdString.length() > 0) {
             visionCycleNewDiffThreshold = Integer.parseInt(visionCycleNewDiffThresholdString);
         }

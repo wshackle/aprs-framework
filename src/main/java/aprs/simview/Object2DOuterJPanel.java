@@ -28,7 +28,6 @@ import aprs.conveyor.ConveyorPosition;
 import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.PhysicalItem;
 import aprs.database.DbSetupBuilder;
 import aprs.database.Part;
@@ -78,6 +77,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.ui.XFuture;
@@ -676,7 +676,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Object rowObjects[] = new Object[]{i, item.getName(), item.x, item.y, toDegrees(item.getRotation()), item.getType(), item.getScore()};
             model.addRow(rowObjects);
         }
-        autoResizeTableColWidths(jtable);
+        autoResizeTableColWidthsOnDisplay(jtable);
         if (null != rowSorter) {
             jtable.setRowSorter(rowSorter);
             rowSorter.allRowsChanged();
@@ -4542,7 +4542,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (isHoldingObjectExpected && !lastIsHoldingObjectExpected) {
                     if (min_dist < pickupDist && min_dist_index >= 0) {
                         captured_item_index = min_dist_index;
-                        if (true) {
+                        if (null == objectPanelToClone) {
                             try {
                                 System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                                 boolean takeSnapshots = isSnapshotsEnabled();
@@ -4576,7 +4576,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                     }
                 } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
-                    if (true) {
+                    if (null == objectPanelToClone) {
                         System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         boolean takeSnapshots = isSnapshotsEnabled();
                         if (takeSnapshots) {
@@ -4613,7 +4613,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     setItems(l);
                 }
             }
-            lastIsHoldingObjectExpected = isHoldingObjectExpected;
         } catch (Exception exception) {
             disconnectCurrentPosition();
             if (showCurrentCachedCheckBox.isSelected()) {
@@ -4627,6 +4626,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             } else {
                 throw new RuntimeException(exception);
             }
+        } finally {
+            lastIsHoldingObjectExpected = isHoldingObjectExpected;
         }
     }
 

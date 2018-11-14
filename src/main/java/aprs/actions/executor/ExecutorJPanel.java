@@ -499,6 +499,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTableToolOffsets.getModel().addTableModelListener(toolOffsetsModelListener);
     }
 
+    public void setPauseInsteadOfRecover(boolean val) {
+       setOption("pauseInsteadOfRecover",Boolean.toString(val));
+       crclGenerator.setPauseInsteadOfRecover(val);
+    }
+    
     private void clearToolOffsetTableModelListener() {
         toolOffsetTablemModelListenerEnabled = false;
         Utils.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
@@ -544,10 +549,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 if (reverseFlag) {
 
                     int tc = setReverseTrueCount.incrementAndGet();
-                    if (tc > 1) {
-                        System.out.println("tc = " + tc);
-
-                    }
+//                    if (tc > 1) {
+//                        System.out.println("tc = " + tc);
+//
+//                    }
                     setReverseFlagTrueTrace = Thread.currentThread().getStackTrace();
                 } else {
                     setReverseFalseCount.incrementAndGet();
@@ -2208,10 +2213,41 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 && !lastContinueActionFuture.isCompletedExceptionally();
     }
 
-    public boolean isDoingActions() {
-        return doingActionsStarted.get() > doingActionsFinished.get()
-                || isRunningProgram() || isContinuingActions();
+    private volatile String isDoingActionsInfo = null;
+
+    public String getIsDoingActionsInfo() {
+        return isDoingActionsInfo;
     }
+
+    
+    public boolean isDoingActions() {
+        int dasCount = doingActionsStarted.get();
+        int dafCount = doingActionsFinished.get();
+        if (dasCount > dafCount) {
+            isDoingActionsInfo
+                    = "doingActionsStarted(" + dasCount + ") > doingActionsFinished(" + dafCount + ")"
+                    + "\n"
+                    + "dasIncrementTrace=" + Utils.traceToString(dasIncrementTrace);
+            return true;
+        } else {
+            boolean runningProgram1 = isRunningProgram();
+            if (runningProgram1) {
+                isDoingActionsInfo = "dasCount=" + dasCount + ", isRunningProgram() = true, \n runningProgramFuture="+runningProgramFuture;
+                return true;
+            } else {
+                boolean continuingActions = isContinuingActions();
+                if (continuingActions) {
+                    isDoingActionsInfo = "dasCount=" + dasCount + ", isContinuingActions() = true, \n lastContinueActionFuture="+lastContinueActionFuture;
+                    return true;
+                } else {
+                    isDoingActionsInfo = null;
+                    return false;
+                }
+            }
+        }
+    }
+
+    private volatile StackTraceElement dasIncrementTrace[] = null;
 
     public boolean doActions(String comment, int startAbortCount) {
 
@@ -2220,6 +2256,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             boolean rev = isReverseFlag();
             appendGenerateAbortLog("doActionsStarting" + comment, actionsList.size(), rev, 0, startAbortCount, -1);
             final int start = doingActionsStarted.incrementAndGet();
+            dasIncrementTrace = Thread.currentThread().getStackTrace();
             this.abortProgram();
             setReplanFromIndex(0);
             actionSetsStarted.incrementAndGet();
@@ -3272,9 +3309,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void setReplanFromIndex(int replanFromIndex, boolean aborting) {
-        if (hppcIndexSet) {
-            System.out.println("hppcIndex = " + hppcIndex);
-        }
+//        if (hppcIndexSet) {
+//            System.out.println("hppcIndex = " + hppcIndex);
+//        }
         int oldRpi = this.replanFromIndex.getAndSet(replanFromIndex);
         if (oldRpi != replanFromIndex) {
             prevSetReplanFromIndexLastThread = setReplanFromIndexLastThread;
@@ -4066,12 +4103,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             appendGenerateAbortLog("completeActionListStarting" + comment, actionsList.size(), rev, getReplanFromIndex(), startSafeAbortRequestCount, -1);
 
             doingActionsStarted.incrementAndGet();
+            dasIncrementTrace = Thread.currentThread().getStackTrace();
             autoStart = true;
             boolean ret = generateCrcl(comment, startSafeAbortRequestCount);
             if (ret && atLastAction()) {
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
-            if(ret) {
+            if (ret) {
                 crclGenerator.clearKitsToCheckExternal();
             }
             appendGenerateAbortLog("completeActionListReturning." + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
@@ -5837,8 +5875,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (logFile == null) {
                 return;
             }
-            String  actionsFileName = reverse?this.reverseActionsFileString:this.actionsFileString;
-            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), aprsSystem.getRobotName(),actionsFileName};
+            String actionsFileName = reverse ? this.reverseActionsFileString : this.actionsFileString;
+            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), aprsSystem.getRobotName(), actionsFileName};
             try (
                     FileWriter fw = new FileWriter(logFile, true);
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
@@ -5855,8 +5893,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             });
 
-            System.out.println("rowValues = " + Arrays.toString(rowValues));
-            System.out.println("generateAbortLogFile = " + generateAbortLogFile);
+//            System.out.println("rowValues = " + Arrays.toString(rowValues));
+//            System.out.println("generateAbortLogFile = " + generateAbortLogFile);
             aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));
         } catch (IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -7071,7 +7109,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 reverseFlagFromProperty = Boolean.parseBoolean(reverseFlagProperty);
             }
             setReverseFlag(reverseFlagFromProperty);
-            reloadActionsFile(reverseFlagFromProperty, true);
+//            reloadActionsFile(reverseFlagFromProperty, true);
             String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
             if (null != autostartString) {
                 this.autoStart = Boolean.valueOf(autostartString);
@@ -7148,6 +7186,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void completeLoadPropertiesOnDisplay() {
+        Map<String, String> optionsMap = getTableOptions();
+        crclGenerator.loadOptionsMap(optionsMap);
         syncPanelToGeneratorToolData();
         loadToolMenus();
     }
@@ -7293,8 +7333,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             System.err.println("newReverseFlag = " + newReverseFlag);
             System.err.println("reverseActionsFileString = " + reverseActionsFileString);
             System.err.println("actionsFileString = " + actionsFileString);
-            checkReverse();
-            return null;
+            throw new IllegalStateException("no actions file to reload");
         }
         checkFilename(output);
         File f = new File(output);
@@ -7493,4 +7532,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return newList;
     }
 
+    
+    /**
+     * Get the value of pauseInsteadOfRecover
+     *
+     * @return the value of pauseInsteadOfRecover
+     */
+    public boolean isPauseInsteadOfRecover() {
+        return crclGenerator.isPauseInsteadOfRecover();
+    }
+    
 }
