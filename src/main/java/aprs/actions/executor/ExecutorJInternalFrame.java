@@ -84,6 +84,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getForceFakeTakeFlag();
     }
 
+     public void setPauseInsteadOfRecover(boolean val) {
+       executorJPanel1.setPauseInsteadOfRecover(val);
+    }
     public void showPaused(boolean state) {
         executorJPanel1.showPaused(state);
     }
@@ -341,6 +344,11 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public XFuture<Boolean> startActions() {
         return executorJPanel1.startActions();
     }
+    
+     public String getIsDoingActionsInfo() {
+        return executorJPanel1.getIsDoingActionsInfo();
+    }
+
 
     public boolean isDoingActions() {
         return executorJPanel1.isDoingActions();
@@ -413,4 +421,13 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getPossibleToolHolderContentsMap();
     }
 
+    
+    /**
+     * Get the value of pauseInsteadOfRecover
+     *
+     * @return the value of pauseInsteadOfRecover
+     */
+    public boolean isPauseInsteadOfRecover() {
+        return this.executorJPanel1.isPauseInsteadOfRecover();
+    }
 }

@@ -271,6 +271,14 @@
                 <Property name="text" type="java.lang.String" value="Log CRCL Programs"/>
               </Properties>
             </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemPauseInsteadOfRecover">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Executor Check Kits : Pause instead of Recover"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed"/>
+              </Events>
+            </MenuItem>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="jMenuExecute">

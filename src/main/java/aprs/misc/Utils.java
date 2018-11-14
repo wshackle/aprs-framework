@@ -95,13 +95,13 @@ public class Utils {
 
     public static String getAprsUserHomeDir() {
         String dir = System.getProperty("aprs.user.home", System.getProperty("user.home"));
-        if(!dir.endsWith("netbeans_run_user_home")) {
-            System.out.println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
-            System.out.println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
-            System.out.println("dir = " + dir);
-            Properties props = System.getProperties();
-            props.list(System.out);
-        }
+//        if(!dir.endsWith("netbeans_run_user_home")) {
+//            System.out.println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
+//            System.out.println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
+//            System.out.println("dir = " + dir);
+//            Properties props = System.getProperties();
+//            props.list(System.out);
+//        }
         return dir;
     }
     
@@ -630,7 +630,7 @@ public class Utils {
      * @param table table to be resized
      */
     @UIEffect
-    private static void autoResizeTableColWidthsOnDisplay(JTable table) {
+    public static void autoResizeTableColWidthsOnDisplay(JTable table) {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
@@ -1134,6 +1134,38 @@ public class Utils {
     public static void readCsvFileToTable(CachedTable cachedTable, File f) {
         readCsvFileToTableAndMap(cachedTable, f, null, null, null);
     }
+    
+    public static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff, long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
+        try (CSVPrinter printer = new CSVPrinter(
+                new FileWriter(f, true),
+                alreadyExists
+                        ? CSVFormat.DEFAULT
+                        : CSVFormat.DEFAULT.withHeader(
+                                "Date",
+                                "cycle_count",
+                                "timeDiff",
+                                "timeDiffPerCycle",
+                                "disableCount",
+                                "disableTime",
+                                "totalRandomDelays",
+                                "ignoredToggles"))) {
+            if (alreadyExists) {
+                printer.println();
+            }
+            printer.printRecord(
+                    Utils.getDateTimeString(),
+                    cycle_count,
+                    timeDiff,
+                    timeDiffPerCycle,
+                    disableCount,
+                    disableTime,
+                    totalRandomDelays,
+                    ignoredToggles);
+        } catch (IOException ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
 
     public static <T> void readCsvFileToTableAndMap(CachedTable cachedTable, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 

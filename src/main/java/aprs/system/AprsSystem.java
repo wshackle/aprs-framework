@@ -348,6 +348,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void setStartRunTime() {
+        setExecutorForceFakeTakeFlag(false);
         checkReadyToRun();
         long t = System.currentTimeMillis();
         if (running.compareAndSet(false, true)) {
@@ -4063,14 +4064,18 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             this.pddlExecutorJInternalFrame1 = newExecFrame;
             ExecutorJInternalFrame newExecFrameCopy = newExecFrame;
-            XFutureVoid loadPropertiesFuture = XFutureVoid.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
-                try {
-                    newExecFrameCopy.loadProperties();
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
-                    throw new RuntimeException(ex);
-                }
-            }, runProgramService);
+            XFutureVoid loadPropertiesFuture
+                    = XFutureVoid.runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
+                        try {
+                            newExecFrameCopy.loadProperties();
+                        } catch (IOException ex) {
+                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                            throw new RuntimeException(ex);
+                        }
+                    }, runProgramService)
+                            .thenComposeToVoid(() -> {
+                                return syncPauseRecoverCheckbox();
+                            });
             this.xf1 = loadPropertiesFuture;
             XFutureVoid setupWindowsFuture
                     = loadPropertiesFuture
@@ -5425,7 +5430,19 @@ public class AprsSystem implements SlotOffsetProvider {
         return reverseCheckBox.isSelected();
     }
 
+    /**
+     * Get the value of pauseInsteadOfRecover
+     *
+     * @return the value of pauseInsteadOfRecover
+     */
+    public boolean isPauseInsteadOfRecover() {
+        return pddlExecutorJInternalFrame1.isPauseInsteadOfRecover();
+    }
+
     private void setReverseCheckBoxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
+        }
         reverseCheckBox.setSelected(val);
     }
 
@@ -5490,6 +5507,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles, boolean reloadActionsFile) {
         clearLogDirCache();
         if (isReverseCheckBoxSelected() != reverseFlag) {
+            setExecutorForceFakeTakeFlag(false);
             setReverseCheckBoxSelected(reverseFlag);
         }
         if (null != object2DViewJInternalFrame) {
@@ -5984,9 +6002,9 @@ public class AprsSystem implements SlotOffsetProvider {
         boolean ret;
         try {
             if (null != actionsToLoad) {
-                File f = createTempFile("actionsList_"+comment, ".txt");
-                try(PrintWriter pw = new PrintWriter(new FileWriter(f))) {
-                    for(Action action: actionsToLoad) {
+                File f = createTempFile("actionsList_" + comment, ".txt");
+                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                    for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
                 }
@@ -6052,6 +6070,13 @@ public class AprsSystem implements SlotOffsetProvider {
             return false;
         }
         return pddlExecutorJInternalFrame1.isDoingActions();
+    }
+
+    public String getIsDoingActionsInfo() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new NullPointerException("pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getIsDoingActionsInfo();
     }
 
     public XFutureVoid startExploreGraphDb() {
@@ -6540,6 +6565,12 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    public void setPauseInsteadOfRecover(boolean val) {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.setPauseInsteadOfRecover(val);
+        }
+    }
+
     private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesOnDisplayTraces = new ConcurrentLinkedDeque<>();
 
     private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
@@ -6645,7 +6676,10 @@ public class AprsSystem implements SlotOffsetProvider {
                                     } catch (IOException ex) {
                                         Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
                                     }
-                                }, runProgramService);
+                                }, runProgramService)
+                                .thenComposeToVoid(() -> {
+                                    return syncPauseRecoverCheckbox();
+                                });
                 futures.add(loadPropertiesFuture);
             }
 
@@ -6743,6 +6777,16 @@ public class AprsSystem implements SlotOffsetProvider {
             XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
             xfv.completeExceptionally(exception);
             return xfv;
+        }
+    }
+
+    private XFutureVoid syncPauseRecoverCheckbox() {
+        if (null != aprsSystemDisplayJFrame) {
+            return Utils.runOnDispatchThread(() -> {
+                aprsSystemDisplayJFrame.setPauseInsteadOfRecoverMenuCheckbox(pddlExecutorJInternalFrame1.isPauseInsteadOfRecover());
+            });
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
@@ -7205,8 +7249,19 @@ public class AprsSystem implements SlotOffsetProvider {
                 connectDatabaseFuture = null;
             }
             DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+            DbSetup dbsetup = dbSetupPublisher.getDbSetup();
+            String dbsetuphost;
+            int port;
+            if (null != dbsetup) {
+                dbsetuphost = dbsetup.getHost();
+                port = dbsetup.getPort();
+            } else {
+                port = -1;
+                dbsetuphost = null;
+            }
             //dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(false).build());
             dbSetupPublisher.disconnect();
+
             List<XFutureVoid> futures = dbSetupPublisher.notifyAllDbSetupListeners(null);
             for (Future<?> f : futures) {
                 if (!f.isDone() && !f.isCancelled()) {
@@ -7220,7 +7275,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
             }
             setConnectDatabaseCheckBoxSelected(false);
-            System.out.println("Finished disconnect from database.");
+            if (null != dbsetuphost) {
+                System.out.println("Finished disconnect from database. " + dbsetuphost + ":" + port);
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -7250,6 +7307,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile boolean closing = false;
 
     public void close() {
+        String task = getTaskName();
         closing = true;
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.stopSimUpdateTimer();
@@ -7262,7 +7320,9 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             eventLogPrinter = null;
         }
-        System.out.println("AprsSystem.close()");
+        if (null != task) {
+            System.out.println("AprsSystem.close() : task=" + task);
+        }
         closeAllWindows();
         connectService.shutdownNow();
         if (null != aprsSystemDisplayJFrame) {

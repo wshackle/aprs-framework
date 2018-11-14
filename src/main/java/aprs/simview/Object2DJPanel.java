@@ -549,7 +549,7 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             ImageIO.write(img, type, f);
-            System.out.println("Saved snapshot to " + f.getCanonicalPath());
+//            System.out.println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -592,7 +592,7 @@ public class Object2DJPanel extends JPanel {
                 type = f.getName().substring(pindex + 1);
             }
             if (ImageIO.write(img, type, f)) {
-                System.out.println("Saved snapshot to " + f.getCanonicalPath());
+//                System.out.println("Saved snapshot to " + f.getCanonicalPath());
             } else {
                 System.out.println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
             }
