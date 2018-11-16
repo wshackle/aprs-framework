@@ -2256,14 +2256,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             appendGenerateAbortLog("doActionsStarting" + comment, actionsList.size(), rev, 0, startAbortCount, -1);
             final int start = doingActionsStarted.incrementAndGet();
             dasIncrementTrace = Thread.currentThread().getStackTrace();
-            this.abortProgram();
             setReplanFromIndex(0);
             actionSetsStarted.incrementAndGet();
             autoStart = true;
             lastActionMillis = System.currentTimeMillis();
             replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
-                runningProgramFuture.cancel(true);
+                if(!runningProgramFuture.isDone()) {
+                    runningProgramFuture.cancel(true);
+                    throw new IllegalStateException("starting doActions when runningProgramFuture="+runningProgramFuture);
+                }
             }
             boolean ret = generateCrcl(comment, startAbortCount);
             if (ret && atLastAction()) {
@@ -2290,16 +2292,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public XFuture<Boolean> startActions() {
+        if(isDoingActions()) {
+            throw new IllegalStateException("calling startActions when still doing actions isDoingActionsInfo="+isDoingActionsInfo);
+        }
         checkReverse();
-        this.abortProgram();
-        this.abortProgram();
         try {
             setReplanFromIndex(0);
             autoStart = true;
             lastActionMillis = System.currentTimeMillis();
             replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
-                runningProgramFuture.cancel(true);
+                if(!runningProgramFuture.isDone()) {
+                    runningProgramFuture.cancel(true);
+                    throw new IllegalStateException("calling startActions when runningProgramFuture="+runningProgramFuture);
+                }
             }
             runningProgramFuture = null;
             XFuture<Boolean> ret = generateCrclAsync()
@@ -2620,6 +2626,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+                
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -3362,6 +3374,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final CachedTable crclProgramCachedTable;
 
     private void clearAll() {
+        if(isDoingActions()) {
+            throw new IllegalStateException("calling clearAll when still doing actions isDoingActionsInfo="+isDoingActionsInfo);
+        }
         warnIfNewActionsNotReady();
         clearAllCount.incrementAndGet();
         clearAllTime = System.currentTimeMillis();
@@ -3369,7 +3384,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclProgramCachedTable.setRowCount(0);
         setReplanFromIndex(0);
         safeAbortRunnablesVector.clear();
-        abortProgram();
         lastActionMillis = System.currentTimeMillis();
         setErrorString(null);
         aprsSystem.setTitleErrorString(null);
@@ -3381,10 +3395,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private AtomicInteger abortProgramCount = new AtomicInteger(0);
     private volatile long abortProgramTime = 0;
 
+    private volatile Thread abortProgramThread = null;
+    private volatile StackTraceElement abortProgramTrace[] = null;
+    private volatile XFutureVoid abortProgramFuture = null;
+    private volatile XFutureVoid abortProgramAbortCrclFuture = null;
+
     /**
      * Abort the currently running CRCL program.
      */
     public XFutureVoid abortProgram() {
+        abortProgramThread = Thread.currentThread();
+        abortProgramTrace = Thread.currentThread().getStackTrace();
         appendGenerateAbortLog("start_abortProgram", actionsList.size(), isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
         boolean rps = replanStarted.getAndSet(true);
         if (null != customRunnables) {
@@ -3396,27 +3417,37 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != aprsSystem) {
-            XFutureVoid abortFuture = aprsSystem.abortCrclProgram();
+            XFutureVoid abortCrclFuture = aprsSystem.abortCrclProgram();
+            abortProgramAbortCrclFuture = abortCrclFuture;
             if (null != generateCrclService) {
-                return abortFuture
+                XFutureVoid abortProgramFutureLocal = abortCrclFuture
                         .thenRunAsync(() -> {
                             completeAbortProgram(rps);
                         }, generateCrclService);
+                abortProgramFuture = abortProgramFutureLocal;
+                return abortProgramFutureLocal;
             } else {
-                return abortFuture
+                XFutureVoid abortProgramFutureLocal = abortCrclFuture
                         .thenRun(() -> {
                             completeAbortProgram(rps);
                         });
+                abortProgramFuture = abortProgramFutureLocal;
+                return abortProgramFutureLocal;
             }
 
         } else {
             completeAbortProgram(rps);
-            return XFutureVoid.completedFuture();
+            XFutureVoid abortProgramFutureLocal = XFutureVoid.completedFuture();
+            abortProgramFuture = abortProgramFutureLocal;
+            return abortProgramFutureLocal;
         }
-
     }
+    private volatile Thread completeAbortProgramThread = null;
+    private volatile StackTraceElement completeAbortProgramTrace[] = null;
 
     private void completeAbortProgram(boolean rps) {
+        completeAbortProgramThread = Thread.currentThread();
+        completeAbortProgramTrace = Thread.currentThread().getStackTrace();
         cancelSafeAbortFutures = true;
         try {
             completeSafeAbort();
@@ -4349,11 +4380,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -5682,7 +5713,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (doSafeAbort) {
             doSafeAbortTime = System.currentTimeMillis();
             doSafeAbortCount.incrementAndGet();
-            this.abortProgram();
+            completeSafeAbort();
             try {
                 if (crclGenerator.isTakeSnapshots() && aprsSystem.snapshotsEnabled()) {
                     takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG"), null, "");

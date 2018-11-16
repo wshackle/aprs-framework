@@ -4538,13 +4538,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         this.jMenuItemSaveSetup.setEnabled(enabled);
     }
 
-    @Override
-    public void setTitle(String title) {
-        System.out.println("title = " + title);
-        Thread.dumpStack();
-        super.setTitle(title); 
-    }
-
     
     public void setTitleMessage(String message, @Nullable File currentSetupFile) {
         if (null != currentSetupFile) {
