@@ -5650,6 +5650,12 @@ public class AprsSystem implements SlotOffsetProvider {
         clearErrors();
     }
 
+    public void clearKitsToCheck() {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.clearKitsToCheck();
+        }
+    }
+    
     private void setCommandID(CRCLCommandType cmd) {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }

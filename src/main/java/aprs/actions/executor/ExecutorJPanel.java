@@ -2248,6 +2248,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile StackTraceElement dasIncrementTrace[] = null;
 
+    public void clearKitsToCheck() {
+        try {
+            crclGenerator.clearKitsToCheckExternal(false);
+        } catch (Exception ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        } 
+    }
+    
     public boolean doActions(String comment, int startAbortCount) {
 
         try {
@@ -2273,7 +2286,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             if (ret && !checkSafeAbort(startAbortCount)) {
                 warnIfNewActionsNotReady();
-                crclGenerator.clearKitsToCheckExternal();
+                crclGenerator.clearKitsToCheckExternal(true);
             }
             appendGenerateAbortLog("doActionsReturning" + comment + ret, actionsList.size(), rev, crclGenerator.getLastIndex(), safeAbortRequestCount.get(), -1);
             return ret;
@@ -4172,7 +4185,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 actionSetsCompleted.set(actionSetsStarted.get());
             }
             if (ret) {
-                crclGenerator.clearKitsToCheckExternal();
+                crclGenerator.clearKitsToCheckExternal(true);
             }
             appendGenerateAbortLog("completeActionListReturning." + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
             return ret;

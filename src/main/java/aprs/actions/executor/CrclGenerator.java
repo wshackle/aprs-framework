@@ -2352,17 +2352,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    public void clearKitsToCheckExternal()
+    public void clearKitsToCheckExternal(boolean withRecheck)
             throws InterruptedException, IOException, ExecutionException {
 
         if (!kitsToCheck.isEmpty()) {
-            if (!recheckKitsOnly(false)) {
-                System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
-                System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
-                System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
-                System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
-                System.err.println("kitsToCheck = " + kitsToCheck);
-                throw new IllegalStateException("clearing kits to check that do not recheck");
+            if (withRecheck) {
+                if (!recheckKitsOnly(false)) {
+                    System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
+                    System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
+                    System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
+                    System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
+                    System.err.println("kitsToCheck = " + kitsToCheck);
+                    throw new IllegalStateException("clearing kits to check that do not recheck");
+                }
             }
             kitsToCheck.clear();
         }
@@ -4900,7 +4902,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         settingsChecked = true;
         Map<String, String> optionsMap = this.options;
-        loadOptionsMap(optionsMap,true);
+        loadOptionsMap(optionsMap, true);
     }
 
     public void loadOptionsMap(Map<String, String> optionsMap, boolean doCheckPose) throws NumberFormatException {

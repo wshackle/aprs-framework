@@ -125,14 +125,16 @@ public class GoalLearner {
     }
 
     private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable []  = null;
-    @Nullable private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
+    @Nullable
+    private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
     private volatile long setLastCreateActionListFromVisionKitToCheckStringsTime;
 
     public StackTraceElement @Nullable [] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
         return setLastCreateActionListFromVisionKitToCheckStringsTrace;
     }
 
-    @Nullable public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
+    @Nullable
+    public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
         return setLastCreateActionListFromVisionKitToCheckStringsThread;
     }
 
@@ -208,15 +210,15 @@ public class GoalLearner {
      * recreate the same configuration
      */
     public List<Action> createActionListFromVision(
-            List<PhysicalItem> requiredItems, 
-            List<PhysicalItem> teachItems, 
-            boolean allEmptyA[], 
-            boolean overrideRotationOffset, 
+            List<PhysicalItem> requiredItems,
+            List<PhysicalItem> teachItems,
+            boolean allEmptyA[],
+            boolean overrideRotationOffset,
             double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
-                        .filter(this::isWithinLimits)
-                        .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                .filter(this::isWithinLimits)
+                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
 
         SlotOffsetProvider localSlotOffsetProvider = this.slotOffsetProvider;
         if (null == localSlotOffsetProvider) {
@@ -225,10 +227,10 @@ public class GoalLearner {
 
         String requiredItemsString
                 = requiredItemsMap
-                        .entrySet()
-                        .stream()
-                        .map(entry -> entry.getKey() + "=" + entry.getValue())
-                        .collect(Collectors.joining(" "));
+                .entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = filterForKitTrays(teachItems);
         if (!checkKitTrays(kitTrays)) {
             return Collections.emptyList();
@@ -236,11 +238,8 @@ public class GoalLearner {
 
         List<Action> l = new ArrayList<>();
 
-        
         l.add(Action.parse("(set-correction-mode " + correctionMode + ")"));
-        if (!correctionMode) {
-            l.add(Action.parse("(clear-kits-to-check)"));
-        }
+        l.add(Action.parse("(clear-kits-to-check)"));
         l.add(Action.parse("(look-for-parts 0 " + requiredItemsString + ")"));
         boolean allEmpty = true;
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
@@ -319,9 +318,9 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                            .sorted(Comparators.byFunction(Map.Entry<String, String>::getKey))
-                            .map(e -> e.getKey() + "=" + e.getValue())
-                            .collect(Collectors.joining(" "))
+                    .sorted(Comparators.byFunction(Map.Entry<String, String>::getKey))
+                    .map(e -> e.getKey() + "=" + e.getValue())
+                    .collect(Collectors.joining(" "))
                     + ")");
         }
         if (!correctionMode) {

@@ -84,6 +84,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getForceFakeTakeFlag();
     }
 
+    public void clearKitsToCheck() {
+        executorJPanel1.clearKitsToCheck();
+    }
+    
      public void setPauseInsteadOfRecover(boolean val) {
        executorJPanel1.setPauseInsteadOfRecover(val);
     }
