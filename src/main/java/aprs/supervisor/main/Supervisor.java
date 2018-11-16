@@ -2949,7 +2949,7 @@ public class Supervisor {
     private final AtomicInteger debugActionCount = new AtomicInteger();
 
     public void debugAction() {
-        logEventErr("");
+        logEvent("debugAction");
         int count = debugActionCount.incrementAndGet();
         System.out.println("Begin AprsSupervisorJFrame.debugAction()" + count);
         System.out.println("waitForTogglesFutures = " + waitForTogglesFutures);
