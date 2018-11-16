@@ -155,8 +155,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.reverseCorrectPoint(ptIn);
     }
 
-    public void abortProgram() {
-        executorJPanel1.abortProgram();
+    public XFutureVoid abortProgram() {
+        return executorJPanel1.abortProgram();
     }
 
     public XFutureVoid startSafeAbort(String name) {

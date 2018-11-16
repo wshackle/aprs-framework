@@ -24,6 +24,7 @@ package aprs.system;
 
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.misc.ActiveWinEnum;
+import aprs.misc.IconImages;
 import aprs.misc.Utils;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -264,12 +265,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void commonInit() {
         try {
-            URL aprsPngUrl = Utils.getAprsIconUrl();
-            if (null != aprsPngUrl) {
-                setIconImage(ImageIO.read(aprsPngUrl));
-            } else {
-                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.WARNING, "Utils.getAprsIconUrl() returned null");
-            }
+            setIconImage(IconImages.BASE_IMAGE);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
