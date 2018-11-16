@@ -3785,7 +3785,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .thenComposeToVoid(() -> {
                         return Utils.runOnDispatchThread(() -> {
                             if (null != actionName && null != runnable) {
-                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Confirm continue with " + actionName + "?"));
+                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Confirm continue with \"" + actionName + "\"? \r\n All parts in position. \r\n Robots at home. \r\n Gripper's empty."));
                                 if (confirmed) {
                                     supervisor.setTitleMessage(actionName);
                                     runnable.run();

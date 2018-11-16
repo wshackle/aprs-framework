@@ -2913,6 +2913,11 @@ public class Supervisor {
             f.cancelAll(stealingRobots);
         }
         debugSystemContinueMap.clear();
+        completeScanTillNewInternalCount.set(0);
+        startScanTillNewInternalCount.set(0);
+        for(AprsSystem sys: aprsSystems) {
+            sys.clearKitsToCheck();
+        }
     }
 
     private void clearCheckBoxes() {
