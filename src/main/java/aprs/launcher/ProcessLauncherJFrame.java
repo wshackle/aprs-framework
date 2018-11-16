@@ -25,6 +25,7 @@ package aprs.launcher;
 import static aprs.launcher.Neo4JKiller.JPS_COMMAND_FILENAME_STRING;
 import aprs.misc.Utils;
 import aprs.logdisplay.LogDisplayJPanel;
+import aprs.misc.IconImages;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import java.io.BufferedReader;
@@ -63,6 +64,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     @UIEffect
     public ProcessLauncherJFrame() {
         initComponents();
+        try {
+            setIconImage(IconImages.BASE_IMAGE);
+        } catch (Exception ex) {
+            Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
     }
 
     /**

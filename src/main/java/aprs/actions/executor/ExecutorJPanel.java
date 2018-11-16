@@ -500,10 +500,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void setPauseInsteadOfRecover(boolean val) {
-       setOption("pauseInsteadOfRecover",Boolean.toString(val));
-       crclGenerator.setPauseInsteadOfRecover(val);
+        setOption("pauseInsteadOfRecover", Boolean.toString(val));
+        crclGenerator.setPauseInsteadOfRecover(val);
     }
-    
+
     private void clearToolOffsetTableModelListener() {
         toolOffsetTablemModelListenerEnabled = false;
         Utils.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
@@ -2219,7 +2219,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return isDoingActionsInfo;
     }
 
-    
     public boolean isDoingActions() {
         int dasCount = doingActionsStarted.get();
         int dafCount = doingActionsFinished.get();
@@ -2232,12 +2231,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             boolean runningProgram1 = isRunningProgram();
             if (runningProgram1) {
-                isDoingActionsInfo = "dasCount=" + dasCount + ", isRunningProgram() = true, \n runningProgramFuture="+runningProgramFuture;
+                isDoingActionsInfo = "dasCount=" + dasCount + ", isRunningProgram() = true, \n runningProgramFuture=" + runningProgramFuture;
                 return true;
             } else {
                 boolean continuingActions = isContinuingActions();
                 if (continuingActions) {
-                    isDoingActionsInfo = "dasCount=" + dasCount + ", isContinuingActions() = true, \n lastContinueActionFuture="+lastContinueActionFuture;
+                    isDoingActionsInfo = "dasCount=" + dasCount + ", isContinuingActions() = true, \n lastContinueActionFuture=" + lastContinueActionFuture;
                     return true;
                 } else {
                     isDoingActionsInfo = null;
@@ -3385,7 +3384,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     /**
      * Abort the currently running CRCL program.
      */
-    public void abortProgram() {
+    public XFutureVoid abortProgram() {
+        appendGenerateAbortLog("start_abortProgram", actionsList.size(), isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
         boolean rps = replanStarted.getAndSet(true);
         if (null != customRunnables) {
             customRunnables.clear();
@@ -3396,13 +3396,38 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != aprsSystem) {
-            aprsSystem.abortCrclProgram();
+            XFutureVoid abortFuture = aprsSystem.abortCrclProgram();
+            if (null != generateCrclService) {
+                return abortFuture
+                        .thenRunAsync(() -> {
+                            completeAbortProgram(rps);
+                        }, generateCrclService);
+            } else {
+                return abortFuture
+                        .thenRun(() -> {
+                            completeAbortProgram(rps);
+                        });
+            }
+
+        } else {
+            completeAbortProgram(rps);
+            return XFutureVoid.completedFuture();
         }
-        completeSafeAbort();
+
+    }
+
+    private void completeAbortProgram(boolean rps) {
+        cancelSafeAbortFutures = true;
+        try {
+            completeSafeAbort();
+        } finally {
+            cancelSafeAbortFutures = false;
+        }
         replanStarted.set(rps);
         runningProgram = false;
         abortProgramTime = System.currentTimeMillis();
         abortProgramCount.incrementAndGet();
+        appendGenerateAbortLog("complete_abortProgram", actionsList.size(), isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
     }
 
     private void stopReplanActionTimer() {
@@ -4027,11 +4052,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     private volatile String startSafeAbortProgramName = null;
     private volatile boolean startSafeAbortIsRunningCrclProgram = false;
+    private volatile boolean cancelSafeAbortFutures = false;
 
     private void completeSafeAbortFuture(XFutureVoid f) {
-        incSafeAbortCount("completeSafeAbortFuture.");
-        crclGenerator.takeSnapshots("", "completeSafeAbortFuture." + f, null, null);
-        f.complete(null);
+        if (!cancelSafeAbortFutures) {
+            incSafeAbortCount("completeSafeAbortFuture.");
+            crclGenerator.takeSnapshots("", "completeSafeAbortFuture." + f, null, null);
+            f.complete(null);
+        } else {
+            crclGenerator.takeSnapshots("", "cancel.completeSafeAbortFuture." + f, null, null);
+            f.cancelAll(false);
+        }
     }
 
     public XFutureVoid startSafeAbort(String name) {
@@ -4318,11 +4349,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -5876,7 +5907,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             String actionsFileName = reverse ? this.reverseActionsFileString : this.actionsFileString;
-            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), aprsSystem.getRobotName(), actionsFileName};
+            boolean runningProgram = isRunningProgram();
+            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), runningProgram, aprsSystem.getRobotName(), actionsFileName};
             try (
                     FileWriter fw = new FileWriter(logFile, true);
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
@@ -7187,7 +7219,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void completeLoadPropertiesOnDisplay() {
         Map<String, String> optionsMap = getTableOptions();
-        crclGenerator.loadOptionsMap(optionsMap);
+        crclGenerator.loadOptionsMap(optionsMap, false);
         syncPanelToGeneratorToolData();
         loadToolMenus();
     }
@@ -7532,7 +7564,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return newList;
     }
 
-    
     /**
      * Get the value of pauseInsteadOfRecover
      *
@@ -7541,5 +7572,5 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public boolean isPauseInsteadOfRecover() {
         return crclGenerator.isPauseInsteadOfRecover();
     }
-    
+
 }

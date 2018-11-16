@@ -105,6 +105,16 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartAllActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartAllReverse">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Start All Reverse"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartAllReverseActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator1">
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSafeAbortAll">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Safe Abort All"/>
@@ -121,6 +131,8 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemImmediateAbortAllActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator2">
+            </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemContinueAll">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Continue All"/>
@@ -135,14 +147,6 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemConnectAllActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartAllReverse">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Start All Reverse"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartAllReverseActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemContinuousDemo">
@@ -169,6 +173,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemScanAllActionPerformed"/>
               </Events>
             </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemLookForPartsAll">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Look ForParts All"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemLookForPartsAllActionPerformed"/>
+              </Events>
+            </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemPause">
               <Properties>
                 <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
@@ -180,109 +192,6 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemPauseActionPerformed"/>
               </Events>
             </MenuItem>
-            <Menu class="javax.swing.JMenu" name="jMenuActionsAdditionalTests">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Additional Tests "/>
-              </Properties>
-              <SubComponents>
-                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemRandomTest">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Randomized Enable Toggle Continuous Demo"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemRandomTestActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemPauseResumeTest">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Pause Resume Test"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemPauseResumeTestActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemResetAll">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Reset All"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemResetAllActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemDbgAction">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Dbg Action"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemDbgActionActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRandomTestReverseFirst">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Randomized Enable Toggle Continuous Demo (Reverse First) "/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemRandomTestReverseFirstActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndContinuousDemo">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="(Independant) Continuous Demo"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndContinuousDemoActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndRandomToggleTest">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="(Independant) Continuous Demo With Randomized Enable Toggle    "/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndRandomToggleTestActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRunCustom">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Run custom code"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemRunCustomActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartContinuousScanAndRun">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Start Continuous Scan and Run"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartContinuousScanAndRunActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartScanAllThenContinuousDemoRevFirst">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Start Scan All Then Continuous Demo Rev First"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemConveyorTest">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Conveyor Test"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemConveyorTestActionPerformed"/>
-                  </Events>
-                </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="jMenuItemReloadSimFiles">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Reload Sim Files"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemReloadSimFilesActionPerformed"/>
-                  </Events>
-                </MenuItem>
-              </SubComponents>
-            </Menu>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="jMenuOptions">
@@ -376,7 +285,7 @@
             </MenuItem>
           </SubComponents>
         </Menu>
-        <Menu class="javax.swing.JMenu" name="jMenu1">
+        <Menu class="javax.swing.JMenu" name="jMenuSpecialTests">
           <Properties>
             <Property name="text" type="java.lang.String" value="Special Tests"/>
           </Properties>
@@ -387,6 +296,102 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemTenCycleTestActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemRandomTest">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Randomized Enable Toggle Continuous Demo"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemRandomTestActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemPauseResumeTest">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Pause Resume Test"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemPauseResumeTestActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemResetAll">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Reset All"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemResetAllActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemDbgAction">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Dbg Action"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemDbgActionActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRandomTestReverseFirst">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Randomized Enable Toggle Continuous Demo (Reverse First) "/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemRandomTestReverseFirstActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndContinuousDemo">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="(Independant) Continuous Demo"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndContinuousDemoActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemIndRandomToggleTest">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="(Independant) Continuous Demo With Randomized Enable Toggle    "/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemIndRandomToggleTestActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemRunCustom">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Run custom code"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemRunCustomActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartContinuousScanAndRun">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Start Continuous Scan and Run"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartContinuousScanAndRunActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemStartScanAllThenContinuousDemoRevFirst">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Start Scan All Then Continuous Demo Rev First"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemConveyorTest">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Conveyor Test"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemConveyorTestActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemReloadSimFiles">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Reload Sim Files"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemReloadSimFilesActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>

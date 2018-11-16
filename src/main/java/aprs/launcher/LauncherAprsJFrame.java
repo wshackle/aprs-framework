@@ -29,10 +29,10 @@ import static aprs.misc.Utils.copyOfRangeNonNullsOnly;
 import static aprs.misc.Utils.readFirstLine;
 import aprs.learninggoals.GoalLearnerTest;
 import aprs.actions.optaplanner.display.OptaplannerTest;
+import aprs.misc.IconImages;
 import static aprs.misc.Utils.PlayAlert;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
-import crcl.ui.XFutureVoid;
 import java.awt.Frame;
 
 import java.awt.GraphicsEnvironment;
@@ -46,8 +46,6 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -65,6 +63,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @UIEffect
     public LauncherAprsJFrame() {
         initComponents();
+        try {
+            setIconImage(IconImages.BASE_IMAGE);
+        } catch (Exception ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
     }
 
     /**
