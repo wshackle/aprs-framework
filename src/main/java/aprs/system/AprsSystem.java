@@ -52,6 +52,8 @@ import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
+import aprs.misc.AprsCommonLogger;
+import aprs.misc.AprsCommonPrintStream;
 import aprs.misc.IconImages;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
@@ -139,7 +141,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import javax.imageio.IIOException;
 import javax.swing.DesktopManager;
 import javax.swing.JDesktopPane;
 import javax.swing.SwingUtilities;
@@ -2255,46 +2256,19 @@ public class AprsSystem implements SlotOffsetProvider {
         return pddlExecutorJInternalFrame1.getToolsInHolders();
     }
 
-    static private class MyPrintStream extends PrintStream {
-
-        final private PrintStream ps;
-        final private LogDisplayJInternalFrame logDisplayJInternalFrame;
-
-        MyPrintStream(PrintStream ps, LogDisplayJInternalFrame logDisplayJInternalFrame) {
-            super(ps, true);
-            this.ps = ps;
-            this.logDisplayJInternalFrame = logDisplayJInternalFrame;
-            if (null == logDisplayJInternalFrame) {
-                throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
-            }
-            if (null == ps) {
-                throw new IllegalArgumentException("PrintStream ps may not be null");
-            }
-        }
-
-        private StringBuffer sb = new StringBuffer();
-
-        @UIEffect
-        private void appendLogDisplayOnDisplay(String text) {
-            if (null != logDisplayJInternalFrame) {
-                logDisplayJInternalFrame.appendText(text);
-            }
-        }
-
-        public void write(byte[] buf, int off, int len) {
-            super.write(buf, off, len);
-            if (null != logDisplayJInternalFrame) {
-                final String s = new String(buf, off, len);
-                sb.append(s);
-                if (s.contains("\n")) {
-                    String fullString = sb.toString();
-                    Utils.runOnDispatchThread(() -> appendLogDisplayOnDisplay(fullString));
-                    sb = new StringBuffer();
-                }
-            }
+    @UIEffect
+    private void appendLogDisplayOnDisplay(String text) {
+        if (null != logDisplayJInternalFrame) {
+            logDisplayJInternalFrame.appendText(text);
         }
     }
 
+    private void appendLogDisplay(String text) {
+        if (null != logDisplayJInternalFrame) {
+            Utils.runOnDispatchThread(() -> appendLogDisplayOnDisplay(text));
+        }
+    }
+    
     private int fanucCrclPort = CRCLSocket.DEFAULT_PORT;
     private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
     private final String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
@@ -3248,11 +3222,6 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    @MonotonicNonNull
-    private volatile MyPrintStream outLogStream = null;
-    @MonotonicNonNull
-    private volatile MyPrintStream errLogStream = null;
-
     public final XFutureVoid initLoggerWindow() {
         if (null != aprsSystemDisplayJFrame) {
             try {
@@ -3265,6 +3234,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.completedFuture();
     }
 
+    private final Consumer<String> loggerFrameStringConsumer =
+            (String s) -> appendLogDisplay(s);
+    
     @UIEffect
     private void initLoggerWindowOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
@@ -3273,22 +3245,10 @@ public class AprsSystem implements SlotOffsetProvider {
                     if (null == logDisplayJInternalFrame) {
                         LogDisplayJInternalFrame logFrame = new LogDisplayJInternalFrame();
                         addInternalFrame(logFrame);
-                        if (null == outLogStream) {
-                            outLogStream = new MyPrintStream(System.out, logFrame);
-                        }
-                        if (null == errLogStream) {
-                            errLogStream = new MyPrintStream(System.err, logFrame);
-                        }
+                        AprsCommonLogger.instance().getStringConsumers()
+                                .add(loggerFrameStringConsumer);
+                        AprsCommonLogger.instance().addRef();
                         this.logDisplayJInternalFrame = logFrame;
-                    }
-                }
-                LogDisplayJInternalFrame logFrame = this.logDisplayJInternalFrame;
-                if (null != logFrame) {
-                    if (null != outLogStream) {
-                        System.setOut(outLogStream);
-                    }
-                    if (null != errLogStream) {
-                        System.setErr(errLogStream);
                     }
                 }
             } catch (Exception ex) {
@@ -3395,6 +3355,9 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        AprsCommonLogger.instance().removeRef();
+        AprsCommonLogger.instance().getStringConsumers()
+                                .remove(loggerFrameStringConsumer);
     }
 
     private void closeDbSetupFrame() {
@@ -5655,7 +5618,7 @@ public class AprsSystem implements SlotOffsetProvider {
             pddlExecutorJInternalFrame1.clearKitsToCheck();
         }
     }
-    
+
     private void setCommandID(CRCLCommandType cmd) {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
