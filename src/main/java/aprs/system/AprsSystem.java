@@ -226,6 +226,7 @@ public class AprsSystem implements SlotOffsetProvider {
             pddlPlannerStartupCheckBox = aprsSystemDisplayJFrame1.pddlPlannerStartupCheckBox();
             reloadSimFilesOnReverseCheckBox = aprsSystemDisplayJFrame1.reloadSimFilesOnReverseCheckBox();
             reverseCheckBox = aprsSystemDisplayJFrame1.reverseCheckBox();
+            alertLimitsCheckBox = aprsSystemDisplayJFrame1.alertLimitsCheckBox();
             robotCrclFanucServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclFanucServerStartupCheckBox();
             robotCrclGUIStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclGUIStartupCheckBox();
             robotCrclMotomanServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclMotomanServerStartupCheckBox();
@@ -252,6 +253,7 @@ public class AprsSystem implements SlotOffsetProvider {
             pddlPlannerStartupCheckBox = new CachedCheckBox();
             reloadSimFilesOnReverseCheckBox = new CachedCheckBox();
             reverseCheckBox = new CachedCheckBox();
+            alertLimitsCheckBox = new CachedCheckBox();
             robotCrclFanucServerStartupCheckBox = new CachedCheckBox();
             robotCrclGUIStartupCheckBox = new CachedCheckBox();
             robotCrclMotomanServerStartupCheckBox = new CachedCheckBox();
@@ -279,6 +281,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private final CachedCheckBox pddlPlannerStartupCheckBox;
     private final CachedCheckBox reloadSimFilesOnReverseCheckBox;
     private final CachedCheckBox reverseCheckBox;
+    private final CachedCheckBox alertLimitsCheckBox;
     private final CachedCheckBox robotCrclFanucServerStartupCheckBox;
     private final CachedCheckBox robotCrclGUIStartupCheckBox;
     private final CachedCheckBox robotCrclMotomanServerStartupCheckBox;
@@ -2268,7 +2271,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Utils.runOnDispatchThread(() -> appendLogDisplayOnDisplay(text));
         }
     }
-    
+
     private int fanucCrclPort = CRCLSocket.DEFAULT_PORT;
     private int motomanCrclPort = CRCLSocket.DEFAULT_PORT;
     private final String fanucNeighborhoodName = "AgilityLabLRMate200iD"; // FIXME hard-coded default
@@ -3234,9 +3237,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.completedFuture();
     }
 
-    private final Consumer<String> loggerFrameStringConsumer =
-            (String s) -> appendLogDisplay(s);
-    
+    private final Consumer<String> loggerFrameStringConsumer
+            = (String s) -> appendLogDisplay(s);
+
     @UIEffect
     private void initLoggerWindowOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
@@ -3357,7 +3360,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         AprsCommonLogger.instance().removeRef();
         AprsCommonLogger.instance().getStringConsumers()
-                                .remove(loggerFrameStringConsumer);
+                .remove(loggerFrameStringConsumer);
     }
 
     private void closeDbSetupFrame() {
@@ -4375,21 +4378,36 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean isWithinMaxLimits(PmCartesian cart) {
-        return cart != null
+        boolean ret=  cart != null
                 && cart.x <= maxLimit.x
                 && cart.y <= maxLimit.y
                 && cart.z <= maxLimit.z;
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within max limits : cart =" + cart+ ", maxLimit="+maxLimit);
+            throw new IllegalStateException("Position is not within max limits : cart =" + cart+ ", maxLimit="+maxLimit);
+        }
+        return ret;
     }
 
     private boolean isWithinMinLimits(PmCartesian cart) {
-        return cart != null
+        boolean ret =  cart != null
                 && cart.x >= minLimit.x
                 && cart.y >= minLimit.y
                 && cart.z >= minLimit.z;
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within min limits : cart =" + cart+ ", minLimit="+minLimit);
+            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit="+minLimit);
+        }
+        return ret;
     }
 
     public boolean isWithinLimits(PmCartesian cart) {
-        return isWithinMaxLimits(cart) && isWithinMinLimits(cart);
+        boolean ret = isWithinMaxLimits(cart) && isWithinMinLimits(cart);
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within limits : cart =" + cart );
+            throw new IllegalStateException("Position is not within limits : cart =" + cart);
+        }
+        return ret;
     }
 
     private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
@@ -5395,6 +5413,10 @@ public class AprsSystem implements SlotOffsetProvider {
         return reverseCheckBox.isSelected();
     }
 
+    private boolean isAlertLimitsCheckBoxSelected() {
+        return alertLimitsCheckBox.isSelected();
+    }
+
     /**
      * Get the value of pauseInsteadOfRecover
      *
@@ -5405,6 +5427,13 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void setReverseCheckBoxSelected(boolean val) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
+        }
+        reverseCheckBox.setSelected(val);
+    }
+
+    private void setAlertLimitsCheckBoxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
         }
@@ -6559,6 +6588,10 @@ public class AprsSystem implements SlotOffsetProvider {
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
+            String alertLimitsString = props.getProperty(ALERT_LIMITS);
+            if (null != alertLimitsString) {
+                setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+            }
             String useTeachTableString = props.getProperty(USETEACHTABLE);
             if (null != useTeachTableString) {
                 setUseTeachTable(Boolean.valueOf(useTeachTableString));
@@ -6750,6 +6783,7 @@ public class AprsSystem implements SlotOffsetProvider {
             return xfv;
         }
     }
+    private static final String ALERT_LIMITS = "alertLimits";
 
     private XFutureVoid syncPauseRecoverCheckbox() {
         if (null != aprsSystemDisplayJFrame) {
@@ -6854,6 +6888,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         Map<String, String> propsMap = new HashMap<>();
 
+        propsMap.put(ALERT_LIMITS, Boolean.toString(isAlertLimitsCheckBoxSelected()));
         propsMap.put(USETEACHTABLE, Boolean.toString(getUseTeachTable()));
         propsMap.put(STARTUPPDDLPLANNER, Boolean.toString(isPddlPlannerStartupSelected()));
         propsMap.put(STARTUPPDDLEXECUTOR, Boolean.toString(isExecutorStartupSelected()));

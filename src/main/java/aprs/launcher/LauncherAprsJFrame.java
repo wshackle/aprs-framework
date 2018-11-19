@@ -29,6 +29,7 @@ import static aprs.misc.Utils.copyOfRangeNonNullsOnly;
 import static aprs.misc.Utils.readFirstLine;
 import aprs.learninggoals.GoalLearnerTest;
 import aprs.actions.optaplanner.display.OptaplannerTest;
+import aprs.misc.AprsCommonLogger;
 import aprs.misc.IconImages;
 import static aprs.misc.Utils.PlayAlert;
 import aprs.system.AprsSystem;
@@ -62,6 +63,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @SuppressWarnings("initialization")
     @UIEffect
     public LauncherAprsJFrame() {
+        AprsCommonLogger.instance();
         initComponents();
         try {
             setIconImage(IconImages.BASE_IMAGE);
