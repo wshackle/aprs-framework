@@ -4541,7 +4541,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
-        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset);
+        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset,false);
         StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
         if (null != actionFile) {
             try {
@@ -4640,7 +4640,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0);
+            return createActionListFromVision(requiredItems, teachItems, false, 0,false);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -4819,7 +4819,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * when complete.
      */
     @Nullable
-    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam) {
+    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag) {
 
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -4871,8 +4871,11 @@ public class AprsSystem implements SlotOffsetProvider {
             if (!equal || !goalLearnerLocal.isCorrectionMode()) {
                 boolean startingReverseFlag = isReverseFlag();
                 File f = createTempFile("actionList", ".txt");
+                if(startingReverseFlag != newReverseFlag) {
+                    setReverseFlag(newReverseFlag, false, false);
+                }
                 saveActionsListToFile(f, actions);
-                loadActionsFile(f, startingReverseFlag);
+                loadActionsFile(f, newReverseFlag);
                 ret = f;
             }
             if (requiredItems != teachItems) {
@@ -5437,7 +5440,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
         }
-        reverseCheckBox.setSelected(val);
+        alertLimitsCheckBox.setSelected(val);
     }
 
     /**
@@ -6139,7 +6142,9 @@ public class AprsSystem implements SlotOffsetProvider {
     private File lastAprsPropertiesFileFile = null;
 
     void reloadForReverse(boolean reverseFlag) {
-        setReverseFlag(reverseFlag, true, true);
+        boolean reloadActionsFile = 
+                pddlExecutorJInternalFrame1.getActionsFileString(reverseFlag) != null;
+        setReverseFlag(reverseFlag, true, reloadActionsFile);
     }
 
     private static class AprsSystemPropDefaults {

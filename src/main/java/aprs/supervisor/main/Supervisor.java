@@ -3643,7 +3643,7 @@ public class Supervisor {
         for (AprsSystem aprsSys : aprsSystems) {
             aprsSys.setCorrectionMode(false);
             if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
+                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0,false);
             } else {
                 aprsSys.createActionListFromVision();
             }
@@ -3792,7 +3792,7 @@ public class Supervisor {
                 aprsSys.setCorrectionMode(true);
                 File actionListFile;
                 if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0);
+                    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0,false);
                 } else {
                     actionListFile = aprsSys.createActionListFromVision();
                 }

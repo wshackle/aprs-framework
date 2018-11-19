@@ -67,6 +67,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.isReverseFlag();
     }
     
+    public String getActionsFileString(boolean newReverseFlag) {
+        return executorJPanel1.getActionsFileString(newReverseFlag);
+    }
+    
     /**
      * Creates new form ActionsToCrclJInternalFrame
      */
