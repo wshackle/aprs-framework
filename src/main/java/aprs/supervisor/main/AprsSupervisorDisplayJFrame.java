@@ -3218,6 +3218,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             resume();
                             resetAll(false);
                             restoreRobotNames();
+                          
                             connectAll();
                             enableAllRobots();
                         } catch (Exception e) {
@@ -4101,20 +4102,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return XFuture.allOfWithName("lookForPartsAll", futures);
     }
 
-//    private XFutureVoid clearReverseAll() {
-//        List<AprsSystem> aprsSystems = getAprsSystems();
-//        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
-//        for (int i = 0; i < aprsSystems.size(); i++) {
-//            AprsSystem aprsSys = aprsSystems.get(i);
-//            if (aprsSys.isReverseFlag()) {
-//                logEvent("Set reverse flag false for " + aprsSys);
-//                futures[i] = aprsSys.startSetReverseFlag(false, false);
-//            } else {
-//                futures[i] = XFuture.completedFuture(null);
-//            }
-//        }
-//        return XFuture.allOfWithName("clearReverseAll", futures);
-//    }
+   
     public XFutureVoid showScanCompleteDisplay() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         logEvent("Scans Complete");

@@ -70,7 +70,6 @@ import crcl.base.PoseType;
 import crcl.utils.CrclCommandWrapper;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
-import crcl.ui.client.PendantClientInner;
 import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
@@ -882,6 +881,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jButtonTest = new javax.swing.JButton();
         jButtonRecord = new javax.swing.JButton();
         jButtonRecordLookForJoints = new javax.swing.JButton();
+        jButtonUpdatePoseCacheFromManual = new javax.swing.JButton();
         jPanelToolChange = new javax.swing.JPanel();
         jButtonGotoToolChangerApproach = new javax.swing.JButton();
         jLabel13 = new javax.swing.JLabel();
@@ -1250,6 +1250,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jButtonUpdatePoseCacheFromManual.setText("Update Pose Cache");
+        jButtonUpdatePoseCacheFromManual.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonUpdatePoseCacheFromManualActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
@@ -1344,7 +1351,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonGridTest)))
+                        .addComponent(jButtonGridTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonUpdatePoseCacheFromManual)))
                 .addContainerGap(239, Short.MAX_VALUE))
         );
 
@@ -1410,7 +1419,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
                     .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButtonGridTest))
+                    .addComponent(jButtonGridTest)
+                    .addComponent(jButtonUpdatePoseCacheFromManual))
                 .addContainerGap(87, Short.MAX_VALUE))
         );
 
@@ -2590,8 +2600,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
             checkFilename(newReverseActionsFileString);
             this.reverseActionsFileString = newReverseActionsFileString;
-        } else if(!newReverseActionsFileString.equals(reverseActionsFileString)) {
-            throw new IllegalStateException("Attempt to change  reverseActionsFileString from "+reverseActionsFileString + " to "+newReverseActionsFileString);
+        } else if (!newReverseActionsFileString.equals(reverseActionsFileString)) {
+            throw new IllegalStateException("Attempt to change  reverseActionsFileString from " + reverseActionsFileString + " to " + newReverseActionsFileString);
         }
     }
 
@@ -2899,7 +2909,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
-            if(checkResetReverseActionsFile()) return;
+            if (checkResetReverseActionsFile()) {
+                return;
+            }
             browseActionsFile();
             loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
         } catch (IOException ex) {
@@ -2911,7 +2923,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
-            if(checkResetReverseActionsFile()) return;
+            if (checkResetReverseActionsFile()) {
+                return;
+            }
             loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
 
         } catch (IOException ex) {
@@ -2922,7 +2936,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private boolean checkResetReverseActionsFile() throws HeadlessException {
         if (reverseFlag && null != reverseActionsFileString && reverseActionsFileString.length() > 0) {
-            int confirm = JOptionPane.showConfirmDialog(this,"Reset reverseActionsFileString="+reverseActionsFileString);
+            int confirm = JOptionPane.showConfirmDialog(this, "Reset reverseActionsFileString=" + reverseActionsFileString);
             if (confirm == JOptionPane.YES_OPTION) {
                 this.reverseActionsFileString = null;
             } else {
@@ -3533,7 +3547,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("part to take is null");
                 return;
             }
-            runningProgramFuture = this.takePart(part);
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        runningProgramFuture = this.takePart(part);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                runningProgramFuture = this.takePart(part);
+            }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -3660,18 +3686,52 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
+            if (isDoingActions()) {
+                System.out.println("isDoingActionsInfo=" + isDoingActionsInfo);
+                int confirm = JOptionPane.showConfirmDialog(this, "isDoingActionsInfo=" + isDoingActionsInfo);
+                if (confirm != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
             setSelectedManualObjectName();
             setReplanFromIndex(0);
-            abortProgram();
-            lookForCount++;
-            clearAll();
-            autoStart = true;
+            abortProgram()
+                    .thenRun(() -> {
+                        try {
+                            lookForCount++;
+                            clearAll();
+                            autoStart = true;
 //            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
-            String part = getComboPart();
+                            cancelRunProgramFuture();
+                            if (null != generateCrclService) {
+                                generateCrclService.submit(() -> {
+                                    try {
+                                        runningProgramFuture = this.lookForParts();
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                        abortProgram();
+                                        cancelRunProgramFuture();
+                                        showExceptionInProgram(ex);
+                                        
+                                    }
+                                });
+                            } else {
+                                runningProgramFuture = this.lookForParts();
+                            }
+                        } catch (Exception ex) {
+                            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            abortProgram();
+                             cancelRunProgramFuture();
+                            showExceptionInProgram(ex);
+                           
+                        }
+                    });
+        } catch (Exception ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            abortProgram();
             cancelRunProgramFuture();
-            runningProgramFuture = this.lookForParts();
-        } catch (Exception e) {
-            showExceptionInProgram(e);
+            showExceptionInProgram(ex);
+            
         }
     }//GEN-LAST:event_jButtonLookForActionPerformed
 
@@ -3693,7 +3753,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("part to return is null");
                 return;
             }
-            runningProgramFuture = this.returnPart(part);
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        runningProgramFuture = this.returnPart(part);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                runningProgramFuture = this.returnPart(part);
+            }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             showExceptionInProgram(ex);
@@ -4290,7 +4362,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             cancelRunProgramFuture();
-            runningProgramFuture = this.placePartSlot(part, slot);
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        runningProgramFuture = this.placePartSlot(part, slot);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                runningProgramFuture = this.placePartSlot(part, slot);
+            }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -4304,7 +4388,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
-            clearAll();
             autoStart = true;
 //            this.jTextFieldTakeCount.setText(Integer.toString(takePartCount));
             String part = getComboPart();
@@ -4313,7 +4396,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("part to take is null");
                 return;
             }
-            runningProgramFuture = this.testPartPosition(part);
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        runningProgramFuture = this.testPartPosition(part);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                runningProgramFuture = this.testPartPosition(part);
+            }
+
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -5379,6 +5475,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void jButtonUpdatePoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheActionPerformed
+        updatePoseCacheOnDisplay();
+    }//GEN-LAST:event_jButtonUpdatePoseCacheActionPerformed
+
+    @UIEffect
+    private void updatePoseCacheOnDisplay() {
         try {
             crclGenerator.clearPoseCache();
             crclGenerator.checkNewItems("userRequestedPoseUpdate");
@@ -5410,7 +5511,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
-    }//GEN-LAST:event_jButtonUpdatePoseCacheActionPerformed
+    }
 
     @UIEffect
     private void jButtonSetCurrentToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSetCurrentToolActionPerformed
@@ -5467,6 +5568,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonRenameToolHolderPoseActionPerformed
+
+    private void jButtonUpdatePoseCacheFromManualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheFromManualActionPerformed
+        updatePoseCacheOnDisplay();
+    }//GEN-LAST:event_jButtonUpdatePoseCacheFromManualActionPerformed
 
     private void clearPoseCache() {
         crclGenerator.clearPoseCache();
@@ -5618,6 +5723,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFutureVoid showExceptionInProgram(final java.lang.Exception ex) {
+        LOGGER.log(Level.SEVERE, "", ex);
         return Utils.runOnDispatchThread(() -> showExceptionInProgramInternalOnDisplay(ex));
     }
 
@@ -5972,7 +6078,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (logFile == null) {
                 return;
             }
-            String actionsFileName = reverse ? this.reverseActionsFileString : this.actionsFileString;
+            String actionsFileName = getActionsFileString(reverse);
             boolean runningProgram = isRunningProgram();
             Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), runningProgram, aprsSystem.getRobotName(), actionsFileName};
             try (
@@ -6240,7 +6346,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
-        clearAll();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> testPartPositionActionList = new ArrayList<>();
@@ -6260,10 +6365,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         for (PositionMap positionMap : getPositionMaps()) {
             if (null != positionMap) {
                 PointType offset = positionMap.getLastOffset();
+                System.out.println("offset = " + offset);
                 if (null != offset) {
                     jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
+                } else {
+                    jTextFieldOffset.setText("null");
                 }
                 PointType testPoint = positionMap.getLastPointOut();
+                System.out.println("testPoint = " + testPoint);
                 if (null != testPoint) {
                     String testPoseString
                             = String.format("%.1f, %.1f, %.1f",
@@ -6271,8 +6380,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                     testPoint.getY(),
                                     testPoint.getZ());
                     jTextFieldAdjPose.setText(testPoseString);
+                } else {
+                    jTextFieldAdjPose.setText("null");
                 }
                 PointType origPoint = positionMap.getLastPointIn();
+                System.out.println("origPoint = " + origPoint);
                 if (null != origPoint) {
                     String origPoseString
                             = String.format("%.1f, %.1f, %.1f",
@@ -6280,6 +6392,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                     origPoint.getY(),
                                     origPoint.getZ());
                     this.jTextFieldTestPose.setText(origPoseString);
+                } else {
+                     this.jTextFieldTestPose.setText("null");
                 }
             }
         }
@@ -6339,7 +6453,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> returnPart(String part) {
-        clearAll();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -7038,6 +7151,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonTest;
     private javax.swing.JButton jButtonTestPickup;
     private javax.swing.JButton jButtonUpdatePoseCache;
+    private javax.swing.JButton jButtonUpdatePoseCacheFromManual;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;
     private javax.swing.JCheckBox jCheckBoxForceFakeTake;
@@ -7426,7 +7540,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Nullable
     public List<Action> reloadActionsFile(boolean newReverseFlag, boolean showInOptaplanner) throws IOException {
         setReverseFlag(newReverseFlag);
-        String output = newReverseFlag ? reverseActionsFileString : actionsFileString;
+        String output = getActionsFileString(newReverseFlag);
         if (null == output) {
             System.err.println("newReverseFlag = " + newReverseFlag);
             System.err.println("reverseActionsFileString = " + reverseActionsFileString);
@@ -7467,6 +7581,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
         return ret;
+    }
+
+    public String getActionsFileString(boolean newReverseFlag) {
+        return newReverseFlag ? reverseActionsFileString : actionsFileString;
     }
 
     private final ConcurrentLinkedDeque<XFutureVoid> newDbSetupFutures = new ConcurrentLinkedDeque<>();

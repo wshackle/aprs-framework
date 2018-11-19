@@ -3440,7 +3440,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            logger.log(Level.WARNING, "no pose for " + partName);
+            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() ="+poseCache.keySet()+", clearPoseCacheTrace="+Utils.traceToString(clearPoseCacheTrace));
             return;
         }
         pose = visionToRobotPose(pose);
@@ -4229,7 +4229,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            logger.log(Level.WARNING, "no pose for " + partName);
+            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() ="+poseCache.keySet() +", clearPoseCacheTrace="+Utils.traceToString(clearPoseCacheTrace));
             return;
         }
         pose = visionToRobotPose(pose);
