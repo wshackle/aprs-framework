@@ -478,6 +478,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
         jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemAlertLimits = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
@@ -730,6 +731,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu4.add(jMenuItemSetPoseMinLimits);
+
+        jCheckBoxMenuItemAlertLimits.setSelected(true);
+        jCheckBoxMenuItemAlertLimits.setText("Alert Limits");
+        jMenu4.add(jCheckBoxMenuItemAlertLimits);
 
         jCheckBoxMenuItemSnapshotImageSize.setText("Snapshot Image size (800 x 600 )");
         jCheckBoxMenuItemSnapshotImageSize.addActionListener(new java.awt.event.ActionListener() {
@@ -1885,6 +1890,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     CachedCheckBox reverseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemReverse);
     }
+    
+    CachedCheckBox alertLimitsCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemAlertLimits);
+    }
 
     CachedCheckBox reloadSimFilesOnReverseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemReloadSimFilesOnReverse);
@@ -1926,6 +1935,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemAlertLimits;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabase;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;

@@ -764,6 +764,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             case "unstealAbort":
                 futureToDisplaySupplier = () -> sup2.getUnstealAbortFuture();
                 break;
+
+            case "prepStart":
+                futureToDisplaySupplier = () -> interactivStartFuture;
+                break;
+
+            case "prepReset":
+                futureToDisplaySupplier = () -> internalInteractiveResetAllFuture;
+                break;
         }
         List<AprsSystem> aprsSystems = sup2.getAprsSystems();
         int sindex = selectedFutureString.indexOf('/');
@@ -3762,6 +3770,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         setContinuousDemoFuture(future);
     }
 
+    private volatile XFutureVoid internalInteractiveResetAllFuture = null;
+    private volatile XFutureVoid interactivStartFuture = null;
+
     @UIEffect
     private XFutureVoid interactivStart(Runnable runnable, String actionName) {
         try {
@@ -3775,7 +3786,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             MultiLineStringJPanel.setIgnoreForceShow(true);
             MultiLineStringJPanel.closeAllPanels();
             fullAbortAll();
-            return internalInteractiveResetAll()
+            XFutureVoid iiraFuture = internalInteractiveResetAll();
+            internalInteractiveResetAllFuture = iiraFuture;
+            XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
                         MultiLineStringJPanel.closeAllPanels();
                         MultiLineStringJPanel.setIgnoreForceShow(false);
@@ -3785,7 +3798,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .thenComposeToVoid(() -> {
                         return Utils.runOnDispatchThread(() -> {
                             if (null != actionName && null != runnable) {
-                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Confirm continue with \"" + actionName + "\"? \r\n All parts in position. \r\n Robots at home. \r\n Gripper's empty."));
+                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? "+INTERACTIVE_CHECK_INSTRUCTIONS;
+                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
                                 if (confirmed) {
                                     supervisor.setTitleMessage(actionName);
                                     runnable.run();
@@ -3793,6 +3807,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             }
                         });
                     });
+            interactivStartFuture = ret;
+            return ret;
         } catch (Exception exception) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", exception);
             XFutureVoid ret = new XFutureVoid("interactivStart.exception");
@@ -3800,6 +3816,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             return ret;
         }
     }
+    private static final String INTERACTIVE_CHECK_INSTRUCTIONS 
+            = " \r\n"
+            +" All parts in slots. \r\n"
+            +" All trays in red rectangle in each live view. \r\n"
+            +" Robots at home. \r\n "
+            +" Gripper's empty.";
 
     @UIEffect
     private void jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
@@ -4538,7 +4560,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         this.jMenuItemSaveSetup.setEnabled(enabled);
     }
 
-    
     public void setTitleMessage(String message, @Nullable File currentSetupFile) {
         if (null != currentSetupFile) {
             String path;
@@ -4744,6 +4765,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         listModel.addElement("Main");
         listModel.addElement("Last");
         listModel.addElement("Resume");
+        listModel.addElement("prepReset");
+        listModel.addElement("prepStart");
         listModel.addElement("Random");
         listModel.addElement("ContinuousDemo");
         listModel.addElement("stealAbort");

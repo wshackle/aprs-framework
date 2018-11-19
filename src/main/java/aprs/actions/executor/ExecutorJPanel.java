@@ -2253,14 +2253,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.clearKitsToCheckExternal(false);
         } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
             }
-        } 
+        }
     }
-    
+
     public boolean doActions(String comment, int startAbortCount) {
 
         try {
@@ -2275,9 +2275,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             lastActionMillis = System.currentTimeMillis();
             replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
-                if(!runningProgramFuture.isDone()) {
+                if (!runningProgramFuture.isDone()) {
                     runningProgramFuture.cancel(true);
-                    throw new IllegalStateException("starting doActions when runningProgramFuture="+runningProgramFuture);
+                    throw new IllegalStateException("starting doActions when runningProgramFuture=" + runningProgramFuture);
                 }
             }
             boolean ret = generateCrcl(comment, startAbortCount);
@@ -2305,8 +2305,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public XFuture<Boolean> startActions() {
-        if(isDoingActions()) {
-            throw new IllegalStateException("calling startActions when still doing actions isDoingActionsInfo="+isDoingActionsInfo);
+        if (isDoingActions()) {
+            throw new IllegalStateException("calling startActions when still doing actions isDoingActionsInfo=" + isDoingActionsInfo);
         }
         checkReverse();
         try {
@@ -2315,9 +2315,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             lastActionMillis = System.currentTimeMillis();
             replanCachedCheckBox.setSelected(true);
             if (null != runningProgramFuture) {
-                if(!runningProgramFuture.isDone()) {
+                if (!runningProgramFuture.isDone()) {
                     runningProgramFuture.cancel(true);
-                    throw new IllegalStateException("calling startActions when runningProgramFuture="+runningProgramFuture);
+                    throw new IllegalStateException("calling startActions when runningProgramFuture=" + runningProgramFuture);
                 }
             }
             runningProgramFuture = null;
@@ -2578,12 +2578,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void updateActionFileStrings() throws HeadlessException, IllegalStateException, IOException {
         if (reverseFlag) {
-            this.reverseActionsFileString = pddlOutputActionsCachedText.getText();
-            checkFilename(reverseActionsFileString);
-
+            String newReverseActionsFileString = pddlOutputActionsCachedText.getText();
+            setInternalReverseActionsFileString(newReverseActionsFileString);
         } else {
             this.actionsFileString = pddlOutputActionsCachedText.getText();
             checkFilename(actionsFileString);
+        }
+    }
+
+    private void setInternalReverseActionsFileString(String newReverseActionsFileString) throws IllegalStateException, HeadlessException, IOException {
+        if (reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
+            checkFilename(newReverseActionsFileString);
+            this.reverseActionsFileString = newReverseActionsFileString;
+        } else if(!newReverseActionsFileString.equals(reverseActionsFileString)) {
+            throw new IllegalStateException("Attempt to change  reverseActionsFileString from "+reverseActionsFileString + " to "+newReverseActionsFileString);
         }
     }
 
@@ -2639,9 +2647,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
-                
+
             } else {
                 throw new RuntimeException(ex);
             }
@@ -2891,6 +2899,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonLoadPddlActionsFromFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadPddlActionsFromFileActionPerformed
         try {
+            if(checkResetReverseActionsFile()) return;
             browseActionsFile();
             loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
         } catch (IOException ex) {
@@ -2902,6 +2911,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
+            if(checkResetReverseActionsFile()) return;
             loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
 
         } catch (IOException ex) {
@@ -2909,6 +2919,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .getName()).log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
+
+    private boolean checkResetReverseActionsFile() throws HeadlessException {
+        if (reverseFlag && null != reverseActionsFileString && reverseActionsFileString.length() > 0) {
+            int confirm = JOptionPane.showConfirmDialog(this,"Reset reverseActionsFileString="+reverseActionsFileString);
+            if (confirm == JOptionPane.YES_OPTION) {
+                this.reverseActionsFileString = null;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @UIEffect
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
@@ -3387,8 +3409,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final CachedTable crclProgramCachedTable;
 
     private void clearAll() {
-        if(isDoingActions()) {
-            throw new IllegalStateException("calling clearAll when still doing actions isDoingActionsInfo="+isDoingActionsInfo);
+        if (isDoingActions()) {
+            throw new IllegalStateException("calling clearAll when still doing actions isDoingActionsInfo=" + isDoingActionsInfo);
         }
         warnIfNewActionsNotReady();
         clearAllCount.incrementAndGet();
@@ -4393,11 +4415,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -7178,7 +7200,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             } else {
                 checkFilename(propsReverseActionsFileString);
             }
-            this.reverseActionsFileString = propsReverseActionsFileString;
+            setInternalReverseActionsFileString(propsReverseActionsFileString);
             boolean reverseFlagFromProperty = false;
             String reverseFlagProperty = props.getProperty(REVERSE_FLAG);
             if (null != reverseFlagProperty) {
