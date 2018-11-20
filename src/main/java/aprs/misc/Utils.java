@@ -119,6 +119,7 @@ public class Utils {
                     String traceString = traceElement.toString();
                     if (first && traceString.contains("Thread.getStackTrace(")) {
                         first = false;
+                        printWriter.println();
                         continue;
                     }
                     first = false;
