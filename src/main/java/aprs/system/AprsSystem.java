@@ -1647,7 +1647,6 @@ public class AprsSystem implements SlotOffsetProvider {
                             }
                             if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
                                 return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
-//                                        (Boolean calRet) -> calRet && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount));
                             }
                             return false;
                         }, runProgramService);

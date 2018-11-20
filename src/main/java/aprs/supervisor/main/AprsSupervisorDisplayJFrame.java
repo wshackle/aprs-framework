@@ -2747,13 +2747,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.performSafeAbortAllAction();
     }
 
-    public void showSafeAbortComplete() {
+    public XFutureVoid showSafeAbortComplete() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        immediateAbortAll("showSafeAbortComplete");
-        fullAbortAll();
-        forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
+        XFutureVoid immediateAbortAllFuture =
+                immediateAbortAll("showSafeAbortComplete");
+        XFutureVoid fullAbortAllFuture =
+                immediateAbortAllFuture.thenComposeToVoid(this::fullAbortAll);
+        return fullAbortAllFuture.thenRun(() -> {
+            forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
                 SplashScreen.getRobotArmImage(),
                 SplashScreen.getBlueWhiteGreenColorList(), gd);
+        });
     }
 
     private final AtomicBoolean ignoreTitleErrors = new AtomicBoolean(false);
@@ -2763,11 +2767,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         fullAbortAll();
     }//GEN-LAST:event_jMenuItemImmediateAbortAllActionPerformed
 
-    private void fullAbortAll() {
+    private XFutureVoid fullAbortAll() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.fullAbortAll();
+        return supervisor.fullAbortAll();
     }
 
     public void clearCheckBoxes() {
@@ -3786,8 +3790,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
             MultiLineStringJPanel.setIgnoreForceShow(true);
             MultiLineStringJPanel.closeAllPanels();
-            fullAbortAll();
-            XFutureVoid iiraFuture = internalInteractiveResetAll();
+            XFutureVoid fullAbortFuture = fullAbortAll();
+            XFutureVoid iiraFuture = 
+                    fullAbortFuture
+                    .thenComposeToVoid(() -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -4486,14 +4492,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      *
      * @return future allowing a check on when the abort is complete.
      */
-    private XFuture<?> immediateAbortAll(String comment) {
+    private XFutureVoid immediateAbortAll(String comment) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.immediateAbortAll(comment);
     }
 
-    private XFuture<?> immediateAbortAll(String comment, boolean skipLog) {
+    private XFutureVoid immediateAbortAll(String comment, boolean skipLog) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
