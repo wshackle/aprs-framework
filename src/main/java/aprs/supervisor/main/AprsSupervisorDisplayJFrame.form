@@ -290,12 +290,12 @@
             <Property name="text" type="java.lang.String" value="Special Tests"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemTenCycleTest">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemMultiCycleTest">
               <Properties>
-                <Property name="text" type="java.lang.String" value="10 Cycle Test"/>
+                <Property name="text" type="java.lang.String" value="Multi Cycle Test"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemTenCycleTestActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemMultiCycleTestActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemRandomTest">

@@ -1616,6 +1616,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile int lastContinueStartAbortCount = -1;
 
+    private volatile StackTraceElement continueActionListTrace[] = null;
+    
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
      * <p>
@@ -1629,6 +1631,8 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public XFuture<Boolean> continueActionList(String comment) {
         setStartRunTime();
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        continueActionListTrace = trace;
         lastContinueActionListFutureComment = comment;
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
@@ -1646,7 +1650,8 @@ public class AprsSystem implements SlotOffsetProvider {
                                 throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
                             }
                             if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount) && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount,trace)
+                                        && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
                             }
                             return false;
                         }, runProgramService);
@@ -5211,6 +5216,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("startContinuousDemo with robotName ==null");
         }
         final String checkedRobotName = startRobotName;
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continuousDemoFuture
                 = XFuture.supplyAsync("startContinuousDemo(task=" + getTaskName() + ") comment=" + comment,
                         new Callable<Boolean>() {
@@ -5229,7 +5235,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         if (!r1) {
                             System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart);
                         }
-                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart);
+                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart,trace);
                     }
                 },
                         XFuture::rethrow,
@@ -5237,7 +5243,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return continuousDemoFuture;
     }
 
-    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) throws IllegalStateException {
+    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart,StackTraceElement [] trace) throws IllegalStateException {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -5248,7 +5254,7 @@ public class AprsSystem implements SlotOffsetProvider {
             String logLabel2 = "startContinuousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCurLocal;
             logToSuper(logLabel2);
             takeSnapshots("doActions." + logLabel2);
-            boolean doActionWithReverseOk = doActionsWithReverse(comment, x, reverseFirst, startAbortCount, startDisconnectCount);
+            boolean doActionWithReverseOk = doActionsWithReverse(comment, x, reverseFirst, startAbortCount, startDisconnectCount,trace);
             cdCurLocal++;
             if (!doActionWithReverseOk) {
                 return false;
@@ -5308,7 +5314,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private boolean doActionsWithReverse(String comment, Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount) throws IllegalStateException {
+    private volatile StackTraceElement doActionsWithReverseTrace[] = null;
+    
+    private boolean doActionsWithReverse(String comment, Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount,StackTraceElement [] trace) throws IllegalStateException {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -5317,13 +5325,14 @@ public class AprsSystem implements SlotOffsetProvider {
             setTitleErrorString("Reverse flag changed as starting continuous demo.");
             throw new IllegalStateException("Reverse flag changed as starting continuous demo.");
         }
+        doActionsWithReverseTrace = trace;
         if (x
                 && !isAborting()
                 && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
                 && startDisconnectCount == disconnectRobotCount.get()) {
             logToSuper(getTaskName() + ": doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
             long doActions1TimeStart = System.currentTimeMillis();
-            boolean actionsOk = pddlExecutorJInternalFrame1.doActions(comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount);
+            boolean actionsOk = pddlExecutorJInternalFrame1.doActions(comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount,trace);
             long doActions1TimeEnd = System.currentTimeMillis();
             logToSuper(getTaskName() + ": actionsOk=" + actionsOk + " time to complete = " + (doActions1TimeEnd - doActions1TimeStart) + " ms");
             if (isReverseFlag() != reverseFirst) {
@@ -5338,7 +5347,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 setReverseFlag(!reverseFirst, true, true);
                 logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
                 long doActions2TimeStart = System.currentTimeMillis();
-                boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount);
+                boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount,trace);
                 long doActions2TimeEnd = System.currentTimeMillis();
                 logToSuper(getTaskName() + ": actionsOk2=" + actionsOk2 + " time to complete = " + (doActions2TimeEnd - doActions2TimeStart) + " ms");
                 return actionsOk2;
@@ -5389,6 +5398,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
             System.err.println("Call to startPreCheckedContinuousDemo when not ready");
         }
+        StackTraceElement trace[]= Thread.currentThread().getStackTrace();
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
                 () -> {
                     if (null == pddlExecutorJInternalFrame1) {
@@ -5398,7 +5408,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
                         return false;
                     }
-                    return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount);
+                    return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount,trace);
                 }, runProgramService)
                 .thenComposeAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ").recurse",
                         x2 -> x2 ? startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinuousDemo.completedFutureWithName", false),
@@ -5981,6 +5991,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 );
         return lastStartActionsFuture;
     }
+    
+    private volatile StackTraceElement startActionsInternalTrace[] = null;
 
     private boolean startActionsInternal(String comment,
             long startRunNumber,
@@ -5995,6 +6007,8 @@ public class AprsSystem implements SlotOffsetProvider {
         if (currentRunNumber != startRunNumber) {
             throw new IllegalStateException("runNumbeChanged");
         }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        startActionsInternalTrace = trace;
         if (currentRunNumber != startRunNumber
                 || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
             return false;
@@ -6019,7 +6033,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     throw new RuntimeException(ex);
                 }
             }
-            ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount);
+            ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount,trace);
             startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
             if (currentRunNumber != startRunNumber) {
                 System.err.println("startActionsStartComments=" + startActionsStartComments);
