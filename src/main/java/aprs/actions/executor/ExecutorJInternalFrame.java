@@ -192,8 +192,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.atLastAction();
     }
 
-    public boolean completeActionList(String comment, int startAbortCount) {
-        return this.executorJPanel1.completeActionList(comment, startAbortCount);
+    public boolean completeActionList(String comment, int startAbortCount, StackTraceElement[] callerTrace) {
+        return this.executorJPanel1.completeActionList(comment, startAbortCount,callerTrace);
     }
 
     public int getActionSetsCompleted() {
@@ -362,8 +362,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.isDoingActions();
     }
 
-    public boolean doActions(String comment, int safeAbortCount) {
-        return executorJPanel1.doActions(comment, safeAbortCount);
+    public boolean doActions(String comment, int safeAbortCount, StackTraceElement[] callerTrace) {
+        return executorJPanel1.doActions(comment, safeAbortCount,callerTrace);
     }
 
 

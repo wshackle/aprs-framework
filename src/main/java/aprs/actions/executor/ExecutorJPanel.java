@@ -2232,21 +2232,29 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public boolean isDoingActions() {
         int dasCount = doingActionsStarted.get();
         int dafCount = doingActionsFinished.get();
+
         if (dasCount > dafCount) {
+            String dasTraceInfo
+                    = combineDasTraceInfo();
             isDoingActionsInfo
                     = "doingActionsStarted(" + dasCount + ") > doingActionsFinished(" + dafCount + ")"
-                    + "\n"
-                    + "dasIncrementTrace=" + Utils.traceToString(dasIncrementTrace);
+                    + dasTraceInfo;
             return true;
         } else {
             boolean runningProgram1 = isRunningProgram();
             if (runningProgram1) {
-                isDoingActionsInfo = "dasCount=" + dasCount + ", isRunningProgram() = true, \n runningProgramFuture=" + runningProgramFuture;
+                String dasTraceInfo
+                        = combineDasTraceInfo();
+                isDoingActionsInfo = "dasCount=" + dasCount + ", isRunningProgram() = true, \n runningProgramFuture=" + runningProgramFuture
+                        + dasTraceInfo;
                 return true;
             } else {
                 boolean continuingActions = isContinuingActions();
                 if (continuingActions) {
-                    isDoingActionsInfo = "dasCount=" + dasCount + ", isContinuingActions() = true, \n lastContinueActionFuture=" + lastContinueActionFuture;
+                    String dasTraceInfo
+                            = combineDasTraceInfo();
+                    isDoingActionsInfo = "dasCount=" + dasCount + ", isContinuingActions() = true, \n lastContinueActionFuture=" + lastContinueActionFuture
+                            + dasTraceInfo;
                     return true;
                 } else {
                     isDoingActionsInfo = null;
@@ -2256,7 +2264,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    private String combineDasTraceInfo() {
+        return "\n"
+                + "dasIncrementTrace=" + Utils.traceToString(dasIncrementTrace)
+                + "\n"
+                + "dasIncrementCallerTrace=" + Utils.traceToString(dasIncrementCallerTrace)
+                + "\n"
+                + "dasIncrementComment=" + dasIncrementComment;
+    }
+
     private volatile StackTraceElement dasIncrementTrace[] = null;
+    private volatile StackTraceElement dasIncrementCallerTrace[] = null;
+    private volatile String dasIncrementComment = null;
 
     public void clearKitsToCheck() {
         try {
@@ -2271,7 +2290,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public boolean doActions(String comment, int startAbortCount) {
+    public boolean doActions(String comment, int startAbortCount, StackTraceElement[] callerTrace) {
 
         try {
             checkReverse();
@@ -2279,6 +2298,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             appendGenerateAbortLog("doActionsStarting" + comment, actionsList.size(), rev, 0, startAbortCount, -1);
             final int start = doingActionsStarted.incrementAndGet();
             dasIncrementTrace = Thread.currentThread().getStackTrace();
+            dasIncrementCallerTrace = callerTrace;
+            dasIncrementComment = comment;
             setReplanFromIndex(0);
             actionSetsStarted.incrementAndGet();
             autoStart = true;
@@ -3712,7 +3733,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                         abortProgram();
                                         cancelRunProgramFuture();
                                         showExceptionInProgram(ex);
-                                        
+
                                     }
                                 });
                             } else {
@@ -3721,9 +3742,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         } catch (Exception ex) {
                             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                             abortProgram();
-                             cancelRunProgramFuture();
+                            cancelRunProgramFuture();
                             showExceptionInProgram(ex);
-                           
+
                         }
                     });
         } catch (Exception ex) {
@@ -3731,7 +3752,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             abortProgram();
             cancelRunProgramFuture();
             showExceptionInProgram(ex);
-            
+
         }
     }//GEN-LAST:event_jButtonLookForActionPerformed
 
@@ -4265,7 +4286,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return actionSetsStarted.get();
     }
 
-    public boolean completeActionList(String comment, int startSafeAbortRequestCount) {
+    public boolean completeActionList(String comment, int startSafeAbortRequestCount, StackTraceElement[] callerTrace) {
         try {
             checkReverse();
             boolean rev = isReverseFlag();
@@ -4273,6 +4294,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             doingActionsStarted.incrementAndGet();
             dasIncrementTrace = Thread.currentThread().getStackTrace();
+            dasIncrementCallerTrace = callerTrace;
+            dasIncrementComment = comment;
             autoStart = true;
             boolean ret = generateCrcl(comment, startSafeAbortRequestCount);
             if (ret && atLastAction()) {
@@ -4511,11 +4534,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -6393,7 +6416,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                     origPoint.getZ());
                     this.jTextFieldTestPose.setText(origPoseString);
                 } else {
-                     this.jTextFieldTestPose.setText("null");
+                    this.jTextFieldTestPose.setText("null");
                 }
             }
         }

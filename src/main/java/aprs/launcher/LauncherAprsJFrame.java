@@ -96,7 +96,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuSpecialTests = new javax.swing.JMenu();
-        jMenuItemTenCycleMultiSystemTest = new javax.swing.JMenuItem();
+        jMenuItemMultiCycleMultiSystemTest = new javax.swing.JMenuItem();
         jMenuItemTenCycleMultiSystemTestNoDisables = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemLaunchExternal = new javax.swing.JCheckBoxMenuItem();
@@ -255,14 +255,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
         jMenuSpecialTests.setText("Special Tests");
 
-        jMenuItemTenCycleMultiSystemTest.setText("10 Cycle Multi-System with Random Enable/Disable Test ");
-        jMenuItemTenCycleMultiSystemTest.setEnabled(false);
-        jMenuItemTenCycleMultiSystemTest.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemMultiCycleMultiSystemTest.setText("Multi Cycle Multi-System with Random Enable/Disable Test ");
+        jMenuItemMultiCycleMultiSystemTest.setEnabled(false);
+        jMenuItemMultiCycleMultiSystemTest.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemTenCycleMultiSystemTestActionPerformed(evt);
+                jMenuItemMultiCycleMultiSystemTestActionPerformed(evt);
             }
         });
-        jMenuSpecialTests.add(jMenuItemTenCycleMultiSystemTest);
+        jMenuSpecialTests.add(jMenuItemMultiCycleMultiSystemTest);
 
         jMenuItemTenCycleMultiSystemTestNoDisables.setText("10 Cycle Multi-System without Random Enable/Disable Test ");
         jMenuItemTenCycleMultiSystemTestNoDisables.setEnabled(false);
@@ -569,7 +569,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         supervisor.tenCycleTestNoDisables(startTime);
     }
     
-    private static void tenCycleTest(@Nullable File launchFile) {
+    private static void multiCycleTest(@Nullable File launchFile, int numCycles) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
 
@@ -580,30 +580,32 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.run(launchFile)
                         .thenRun(() -> {
                             supervisor.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> supervisor.completeTenCycleTestWithPrevMulti(startTime));
+                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime,numCycles));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            supervisor.completeTenCycleTestWithPrevMulti( startTime);
+            supervisor.completeMultiCycleTestWithPrevMulti( startTime,numCycles);
         }
     }
 
     
     @UIEffect
-    private void jMenuItemTenCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleMultiSystemTestActionPerformed
+    private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
+        int numCycles =
+                Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
-                tenCycleTest(getLastLaunchFile());
+                multiCycleTest(getLastLaunchFile(),numCycles);
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            tenCycleTest(null);
+            multiCycleTest(null,numCycles);
         }
-    }//GEN-LAST:event_jMenuItemTenCycleMultiSystemTestActionPerformed
+    }//GEN-LAST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
 
     @UIEffect
     private void jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed
@@ -688,14 +690,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 jButtonPrevMulti.setToolTipText("Open " + f.getCanonicalPath() + " ");
                 jButtonPrevMulti.setEnabled(true);
-                jMenuItemTenCycleMultiSystemTest.setEnabled(true);
+                jMenuItemMultiCycleMultiSystemTest.setEnabled(true);
                 jMenuItemTenCycleMultiSystemTestNoDisables.setEnabled(true);
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
             jButtonPrevMulti.setEnabled(false);
-            jMenuItemTenCycleMultiSystemTest.setEnabled(true);
+            jMenuItemMultiCycleMultiSystemTest.setEnabled(true);
             jMenuItemTenCycleMultiSystemTestNoDisables.setEnabled(true);
         }
         f = null;
@@ -776,10 +778,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 break;
 
                             case "--tenCycleTest":
-                                if (argsLeft.length > 0) {
-                                    tenCycleTest(new File(argsLeft[0]));
+                                if (argsLeft.length > 1) {
+                                    multiCycleTest(new File(argsLeft[0]),Integer.parseInt(argsLeft[1]));
+                                } else if (argsLeft.length > 0) {
+                                    multiCycleTest(new File(argsLeft[0]),10);
                                 } else {
-                                    tenCycleTest(null);
+                                    multiCycleTest(null,10);
                                 }
                                 break;
 
@@ -825,8 +829,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemMultiCycleMultiSystemTest;
     private javax.swing.JMenuItem jMenuItemSetLaunchFile;
-    private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTest;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTestNoDisables;
     private javax.swing.JMenu jMenuSpecialTests;
     private javax.swing.JPanel jPanelMultiWorkcellSystem;

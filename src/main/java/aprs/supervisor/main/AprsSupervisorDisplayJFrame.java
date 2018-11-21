@@ -1184,19 +1184,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return SplashScreen.showMessageFullScreen(message, fontSize, image, colors, graphicsDevice);
     }
 
-    private XFutureVoid stealRobot(AprsSystem stealFrom, AprsSystem stealFor) throws IOException, PositionMap.BadErrorMapFormatException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.stealRobot(stealFrom, stealFor);
-    }
-
-    private String assertFail() {
-        logEvent("assertFail");
-        pause();
-        return "";
-    }
-
     private static final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
 
     /**
@@ -1492,7 +1479,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemRecordLiveImageMovie = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetConveyorViewCloneSystem = new javax.swing.JMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
-        jMenuItemTenCycleTest = new javax.swing.JMenuItem();
+        jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPauseResumeTest = new javax.swing.JCheckBoxMenuItem();
         jMenuItemResetAll = new javax.swing.JMenuItem();
@@ -2340,13 +2327,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         jMenuSpecialTests.setText("Special Tests");
 
-        jMenuItemTenCycleTest.setText("10 Cycle Test");
-        jMenuItemTenCycleTest.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemMultiCycleTest.setText("Multi Cycle Test");
+        jMenuItemMultiCycleTest.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemTenCycleTestActionPerformed(evt);
+                jMenuItemMultiCycleTestActionPerformed(evt);
             }
         });
-        jMenuSpecialTests.add(jMenuItemTenCycleTest);
+        jMenuSpecialTests.add(jMenuItemMultiCycleTest);
 
         jCheckBoxMenuItemRandomTest.setText("Randomized Enable Toggle Continuous Demo");
         jCheckBoxMenuItemRandomTest.addActionListener(new java.awt.event.ActionListener() {
@@ -3924,9 +3911,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 jMenuItemReloadSimFiles.getText());
     }//GEN-LAST:event_jMenuItemReloadSimFilesActionPerformed
 
-    private void jMenuItemTenCycleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleTestActionPerformed
-        supervisor.completeTenCycleTest(System.currentTimeMillis());
-    }//GEN-LAST:event_jMenuItemTenCycleTestActionPerformed
+    private void jMenuItemMultiCycleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleTestActionPerformed
+        int numCycles =
+                Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+        supervisor.completeMultiCycleTest(System.currentTimeMillis(),numCycles);
+    }//GEN-LAST:event_jMenuItemMultiCycleTestActionPerformed
 
     private void jMenuItemLookForPartsAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForPartsAllActionPerformed
         interactivStart(() -> lookForPartsAll(),
@@ -5344,6 +5333,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
     private javax.swing.JMenuItem jMenuItemLoadSetup;
     private javax.swing.JMenuItem jMenuItemLookForPartsAll;
+    private javax.swing.JMenuItem jMenuItemMultiCycleTest;
     private javax.swing.JMenuItem jMenuItemOpenAll;
     private javax.swing.JMenuItem jMenuItemRandomTestReverseFirst;
     private javax.swing.JMenuItem jMenuItemReloadSimFiles;
@@ -5363,7 +5353,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;
     private javax.swing.JMenuItem jMenuItemStartContinuousScanAndRun;
     private javax.swing.JMenuItem jMenuItemStartScanAllThenContinuousDemoRevFirst;
-    private javax.swing.JMenuItem jMenuItemTenCycleTest;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JMenu jMenuSpecialTests;
     private javax.swing.JPanel jPanelEvents;

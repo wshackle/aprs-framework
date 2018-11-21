@@ -14,13 +14,13 @@
             <Property name="text" type="java.lang.String" value="Special Tests"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemTenCycleMultiSystemTest">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemMultiCycleMultiSystemTest">
               <Properties>
-                <Property name="text" type="java.lang.String" value="10 Cycle Multi-System with Random Enable/Disable Test "/>
+                <Property name="text" type="java.lang.String" value="Multi Cycle Multi-System with Random Enable/Disable Test "/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemTenCycleMultiSystemTestActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemMultiCycleMultiSystemTestActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="jMenuItemTenCycleMultiSystemTestNoDisables">

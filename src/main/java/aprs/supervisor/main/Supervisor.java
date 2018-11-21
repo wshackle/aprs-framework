@@ -244,17 +244,17 @@ public class Supervisor {
         return xf4;
     }
 
-    public XFuture<?> completeTenCycleTestWithPrevMulti(long startTime) {
+    public XFuture<?> completeMultiCycleTestWithPrevMulti(long startTime, int numCycles) {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
         return completePrevMultiFuture
-                .thenCompose(x -> completeTenCycleTest(startTime));
+                .thenCompose(x -> completeMultiCycleTest(startTime,numCycles));
     }
 
-    public XFuture<?> completeTenCycleTest(long startTime) {
+    public XFuture<?> completeMultiCycleTest(long startTime, int numCycles) {
         this.setShowFullScreenMessages(false);
-        this.setMax_cycles(10);
+        this.setMax_cycles(numCycles);
         XFutureVoid supervisorScanAllFuture
                 = startScanAll();
         XFuture<?> xf2 = supervisorScanAllFuture
@@ -641,7 +641,7 @@ public class Supervisor {
     }
 
     boolean isTogglesAllowed() {
-        return togglesAllowed;
+        return togglesAllowed && toggleBlockerMap.isEmpty();
     }
 
     public void setTogglesAllowed(boolean togglesAllowed) {
@@ -1859,6 +1859,9 @@ public class Supervisor {
                 = withAllowTogglesFuture
                         .thenComposeAsync("continueAfterSwitch" + " : srn=" + srn,
                                 (Void ignore3) -> {
+                                    if (!isTogglesAllowed()) {
+                                        throw new IllegalStateException("continueAllActions when  toggleBlockerMap.keySet()" + toggleBlockerMap.keySet());
+                                    }
                                     int curSrn = stealRobotNumber.get();
                                     if (srn != curSrn) {
                                         logEvent("continueAfterSwitch srn=" + srn + ", curSrn=" + curSrn);
@@ -5339,6 +5342,9 @@ public class Supervisor {
     }
 
     XFutureVoid continueAllActions() {
+        if (!isTogglesAllowed()) {
+            throw new IllegalStateException("continueAllActions when  toggleBlockerMap.keySet()" + toggleBlockerMap.keySet());
+        }
         logEvent("continueAllActions");
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         StringBuilder tasksNames = new StringBuilder();
@@ -5608,7 +5614,7 @@ public class Supervisor {
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         XFutureVoid abortAllFuture
                 = disallowTogglesFuture.thenComposeAsyncToVoid(x -> {
-                    
+
                     for (int i = 0; i < aprsSystems.size(); i++) {
                         AprsSystem sys = aprsSystems.get(i);
                         futures[i] = sys.startSafeAbort("safeAbortAll")
@@ -5616,7 +5622,7 @@ public class Supervisor {
                     }
                     return XFuture.allOfWithName("safeAbortAll", futures);
                 }, supervisorExecutorService);
-        XFutureVoid  f2 = abortAllFuture
+        XFutureVoid f2 = abortAllFuture
                 .thenComposeAsync((Function<Void, XFuture<@Nullable Void>>) x -> {
                     logEvent("safeAbortAll: all systems aborted. calling return robots: futures =" + Arrays.toString(futures));
                     return returnRobots("safeAbortAll", null, null, -1);
