@@ -34,6 +34,7 @@ import aprs.misc.IconImages;
 import static aprs.misc.Utils.PlayAlert;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
+import crcl.ui.XFutureVoid;
 import java.awt.Frame;
 
 import java.awt.GraphicsEnvironment;
@@ -385,8 +386,6 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    
-
     @UIEffect
     private void jButtonNewMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNewMultiActionPerformed
         newMulti();
@@ -405,7 +404,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jButtonOpenMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenMultiActionPerformed
         try {
             boolean getLauncher = JOptionPane.showConfirmDialog(this, "Select a launcher text file?") == JOptionPane.YES_OPTION;
-            
+
             if (getLauncher) {
                 File launcherFile = null;
                 try {
@@ -414,7 +413,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", iOException);
                 }
                 JFileChooser launcherFileChooser;
-                if(null != launcherFile) {
+                if (null != launcherFile) {
                     launcherFileChooser = new JFileChooser(launcherFile);
                 } else {
                     launcherFileChooser = new JFileChooser();
@@ -426,12 +425,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 if (launcherFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     launcherFile = launcherFileChooser.getSelectedFile();
                     saveLastLaunchFile(launcherFile);
-                    openMultiWithLaunchFile(launcherFile,null, this);
+                    openMultiWithLaunchFile(launcherFile, null, this);
                 } else {
-                    openMultiWithoutLaunchFile(null,this,null);
+                    openMultiWithoutLaunchFile(null, this, null);
                 }
             } else {
-                openMultiWithoutLaunchFile(null,this,null);
+                openMultiWithoutLaunchFile(null, this, null);
             }
             this.setVisible(false);
             this.dispose();
@@ -448,12 +447,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             setupFile = new File(args[0]);
             if (args.length > 1) {
                 launcherFile = new File(args[1]);
-                openMultiWithLaunchFile(launcherFile, setupFile,null);
+                openMultiWithLaunchFile(launcherFile, setupFile, null);
             } else {
-                openMultiWithoutLaunchFile(setupFile,null,null);
+                openMultiWithoutLaunchFile(setupFile, null, null);
             }
         } else {
-            openMultiWithoutLaunchFile(setupFile,null,null);
+            openMultiWithoutLaunchFile(setupFile, null, null);
         }
     }
 
@@ -466,7 +465,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             processLauncher.run(launcherFile)
                     .thenRun(() -> {
                         try {
-                            XFuture<Supervisor> supervisorFuture = openMultiWithoutLaunchFile(setupFile,parent, launcherFile.getParent());
+                            XFuture<Supervisor> supervisorFuture = openMultiWithoutLaunchFile(setupFile, parent, launcherFile.getParent());
                             supervisorFuture.thenAccept((Supervisor supervisor) -> {
                                 supervisor.setProcessLauncher(processLauncher);
                             });
@@ -480,7 +479,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
-    private static XFuture<Supervisor> openMultiWithoutLaunchFile(@Nullable File setupFile, @Nullable Frame parent,@Nullable String dirName) throws IOException {
+    private static XFuture<Supervisor> openMultiWithoutLaunchFile(@Nullable File setupFile, @Nullable Frame parent, @Nullable String dirName) throws IOException {
         if (null == setupFile) {
             return Supervisor.openAll(null, parent, dirName)
                     .thenApply((Supervisor supervisor) -> {
@@ -494,7 +493,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             supervisor.startColorTextReader();
             supervisor.setVisible(true);
             return supervisor.loadSetupFile(setupFile)
-                    .thenRun(() -> completeOpenSupevisor(supervisor,setupFile.getParent()))
+                    .thenRun(() -> completeOpenSupevisor(supervisor, setupFile.getParent()))
                     .thenApply(x -> supervisor);
         }
     }
@@ -568,42 +567,52 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
         supervisor.tenCycleTestNoDisables(startTime);
     }
-    
+
     private static void multiCycleTest(@Nullable File launchFile, int numCycles) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
 
         if (null != launchFile) {
             try {
-                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
-                processLauncher.setVisible(true);
-                processLauncher.run(launchFile)
+                XFutureVoid launchFuture;
+                ProcessLauncherJFrame processLauncher;
+                if (!GraphicsEnvironment.isHeadless()) {
+                    processLauncher = new ProcessLauncherJFrame();
+                    processLauncher.setVisible(true);
+                    launchFuture = processLauncher.run(launchFile);
+                } else {
+                    processLauncher = null;
+                    LaunchFileRunner runner = new LaunchFileRunner();
+                    launchFuture = runner.run(launchFile, -1, true);
+                }
+                launchFuture
                         .thenRun(() -> {
-                            supervisor.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime,numCycles));
+                            if (null != processLauncher) {
+                                supervisor.setProcessLauncher(processLauncher);
+                            }
+                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            supervisor.completeMultiCycleTestWithPrevMulti( startTime,numCycles);
+            supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles);
         }
     }
 
-    
     @UIEffect
     private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
-        int numCycles =
-                Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+        int numCycles
+                = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
-                multiCycleTest(getLastLaunchFile(),numCycles);
+                multiCycleTest(getLastLaunchFile(), numCycles);
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            multiCycleTest(null,numCycles);
+            multiCycleTest(null, numCycles);
         }
     }//GEN-LAST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
 
@@ -617,12 +626,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jMenuItemSetLaunchFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetLaunchFileActionPerformed
         File oldFile = null;
         try {
-            oldFile= getLastLaunchFile();
+            oldFile = getLastLaunchFile();
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         JFileChooser chooser;
-        if(null !=oldFile) {
+        if (null != oldFile) {
             chooser = new JFileChooser(oldFile);
         } else {
             chooser = new JFileChooser();
@@ -632,7 +641,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         chooser.setFileFilter(txtExtensionFilter);
         chooser.setDialogTitle("Choose launch text file for Aprs.");
         try {
-            
+
             if (null != oldFile) {
                 File parentFile = oldFile.getParentFile();
                 if (null != parentFile) {
@@ -711,14 +720,6 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    
-
-//    static public void PlayBeep() {
-//        URL url = LauncherAprsJFrame.class.getResource("alert.wav");
-//        System.out.println("url = " + url);
-//        AudioClip clip = Applet.newAudioClip(url);
-//        clip.play();
-//    }
     /**
      * @param args the command line arguments
      */
@@ -779,11 +780,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
                             case "--tenCycleTest":
                                 if (argsLeft.length > 1) {
-                                    multiCycleTest(new File(argsLeft[0]),Integer.parseInt(argsLeft[1]));
+                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]));
                                 } else if (argsLeft.length > 0) {
-                                    multiCycleTest(new File(argsLeft[0]),10);
+                                    multiCycleTest(new File(argsLeft[0]), 10);
                                 } else {
-                                    multiCycleTest(null,10);
+                                    multiCycleTest(null, 10);
                                 }
                                 break;
 
