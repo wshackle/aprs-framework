@@ -437,11 +437,54 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, pose, label, w, h);
     }
+    
+    private int snapshotHeight = -1;
+    private int snapshotWidth = -1;
+
+    public int getSnapshotHeight() {
+        return snapshotHeight;
+    }
+
+    public void setSnapshotHeight(int snapshotHeight) {
+        this.snapshotHeight = snapshotHeight;
+    }
+
+    public int getSnapshotWidth() {
+        return snapshotWidth;
+    }
+
+    public void setSnapshotWidth(int snapshotWidth) {
+        this.snapshotWidth = snapshotWidth;
+    }
+    
+    private final static int DEFAULT_SNAPW= 100;
+    
+    private int snapW() {
+        if(snapshotWidth > 0) {
+            return snapshotWidth;
+        } else if(this.getWidth() > 0) {
+            return this.getWidth();
+        } else {
+            return DEFAULT_SNAPW;
+        }
+    }
+    
+    private final static int DEFAULT_SNAPH= 100;
+    
+    private int snapH() {
+        if(snapshotHeight> 0) {
+            return snapshotHeight;
+        } else if(this.getHeight() > 0) {
+            return this.getHeight();
+        } else {
+            return DEFAULT_SNAPH;
+        }
+    }
 
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PointType point, String label) {
-        final int w = this.getWidth();
-        final int h = this.getHeight();
+        final int w = snapW();
+        final int h = snapH();
         if (w < 1 || h < 1) {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
@@ -451,8 +494,8 @@ public class Object2DJPanel extends JPanel {
 
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
-        final int w = this.getWidth();
-        final int h = this.getHeight();
+        final int w = snapW();
+        final int h = snapH();
         if (w < 1 || h < 1) {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;

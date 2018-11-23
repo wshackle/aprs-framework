@@ -71,6 +71,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         } catch (Exception ex) {
             Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
+        launchFileRunner = new LaunchFileRunner(this);
     }
 
     /**
@@ -161,28 +162,48 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         close();
     }//GEN-LAST:event_formWindowClosing
-    
+
     @UIEffect
     private void jCheckBoxMenuItemDebugActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemDebugActionPerformed
         Neo4JKiller.setDebug(jCheckBoxMenuItemDebug.isSelected());
-        System.out.println("timoutMillis = " + timoutMillis);
-        if (timoutMillis > 0) {
-            System.out.println("timeoutStart = " + this.timeoutStart);
+        int timeoutMillis = launchFileRunner.getTimeoutMillis();
+        long timeoutStart = launchFileRunner.getTimeoutStart();
+        System.out.println("timeoutMillis = " + timeoutMillis);
+        if (timeoutMillis > 0) {
+            System.out.println("timeoutStart = " + timeoutStart);
             long t = System.currentTimeMillis();
-            long timeleft = timoutMillis - (t - timeoutStart);
+            long timeleft = timeoutMillis - (t - timeoutStart);
             System.out.println("timeleft = " + timeleft);
         }
+        List<WrappedProcess> processes = getProcesses();
         System.out.println("processes.size() = " + processes.size());
         for (WrappedProcess proc : processes) {
             System.out.println("");
             proc.printInfo(System.out);
             System.out.println("");
         }
+        List<LineConsumer> lineConsumers = getLineConsumers();
         System.out.println("lineConsumers.size() = " + lineConsumers.size());
         for (LineConsumer lc : lineConsumers) {
             System.out.println("lc.isFinished() = " + lc.isFinished());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
+
+    public List<WrappedProcess> getProcesses() {
+        return launchFileRunner.getProcesses();
+    }
+
+    WrappedProcess addProcess(String... command) {
+        return launchFileRunner.addProcess(command);
+    }
+
+    WrappedProcess addProcess(List<String> command) {
+        return launchFileRunner.addProcess(command);
+    }
+    
+    WrappedProcess addProcess(File directory, String... command) {
+        return launchFileRunner.addProcess(directory,command);
+    }
 
     /**
      * @param args the command line arguments
@@ -302,181 +323,33 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 //            this.write(buf, 0, 1);
 //        }
 //    }
-    private final List<WrappedProcess> processes = new ArrayList<>();
-    
-    private volatile List<LineConsumer> lineConsumers = new ArrayList<>();
-    private volatile List<LineConsumer> errorLineConsumers = new ArrayList<>();
-    
-    @SuppressWarnings("UnusedReturnValue")
-    private WrappedProcess addProcess(String... command) {
-        LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        String cmdLine = String.join(" ", command);
-        this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
-        lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
-        wrappedProcess.setDisplayComponent(logPanel);
-        processes.add(wrappedProcess);
-        return wrappedProcess;
+    public List<LineConsumer> getLineConsumers() {
+        return launchFileRunner.getLineConsumers();
     }
-    
-    private WrappedProcess addProcess(List<String> command) {
-        LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        String cmdLine = String.join(" ", command);
-        this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
-        lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
-        wrappedProcess.setDisplayComponent(logPanel);
-        processes.add(wrappedProcess);
-        return wrappedProcess;
+
+    public JTabbedPane getjTabbedPaneProcesses() {
+        return jTabbedPaneProcesses;
     }
-    
-    public WrappedProcess addProcess(File directory, String... command) {
-        LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        String[] command2 = replaceDotDir(directory, command);
-        String cmdLine = String.join(" ", command2);
-        this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
-        lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
-        wrappedProcess.setDisplayComponent(logPanel);
-        processes.add(wrappedProcess);
-        return wrappedProcess;
+
+    public List<LineConsumer> getErrorLineConsumers() {
+        return launchFileRunner.getErrorLineConsumers();
     }
-    
-    private static String replaceDotDir(File dir, String in) {
-        if (!in.startsWith(".")) {
-            return in;
-        }
-        if (in.startsWith("./") || in.startsWith(".\\")) {
-            return dir.toString() + in.substring(1);
-        }
-        String tmpIn = in;
-        File parentFile = dir;
-        while ((tmpIn.startsWith("../") || tmpIn.startsWith("..\\")) && parentFile != null) {
-            tmpIn = tmpIn.substring(3);
-            parentFile = parentFile.getParentFile();
-        }
-        if (null != parentFile && tmpIn.length() > 0 && tmpIn.length() < in.length()) {
-            return parentFile.toString() + File.separator + tmpIn;
-        }
-        return in;
+
+    public List<String> getStopLines() {
+        return launchFileRunner.getStopLines();
     }
-    
-    private static String[] replaceDotDir(File dir, String in[]) {
-        for (int i = 0; i < in.length; i++) {
-            in[i] = replaceDotDir(dir, in[i]);
-        }
-        return in;
+
+    public File getProcessLaunchDirectory() {
+        return launchFileRunner.getProcessLaunchDirectory();
     }
-    
-    private static List<String> replaceDotDir(File dir, List<String> in) {
-        for (int i = 0; i < in.size(); i++) {
-            in.set(i, replaceDotDir(dir, in.get(i)));
-        }
-        return in;
+
+    public Deque<Boolean> getIfStack() {
+        return launchFileRunner.getIfStack();
     }
-    
-    private WrappedProcess addProcess(File directory, List<String> command) {
-        LogDisplayJPanel logPanel = new LogDisplayJPanel();
-        List<String> command2 = replaceDotDir(directory, command);
-        String cmdLine = String.join(" ", command2);
-        this.jTabbedPaneProcesses.add(cmdLine, logPanel);
-        OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
-        lineConsumers = new ArrayList<>();
-        WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
-        wrappedProcess.setDisplayComponent(logPanel);
-        processes.add(wrappedProcess);
-        return wrappedProcess;
+
+    public JTextArea getjTextAreaLauncherFile() {
+        return jTextAreaLauncherFile;
     }
-    
-    public static String[] parseCommandLineToArray(String line) {
-        List<String> args = parseCommandLine(line);
-        return args.toArray(new String[0]);
-    }
-    
-    private static List<String> parseCommandLine(String line) {
-        List<String> args = new ArrayList<>();
-        int dquotes = 0;
-        int squotes = 0;
-        StringBuilder sb = new StringBuilder();
-        char lastC = 0;
-        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            switch (c) {
-                case ' ':
-                case '\t':
-                    if (dquotes % 2 == 0 && squotes % 2 == 0 && lastC != '\\') {
-                        args.add(sb.toString());
-                        sb = new StringBuilder();
-                    } else {
-                        sb.append(c);
-                    }
-                    break;
-                
-                case '\"':
-                    if (squotes % 2 == 0 && lastC != '\\') {
-                        dquotes++;
-                    } else {
-                        sb.append(c);
-                    }
-                    break;
-                
-                case '\'':
-                    if (dquotes % 2 == 0 && lastC != '\\') {
-                        squotes++;
-                    } else {
-                        sb.append(c);
-                    }
-                    break;
-                
-                case '\\':
-                    if (lastC == '\\' || isWindows) {
-                        sb.append(c);
-                        c = 0;
-                    }
-                    break;
-                
-                default:
-                    sb.append(c);
-                    break;
-            }
-            lastC = c;
-        }
-        String last = sb.toString();
-        if (last.length() > 0) {
-            args.add(last);
-        }
-        return args;
-    }
-    
-    private volatile boolean stopLineSeen = false;
-    
-    private volatile List<String> stopLines = new ArrayList<>();
-    
-    @Nullable
-    private volatile File processLaunchDirectory = null;
-    
-    @Nullable
-    private volatile String onFailLine = null;
-    @Nullable
-    private volatile XFutureVoid waitForFuture = null;
-    
-    private final Deque<Boolean> ifStack = new ArrayDeque<>();
-    private String tabs = "";
-    
-    private boolean allIfStack() {
-        for (boolean val : ifStack) {
-            if (!val) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private boolean debug;
 
     /**
      * Get the value of debug
@@ -484,7 +357,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
      * @return the value of debug
      */
     public boolean isDebug() {
-        return debug;
+        return launchFileRunner.isDebug();
     }
 
     /**
@@ -493,376 +366,63 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
      * @param debug new value of debug
      */
     public void setDebug(boolean debug) {
-        this.debug = debug;
+        launchFileRunner.setDebug(debug);
+        jCheckBoxMenuItemDebug.setSelected(debug);
     }
-    
-    private int timoutMillis;
+
 
     /**
-     * Get the value of timoutMillis
+     * Get the value of timeoutMillis
      *
-     * @return the value of timoutMillis
+     * @return the value of timeoutMillis
      */
     public int getTimoutMillis() {
-        return timoutMillis;
+        return launchFileRunner.getTimeoutMillis();
     }
 
     /**
-     * Set the value of timoutMillis
+     * Set the value of timeoutMillis
      *
-     * @param timoutMillis new value of timoutMillis
+     * @param timeoutMillis new value of timeoutMillis
      */
-    public void setTimoutMillis(int timoutMillis) {
-        this.timoutMillis = timoutMillis;
+    public void setTimoutMillis(int timeoutMillis) {
+        launchFileRunner.setTimeoutMillis(timeoutMillis);
     }
-    
-    @Nullable
-    @SuppressWarnings("nullness")
-    private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
-        if (line.length() < 1) {
-            if (null != stringBuilder) {
-                stringBuilder.append("\n");
-            }
-            return null;
-        }
-        
-        if (debug) {
-            System.out.println("line = " + line);
-            System.out.println("ifStack.size() = " + ifStack.size());
-        }
-        String currentOnFailLine = onFailLine;
-        XFutureVoid currentWaitForFuture = waitForFuture;
-        List<LineConsumer> currentErrorLineConsumers = errorLineConsumers;
-        
-        line = line.trim();
-        if (line.length() < 1) {
-            if (null != stringBuilder) {
-                stringBuilder.append("\n");
-            }
-            return null;
-        }
-        line = replaceVarsInLine(line, "%", "%");
-        line = replaceVarsInLine(line, "${", "}");
-        line = replaceVarsInLine(line, "$", " ");
-        line = replaceVarsInLine(line, "$", "\n");
-        line = replaceVarsInLine(line, "$", "\r");
-        line = replaceVarsInLine(line, "$", null);
-        
-        if (stopLineSeen) {
-            stopLines.add(line);
-            if (null != stringBuilder) {
-                stringBuilder.append("\t\tSTOP_LINE:\t\t");
-                stringBuilder.append(line);
-                stringBuilder.append("\n");
-            }
-            return null;
-        }
-        String newTabs = tabs;
-        boolean cmdsProcessed = false;
-        try {
-            String words[] = line.split("[ \t\r\n]+");
-            if (words.length < 1) {
-                return null;
-            }
-            String firstWord = words[0];
-            if (firstWord.equals("if!connectOK")) {
-                
-                String parts[] = Arrays.copyOfRange(words, 1, words.length);
-                if (parts.length >= 2) {
-                    try {
-                        Socket s = new Socket(parts[0], Integer.parseInt(parts[1]));
-                        ifStack.push(false);
-                    } catch (Exception e) {
-//                         Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", e);
-                        ifStack.push(true);
-                    }
-                    newTabs = tabs + "    ";
-                }
-                return null;
-            } else if (firstWord.equals("else")) {
-                ifStack.push(!ifStack.pop());
-                return null;
-            } else if (firstWord.equals("endif")) {
-                if (tabs.length() > 4) {
-                    newTabs = tabs.substring(4);
-                    tabs = newTabs;
-                } else if (tabs.length() == 4) {
-                    newTabs = "";
-                    tabs = newTabs;
-                }
-                ifStack.pop();
-                return null;
-            }
-            cmdsProcessed = true;
-            
-            if (!allIfStack()) {
-                return null;
-            }
-            
-            if (firstWord.equals("plj-recoverWaitFor")) {
-                String text = afterFirstWord(line, firstWord);
-                final List<LineConsumer> containingList = errorLineConsumers;
-                LineConsumer consumer = new LineConsumer() {
-                    
-                    private volatile boolean finished = false;
-                    
-                    @Override
-                    public void accept(String s) {
-                        if (s.contains(text)) {
-                            if (null != currentWaitForFuture) {
-                                currentWaitForFuture.complete();
-                            }
-                            finished = true;
-                        }
-                    }
-                    
-                    @Override
-                    public boolean isFinished() {
-                        return finished;
-                    }
-                };
-                containingList.add(consumer);
-            } else if (firstWord.equals("plj-onfail")) {
-                String text = afterFirstWord(line, firstWord);
-                onFailLine = text;
-            } else if (firstWord.equals("plj-checkfail")) {
-                String text = afterFirstWord(line, firstWord);
-                final List<LineConsumer> containingList = lineConsumers;
-                LineConsumer consumer = new LineConsumer() {
-                    
-                    private volatile boolean finished = false;
-                    
-                    @Override
-                    public void accept(String s) {
-                        if (s.contains(text)) {
-                            String line = currentOnFailLine;
-                            if (null != line) {
-                                String lineToParse = line;
-                                Utils.runOnDispatchThread(() -> {
-                                    List<LineConsumer> origLineConsumers = lineConsumers;
-                                    try {
-                                        lineConsumers = currentErrorLineConsumers;
-                                        File dir = processLaunchDirectory;
-                                        if (null != dir) {
-                                            addProcess(dir, parseCommandLine(lineToParse));
-                                            
-                                        } else {
-                                            addProcess(parseCommandLine(lineToParse));
-                                        }
-                                    } catch (Exception ex) {
-                                        Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", ex);
-                                        if (ex instanceof RuntimeException) {
-                                            throw (RuntimeException) ex;
-                                        } else {
-                                            throw new RuntimeException(ex);
-                                        }
-                                    }
-                                    lineConsumers = origLineConsumers;
-                                });
-                            }
-                            finished = true;
-                        }
-                    }
-                    
-                    @Override
-                    public boolean isFinished() {
-                        return finished;
-                    }
-                };
-                containingList.add(consumer);
-            } else if (firstWord.equals("plj-timeout")) {
-                String text = afterFirstWord(line, firstWord);
-                setTimoutMillis(Integer.parseInt(text.trim()));
-            } else if (firstWord.equals("plj-waitfor")) {
-                String text = afterFirstWord(line, firstWord);
-                XFutureVoid xf = new XFutureVoid("plj-waitfor " + text);
-                final List<LineConsumer> containingList = lineConsumers;
-                LineConsumer consumer = new LineConsumer() {
-                    
-                    private volatile boolean finished = false;
-                    
-                    @Override
-                    public void accept(String s) {
-                        if (s.contains(text)) {
-                            xf.complete();
-                            finished = true;
-                        }
-                    }
-                    
-                    @Override
-                    public boolean isFinished() {
-                        return finished;
-                    }
-                };
-                containingList.add(consumer);
-                futures.add(xf);
-                waitForFuture = xf;
-            } else if (firstWord.equals("plj-killNeo4J")) {
-                Neo4JKiller.killNeo4J();
-            } else if (firstWord.equals("plj-cd") || firstWord.equals("cd") || firstWord.equals("chdir")) {
-                String text = afterFirstWord(line, firstWord);
-                File dir = new File(text);
-                if (!dir.exists()) {
-                    if (null != stringBuilder) {
-                        stringBuilder.append("Directory \"");
-                        stringBuilder.append(text);
-                        stringBuilder.append("does not exist");
-                    }
-                    throw new RuntimeException("Directory " + dir + " does not exist.");
-                }
-                if (!dir.isDirectory()) {
-                    if (null != stringBuilder) {
-                        stringBuilder.append("\"");
-                        stringBuilder.append(text);
-                        stringBuilder.append("\" is not a directory");
-                    }
-                    throw new RuntimeException(dir + " is not a directory");
-                }
-                processLaunchDirectory = dir;
-            } else if (firstWord.equals("plj-stop")) {
-                stopLineSeen = true;
-                stopLines = new ArrayList<>();
-            } else if (firstWord.equals("plj-debug")) {
-                setDebug(true);
-            } else if (firstWord.startsWith("plj-")) {
-                throw new IllegalArgumentException("line starts with plj- but is not recognized : firstWord=" + firstWord + ", line=" + line);
-            } else if (!line.startsWith("#") && !firstWord.startsWith("plj-")) {
-                errorLineConsumers = new ArrayList<>();
-                waitForFuture = null;
-                onFailLine = null;
-                if (null != processLaunchDirectory) {
-                    return addProcess(processLaunchDirectory, parseCommandLine(line));
-                } else {
-                    return addProcess(parseCommandLine(line));
-                }
-            }
-        } finally {
-            if (null != stringBuilder) {
-                stringBuilder.append(allIfStack() || (!cmdsProcessed) ? "" : "//");
-                stringBuilder.append(tabs);
-                stringBuilder.append(line);
-                stringBuilder.append("\n");
-            }
-            tabs = newTabs;
-        }
-        
-        return null;
-    }
-    
-    private String afterFirstWord(String line, String firstWord) {
-        return line.substring(line.indexOf(firstWord) + firstWord.length()).trim();
-    }
-    
-    private String replaceVarsInLine(String line, String startString, @Nullable String endString) {
-        int varStartIndex = line.indexOf(startString);
-        int endStringLength = (null != endString) ? endString.length() : 0;
-        int startStringLength = startString.length();
-        while (varStartIndex >= 0) {
-            
-            int varEndIndex
-                    = (endString != null)
-                            ? line.indexOf(endString, varStartIndex + startStringLength)
-                            : line.length();
-            if (varEndIndex <= varStartIndex) {
-                break;
-            }
-            String substring = line.substring(varStartIndex + startStringLength, varEndIndex);
-            boolean isidentifier = true;
-            for (int i = 0; i < substring.length(); i++) {
-                char c = substring.charAt(i);
-                if (i == 0 && !Character.isLetter(c)) {
-                    isidentifier = false;
-                    break;
-                }
-                if (c != '.' && c != '_' && !Character.isLetterOrDigit(c)) {
-                    isidentifier = false;
-                    break;
-                }
-            }
-            if (isidentifier) {
-                String env = System.getenv(substring);
-                if (null == env) {
-                    env = System.getProperty(substring);
-                }
-                if (null != env && env.length() > 0) {
-                    String linestart = line.substring(0, varStartIndex);
-                    String lineend = line.substring(varEndIndex + endStringLength);
-                    line = linestart + env + lineend;
-                    varEndIndex = linestart.length() + env.length();
-                }
-            }
-            varStartIndex = line.indexOf(startString, varEndIndex + 1);
-        }
-        return line;
-    }
-    
+
+    private final LaunchFileRunner launchFileRunner;
+
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
-        List<XFuture<?>> futures = new ArrayList<>();
-        stopLineSeen = false;
-        processLaunchDirectory = f.getParentFile();
-        File jpsCommandFile = Neo4JKiller.getJpsCommandFile();
-        if (null == jpsCommandFile) {
-            jpsCommandFile = new File(processLaunchDirectory, JPS_COMMAND_FILENAME_STRING);
-        }
-        StringBuilder stringBuilder = new StringBuilder();
-        ifStack.clear();
-        ifStack.push(true);
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while (null != (line = br.readLine())) {
-                WrappedProcess p = parseLaunchFileLine(line, futures, stringBuilder);
-                if (null != p) {
-                    futures.add(p.getProcessStartXFuture());
-                }
-            }
-            jTextAreaLauncherFile.setText(stringBuilder.toString());
-            stringBuilder = null;
-        }
-        if (timoutMillis > 0) {
-            return XFutureVoid.anyOf(XFuture.allOf(futures), newTimeoutFuture())
-                    .thenRun(() -> {
-                        try {
-                            System.out.println(f.getCanonicalPath() + " complete.");
-                        } catch (IOException ex) {
-                            Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    })
-                    .always(WrappedProcess::shutdownStarterService);
-        }
-        return XFuture.allOf(futures)
-                .always(WrappedProcess::shutdownStarterService);
+        return launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
     }
-    
-    private volatile long timeoutStart = -1;
-    
-    XFutureVoid newTimeoutFuture() {
-        XFutureVoid ret = new XFutureVoid("timeoutFuture");
-        timeoutStart = System.currentTimeMillis();
-        javax.swing.Timer timer = new Timer(this.timoutMillis, (evt) -> {
-            ret.complete();
-        });
-        timer.setRepeats(false);
-        timer.setInitialDelay(this.timoutMillis);
-        timer.start();
-        return ret;
+
+   
+
+    public void setStopLineSeen(boolean stopLineSeen) {
+        launchFileRunner.setStopLineSeen(stopLineSeen);
     }
+
+    public void setProcessLaunchDirectory(File processLaunchDirectory) {
+        launchFileRunner.setProcessLaunchDirectory(processLaunchDirectory);
+    }
+
     
+
     private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
-    
+
     public void addOnCloseRunnable(Runnable r) {
         onCloseRunnables.add(r);
     }
-    
+
     public void removeOnCloseRunnable(Runnable r) {
         onCloseRunnables.remove(r);
     }
-    
+
     private final AtomicBoolean closing = new AtomicBoolean();
-    
+
     @SuppressWarnings("CanBeFinal")
     private volatile XFutureVoid closingFuture = new XFutureVoid("processLauncherClosingFuture");
-    
+
     public XFutureVoid close() {
         boolean wasClosing = closing.getAndSet(true);
         if (wasClosing) {
@@ -871,7 +431,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         for (Runnable r : onCloseRunnables) {
             try {
                 r.run();
-                
+
             } catch (Exception ex) {
                 Logger.getLogger(ProcessLauncherJFrame.class
                         .getName()).log(Level.SEVERE, "", ex);
@@ -881,42 +441,12 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         closingThread.start();
         return closingFuture;
     }
-    
-    private void completeClose() {
-        List<WrappedProcess> stopProcesses = new ArrayList<>();
-        List<XFuture<?>> futures = new ArrayList<>();
-        stopLineSeen = false;
-        processLaunchDirectory = null;
-        for (String line : stopLines) {
-            try {
-                WrappedProcess p = parseLaunchFileLine(line, futures, null);
-                if (null != p) {
-                    stopProcesses.add(p);
-                    
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(ProcessLauncherJFrame.class
-                        .getName()).log(Level.SEVERE, "", ex);
-            }
-        }
-        for (WrappedProcess p : stopProcesses) {
-            try {
-                if (!p.waitFor(5, TimeUnit.SECONDS)) {
-                    p.close();
-                    
-                }
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ProcessLauncherJFrame.class
-                        .getName()).log(Level.SEVERE, "", ex);
-            }
-        }
-        for (WrappedProcess wp : this.processes) {
-            wp.close();
-        }
-        WrappedProcess.shutdownStarterService();
-        Utils.runOnDispatchThread("coseProcessLauncher", this::finalFinishClose);
+
+    void completeClose() {
+        launchFileRunner.completeClose();
+         Utils.runOnDispatchThread("closeProcessLauncher", this::finalFinishClose);
     }
-    
+
     private void finalFinishClose() {
         this.setVisible(false);
         closingFuture.complete(null);
