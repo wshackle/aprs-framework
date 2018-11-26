@@ -2234,6 +2234,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         inputPlan.setMaxSpeed(fastTransSpeed);
         inputPlan.setStartEndMaxSpeed(2 * fastTransSpeed);
         inputPlan.setActions(opActions);
+        int inputRequiredCount = 0;
+        List<OpAction> inputRequiredActions = new ArrayList<>();
+        for (int i = 0; i < opActions.size(); i++) {
+            OpAction opActI = opActions.get(i);
+            if (opActI.isRequired()) {
+                inputRequiredCount++;
+                inputRequiredActions.add(opActI);
+            }
+        }
         inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
         inputPlan.initNextActions();
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
@@ -2254,6 +2263,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             synchronized (solverToRun) {
                 solvedPlan = solverToRun.solve(inputPlan);
             }
+            int outputRequiredCount = 0;
+            List<OpAction> outputRequiredActions = new ArrayList<>();
+            List<OpAction> outputActions = solvedPlan.getOrderedList(false);
+            for (int i = 0; i < outputActions.size(); i++) {
+                OpAction opActI = outputActions.get(i);
+                if (opActI.isRequired()) {
+                    outputRequiredCount++;
+                    outputRequiredActions.add(opActI);
+                }
+            }
+            System.out.println("inputRequiredCount = " + inputRequiredCount);
+            System.out.println("inputRequiredActions = " + inputRequiredActions);
+            System.out.println("outputRequiredCount = " + outputRequiredCount);
+            System.out.println("outputRequiredActions = " + outputRequiredActions);
             HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
             assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
             double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
@@ -3440,7 +3463,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() ="+poseCache.keySet()+", clearPoseCacheTrace="+Utils.traceToString(clearPoseCacheTrace));
+            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() =" + poseCache.keySet() + ", clearPoseCacheTrace=" + Utils.traceToString(clearPoseCacheTrace));
             return;
         }
         pose = visionToRobotPose(pose);
@@ -4229,7 +4252,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() ="+poseCache.keySet() +", clearPoseCacheTrace="+Utils.traceToString(clearPoseCacheTrace));
+            logger.log(Level.WARNING, "no pose for " + partName + " poseCache.keySet() =" + poseCache.keySet() + ", clearPoseCacheTrace=" + Utils.traceToString(clearPoseCacheTrace));
             return;
         }
         pose = visionToRobotPose(pose);

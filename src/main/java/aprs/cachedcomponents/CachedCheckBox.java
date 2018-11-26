@@ -116,7 +116,7 @@ public class CachedCheckBox extends CachedComponentBase {
             int sc = getStartCount();
             int fc = getFinishCount();
             int ac = actionCount.get();
-            throw new IllegalStateException("selected=" + selected + ", this.selected=" + this.selected + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
+            throw new IllegalStateException("selected=" + selected + ", this.selected=" + this.selected +", text="+abstractButton.getText()+ ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
         }
         if (null != abstractButton && selected != abstractButton.isSelected()) {
             abstractButton.setSelected(selected);
