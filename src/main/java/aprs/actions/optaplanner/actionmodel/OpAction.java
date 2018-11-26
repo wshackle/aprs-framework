@@ -40,7 +40,8 @@ public class OpAction implements OpActionInterface {
 
     private final static AtomicInteger idCounter = new AtomicInteger();
 
-    @Nullable private final ActionType executorActionType;
+    @Nullable
+    private final ActionType executorActionType;
     private final String[] executorArgs;
     private String name;
 
@@ -58,7 +59,8 @@ public class OpAction implements OpActionInterface {
      *
      * @return the value of executorActionType
      */
-    @Nullable public ActionType getExecutorActionType() {
+    @Nullable
+    public ActionType getExecutorActionType() {
         return executorActionType;
     }
 
@@ -123,14 +125,15 @@ public class OpAction implements OpActionInterface {
         this.trayType = getTrayType(opActionType, name);
     }
 
-    @Nullable private static String getTrayType(OpActionType opActionType, String name) {
+    @Nullable
+    private static String getTrayType(OpActionType opActionType, String name) {
         switch (opActionType) {
             case PICKUP:
             case DROPOFF:
                 if (name.contains("_in_pt_") || name.endsWith("in_pt")) {
                     return "PT";
-                } else if (name.contains("_in_kit_")) {
-                    return"KT";
+                } else if (name.contains("_in_kit_")|| name.contains("_in_kt_")) {
+                    return "KT";
                 }
                 break;
 
@@ -173,7 +176,8 @@ public class OpAction implements OpActionInterface {
 
     @PlanningVariable(graphType = PlanningVariableGraphType.CHAINED,
             valueRangeProviderRefs = {"possibleNextActions", "endActions"})
-    private volatile @Nullable OpActionInterface next;
+    private volatile @Nullable
+    OpActionInterface next;
 
     private OpActionType opActionType;
 
@@ -218,29 +222,52 @@ public class OpAction implements OpActionInterface {
     }
 
     private boolean actionRequired() {
-        return Objects.equals(trayType, "KT");
+        return required; // Objects.equals(trayType, "KT");
     }
 
     public boolean checkNextAction(OpActionInterface possibleNextAction) {
+        OpActionType possibleNextOpActionType = possibleNextAction.getOpActionType();
         switch (opActionType) {
             case START:
-                return (possibleNextAction.getOpActionType() == PICKUP);
+                return (possibleNextOpActionType == PICKUP);
             case FAKE_DROPOFF:
             case DROPOFF:
-                return (possibleNextAction.getOpActionType() == PICKUP)
-                        || (possibleNextAction.getOpActionType() == FAKE_PICKUP)
-                        || possibleNextAction.getOpActionType() == END;
+                switch (possibleNextOpActionType) {
+                    case PICKUP:
+                    case FAKE_PICKUP:
+                    case END:
+                        return true;
+                    default:
+                        return false;
+                }
 
             case PICKUP:
-                return (Objects.equals(partType, possibleNextAction.getPartType())
-                        && (possibleNextAction.getOpActionType() == DROPOFF)
-                        || ((!this.actionRequired() && possibleNextAction.getOpActionType() == FAKE_DROPOFF)));
+                if (Objects.equals(partType, possibleNextAction.getPartType())) {
+                    switch (possibleNextOpActionType) {
+                        case DROPOFF:
+                            return true;
+                        case FAKE_DROPOFF:
+                            return !this.actionRequired();
+                        default:
+                            return false;
+                    }
+                } else {
+                    return false;
+                }
 
             case FAKE_PICKUP:
-                return (Objects.equals(partType, possibleNextAction.getPartType())
-                        && ((!possibleNextAction.isRequired() && possibleNextAction.getOpActionType() == DROPOFF)
-                        || possibleNextAction.getOpActionType() == FAKE_DROPOFF));
-
+                if(Objects.equals(partType, possibleNextAction.getPartType())) {
+                    switch (possibleNextOpActionType) {
+                        case DROPOFF:
+                            return !possibleNextAction.isRequired();
+                        case FAKE_DROPOFF:
+                            return true;
+                        default:
+                            return false;
+                    }
+                } else {
+                    return false;
+                }
             case END:
             default:
                 return false;
@@ -263,9 +290,11 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    @Nullable private String trayType;
+    @Nullable
+    private String trayType;
 
-    @Nullable @Override
+    @Nullable
+    @Override
     public String getTrayType() {
         return this.trayType;
     }
@@ -293,7 +322,8 @@ public class OpAction implements OpActionInterface {
         return !this.isRequired() && !n.isRequired();
     }
 
-    @Override @Nullable
+    @Override
+    @Nullable
     public OpActionInterface effectiveNext(boolean quiet) {
         if (getOpActionType() == FAKE_DROPOFF) {
             return next;
@@ -431,7 +461,7 @@ public class OpAction implements OpActionInterface {
         try {
             effNext = effectiveNext(true);
         } catch (Exception e) {
-            Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE,"",e);
+            Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
         }
         if (effNext != next && null != effNext) {
             effNextString = "(effectiveNext=" + effNext.getName() + ")";
@@ -453,7 +483,7 @@ public class OpAction implements OpActionInterface {
                 try {
                     dist = distance(true);
                 } catch (Exception e) {
-                    Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE,"",e);
+                    Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
                 }
                 return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", dist) + ")";
             } else {
