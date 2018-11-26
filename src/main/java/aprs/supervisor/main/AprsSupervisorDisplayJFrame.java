@@ -2736,14 +2736,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public XFutureVoid showSafeAbortComplete() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        XFutureVoid immediateAbortAllFuture =
-                immediateAbortAll("showSafeAbortComplete");
-        XFutureVoid fullAbortAllFuture =
-                immediateAbortAllFuture.thenComposeToVoid(this::fullAbortAll);
+        XFutureVoid immediateAbortAllFuture
+                = immediateAbortAll("showSafeAbortComplete");
+        XFutureVoid fullAbortAllFuture
+                = immediateAbortAllFuture.thenComposeToVoid(this::fullAbortAll);
         return fullAbortAllFuture.thenRun(() -> {
             forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
-                SplashScreen.getRobotArmImage(),
-                SplashScreen.getBlueWhiteGreenColorList(), gd);
+                    SplashScreen.getRobotArmImage(),
+                    SplashScreen.getBlueWhiteGreenColorList(), gd);
         });
     }
 
@@ -3209,7 +3209,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             resume();
                             resetAll(false);
                             restoreRobotNames();
-                          
+
                             connectAll();
                             enableAllRobots();
                         } catch (Exception e) {
@@ -3778,8 +3778,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             MultiLineStringJPanel.setIgnoreForceShow(true);
             MultiLineStringJPanel.closeAllPanels();
             XFutureVoid fullAbortFuture = fullAbortAll();
-            XFutureVoid iiraFuture = 
-                    fullAbortFuture
+            XFutureVoid iiraFuture
+                    = fullAbortFuture
                     .thenComposeToVoid(() -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
@@ -3792,7 +3792,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .thenComposeToVoid(() -> {
                         return Utils.runOnDispatchThread(() -> {
                             if (null != actionName && null != runnable) {
-                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? "+INTERACTIVE_CHECK_INSTRUCTIONS;
+                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
                                 boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
                                 if (confirmed) {
                                     supervisor.setTitleMessage(actionName);
@@ -3810,12 +3810,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             return ret;
         }
     }
-    private static final String INTERACTIVE_CHECK_INSTRUCTIONS 
+    private static final String INTERACTIVE_CHECK_INSTRUCTIONS
             = " \r\n"
-            +" All parts in slots. \r\n"
-            +" All trays in red rectangle in each live view. \r\n"
-            +" Robots at home. \r\n "
-            +" Gripper's empty.";
+            + " All parts in slots. \r\n"
+            + " All trays in red rectangle in each live view. \r\n"
+            + " Robots at home. \r\n "
+            + " Gripper's empty.";
 
     @UIEffect
     private void jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
@@ -3912,9 +3912,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemReloadSimFilesActionPerformed
 
     private void jMenuItemMultiCycleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleTestActionPerformed
-        int numCycles =
-                Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
-        supervisor.completeMultiCycleTest(System.currentTimeMillis(),numCycles);
+        int numCycles
+                = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+        if (numCycles > 0) {
+            interactivStart(() -> supervisor.completeMultiCycleTest(System.currentTimeMillis(), numCycles),
+                    jMenuItemMultiCycleTest.getText());
+        }
     }//GEN-LAST:event_jMenuItemMultiCycleTestActionPerformed
 
     private void jMenuItemLookForPartsAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForPartsAllActionPerformed
@@ -4097,7 +4100,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return XFuture.allOfWithName("lookForPartsAll", futures);
     }
 
-   
     public XFutureVoid showScanCompleteDisplay() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         logEvent("Scans Complete");
