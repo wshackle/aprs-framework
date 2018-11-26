@@ -171,8 +171,8 @@ public class LaunchFileRunner {
 
     private void completeTimeoutFuture(XFutureVoid future, long timeOutStart) {
         long curTime = System.currentTimeMillis();
-        long diff = curTime = timeOutStart;
-        System.out.println("Completing " + future + " after " + diff + " ms");
+        long diff = curTime - timeOutStart;
+        System.out.println("LaunchFileRunner: Completing  " + future + " after " + diff + " ms");
         future.complete();
     }
 
