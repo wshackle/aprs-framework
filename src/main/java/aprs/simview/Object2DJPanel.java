@@ -459,6 +459,7 @@ public class Object2DJPanel extends JPanel {
     
     private final static int DEFAULT_SNAPW= 100;
     
+   @SuppressWarnings("guieffect")
     private int snapW() {
         if(snapshotWidth > 0) {
             return snapshotWidth;
@@ -471,6 +472,7 @@ public class Object2DJPanel extends JPanel {
     
     private final static int DEFAULT_SNAPH= 100;
     
+    @SuppressWarnings("guieffect")
     private int snapH() {
         if(snapshotHeight> 0) {
             return snapshotHeight;
@@ -481,7 +483,6 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, PointType point, String label) {
         final int w = snapW();
         final int h = snapH();
@@ -492,7 +493,7 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    @SuppressWarnings("guieffect")
+    
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         final int w = snapW();
         final int h = snapH();

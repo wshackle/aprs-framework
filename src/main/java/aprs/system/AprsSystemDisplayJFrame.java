@@ -72,7 +72,6 @@ import org.checkerframework.checker.guieffect.qual.UIType;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("unused")
 class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull
@@ -90,10 +89,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     
+    @UIEffect
     public boolean getPauseInsteadOfRecoverMenuCheckbox() {
         return jCheckBoxMenuItemPauseInsteadOfRecover.isSelected();
     }
     
+    @UIEffect
     public void setPauseInsteadOfRecoverMenuCheckbox(boolean selected) {
         jCheckBoxMenuItemPauseInsteadOfRecover.setSelected(selected);
     }
@@ -1376,7 +1377,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void startActions(String label, boolean reverseFlag) {
         if (null != aprsSystem) {
             aprsSystem.startActions(label, reverseFlag);
@@ -1453,6 +1453,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         reloadForReverse(reverseFlag);
     }//GEN-LAST:event_jCheckBoxMenuItemReverseActionPerformed
 
+    @SuppressWarnings("guieffect")
     private void reloadForReverse(boolean reverseFlag) {
         updateForceFakeTakeState(reverseFlag);
         if (null != aprsSystem) {
@@ -1460,6 +1461,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
     public void updateForceFakeTakeState(boolean reverseFlag1) {
         boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem 
                 &&  (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
@@ -1469,15 +1471,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         setForceFakeTakeEnabled(forceFakeTakeOk);
     }
 
+    @UIEffect
     public void setForceFakeTakeSelected(boolean selected) {
         jCheckBoxMenuItemForceFakeTake.setSelected(selected);
     }
 
+    @UIEffect
     public void setForceFakeTakeEnabled(boolean enabled) {
         jCheckBoxMenuItemForceFakeTake.setEnabled(enabled);
     }
 
-    @SuppressWarnings("SameParameterValue")
     private XFuture<Boolean> startContinuousDemo(String label, boolean reverseFlag) {
         if (null != aprsSystem) {
             return aprsSystem.startContinuousDemo(label, reverseFlag);
@@ -1582,7 +1585,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemForceFakeTakeActionPerformed
 
-    @SuppressWarnings("SameParameterValue")
     private void continueActionList(String label) {
         if (null != aprsSystem) {
             aprsSystem.continueActionList(label);
@@ -1868,6 +1870,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemFillKitTraysActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
         if(null != aprsSystem) {
             aprsSystem.setPauseInsteadOfRecover(jCheckBoxMenuItemPauseInsteadOfRecover.isSelected());

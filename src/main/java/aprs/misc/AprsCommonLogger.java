@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -49,9 +50,14 @@ public class AprsCommonLogger {
     private final AprsCommonPrintStream errStream;
     private final ConcurrentLinkedDeque<Consumer<String>> stringConsumers
             = new ConcurrentLinkedDeque<>();
-    private File logFile;
-    private volatile PrintStream auxPrintStream;
+    
+    @Nullable
+    private File logFile = null;
+    
+    @Nullable 
+    private volatile PrintStream auxPrintStream= null;
 
+    @SuppressWarnings("initialization")
     private final Consumer<String> auxConsumer
             = (String s) -> printToAux(s);
 

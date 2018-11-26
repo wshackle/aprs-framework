@@ -176,6 +176,7 @@ public class Supervisor {
     }
 
     @UIEffect
+    @SuppressWarnings("guieffect")
     public XFutureVoid completePrevMulti() {
         this.startColorTextReader();
         return this.loadAllPrevFiles(null)
@@ -185,6 +186,7 @@ public class Supervisor {
                 });
     }
 
+     @SuppressWarnings("guieffect")
     public XFuture<?> tenCycleTestNoDisables(long startTime) {
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
@@ -233,7 +235,6 @@ public class Supervisor {
                                 (timeDiff / 1000.0),
                                 (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
                         System.out.println(msg);
-//                        JOptionPane.showMessageDialog(amsFrame,msg);
                         System.out.println();
                         System.out.println("===============================================================");
                         System.out.println();
@@ -244,12 +245,13 @@ public class Supervisor {
         return xf4;
     }
 
+     @SuppressWarnings("guieffect")
     public XFuture<?> completeMultiCycleTestWithPrevMulti(long startTime, int numCycles) {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
         return completePrevMultiFuture
-                .thenCompose(x -> completeMultiCycleTest(startTime,numCycles));
+                .thenCompose(x -> completeMultiCycleTest(startTime, numCycles));
     }
 
     public XFuture<?> completeMultiCycleTest(long startTime, int numCycles) {
@@ -1404,7 +1406,7 @@ public class Supervisor {
         System.out.println("returnRobotsTime = " + (returnRobotsTime - System.currentTimeMillis()));
     }
 
-    private XFutureVoid returnRobots(String comment, AprsSystem stealFrom, AprsSystem stealFor, int srn) {
+    private XFutureVoid returnRobots(String comment, @Nullable AprsSystem stealFrom, @Nullable AprsSystem stealFor, int srn) {
         try {
             AprsSystem systems[] = (null != stealFor && null != stealFrom)
                     ? new AprsSystem[]{stealFor, stealFrom}
@@ -4152,7 +4154,7 @@ public class Supervisor {
         roboteEnableToggleBlockerText = text;
     }
 
-    private volatile StackTraceElement[] allowTogglesTrace = null;
+    private volatile StackTraceElement allowTogglesTrace @Nullable []  = null;
 
     private void clearAllToggleBlockers() {
         allowTogglesCount.incrementAndGet();
@@ -4255,7 +4257,7 @@ public class Supervisor {
     @Nullable
     private volatile XFuture<LockInfo> lastDisallowTogglesFuture = null;
     @Nullable
-    private volatile StackTraceElement[] lastDisallowTogglesTrace = null;
+    private volatile StackTraceElement lastDisallowTogglesTrace @Nullable []  = null;
 
     @SuppressWarnings("UnusedReturnValue")
     private XFuture<LockInfo> disallowToggles(String blockerName, AprsSystem... systems) {
@@ -5082,7 +5084,9 @@ public class Supervisor {
         resumeFuture.set(new XFutureVoid("resume"));
         setTitleMessage("Paused");
         if (logEventErrCount.get() == 0) {
-            setIconImage(IconImages.DISCONNECTED_IMAGE);
+            Utils.runOnDispatchThread(() -> {
+                setIconImage(IconImages.DISCONNECTED_IMAGE);
+            });
         }
     }
 
@@ -6187,10 +6191,11 @@ public class Supervisor {
 
     private XFutureVoid showSafeAbortComplete() {
         if (null != displayJFrame) {
+            AprsSupervisorDisplayJFrame displayJFrameLocal = displayJFrame;
             String blockerName = "showSafeAbortComplete" + showSafeAbortCount.incrementAndGet();
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
-            return f.thenComposeToVoid(x -> displayJFrame.showSafeAbortComplete())
+            return f.thenComposeToVoid(x -> displayJFrameLocal.showSafeAbortComplete())
                     .always(() -> allowToggles(blockerName, systems));
         } else {
             return XFutureVoid.completedFuture();

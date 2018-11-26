@@ -2550,14 +2550,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void checkKits(Action action, List<MiddleCommandType> cmds)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
         checkSettings();
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         boolean correctionMode = aprsSystem.isCorrectionMode();
         if (IGNORE_KIT_CHECK_FAILURES) {
             if (!correctionMode && pauseInsteadOfRecover) {
                 return;
             }
-        }
-        if (null == aprsSystem) {
-            throw new NullPointerException("aprsSystem");
         }
         int prePubs = aprsSystem.getSimLineCount();
         int preVis = aprsSystem.getVisionLineCount();

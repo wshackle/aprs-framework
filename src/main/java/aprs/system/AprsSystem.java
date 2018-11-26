@@ -1289,10 +1289,10 @@ public class AprsSystem implements SlotOffsetProvider {
 //                                    }
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                        .thenRun(this::setStopRunTime)
-                        .thenCompose(x -> waitAllLastFutures())
-                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
-                        .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
+                                .thenRun(this::setStopRunTime)
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName, this::disconnectRobotPrivate, runProgramService)
+                                .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1616,8 +1616,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile int lastContinueStartAbortCount = -1;
 
-    private volatile StackTraceElement continueActionListTrace[] = null;
-    
+    private volatile StackTraceElement continueActionListTrace @Nullable []  = null;
+
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
      * <p>
@@ -1642,19 +1642,19 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                .thenApplyAsync("AprsSystem.continueActionList" + comment,
-                        x -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            if (null == pddlExecutorJInternalFrame1) {
-                                throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
-                            }
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount,trace)
+                        .thenApplyAsync("AprsSystem.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                                    if (null == pddlExecutorJInternalFrame1) {
+                                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                    }
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace)
                                         && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
-                            }
-                            return false;
-                        }, runProgramService);
+                                    }
+                                    return false;
+                                }, runProgramService);
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -1913,17 +1913,17 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            return runCRCLProgram(program);
-                        } catch (Exception ex) {
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            } else {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }, runProgramService);
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCRCLProgram(program);
+                                } catch (Exception ex) {
+                                    if (ex instanceof RuntimeException) {
+                                        throw (RuntimeException) ex;
+                                    } else {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -3208,12 +3208,12 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (null != object2DViewFuture) {
                     XFutureVoid connectVisionFuture
                             = XFutureVoid.allOf(object2DViewFuture, startVisionToDbFuture)
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 } else {
                     XFutureVoid connectVisionFuture
                             = startVisionToDbFuture
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 }
             }
@@ -3241,6 +3241,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.completedFuture();
     }
 
+    @SuppressWarnings("initialization")
     private final Consumer<String> loggerFrameStringConsumer
             = (String s) -> appendLogDisplay(s);
 
@@ -4045,22 +4046,22 @@ public class AprsSystem implements SlotOffsetProvider {
                             throw new RuntimeException(ex);
                         }
                     }, runProgramService)
-                    .thenComposeToVoid(() -> {
-                        return syncPauseRecoverCheckbox();
-                    });
+                            .thenComposeToVoid(() -> {
+                                return syncPauseRecoverCheckbox();
+                            });
             this.xf1 = loadPropertiesFuture;
             XFutureVoid setupWindowsFuture
                     = loadPropertiesFuture
-                    .thenComposeToVoid(() -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            if (!alreadySelected) {
-                                setupWindowsMenuOnDisplay();
-                            }
-                            if (null != aprsSystemDisplayJFrame) {
-                                aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
-                            }
-                        });
-                    });
+                            .thenComposeToVoid(() -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    if (!alreadySelected) {
+                                        setupWindowsMenuOnDisplay();
+                                    }
+                                    if (null != aprsSystemDisplayJFrame) {
+                                        aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
+                                    }
+                                });
+                            });
             this.xf2 = setupWindowsFuture;
             return setupWindowsFuture;
         } catch (Exception ex) {
@@ -4382,25 +4383,25 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean isWithinMaxLimits(PmCartesian cart) {
-        boolean ret=  cart != null
+        boolean ret = cart != null
                 && cart.x <= maxLimit.x
                 && cart.y <= maxLimit.y
                 && cart.z <= maxLimit.z;
         if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within max limits : cart =" + cart+ ", maxLimit="+maxLimit);
-            throw new IllegalStateException("Position is not within max limits : cart =" + cart+ ", maxLimit="+maxLimit);
+            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
         }
         return ret;
     }
 
     private boolean isWithinMinLimits(PmCartesian cart) {
-        boolean ret =  cart != null
+        boolean ret = cart != null
                 && cart.x >= minLimit.x
                 && cart.y >= minLimit.y
                 && cart.z >= minLimit.z;
         if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within min limits : cart =" + cart+ ", minLimit="+minLimit);
-            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit="+minLimit);
+            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
         }
         return ret;
     }
@@ -4408,7 +4409,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public boolean isWithinLimits(PmCartesian cart) {
         boolean ret = isWithinMaxLimits(cart) && isWithinMinLimits(cart);
         if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within limits : cart =" + cart );
+            setTitleErrorString("Position is not within limits : cart =" + cart);
             throw new IllegalStateException("Position is not within limits : cart =" + cart);
         }
         return ret;
@@ -4545,7 +4546,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
-        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset,false);
+        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
         StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
         if (null != actionFile) {
             try {
@@ -4644,7 +4645,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0,false);
+            return createActionListFromVision(requiredItems, teachItems, false, 0, false);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -4875,7 +4876,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (!equal || !goalLearnerLocal.isCorrectionMode()) {
                 boolean startingReverseFlag = isReverseFlag();
                 File f = createTempFile("actionList", ".txt");
-                if(startingReverseFlag != newReverseFlag) {
+                if (startingReverseFlag != newReverseFlag) {
                     setReverseFlag(newReverseFlag, false, false);
                 }
                 saveActionsListToFile(f, actions);
@@ -4894,8 +4895,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 logEvent("createActionListFromVision",
                         equal + "\n"
                         + endingList
-                        .stream()
-                        .collect(Collectors.joining("\n")));
+                                .stream()
+                                .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
@@ -5235,7 +5236,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         if (!r1) {
                             System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart);
                         }
-                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart,trace);
+                        return repeatDoActionWithReverse(enabledOk, comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart, trace);
                     }
                 },
                         XFuture::rethrow,
@@ -5243,7 +5244,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return continuousDemoFuture;
     }
 
-    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart,StackTraceElement [] trace) throws IllegalStateException {
+    private boolean repeatDoActionWithReverse(Boolean x, String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart, StackTraceElement[] trace) throws IllegalStateException {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -5254,7 +5255,7 @@ public class AprsSystem implements SlotOffsetProvider {
             String logLabel2 = "startContinuousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCurLocal;
             logToSuper(logLabel2);
             takeSnapshots("doActions." + logLabel2);
-            boolean doActionWithReverseOk = doActionsWithReverse(comment, x, reverseFirst, startAbortCount, startDisconnectCount,trace);
+            boolean doActionWithReverseOk = doActionsWithReverse(comment, x, reverseFirst, startAbortCount, startDisconnectCount, trace);
             cdCurLocal++;
             if (!doActionWithReverseOk) {
                 return false;
@@ -5314,9 +5315,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile StackTraceElement doActionsWithReverseTrace[] = null;
-    
-    private boolean doActionsWithReverse(String comment, Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount,StackTraceElement [] trace) throws IllegalStateException {
+    private volatile StackTraceElement doActionsWithReverseTrace @Nullable []  = null;
+
+    private boolean doActionsWithReverse(String comment, Boolean x, boolean reverseFirst, int startAbortCount, int startDisconnectCount, StackTraceElement[] trace) throws IllegalStateException {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -5332,7 +5333,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && startDisconnectCount == disconnectRobotCount.get()) {
             logToSuper(getTaskName() + ": doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
             long doActions1TimeStart = System.currentTimeMillis();
-            boolean actionsOk = pddlExecutorJInternalFrame1.doActions(comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount,trace);
+            boolean actionsOk = pddlExecutorJInternalFrame1.doActions(comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount, trace);
             long doActions1TimeEnd = System.currentTimeMillis();
             logToSuper(getTaskName() + ": actionsOk=" + actionsOk + " time to complete = " + (doActions1TimeEnd - doActions1TimeStart) + " ms");
             if (isReverseFlag() != reverseFirst) {
@@ -5347,7 +5348,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 setReverseFlag(!reverseFirst, true, true);
                 logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
                 long doActions2TimeStart = System.currentTimeMillis();
-                boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount,trace);
+                boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount, trace);
                 long doActions2TimeEnd = System.currentTimeMillis();
                 logToSuper(getTaskName() + ": actionsOk2=" + actionsOk2 + " time to complete = " + (doActions2TimeEnd - doActions2TimeStart) + " ms");
                 return actionsOk2;
@@ -5398,7 +5399,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
             System.err.println("Call to startPreCheckedContinuousDemo when not ready");
         }
-        StackTraceElement trace[]= Thread.currentThread().getStackTrace();
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
                 () -> {
                     if (null == pddlExecutorJInternalFrame1) {
@@ -5408,7 +5409,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
                         return false;
                     }
-                    return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount,trace);
+                    return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount, trace);
                 }, runProgramService)
                 .thenComposeAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ").recurse",
                         x2 -> x2 ? startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount) : XFuture.completedFutureWithName("startContinuousDemo.completedFutureWithName", false),
@@ -5435,9 +5436,13 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return the value of pauseInsteadOfRecover
      */
     public boolean isPauseInsteadOfRecover() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         return pddlExecutorJInternalFrame1.isPauseInsteadOfRecover();
     }
 
+    @SuppressWarnings("guieffect")
     private void setReverseCheckBoxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
@@ -5445,6 +5450,7 @@ public class AprsSystem implements SlotOffsetProvider {
         reverseCheckBox.setSelected(val);
     }
 
+    @SuppressWarnings("guieffect")
     private void setAlertLimitsCheckBoxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
@@ -5756,7 +5762,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
+                        .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
     }
@@ -5991,8 +5997,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 );
         return lastStartActionsFuture;
     }
-    
-    private volatile StackTraceElement startActionsInternalTrace[] = null;
+
+    private volatile StackTraceElement startActionsInternalTrace @Nullable []  = null;
 
     private boolean startActionsInternal(String comment,
             long startRunNumber,
@@ -6033,7 +6039,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     throw new RuntimeException(ex);
                 }
             }
-            ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount,trace);
+            ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount, trace);
             startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
             if (currentRunNumber != startRunNumber) {
                 System.err.println("startActionsStartComments=" + startActionsStartComments);
@@ -6088,6 +6094,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
+    @Nullable 
     public String getIsDoingActionsInfo() {
         if (null == pddlExecutorJInternalFrame1) {
             throw new NullPointerException("pddlExecutorJInternalFrame1");
@@ -6155,8 +6162,11 @@ public class AprsSystem implements SlotOffsetProvider {
     private File lastAprsPropertiesFileFile = null;
 
     void reloadForReverse(boolean reverseFlag) {
-        boolean reloadActionsFile = 
-                pddlExecutorJInternalFrame1.getActionsFileString(reverseFlag) != null;
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
+        boolean reloadActionsFile
+                = pddlExecutorJInternalFrame1.getActionsFileString(reverseFlag) != null;
         setReverseFlag(reverseFlag, true, reloadActionsFile);
     }
 
@@ -6699,9 +6709,9 @@ public class AprsSystem implements SlotOffsetProvider {
                                         Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
                                     }
                                 }, runProgramService)
-                        .thenComposeToVoid(() -> {
-                            return syncPauseRecoverCheckbox();
-                        });
+                                .thenComposeToVoid(() -> {
+                                    return syncPauseRecoverCheckbox();
+                                });
                 futures.add(loadPropertiesFuture);
             }
 
@@ -6804,9 +6814,17 @@ public class AprsSystem implements SlotOffsetProvider {
     private static final String ALERT_LIMITS = "alertLimits";
 
     private XFutureVoid syncPauseRecoverCheckbox() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
         if (null != aprsSystemDisplayJFrame) {
             return Utils.runOnDispatchThread(() -> {
-                aprsSystemDisplayJFrame.setPauseInsteadOfRecoverMenuCheckbox(pddlExecutorJInternalFrame1.isPauseInsteadOfRecover());
+                if (null == pddlExecutorJInternalFrame1) {
+                    throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                }
+                if (null != aprsSystemDisplayJFrame) {
+                    aprsSystemDisplayJFrame.setPauseInsteadOfRecoverMenuCheckbox(pddlExecutorJInternalFrame1.isPauseInsteadOfRecover());
+                }
             });
         } else {
             return XFutureVoid.completedFuture();

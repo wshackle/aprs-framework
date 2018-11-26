@@ -2223,8 +2223,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 && !lastContinueActionFuture.isCompletedExceptionally();
     }
 
+    @Nullable
     private volatile String isDoingActionsInfo = null;
 
+    @Nullable
     public String getIsDoingActionsInfo() {
         return isDoingActionsInfo;
     }
@@ -2273,8 +2275,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 + "dasIncrementComment=" + dasIncrementComment;
     }
 
-    private volatile StackTraceElement dasIncrementTrace[] = null;
-    private volatile StackTraceElement dasIncrementCallerTrace[] = null;
+    private volatile StackTraceElement dasIncrementTrace  @Nullable []  = null;
+    private volatile StackTraceElement dasIncrementCallerTrace @Nullable []  = null;
+    @Nullable
     private volatile String dasIncrementComment = null;
 
     public void clearKitsToCheck() {
@@ -2617,11 +2620,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private void setInternalReverseActionsFileString(String newReverseActionsFileString) throws IllegalStateException, HeadlessException, IOException {
+    private void setInternalReverseActionsFileString(@Nullable String newReverseActionsFileString) throws IllegalStateException, HeadlessException, IOException {
         if (reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
             checkFilename(newReverseActionsFileString);
             this.reverseActionsFileString = newReverseActionsFileString;
-        } else if (!newReverseActionsFileString.equals(reverseActionsFileString)) {
+        } else if (!Objects.equals(newReverseActionsFileString,reverseActionsFileString)) {
             throw new IllegalStateException("Attempt to change  reverseActionsFileString from " + reverseActionsFileString + " to " + newReverseActionsFileString);
         }
     }
@@ -2955,6 +2958,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
+    @UIEffect
     private boolean checkResetReverseActionsFile() throws HeadlessException {
         if (reverseFlag && null != reverseActionsFileString && reverseActionsFileString.length() > 0) {
             int confirm = JOptionPane.showConfirmDialog(this, "Reset reverseActionsFileString=" + reverseActionsFileString);
@@ -3465,9 +3469,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private AtomicInteger abortProgramCount = new AtomicInteger(0);
     private volatile long abortProgramTime = 0;
 
+    @Nullable
     private volatile Thread abortProgramThread = null;
-    private volatile StackTraceElement abortProgramTrace[] = null;
+    private volatile StackTraceElement abortProgramTrace  @Nullable []  = null;
+    @Nullable
     private volatile XFutureVoid abortProgramFuture = null;
+    @Nullable
     private volatile XFutureVoid abortProgramAbortCrclFuture = null;
 
     /**
@@ -3512,8 +3519,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return abortProgramFutureLocal;
         }
     }
+
+    @Nullable
     private volatile Thread completeAbortProgramThread = null;
-    private volatile StackTraceElement completeAbortProgramTrace[] = null;
+    private volatile StackTraceElement completeAbortProgramTrace @Nullable []  = null;
 
     private void completeAbortProgram(boolean rps) {
         completeAbortProgramThread = Thread.currentThread();
@@ -5592,6 +5601,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonRenameToolHolderPoseActionPerformed
 
+                
+    @UIEffect
     private void jButtonUpdatePoseCacheFromManualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheFromManualActionPerformed
         updatePoseCacheOnDisplay();
     }//GEN-LAST:event_jButtonUpdatePoseCacheFromManualActionPerformed
@@ -7606,7 +7617,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
-    public String getActionsFileString(boolean newReverseFlag) {
+    @Nullable public String getActionsFileString(boolean newReverseFlag) {
         return newReverseFlag ? reverseActionsFileString : actionsFileString;
     }
 

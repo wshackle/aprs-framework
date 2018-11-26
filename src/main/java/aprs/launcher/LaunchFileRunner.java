@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Timer;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -65,9 +66,10 @@ public class LaunchFileRunner {
 
     private final Deque<Boolean> ifStack = new ArrayDeque<>();
 
-    private final ProcessLauncherJFrame frm;
+    @Nullable
+    private final ProcessLauncherJFrame processLauncherJFrame;
 
-    private volatile boolean debug=false;
+    private volatile boolean debug = false;
 
     private final List<WrappedProcess> processes = new ArrayList<>();
 
@@ -75,8 +77,9 @@ public class LaunchFileRunner {
         return ifStack;
     }
 
-    public ProcessLauncherJFrame getFrm() {
-        return frm;
+    @Nullable
+    public ProcessLauncherJFrame getProcessLauncherJFrame() {
+        return processLauncherJFrame;
     }
 
     public List<WrappedProcess> getProcesses() {
@@ -87,18 +90,22 @@ public class LaunchFileRunner {
     private volatile List<LineConsumer> errorLineConsumers = new ArrayList<>();
 
     public LaunchFileRunner() {
-        this.frm = null;
+        this.processLauncherJFrame = null;
     }
 
     public LaunchFileRunner(ProcessLauncherJFrame frm) {
-        this.frm = frm;
+        this.processLauncherJFrame = frm;
     }
 
     public WrappedProcess addProcess(String... command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
-        if (null != frm) {
-            frm.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+        if (null != processLauncherJFrame) {
+            Utils.runOnDispatchThread(() -> {
+                if (null != processLauncherJFrame) {
+                    processLauncherJFrame.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+                }
+            });
         }
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
         lineConsumers = new ArrayList<>();
@@ -111,8 +118,12 @@ public class LaunchFileRunner {
     WrappedProcess addProcess(List<String> command) {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String cmdLine = String.join(" ", command);
-        if (null != frm) {
-            frm.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+        if (null != processLauncherJFrame) {
+            Utils.runOnDispatchThread(() -> {
+                if (null != processLauncherJFrame) {
+                    processLauncherJFrame.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+                }
+            });
         }
         List<LineConsumer> lineConsumers = getLineConsumers();
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
@@ -128,8 +139,12 @@ public class LaunchFileRunner {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         String[] command2 = replaceDotDir(directory, command);
         String cmdLine = String.join(" ", command2);
-        if (null != frm) {
-            frm.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+        if (null != processLauncherJFrame) {
+            Utils.runOnDispatchThread(() -> {
+                if (null != processLauncherJFrame) {
+                    processLauncherJFrame.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+                }
+            });
         }
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
         lineConsumers = new ArrayList<>();
@@ -148,8 +163,10 @@ public class LaunchFileRunner {
         this.timeoutStart = timeoutStart;
     }
 
-    private volatile ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor;
+    @MonotonicNonNull
+    private volatile ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
+    @SuppressWarnings("guieffect")
     XFutureVoid newTimeoutFuture() {
         XFutureVoid ret = new XFutureVoid("timeoutFuture");
         timeoutStart = System.currentTimeMillis();
@@ -159,12 +176,14 @@ public class LaunchFileRunner {
             }
             timeoutScheduledThreadPoolExecutor.schedule(() -> ret.complete(), timeoutMillis, TimeUnit.MILLISECONDS);
         } else {
-            javax.swing.Timer timer = new Timer(this.timeoutMillis, (evt) -> {
-                ret.complete();
+            Utils.runOnDispatchThread(() -> {
+                javax.swing.Timer timer = new Timer(this.timeoutMillis, (evt) -> {
+                    ret.complete();
+                });
+                timer.setRepeats(false);
+                timer.setInitialDelay(this.timeoutMillis);
+                timer.start();
             });
-            timer.setRepeats(false);
-            timer.setInitialDelay(this.timeoutMillis);
-            timer.start();
         }
         return ret;
     }
@@ -206,8 +225,12 @@ public class LaunchFileRunner {
         LogDisplayJPanel logPanel = new LogDisplayJPanel();
         List<String> command2 = replaceDotDir(directory, command);
         String cmdLine = String.join(" ", command2);
-        if (null != frm) {
-            frm.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+        if (null != processLauncherJFrame) {
+            Utils.runOnDispatchThread(() -> {
+                if (null != processLauncherJFrame) {
+                    processLauncherJFrame.getjTabbedPaneProcesses().add(cmdLine, logPanel);
+                }
+            });
         }
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
         lineConsumers = new ArrayList<>();
@@ -387,14 +410,16 @@ public class LaunchFileRunner {
 
     }
 
+    @Nullable
     public File getProcessLaunchDirectory() {
         return processLaunchDirectory;
     }
 
-    public void setProcessLaunchDirectory(File processLaunchDirectory) {
+    public void setProcessLaunchDirectory(@Nullable File processLaunchDirectory) {
         this.processLaunchDirectory = processLaunchDirectory;
     }
 
+    @Nullable
     public String getOnFailLine() {
         return onFailLine;
     }
@@ -403,6 +428,7 @@ public class LaunchFileRunner {
         this.onFailLine = onFailLine;
     }
 
+    @Nullable
     public XFutureVoid getWaitForFuture() {
         return waitForFuture;
     }
@@ -689,17 +715,19 @@ public class LaunchFileRunner {
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
         this.timeoutMillis = timeoutMillis;
-        this.processLaunchDirectory = f.getParentFile();
+        File parentFile = f.getParentFile();
+        this.processLaunchDirectory = parentFile;
         this.stopLineSeen = false;
         this.debug = debug;
+        ProcessLauncherJFrame frm = this.processLauncherJFrame;
         if (null != frm) {
             frm.setStopLineSeen(false);
-            frm.setProcessLaunchDirectory(this.processLaunchDirectory);
+            frm.setProcessLaunchDirectory(parentFile);
         }
 
 //        File jpsCommandFile = Neo4JKiller.getJpsCommandFile();
 //        if (null == jpsCommandFile) {
-//            jpsCommandFile = new File(frm.processLaunchDirectory, JPS_COMMAND_FILENAME_STRING);
+//            jpsCommandFile = new File(processLauncherJFrame.processLaunchDirectory, JPS_COMMAND_FILENAME_STRING);
 //        }
         StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
