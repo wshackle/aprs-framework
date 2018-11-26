@@ -339,6 +339,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return launchFileRunner.getStopLines();
     }
 
+    @Nullable
     public File getProcessLaunchDirectory() {
         return launchFileRunner.getProcessLaunchDirectory();
     }
@@ -402,7 +403,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         launchFileRunner.setStopLineSeen(stopLineSeen);
     }
 
-    public void setProcessLaunchDirectory(File processLaunchDirectory) {
+    
+    public void setProcessLaunchDirectory(@Nullable File processLaunchDirectory) {
         launchFileRunner.setProcessLaunchDirectory(processLaunchDirectory);
     }
 

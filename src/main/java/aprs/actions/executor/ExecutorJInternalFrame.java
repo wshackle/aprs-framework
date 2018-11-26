@@ -67,6 +67,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.isReverseFlag();
     }
     
+    @Nullable
     public String getActionsFileString(boolean newReverseFlag) {
         return executorJPanel1.getActionsFileString(newReverseFlag);
     }
@@ -353,6 +354,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.startActions();
     }
     
+    @Nullable
      public String getIsDoingActionsInfo() {
         return executorJPanel1.getIsDoingActionsInfo();
     }
