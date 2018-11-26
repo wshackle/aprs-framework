@@ -166,25 +166,42 @@ public class LaunchFileRunner {
     @MonotonicNonNull
     private volatile ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
+    private volatile XFutureVoid lastNewTimeoutFuture = null;
+    private volatile javax.swing.Timer lastTimeoutSwingTimer = null;
+
+    private void completeTimeoutFuture(XFutureVoid future, long timeOutStart) {
+        long curTime = System.currentTimeMillis();
+        long diff = curTime = timeOutStart;
+        System.out.println("Completing " + future + " after " + diff + " ms");
+        future.complete();
+    }
+
     @SuppressWarnings("guieffect")
     XFutureVoid newTimeoutFuture() {
+        int timeoutMillisLocal = timeoutMillis;
+        if (timeoutMillisLocal < 1) {
+            throw new IllegalStateException("timeoutMillis=" + timeoutMillisLocal);
+        }
         XFutureVoid ret = new XFutureVoid("timeoutFuture");
-        timeoutStart = System.currentTimeMillis();
+        long timeoutStartLocal = System.currentTimeMillis();
+        this.timeoutStart = timeoutStartLocal;
         if (GraphicsEnvironment.isHeadless()) {
             if (timeoutScheduledThreadPoolExecutor == null) {
                 timeoutScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
             }
-            timeoutScheduledThreadPoolExecutor.schedule(() -> ret.complete(), timeoutMillis, TimeUnit.MILLISECONDS);
+            timeoutScheduledThreadPoolExecutor.schedule(() -> completeTimeoutFuture(ret, timeoutStartLocal), timeoutMillisLocal, TimeUnit.MILLISECONDS);
         } else {
             Utils.runOnDispatchThread(() -> {
-                javax.swing.Timer timer = new Timer(this.timeoutMillis, (evt) -> {
-                    ret.complete();
+                javax.swing.Timer timer = new Timer(timeoutMillisLocal, (evt) -> {
+                    completeTimeoutFuture(ret, timeoutStartLocal);
                 });
+                lastTimeoutSwingTimer = timer;
                 timer.setRepeats(false);
-                timer.setInitialDelay(this.timeoutMillis);
+                timer.setInitialDelay(timeoutMillisLocal);
                 timer.start();
             });
         }
+        lastNewTimeoutFuture = ret;
         return ret;
     }
 
@@ -711,6 +728,8 @@ public class LaunchFileRunner {
         this.timeoutMillis = timeoutMillis;
     }
 
+    private volatile XFutureVoid lastRunAllOfFuture = null;
+    
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
@@ -745,8 +764,10 @@ public class LaunchFileRunner {
             }
             stringBuilder = null;
         }
-        if (timeoutMillis > 0) {
-            return XFutureVoid.anyOf(XFuture.allOf(futures), newTimeoutFuture())
+        XFutureVoid allOfXFuture = XFuture.allOf(futures);
+        this.lastRunAllOfFuture  = allOfXFuture;
+        if (this.timeoutMillis > 0) {
+            return XFutureVoid.anyOf(allOfXFuture, newTimeoutFuture())
                     .thenRun(() -> {
                         try {
                             System.out.println(f.getCanonicalPath() + " complete.");
@@ -755,8 +776,9 @@ public class LaunchFileRunner {
                         }
                     })
                     .always(WrappedProcess::shutdownStarterService);
+        } else {
+            return allOfXFuture
+                    .always(WrappedProcess::shutdownStarterService);
         }
-        return XFuture.allOf(futures)
-                .always(WrappedProcess::shutdownStarterService);
     }
 }
