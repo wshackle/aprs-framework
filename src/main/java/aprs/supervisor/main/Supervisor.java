@@ -4981,8 +4981,8 @@ public class Supervisor {
                     return step2Future
                             .alwaysAsync(() -> {
                                 allowToggles(blockerName, sysArray);
-                            }, supervisorExecutorService)
-                            .always(this::logStartCheckAndEnableAllRobotsComplete);
+                                logStartCheckAndEnableAllRobotsComplete();
+                            }, supervisorExecutorService);
                 }, supervisorExecutorService);
     }
 
