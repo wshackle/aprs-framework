@@ -3903,7 +3903,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSaveSetupActionPerformed
 
     private void jMenuItemConveyorTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemConveyorTestActionPerformed
-        conveyorTest();
+        interactivStart(() ->conveyorTest(),
+                jMenuItemConveyorTest.getText());
     }//GEN-LAST:event_jMenuItemConveyorTestActionPerformed
 
     private void jMenuItemReloadSimFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReloadSimFilesActionPerformed
@@ -3926,6 +3927,21 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemLookForPartsAllActionPerformed
 
     private XFutureVoid conveyorTest() {
+        AprsSystem sys = this.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        if(sys.isAlertLimitsCheckBoxSelected()) { 
+            int confirm = JOptionPane.showConfirmDialog(this,"Disable Alert Limits on "+sys);
+            if(confirm == JOptionPane.YES_OPTION) {
+                sys.setAlertLimitsCheckBoxSelected(false);
+            }  else {
+                XFutureVoid xfv = new XFutureVoid("conveyortTest.confirm="+confirm);
+                xfv.cancelAll(false);
+                return xfv;
+            }
+        }
+        
         return supervisor.conveyorTest();
     }
 
