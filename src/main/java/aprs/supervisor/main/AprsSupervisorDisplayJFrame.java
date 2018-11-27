@@ -740,6 +740,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             case "Main":
                 futureToDisplaySupplier = () -> sup2.getMainFuture();
                 break;
+                
+                case "Conveyor":
+                futureToDisplaySupplier = () -> sup2.getConveyorTestFuture();
+                break;
 
             case "Last":
                 futureToDisplaySupplier = () -> lastFutureReturned;
@@ -1155,6 +1159,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 SplashScreen.getRedYellowColorList(), gd);
     }
 
+    public boolean isShowSplashMessagesSelected() {
+        return jCheckBoxMenuItemShowSplashMessages.isSelected();
+    }
+    
     /**
      * Show a message in full screen mode with flashing colors. (It is intended
      * to be visible and attention grabbing across the room.) Note: there is a
@@ -3926,6 +3934,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 null);
     }//GEN-LAST:event_jMenuItemLookForPartsAllActionPerformed
 
+    
     private XFutureVoid conveyorTest() {
         AprsSystem sys = this.getConveyorVisClonedSystem();
         if (null == sys) {
@@ -4768,6 +4777,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         listModel.addElement("Resume");
         listModel.addElement("prepReset");
         listModel.addElement("prepStart");
+        listModel.addElement("conveyor");
         listModel.addElement("Random");
         listModel.addElement("ContinuousDemo");
         listModel.addElement("stealAbort");
