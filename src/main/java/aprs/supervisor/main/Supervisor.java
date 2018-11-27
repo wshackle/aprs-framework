@@ -186,7 +186,7 @@ public class Supervisor {
                 });
     }
 
-     @SuppressWarnings("guieffect")
+    @SuppressWarnings("guieffect")
     public XFuture<?> tenCycleTestNoDisables(long startTime) {
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
@@ -245,7 +245,7 @@ public class Supervisor {
         return xf4;
     }
 
-     @SuppressWarnings("guieffect")
+    @SuppressWarnings("guieffect")
     public XFuture<?> completeMultiCycleTestWithPrevMulti(long startTime, int numCycles) {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
@@ -2782,8 +2782,12 @@ public class Supervisor {
             fillTraysAndNextRepeatingFuture = null;
         }
         if (null != conveyorTestFuture) {
-            conveyorTestFuture.cancelAll(true);
+            XFutureVoid xfv = conveyorTestFuture;
+            if (xfv == mainFuture) {
+                mainFuture = null;
+            }
             conveyorTestFuture = null;
+            xfv.cancelAll(true);
         }
 
         firstEventTime = -1;
@@ -3134,6 +3138,14 @@ public class Supervisor {
                 lastSafeAbortAllFuture2 = null;
             }
             xf.cancelAll(true);
+        }
+        if (null != conveyorTestFuture) {
+            XFutureVoid xfv = conveyorTestFuture;
+            if (xfv == mainFuture) {
+                mainFuture = null;
+            }
+            conveyorTestFuture = null;
+            xfv.cancelAll(true);
         }
         if (null != randomTestFuture) {
             randomTestFuture.cancelAll(true);
@@ -3806,7 +3818,9 @@ public class Supervisor {
                     System.err.println("diffTime = " + diffTime);
                     Thread currentThread = Thread.currentThread();
                     System.err.println("currentThread = " + currentThread);
-                    logEventErr("completeScanTillNewInternal : " + startingKitStrings + " != " + lastCreateActionListFromVisionKitToCheckStrings);
+                    String errMsg = "completeScanTillNewInternal : " + startingKitStrings + " != " + lastCreateActionListFromVisionKitToCheckStrings;
+                    logEventErr(errMsg);
+                    throw new IllegalStateException(errMsg);
                 }
                 aprsSys.setCorrectionMode(true);
                 File actionListFile;
@@ -3976,6 +3990,10 @@ public class Supervisor {
 
     @Nullable
     private volatile XFutureVoid conveyorTestFuture = null;
+
+    public XFutureVoid getConveyorTestFuture() {
+        return conveyorTestFuture;
+    }
 
     public XFutureVoid conveyorTest() {
         if (null == displayJFrame) {
@@ -4350,15 +4368,43 @@ public class Supervisor {
 
     private final AtomicInteger logEventErrCount = new AtomicInteger();
 
+    private static String splitLongMessage(String inString, int maxlen) {
+        String lines[] = inString.split("[\r\n]+");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            if(line.length() > maxlen) {
+                StringBuilder sbi = new StringBuilder();
+                for (int j = 0; j < line.length()/maxlen; j++) {
+                    String line1 = line.substring(j*maxlen, Math.min(line.length(),(j+1)*maxlen));
+                    sbi.append(line1);
+                    sbi.append("\r\n");
+                }
+                line = sbi.toString();
+            }
+            sb.append(line);
+        }
+        return sb.toString();
+    }
+    
     private void logEventErr(@Nullable String err) {
         int count = logEventErrCount.incrementAndGet();
         if (null != err) {
             System.err.println(err);
             logEvent("ERROR(" + count + "): " + err);
         }
-        Utils.runOnDispatchThread(() -> {
-            setIconImage(IconImages.ERROR_IMAGE);
-        });
+        if (null != displayJFrame) {
+            Utils.runOnDispatchThread(() -> {
+                if (count < 2 && null != displayJFrame) {
+                    if (displayJFrame.isShowSplashMessagesSelected()) {
+                        displayJFrame.showErrorSplash(err);
+                    } else {
+                        JOptionPane.showMessageDialog(displayJFrame, splitLongMessage(err,80));
+                    }
+                }
+                setIconImage(IconImages.ERROR_IMAGE);
+            });
+        }
     }
 
     private boolean allSystemsOk() {
