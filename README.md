@@ -146,14 +146,14 @@ easier to setup multiple instances.
 
     
     cd ~/fanuc-neo4j-database/neo4j-community-2.3.12/data
-    unzip ~/aprs-framework/neo4j-database-backup/fanucworkcell-04-august-2017.zip 
+    unzip ~/aprs-framework/neo4j-database-backup/neo4j-2018-11-27-fanuc-data-graphdb.zip
 
 
 10.  Extract the data from the zip file into the motoman data directory
 
     
     cd ~/motoman-neo4j-database/neo4j-community-2.3.12/data
-    unzip ~/aprs-framework/neo4j-database-backup/motomanworkcell-04-august-2017.zip
+    unzip ~/aprs-framework/neo4j-database-backup/neo4j-2018-11-27-motoman-data-graphdb.zip
 
 
 11. Start the fanuc database.
