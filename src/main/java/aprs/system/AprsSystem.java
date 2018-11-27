@@ -5426,7 +5426,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return reverseCheckBox.isSelected();
     }
 
-    private boolean isAlertLimitsCheckBoxSelected() {
+    public boolean isAlertLimitsCheckBoxSelected() {
         return alertLimitsCheckBox.isSelected();
     }
 
@@ -5451,7 +5451,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     @SuppressWarnings("guieffect")
-    private void setAlertLimitsCheckBoxSelected(boolean val) {
+    public void setAlertLimitsCheckBoxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
         }
