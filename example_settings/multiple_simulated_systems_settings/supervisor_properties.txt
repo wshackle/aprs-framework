@@ -1,2 +1,15 @@
 #  Automatically saved 
+aprs.supervisor.display.debug=false
+aprs.supervisor.display.recordLiveImageMovie=false
+aprs.supervisor.display.showSplashMessages=true
+aprs.supervisor.display.useTeachCamera=true
+aprs.supevisor.display.conveyor.AxisX=0.0
+aprs.supevisor.display.conveyor.AxisY=1.0
+aprs.supevisor.display.conveyor.MaxPosition=800.0
+aprs.supevisor.display.conveyor.MinPosition=100.0
+aprs.supevisor.display.conveyor.Scale=1.0E-5
+aprs.supevisor.display.conveyor.modbusHost=192.168.1.50
+aprs.supevisor.display.conveyor.nextDelayMillis=10000
+aprs.supevisor.display.conveyor.trayDiff=300.0
 conveyorClonedViewSystemTaskName=Shared Table
+conveyorTestObjectViewSimulatedFilePath=simulated_motoman/conveyor_motoman_shared_table_objects_in_parts_trays.csv

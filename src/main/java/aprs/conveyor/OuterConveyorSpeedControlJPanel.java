@@ -229,7 +229,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return Double.parseDouble(txt);
     }
 
-    private void mapToProperties(Map<String, String> map1) throws NumberFormatException {
+    public void mapToProperties(Map<String, String> map1) throws NumberFormatException {
         setScale(parseDouble(map1.get(SCALE), getScale()));
         setAxisX(parseDouble(map1.get(AXIS_X), getAxisX()));
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
@@ -246,7 +246,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         }
     }
 
-    private Map<String, String> propertiesToMap() {
+    public Map<String, String> propertiesToMap() {
         Map<String, String> map0 = new TreeMap<>();
         map0.put(SCALE, Double.toString(getScale()));
         map0.put(AXIS_X, Double.toString(getAxisX()));
