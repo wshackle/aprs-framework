@@ -257,6 +257,14 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return this.object2DOuterJPanel1.isSimulated();
     }
 
+    public void loadFile(File f) throws IOException {
+        this.object2DOuterJPanel1.loadFile(f);
+    }
+    
+    public void loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+        this.object2DOuterJPanel1.loadFile(f, convertRotToRad, zeroRotations);
+    }
+    
     public boolean isConnected() {
         return this.object2DOuterJPanel1.isConnected();
     }

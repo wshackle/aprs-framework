@@ -624,7 +624,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     private final javax.swing.Timer positionUpdateTimer;
 
-    private volatile long lastEstimatedPositionTime = System.currentTimeMillis();
+    private volatile long lastEstimatedPositionTime = 0;
 
     /**
      * Get the value of scale
@@ -653,6 +653,10 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         boolean forward = conveyorSpeedJPanel1.isForwardDirection();
         long time = System.currentTimeMillis();
         long timeDiff = time - lastEstimatedPositionTime;
+        if(lastEstimatedPositionTime < 1 || timeDiff < 1 || timeDiff > 10000) {
+            lastEstimatedPositionTime=time;
+            return;
+        }
         final double scale = getScale();
         double scaledSpeed = speed * scale;
         double positionInc = ((forward ? 1 : -1) * scaledSpeed * timeDiff);

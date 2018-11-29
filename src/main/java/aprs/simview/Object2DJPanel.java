@@ -174,8 +174,10 @@ public class Object2DJPanel extends JPanel {
      * @param viewDetails new value of viewDetails
      */
     void setViewDetails(boolean viewDetails) {
-        this.viewDetails = viewDetails;
-        this.repaint();
+        if (this.viewDetails != viewDetails) {
+            this.viewDetails = viewDetails;
+            this.checkedRepaint();
+        }
     }
 
     private void addPartImage(@UnknownInitialization Object2DJPanel this,
@@ -254,9 +256,12 @@ public class Object2DJPanel extends JPanel {
      * @param displayAxis new value of displayAxis
      */
     void setDisplayAxis(DisplayAxis displayAxis) {
-        this.displayAxis = displayAxis;
-        this.repaint();
+        if (this.displayAxis != displayAxis) {
+            this.displayAxis = displayAxis;
+            this.checkedRepaint();
+        }
     }
+
     static final List<PhysicalItem> EXAMPLES_ITEMS_LIST = Arrays.asList(// PhysicalItem(String slotMaxDistExpansion, double rotation, double x, double y, double score, String type)
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.10, 700.45, -140.82, 0.99, "P"),
             newPhysicalItemNameRotXYScoreType("sku_part_medium_gear", 0.79, 528.60, -122.51, 0.95, "P"),
@@ -277,9 +282,11 @@ public class Object2DJPanel extends JPanel {
     private volatile List<PhysicalItem> items = EXAMPLES_ITEMS_LIST;
 
     public void setItems(List<PhysicalItem> items) {
-        this.items = items;
+        if (this.items != items) {
+            this.items = items;
+            this.checkedRepaint();
+        }
         updateAddedExtras();
-        this.repaint();
     }
 
     private void clearAddedSlotInfo() {
@@ -314,8 +321,10 @@ public class Object2DJPanel extends JPanel {
      * @param showOutputItems new value of showOutputItems
      */
     public void setShowOutputItems(boolean showOutputItems) {
-        this.showOutputItems = showOutputItems;
-        this.repaint();
+        if (this.showOutputItems != showOutputItems) {
+            this.showOutputItems = showOutputItems;
+            this.checkedRepaint();
+        }
     }
 
     private List<PhysicalItem> outputItems = Collections.emptyList();
@@ -338,11 +347,13 @@ public class Object2DJPanel extends JPanel {
      * @param outputItems new value of outputItems
      */
     public void setOutputItems(List<PhysicalItem> outputItems) {
-        this.outputItems = outputItems;
-        updateAddedExtras();
-        if (this.showOutputItems) {
-            this.repaint();
+        if (this.outputItems != outputItems) {
+            this.outputItems = outputItems;
+            if (this.showOutputItems) {
+                this.checkedRepaint();
+            }
         }
+        updateAddedExtras();
     }
 
     private List<PhysicalItem> addedOutputSlots = Collections.emptyList();
@@ -437,7 +448,7 @@ public class Object2DJPanel extends JPanel {
         }
         takeSnapshot(f, pose, label, w, h);
     }
-    
+
     private int snapshotHeight = -1;
     private int snapshotWidth = -1;
 
@@ -456,27 +467,27 @@ public class Object2DJPanel extends JPanel {
     public void setSnapshotWidth(int snapshotWidth) {
         this.snapshotWidth = snapshotWidth;
     }
-    
-    private final static int DEFAULT_SNAPW= 100;
-    
-   @SuppressWarnings("guieffect")
+
+    private final static int DEFAULT_SNAPW = 100;
+
+    @SuppressWarnings("guieffect")
     private int snapW() {
-        if(snapshotWidth > 0) {
+        if (snapshotWidth > 0) {
             return snapshotWidth;
-        } else if(this.getWidth() > 0) {
+        } else if (this.getWidth() > 0) {
             return this.getWidth();
         } else {
             return DEFAULT_SNAPW;
         }
     }
-    
-    private final static int DEFAULT_SNAPH= 100;
-    
+
+    private final static int DEFAULT_SNAPH = 100;
+
     @SuppressWarnings("guieffect")
     private int snapH() {
-        if(snapshotHeight> 0) {
+        if (snapshotHeight > 0) {
             return snapshotHeight;
-        } else if(this.getHeight() > 0) {
+        } else if (this.getHeight() > 0) {
             return this.getHeight();
         } else {
             return DEFAULT_SNAPH;
@@ -493,7 +504,6 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, point, label, w, h);
     }
 
-    
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         final int w = snapW();
         final int h = snapH();
@@ -894,9 +904,11 @@ public class Object2DJPanel extends JPanel {
      * @param autoscale new value of autoscale
      */
     void setAutoscale(boolean autoscale) {
-        this.autoscale = autoscale;
-        this.scale_set = false;
-        this.repaint();
+        if (this.autoscale != autoscale) {
+            this.autoscale = autoscale;
+            this.scale_set = false;
+            this.checkedRepaint();
+        }
     }
 
     private int selectedItemIndex = -1;
@@ -927,8 +939,10 @@ public class Object2DJPanel extends JPanel {
      * @param viewRotationsAndImages new value of viewRotationsAndImages
      */
     void setViewRotationsAndImages(boolean viewRotationsAndImages) {
-        this.viewRotationsAndImages = viewRotationsAndImages;
-        this.repaint();
+        if (this.viewRotationsAndImages != viewRotationsAndImages) {
+            this.viewRotationsAndImages = viewRotationsAndImages;
+            this.checkedRepaint();
+        }
     }
 
     /**
@@ -940,7 +954,7 @@ public class Object2DJPanel extends JPanel {
         int oldSelectedItemIndex = this.selectedItemIndex;
         if (oldSelectedItemIndex != newsSelectedItemIndex) {
             this.selectedItemIndex = newsSelectedItemIndex;
-            this.repaint();
+            this.checkedRepaint();
         }
     }
 
@@ -1011,32 +1025,60 @@ public class Object2DJPanel extends JPanel {
         g2d.translate(t.x, t.y);
     }
 
-    public Point2D.Double worldToScreenPoint(double itemx, double itemy) {
-        return toScreenPoint(getDisplayAxis(), itemx, itemy, getMinmax(), getScale());
+    public Point2D.Double worldToScreenPoint(double worldx, double worldy) {
+        return toScreenPoint(getDisplayAxis(), worldx, worldy, getMinmax(), getScale());
     }
 
-    private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double itemx, double itemy, MinMax minmax, double currentScale) {
+    private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double worldx, double worldy, MinMax minmax, double currentScale) {
         double minX = minmax.min.x;
         double maxX = minmax.max.x;
         double minY = minmax.min.y;
         double maxY = minmax.max.y;
         switch (displayAxis) {
             case POS_X_POS_Y:
-                return new Point2D.Double((itemx - minX) * currentScale + TO_SCREEN_X_OFFSET, (maxY - itemy) * currentScale + TO_SCREEN_Y_OFFSET);
+                return new Point2D.Double((worldx - minX) * currentScale + TO_SCREEN_X_OFFSET, (maxY - worldy) * currentScale + TO_SCREEN_Y_OFFSET);
 
             case POS_Y_NEG_X:
-                return new Point2D.Double((itemy - minY) * currentScale + TO_SCREEN_X_OFFSET, (itemx - minX) * currentScale + TO_SCREEN_Y_OFFSET);
+                return new Point2D.Double((worldy - minY) * currentScale + TO_SCREEN_X_OFFSET, (worldx - minX) * currentScale + TO_SCREEN_Y_OFFSET);
 
             case NEG_X_NEG_Y:
-                return new Point2D.Double((maxX - itemx) * currentScale + TO_SCREEN_X_OFFSET, (itemy - minY) * currentScale + TO_SCREEN_Y_OFFSET);
+                return new Point2D.Double((maxX - worldx) * currentScale + TO_SCREEN_X_OFFSET, (worldy - minY) * currentScale + TO_SCREEN_Y_OFFSET);
 
             case NEG_Y_POS_X:
-                return new Point2D.Double((maxY - itemy) * currentScale + TO_SCREEN_X_OFFSET, (maxX - itemx) * currentScale + TO_SCREEN_Y_OFFSET);
+                return new Point2D.Double((maxY - worldy) * currentScale + TO_SCREEN_X_OFFSET, (maxX - worldx) * currentScale + TO_SCREEN_Y_OFFSET);
         }
         throw new IllegalStateException("invalid displayAxis");
     }
-    private static final int TO_SCREEN_Y_OFFSET = 20;
+
+    public Point2D.Double screenToWorldPoint(double scrrenx, double screeny) {
+        return toWorldPoint(getDisplayAxis(), scrrenx, screeny, getMinmax(), getScale());
+    }
+
+    private static Point2D.Double toWorldPoint(DisplayAxis displayAxis, double screenx, double screeny, MinMax minmax, double currentScale) {
+        double minX = minmax.min.x;
+        double maxX = minmax.max.x;
+        double minY = minmax.min.y;
+        double maxY = minmax.max.y;
+        double xi = (screenx - TO_SCREEN_X_OFFSET) / currentScale;
+        double yi = (screeny - TO_SCREEN_Y_OFFSET) / currentScale;
+        switch (displayAxis) {
+            case POS_X_POS_Y:
+                return new Point2D.Double(minX + xi, maxY - yi);
+
+            case POS_Y_NEG_X:
+                return new Point2D.Double(minX + yi, minY + xi);
+
+            case NEG_X_NEG_Y:
+                return new Point2D.Double(maxX - xi, minY + yi);
+
+            case NEG_Y_POS_X:
+                return new Point2D.Double(maxX - yi, maxY - xi);
+        }
+        throw new IllegalStateException("invalid displayAxis");
+    }
+
     private static final int TO_SCREEN_X_OFFSET = 15;
+    private static final int TO_SCREEN_Y_OFFSET = 20;
 
     private boolean endEffectorClosed;
 
@@ -1069,14 +1111,47 @@ public class Object2DJPanel extends JPanel {
         return currentX;
     }
 
+    private long repaintMinMillis = 60;
+
+    /**
+     * Get the value of repaintMinMillis
+     *
+     * @return the value of repaintMinMillis
+     */
+    public long getRepaintMinMillis() {
+        return repaintMinMillis;
+    }
+
+    /**
+     * Set the value of repaintMinMillis
+     *
+     * @param repaintMinMillis new value of repaintMinMillis
+     */
+    public void setRepaintMinMillis(long repaintMinMillis) {
+        this.repaintMinMillis = repaintMinMillis;
+    }
+
+    private volatile long lastRepaintPaintTime = 0;
+
+    void checkedRepaint() {
+        long timeNow = System.currentTimeMillis();
+        long diff = timeNow - lastRepaintPaintTime;
+        if (diff > repaintMinMillis) {
+            lastRepaintPaintTime = timeNow;
+            super.repaint();
+        }
+    }
+
     /**
      * Set the value of currentX
      *
      * @param currentX new value of currentX
      */
     void setCurrentX(double currentX) {
-        this.currentX = currentX;
-        this.repaint();
+        if (Math.abs(this.currentX - currentX) > 0.0001) {
+            this.currentX = currentX;
+            this.checkedRepaint();
+        }
     }
 
     private double currentY = 0;
@@ -1096,8 +1171,10 @@ public class Object2DJPanel extends JPanel {
      * @param currentY new value of currentY
      */
     void setCurrentY(double currentY) {
-        this.currentY = currentY;
-        this.repaint();
+        if (Math.abs(this.currentY - currentY) > 0.0001) {
+            this.currentY = currentY;
+            this.checkedRepaint();
+        }
     }
 
     private boolean showCurrentXY;
@@ -1117,8 +1194,10 @@ public class Object2DJPanel extends JPanel {
      * @param showCurrentXY new value of showCurrentXY
      */
     void setShowCurrentXY(boolean showCurrentXY) {
-        this.showCurrentXY = showCurrentXY;
-        this.repaint();
+        if (this.showCurrentXY != showCurrentXY) {
+            this.showCurrentXY = showCurrentXY;
+            this.checkedRepaint();
+        }
     }
 
     private boolean useSeparateNames = true;
@@ -1138,8 +1217,10 @@ public class Object2DJPanel extends JPanel {
      * @param useSeparateNames new value of useSeparateNames
      */
     void setUseSeparateNames(boolean useSeparateNames) {
-        this.useSeparateNames = useSeparateNames;
-        this.repaint();
+        if (this.useSeparateNames != useSeparateNames) {
+            this.useSeparateNames = useSeparateNames;
+            this.checkedRepaint();
+        }
     }
 
     private int namesXPos = 100;
@@ -1170,36 +1251,41 @@ public class Object2DJPanel extends JPanel {
     @Override
     @UIEffect
     public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+        try {
+            this.lastRepaintPaintTime = System.currentTimeMillis();
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
 
-        List<PhysicalItem> itemsToPaint = getItemsToPaint();
-        PhysicalItem selectedItem = null;
-        if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
-            selectedItem = itemsToPaint.get(selectedItemIndex);
-        }
-        Dimension dim = this.getSize();
-        int w = dim.width;
-        int h = dim.height;
-        if (w < 10 || h < 10) {
-            return;
-        }
-        ViewOptions opts = new ViewOptions();
-        opts.w = w;
-        opts.h = h;
-        opts.scale = this.scale;
-        opts.scale_set = this.scale_set && !this.autoscale;
-        opts.paintingComponent = true;
-        if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
-            if (this.autoscale || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.max.y)) {
-                paintWithAutoScale(itemsToPaint, selectedItem, g2d, opts);
-            } else {
-                paintItems(g2d, itemsToPaint, selectedItem, this.minmax, opts);
+            List<PhysicalItem> itemsToPaint = getItemsToPaint();
+            PhysicalItem selectedItem = null;
+            if (selectedItemIndex >= 0 && selectedItemIndex < itemsToPaint.size()) {
+                selectedItem = itemsToPaint.get(selectedItemIndex);
             }
-        }
-        if (opts.scale_set && opts.scale > 0) {
-            this.scale = opts.scale;
-            this.scale_set = !this.autoscale;
+            Dimension dim = this.getSize();
+            int w = dim.width;
+            int h = dim.height;
+            if (w < 10 || h < 10) {
+                return;
+            }
+            ViewOptions opts = new ViewOptions();
+            opts.w = w;
+            opts.h = h;
+            opts.scale = this.scale;
+            opts.scale_set = this.scale_set && !this.autoscale;
+            opts.paintingComponent = true;
+            if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
+                if (this.autoscale || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.max.y)) {
+                    paintWithAutoScale(itemsToPaint, selectedItem, g2d, opts);
+                } else {
+                    paintItems(g2d, itemsToPaint, selectedItem, this.minmax, opts);
+                }
+            }
+            if (opts.scale_set && opts.scale > 0) {
+                this.scale = opts.scale;
+                this.scale_set = !this.autoscale;
+            }
+        } finally {
+            this.lastRepaintPaintTime = System.currentTimeMillis();
         }
     }
 
@@ -1288,9 +1374,11 @@ public class Object2DJPanel extends JPanel {
      * @param showAddedSlotPositions new value of showAddedSlotPositions
      */
     void setShowAddedSlotPositions(boolean showAddedSlotPositions) {
-        this.showAddedSlotPositions = showAddedSlotPositions;
+        if (this.showAddedSlotPositions != showAddedSlotPositions) {
+            this.showAddedSlotPositions = showAddedSlotPositions;
+            checkedRepaint();
+        }
         updateAddedExtras();
-        repaint();
     }
 
     private List<PhysicalItem> getAvailableToolHolders() {
@@ -1535,6 +1623,51 @@ public class Object2DJPanel extends JPanel {
         this.viewLimitsLine = viewLimitsLine;
     }
 
+    @Nullable
+    private Point mousePoint = null;
+
+    /**
+     * Get the value of mousePoint
+     *
+     * @return the value of mousePoint
+     */
+    @Nullable
+    public Point getMousePoint() {
+        return mousePoint;
+    }
+
+    /**
+     * Set the value of mousePoint
+     *
+     * @param mousePoint new value of mousePoint
+     */
+    public void setMousePoint(@Nullable Point mousePoint) {
+        if (this.mousePoint != mousePoint) {
+            this.mousePoint = mousePoint;
+            this.checkedRepaint();
+        }
+    }
+
+    private boolean mouseInside;
+
+    /**
+     * Get the value of mouseInside
+     *
+     * @return the value of mouseInside
+     */
+    public boolean isMouseInside() {
+        return mouseInside;
+    }
+
+    /**
+     * Set the value of mouseInside
+     *
+     * @param mouseInside new value of mouseInside
+     */
+    public void setMouseInside(boolean mouseInside) {
+        this.mouseInside = mouseInside;
+    }
+
     @SuppressWarnings("guieffect")
     private void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
@@ -1623,7 +1756,12 @@ public class Object2DJPanel extends JPanel {
                     break;
             }
             if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
-                g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, new_scale), 10, height - 10);
+                if (mouseInside && null != mousePoint) {
+                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y);
+                    g2d.drawString(String.format("(%.2f,%.2f), scale=%.2f", worldMousePoint.x, worldMousePoint.y, new_scale), 10, height - 10);
+                } else {
+                    g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, new_scale), 10, height - 10);
+                }
             }
             Collection<? extends PhysicalItem> displayItems = itemsToPaint;
             if (useSeperateNamesThisTime) {
@@ -2229,8 +2367,10 @@ public class Object2DJPanel extends JPanel {
      * @param alternativeRotation new value of alternativeRotation
      */
     public void setAlternativeRotation(double alternativeRotation) {
-        this.alternativeRotation = alternativeRotation;
-        this.repaint();
+        if (Math.abs(alternativeRotation - this.alternativeRotation) > 0.0001) {
+            this.alternativeRotation = alternativeRotation;
+            this.checkedRepaint();
+        }
     }
 
     @SuppressWarnings("guieffect")
@@ -2277,9 +2417,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void setMaxX(double maxX) {
-        this.minmax.max.x = maxX;
-        this.scale_set = false;
-        this.repaint();
+        if (Math.abs(this.minmax.max.x - maxX) > 0.0001) {
+            this.minmax.max.x = maxX;
+            this.scale_set = false;
+            this.checkedRepaint();
+        }
     }
 
     public double getMinX() {
@@ -2287,9 +2429,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void setMinX(double minX) {
-        this.minmax.min.x = minX;
-        this.scale_set = false;
-        this.repaint();
+        if (Math.abs(this.minmax.min.x - minX) > 0.0001) {
+            this.minmax.min.x = minX;
+            this.scale_set = false;
+            this.checkedRepaint();
+        }
     }
 
     public double getMaxY() {
@@ -2297,9 +2441,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void setMaxY(double maxY) {
-        this.minmax.max.y = maxY;
-        this.scale_set = false;
-        this.repaint();
+        if (Math.abs(this.minmax.max.y - maxY) > 0.0001) {
+            this.minmax.max.y = maxY;
+            this.scale_set = false;
+            this.checkedRepaint();
+        }
     }
 
     public double getMinY() {
@@ -2307,8 +2453,10 @@ public class Object2DJPanel extends JPanel {
     }
 
     public void setMinY(double minY) {
-        this.minmax.min.y = minY;
-        this.scale_set = false;
-        this.repaint();
+        if (Math.abs(this.minmax.min.y - minY) > 0.0001) {
+            this.minmax.min.y = minY;
+            this.scale_set = false;
+            this.checkedRepaint();
+        }
     }
 }

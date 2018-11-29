@@ -3991,6 +3991,7 @@ public class Supervisor {
     @Nullable
     private volatile XFutureVoid conveyorTestFuture = null;
 
+    @Nullable
     public XFutureVoid getConveyorTestFuture() {
         return conveyorTestFuture;
     }
@@ -4006,7 +4007,7 @@ public class Supervisor {
         }
         XFutureVoid ret
                 = fillTraysAndNextRepeating(sys)
-                        .always(this::finishConveyorTest);
+                        .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
     }
@@ -4020,24 +4021,44 @@ public class Supervisor {
         fillTraysAndNextRepeatingSys = sys;
         logEvent("request vision update");
         sys.clearVisionRequiredParts();
-        XFutureVoid ret = sys.getSingleVisionToDbUpdate()
+        
+        XFuture<List<PhysicalItem>> itemsFuture = sys.getSingleRawVisionUpdate();
+        XFutureVoid ret = itemsFuture
                 .thenComposeToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty()) {
-                        return fillTraysAndNext(sys)
+                        return fillTraysAndNextWithItemList(sys, l)
                                 .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys));
                     } else {
                         return XFutureVoid.completedFutureWithName("fillTraysAndNextRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
                     }
                 });
-        logEvent("refreshSimView");
-        sys.refreshSimView();
         fillTraysAndNextRepeatingFuture = ret;
+        if (sys.isObjectViewSimulated()) {
+            logEvent("refreshSimView");
+            sys.refreshSimView();
+        }
         return ret;
     }
 
-    private void finishConveyorTest() {
+    private XFutureVoid finishConveyorTest() {
         logEvent("ConveyorTest finished");
+        if (null != displayJFrame) {
+            return Utils.runOnDispatchThread(() -> {
+                if (null != displayJFrame) {
+                    if (displayJFrame.isShowSplashMessagesSelected()) {
+                        final GraphicsDevice gd = displayJFrame.getGraphicsConfiguration().getDevice();
+                        displayJFrame.showMessageFullScreen("ConveyorTest finished", 80.0f,
+                                null,
+                                SplashScreen.getBlueWhiteGreenColorList(), gd);
+                    } else {
+                        JOptionPane.showMessageDialog(displayJFrame, "ConveyorTest finished");
+                    }
+                }
+            });
+        } else {
+            return XFutureVoid.completedFuture();
+        }
     }
 
     private XFutureVoid fillTraysAndNext(AprsSystem sys) {
@@ -4048,17 +4069,33 @@ public class Supervisor {
                 .thenComposeToVoid(x -> conveyorVisNext());
     }
 
+    private final AtomicInteger fillTraysCount = new AtomicInteger();
+    
+    private XFutureVoid fillTraysAndNextWithItemList(AprsSystem sys, List<PhysicalItem> items) {
+        logEvent("Fill Kit Trays "+fillTraysCount.incrementAndGet());
+        sys.clearVisionRequiredParts();
+        return sys.fillKitTraysWithItemList(items)
+                .thenRun(() -> sys.clearVisionRequiredParts())
+                .thenComposeToVoid(x -> conveyorVisNext());
+    }
+    
+    private final AtomicInteger conveyorVisCount = new AtomicInteger();
+
     private XFutureVoid conveyorVisNext() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
-        logEvent("Conveyor Next Starting");
-        return displayJFrame.conveyorVisNextTray()
-                .thenRun(this::conveyorVisNextFinish);
+        int count = conveyorVisCount.incrementAndGet();
+        logEvent("Conveyor Next Starting "+count);
+        XFutureVoid ret
+                = displayJFrame.conveyorVisNextTray()
+                        .thenRun(this::conveyorVisNextFinish);
+        conveyorTestFuture = ret;
+        return ret;
     }
 
     private void conveyorVisNextFinish() {
-        logEvent("Conveyor Next finished.");
+        logEvent("Conveyor Next finished. "+conveyorVisCount.get());
     }
 
     private final AtomicInteger srts2Count = new AtomicInteger();
@@ -4373,10 +4410,10 @@ public class Supervisor {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i];
-            if(line.length() > maxlen) {
+            if (line.length() > maxlen) {
                 StringBuilder sbi = new StringBuilder();
-                for (int j = 0; j < line.length()/maxlen; j++) {
-                    String line1 = line.substring(j*maxlen, Math.min(line.length(),(j+1)*maxlen));
+                for (int j = 0; j < line.length() / maxlen; j++) {
+                    String line1 = line.substring(j * maxlen, Math.min(line.length(), (j + 1) * maxlen));
                     sbi.append(line1);
                     sbi.append("\r\n");
                 }
@@ -4386,24 +4423,24 @@ public class Supervisor {
         }
         return sb.toString();
     }
-    
+
     private void logEventErr(@Nullable String err) {
         int count = logEventErrCount.incrementAndGet();
         if (null != err) {
             System.err.println(err);
             logEvent("ERROR(" + count + "): " + err);
-        }
-        if (null != displayJFrame) {
-            Utils.runOnDispatchThread(() -> {
-                if (count < 2 && null != displayJFrame) {
-                    if (displayJFrame.isShowSplashMessagesSelected()) {
-                        displayJFrame.showErrorSplash(err);
-                    } else {
-                        JOptionPane.showMessageDialog(displayJFrame, splitLongMessage(err,80));
+            if (null != displayJFrame) {
+                Utils.runOnDispatchThread(() -> {
+                    if (count < 2 && null != displayJFrame) {
+                        if (displayJFrame.isShowSplashMessagesSelected()) {
+                            displayJFrame.showErrorSplash(err);
+                        } else {
+                            JOptionPane.showMessageDialog(displayJFrame, splitLongMessage(err, 80));
+                        }
                     }
-                }
-                setIconImage(IconImages.ERROR_IMAGE);
-            });
+                    setIconImage(IconImages.ERROR_IMAGE);
+                });
+            }
         }
     }
 

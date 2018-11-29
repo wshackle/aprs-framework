@@ -166,8 +166,10 @@ public class LaunchFileRunner {
     @MonotonicNonNull
     private volatile ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
+    @Nullable
     private volatile XFutureVoid lastNewTimeoutFuture = null;
-    private volatile javax.swing.Timer lastTimeoutSwingTimer = null;
+
+    private volatile javax.swing.@Nullable Timer lastTimeoutSwingTimer = null;
 
     private void completeTimeoutFuture(XFutureVoid future, long timeOutStart) {
         long curTime = System.currentTimeMillis();
@@ -728,8 +730,9 @@ public class LaunchFileRunner {
         this.timeoutMillis = timeoutMillis;
     }
 
+    @Nullable
     private volatile XFutureVoid lastRunAllOfFuture = null;
-    
+
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
@@ -765,7 +768,7 @@ public class LaunchFileRunner {
             stringBuilder = null;
         }
         XFutureVoid allOfXFuture = XFuture.allOf(futures);
-        this.lastRunAllOfFuture  = allOfXFuture;
+        this.lastRunAllOfFuture = allOfXFuture;
         if (this.timeoutMillis > 0) {
             return XFutureVoid.anyOf(allOfXFuture, newTimeoutFuture())
                     .thenRun(() -> {
