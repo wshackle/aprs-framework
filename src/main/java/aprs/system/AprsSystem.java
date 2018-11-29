@@ -1682,6 +1682,20 @@ public class AprsSystem implements SlotOffsetProvider {
         return this.object2DViewJInternalFrame.isSimulated();
     }
 
+    public void loadObjectViewSimulatedFile(File f) throws IOException {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
+        this.object2DViewJInternalFrame.loadFile(f);
+    }
+
+    public void loadObjectViewSimulatedFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
+        this.object2DViewJInternalFrame.loadFile(f, convertRotToRad, zeroRotations);
+    }
+
     /**
      * Set the value of taskName
      *
@@ -4526,14 +4540,24 @@ public class AprsSystem implements SlotOffsetProvider {
         return fillKitTrays(false, 0);
     }
 
+    public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items) {
+        return fillKitTraysWithItemList(items, false, 0);
+    }
+
     public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset) {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
         XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
         return itemsFuture
-                .thenApply(l -> l.stream().filter(this::isWithinLimits).collect(Collectors.toList()))
-                .thenCompose(items -> fillKitTrays(items, overrideRotationOffset, newRotationOffset));
+                .thenCompose((List<PhysicalItem> l) -> {
+                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset);
+                });
+    }
+
+    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset) {
+        List<PhysicalItem> filteredItems = l.stream().filter(this::isWithinLimits).collect(Collectors.toList());
+        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset);
     }
 
     private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
@@ -4542,10 +4566,15 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        List<PhysicalItem> filledkitTraysList = createFilledKitsList(items, overrideRotationOffset, newRotationOffset);
+        TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
+        if (fillInfo.getKitTrays().isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
+        List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo);
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
+
         File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
         StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
         if (null != actionFile) {
@@ -4582,6 +4611,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private List<PhysicalItem> createFilledKitsList(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) {
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
+        return createFilledKitsListFromFillInfo(fillInfo);
+    }
+
+    private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo) throws IllegalStateException {
         List<PhysicalItem> outputList = new ArrayList<>();
         outputList.addAll(fillInfo.getKitTrays());
         outputList.addAll(fillInfo.getPartTrays());
@@ -6094,7 +6127,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
-    @Nullable 
+    @Nullable
     public String getIsDoingActionsInfo() {
         if (null == pddlExecutorJInternalFrame1) {
             throw new NullPointerException("pddlExecutorJInternalFrame1");

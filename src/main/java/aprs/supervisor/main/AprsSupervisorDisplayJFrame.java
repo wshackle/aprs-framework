@@ -3951,6 +3951,18 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
         
+        if(sys.isObjectViewSimulated()) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setCurrentDirectory(supervisor.getPropertiesFile().getParentFile());
+            if(JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
+                try {
+                    sys.loadObjectViewSimulatedFile(chooser.getSelectedFile());
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
         return supervisor.conveyorTest();
     }
 
@@ -4777,7 +4789,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         listModel.addElement("Resume");
         listModel.addElement("prepReset");
         listModel.addElement("prepStart");
-        listModel.addElement("conveyor");
+        listModel.addElement("Conveyor");
         listModel.addElement("Random");
         listModel.addElement("ContinuousDemo");
         listModel.addElement("stealAbort");

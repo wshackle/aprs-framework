@@ -2479,10 +2479,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (t - mouseDraggedUpdateTableTime > 200) {
                 this.updateItemsTable(getItems());
                 mouseDraggedUpdateTableTime = System.currentTimeMillis();
-                object2DJPanel1.repaint();
+                object2DJPanel1.checkedRepaint();
             }
             mouseDown = true;
         }
+        object2DJPanel1.setMousePoint(evt.getPoint());
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     @Nullable
@@ -3087,19 +3088,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.draggedItemsList = null;
     }//GEN-LAST:event_object2DJPanel1MouseClicked
 
+    @UIEffect
     private void object2DJPanel1MouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseMoved
         this.draggedItem = null;
         this.draggedItemsList = null;
+        object2DJPanel1.setMousePoint(evt.getPoint());
     }//GEN-LAST:event_object2DJPanel1MouseMoved
 
+    @UIEffect
     private void object2DJPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseEntered
         this.draggedItem = null;
         this.draggedItemsList = null;
+        this.object2DJPanel1.setMouseInside(true);
+        this.object2DJPanel1.setMousePoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseEntered
 
     private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
         this.draggedItem = null;
         this.draggedItemsList = null;
+        this.object2DJPanel1.setMouseInside(false);
+        this.object2DJPanel1.setMousePoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseExited
 
     @UIEffect
