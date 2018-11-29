@@ -24,6 +24,7 @@ package aprs.conveyor;
 
 import aprs.system.AprsSystem;
 import crcl.ui.XFutureVoid;
+import java.util.Map;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
@@ -74,6 +75,14 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
     
     public XFutureVoid nextTray() {
         return outerConveyorSpeedControlJPanel1.nextTray();
+    }
+    
+    public void mapToProperties(Map<String, String> map1) throws NumberFormatException {
+        outerConveyorSpeedControlJPanel1.mapToProperties(map1);
+    }
+    
+    public Map<String, String> propertiesToMap() {
+        return outerConveyorSpeedControlJPanel1.propertiesToMap();
     }
     
     public XFutureVoid previousTray() {

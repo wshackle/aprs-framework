@@ -4021,7 +4021,7 @@ public class Supervisor {
         fillTraysAndNextRepeatingSys = sys;
         logEvent("request vision update");
         sys.clearVisionRequiredParts();
-        
+
         XFuture<List<PhysicalItem>> itemsFuture = sys.getSingleRawVisionUpdate();
         XFutureVoid ret = itemsFuture
                 .thenComposeToVoid((List<PhysicalItem> l) -> {
@@ -4070,15 +4070,15 @@ public class Supervisor {
     }
 
     private final AtomicInteger fillTraysCount = new AtomicInteger();
-    
+
     private XFutureVoid fillTraysAndNextWithItemList(AprsSystem sys, List<PhysicalItem> items) {
-        logEvent("Fill Kit Trays "+fillTraysCount.incrementAndGet());
+        logEvent("Fill Kit Trays " + fillTraysCount.incrementAndGet());
         sys.clearVisionRequiredParts();
         return sys.fillKitTraysWithItemList(items)
                 .thenRun(() -> sys.clearVisionRequiredParts())
                 .thenComposeToVoid(x -> conveyorVisNext());
     }
-    
+
     private final AtomicInteger conveyorVisCount = new AtomicInteger();
 
     private XFutureVoid conveyorVisNext() {
@@ -4086,7 +4086,7 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame");
         }
         int count = conveyorVisCount.incrementAndGet();
-        logEvent("Conveyor Next Starting "+count);
+        logEvent("Conveyor Next Starting " + count);
         XFutureVoid ret
                 = displayJFrame.conveyorVisNextTray()
                         .thenRun(this::conveyorVisNextFinish);
@@ -4095,7 +4095,7 @@ public class Supervisor {
     }
 
     private void conveyorVisNextFinish() {
-        logEvent("Conveyor Next finished. "+conveyorVisCount.get());
+        logEvent("Conveyor Next finished. " + conveyorVisCount.get());
     }
 
     private final AtomicInteger srts2Count = new AtomicInteger();
@@ -6424,6 +6424,9 @@ public class Supervisor {
         if (null != this.conveyorClonedViewSystemTaskName) {
             propsMap.put("conveyorClonedViewSystemTaskName", conveyorClonedViewSystemTaskName);
         }
+        if (null != this.conveyorTestObjectViewSimulatedFilePath) {
+            propsMap.put("conveyorTestObjectViewSimulatedFilePath", conveyorTestObjectViewSimulatedFilePath);
+        }
         Properties props = new Properties();
         props.putAll(propsMap);
         System.out.println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
@@ -6452,6 +6455,29 @@ public class Supervisor {
         this.conveyorClonedViewSystemTaskName = conveyorClonedViewSystemTaskName;
     }
 
+    @MonotonicNonNull
+    private String conveyorTestObjectViewSimulatedFilePath = null;
+
+    /**
+     * Get the value of conveyorTestObjectViewSimulatedFilePath
+     *
+     * @return the value of conveyorTestObjectViewSimulatedFilePath
+     */
+    @Nullable
+    public String getConveyorTestObjectViewSimulatedFilePath() {
+        return conveyorTestObjectViewSimulatedFilePath;
+    }
+
+    /**
+     * Set the value of conveyorTestObjectViewSimulatedFilePath
+     *
+     * @param conveyorTestObjectViewSimulatedFilePath new value of
+     * conveyorTestObjectViewSimulatedFilePath
+     */
+    public void setConveyorTestObjectViewSimulatedFilePath(String conveyorTestObjectViewSimulatedFilePath) {
+        this.conveyorTestObjectViewSimulatedFilePath = conveyorTestObjectViewSimulatedFilePath;
+    }
+
     private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesOnDisplayTraces = new ConcurrentLinkedDeque<>();
 
     private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
@@ -6473,6 +6499,10 @@ public class Supervisor {
             String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
             if (null != convTaskName) {
                 setConveyorClonedViewSystemTaskName(convTaskName);
+            }
+            String convTestFileName = props.getProperty("conveyorTestObjectViewSimulatedFilePath");
+            if(null != convTestFileName) {
+                setConveyorTestObjectViewSimulatedFilePath(convTestFileName);
             }
             if (futures.isEmpty()) {
                 return XFutureVoid.completedFutureWithName("loadPropertiesOnDisplay_allComplete");
