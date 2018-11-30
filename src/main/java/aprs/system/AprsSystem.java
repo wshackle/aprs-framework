@@ -4938,7 +4938,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
 
             List<String> endingList = goalLearnerLocal.getLastCreateActionListFromVisionKitToCheckStrings();
-            boolean equal = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
+            String diff = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
+            boolean equal = (diff == null);
             if (!equal || !goalLearnerLocal.isCorrectionMode()) {
                 boolean startingReverseFlag = isReverseFlag();
                 File f = createTempFile("actionList", ".txt");
