@@ -152,9 +152,9 @@ public class GoalLearner {
         this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 
-    public static boolean kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
+    public static String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
-            return false;
+            return "sizes differ : " + kitToCheckStrings1.size()+"!="+ kitToCheckStrings2.size();
         }
         for (String s1 : kitToCheckStrings1) {
             boolean matchFound = false;
@@ -165,7 +165,7 @@ public class GoalLearner {
                 }
             }
             if (!matchFound) {
-                return false;
+                return "no match for "+s1  + " in first list";
             }
         }
         for (String s2 : kitToCheckStrings2) {
@@ -177,10 +177,10 @@ public class GoalLearner {
                 }
             }
             if (!matchFound) {
-                return false;
+                 return "no match for "+s2 + " in second list";
             }
         }
-        return true;
+        return null;
     }
 
     public boolean isCorrectionMode() {
