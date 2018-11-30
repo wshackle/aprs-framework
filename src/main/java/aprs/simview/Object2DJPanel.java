@@ -1403,7 +1403,7 @@ public class Object2DJPanel extends JPanel {
 
     private void updateAddedExtras() {
         if (showAddedSlotPositions || showAddedToolsAndToolHolders) {
-            if (showAddedToolsAndToolHolders) {
+            if (showAddedToolsAndToolHolders && null != this.aprsSystem) {
                 this.addedTools = getToolsAndHolders();
 
             } else {

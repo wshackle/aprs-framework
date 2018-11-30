@@ -467,8 +467,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
-            if (null != srv && !pauseCachedCheckBox.isSelected()) {
-                publishCurrentItems();
+            if (!pauseCachedCheckBox.isSelected()) {
+                if (null != srv) {
+                    publishCurrentItems();
+                } else {
+                    setOutputItems(computeNewOutputList(items));
+                }
             }
         }
         return future.thenRun(() -> notifySetItemsListeners(items));
@@ -2353,31 +2357,46 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == srv) {
             throw new IllegalStateException("visionSocketServer is null");
         }
+
+        List<PhysicalItem> origList = getItems();
+        List<PhysicalItem> newOutputList = computeNewOutputList(origList);
+        srv.publishList(newOutputList);
+        setOutputItems(newOutputList);
+    }
+
+    private boolean isOutputFilteringNeeded() {
         boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
-        if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()
+        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
+        boolean needOutputFiltering = shuffleSimulatedUpdates
                 || isEnforceSensorLimits()
-                || simulatedDropRate > 0.01 || addPosNoise) {
-            List<PhysicalItem> origList = getItems();
-            List<PhysicalItem> l = new ArrayList<>(origList);
-            l = l.stream()
+                || simulatedDropRate > 0.01 || addPosNoise;
+        return needOutputFiltering;
+    }
+
+    private List<PhysicalItem> computeNewOutputList(List<PhysicalItem> origList) {
+        List<PhysicalItem> newOutputList = new ArrayList<>(origList);
+        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
+        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
+        boolean needOutputFiltering = shuffleSimulatedUpdates
+                || isEnforceSensorLimits()
+                || simulatedDropRate > 0.01 || addPosNoise;
+        if (needOutputFiltering) {
+            newOutputList = newOutputList.stream()
                     .filter(this::dropFilter)
                     .filter(this::limitsFilter)
                     .map(this::noiseFilter)
                     .collect(Collectors.toList());
-            if (shuffleSimulatedUpdatesCachedCheckBox.isSelected()) {
-                Collections.shuffle(l);
+            if (shuffleSimulatedUpdates) {
+                Collections.shuffle(newOutputList);
             }
-            if (l.size() != origList.size()) {
-                System.out.println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
-                System.out.println("dropCount = " + dropCount);
-                System.out.println("l.size() = " + l.size());
-                System.out.println("origList.size() = " + origList.size());
-            }
-            srv.publishList(l);
-            setOutputItems(l);
-        } else {
-            srv.publishList(getItems());
+//            if (newOutputList.size() != origList.size()) {
+//                System.out.println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
+//                System.out.println("dropCount = " + dropCount);
+//                System.out.println("l.size() = " + newOutputList.size());
+//                System.out.println("origList.size() = " + origList.size());
+//            }
         }
+        return newOutputList;
     }
 
     @UIEffect
@@ -3110,6 +3129,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.object2DJPanel1.setMousePoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseExited
 
+    /**
+     * Get the value of showAddedToolsAndToolHolders
+     *
+     * @return the value of showAddedToolsAndToolHolders
+     */
+    @UIEffect
+    public boolean isShowAddedToolsAndToolHolders() {
+        return jCheckBoxTools.isSelected();
+    }
+
+    /**
+     * Set the value of showAddedToolsAndToolHolders
+     *
+     * @param showAddedToolsAndToolHolders new value of
+     * showAddedToolsAndToolHolders
+     */
+    void setShowAddedToolsAndToolHolders(boolean showAddedToolsAndToolHolders) {
+        jCheckBoxTools.setSelected(showAddedToolsAndToolHolders);
+        object2DJPanel1.setShowAddedToolsAndToolHolders(showAddedToolsAndToolHolders);
+    }
+
     @UIEffect
     private void jCheckBoxToolsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxToolsActionPerformed
         object2DJPanel1.setShowAddedToolsAndToolHolders(jCheckBoxTools.isSelected());
@@ -3484,7 +3524,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @UIEffect
-    private Properties getPropertiesOnDisplay() {
+    Properties getPropertiesOnDisplay() {
         Properties props = new Properties();
         loadPropsFromTable(props);
         props.setProperty("alternativeRotation", String.format("%.2f", toDegrees(object2DJPanel1.getAlternativeRotation())));
@@ -3904,12 +3944,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } else {
             throw new IllegalStateException("connected property not set");
         }
-        if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
-            if (needReloadDataFile()) {
-                try {
-                    reloadDataFile();
-                } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        if (!dialogMode) {
+            if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
+                if (needReloadDataFile()) {
+                    try {
+                        reloadDataFile();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                    }
                 }
             }
         }
@@ -3984,6 +4026,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @Nullable
     private String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
+    }
+
+    private boolean dialogMode;
+
+    /**
+     * Get the value of dialogMode
+     *
+     * @return the value of dialogMode
+     */
+    public boolean isDialogMode() {
+        return dialogMode;
+    }
+
+    /**
+     * Set the value of dialogMode
+     *
+     * @param dialogMode new value of dialogMode
+     */
+    public void setDialogMode(boolean dialogMode) {
+        this.dialogMode = dialogMode;
     }
 
     private boolean needReloadDataFile() {
@@ -4461,6 +4523,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItems(itemsCopy, true);
         }
         this.lastConveyorPosition = newConveyorPosition;
+        if(objectPanelToClone != null) {
+            objectPanelToClone.handleConveyorPositionUpdate(newConveyorPosition);
+        }
     }
 
     @Override

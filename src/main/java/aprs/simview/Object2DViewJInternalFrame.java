@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Consumer;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -193,6 +194,11 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.saveProperties();
     }
 
+    @UIEffect
+    public Properties getPropertiesOnDisplay() {
+        return object2DOuterJPanel1.getPropertiesOnDisplay();
+    }
+    
     @Nullable private volatile XFutureVoid loadPropertiesFuture=null;
     
     public XFutureVoid loadProperties() throws IOException {
