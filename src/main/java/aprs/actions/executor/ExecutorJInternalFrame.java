@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.JMenu;
+import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -351,7 +352,16 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     public XFuture<Boolean> startActions() {
-        return executorJPanel1.startActions();
+        return executorJPanel1.startActions()
+                .thenCompose(x -> {
+                   return Utils.supplyOnDispatchThread(() -> {
+                       if(JOptionPane.YES_OPTION != 
+                               JOptionPane.showConfirmDialog(this, "startActions Complete. Continue?")) {
+                           throw new RuntimeException("canceled by user");
+                       }
+                       return x;
+                   });
+                });
     }
     
     @Nullable

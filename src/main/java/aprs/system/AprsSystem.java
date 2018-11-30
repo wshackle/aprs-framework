@@ -55,6 +55,7 @@ import aprs.database.vision.VisionToDbJInternalFrame;
 import aprs.misc.AprsCommonLogger;
 import aprs.misc.AprsCommonPrintStream;
 import aprs.misc.IconImages;
+import aprs.simview.Object2DOuterDialogPanel;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
 
@@ -1654,7 +1655,17 @@ public class AprsSystem implements SlotOffsetProvider {
                                         && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
                                     }
                                     return false;
-                                }, runProgramService);
+                                }, runProgramService)
+                .thenCompose(x -> {
+                   return Utils.supplyOnDispatchThread(() -> {
+                       if(JOptionPane.YES_OPTION != 
+                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
+                                       "continueActionList "+comment+" Complete. Continue?")) {
+                           throw new RuntimeException("canceled by user");
+                       }
+                       return x;
+                   });
+                });
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -4560,6 +4571,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset);
     }
 
+    private boolean showFilledList;
+
     private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
@@ -4571,10 +4584,30 @@ public class AprsSystem implements SlotOffsetProvider {
             return XFuture.completedFuture(true);
         }
         List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo);
+
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
 
+        if (showFilledList) {
+            XFutureVoid filledListShowFuture
+                    = Utils.runOnDispatchThread(() -> {
+                        Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
+                                "Filled Kit Items", true,
+                                object2DViewJInternalFrame.getPropertiesOnDisplay(),
+                                filledkitTraysList);
+                    });
+            return filledListShowFuture
+                    .thenCompose(x -> {
+                        return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
+                    });
+        } else {
+            return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
+        }
+
+    }
+
+    private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
         StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
         if (null != actionFile) {
@@ -6027,7 +6060,17 @@ public class AprsSystem implements SlotOffsetProvider {
                         }
                     }
                 }, runProgramService
-                );
+                )
+                .thenCompose(x -> {
+                   return Utils.supplyOnDispatchThread(() -> {
+                       if(JOptionPane.YES_OPTION != 
+                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
+                                       "startActions "+comment+" Complete. Continue?")) {
+                           throw new RuntimeException("canceled by user");
+                       }
+                       return x;
+                   });
+                });
         return lastStartActionsFuture;
     }
 

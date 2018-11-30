@@ -2624,7 +2624,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
             checkFilename(newReverseActionsFileString);
             this.reverseActionsFileString = newReverseActionsFileString;
-        } else if (!Objects.equals(newReverseActionsFileString,reverseActionsFileString)) {
+        } else if (!Objects.equals(newReverseActionsFileString, reverseActionsFileString)) {
             throw new IllegalStateException("Attempt to change  reverseActionsFileString from " + reverseActionsFileString + " to " + newReverseActionsFileString);
         }
     }
@@ -3493,6 +3493,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Utils.runOnDispatchThread(this::stopReplanActionTimer);
         }
         this.replanRunnable = this.defaultReplanRunnable;
+        if (null != runningProgramFuture) {
+            runningProgramFuture.cancelAll(false);
+            runningProgramFuture = null;
+        }
         if (null != aprsSystem) {
             XFutureVoid abortCrclFuture = aprsSystem.abortCrclProgram();
             abortProgramAbortCrclFuture = abortCrclFuture;
@@ -4112,6 +4116,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setSelectedManualObjectName();
         setReplanFromIndex(0);
         abortProgram();
+        if (null != runningProgramFuture) {
+            runningProgramFuture.cancelAll(false);
+            runningProgramFuture = null;
+        }
     }//GEN-LAST:event_jButtonAbortActionPerformed
 
     @UIEffect
@@ -5601,7 +5609,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonRenameToolHolderPoseActionPerformed
 
-                
     @UIEffect
     private void jButtonUpdatePoseCacheFromManualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheFromManualActionPerformed
         updatePoseCacheOnDisplay();
@@ -6151,7 +6158,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (rpi < 0 || rpi > actionsList.size()) {
             setReplanFromIndex(0);
         }
-        syncCrclGeneratorPositionMaps();
+        if (!stepping) {
+            syncCrclGeneratorPositionMaps();
+        }
         if (enableOptaplannerCachedCheckBox.isSelected()) {
             if (null == solver) {
                 synchronized (solverFactory) {
@@ -6527,7 +6536,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void syncCrclGeneratorPositionMaps() {
         if (isRunningProgram()) {
-            throw new IllegalStateException("Attempting to change position maps when program running.");
+            throw new IllegalStateException("Attempting to change position maps when program running. runningProgramFuture=" + runningProgramFuture);
         }
         crclGenerator.setPositionMaps(getPositionMaps());
     }
@@ -7617,7 +7626,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
-    @Nullable public String getActionsFileString(boolean newReverseFlag) {
+    @Nullable
+    public String getActionsFileString(boolean newReverseFlag) {
         return newReverseFlag ? reverseActionsFileString : actionsFileString;
     }
 

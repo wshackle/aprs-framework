@@ -4027,6 +4027,7 @@ public class Supervisor {
                 .thenComposeToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty()) {
+                        sys.setCorrectionMode(true);
                         return fillTraysAndNextWithItemList(sys, l)
                                 .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys));
                     } else {
