@@ -22,6 +22,7 @@
  */
 package aprs.cachedcomponents;
 
+import aprs.misc.Utils;
 import crcl.ui.XFutureVoid;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -99,10 +100,18 @@ public class CachedCheckBox extends CachedComponentBase {
         return selected;
     }
 
+    private volatile StackTraceElement falseTrace[] = null;
+    private volatile StackTraceElement trueTrace[] = null;
+    
     public XFutureVoid setSelected(boolean newSelectedVal) {
         boolean oldSelectedVal = this.selected;
         this.selected = newSelectedVal;
         if (null != abstractButton && newSelectedVal != oldSelectedVal) {
+            if(newSelectedVal) {
+                trueTrace = Thread.currentThread().getStackTrace();
+            } else {
+                falseTrace = Thread.currentThread().getStackTrace();
+            }
             return runOnDispatchThread(() -> setSelectedOnDisplay(newSelectedVal));
         } else {
             return XFutureVoid.completedFuture();
@@ -117,6 +126,8 @@ public class CachedCheckBox extends CachedComponentBase {
             int fc = getFinishCount();
             int ac = actionCount.get();
             String text = (abstractButton !=  null)?abstractButton.getText():null;
+            System.err.println("falseTrace="+Utils.traceToString(falseTrace));
+            System.err.println("trueTrace="+Utils.traceToString(trueTrace));
             
             throw new IllegalStateException("selected=" + selected + ", this.selected=" + this.selected +", text="+text+ ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
         }
