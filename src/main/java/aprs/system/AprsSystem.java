@@ -2406,9 +2406,9 @@ public class AprsSystem implements SlotOffsetProvider {
                         takeSnapshots("setTitleError_" + newTitleErrorString + "_");
                     }
                     pause();
-                    if (!snapshotsEnabled) {
-                        snapshotsCheckBox.setSelected(false);
-                    }
+//                    if (!snapshotsEnabled) {
+//                        snapshotsCheckBox.setSelected(false);
+//                    }
                 }
             }
             lastNewTitleErrorString = newTitleErrorString;
