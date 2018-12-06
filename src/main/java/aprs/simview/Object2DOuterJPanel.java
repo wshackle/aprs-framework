@@ -91,7 +91,10 @@ import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.EventListener;
+import java.util.HashMap;
 import static java.util.Objects.requireNonNull;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -583,62 +586,83 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return minDist(sx, sy, items) < 20.0;
     }
 
+    private final DefaultTableModel nonEditableTraySlotsTableModel;
+    private final DefaultTableModel origTraySlotsTableModel;
+
     @UIEffect
     private void loadTraySlotInfo(List<PhysicalItem> items) {
-        int row = jTableItems.getSelectedRow();
-        if (row < 0) {
-            return;
-        }
         DefaultTableModel tm = (DefaultTableModel) jTableTraySlots.getModel();
-        tm.setRowCount(0);
-        if (object2DJPanel1.isShowOutputItems()) {
+        if (jTableItems.getRowCount() < 1) {
+            if (tm != nonEditableTraySlotsTableModel) {
+                jTableTraySlots.setEnabled(false);
+                jLabelTraySlotInfoStatus.setText("Slots info disabled when row items table empty.");
+                tm = nonEditableTraySlotsTableModel;
+                jTableTraySlots.setModel(tm);
+            }
             return;
         }
 
-        String type = (String) jTableItems.getValueAt(row, 5);
-        if (null == type) {
+        if (object2DJPanel1.isShowOutputItems()) {
+            if (tm != nonEditableTraySlotsTableModel) {
+                jTableTraySlots.setEnabled(false);
+                jLabelTraySlotInfoStatus.setText("Slots info disabled when Showing Output Items");
+                tm = nonEditableTraySlotsTableModel;
+                jTableTraySlots.setModel(tm);
+            }
             return;
+        } else {
+            if (tm != origTraySlotsTableModel) {
+                jTableTraySlots.setEnabled(true);
+                jLabelTraySlotInfoStatus.setText("Tray Slot Information");
+                tm = origTraySlotsTableModel;
+                jTableTraySlots.setModel(tm);
+            }
         }
-        switch (type) {
-            case "PT":
-            case "KT":
-                Object nameObject = jTableItems.getValueAt(row, 1);
-                Object xObject = jTableItems.getValueAt(row, 2);
-                Object yObject = jTableItems.getValueAt(row, 3);
-                Object rotObject = jTableItems.getValueAt(row, 4);
-                if (null == nameObject) {
-                    return;
-                }
-                if (null == xObject) {
-                    return;
-                }
-                if (null == yObject) {
-                    return;
-                }
-                if (null == rotObject) {
-                    return;
-                }
-                String name = (String) nameObject;
-                double x = (double) xObject;
-                double y = (double) yObject;
-                double rot = toRadians((double) rotObject);
-                if (null != slotOffsetProvider) {
-                    Tray trayItem = new Tray(name, rot, x, y);
-                    List<Slot> l = slotOffsetProvider.getSlotOffsets(name, true);
-                    if (null != l) {
-                        for (Slot s : l) {
-                            Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
-                            if (null != absItem) {
-                                double minDist = minDist(absItem.x, absItem.y, items);
-                                tm.addRow(new Object[]{s.getSlotForSkuName(), minDist < 20.0, absItem.x, absItem.y, minDist});
+
+        tm.setRowCount(0);
+        for (int row = 0; row < jTableItems.getRowCount(); row++) {
+
+            String type = (String) jTableItems.getValueAt(row, 5);
+            Object nameObject = jTableItems.getValueAt(row, 1);
+            if (null == type) {
+                continue;
+            }
+            switch (type) {
+                case "PT":
+                case "KT":
+
+                    Object xObject = jTableItems.getValueAt(row, 2);
+                    Object yObject = jTableItems.getValueAt(row, 3);
+                    Object rotObject = jTableItems.getValueAt(row, 4);
+                    if (null != nameObject
+                            && null != xObject
+                            && null != yObject
+                            && null != rotObject) {
+                        String name = (String) nameObject;
+                        double x = (double) xObject;
+                        double y = (double) yObject;
+                        double rot = toRadians((double) rotObject);
+                        String trayInfo = String.format("%d,%s", row, name);
+                        if (null != slotOffsetProvider) {
+                            Tray trayItem = new Tray(name, rot, x, y);
+                            jLabelTraySlotInfoStatus.setText("Tray: row=" + row + ", name=" + name + ", rot=" + rot + ", x=" + x + ", y=" + y);
+                            List<Slot> l = slotOffsetProvider.getSlotOffsets(name, true);
+                            if (null != l) {
+                                for (Slot s : l) {
+                                    Slot absItem = slotOffsetProvider.absSlotFromTrayAndOffset(trayItem, s);
+                                    if (null != absItem) {
+                                        double minDist = minDist(absItem.x, absItem.y, items);
+                                        tm.addRow(new Object[]{minDist < 20.0, row, name, s.getSlotForSkuName(), absItem.x, absItem.y, minDist});
+                                    }
+                                }
                             }
                         }
                     }
-                }
-                break;
+                    break;
 
-            default:
-                tm.setRowCount(0);
+                default:
+                    break;
+            }
         }
         Utils.autoResizeTableColWidths(jTableTraySlots);
     }
@@ -718,7 +742,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     public Object2DOuterJPanel() {
         initComponents();
-        this.setItemsInternal(object2DJPanel1.getItems());
+
         jTableItems.getModel().addTableModelListener(itemsTableModelListener);
         jTableItems.getSelectionModel().addListSelectionListener(itemsTableListSelectionListener);
         jTableTraySlots.getModel().addTableModelListener(traySlotsTableModelListener);
@@ -746,6 +770,209 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         pickupDistCachedTextField = new CachedTextField(jTextFieldPickupDist);
         dropOffThresholdCachedTextField = new CachedTextField(jTextFieldDropOffThreshold);
         jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(object2DJPanel1.getRotationOffset())));
+        origTraySlotsTableModel = (DefaultTableModel) jTableTraySlots.getModel();
+        Vector columnIdentifiers = new Vector();
+        for (int i = 0; i < origTraySlotsTableModel.getColumnCount(); i++) {
+            String string = POSE_UPDATE_HISTORY_HEADER[i];
+            columnIdentifiers.add(origTraySlotsTableModel.getColumnName(i));
+        }
+        nonEditableTraySlotsTableModel = new DefaultTableModel(origTraySlotsTableModel.getDataVector(), columnIdentifiers) {
+            @Override
+            public void setValueAt(Object aValue, int row, int column) {
+                origTraySlotsTableModel.setValueAt(aValue, row, column); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Object getValueAt(int row, int column) {
+                return origTraySlotsTableModel.getValueAt(row, column); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public String getColumnName(int column) {
+                return origTraySlotsTableModel.getColumnName(column); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public int getColumnCount() {
+                return origTraySlotsTableModel.getColumnCount(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public int getRowCount() {
+                return origTraySlotsTableModel.getRowCount(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addColumn(Object columnName, Object[] columnData) {
+                origTraySlotsTableModel.addColumn(columnName, columnData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addColumn(Object columnName, Vector columnData) {
+                origTraySlotsTableModel.addColumn(columnName, columnData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addColumn(Object columnName) {
+                origTraySlotsTableModel.addColumn(columnName); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setColumnCount(int columnCount) {
+                origTraySlotsTableModel.setColumnCount(columnCount); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setColumnIdentifiers(Object[] newIdentifiers) {
+                origTraySlotsTableModel.setColumnIdentifiers(newIdentifiers); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setColumnIdentifiers(Vector columnIdentifiers) {
+                origTraySlotsTableModel.setColumnIdentifiers(columnIdentifiers); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void removeRow(int row) {
+                origTraySlotsTableModel.removeRow(row); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void moveRow(int start, int end, int to) {
+                origTraySlotsTableModel.moveRow(start, end, to); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void insertRow(int row, Object[] rowData) {
+                origTraySlotsTableModel.insertRow(row, rowData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void insertRow(int row, Vector rowData) {
+                origTraySlotsTableModel.insertRow(row, rowData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addRow(Object[] rowData) {
+                origTraySlotsTableModel.addRow(rowData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addRow(Vector rowData) {
+                origTraySlotsTableModel.addRow(rowData); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setRowCount(int rowCount) {
+                origTraySlotsTableModel.setRowCount(rowCount); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setNumRows(int rowCount) {
+                origTraySlotsTableModel.setNumRows(rowCount); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void rowsRemoved(TableModelEvent event) {
+                origTraySlotsTableModel.rowsRemoved(event); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void newRowsAdded(TableModelEvent e) {
+                origTraySlotsTableModel.newRowsAdded(e); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void newDataAvailable(TableModelEvent event) {
+                origTraySlotsTableModel.newDataAvailable(event); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setDataVector(Object[][] dataVector, Object[] columnIdentifiers) {
+                origTraySlotsTableModel.setDataVector(dataVector, columnIdentifiers); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void setDataVector(Vector dataVector, Vector columnIdentifiers) {
+                origTraySlotsTableModel.setDataVector(dataVector, columnIdentifiers); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Vector getDataVector() {
+                return origTraySlotsTableModel.getDataVector(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public <T extends EventListener> T[] getListeners(Class<T> listenerType) {
+                return origTraySlotsTableModel.getListeners(listenerType); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableChanged(TableModelEvent e) {
+                origTraySlotsTableModel.fireTableChanged(e); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableCellUpdated(int row, int column) {
+                origTraySlotsTableModel.fireTableCellUpdated(row, column); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableRowsDeleted(int firstRow, int lastRow) {
+                origTraySlotsTableModel.fireTableRowsDeleted(firstRow, lastRow); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableRowsUpdated(int firstRow, int lastRow) {
+                origTraySlotsTableModel.fireTableRowsUpdated(firstRow, lastRow); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableRowsInserted(int firstRow, int lastRow) {
+                origTraySlotsTableModel.fireTableRowsInserted(firstRow, lastRow); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableStructureChanged() {
+                origTraySlotsTableModel.fireTableStructureChanged(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void fireTableDataChanged() {
+                origTraySlotsTableModel.fireTableDataChanged(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public TableModelListener[] getTableModelListeners() {
+                return origTraySlotsTableModel.getTableModelListeners(); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void removeTableModelListener(TableModelListener l) {
+                origTraySlotsTableModel.removeTableModelListener(l); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void addTableModelListener(TableModelListener l) {
+                origTraySlotsTableModel.addTableModelListener(l); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public int findColumn(String columnName) {
+                return origTraySlotsTableModel.findColumn(columnName); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Class getColumnClass(int columnIndex) {
+                return origTraySlotsTableModel.getColumnClass(columnIndex);
+            }
+
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return false;
+            }
+        };
+        this.setItemsInternal(object2DJPanel1.getItems());
     }
 
     private final TableModelListener itemsTableModelListener = new TableModelListener() {
@@ -855,51 +1082,61 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!jCheckBoxSimulated.isSelected()) {
                 return;
             }
-            if (e.getColumn() == 1 && e.getType() == TableModelEvent.UPDATE) {
-                int row = e.getFirstRow();
-                if (row == e.getLastRow()) {
-                    Object traySlotValue1 = jTableTraySlots.getValueAt(row, 1);
-                    if (!(traySlotValue1 instanceof Boolean)) {
-                        throw new IllegalStateException("bad value in table at " + row + ",1 :" + traySlotValue1);
-                    }
-                    boolean filled = (boolean) traySlotValue1;
-                    List<PhysicalItem> l = new ArrayList<>();
-                    int selectedRowIndex = jTableItems.getSelectedRow();
-                    Object traySlotValue2 = jTableTraySlots.getValueAt(row, 2);
-                    if (!(traySlotValue2 instanceof Double)) {
-                        throw new IllegalStateException("bad value in table at " + row + ",2 :" + traySlotValue2);
-                    }
-                    Object traySlotValue3 = jTableTraySlots.getValueAt(row, 3);
-                    if (!(traySlotValue3 instanceof Double)) {
-                        throw new IllegalStateException("bad value in table at " + row + ",3 :" + traySlotValue3);
-                    }
-                    if (filled) {
-                        l.addAll(getItems());
-                        double sx = (double) traySlotValue2;
-                        double sy = (double) traySlotValue3;
-                        Object traySlotValue0 = jTableTraySlots.getValueAt(row, 0);
-                        if (!(traySlotValue0 instanceof String)) {
-                            throw new IllegalStateException("bad value in table at " + row + ",0 :" + traySlotValue0);
+            if (object2DJPanel1.isShowOutputItems()) {
+                return;
+            }
+            if (e.getColumn() == 0 && e.getType() == TableModelEvent.UPDATE) {
+                int eventRowIndex = e.getFirstRow();
+//                int row = jTableTraySlots.convertRowIndexToModel(eventRowIndex);
+                int row = jTableTraySlots.convertRowIndexToView(eventRowIndex);
+//                    String trayInfo = (String) jTableTraySlots.getValueAt(row, 0);
+//                    String stringInfoFields[] = trayInfo.split(",");
+                List<PhysicalItem> newItemsList = new ArrayList<>();
+                Object traySlotValueFilled = jTableTraySlots.getValueAt(row, 0);
+                if (!(traySlotValueFilled instanceof Boolean)) {
+                    throw new IllegalStateException("bad value in table at " + row + ",1 :" + traySlotValueFilled);
+                }
+                boolean filled = (boolean) traySlotValueFilled;
+
+                Object traySlotValueSx = jTableTraySlots.getValueAt(row, 4);
+                if (!(traySlotValueSx instanceof Double)) {
+                    throw new IllegalStateException("bad value in table at " + row + ",2 :" + traySlotValueSx);
+                }
+                Object traySlotValueSy = jTableTraySlots.getValueAt(row, 5);
+                if (!(traySlotValueSy instanceof Double)) {
+                    throw new IllegalStateException("bad value in table at " + row + ",3 :" + traySlotValueSy);
+                }
+                Object traySlotValueName = jTableTraySlots.getValueAt(row, 3);
+                if (!(traySlotValueName instanceof String)) {
+                    throw new IllegalStateException("bad value in table at " + row + ",0 :" + traySlotValueName);
+                }
+                String name = (String) traySlotValueName;
+                List<PhysicalItem> origItems = getItems();
+                if (filled) {
+                    newItemsList.addAll(origItems);
+                    double sx = (double) traySlotValueSx;
+                    double sy = (double) traySlotValueSy;
+                    PhysicalItem newPart = newPhysicalItemNameRotXYScoreType(name, 0.0, sx, sy, 100.0, "P");
+                    newItemsList.add(newPart);
+                } else {
+                    double sx = (double) traySlotValueSx;
+                    double sy = (double) traySlotValueSy;
+                    for (int i = 0; i < origItems.size(); i++) {
+                        PhysicalItem it = origItems.get(i);
+                        if (Math.hypot(sx - it.x, sy - it.y) > 20.0 || !it.getName().contains(name)) {
+                            newItemsList.add(it);
                         }
-                        String name = (String) traySlotValue0;
-                        PhysicalItem newPart = newPhysicalItemNameRotXYScoreType(name, 0.0, sx, sy, 100.0, "P");
-                        l.add(newPart);
-                    } else {
-                        double sx = (double) traySlotValue2;
-                        double sy = (double) traySlotValue3;
-                        List<PhysicalItem> items = getItems();
-                        for (int i = 0; i < items.size(); i++) {
-                            PhysicalItem it = items.get(i);
-                            if (Math.hypot(sx - it.x, sy - it.y) > 20.0) {
-                                l.add(it);
-                            } else if (i < selectedRowIndex) {
-                                selectedRowIndex--;
-                            }
-                        }
                     }
-                    javax.swing.SwingUtilities.invokeLater(() -> setItemsInternal(l));
-                    int newSelectedRowIndex = selectedRowIndex;
-                    javax.swing.SwingUtilities.invokeLater(() -> jTableItems.getSelectionModel().setSelectionInterval(newSelectedRowIndex, newSelectedRowIndex));
+                }
+                if (newItemsList.size() != origItems.size()) {
+                    Utils.runOnDispatchThread(() -> {
+                        setItemsInternal(newItemsList);
+                        notifySetItemsListeners(newItemsList);
+                    });
+                } else {
+                    System.err.println("List size " + newItemsList.size() + " not changed on jTableTraySlots event " + e);
+                    System.out.println("newItemsList = " + newItemsList);
+                    System.out.println("origItems = " + origItems);
                 }
             }
         }
@@ -973,6 +1210,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
+        jLabelTraySlotInfoStatus = new javax.swing.JLabel();
         jPanelTopRow = new javax.swing.JPanel();
         jTextFieldFilename = new javax.swing.JTextField();
         jButtonSave = new javax.swing.JButton();
@@ -1387,22 +1625,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
 
+        jTableTraySlots.setAutoCreateRowSorter(true);
         jTableTraySlots.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+
             },
             new String [] {
-                "Slot Name", "Fill", "sx", "sy", "dist"
+                "Fill", "Tray Index", "TrayName", "Slot Name", "sx", "sy", "dist"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Boolean.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+                java.lang.Boolean.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, false, false, false
+                true, false, true, true, true, true, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1415,20 +1651,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
         jScrollPane2.setViewportView(jTableTraySlots);
 
+        jLabelTraySlotInfoStatus.setText("Tray Slot Info Status");
+
         javax.swing.GroupLayout jPanelTraysLayout = new javax.swing.GroupLayout(jPanelTrays);
         jPanelTrays.setLayout(jPanelTraysLayout);
         jPanelTraysLayout.setHorizontalGroup(
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2)
+                .addGroup(jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                    .addComponent(jLabelTraySlotInfoStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanelTraysLayout.setVerticalGroup(
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTraysLayout.createSequentialGroup()
+            .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 384, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabelTraySlotInfoStatus)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Trays", jPanelTrays);
@@ -3051,7 +3294,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setShowOutputItemsOnDisplay(boolean showOutputItems) {
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
-            setItemsInternal(getItems());
+            List<PhysicalItem> items = getItems();
+            setItemsInternal(items);
+            notifySetItemsListeners(items);
         } else {
             setOutputItemsInternal(getOutputItems());
         }
@@ -3412,6 +3657,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelHost;
+    private javax.swing.JLabel jLabelTraySlotInfoStatus;
     private javax.swing.JPanel jPanelBottomMain;
     private javax.swing.JPanel jPanelBottomPropertiesButtons;
     private javax.swing.JPanel jPanelConnectionsTab;
@@ -4523,7 +4769,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItems(itemsCopy, true);
         }
         this.lastConveyorPosition = newConveyorPosition;
-        if(objectPanelToClone != null) {
+        if (objectPanelToClone != null) {
             objectPanelToClone.handleConveyorPositionUpdate(newConveyorPosition);
         }
     }

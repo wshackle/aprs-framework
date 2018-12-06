@@ -1655,17 +1655,17 @@ public class AprsSystem implements SlotOffsetProvider {
                                         && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
                                     }
                                     return false;
-                                }, runProgramService)
-                .thenCompose(x -> {
-                   return Utils.supplyOnDispatchThread(() -> {
-                       if(JOptionPane.YES_OPTION != 
-                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
-                                       "continueActionList "+comment+" Complete. Continue?")) {
-                           throw new RuntimeException("canceled by user");
-                       }
-                       return x;
-                   });
-                });
+                                }, runProgramService);
+//                .thenCompose(x -> {
+//                   return Utils.supplyOnDispatchThread(() -> {
+////                       if(JOptionPane.YES_OPTION != 
+////                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
+////                                       "continueActionList "+comment+" Complete. Continue?")) {
+////                           throw new RuntimeException("canceled by user");
+////                       }
+//                       return x;
+//                   });
+//                });
         return lastContinueActionListFuture.always(() -> logEvent("finished continueActionList", comment));
     }
 
@@ -6061,17 +6061,17 @@ public class AprsSystem implements SlotOffsetProvider {
                         }
                     }
                 }, runProgramService
-                )
-                .thenCompose(x -> {
-                   return Utils.supplyOnDispatchThread(() -> {
-                       if(JOptionPane.YES_OPTION != 
-                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
-                                       "startActions "+comment+" Complete. Continue?")) {
-                           throw new RuntimeException("canceled by user");
-                       }
-                       return x;
-                   });
-                });
+                );
+//                .thenCompose(x -> {
+//                   return Utils.supplyOnDispatchThread(() -> {
+//                       if(JOptionPane.YES_OPTION != 
+//                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
+//                                       "startActions "+comment+" Complete. Continue?")) {
+//                           throw new RuntimeException("canceled by user");
+//                       }
+//                       return x;
+//                   });
+//                });
         return lastStartActionsFuture;
     }
 

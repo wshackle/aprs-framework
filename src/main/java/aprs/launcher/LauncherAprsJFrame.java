@@ -565,7 +565,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private static void tenCycleTestNoDisables() {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
-        supervisor.tenCycleTestNoDisables(startTime);
+        supervisor.multiCycleTestNoDisables(startTime, 10);
     }
 
     private static void multiCycleTest(@Nullable File launchFile, int numCycles) {
