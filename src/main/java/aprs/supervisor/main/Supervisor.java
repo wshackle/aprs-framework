@@ -3884,6 +3884,11 @@ public class Supervisor {
                 futureCompleted = true;
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
+                try {
+                    object2DOuterJPanel1.takeSnapshot(Utils.createTempFile("teachItems_"+teachItems.size()+"_", ".PNG"), teachItems);
+                } catch (IOException ex) {
+                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 future.complete();
             }
         }
