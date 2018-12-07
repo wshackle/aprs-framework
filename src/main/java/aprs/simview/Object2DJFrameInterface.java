@@ -25,6 +25,7 @@ package aprs.simview;
 import aprs.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.ui.XFutureVoid;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +39,7 @@ interface Object2DJFrameInterface {
     
     public List<PhysicalItem> getItems();
     
-    public void setItems(List<PhysicalItem> items);
+    public XFutureVoid setItems(List<PhysicalItem> items);
     
     public void takeSnapshot(File f, PointType point, String label) ;
     public void takeSnapshot(File f, PmCartesian point, String label) ;

@@ -367,22 +367,24 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
-    private static void prevMulti(@Nullable File launchFile) {
-        Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
+    private static XFutureVoid prevMulti(@Nullable File launchFile) {
         if (null != launchFile) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
-                processLauncher.run(launchFile)
-                        .thenRun(() -> {
+                return processLauncher.run(launchFile)
+                        .thenComposeToVoid(() -> {
+                            Supervisor supervisor = createAprsSupervisorWithSwingDisplay(false);
                             supervisor.setProcessLauncher(processLauncher);
-                            Utils.runOnDispatchThread(() -> supervisor.completePrevMulti());
+                            return Utils.composeToVoidOnDispatchThread(() -> supervisor.completePrevMulti());
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
         } else {
-            supervisor.completePrevMulti();
+            Supervisor supervisor = createAprsSupervisorWithSwingDisplay(true);
+            return supervisor.completePrevMulti();
         }
     }
 
@@ -394,7 +396,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
     private static void newMulti() {
-        Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
+        Supervisor supervisor = createAprsSupervisorWithSwingDisplay(true);
         supervisor.startColorTextReader();
         supervisor.setVisible(true);
         supervisor.browseSaveSetupAs();
@@ -489,7 +491,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     });
         } else {
             Supervisor supervisor
-                    = createAprsSupervisorWithSwingDisplay();
+                    = createAprsSupervisorWithSwingDisplay(true);
             supervisor.startColorTextReader();
             supervisor.setVisible(true);
             return supervisor.loadSetupFile(setupFile)
@@ -564,7 +566,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static void tenCycleTestNoDisables() {
         long startTime = System.currentTimeMillis();
-        Supervisor supervisor = createAprsSupervisorWithSwingDisplay();
+        Supervisor supervisor = createAprsSupervisorWithSwingDisplay(true);
         supervisor.multiCycleTestNoDisables(startTime, 10);
     }
 

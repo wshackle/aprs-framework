@@ -3948,6 +3948,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
 
+        List<XFutureVoid> futuresList = new ArrayList<>();
         if (sys.isObjectViewSimulated()) {
             try {
                 JFileChooser chooser = new JFileChooser();
@@ -3967,7 +3968,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
 
-                    sys.loadObjectViewSimulatedFile(chooser.getSelectedFile());
+                    XFutureVoid loadSimFileFuture =
+                            sys.loadObjectViewSimulatedFile(chooser.getSelectedFile());
+                    futuresList.add(loadSimFileFuture);
                     String path = chooser.getSelectedFile().getCanonicalPath();
 
                     if (path.startsWith(parentPath)) {
@@ -3983,7 +3986,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 throw new RuntimeException(ex);
             }
         }
-        return supervisor.conveyorTest();
+        return XFutureVoid.allOf(futuresList)
+                .thenComposeToVoid(supervisor::conveyorTest);
     }
 
     private static final String titleStart = "Multi Aprs Supervisor";
@@ -4168,13 +4172,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private XFutureVoid setTeachSystemFilter(@Nullable AprsSystem sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
-            object2DOuterJPanel1.setShowOutputItems(false);
-            return object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
+            XFutureVoid setShowFuture = object2DOuterJPanel1.setShowOutputItems(false);
+            return setShowFuture
+                    .thenComposeToVoid(() -> object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems()));
         } else {
             object2DOuterJPanel1.setForceOutputFlag(true);
             object2DOuterJPanel1.setSimulated(true);
-            object2DOuterJPanel1.setShowOutputItems(true);
-            return object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
+            XFutureVoid setShowFuture = object2DOuterJPanel1.setShowOutputItems(true);
+            return setShowFuture
+                    .thenComposeToVoid(() -> object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems())));
         }
     }
 

@@ -1693,11 +1693,11 @@ public class AprsSystem implements SlotOffsetProvider {
         return this.object2DViewJInternalFrame.isSimulated();
     }
 
-    public void loadObjectViewSimulatedFile(File f) throws IOException {
+    public XFutureVoid loadObjectViewSimulatedFile(File f) throws IOException {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
-        this.object2DViewJInternalFrame.loadFile(f);
+        return this.object2DViewJInternalFrame.loadFile(f);
     }
 
     public void loadObjectViewSimulatedFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
@@ -4440,6 +4440,64 @@ public class AprsSystem implements SlotOffsetProvider {
         return ret;
     }
 
+    private boolean isWithinMaxLimits(PmCartesian cart, double radius) {
+        boolean ret = cart != null
+                && cart.x + radius <= maxLimit.x
+                && cart.y + radius <= maxLimit.y
+                && cart.z <= maxLimit.z;
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+        }
+        return ret;
+    }
+
+    private boolean isWithinMinLimits(PmCartesian cart, double radius) {
+        boolean ret = cart != null
+                && cart.x - radius >= minLimit.x
+                && cart.y - radius >= minLimit.y
+                && cart.z >= minLimit.z;
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+        }
+        return ret;
+    }
+
+    public boolean isWithinLimits(PmCartesian cart, double radius) {
+        boolean ret = isWithinMaxLimits(cart, radius) && isWithinMinLimits(cart, radius);
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within limits : cart =" + cart);
+            throw new IllegalStateException("Position is not within limits : cart =" + cart);
+        }
+        return ret;
+    }
+
+    public boolean isWithinLimits(PhysicalItem item) {
+        boolean ret = isWithinMaxLimits(item) && isWithinMinLimits(item);
+        if (!ret && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within limits : cart =" + item);
+            throw new IllegalStateException("Position is not within limits : cart =" + item);
+        }
+        if (!ret) {
+            return false;
+        }
+        if (item instanceof Tray) {
+            Tray tray = (Tray) item;
+            return isWithinLimits(tray, tray.getMaxSlotDist());
+        } else if (item.getType().equals("KT")) {
+//            Tray tray = new Tray(item.getName(), item.getPose(), 0);
+//            tray.setType("KT");
+//            List<Slot> slots = getSlots(tray, false);
+//            for(Slot slot : slots) {
+//                if(!isWithinLimits(slot)) {
+//                    return false;
+//                }
+//            }
+        }
+        return ret;
+    }
+
     private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
 
     /**
@@ -4568,6 +4626,11 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset) {
         List<PhysicalItem> filteredItems = l.stream().filter(this::isWithinLimits).collect(Collectors.toList());
+        try {
+            takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset);
     }
 
@@ -4608,38 +4671,45 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
-        File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
-        StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
-        if (null != actionFile) {
-            try {
-                loadActionsFile(actionFile, false);
-                return startActions("fillKitTrays", false)
-                        .exceptionally((Throwable throwable) -> {
-                            System.err.println("fillKitTraysTrace = " + Utils.traceToString(fillKitTraysTrace));
-                            System.err.println("actionFile = " + actionFile);
-                            System.err.println("filledkitTraysList.size() = " + filledkitTraysList.size());
-                            System.err.println("filledkitTraysList = " + filledkitTraysList);
-                            showException(throwable);
-                            if (throwable instanceof RuntimeException) {
-                                throw (RuntimeException) throwable;
-                            } else {
-                                throw new RuntimeException(throwable);
-                            }
-                        });
-            } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
-                if (ex instanceof RuntimeException) {
-                    throw (RuntimeException) ex;
-                } else {
-                    throw new RuntimeException(ex);
-                }
+        try {
+            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
+            if (null == actionFile) {
+               return XFuture.completedFuture(false);
             }
-        } else {
-            System.err.println("fillKitTraysTrace = " + Utils.traceToString(fillKitTraysTrace));
-            System.err.println("filledkitTraysList.size() = " + filledkitTraysList.size());
-            System.err.println("filledkitTraysList = " + filledkitTraysList);
-            throw new RuntimeException("createActionListFromVision returned null");
+            StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
+            loadActionsFile(actionFile, false);
+            return startActions("fillKitTrays", false)
+                    .exceptionally((Throwable throwable) -> {
+                        System.err.println("fillKitTraysTrace = " + Utils.traceToString(fillKitTraysTrace));
+                        System.err.println("actionFile = " + actionFile);
+                        System.err.println("filledkitTraysList.size() = " + filledkitTraysList.size());
+                        System.err.println("filledkitTraysList = " + filledkitTraysList);
+                        showException(throwable);
+                        if (throwable instanceof RuntimeException) {
+                            throw (RuntimeException) throwable;
+                        } else {
+                            throw new RuntimeException(throwable);
+                        }
+                    });
+        } catch (Exception ex) {
+
+            String errMsg = ex.getMessage() + "\n"
+                    + "filledkitTraysList=" + filledkitTraysList + ",\n"
+                    + "overrideRotationOffset=" + overrideRotationOffset + ",\n"
+                    + "newRotationOffset=" + newRotationOffset + ",\n";
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
+            try {
+                takeSimViewSnapshot("fillKitTraysInternal" + ex.getMessage(), filledkitTraysList);
+            } catch (IOException ex1) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
+
     }
 
     private List<PhysicalItem> createFilledKitsList(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) {
@@ -4898,7 +4968,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Executor View must be open to use this function.");
         }
-
+        if (teachItems.isEmpty()) {
+            return null;
+        }
         long t0 = System.currentTimeMillis();
         long t1 = t0;
         File ret = null;
@@ -4909,9 +4981,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 goalLearnerLocal = new GoalLearner();
                 this.goalLearner = goalLearnerLocal;
             }
-            if (teachItems.isEmpty()) {
-                return null;
-            }
+
             goalLearnerLocal.setItemPredicate(this::isWithinLimits);
             if (goalLearnerLocal.isCorrectionMode()) {
                 goalLearnerLocal.setKitTrayListPredicate(null);
