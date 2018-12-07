@@ -428,10 +428,6 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         }
 
         paintSpeedBar(dim, g);
-        paintPositionMarke(g, Color.BLACK, dim, this.estimatedPosition, "");
-        if (goalSet) {
-            paintPositionMarke(g, Color.GREEN, dim, this.goalPosition, "goal");
-        }
         List<PhysicalItem> itemsToPaint = this.items;
         if (null != itemsToPaint) {
             for (int i = 0; i < itemsToPaint.size(); i++) {
@@ -446,6 +442,18 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                 }
             }
         }
+        if(this.estimatedPosition < this.minPosition) {
+             paintPositionMarke(g, Color.BLACK, dim, this.minPosition, "min");
+        }
+        if(this.estimatedPosition > this.maxPosition) {
+             paintPositionMarke(g, Color.BLACK, dim, this.maxPosition, "max");
+        }
+         if (goalSet) {
+            paintPositionMarke(g, Color.GREEN, dim, this.goalPosition, "goal");
+        }
+        paintPositionMarke(g, Color.BLACK, dim, this.estimatedPosition, "current");
+       
+        
     }
 
     public double positionOfItem(PhysicalItem item) {
@@ -454,12 +462,15 @@ public class InnerConveyorSpeedJPanel extends JPanel {
 
     private void paintPositionMarke(Graphics g, Color lineColor, Dimension dim, double pos, String label) {
         g.setColor(lineColor);
+        double min = Math.min(estimatedPosition, minPosition);
+        double max = Math.max(estimatedPosition, maxPosition);
+        double diff = (max-min);
         if (horizontal) {
-            int xpos = 15 + ((int) ((dim.width - 30) * (pos - minPosition) / (maxPosition - minPosition)));
+            int xpos = 15 + ((int) ((dim.width - 30) * (pos - min) / diff));
             g.drawLine(xpos, 0, xpos, dim.height);
             g.drawString(String.format("%.0f %s", pos, label), xpos, dim.height / 2);
         } else {
-            int ypos = 15 + (int) ((dim.height - 30) * (pos - minPosition) / (maxPosition - minPosition));
+            int ypos = 15 + (int) ((dim.height - 30) * (pos - min) / diff);
             g.drawLine(0, ypos, dim.width, ypos);
             g.drawString(String.format("%.0f %s", pos, label), dim.width / 2, ypos);
         }

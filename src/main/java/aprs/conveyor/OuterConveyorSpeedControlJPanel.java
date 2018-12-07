@@ -87,7 +87,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      *
      * @return the value of goalPostion
      */
-    public double getGoalPostion() {
+    public double getGoalPosition() {
         return conveyorSpeedJPanel1.getGoalPosition();
     }
 
@@ -112,10 +112,20 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     /**
      * Set the value of goalPostion
      *
-     * @param goalPostion new value of goalPostion
+     * @param goalPosition new value of goalPostion
      */
-    public void setGoalPostion(double goalPostion) {
-        conveyorSpeedJPanel1.setGoalPosition(goalPostion);
+    public void setGoalPosition(double goalPosition) {
+        if (goalPosition > conveyorSpeedJPanel1.getMaxPosition()) {
+            stopConveyorNoPosEstimate();
+            setGoalSet(false);
+            throw new IllegalStateException("goalPosition > conveyorSpeedJPanel1.getMaxPosition() : goalPostion=" + goalPosition + ", conveyorSpeedJPanel1.getMaxPosition()=" + conveyorSpeedJPanel1.getMaxPosition());
+        }
+        if (goalPosition < conveyorSpeedJPanel1.getMinPosition()) {
+            stopConveyorNoPosEstimate();
+            setGoalSet(false);
+            throw new IllegalStateException("goalPosition < conveyorSpeedJPanel1.getMinPosition() : goalPostion=" + goalPosition + ", conveyorSpeedJPanel1.getMinPosition()=" + conveyorSpeedJPanel1.getMinPosition());
+        }
+        conveyorSpeedJPanel1.setGoalPosition(goalPosition);
     }
 
     private volatile double trayDiff = 300.0;
@@ -134,7 +144,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 //        computeTrayDiff();
         setGoalSet(false);
         updateEstimatedPosition();
-        setGoalPostion(getEstimatedPosition() - trayDiff);
+        setGoalPosition(getEstimatedPosition() - trayDiff);
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
         if (null != nextPrevTrayFuture) {
@@ -160,7 +170,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 //        computeTrayDiff();
         setGoalSet(false);
         updateEstimatedPosition();
-        setGoalPostion(getEstimatedPosition() + trayDiff);
+        setGoalPosition(getEstimatedPosition() + trayDiff);
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
         if (null != nextPrevTrayFuture) {
@@ -234,6 +244,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setAxisX(parseDouble(map1.get(AXIS_X), getAxisX()));
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
+        setEstimatedPosition(parseDouble(map1.get(CURRENT_POSITION), getEstimatedPosition()));
+        setGoalPosition(parseDouble(map1.get(GOAL_POSITION), getGoalPosition()));
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
         setTrayDiff(parseDouble(map1.get(TRAY_DIFF), getTrayDiff()));
         String modbusHostName = map1.get(MODBUS_HOST);
@@ -253,6 +265,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         map0.put(AXIS_Y, Double.toString(getAxisY()));
         map0.put(MAX_POSITION, Double.toString(getMaxPosition()));
         map0.put(MIN_POSITION, Double.toString(getMinPosition()));
+        map0.put(CURRENT_POSITION, Double.toString(getEstimatedPosition()));
+        map0.put(GOAL_POSITION, Double.toString(getGoalPosition()));
         map0.put(TRAY_DIFF, Double.toString(getTrayDiff()));
         map0.put(MODBUS_HOST, getModBusHost());
         map0.put(NEXT_DELAY_MILLIS, Integer.toString(getNextDelayMillis()));
@@ -262,6 +276,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private static final String TRAY_DIFF = "trayDiff";
     private static final String MIN_POSITION = "MinPosition";
     private static final String MAX_POSITION = "MaxPosition";
+    private static final String CURRENT_POSITION = "CurrentPosition";
+    private static final String GOAL_POSITION = "GoalPosition";
+    
     private static final String AXIS_Y = "AxisY";
     private static final String AXIS_X = "AxisX";
     private static final String SCALE = "Scale";
@@ -653,8 +670,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         boolean forward = conveyorSpeedJPanel1.isForwardDirection();
         long time = System.currentTimeMillis();
         long timeDiff = time - lastEstimatedPositionTime;
-        if(lastEstimatedPositionTime < 1 || timeDiff < 1 || timeDiff > 10000) {
-            lastEstimatedPositionTime=time;
+        if (lastEstimatedPositionTime < 1 || timeDiff < 1 || timeDiff > 10000) {
+            lastEstimatedPositionTime = time;
             return;
         }
         final double scale = getScale();
@@ -676,7 +693,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             }
             final boolean goalSet = isGoalSet();
             if (goalSet) {
-                final double goalPosition = this.getGoalPostion();
+                final double goalPosition = this.getGoalPosition();
                 if (forward && estimatedPosition > goalPosition) {
                     setGoalSet(false);
                     stopConveyorNoPosEstimate();
