@@ -59,8 +59,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         initComponents();
     }
 
-    public void refresh(boolean loadFile) {
-        object2DOuterJPanel1.refresh(loadFile);
+    public XFutureVoid refresh(boolean loadFile) {
+        return object2DOuterJPanel1.refresh(loadFile);
     }
 
     public boolean isPartMoving() {
@@ -178,8 +178,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
     
     @Override
-    public void setItems(List<PhysicalItem> items) {
-        object2DOuterJPanel1.setItems(items);
+    public XFutureVoid setItems(List<PhysicalItem> items) {
+        return object2DOuterJPanel1.setItems(items);
     }
 
     public void setPropertiesFile(File f) {
@@ -263,8 +263,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return this.object2DOuterJPanel1.isSimulated();
     }
 
-    public void loadFile(File f) throws IOException {
-        this.object2DOuterJPanel1.loadFile(f);
+    public XFutureVoid loadFile(File f) throws IOException {
+        return this.object2DOuterJPanel1.loadFile(f);
     }
     
     public void loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {

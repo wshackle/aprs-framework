@@ -4054,7 +4054,7 @@ public class Supervisor {
 
         XFuture<List<PhysicalItem>> itemsFuture = sys.getSingleRawVisionUpdate();
         XFutureVoid ret = itemsFuture
-                .thenComposeToVoid((List<PhysicalItem> l) -> {
+                .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty()) {
                         sys.setCorrectionMode(true);
@@ -4063,7 +4063,7 @@ public class Supervisor {
                     } else {
                         return XFutureVoid.completedFutureWithName("fillTraysAndNextRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
                     }
-                });
+                },supervisorExecutorService);
         fillTraysAndNextRepeatingFuture = ret;
         if (sys.isObjectViewSimulated()) {
             logEvent("refreshSimView");
@@ -4105,6 +4105,11 @@ public class Supervisor {
     private XFutureVoid fillTraysAndNextWithItemList(AprsSystem sys, List<PhysicalItem> items) {
         logEvent("Fill Kit Trays " + fillTraysCount.incrementAndGet());
         sys.clearVisionRequiredParts();
+        try {
+            sys.takeSimViewSnapshot("fillTraysAndNextWithItemList", items);
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return sys.fillKitTraysWithItemList(items)
                 .thenRun(() -> sys.clearVisionRequiredParts())
                 .thenComposeToVoid(x -> conveyorVisNext());
@@ -6383,7 +6388,7 @@ public class Supervisor {
     public static Supervisor createSupervisor() {
         return GraphicsEnvironment.isHeadless()
                 ? new Supervisor()
-                : createAprsSupervisorWithSwingDisplay();
+                : createAprsSupervisorWithSwingDisplay(true);
     }
 
     /**
@@ -7124,12 +7129,12 @@ public class Supervisor {
     }
 
     @UIEffect
-    public static Supervisor createAprsSupervisorWithSwingDisplay() {
+    public static Supervisor createAprsSupervisorWithSwingDisplay(boolean initVisible) {
         AprsSupervisorDisplayJFrame aprsSupervisorDisplayJFrame1 = new AprsSupervisorDisplayJFrame();
         aprsSupervisorDisplayJFrame1.setDefaultIconImage();
         Supervisor supervisor = new Supervisor(aprsSupervisorDisplayJFrame1);
         aprsSupervisorDisplayJFrame1.setSupervisor(supervisor);
-        aprsSupervisorDisplayJFrame1.setVisible(true);
+        aprsSupervisorDisplayJFrame1.setVisible(initVisible);
         aprsSupervisorDisplayJFrame1.updateRobotsTable();
         return supervisor;
     }

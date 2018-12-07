@@ -533,6 +533,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final Map<String, String> closestItemNameMap;
         final List<Slot> absSlots;
         final Map<String, String> itemSkuMap;
+        final PoseType pose;
 
         final List<KitToCheckFailedItemInfo> failedItems;
 
@@ -542,9 +543,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return failedSlots;
         }
 
-        KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots) {
+        KitToCheckInstanceInfo(String instanceName, List<Slot> absSlots, PoseType pose) {
             this.instanceName = instanceName;
             this.absSlots = absSlots;
+            this.pose = pose;
             closestItemMap = new HashMap<>();
             itemSkuMap = new HashMap<>();
             closestItemNameMap = new HashMap<>();
@@ -553,6 +555,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         @Override
         public String toString() {
+            if(null == pose) {
+                return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", pose=null" + '}';
+            }
+            if(absSlots.isEmpty()) {
+                return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", absSlots.isEmpty()" + '}';
+            }
             return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", closestItemNameMap=" + closestItemNameMap + ", itemSkuMap=" + itemSkuMap + ", failedSlots=" + failedSlots + '}';
         }
 
@@ -2143,13 +2151,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
-                    .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> takePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
 
             for (String partTypeName : takePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeItems
@@ -2166,23 +2174,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Set<String> typeSet
                     = physicalItemsLocal
-                    .stream()
-                    .map(PhysicalItem::getType)
-                    .collect(Collectors.toSet());
+                            .stream()
+                            .map(PhysicalItem::getType)
+                            .collect(Collectors.toSet());
             if (debug) {
                 logDebug("typeSet = " + typeSet);
             }
             MutableMultimap<String, PhysicalItem> availSlotsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
-                    .select(item -> item.getType().equals("ES")
+                            .select(item -> item.getType().equals("ES")
                             && item.getName().startsWith("empty_slot_")
                             && !item.getName().contains("_in_kit_"))
-                    .groupBy(item -> posNameToType(item.getName()));
+                            .groupBy(item -> posNameToType(item.getName()));
 
             MutableMultimap<String, Action> placePartMap
                     = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                    .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                    .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
 
             for (String partTypeName : placePartMap.keySet()) {
                 MutableCollection<PhysicalItem> thisPartTypeSlots
@@ -2433,8 +2441,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String kitName = action.getArgs()[0];
         Map<String, String> kitSlotMap
                 = Arrays.stream(action.getArgs(), 1, action.getArgs().length)
-                .map(arg -> arg.split("="))
-                .collect(Collectors.toMap(array -> array[0], array -> array[1]));
+                        .map(arg -> arg.split("="))
+                        .collect(Collectors.toMap(array -> array[0], array -> array[1]));
         KitToCheck kit = new KitToCheck(kitName, kitSlotMap);
         kitsToCheck.add(kit);
     }
@@ -2474,9 +2482,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 .collect(Collectors.toList());
     }
 
-    private List<Slot> getAbsSlotListForKitInstance(String kitSkuName, String kitInstanceName) {
+    private List<Slot> getAbsSlotListForKitInstance(String kitSkuName, String kitInstanceName, PoseType pose) {
         try {
-            PoseType pose = getPose(kitInstanceName);
             if (debug) {
                 try {
                     if (null != pose) {
@@ -2607,9 +2614,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             List<String> partsFullNames
                     = parts
-                    .stream()
-                    .map(PhysicalItem::getFullName)
-                    .collect(Collectors.toList());
+                            .stream()
+                            .map(PhysicalItem::getFullName)
+                            .collect(Collectors.toList());
             List<String> partsInPartsTrayFullNames
                     = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
@@ -2701,8 +2708,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 if (matchedKitInstanceNames.contains(kitInstanceName)) {
                                     continue;
                                 }
+                                if(null == info.pose) {
+                                    continue;
+                                }
+                                PoseType pose = info.pose;
+
                                 List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                                        (String n) -> getAbsSlotListForKitInstance(kit.name, n));
+                                        (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
 
                                 if (snapshotsEnabled()) {
                                     takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
@@ -2906,11 +2918,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = new HashMap<>();
             kit.instanceInfoMap = kitInstanceInfoMap;
             for (String kitInstanceName : kit.kitInstanceNames) {
-
+                PoseType pose = getPose(kitInstanceName);
                 List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                        (String n) -> getAbsSlotListForKitInstance(kit.name, n));
-                KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots);
+                        (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
+                KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots,pose);
                 kitInstanceInfoMap.put(kitInstanceName, info);
+                if(pose == null) {
+                    continue;
+                }
+                if(absSlots.isEmpty()) {
+                    continue;
+                }
                 if (matchedKitInstanceNames.contains(kitInstanceName)) {
                     continue;
                 }

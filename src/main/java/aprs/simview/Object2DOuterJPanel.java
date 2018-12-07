@@ -394,16 +394,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final CachedTextField filenameCachedTextField;
     private final CachedCheckBox pauseCachedCheckBox;
 
-    public void refresh(boolean loadFile) {
+    public XFutureVoid refresh(boolean loadFile) {
         try {
             if (simulatedCachedCheckBox.isSelected()) {
                 boolean fileLoaded = false;
+                XFutureVoid loadFileFuture = null;
                 if (loadFile) {
                     String fname = filenameCachedTextField.getText().trim();
                     File f = new File(fname);
                     if (f.exists() && f.canRead()) {
                         try {
-                            loadFile(f);
+                            loadFileFuture = loadFile(f);
                             fileLoaded = true;
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -411,19 +412,34 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (!fileLoaded && null != visionSocketServer && !pauseCachedCheckBox.isSelected()) {
-                    this.setItems(object2DJPanel1.getItems());
+                    if(null != loadFileFuture) {
+                        return 
+                                loadFileFuture
+                                .thenComposeToVoid(() -> this.setItems(object2DJPanel1.getItems()));
+                    } else {
+                        return this.setItems(object2DJPanel1.getItems());
+                    }
+                } else {
+                    return XFutureVoid.completedFuture();
                 }
+            } else {
+                return XFutureVoid.completedFuture();
             }
         } catch (Exception e) {
             e.printStackTrace();
+            if(e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         } finally {
             lastRefreshTime = System.currentTimeMillis();
             refreshCount.incrementAndGet();
         }
     }
 
-    public void loadFile(File f) throws IOException {
-        loadFile(f, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
+    public XFutureVoid loadFile(File f) throws IOException {
+        return loadFile(f, handleRotationEnum == HandleRotationEnum.DEGREES, handleRotationEnum == HandleRotationEnum.IGNORE);
     }
 
     public boolean isViewingOutput() {
@@ -445,9 +461,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    @Override
-    public void setItems(List<PhysicalItem> items) {
-        setItems(items, !pauseCachedCheckBox.isSelected());
+    public XFutureVoid setItems(List<PhysicalItem> items) {
+        return setItems(items, !pauseCachedCheckBox.isSelected());
     }
 
     private volatile @Nullable
@@ -3031,7 +3046,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return aprsSystem.isSnapshotsSelected();
     }
 
-    public void loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+    public XFutureVoid loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+
+        List<XFutureVoid> futuresList = new ArrayList<>();
 
         boolean takeSnapshots = isSnapshotsEnabled();
         if (takeSnapshots) {
@@ -3042,21 +3059,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         if (f.isDirectory()) {
-            System.err.println("Can not load file \"" + f + "\" : It is a directory when a text/csv file is expected.");
-            return;
+            throw new RuntimeException("Can not load file \"" + f + "\" : It is a directory when a text/csv file is expected.");
         }
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
-        this.setItems(VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations));
+        XFutureVoid setItemsFuture = this.setItems(VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations));
+        futuresList.add(setItemsFuture);
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
-            javax.swing.SwingUtilities.invokeLater(() -> {
+            XFutureVoid snapshotFuture = Utils.runOnDispatchThread(() -> {
                 try {
                     takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
                 } catch (IOException ex) {
                     Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             });
+            futuresList.add(snapshotFuture);
         }
+        return XFutureVoid.allOf(futuresList)
+                .thenComposeToVoid(() -> {
+                   return Utils.runOnDispatchThread(() -> {
+                      this.repaint();
+                      object2DJPanel1.repaint();
+                   });
+                });
     }
 
     public void saveFile(File f) throws IOException {
@@ -3286,8 +3311,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setShowOutputItemsOnDisplay(jCheckBoxViewOutput.isSelected());
     }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
 
-    public void setShowOutputItems(boolean showOutputItems) {
-        Utils.runOnDispatchThread(() -> setShowOutputItemsOnDisplay(showOutputItems));
+    public XFutureVoid setShowOutputItems(boolean showOutputItems) {
+        return Utils.runOnDispatchThread(() -> setShowOutputItemsOnDisplay(showOutputItems));
     }
 
     @UIEffect
