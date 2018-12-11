@@ -245,8 +245,10 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
         setEstimatedPosition(parseDouble(map1.get(CURRENT_POSITION), getEstimatedPosition()));
-        setGoalPosition(parseDouble(map1.get(GOAL_POSITION), getGoalPosition()));
+        
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
+        double g = parseDouble(map1.get(GOAL_POSITION), getGoalPosition());
+        setGoalPosition(Math.min(getMaxPosition(), Math.max(g, getMinPosition())));
         setTrayDiff(parseDouble(map1.get(TRAY_DIFF), getTrayDiff()));
         String modbusHostName = map1.get(MODBUS_HOST);
         if (null != modbusHostName) {

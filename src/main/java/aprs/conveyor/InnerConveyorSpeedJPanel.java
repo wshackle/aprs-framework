@@ -41,7 +41,7 @@ import org.eclipse.collections.impl.block.factory.Comparators;
 @UIType
 public class InnerConveyorSpeedJPanel extends JPanel {
 
-    private double goalPosition;
+    private double goalPosition = 450.0;
 
     /**
      * Get the value of goalPosition
