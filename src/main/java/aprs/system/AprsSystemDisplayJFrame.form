@@ -228,20 +228,12 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSetPoseMaxLimits">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSetPoseMinMaxLimits">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Set Pose Max Limits ... (+10000,+10000,+10000)    ..."/>
+                <Property name="text" type="java.lang.String" value="Set Pose Min/Max Limits "/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemSetPoseMaxLimitsActionPerformed"/>
-              </Events>
-            </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemSetPoseMinLimits">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Set Pose Min Limits ... (-10000,-10000,-10000)    ..."/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemSetPoseMinLimitsActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemSetPoseMinMaxLimitsActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JCheckBoxMenuItem" name="jCheckBoxMenuItemAlertLimits">

@@ -76,9 +76,9 @@ import crcl.base.SetRotSpeedType;
 import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
-import crcl.ui.ConcurrentBlockProgramsException;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.ui.client.PendantClientInner;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLException;
 import crcl.utils.CrclCommandWrapper;
@@ -144,6 +144,7 @@ import rcs.posemath.Posemath;
 
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
@@ -555,15 +556,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         @Override
         public String toString() {
-            if(null == pose) {
+            if (null == pose) {
                 return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", pose=null" + '}';
             }
-            if(absSlots.isEmpty()) {
+            if (absSlots.isEmpty()) {
                 return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", absSlots.isEmpty()" + '}';
             }
             return "KitToCheckInstanceInfo{" + "instanceName=" + instanceName + ", closestItemNameMap=" + closestItemNameMap + ", itemSkuMap=" + itemSkuMap + ", failedSlots=" + failedSlots + '}';
         }
 
+        public void print(PrintWriter pw, String prefix) {
+            pw.println(prefix + "class=" + this.getClass().getName());
+            pw.println(prefix + "instanceName=" + instanceName);
+        }
     }
 
     static private class KitToCheck {
@@ -604,6 +609,62 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return diff;
         }
 
+        public void print(PrintWriter pw, String prefix) {
+            pw.println(prefix + "class=" + this.getClass().getName());
+            pw.println(prefix + "name=" + name);
+            saveSimpleList(pw, prefix + "kitInstanceNames", kitInstanceNames);
+            saveSimpleMap(pw, prefix + "slotMap", slotMap);
+            saveComplexValueMap(pw, prefix + "instanceInfoMap", instanceInfoMap, kitToCheckInstanceInfoPrinter);
+        }
+
+    }
+
+    static void saveSimpleList(PrintWriter pw, String listPrefix, List list) {
+        pw.println(listPrefix + ".size()=" + list.size());
+        for (int i = 0; i < list.size(); i++) {
+            pw.println(listPrefix + ".get(" + i + ")=" + list.get(i));
+        }
+    }
+
+    static <V> void saveSimpleMap(PrintWriter pw, String mapPrefix, Map<?, ?> map) {
+        pw.println(mapPrefix + ".size()=" + map.size());
+        for (Entry<?, ?> entry : map.entrySet()) {
+            String entryPrefix = mapPrefix + ".get(" + entry.getKey() + ")";
+            pw.println(entryPrefix + "=" + entry.getValue());
+        }
+    }
+
+    private static interface Printer<V> {
+
+        public void print(PrintWriter pw, String prefix, V value);
+    }
+    // KitToCheckInstanceInfo
+    private static final Printer<KitToCheckInstanceInfo> kitToCheckInstanceInfoPrinter
+            = (PrintWriter pw, String prefix, KitToCheckInstanceInfo kit) -> kit.print(pw, prefix);
+
+    private static final Printer<KitToCheck> kitToCheckPrinter
+            = (PrintWriter pw, String prefix, KitToCheck kit) -> kit.print(pw, prefix);
+
+    <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
+        try (PrintWriter pw = new PrintWriter(this.aprsSystem.createTempFile(label, ".txt"))) {
+            saveComplexValueList(pw, listPrefix, list, printer);
+        }
+    }
+
+    static <V> void saveComplexValueList(PrintWriter pw, String listPrefix, List<V> list, Printer<V> printer) {
+        pw.println(listPrefix + ".size()=" + list.size());
+        for (int i = 0; i < list.size(); i++) {
+            String entryPrefix = listPrefix + ".get(" + i + ")";
+            printer.print(pw, entryPrefix, list.get(i));
+        }
+    }
+
+    static <V> void saveComplexValueMap(PrintWriter pw, String mapPrefix, Map<?, V> map, Printer<V> printer) {
+        pw.println(mapPrefix + ".size()=" + map.size());
+        for (Entry<?, V> entry : map.entrySet()) {
+            String entryPrefix = mapPrefix + ".get(" + entry.getKey() + ")";
+            printer.print(pw, entryPrefix, entry.getValue());
+        }
     }
 
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
@@ -2475,6 +2536,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return skuNameToInstanceNamesMap.computeIfAbsent(kitName, this::getPartTrayInstancesFromSkuName);
     }
 
+    private List<PoseType> getKitInstancePoses(String kitName) {
+        return getKitInstanceNames(kitName)
+                .stream()
+                .map(this::getPose)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     private static <T> List<T> listFilter(List<T> listIn, Predicate<T> predicate) {
         return listIn
                 .stream()
@@ -2550,6 +2619,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
         boolean empty = kitsToFix.isEmpty();
         if (!empty) {
+            saveComplexValueList("kitsToFix", "kitsToFix", kitsToFix, kitToCheckPrinter);
             takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItemsLocal);
             takeSimViewSnapshot("recheckKitsOnly: parts", parts);
             logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
@@ -2559,6 +2629,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
                 for (Entry<String, KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
                     KitToCheckInstanceInfo info = entry.getValue();
+                    takeSimViewSnapshot("recheckKitsOnly", info.pose, info.instanceName);
                     for (KitToCheckFailedItemInfo failedItemInfo : info.failedItems) {
                         logError("recheckKitsOnly: failedItemInfo = " + failedItemInfo);
                         logError("recheckKitsOnly: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
@@ -2708,7 +2779,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 if (matchedKitInstanceNames.contains(kitInstanceName)) {
                                     continue;
                                 }
-                                if(null == info.pose) {
+                                if (null == info.pose) {
                                     continue;
                                 }
                                 PoseType pose = info.pose;
@@ -2896,7 +2967,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Set<String> matchedKitInstanceNames,
             List<PhysicalItem> parts) throws IOException {
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
-
+        checkKitsToCheckInstanceCounts();
         if (kitsToFix.isEmpty()) {
             if (!newCheck && null != lastKitsToCheckCopy && !lastKitsToCheckCopy.isEmpty()) {
                 kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
@@ -2916,17 +2987,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         for (KitToCheck kit : kitsToCheckCopy) {
             kit.kitInstanceNames = getKitInstanceNames(kit.name);
             Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = new HashMap<>();
-            kit.instanceInfoMap = kitInstanceInfoMap;
             for (String kitInstanceName : kit.kitInstanceNames) {
                 PoseType pose = getPose(kitInstanceName);
-                List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                        (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
-                KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots,pose);
-                kitInstanceInfoMap.put(kitInstanceName, info);
-                if(pose == null) {
+                if (pose == null) {
                     continue;
                 }
-                if(absSlots.isEmpty()) {
+                List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
+                        (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
+                KitToCheckInstanceInfo info = new KitToCheckInstanceInfo(kitInstanceName, absSlots, pose);
+                kitInstanceInfoMap.put(kitInstanceName, info);
+                if (absSlots.isEmpty()) {
                     continue;
                 }
                 if (matchedKitInstanceNames.contains(kitInstanceName)) {
@@ -2972,12 +3042,34 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     break;
                 }
             }
+            if (!kitInstanceInfoMap.isEmpty()) {
+                kit.instanceInfoMap = kitInstanceInfoMap;
+            } else {
+                kitsToFix.remove(kit);
+            }
             if (debug) {
                 logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
                 logDebug("kitsToFix = " + kitsToFix);
             }
         }
         return kitsToFix;
+    }
+
+    private void checkKitsToCheckInstanceCounts() throws IllegalStateException {
+        ConcurrentHashMap<String,Integer>
+                kitNameCountMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String,List<PoseType>>
+                kitNamePoseListMap = new ConcurrentHashMap<>();
+        for(KitToCheck kit : kitsToCheck) {
+            kitNameCountMap.compute(kit.name, (String name,Integer v) -> ((v!=null)?v+1:1));
+            kitNamePoseListMap.compute(kit.name, (String name,List<PoseType> v) -> ((v!=null)?v:getKitInstancePoses(name)));
+        }
+        for(Entry<String,Integer> entry : kitNameCountMap.entrySet()) {
+            List<PoseType> poses = kitNamePoseListMap.get(entry.getKey());
+            if(poses.size() < entry.getValue()) {
+                throw new IllegalStateException("need "+entry.getValue()+" kits of "+entry.getKey()+" but only have "+poses.size());
+            }
+        }
     }
 
     private void printLastOptoInfo() {
@@ -5384,7 +5476,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new NullPointerException("aprsSystem");
         }
         if (!aprsSystem.isWithinLimits(cart)) {
-            throw new IllegalStateException("lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits minLimit=" + aprsSystem.getMinLimit() + ", maxLimit=" + aprsSystem.getMaxLimit());
+            throw new IllegalStateException("lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits");
         }
         return CRCLPosemath.toPointType(cart);
     }
@@ -6365,7 +6457,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logger.log(Level.SEVERE, "", ioException);
         }
         List<PhysicalItem> filteredList
-                = l.stream().filter(aprsSystem::isWithinLimits).collect(Collectors.toList());
+                = l.stream().filter(aprsSystem::isItemWithinLimits).collect(Collectors.toList());
         synchronized (this) {
             clearPoseCache();
             physicalItems = filteredList;
