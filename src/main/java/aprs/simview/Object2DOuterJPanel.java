@@ -1297,6 +1297,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 object2DJPanel1MouseEntered(evt);
             }
         });
+        object2DJPanel1.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                object2DJPanel1ComponentResized(evt);
+            }
+        });
 
         javax.swing.GroupLayout object2DJPanel1Layout = new javax.swing.GroupLayout(object2DJPanel1);
         object2DJPanel1.setLayout(object2DJPanel1Layout);
@@ -2895,6 +2900,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jTextFieldMaxXMaxYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMaxXMaxYActionPerformed
+        object2DJPanel1.clearSizes();
         String txt = jTextFieldMaxXMaxY.getText().trim();
         setMaxXMaxYText(txt);
     }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
@@ -2970,6 +2976,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void jTextFieldMinXMinYActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMinXMinYActionPerformed
+        object2DJPanel1.clearSizes();
         String txt = jTextFieldMinXMinY.getText().trim();
         setMinXMinYText(txt);
     }//GEN-LAST:event_jTextFieldMinXMinYActionPerformed
@@ -3499,6 +3506,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }//GEN-LAST:event_jButtonViewSnapshotCsvActionPerformed
+
+    private void object2DJPanel1ComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_object2DJPanel1ComponentResized
+       object2DJPanel1.clearSizes();
+    }//GEN-LAST:event_object2DJPanel1ComponentResized
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 

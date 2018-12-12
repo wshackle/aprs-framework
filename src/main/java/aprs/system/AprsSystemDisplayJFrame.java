@@ -24,7 +24,9 @@ package aprs.system;
 
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.misc.ActiveWinEnum;
+import aprs.misc.CsvTableJPanel;
 import aprs.misc.IconImages;
+import aprs.misc.PmCartesianMinMaxLimit;
 import aprs.misc.Utils;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,7 +35,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JMenuItem;
@@ -43,7 +44,6 @@ import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Container;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -60,7 +60,6 @@ import javax.swing.DesktopManager;
 import javax.swing.JMenu;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
  * AprsSystemInterface is the container for one robotic system in the APRS
@@ -80,25 +79,24 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
-        PmCartesian maxLimit = aprsSystem.getMaxLimit();
-        PmCartesian minLimit = aprsSystem.getMinLimit();
-        Utils.runOnDispatchThread(() -> {
-            setMaxLimitMenuDisplay(maxLimit);
-            setMinLimitMenuDisplay(minLimit);
-        });
+//        PmCartesian maxLimit = aprsSystem.getMaxLimit();
+//        PmCartesian minLimit = aprsSystem.getMinLimit();
+//        Utils.runOnDispatchThread(() -> {
+//            setMaxLimitMenuDisplay(maxLimit);
+//            setMinLimitMenuDisplay(minLimit);
+//        });
     }
 
-    
     @UIEffect
     public boolean getPauseInsteadOfRecoverMenuCheckbox() {
         return jCheckBoxMenuItemPauseInsteadOfRecover.isSelected();
     }
-    
+
     @UIEffect
     public void setPauseInsteadOfRecoverMenuCheckbox(boolean selected) {
         jCheckBoxMenuItemPauseInsteadOfRecover.setSelected(selected);
     }
-    
+
     private volatile boolean showingException = false;
 
     @SafeEffect
@@ -204,8 +202,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     public AprsSystemDisplayJFrame() {
         try {
             initComponents();
-            setMaxLimitMenuDisplay(new PmCartesian(10000.0, 10000.0, 10000.0));
-            setMinLimitMenuDisplay(new PmCartesian(-10000.0, -10000.0, -10000.0));
+//            setMaxLimitMenuDisplay(new PmCartesian(10000.0, 10000.0, 10000.0));
+//            setMinLimitMenuDisplay(new PmCartesian(-10000.0, -10000.0, -10000.0));
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -477,8 +475,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemConnectedRobot = new javax.swing.JCheckBoxMenuItem();
         jMenu4 = new javax.swing.JMenu();
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemSetPoseMaxLimits = new javax.swing.JMenuItem();
-        jMenuItemSetPoseMinLimits = new javax.swing.JMenuItem();
+        jMenuItemSetPoseMinMaxLimits = new javax.swing.JMenuItem();
         jCheckBoxMenuItemAlertLimits = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
@@ -717,21 +714,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu4.add(jCheckBoxMenuItemEnableDebugDumpstacks);
 
-        jMenuItemSetPoseMaxLimits.setText("Set Pose Max Limits ... (+10000,+10000,+10000)    ...");
-        jMenuItemSetPoseMaxLimits.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemSetPoseMinMaxLimits.setText("Set Pose Min/Max Limits ");
+        jMenuItemSetPoseMinMaxLimits.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSetPoseMaxLimitsActionPerformed(evt);
+                jMenuItemSetPoseMinMaxLimitsActionPerformed(evt);
             }
         });
-        jMenu4.add(jMenuItemSetPoseMaxLimits);
-
-        jMenuItemSetPoseMinLimits.setText("Set Pose Min Limits ... (-10000,-10000,-10000)    ...");
-        jMenuItemSetPoseMinLimits.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSetPoseMinLimitsActionPerformed(evt);
-            }
-        });
-        jMenu4.add(jMenuItemSetPoseMinLimits);
+        jMenu4.add(jMenuItemSetPoseMinMaxLimits);
 
         jCheckBoxMenuItemAlertLimits.setSelected(true);
         jCheckBoxMenuItemAlertLimits.setText("Alert Limits");
@@ -1463,9 +1452,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     public void updateForceFakeTakeState(boolean reverseFlag1) {
-        boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem 
-                &&  (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
-        if(!forceFakeTakeOk) {
+        boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem
+                && (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
+        if (!forceFakeTakeOk) {
             setForceFakeTakeSelected(false);
         }
         setForceFakeTakeEnabled(forceFakeTakeOk);
@@ -1611,77 +1600,74 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         createActionListFromVision();
     }//GEN-LAST:event_jMenuItemCreateActionListFromVisionActionPerformed
 
-    private void setMinLimit(PmCartesian cart) {
-        if (null != aprsSystem) {
-            aprsSystem.setMinLimit(cart);
-        } else {
-            throw new IllegalStateException("aprsSystem == null, this=" + this);
-        }
-    }
-
-    private PmCartesian getMinLimit() {
-        if (null != aprsSystem) {
-            return aprsSystem.getMinLimit();
-        } else {
-            throw new IllegalStateException("aprsSystem == null, this=" + this);
-        }
-    }
-
-    @UIEffect
-    private void jMenuItemSetPoseMinLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinLimitsActionPerformed
-        PmCartesian minLimit = getMinLimit();
-        String newMinLimitsString = JOptionPane.showInputDialog(this, "New Min Pose Limits",
-                String.format("%+.3f,%.3f,%+.3f", minLimit.x, minLimit.y, minLimit.z));
-        if (newMinLimitsString != null && newMinLimitsString.length() > 0) {
-            PmCartesian cart = PmCartesian.valueOf(newMinLimitsString);
-            setMinLimit(cart);
-        }
-    }//GEN-LAST:event_jMenuItemSetPoseMinLimitsActionPerformed
-
-    private void setMaxLimit(PmCartesian cart) {
-        if (null != aprsSystem) {
-            aprsSystem.setMaxLimit(cart);
-        } else {
-            throw new IllegalStateException("aprsSystem == null, this=" + this);
-        }
-    }
-
+//    private void setMinLimit(PmCartesian cart) {
+//        if (null != aprsSystem) {
+//            aprsSystem.setMinLimit(cart);
+//        } else {
+//            throw new IllegalStateException("aprsSystem == null, this=" + this);
+//        }
+//    }
+//    private PmCartesian getMinLimit() {
+//        if (null != aprsSystem) {
+//            return aprsSystem.getMinLimit();
+//        } else {
+//            throw new IllegalStateException("aprsSystem == null, this=" + this);
+//        }
+//    }
+//    private void setMaxLimit(PmCartesian cart) {
+//        if (null != aprsSystem) {
+//            aprsSystem.setMaxLimit(cart);
+//        } else {
+//            throw new IllegalStateException("aprsSystem == null, this=" + this);
+//        }
+//    }
     @UIEffect
     public void setMaxLimitMenuDisplay(PmCartesian cart) {
         String txt
                 = String.format(
                         "Set Pose Max Limits ... (%+.0f,%+.0f,%+.0f)    ...",
                         cart.x, cart.y, cart.z);
-        jMenuItemSetPoseMaxLimits.setText(txt);
+        jMenuItemSetPoseMinMaxLimits.setText(txt);
     }
 
+//    @UIEffect
+//    public void setMinLimitMenuDisplay(PmCartesian cart) {
+//        String txt
+//                = String.format(
+//                        "Set Pose Min Limits ... (%+.0f,%+.0f,%+.0f)    ...",
+//                        cart.x, cart.y, cart.z);
+//        jMenuItemSetPoseMinLimitsLimits.setText(txt);
+//    }
+//    private PmCartesian getMaxLimit() {
+//        if (null != aprsSystem) {
+//            return aprsSystem.getMaxLimit();
+//        } else {
+//            throw new IllegalStateException("aprsSystem == null, this=" + this);
+//        }
+//    }
     @UIEffect
-    public void setMinLimitMenuDisplay(PmCartesian cart) {
-        String txt
-                = String.format(
-                        "Set Pose Min Limits ... (%+.0f,%+.0f,%+.0f)    ...",
-                        cart.x, cart.y, cart.z);
-        jMenuItemSetPoseMinLimits.setText(txt);
-    }
-
-    private PmCartesian getMaxLimit() {
-        if (null != aprsSystem) {
-            return aprsSystem.getMaxLimit();
-        } else {
-            throw new IllegalStateException("aprsSystem == null, this=" + this);
+    private void jMenuItemSetPoseMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinMaxLimitsActionPerformed
+        try {
+            File csvFile = aprsSystem.getCartLimitsCsvFile();
+            if (csvFile.exists()) {
+                aprsSystem.readLimitsFromCsv(csvFile);
+            }
+            Object dataIn[][] = new Object[aprsSystem.getLimits().size()][];
+            for (int i = 0; i < aprsSystem.getLimits().size(); i++) {
+                dataIn[i] = aprsSystem.getLimits().get(i).toObjArray();
+            }
+            Object dataOut[][] = CsvTableJPanel.editTable(this, csvFile.getCanonicalPath(), true, PmCartesianMinMaxLimit.getHeaders(), dataIn);
+            if (null != dataOut) {
+                aprsSystem.getLimits().clear();
+                for (int i = 0; i < dataOut.length; i++) {
+                    aprsSystem.getLimits().add(new PmCartesianMinMaxLimit(dataOut[i]));
+                }
+                aprsSystem.writeLimitsFromCsv(csvFile);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    @UIEffect
-    private void jMenuItemSetPoseMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMaxLimitsActionPerformed
-        PmCartesian maxLimit = getMaxLimit();
-        String newMaxLimitsString = JOptionPane.showInputDialog(this, "New Max Pose Limits",
-                String.format("%+.3f,%.3f,%+.3f", maxLimit.x, maxLimit.y, maxLimit.z));
-        if (newMaxLimitsString != null && newMaxLimitsString.length() > 0) {
-            PmCartesian cart = PmCartesian.valueOf(newMaxLimitsString);
-            setMaxLimit(cart);
-        }
-    }//GEN-LAST:event_jMenuItemSetPoseMaxLimitsActionPerformed
+    }//GEN-LAST:event_jMenuItemSetPoseMinMaxLimitsActionPerformed
 
     private int getSnapShotWidth() {
         if (null != aprsSystem) {
@@ -1872,7 +1858,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             aprsSystem.setPauseInsteadOfRecover(jCheckBoxMenuItemPauseInsteadOfRecover.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
@@ -1893,7 +1879,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     CachedCheckBox reverseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemReverse);
     }
-    
+
     CachedCheckBox alertLimitsCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemAlertLimits);
     }
@@ -1986,8 +1972,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
-    private javax.swing.JMenuItem jMenuItemSetPoseMaxLimits;
-    private javax.swing.JMenuItem jMenuItemSetPoseMinLimits;
+    private javax.swing.JMenuItem jMenuItemSetPoseMinMaxLimits;
     private javax.swing.JMenuItem jMenuItemShowFilledKitTrays;
     private javax.swing.JMenuItem jMenuItemStartActionList;
     private javax.swing.JMenu jMenuWindow;

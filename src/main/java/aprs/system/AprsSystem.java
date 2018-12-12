@@ -55,6 +55,7 @@ import aprs.database.vision.VisionToDbJInternalFrame;
 import aprs.misc.AprsCommonLogger;
 import aprs.misc.AprsCommonPrintStream;
 import aprs.misc.IconImages;
+import aprs.misc.PmCartesianMinMaxLimit;
 import aprs.simview.Object2DOuterDialogPanel;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
@@ -147,7 +148,9 @@ import javax.swing.JDesktopPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
@@ -1956,15 +1959,44 @@ public class AprsSystem implements SlotOffsetProvider {
         return ret;
     }
 
-//    private boolean runCrclProgram(CRCLProgramType program) throws JAXBException {
-//        setThreadName();
-//        takeSnapshots("startCRCLProgram(" + program.getName() + ")");
-//        setProgram(program);
-//        if (null == crclClientJInternalFrame) {
-//            throw new IllegalStateException("CRCL Client View must be open to use this function.");
-//        }
-//        return crclClientJInternalFrame.runCurrentProgram(isStepMode());
-//    }
+    private final List<PmCartesianMinMaxLimit> limits = new ArrayList<>();
+
+    public List<PmCartesianMinMaxLimit> getLimits() {
+        return limits;
+    }
+
+    public void readLimitsFromCsv(File csvFile) throws IOException {
+        try (CSVParser parser = new CSVParser(new FileReader(csvFile), Utils.preferredCsvFormat())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            if (null == headerMap) {
+                throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
+            }
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            limits.clear();
+            for (CSVRecord rec : records) {
+                PmCartesian max = new PmCartesian(
+                        Double.parseDouble(rec.get("MaxX")),
+                        Double.parseDouble(rec.get("MaxY")),
+                        Double.parseDouble(rec.get("MaxZ")));
+                PmCartesian min = new PmCartesian(
+                        Double.parseDouble(rec.get("MinX")),
+                        Double.parseDouble(rec.get("MinY")),
+                        Double.parseDouble(rec.get("MinZ")));
+                limits.add(new PmCartesianMinMaxLimit(min, max));
+            }
+        }
+    }
+
+    public void writeLimitsFromCsv(File csvFile) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile), Utils.preferredCsvFormat().withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
+            for (int i = 0; i < limits.size(); i++) {
+                PmCartesianMinMaxLimit minMax = limits.get(i);
+                printer.printRecord(minMax.toObjArray());
+            }
+        }
+    }
+
     private boolean isMove(MiddleCommandType midCmd) {
         if (midCmd instanceof MoveToType) {
             return true;
@@ -2028,11 +2060,23 @@ public class AprsSystem implements SlotOffsetProvider {
             long startTime = logEvent("start runCrclProgram", programToString(program));
             CRCLProgramType progCopy = CRCLPosemath.copy(program);
             setProgram(program);
+            PmCartesian maxLimit = new PmCartesian(-100000.0, -100000.0, -100000.0);
+            PmCartesian minLimit = new PmCartesian(+100000.0, +100000.0, +100000.0);
+            for (PmCartesianMinMaxLimit minMaxLimit : limits) {
+                PmCartesian submax = minMaxLimit.getMax();
+                maxLimit.x = Math.max(submax.x, maxLimit.x);
+                maxLimit.y = Math.max(submax.y, maxLimit.y);
+                maxLimit.z = Math.max(submax.z, maxLimit.z);
+                PmCartesian submin = minMaxLimit.getMin();
+                minLimit.x = Math.min(submin.x, minLimit.x);
+                minLimit.y = Math.min(submin.y, minLimit.y);
+                minLimit.z = Math.min(submin.z, minLimit.z);
+            }
             if (null == crclClientJInternalFrame) {
                 throw new IllegalStateException("CRCL Client View must be open to use this function.");
             }
-            crclClientJInternalFrame.setMaxLimit(getMaxLimit());
-            crclClientJInternalFrame.setMinLimit(getMinLimit());
+            crclClientJInternalFrame.setMaxLimit(maxLimit);
+            crclClientJInternalFrame.setMinLimit(minLimit);
             ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
             if (!ret) {
                 System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Arrays.toString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
@@ -4407,151 +4451,174 @@ public class AprsSystem implements SlotOffsetProvider {
         return debug;
     }
 
-    private boolean isWithinMaxLimits(PmCartesian cart) {
+    private boolean isWithinMaxLimits(PmCartesian cart, PmCartesianMinMaxLimit minMax) {
+        PmCartesian maxLimit = minMax.getMax();
         boolean ret = cart != null
                 && cart.x <= maxLimit.x
                 && cart.y <= maxLimit.y
                 && cart.z <= maxLimit.z;
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-        }
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+//            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+//        }
         return ret;
     }
 
-    private boolean isWithinMinLimits(PmCartesian cart) {
+    private boolean isWithinMinLimits(PmCartesian cart, PmCartesianMinMaxLimit minMax) {
+        PmCartesian minLimit = minMax.getMin();
         boolean ret = cart != null
                 && cart.x >= minLimit.x
                 && cart.y >= minLimit.y
                 && cart.z >= minLimit.z;
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-        }
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+//            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+//        }
+        return ret;
+    }
+
+    public boolean isWithinLimits(PmCartesian cart, PmCartesianMinMaxLimit minMax) {
+        boolean ret = isWithinMaxLimits(cart, minMax) && isWithinMinLimits(cart, minMax);
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within limits : cart =" + cart);
+//            throw new IllegalStateException("Position is not within limits : cart =" + cart);
+//        }
         return ret;
     }
 
     public boolean isWithinLimits(PmCartesian cart) {
-        boolean ret = isWithinMaxLimits(cart) && isWithinMinLimits(cart);
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
+        for (int i = 0; i < limits.size(); i++) {
+            PmCartesianMinMaxLimit lim = limits.get(i);
+            if (isWithinLimits(cart, lim)) {
+
+                return true;
+            }
+        }
+        if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
             setTitleErrorString("Position is not within limits : cart =" + cart);
             throw new IllegalStateException("Position is not within limits : cart =" + cart);
         }
-        return ret;
+        return limits.isEmpty();
     }
 
-    private boolean isWithinMaxLimits(PmCartesian cart, double radius) {
+    private boolean isWithinMaxLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        PmCartesian maxLimit = minMax.getMax();
         boolean ret = cart != null
                 && cart.x + radius <= maxLimit.x
                 && cart.y + radius <= maxLimit.y
                 && cart.z <= maxLimit.z;
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-        }
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+//            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
+//        }
         return ret;
     }
 
-    private boolean isWithinMinLimits(PmCartesian cart, double radius) {
+    private boolean isWithinMinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        PmCartesian minLimit = minMax.getMin();
         boolean ret = cart != null
                 && cart.x - radius >= minLimit.x
                 && cart.y - radius >= minLimit.y
                 && cart.z >= minLimit.z;
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-        }
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+//            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
+//        }
         return ret;
     }
 
-    public boolean isWithinLimits(PmCartesian cart, double radius) {
-        boolean ret = isWithinMaxLimits(cart, radius) && isWithinMinLimits(cart, radius);
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within limits : cart =" + cart);
-            throw new IllegalStateException("Position is not within limits : cart =" + cart);
-        }
+    public boolean isWithinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        boolean ret = isWithinMaxLimits(cart, radius, minMax) && isWithinMinLimits(cart, radius, minMax);
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within limits : cart =" + cart);
+//            throw new IllegalStateException("Position is not within limits : cart =" + cart);
+//        }
         return ret;
     }
 
-    public boolean isWithinLimits(PhysicalItem item) {
-        boolean ret = isWithinMaxLimits(item) && isWithinMinLimits(item);
-        if (!ret && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within limits : cart =" + item);
-            throw new IllegalStateException("Position is not within limits : cart =" + item);
-        }
+    private boolean isItemWithinLimits(PhysicalItem item, PmCartesianMinMaxLimit minMax) {
+        boolean ret = isWithinMaxLimits(item, minMax) && isWithinMinLimits(item, minMax);
+//        if (!ret && isAlertLimitsCheckBoxSelected()) {
+//            setTitleErrorString("Position is not within limits : cart =" + item);
+//            throw new IllegalStateException("Position is not within limits : cart =" + item);
+//        }
         if (!ret) {
             return false;
         }
         if (item instanceof Tray) {
             Tray tray = (Tray) item;
-            return isWithinLimits(tray, tray.getMaxSlotDist());
+            return isWithinLimits(tray, tray.getMaxSlotDist(), minMax);
         } else if (item.getType().equals("KT")) {
-//            Tray tray = new Tray(item.getName(), item.getPose(), 0);
-//            tray.setType("KT");
-//            List<Slot> slots = getSlots(tray, false);
-//            for(Slot slot : slots) {
-//                if(!isWithinLimits(slot)) {
-//                    return false;
-//                }
-//            }
         }
         return ret;
     }
-
-    private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
-
-    /**
-     * Get the value of minLimit
-     *
-     * @return the value of minLimit
-     */
-    public PmCartesian getMinLimit() {
-        return new PmCartesian(minLimit.x, minLimit.y, minLimit.z);
-    }
-
-    /**
-     * Set the value of minLimit
-     *
-     * @param minLimit new value of minLimit
-     */
-    public void setMinLimit(PmCartesian minLimit) {
-        this.minLimit = minLimit;
-        if (null != this.aprsSystemDisplayJFrame) {
-            Utils.runOnDispatchThread(() -> {
-                if (null != this.aprsSystemDisplayJFrame) {
-                    this.aprsSystemDisplayJFrame.setMinLimitMenuDisplay(minLimit);
-                }
-            });
+    
+    public boolean isItemWithinLimits(PhysicalItem item) {
+        for (int i = 0; i < limits.size(); i++) {
+            PmCartesianMinMaxLimit minMax =limits.get(i);
+            if(isItemWithinLimits(item,minMax)) {
+                return true;
+            }
         }
-    }
-
-    private volatile PmCartesian maxLimit = new PmCartesian(10000, 10000, 10000);
-
-    /**
-     * Get the value of maxLimit
-     *
-     * @return the value of maxLimit
-     */
-    public PmCartesian getMaxLimit() {
-        return new PmCartesian(maxLimit.x, maxLimit.y, maxLimit.z);
-    }
-
-    /**
-     * Set the value of maxLimit
-     *
-     * @param maxLimit new value of maxLimit
-     */
-    public void setMaxLimit(PmCartesian maxLimit) {
-        this.maxLimit = maxLimit;
-        if (null != this.aprsSystemDisplayJFrame) {
-            Utils.runOnDispatchThread(() -> {
-                if (null != this.aprsSystemDisplayJFrame) {
-                    this.aprsSystemDisplayJFrame.setMaxLimitMenuDisplay(maxLimit);
-                }
-            });
+         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
+            setTitleErrorString("Position is not within limits : item =" + item);
+            throw new IllegalStateException("Position is not within limits : item =" + item);
         }
+        return limits.isEmpty();
     }
 
+//    private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
+//
+//    /**
+//     * Get the value of minLimit
+//     *
+//     * @return the value of minLimit
+//     */
+//    public PmCartesian getMinLimit() {
+//        return new PmCartesian(minLimit.x, minLimit.y, minLimit.z);
+//    }
+//
+//    /**
+//     * Set the value of minLimit
+//     *
+//     * @param minLimit new value of minLimit
+//     */
+//    public void setMinLimit(PmCartesian minLimit) {
+//        this.minLimit = minLimit;
+//        if (null != this.aprsSystemDisplayJFrame) {
+//            Utils.runOnDispatchThread(() -> {
+//                if (null != this.aprsSystemDisplayJFrame) {
+//                    this.aprsSystemDisplayJFrame.setMinLimitMenuDisplay(minLimit);
+//                }
+//            });
+//        }
+//    }
+//
+//    private volatile PmCartesian maxLimit = new PmCartesian(10000, 10000, 10000);
+//    /**
+//     * Get the value of maxLimit
+//     *
+//     * @return the value of maxLimit
+//     */
+//    public PmCartesian getMaxLimit() {
+//        return new PmCartesian(maxLimit.x, maxLimit.y, maxLimit.z);
+//    }
+//
+//    /**
+//     * Set the value of maxLimit
+//     *
+//     * @param maxLimit new value of maxLimit
+//     */
+//    public void setMaxLimit(PmCartesian maxLimit) {
+//        this.maxLimit = maxLimit;
+//        if (null != this.aprsSystemDisplayJFrame) {
+//            Utils.runOnDispatchThread(() -> {
+//                if (null != this.aprsSystemDisplayJFrame) {
+//                    this.aprsSystemDisplayJFrame.setMaxLimitMenuDisplay(maxLimit);
+//                }
+//            });
+//        }
+//    }
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
@@ -4625,7 +4692,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset) {
-        List<PhysicalItem> filteredItems = l.stream().filter(this::isWithinLimits).collect(Collectors.toList());
+        List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
@@ -4672,9 +4739,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false);
+            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true);
             if (null == actionFile) {
-               return XFuture.completedFuture(false);
+                return XFuture.completedFuture(false);
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
             loadActionsFile(actionFile, false);
@@ -4762,7 +4829,7 @@ public class AprsSystem implements SlotOffsetProvider {
         outputList.addAll(movedPartsList);
         outputList.addAll(partsInPartsTrays);
         try {
-            takeSimViewSnapshot("createFilledKitsList:outputList", outputList);
+            takeSimViewSnapshot("createFilledKitsList_outputList", outputList);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -4781,7 +4848,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0, false);
+            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -4960,7 +5027,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * when complete.
      */
     @Nullable
-    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag) {
+    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag, boolean alwaysLoad) {
 
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -5010,7 +5077,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<String> endingList = goalLearnerLocal.getLastCreateActionListFromVisionKitToCheckStrings();
             String diff = GoalLearner.kitToCheckStringsEqual(startingList, endingList);
             boolean equal = (diff == null);
-            if (!equal || !goalLearnerLocal.isCorrectionMode()) {
+            if (!equal || !goalLearnerLocal.isCorrectionMode() || alwaysLoad) {
                 boolean startingReverseFlag = isReverseFlag();
                 File f = createTempFile("actionList", ".txt");
                 if (startingReverseFlag != newReverseFlag) {
@@ -6904,14 +6971,18 @@ public class AprsSystem implements SlotOffsetProvider {
             } else {
                 setDefaultRobotName();
             }
-            String maxLimitString = props.getProperty(MAX_LIMIT_PROP);
-            if (null != maxLimitString && maxLimitString.trim().length() > 0) {
-                setMaxLimit(PmCartesian.valueOf(maxLimitString));
+            File limitsCsv = getCartLimitsCsvFile();
+            if (limitsCsv.exists()) {
+                readLimitsFromCsv(limitsCsv);
             }
-            String minLimitString = props.getProperty(MIN_LIMIT_PROP);
-            if (null != minLimitString && minLimitString.trim().length() > 0) {
-                setMinLimit(PmCartesian.valueOf(minLimitString));
-            }
+//            String maxLimitString = props.getProperty(MAX_LIMIT_PROP);
+//            if (null != maxLimitString && maxLimitString.trim().length() > 0) {
+//                setMaxLimit(PmCartesian.valueOf(maxLimitString));
+//            }
+//            String minLimitString = props.getProperty(MIN_LIMIT_PROP);
+//            if (null != minLimitString && minLimitString.trim().length() > 0) {
+//                setMinLimit(PmCartesian.valueOf(minLimitString));
+//            }
 
             String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
             if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
@@ -7088,8 +7159,8 @@ public class AprsSystem implements SlotOffsetProvider {
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
         propsMap.put(STARTUPKITINSPECTION, Boolean.toString(isKitInspectionStartupSelected()));
-        propsMap.put(MAX_LIMIT_PROP, maxLimit.toString());
-        propsMap.put(MIN_LIMIT_PROP, minLimit.toString());
+//        propsMap.put(MAX_LIMIT_PROP, maxLimit.toString());
+//        propsMap.put(MIN_LIMIT_PROP, minLimit.toString());
         propsMap.put(SNAP_SHOT_ENABLE_PROP, Boolean.toString(isSnapshotsSelected()));
         propsMap.put(SNAP_SHOT_WIDTH_PROP, Integer.toString(snapShotWidth));
         propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
@@ -7408,6 +7479,14 @@ public class AprsSystem implements SlotOffsetProvider {
             base = base.substring(0, pindex);
         }
         return base;
+    }
+
+    public File getCartLimitsCsvFile() {
+        return cartLimitsCsvFile(propertiesDirectory, propertiesFileBaseString());
+    }
+
+    private static File cartLimitsCsvFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_cartLimits.csv");
     }
 
     @Nullable
