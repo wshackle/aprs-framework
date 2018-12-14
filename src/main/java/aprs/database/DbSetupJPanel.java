@@ -75,6 +75,9 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableColWidths;
 
 /**
  *

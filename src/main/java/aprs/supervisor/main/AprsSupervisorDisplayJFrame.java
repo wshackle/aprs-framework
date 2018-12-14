@@ -690,7 +690,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
             throw new IllegalThreadStateException("call me from AWT event thread.");
         }
-        if (!ignoreRobotTableChanges) {
+        if (!ignoreRobotTableChanges && !resetting) {
             throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
         }
 //        jTableRobots.getModel().addTableModelListener(robotTableModelListener);
@@ -3195,9 +3195,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private XFutureVoid internalInteractiveResetAll() {
         boolean origIgnoreTitleErrs = ignoreTitleErrors.getAndSet(true);
 //        boolean reloadSimFiles = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Reload sim files?"));
+        resetting = true;
         return resetAll(false)
                 .thenComposeToVoid(x -> {
-                    return Utils.runOnDispatchThread(() -> {
+                    return Utils.composeToVoidOnDispatchThread(() -> {
                         boolean origIgnoreTitleErrs2 = ignoreTitleErrors.getAndSet(true);
                         try {
                             cancelAll(true);
@@ -3214,22 +3215,36 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             jCheckBoxMenuItemPause.setSelected(false);
                             resume();
                             resetAll(false);
-                            restoreRobotNames();
-
-                            connectAll();
-                            enableAllRobots();
+                            return restoreOrigRobotInfo()
+                                    .thenComposeToVoid(() -> {
+                                        return Utils.runOnDispatchThread(() -> {
+                                            try {
+                                                connectAll();
+                                                enableAllRobots();
+                                                resetting = false;
+                                            } catch (Exception e) {
+                                                logEvent("Exception occurred: " + e);
+                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                                throw e;
+                                            } finally {
+                                                if (!origIgnoreTitleErrs) {
+                                                    ignoreTitleErrors.set(false);
+                                                }
+                                            }
+                                        });
+                                    });
                         } catch (Exception e) {
                             logEvent("Exception occurred: " + e);
                             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
                             JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                        } finally {
-                            if (!origIgnoreTitleErrs) {
-                                ignoreTitleErrors.set(false);
-                            }
+                            throw e;
                         }
                     });
                 });
     }
+
+    private volatile boolean resetting = false;
 
     /**
      * Reset all systems, clearing errors, resetting states to defaults and
@@ -3240,10 +3255,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * is complete.
      */
     private XFutureVoid resetAll(boolean reloadSimFiles) {
+        boolean alreadyResetting = resetting;
+        resetting = true;
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.resetAll(reloadSimFiles);
+        return supervisor.resetAll(reloadSimFiles)
+                .thenRun(() -> resetting = alreadyResetting);
     }
 
     @Nullable
@@ -3363,8 +3381,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                        x -> continueAllActions());
+                        .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3395,7 +3413,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             interactivStart(() -> {
                 prepAndFinishOnDispatch(() -> {
                     try {
-                        restoreRobotNames();
                         lastFutureReturned = startScanAll();
                         setMainFuture(lastFutureReturned);
                     } catch (Exception e) {
@@ -3434,24 +3451,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                                    .thenComposeToVoid(x -> {
-                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                            try {
-                                                clearAllErrors();
-                                                connectAll();
-                                                jCheckBoxMenuItemPause.setSelected(false);
-                                                resume();
-                                                return startRandomTestFirstActionReversed2();
-                                            } catch (Exception e) {
-                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                                ret.completeExceptionally(e);
-                                                return ret;
-                                            }
-                                        }).thenComposeToVoid(x3 -> x3);
-                                        return innerRet;
-                                    });
+                            .thenComposeToVoid(x -> {
+                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                    try {
+                                        clearAllErrors();
+                                        connectAll();
+                                        jCheckBoxMenuItemPause.setSelected(false);
+                                        resume();
+                                        return startRandomTestFirstActionReversed2();
+                                    } catch (Exception e) {
+                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                        ret.completeExceptionally(e);
+                                        return ret;
+                                    }
+                                }).thenComposeToVoid(x3 -> x3);
+                                return innerRet;
+                            });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3786,7 +3803,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFutureVoid iiraFuture
                     = fullAbortFuture
-                            .thenComposeToVoid(() -> internalInteractiveResetAll());
+                    .thenComposeToVoid(() -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -3909,6 +3926,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSaveSetupActionPerformed
 
     private void jMenuItemConveyorTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemConveyorTestActionPerformed
+        AprsSystem sys = this.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        if (sys.isAlertLimitsCheckBoxSelected()) {
+            int confirm = JOptionPane.showConfirmDialog(this, "Disable Alert Limits on " + sys);
+            if (confirm == JOptionPane.YES_OPTION) {
+                sys.setAlertLimitsCheckBoxSelected(false);
+            }
+        }
+
         interactivStart(() -> conveyorTest(),
                 jMenuItemConveyorTest.getText());
     }//GEN-LAST:event_jMenuItemConveyorTestActionPerformed
@@ -3968,8 +3996,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
 
-                    XFutureVoid loadSimFileFuture =
-                            sys.loadObjectViewSimulatedFile(chooser.getSelectedFile());
+                    XFutureVoid loadSimFileFuture
+                            = sys.loadObjectViewSimulatedFile(chooser.getSelectedFile());
                     futuresList.add(loadSimFileFuture);
                     String path = chooser.getSelectedFile().getCanonicalPath();
 
@@ -4619,11 +4647,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.cancelAllStealUnsteal(mayInterrupt);
     }
 
-    private void restoreRobotNames() {
+    private XFutureVoid restoreOrigRobotInfo() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.restoreRobotNames();
+        return supervisor.restoreOrigRobotInfo();
     }
 
     /**
@@ -4946,7 +4974,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
                     throw new IllegalStateException("called from wrong thread");
                 }
-                if (!ignoreRobotTableChanges) {
+                if (!ignoreRobotTableChanges && !resetting) {
                     throw new IllegalStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
                 }
                 jTableRobots.setValueAt(val, row, col);
@@ -5024,7 +5052,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
             throw new IllegalThreadStateException("call me from AWT event thread.");
         }
-        if (ignoreRobotTableChanges) {
+        if (ignoreRobotTableChanges && !resetting) {
             throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
         }
 //        jTableRobots.getModel().removeTableModelListener(robotTableModelListener);

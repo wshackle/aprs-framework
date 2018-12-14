@@ -50,6 +50,20 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
+import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
+import static aprs.misc.Utils.PlayAlert;
 
 /**
  *

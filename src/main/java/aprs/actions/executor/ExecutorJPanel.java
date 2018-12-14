@@ -176,6 +176,30 @@ import java.util.function.Consumer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableRowHeights;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static aprs.misc.Utils.readCsvFileToTable;
+import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import static java.util.Objects.requireNonNull;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableRowHeights;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static aprs.misc.Utils.readCsvFileToTable;
+import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import static java.util.Objects.requireNonNull;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableRowHeights;
+import static crcl.utils.CRCLPosemath.pose;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static aprs.misc.Utils.readCsvFileToTable;
+import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -4551,11 +4575,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                        .stream()
-                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
-                        .map(Objects::toString)
-                        .collect(Collectors.joining(","));
+                .stream()
+                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                .map(JointStatusType::getJointPosition)
+                .map(Objects::toString)
+                .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -6399,7 +6423,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         testPartPositionActionList.add(takePartAction);
         syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
+        Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
+        crclGenerator.setSolver(null);
         List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1);
+        crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);
@@ -6458,7 +6485,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         takePartActionsList.add(takePartAction);
         syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
+        Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
+        crclGenerator.setSolver(null);
         List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
+        crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
         program.getMiddleCommand().addAll(cmds);

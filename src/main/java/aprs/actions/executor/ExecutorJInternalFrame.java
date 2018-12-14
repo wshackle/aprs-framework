@@ -151,6 +151,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.correctPose(poseIn);
     }
 
+    public PointType correctPoint(PointType pointIn) {
+        return executorJPanel1.correctPoint(pointIn);
+    }
+    
     @Nullable public List<Action> reloadActionsFile(boolean reverseFlag) throws IOException {
         return this.executorJPanel1.reloadActionsFile(reverseFlag, false);
     }

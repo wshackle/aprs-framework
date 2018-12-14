@@ -68,6 +68,9 @@ import javax.swing.table.DefaultTableModel;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.autoResizeTableColWidths;
 
 /**
  *
