@@ -106,6 +106,9 @@ import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  *
@@ -4575,7 +4578,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
-        PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
+        PointType uncorrectedPoint = aprsSystem.convertRobotToVisionPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>(getItems());
         return getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l).dist;
     }
@@ -4830,7 +4833,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             PointType ptIn = requireNonNull(pose.getPoint(), "pose.getPoint()");
 
-            PointType uncorrectedPoint = aprsSystem.reverseCorrectPoint(ptIn);
+            PointType uncorrectedPoint = aprsSystem.convertRobotToVisionPoint(ptIn);
             currentX = uncorrectedPoint.getX();
             currentY = uncorrectedPoint.getY();
             jTextFieldCurrentXY.setText(String.format("%.3f,%.3f", currentX, currentY));

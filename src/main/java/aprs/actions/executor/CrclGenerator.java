@@ -150,6 +150,15 @@ import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -4926,7 +4935,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     if (null == currentPoint) {
                         throw new IllegalStateException("null == currentPoint");
                     }
-                    PointType uncorrectedPoint = af.reverseCorrectPoint(currentPoint);
+                    PointType uncorrectedPoint = af.convertRobotToVisionPoint(currentPoint);
                     List<PhysicalItem> items = af.getSimItemsData();
                     String errString
                             = "Can't take part when distance of " + distToPart
@@ -5026,7 +5035,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private boolean checkPose(PoseType pose, boolean ignoreCartTran) {
         assert null != aprsSystem : "(null == aprsSystemInterface)";
-        return aprsSystem.checkPose(pose, ignoreCartTran);
+        return aprsSystem.checkPose(pose, ignoreCartTran,true);
     }
 
     private void checkSettings() {
@@ -5349,6 +5358,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
         if (!checkPose(pose)) {
+            try {
+                takeSimViewSnapshot("invalid pose", pose, message);
+            } catch (IOException ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            System.err.println("message="+message);
+            boolean recheckPose = checkPose(pose);
+            System.out.println("recheckPose = " + recheckPose);
+            boolean recheckPose2 = checkPose(pose);
+            System.out.println("recheckPose2 = " + recheckPose2);
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
         }
         moveCmd.setEndPosition(pose);
