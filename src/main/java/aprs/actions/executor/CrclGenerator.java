@@ -142,20 +142,11 @@ import rcs.posemath.PmException;
 import rcs.posemath.PmPose;
 import rcs.posemath.Posemath;
 
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.io.PrintWriter;
 import java.util.Iterator;
-import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static java.util.Objects.requireNonNull;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static java.util.Objects.requireNonNull;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import static java.util.Objects.requireNonNull;
@@ -1463,7 +1454,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         int blockingCount = localAprsSystem.startBlockingCrclPrograms();
 
         ActionCallbackInfo acbi = lastAcbi.get();
-        if (null != acbi && includeEndNormalActionMarker && includeEndProgramMarker && includeSkipNotifyMarkers) {
+        if (null != acbi && includeEndProgramMarker && includeSkipNotifyMarkers) {
             int actionIndex = acbi.getActionIndex();
             if (gparams.startingIndex < actionIndex) {
                 if (gparams.startingIndex != 0 || actionIndex < acbi.getActionsSize() - 2) {
@@ -1623,45 +1614,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         lookForParts(action, cmds, (idx < 2),
                                 doInspectKit ? (idx == gparams.actions.size() - 1) : (idx >= gparams.actions.size() - 2)
                         );
-                        updateActionToCrclArrays(idx, cmds);
-                         {
-                            String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-                            addNotifyMarker(cmds, end_action_string, idx, action, fixedActionsCopy, fixedOrigActionsCopy);
-                        }
-                        if (idx != 0 || cmdsContainNonWrapper(cmds)) {
-                            if (!skippedParts.isEmpty()) {
-                                logDebug("foundParts = " + foundParts);
-                                logDebug("skippedParts = " + skippedParts);
-                                logDebug("poseCache.keySet() = " + poseCache.keySet());
-                            }
-                            return cmds;
-                        } else {
-                            long cmd0Id = -1;
-                            if (!cmds.isEmpty()) {
-                                cmd0Id = cmds.get(0).getCommandID();
-                                try {
-                                    processCommands(cmds);
-                                } catch (Throwable thrown) {
-                                    thrown.printStackTrace();
-                                    throw thrown;
-                                }
-                            }
-                            if (!gparams.newItemsReceived && visionUpdateCount.get() == gparams.startingVisionUpdateCount) {
-                                checkNewItems(waitForCompleteVisionUpdatesCommentString);
-                            }
-                            logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
-                            if (null != gparams.runOptoToGenerateReturn) {
-                                gparams.runOptoToGenerateReturn.newIndex = idx + 1;
-                                if (!skippedParts.isEmpty()) {
-                                    logDebug("foundParts = " + foundParts);
-                                    logDebug("skippedParts = " + skippedParts);
-                                    logDebug("poseCache.keySet() = " + poseCache.keySet());
-                                }
-                                if (cmd0Id > 1) {
-                                    commandId.set(cmd0Id - 1);
-                                }
-                                return Collections.emptyList();
-                            }
+                        List<MiddleCommandType> ret = endSection(
+                                action,
+                                idx,
+                                cmds,
+                                fixedActionsCopy,
+                                fixedOrigActionsCopy,
+                                skippedParts,
+                                foundParts,
+                                gparams,
+                                waitForCompleteVisionUpdatesCommentString);
+                        if (null != ret) {
+                            return ret;
                         }
                         break;
 
@@ -1718,10 +1682,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             throw new IllegalStateException("null == lastTakenPart when PLACE_PART encountered: idx=" + idx + ",gparams.startingIndex=" + gparams.startingIndex + ",lastAction=" + lastAction);
                         }
                         placePart(action, cmds);
-                        if (!includeEndNormalActionMarker) {
-                            String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-                            addNotifyMarker(cmds, end_action_string, idx, action, fixedActionsCopy, fixedOrigActionsCopy);
-                        }
                         break;
 
                     case PAUSE:
@@ -1740,11 +1700,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                    }
 //                    break;
                     case CLEAR_KITS_TO_CHECK:
+                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex="+gparams.startingIndex+",idx="+idx, action);
                         clearKitsToCheck(action, cmds, gparams);
                         break;
 
                     case ADD_KIT_TO_CHECK:
+                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex="+gparams.startingIndex+",idx="+idx, action);
                         addKitToCheck(action, cmds, gparams);
+                        aprsSystem.logEvent("ADD_KIT_TO_CHECK kitsToCheck.size()=", kitsToCheck.size());
                         break;
 
                     case SET_CORRECTION_MODE:
@@ -1752,7 +1715,24 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         break;
 
                     case CHECK_KITS:
-                        checkKits(action, cmds);
+                        boolean correctionDone = checkKits(action, cmds, idx);
+                        if (correctionDone) {
+                            addNotifyMarker(cmds, "checkKitstNeedCorrection", idx - 1, action, fixedActionsCopy, fixedOrigActionsCopy);
+                            return cmds;
+//                            List<MiddleCommandType> ret2 = endSection(
+//                                    action,
+//                                    idx,
+//                                    cmds,
+//                                    fixedActionsCopy,
+//                                    fixedOrigActionsCopy,
+//                                    skippedParts,
+//                                    foundParts,
+//                                    gparams,
+//                                    waitForCompleteVisionUpdatesCommentString);
+//                            if (null != ret2) {
+//                                return ret2;
+//                            }
+                        }
                         break;
 
                     default:
@@ -1762,10 +1742,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 updateActionToCrclArrays(idx, cmds);
                 action.setPlanTime();
                 String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
-
-                if (includeEndNormalActionMarker) {
-                    addNotifyMarker(cmds, end_action_string, idx, action, fixedActionsCopy, fixedOrigActionsCopy);
-                }
+                addNotifyMarker(cmds, end_action_string, idx, action, fixedActionsCopy, fixedOrigActionsCopy);
                 addTakeSnapshots(cmds, end_action_string, null, null, this.crclNumber.get());
                 if (!skippedParts.isEmpty()) {
                     logDebug("foundParts = " + foundParts);
@@ -1807,25 +1784,57 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return cmds;
     }
 
-    private boolean includeEndNormalActionMarker = true;
-
-    /**
-     * Get the value of includeEndNormalActionMarker
-     *
-     * @return the value of includeEndNormalActionMarker
-     */
-    public boolean isIncludeEndNormalActionMarker() {
-        return includeEndNormalActionMarker;
-    }
-
-    /**
-     * Set the value of includeEndNormalActionMarker
-     *
-     * @param includeEndNormalActionMarker new value of
-     * includeEndNormalActionMarker
-     */
-    public void setIncludeEndNormalActionMarker(boolean includeEndNormalActionMarker) {
-        this.includeEndNormalActionMarker = includeEndNormalActionMarker;
+    @Nullable
+    private List<MiddleCommandType> endSection(Action action,
+            int idx,
+            List<MiddleCommandType> cmds,
+            List<Action> fixedActionsCopy,
+            List<Action> fixedOrigActionsCopy,
+            List<String> skippedParts,
+            List<String> foundParts,
+            GenerateParams gparams,
+            String waitForCompleteVisionUpdatesCommentString) throws Exception {
+        updateActionToCrclArrays(idx, cmds);
+        {
+            String end_action_string = "end_" + idx + "_" + action.getType() + "_" + Arrays.toString(action.getArgs());
+            addNotifyMarker(cmds, end_action_string, idx, action, fixedActionsCopy, fixedOrigActionsCopy);
+        }
+        if (idx != 0 || cmdsContainNonWrapper(cmds)) {
+            if (!skippedParts.isEmpty()) {
+                logDebug("foundParts = " + foundParts);
+                logDebug("skippedParts = " + skippedParts);
+                logDebug("poseCache.keySet() = " + poseCache.keySet());
+            }
+            return cmds;
+        } else {
+            long cmd0Id = -1;
+            if (!cmds.isEmpty()) {
+                cmd0Id = cmds.get(0).getCommandID();
+                try {
+                    processCommands(cmds);
+                } catch (Throwable thrown) {
+                    thrown.printStackTrace();
+                    throw thrown;
+                }
+            }
+            if (!gparams.newItemsReceived && visionUpdateCount.get() == gparams.startingVisionUpdateCount) {
+                checkNewItems(waitForCompleteVisionUpdatesCommentString);
+            }
+            logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
+            if (null != gparams.runOptoToGenerateReturn) {
+                gparams.runOptoToGenerateReturn.newIndex = idx + 1;
+                if (!skippedParts.isEmpty()) {
+                    logDebug("foundParts = " + foundParts);
+                    logDebug("skippedParts = " + skippedParts);
+                    logDebug("poseCache.keySet() = " + poseCache.keySet());
+                }
+                if (cmd0Id > 1) {
+                    commandId.set(cmd0Id - 1);
+                }
+                return Collections.emptyList();
+            }
+        }
+        return null;
     }
 
     private boolean includeEndProgramMarker = false;
@@ -2503,7 +2512,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile GenerateParams lastAddKitToCheckGenerateParams = null;
     private volatile int lastAddKitToCheckGenerateIndex = -1;
 
-    @SuppressWarnings("unused")
     private void addKitToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams) {
 
         lastAddKitToCheckGenerateParams = gparams;
@@ -2656,8 +2664,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return empty;
     }
 
-    @SuppressWarnings("unused")
-    private void checkKits(Action action, List<MiddleCommandType> cmds)
+    private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex)
             throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
         checkSettings();
         if (null == aprsSystem) {
@@ -2666,7 +2673,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         boolean correctionMode = aprsSystem.isCorrectionMode();
         if (IGNORE_KIT_CHECK_FAILURES) {
             if (!correctionMode && pauseInsteadOfRecover) {
-                return;
+                return false;
             }
         }
         int prePubs = aprsSystem.getSimLineCount();
@@ -2779,6 +2786,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         Map<String, List<String>> removedItemsNameMap = new HashMap<>();
                         kitsToFix.sort(Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
                         List<Action> correctiveActions = new ArrayList<>();
+                        List<PhysicalItem> correctivedItems = new ArrayList<>();
                         List<String> fixLogList = new ArrayList<>();
                         for (KitToCheck kit : kitsToFix) {
                             List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
@@ -2877,6 +2885,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 return v;
                                             });
                                             correctiveActions.add(new Action(TAKE_PART, partName));
+                                            for (int i = 0; i < parts.size(); i++) {
+                                                PhysicalItem partI = parts.get(i);
+                                                if (partI.getFullName().equals(partName)) {
+                                                    correctivedItems.add(partI);
+                                                    break;
+                                                }
+                                            }
                                             String slotName = absSlot.getFullName();
                                             logDebug("checkKits: slotName = " + slotName);
                                             PoseType absSlotPose = absSlot.getPose();
@@ -2908,6 +2923,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 }
                                                 throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
                                             }
+                                            correctivedItems.add(absSlot);
                                             correctiveActions.add(new Action(PLACE_PART, closestKey));
 
 //                                        takePartByName(partName, null, cmds);
@@ -2923,7 +2939,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         List<Action> optimizedCorrectiveActions
                                 = optimizePddlActionsWithOptaPlanner(correctiveActions, 0);
-                        int startingGetLastIndex = getLastIndex();
+                        lastIndex.compareAndSet(origIndex, origIndex - 1);
+                        boolean placedPart = false;
                         CORRECT_ACTIONS_LOOP:
                         for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
                             Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
@@ -2945,10 +2962,43 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     break;
 
                                 case PLACE_PART:
+                                    placedPart = true;
                                     String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                    placePartBySlotName(slotName, cmds, correctiveAction, action, startingGetLastIndex);  //ByName(slotName, null, cmds);
+                                    placePartBySlotName(slotName, cmds, correctiveAction, action, origIndex-1);  //ByName(slotName, null, cmds);
                                     break;
                             }
+                        }
+                        if (placedPart) {
+                            takeSimViewSnapshot("correctivedItems", correctivedItems);
+                            addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
+                                try {
+                                    List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
+                                    takeSimViewSnapshot("corrective lookForParts", null);
+                                    lookForParts(action, l, false, false);
+                                    addMarkerCommand(l, "checkKitsCorrectionEndAfterLookForParts", (CrclCommandWrapper wrapper2) -> {
+                                        try {
+                                            List<MiddleCommandType> l2 = wrapper2.getCurProgram().getMiddleCommand();
+                                            takeSimViewSnapshot("corrective recursive checkKits", null);
+                                            checkKits(action, l2, origIndex);
+                                        } catch (Exception ex) {
+                                            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
+                                            if (ex instanceof RuntimeException) {
+                                                throw (RuntimeException) ex;
+                                            } else {
+                                                throw new RuntimeException(ex);
+                                            }
+                                        }
+                                    });
+                                } catch (Exception ex2) {
+                                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex2);
+                                    if (ex2 instanceof RuntimeException) {
+                                        throw (RuntimeException) ex2;
+                                    } else {
+                                        throw new RuntimeException(ex2);
+                                    }
+                                }
+                            });
+                            return true;
                         }
                     }
                 }
@@ -2957,6 +3007,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new RuntimeException(ex);
             }
         }
+        try {
+            takeSimViewSnapshot("checkKitsReturningFalse", null);
+        } catch (IOException ex) {
+            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
     private List<PhysicalItem> checkKitsItemsToParts(List<PhysicalItem> newItems) {
@@ -3065,18 +3121,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void checkKitsToCheckInstanceCounts() throws IllegalStateException {
-        ConcurrentHashMap<String,Integer>
-                kitNameCountMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<String,List<PoseType>>
-                kitNamePoseListMap = new ConcurrentHashMap<>();
-        for(KitToCheck kit : kitsToCheck) {
-            kitNameCountMap.compute(kit.name, (String name,Integer v) -> ((v!=null)?v+1:1));
-            kitNamePoseListMap.compute(kit.name, (String name,List<PoseType> v) -> ((v!=null)?v:getKitInstancePoses(name)));
+        ConcurrentHashMap<String, Integer> kitNameCountMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, List<PoseType>> kitNamePoseListMap = new ConcurrentHashMap<>();
+        for (KitToCheck kit : kitsToCheck) {
+            kitNameCountMap.compute(kit.name, (String name, Integer v) -> ((v != null) ? v + 1 : 1));
+            kitNamePoseListMap.compute(kit.name, (String name, List<PoseType> v) -> ((v != null) ? v : getKitInstancePoses(name)));
         }
-        for(Entry<String,Integer> entry : kitNameCountMap.entrySet()) {
+        for (Entry<String, Integer> entry : kitNameCountMap.entrySet()) {
             List<PoseType> poses = kitNamePoseListMap.get(entry.getKey());
-            if(poses.size() < entry.getValue()) {
-                throw new IllegalStateException("need "+entry.getValue()+" kits of "+entry.getKey()+" but only have "+poses.size());
+            if (poses.size() < entry.getValue()) {
+                throw new IllegalStateException("need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + poses.size());
             }
         }
     }
@@ -4947,14 +5001,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     checkedPause();
                     SetEndEffectorType seeCmd = (SetEndEffectorType) ccw.getWrappedCommand();
                     seeCmd.setSetting(1.0);
-                    setFakeTakePart(false);
+//                    setFakeTakePart(false);
                     return;
                 }
             }
             if (getForceFakeTakeFlag()) {
                 SetEndEffectorType seeCmd = (SetEndEffectorType) ccw.getWrappedCommand();
                 seeCmd.setSetting(1.0);
-                setFakeTakePart(false);
+//                setFakeTakePart(false);
             }
         }, "takePartByPose." + name);
 
@@ -5035,7 +5089,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private boolean checkPose(PoseType pose, boolean ignoreCartTran) {
         assert null != aprsSystem : "(null == aprsSystemInterface)";
-        return aprsSystem.checkPose(pose, ignoreCartTran,true);
+        return aprsSystem.checkPose(pose, ignoreCartTran, true);
     }
 
     private void checkSettings() {
@@ -5363,7 +5417,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } catch (IOException ex) {
                 Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
-            System.err.println("message="+message);
+            System.err.println("message=" + message);
             boolean recheckPose = checkPose(pose);
             System.out.println("recheckPose = " + recheckPose);
             boolean recheckPose2 = checkPose(pose);

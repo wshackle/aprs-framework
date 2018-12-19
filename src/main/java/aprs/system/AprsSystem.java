@@ -1293,12 +1293,12 @@ public class AprsSystem implements SlotOffsetProvider {
 //                                    }
                 safeAbortAndDisconnectFuture
                         = localSafeAbortFuture
-                        .thenRun(this::setStopRunTime)
-                        .thenCompose(x -> waitAllLastFutures())
-                        .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName,
-                                this::disconnectRobotPrivate,
-                                runProgramService)
-                        .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
+                                .thenRun(this::setStopRunTime)
+                                .thenCompose(x -> waitAllLastFutures())
+                                .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName,
+                                        this::disconnectRobotPrivate,
+                                        runProgramService)
+                                .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService);
             } else {
                 safeAbortFuture = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortAndDisconnectFuture = safeAbortFuture;
@@ -1651,20 +1651,20 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
                 = waitForPause()
-                .thenApplyAsync("AprsSystem.continueActionList" + comment,
-                        x -> {
-                            setThreadName();
-                            takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                            updateRobotLimits();
-                            if (null == pddlExecutorJInternalFrame1) {
-                                throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
-                            }
-                            if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
-                                return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace)
-                                && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
-                            }
-                            return false;
-                        }, runProgramService);
+                        .thenApplyAsync("AprsSystem.continueActionList" + comment,
+                                x -> {
+                                    setThreadName();
+                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
+                                    updateRobotLimits();
+                                    if (null == pddlExecutorJInternalFrame1) {
+                                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                    }
+                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace)
+                                        && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                                    }
+                                    return false;
+                                }, runProgramService);
 //                .thenCompose(x -> {
 //                   return Utils.supplyOnDispatchThread(() -> {
 ////                       if(JOptionPane.YES_OPTION != 
@@ -1972,17 +1972,17 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             lastRunProgramFuture
                     = waitForPause()
-                    .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
-                        try {
-                            return runCRCLProgram(program);
-                        } catch (Exception ex) {
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            } else {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }, runProgramService);
+                            .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
+                                try {
+                                    return runCRCLProgram(program);
+                                } catch (Exception ex) {
+                                    if (ex instanceof RuntimeException) {
+                                        throw (RuntimeException) ex;
+                                    } else {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            }, runProgramService);
             return lastRunProgramFuture;
         }
         XFuture<Boolean> ret = new XFuture<>("startCRCLProgram.pendantClientJInternalFrame==null");
@@ -2110,9 +2110,10 @@ public class AprsSystem implements SlotOffsetProvider {
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis())
             );
         } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             showException(ex);
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -3331,12 +3332,12 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (null != object2DViewFuture) {
                     XFutureVoid connectVisionFuture
                             = XFutureVoid.allOf(object2DViewFuture, startVisionToDbFuture)
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 } else {
                     XFutureVoid connectVisionFuture
                             = startVisionToDbFuture
-                            .thenComposeToVoid(this::connectVision);
+                                    .thenComposeToVoid(this::connectVision);
                     futures.add(connectVisionFuture);
                 }
             }
@@ -3845,6 +3846,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
                 + (isAborting() ? " : Aborting" : "")
                 + (isReverseFlag() ? " : Reverse" : "")
+                 + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
                 + pddlActionString();
         if (newTitle.length() > 100) {
             newTitle = newTitle.substring(0, 100) + " ... ";
@@ -4169,22 +4171,22 @@ public class AprsSystem implements SlotOffsetProvider {
                             throw new RuntimeException(ex);
                         }
                     }, runProgramService)
-                    .thenComposeToVoid(() -> {
-                        return syncPauseRecoverCheckbox();
-                    });
+                            .thenComposeToVoid(() -> {
+                                return syncPauseRecoverCheckbox();
+                            });
             this.xf1 = loadPropertiesFuture;
             XFutureVoid setupWindowsFuture
                     = loadPropertiesFuture
-                    .thenComposeToVoid(() -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            if (!alreadySelected) {
-                                setupWindowsMenuOnDisplay();
-                            }
-                            if (null != aprsSystemDisplayJFrame) {
-                                aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
-                            }
-                        });
-                    });
+                            .thenComposeToVoid(() -> {
+                                return Utils.runOnDispatchThread(() -> {
+                                    if (!alreadySelected) {
+                                        setupWindowsMenuOnDisplay();
+                                    }
+                                    if (null != aprsSystemDisplayJFrame) {
+                                        aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
+                                    }
+                                });
+                            });
             this.xf2 = setupWindowsFuture;
             return setupWindowsFuture;
         } catch (Exception ex) {
@@ -4713,51 +4715,53 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void showFilledKitTrays() {
-        XFuture<List<PhysicalItem>> itemsFuture = getSingleVisionToDbUpdate();
-        itemsFuture
-                .thenApply(l -> l.stream().filter(this::isWithinLimits).collect(Collectors.toList()))
-                .thenApply(l -> createFilledKitsList(l, false, 0))
-                .thenAccept(filledkitTraysList -> {
-                    if (null != filledkitTraysList) {
-                        if (null != object2DViewJInternalFrame) {
-                            object2DViewJInternalFrame.setItems(filledkitTraysList);
-                        }
-                    }
-                });
+        try {
+            fillKitTrays(false, 0, true);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void showEmptiedKitTrays() {
+        try {
+            emptyKitTrays(false, 0, true);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public XFuture<Boolean> fillKitTrays() {
-        return fillKitTrays(false, 0);
+        return fillKitTrays(false, 0, false);
     }
 
     public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items) {
-        return fillKitTraysWithItemList(items, false, 0);
+        return fillKitTraysWithItemList(items, false, 0, false);
     }
 
-    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset) {
+    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) {
+
+        setCorrectionMode(true);
+        XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(false);
         }
-        XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
         return itemsFuture
                 .thenCompose((List<PhysicalItem> l) -> {
-                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset);
+                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showFilledListOnly);
                 });
     }
 
-    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset) {
+    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) {
         List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset);
+        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly);
     }
 
-    private boolean showFilledList;
-
-    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
+    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) throws RuntimeException {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (IOException ex) {
@@ -4773,18 +4777,18 @@ public class AprsSystem implements SlotOffsetProvider {
             return XFuture.completedFuture(true);
         }
 
-        if (showFilledList) {
-            XFutureVoid filledListShowFuture
-                    = Utils.runOnDispatchThread(() -> {
-                        Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
+        if (showFilledListOnly) {
+            XFuture<Boolean> filledListShowFuture
+                    = Utils.supplyOnDispatchThread(() -> {
+                        return Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
                                 "Filled Kit Items", true,
                                 object2DViewJInternalFrame.getPropertiesOnDisplay(),
                                 filledkitTraysList);
                     });
-            return filledListShowFuture
-                    .thenCompose(x -> {
-                        return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
-                    });
+            return filledListShowFuture;
+//                    .thenCompose(x -> {
+//                        return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
+//                    });
         } else {
             return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
         }
@@ -4793,7 +4797,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true);
+            clearKitsToCheck();
+            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
@@ -4831,11 +4836,6 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
 
-    }
-
-    private List<PhysicalItem> createFilledKitsList(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset) {
-        TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
-        return createFilledKitsListFromFillInfo(fillInfo);
     }
 
     private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo) throws IllegalStateException {
@@ -4890,6 +4890,166 @@ public class AprsSystem implements SlotOffsetProvider {
         return outputList;
     }
 
+    public XFuture<Boolean> emptyKitTrays() {
+        return emptyKitTrays(false, 0, false);
+    }
+
+    public XFuture<Boolean> emptyKitTraysWithItemList(List<PhysicalItem> items) {
+        return emptyKitTraysWithItemList(items, false, 0, false);
+    }
+
+    public XFuture<Boolean> emptyKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) {
+
+        setCorrectionMode(true);
+        XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.refresh(false);
+        }
+        return itemsFuture
+                .thenCompose((List<PhysicalItem> l) -> {
+                    return emptyKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showEmptiedListOnly);
+                });
+    }
+
+    private XFuture<Boolean> emptyKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) {
+        List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
+        try {
+            takeSimViewSnapshot("emptyKitTraysWithItemList.filteredItems", filteredItems);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return emptyKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showEmptiedListOnly);
+    }
+
+    private XFuture<Boolean> emptyKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) throws RuntimeException {
+        try {
+            takeSimViewSnapshot("emptyKitTrays", items);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        TrayFillInfo emptyInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
+        if (emptyInfo.getKitTrays().isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
+        List<PhysicalItem> emptiedkitTraysList = createEmptiedKitsListFromFillInfo(emptyInfo);
+
+        if (emptiedkitTraysList.isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
+
+        if (showEmptiedListOnly) {
+            XFuture<Boolean> emptiedListShowFuture
+                    = Utils.supplyOnDispatchThread(() -> {
+                        return Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
+                                "Emptied Kit Items", true,
+                                object2DViewJInternalFrame.getPropertiesOnDisplay(),
+                                emptiedkitTraysList);
+                    });
+            return emptiedListShowFuture;
+//                    .thenCompose(x -> {
+//                        return emptyKitTraysInternal(emptiedkitTraysList, overrideRotationOffset, newRotationOffset);
+//                    });
+        } else {
+            return emptyKitTraysInternal(emptiedkitTraysList, overrideRotationOffset, newRotationOffset);
+        }
+
+    }
+
+    private XFuture<Boolean> emptyKitTraysInternal(List<PhysicalItem> emptiedkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
+        try {
+            clearKitsToCheck();
+            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, false, true, true);
+            if (null == actionFile) {
+                return XFuture.completedFuture(false);
+            }
+            StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
+            loadActionsFile(actionFile, false);
+            return startActions("emptyKitTrays", false)
+                    .exceptionally((Throwable throwable) -> {
+                        System.err.println("emptyKitTraysTrace = " + Utils.traceToString(emptyKitTraysTrace));
+                        System.err.println("actionFile = " + actionFile);
+                        System.err.println("emptiedkitTraysList.size() = " + emptiedkitTraysList.size());
+                        System.err.println("emptiedkitTraysList = " + emptiedkitTraysList);
+                        showException(throwable);
+                        if (throwable instanceof RuntimeException) {
+                            throw (RuntimeException) throwable;
+                        } else {
+                            throw new RuntimeException(throwable);
+                        }
+                    });
+        } catch (Exception ex) {
+
+            String errMsg = ex.getMessage() + "\n"
+                    + "emptiedkitTraysList=" + emptiedkitTraysList + ",\n"
+                    + "overrideRotationOffset=" + overrideRotationOffset + ",\n"
+                    + "newRotationOffset=" + newRotationOffset + ",\n";
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
+            try {
+                takeSimViewSnapshot("emptyKitTraysInternal" + ex.getMessage(), emptiedkitTraysList);
+            } catch (IOException ex1) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        }
+
+    }
+
+    private List<PhysicalItem> createEmptiedKitsListFromFillInfo(TrayFillInfo trayFillInfo) throws IllegalStateException {
+        List<PhysicalItem> outputList = new ArrayList<>();
+        outputList.addAll(trayFillInfo.getKitTrays());
+        outputList.addAll(trayFillInfo.getPartTrays());
+        outputList.addAll(trayFillInfo.getPartsInPartsTrays());
+        List<PhysicalItem> partsInKit = new ArrayList<>(trayFillInfo.getPartsInKit());
+        List<TraySlotListItem> emptyPartsTraySlots = trayFillInfo.getEmptyPartTraySlots();
+        List<PhysicalItem> movedPartsList = new ArrayList<>();
+        for (TraySlotListItem emptySlotItem : emptyPartsTraySlots) {
+            int itemFoundIndex = -1;
+            for (int i = 0; i < partsInKit.size(); i++) {
+                PhysicalItem item = partsInKit.get(i);
+                String itemName = item.getName();
+                if (itemName.startsWith("sku_")) {
+                    itemName = itemName.substring(4);
+                }
+                if (itemName.startsWith("part_")) {
+                    itemName = itemName.substring(5);
+                }
+
+                String slotName = emptySlotItem.getSlotOffset().getSlotName();
+                if (!Objects.equals(itemName, slotName)) {
+                    int in_pt_index = itemName.indexOf("_in_pt");
+                    if (in_pt_index > 0) {
+                        throw new IllegalStateException("bad itemName for item=" + item);
+                    }
+                    int in_kt_index = itemName.indexOf("_in_kt");
+                    if (in_kt_index > 0) {
+                        throw new IllegalStateException("bad itemName for item=" + item);
+                    }
+                }
+                if (Objects.equals(itemName, slotName)) {
+                    PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
+                    movedPartsList.add(newItem);
+                    itemFoundIndex = i;
+                    break;
+                }
+            }
+            if (-1 != itemFoundIndex) {
+                partsInKit.remove(itemFoundIndex);
+            }
+        }
+        outputList.addAll(movedPartsList);
+        outputList.addAll(partsInKit);
+        try {
+            takeSimViewSnapshot("createEmptiedKitsList_outputList", outputList);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return outputList;
+    }
+
     /**
      * Get a list of items seen by the vision system or simulated in the
      * Object2D view and create a set of actions that will fill empty trays to
@@ -4902,7 +5062,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false);
+            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -5065,6 +5225,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param correctionMode new value of correctionMode
      */
     public void setCorrectionMode(boolean correctionMode) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setCheckBoxMenuItemCorrectionModeSelected(correctionMode);
+        }
         if (goalLearner == null) {
             goalLearner = new GoalLearner();
         }
@@ -5081,7 +5244,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * when complete.
      */
     @Nullable
-    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag, boolean alwaysLoad) {
+    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag, boolean alwaysLoad, boolean allowEmptyKits) {
 
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -5104,7 +5267,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
 
             goalLearnerLocal.setItemPredicate(this::isWithinLimits);
-            if (goalLearnerLocal.isCorrectionMode()) {
+            if (goalLearnerLocal.isCorrectionMode() || allowEmptyKits) {
                 goalLearnerLocal.setKitTrayListPredicate(null);
             } else {
                 goalLearnerLocal.setKitTrayListPredicate(this::checkKitTrays);
@@ -5115,7 +5278,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<Action> actions = goalLearnerLocal.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             t1 = System.currentTimeMillis();
             boolean allEmpty = allEmptyA[0];
-            if (!goalLearnerLocal.isCorrectionMode()) {
+            if (!goalLearnerLocal.isCorrectionMode() && !allowEmptyKits) {
                 if (allEmpty || actions == null || actions.isEmpty()) {
                     System.out.println("requiredItems = " + requiredItems);
                     System.out.println("teachItems = " + teachItems);
@@ -5153,8 +5316,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 logEvent("createActionListFromVision",
                         equal + "\n"
                         + endingList
-                        .stream()
-                        .collect(Collectors.joining("\n")));
+                                .stream()
+                                .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
@@ -6026,7 +6189,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.lastStartCheckEnabledFuture1 = xf1;
         XFuture<Boolean> xf2
                 = xf1
-                .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
+                        .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = xf2;
         return xf2;
     }
@@ -6991,9 +7154,9 @@ public class AprsSystem implements SlotOffsetProvider {
                                         Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
                                     }
                                 }, runProgramService)
-                        .thenComposeToVoid(() -> {
-                            return syncPauseRecoverCheckbox();
-                        });
+                                .thenComposeToVoid(() -> {
+                                    return syncPauseRecoverCheckbox();
+                                });
                 futures.add(loadPropertiesFuture);
             }
 

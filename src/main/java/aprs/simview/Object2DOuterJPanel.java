@@ -415,9 +415,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (!fileLoaded && null != visionSocketServer && !pauseCachedCheckBox.isSelected()) {
-                    if(null != loadFileFuture) {
-                        return 
-                                loadFileFuture
+                    if (null != loadFileFuture) {
+                        return loadFileFuture
                                 .thenComposeToVoid(() -> this.setItems(object2DJPanel1.getItems()));
                     } else {
                         return this.setItems(object2DJPanel1.getItems());
@@ -430,7 +429,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if(e instanceof RuntimeException) {
+            if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
             } else {
                 throw new RuntimeException(e);
@@ -1407,13 +1406,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabelHost)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jTextFieldHost))
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                .addComponent(jLabel12)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jButtonRefresh))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jLabel12)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jButtonRefresh))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(12, 12, 12))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                         .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jScrollPane3)
@@ -1433,7 +1435,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                         .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxCloning)))
-                                .addGap(0, 200, Short.MAX_VALUE)))
+                                .addGap(0, 149, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1463,7 +1465,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -3087,10 +3089,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return XFutureVoid.allOf(futuresList)
                 .thenComposeToVoid(() -> {
-                   return Utils.runOnDispatchThread(() -> {
-                      this.repaint();
-                      object2DJPanel1.repaint();
-                   });
+                    return Utils.runOnDispatchThread(() -> {
+                        this.repaint();
+                        object2DJPanel1.repaint();
+                    });
                 });
     }
 
@@ -3511,7 +3513,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jButtonViewSnapshotCsvActionPerformed
 
     private void object2DJPanel1ComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_object2DJPanel1ComponentResized
-       object2DJPanel1.clearSizes();
+        object2DJPanel1.clearSizes();
     }//GEN-LAST:event_object2DJPanel1ComponentResized
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
@@ -4465,10 +4467,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
-        File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        Utils.runOnDispatchThread(() -> {
-            updateSnapshotsTable(f, csvFile);
-        });
+        if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
+            File csvFile = saveSnapshotCsv(f, itemsToPaint);
+            Utils.runOnDispatchThread(() -> {
+                updateSnapshotsTable(f, csvFile);
+            });
+        } else {
+            File csvFile = saveSnapshotCsv(f, getItems());
+            Utils.runOnDispatchThread(() -> {
+                updateSnapshotsTable(f, csvFile);
+            });
+        }
     }
 
     private File saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {

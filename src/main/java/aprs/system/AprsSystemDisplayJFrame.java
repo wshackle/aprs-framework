@@ -473,7 +473,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectVision = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemConnectedRobot = new javax.swing.JCheckBoxMenuItem();
-        jMenu4 = new javax.swing.JMenu();
+        jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetPoseMinMaxLimits = new javax.swing.JMenuItem();
         jCheckBoxMenuItemAlertLimits = new javax.swing.JCheckBoxMenuItem();
@@ -482,21 +482,28 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemUseTeachTable = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemLogCrclPrograms = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemPauseInsteadOfRecover = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemCorrectionMode = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemAllowForceFakeTakeAnyTime = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
         jMenuItemContinueActionList = new javax.swing.JMenuItem();
         jMenuItemReset = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinuousDemo = new javax.swing.JCheckBoxMenuItem();
-        jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jMenuItemDebugAction = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
         jMenuItemCreateActionListFromVision = new javax.swing.JMenuItem();
         jMenuItemLookFor = new javax.swing.JMenuItem();
         jMenuItemClearErrors = new javax.swing.JMenuItem();
-        jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
         jMenuItemFillKitTrays = new javax.swing.JMenuItem();
         jMenuItemShowFilledKitTrays = new javax.swing.JMenuItem();
+        jMenuItemEmptyKitTrays = new javax.swing.JMenuItem();
+        jMenuItemShowEmptiedKitTrays = new javax.swing.JMenuItem();
+        jMenuItemRestoreOriginalRobotConnection = new javax.swing.JMenuItem();
+        jMenuPause = new javax.swing.JMenu();
+        jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
+        jMenuTests = new javax.swing.JMenu();
+        jCheckBoxMenuItemForceFakeTake = new javax.swing.JCheckBoxMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
@@ -704,7 +711,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
-        jMenu4.setText("Options");
+        jMenuOptions.setText("Options");
 
         jCheckBoxMenuItemEnableDebugDumpstacks.setText("Enable Debug DumpStacks");
         jCheckBoxMenuItemEnableDebugDumpstacks.addActionListener(new java.awt.event.ActionListener() {
@@ -712,7 +719,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 jCheckBoxMenuItemEnableDebugDumpstacksActionPerformed(evt);
             }
         });
-        jMenu4.add(jCheckBoxMenuItemEnableDebugDumpstacks);
+        jMenuOptions.add(jCheckBoxMenuItemEnableDebugDumpstacks);
 
         jMenuItemSetPoseMinMaxLimits.setText("Set Pose Min/Max Limits ");
         jMenuItemSetPoseMinMaxLimits.addActionListener(new java.awt.event.ActionListener() {
@@ -720,11 +727,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 jMenuItemSetPoseMinMaxLimitsActionPerformed(evt);
             }
         });
-        jMenu4.add(jMenuItemSetPoseMinMaxLimits);
+        jMenuOptions.add(jMenuItemSetPoseMinMaxLimits);
 
         jCheckBoxMenuItemAlertLimits.setSelected(true);
         jCheckBoxMenuItemAlertLimits.setText("Alert Limits");
-        jMenu4.add(jCheckBoxMenuItemAlertLimits);
+        jMenuOptions.add(jCheckBoxMenuItemAlertLimits);
 
         jCheckBoxMenuItemSnapshotImageSize.setText("Snapshot Image size (800 x 600 )");
         jCheckBoxMenuItemSnapshotImageSize.addActionListener(new java.awt.event.ActionListener() {
@@ -732,10 +739,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 jCheckBoxMenuItemSnapshotImageSizeActionPerformed(evt);
             }
         });
-        jMenu4.add(jCheckBoxMenuItemSnapshotImageSize);
+        jMenuOptions.add(jCheckBoxMenuItemSnapshotImageSize);
 
         jCheckBoxMenuItemReloadSimFilesOnReverse.setText("Reload Sim Files on Reverse");
-        jMenu4.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
+        jMenuOptions.add(jCheckBoxMenuItemReloadSimFilesOnReverse);
 
         jCheckBoxMenuItemUseTeachTable.setText("Use Teach Table");
         jCheckBoxMenuItemUseTeachTable.addActionListener(new java.awt.event.ActionListener() {
@@ -743,11 +750,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 jCheckBoxMenuItemUseTeachTableActionPerformed(evt);
             }
         });
-        jMenu4.add(jCheckBoxMenuItemUseTeachTable);
+        jMenuOptions.add(jCheckBoxMenuItemUseTeachTable);
 
         jCheckBoxMenuItemLogCrclPrograms.setSelected(true);
         jCheckBoxMenuItemLogCrclPrograms.setText("Log CRCL Programs");
-        jMenu4.add(jCheckBoxMenuItemLogCrclPrograms);
+        jMenuOptions.add(jCheckBoxMenuItemLogCrclPrograms);
 
         jCheckBoxMenuItemPauseInsteadOfRecover.setText("Executor Check Kits : Pause instead of Recover");
         jCheckBoxMenuItemPauseInsteadOfRecover.addActionListener(new java.awt.event.ActionListener() {
@@ -755,9 +762,34 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed(evt);
             }
         });
-        jMenu4.add(jCheckBoxMenuItemPauseInsteadOfRecover);
+        jMenuOptions.add(jCheckBoxMenuItemPauseInsteadOfRecover);
 
-        jMenuBar1.add(jMenu4);
+        jCheckBoxMenuItemStepping.setText("Single Stepping");
+        jCheckBoxMenuItemStepping.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemSteppingActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemStepping);
+
+        jCheckBoxMenuItemCorrectionMode.setSelected(true);
+        jCheckBoxMenuItemCorrectionMode.setText("Correction Mode");
+        jCheckBoxMenuItemCorrectionMode.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemCorrectionModeActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemCorrectionMode);
+
+        jCheckBoxMenuItemAllowForceFakeTakeAnyTime.setText("Allow Force Fake Take Any  Time");
+        jCheckBoxMenuItemAllowForceFakeTakeAnyTime.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemAllowForceFakeTakeAnyTime);
+
+        jMenuBar1.add(jMenuOptions);
 
         jMenuExecute.setText("Execute");
 
@@ -801,15 +833,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuExecute.add(jCheckBoxMenuItemContinuousDemo);
 
-        jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
-        jCheckBoxMenuItemPause.setText("Pause");
-        jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemPauseActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemPause);
-
         jMenuItemDebugAction.setText("Debug Action");
         jMenuItemDebugAction.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -817,14 +840,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuExecute.add(jMenuItemDebugAction);
-
-        jCheckBoxMenuItemForceFakeTake.setText("Force Fake Take");
-        jCheckBoxMenuItemForceFakeTake.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemForceFakeTakeActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemForceFakeTake);
 
         jMenuItemCreateActionListFromVision.setText("Create Action List From Vision");
         jMenuItemCreateActionListFromVision.addActionListener(new java.awt.event.ActionListener() {
@@ -850,14 +865,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuExecute.add(jMenuItemClearErrors);
 
-        jCheckBoxMenuItemStepping.setText("Single Stepping");
-        jCheckBoxMenuItemStepping.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemSteppingActionPerformed(evt);
-            }
-        });
-        jMenuExecute.add(jCheckBoxMenuItemStepping);
-
         jMenuItemFillKitTrays.setText("Fill Kit Trays");
         jMenuItemFillKitTrays.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -867,9 +874,64 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuExecute.add(jMenuItemFillKitTrays);
 
         jMenuItemShowFilledKitTrays.setText("Show Filled Kit Trays");
+        jMenuItemShowFilledKitTrays.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemShowFilledKitTraysActionPerformed(evt);
+            }
+        });
         jMenuExecute.add(jMenuItemShowFilledKitTrays);
 
+        jMenuItemEmptyKitTrays.setText("Empty Kit Trays");
+        jMenuItemEmptyKitTrays.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemEmptyKitTraysActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemEmptyKitTrays);
+
+        jMenuItemShowEmptiedKitTrays.setText("Show Emptied Kit Trays");
+        jMenuItemShowEmptiedKitTrays.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemShowEmptiedKitTraysActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemShowEmptiedKitTrays);
+
+        jMenuItemRestoreOriginalRobotConnection.setText("Restore Original Robot Connection");
+        jMenuItemRestoreOriginalRobotConnection.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemRestoreOriginalRobotConnectionActionPerformed(evt);
+            }
+        });
+        jMenuExecute.add(jMenuItemRestoreOriginalRobotConnection);
+
         jMenuBar1.add(jMenuExecute);
+
+        jMenuPause.setText("Pause");
+
+        jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
+        jCheckBoxMenuItemPause.setText("Pause");
+        jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemPauseActionPerformed(evt);
+            }
+        });
+        jMenuPause.add(jCheckBoxMenuItemPause);
+
+        jMenuBar1.add(jMenuPause);
+
+        jMenuTests.setText("Tests");
+
+        jCheckBoxMenuItemForceFakeTake.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F1, 0));
+        jCheckBoxMenuItemForceFakeTake.setText("Force Fake Take");
+        jCheckBoxMenuItemForceFakeTake.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemForceFakeTakeActionPerformed(evt);
+            }
+        });
+        jMenuTests.add(jCheckBoxMenuItemForceFakeTake);
+
+        jMenuBar1.add(jMenuTests);
 
         setJMenuBar(jMenuBar1);
 
@@ -1454,6 +1516,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     public void updateForceFakeTakeState(boolean reverseFlag1) {
         boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem
                 && (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
+        if(jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
+            forceFakeTakeOk=true;
+        }
         if (!forceFakeTakeOk) {
             setForceFakeTakeSelected(false);
         }
@@ -1846,8 +1911,23 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemUseTeachTableActionPerformed
 
+    
+    void setCheckBoxMenuItemCorrectionModeSelected(boolean selected) {
+        Utils.runOnDispatchThread(() -> {
+            jCheckBoxMenuItemCorrectionMode.setSelected(selected);
+        });
+    }
+    
+    @UIEffect
     private void jMenuItemFillKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFillKitTraysActionPerformed
         try {
+            jCheckBoxMenuItemPause.setSelected(false);
+            jCheckBoxMenuItemCorrectionMode.setSelected(true);
+            clearErrors();
+            resume();
+            jCheckBoxMenuItemReverse.setSelected(false);
+            reverseFlag = false;
+            reloadForReverse(false);
             if (null != aprsSystem) {
                 aprsSystem.fillKitTrays();
             }
@@ -1862,6 +1942,71 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             aprsSystem.setPauseInsteadOfRecover(jCheckBoxMenuItemPauseInsteadOfRecover.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseInsteadOfRecoverActionPerformed
+
+    private void jMenuItemShowFilledKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemShowFilledKitTraysActionPerformed
+        try {
+            if (null != aprsSystem) {
+                aprsSystem.showFilledKitTrays();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemShowFilledKitTraysActionPerformed
+
+    private void jMenuItemEmptyKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemEmptyKitTraysActionPerformed
+        try {
+            jCheckBoxMenuItemPause.setSelected(false);
+            jCheckBoxMenuItemCorrectionMode.setSelected(true);
+            clearErrors();
+            resume();
+            jCheckBoxMenuItemReverse.setSelected(true);
+            reverseFlag = true;
+            reloadForReverse(true);
+            if (null != aprsSystem) {
+                aprsSystem.emptyKitTrays();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemEmptyKitTraysActionPerformed
+
+    private void jMenuItemShowEmptiedKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemShowEmptiedKitTraysActionPerformed
+        try {
+            if (null != aprsSystem) {
+                aprsSystem.showEmptiedKitTrays();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemShowEmptiedKitTraysActionPerformed
+
+    private void jCheckBoxMenuItemCorrectionModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemCorrectionModeActionPerformed
+        try {
+            if (null != aprsSystem) {
+                aprsSystem.setCorrectionMode(jCheckBoxMenuItemCorrectionMode.isSelected());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemCorrectionModeActionPerformed
+
+    private void jMenuItemRestoreOriginalRobotConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRestoreOriginalRobotConnectionActionPerformed
+        try {
+            if (null != aprsSystem) {
+                aprsSystem.disconnectRobot();
+                aprsSystem.setRobotName(aprsSystem.getOrigRobotName());
+                aprsSystem.connectRobot(aprsSystem.getOrigRobotName(), aprsSystem.getOrigCrclRobotHost(), aprsSystem.getOrigCrclRobotPort());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemRestoreOriginalRobotConnectionActionPerformed
+
+    private void jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
+        if(jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
+            setForceFakeTakeEnabled(true);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
 
     CachedCheckBox connectDatabaseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
@@ -1888,9 +2033,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return new CachedCheckBox(jCheckBoxMenuItemReloadSimFilesOnReverse);
     }
 
-    CachedCheckBox forceFakeTakeCheckBox() {
-        return new CachedCheckBox(jCheckBoxMenuItemForceFakeTake);
-    }
 
     private void logEvent(String string, Object o) {
         if (null != aprsSystem) {
@@ -1925,12 +2067,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemAlertLimits;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemAllowForceFakeTakeAnyTime;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabase;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectDatabaseOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVision;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectVisionOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemConnectedRobot;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemCorrectionMode;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
@@ -1956,13 +2100,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
-    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
     private javax.swing.JMenuItem jMenuItemClearErrors;
     private javax.swing.JMenuItem jMenuItemContinueActionList;
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
     private javax.swing.JMenuItem jMenuItemDebugAction;
+    private javax.swing.JMenuItem jMenuItemEmptyKitTrays;
     private javax.swing.JMenuItem jMenuItemExit;
     private javax.swing.JMenuItem jMenuItemFillKitTrays;
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
@@ -1970,11 +2114,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
     private javax.swing.JMenuItem jMenuItemLookFor;
     private javax.swing.JMenuItem jMenuItemReset;
+    private javax.swing.JMenuItem jMenuItemRestoreOriginalRobotConnection;
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenuItem jMenuItemSetPoseMinMaxLimits;
+    private javax.swing.JMenuItem jMenuItemShowEmptiedKitTrays;
     private javax.swing.JMenuItem jMenuItemShowFilledKitTrays;
     private javax.swing.JMenuItem jMenuItemStartActionList;
+    private javax.swing.JMenu jMenuOptions;
+    private javax.swing.JMenu jMenuPause;
+    private javax.swing.JMenu jMenuTests;
     private javax.swing.JMenu jMenuWindow;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;

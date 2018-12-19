@@ -723,7 +723,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Action parentAction = ppi.getParentAction();
             crclGenerator.setLastProgramAborted(true);
             if (null != parentAction && parentAction.getType() == CHECK_KITS) {
-                hppcIndex = ppi.getParentActionIndex();
+                hppcIndex = ppi.getParentActionIndex()+1;
 
                 setReplanFromIndex(hppcIndex, true);
                 appendGenerateAbortLog(logMsg + ".handlePlacePartCompleted.checkKits.abort", actionsList.size(), isReverseFlag(), ppi.getParentActionIndex(), sarc, -1);
@@ -2017,14 +2017,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             },
             new String [] {
-                "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run", "Robot", "Actions File"
+                "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run Number", "Is Running Program", "Robot", "Actions File"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, true
+                false, false, false, false, false, false, true, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -6246,7 +6246,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //                }
 //            }
 //        }
-        if (lastIndex < startReplanFromIndex) {
+        if (lastIndex < startReplanFromIndex-1) {
             throw new IllegalStateException("lastIndex=" + lastIndex + ",startReplanFromIndex=" + startReplanFromIndex);
         }
         if (lastIndex < actionsList.size() - 1) {
