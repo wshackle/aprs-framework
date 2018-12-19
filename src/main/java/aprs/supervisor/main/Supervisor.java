@@ -3298,14 +3298,27 @@ public class Supervisor {
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem sys = aprsSystems.get(i);
             allResetFutures[i] = sys.reset(reloadSimFiles);
-            sys.setCorrectionMode(false);
+            sys.setCorrectionMode(correctionMode);
         }
         abortEventTime = -1;
         firstEventTime = -1;
         return XFutureVoid.allOf(allResetFutures);
-
     }
 
+    private volatile boolean correctionMode = true;
+
+    public boolean isCorrectionMode() {
+        return correctionMode;
+    }
+
+    public void setCorrectionMode(boolean correctionMode) {
+        this.correctionMode = correctionMode;
+        if(null != displayJFrame) {
+            displayJFrame.setCheckBoxMenuItemUseCorrectionModeByDefaultSelected(correctionMode);
+        }
+    }
+    
+    
     private int resetMainPauseCount = 0;
 
     void resetMainPauseTestFuture() {
@@ -3700,9 +3713,9 @@ public class Supervisor {
             teachItems = object2DOuterJPanel1.getItems();
         }
         for (AprsSystem aprsSys : aprsSystems) {
-            aprsSys.setCorrectionMode(false);
+            aprsSys.setCorrectionMode(correctionMode);
             if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false);
+                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true);
             } else {
                 aprsSys.createActionListFromVision();
             }
@@ -3878,7 +3891,7 @@ public class Supervisor {
                 aprsSys.setCorrectionMode(true);
                 File actionListFile;
                 if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false);
+                    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false,true);
                 } else {
                     actionListFile = aprsSys.createActionListFromVision();
                 }
@@ -6512,6 +6525,7 @@ public class Supervisor {
         if (null != displayJFrame) {
             propsMap.putAll(displayJFrame.getPropertiesMap());
         }
+        propsMap.put("correctionMode", Boolean.toString(isCorrectionMode()));
         if (null != this.conveyorClonedViewSystemTaskName) {
             propsMap.put("conveyorClonedViewSystemTaskName", conveyorClonedViewSystemTaskName);
         }
@@ -6586,6 +6600,10 @@ public class Supervisor {
             if (null != displayJFrame) {
                 displayLoadPropertiesFuture = displayJFrame.loadProperties(props);
                 futures.add(displayLoadPropertiesFuture);
+            }
+            String correctionModeString = props.getProperty("correctionMode");
+            if (null != correctionModeString && correctionModeString.length() > 0) {
+                setCorrectionMode(Boolean.parseBoolean(correctionModeString));
             }
             String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
             if (null != convTaskName) {

@@ -1484,6 +1484,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemSetMaxCycles = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRecordLiveImageMovie = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetConveyorViewCloneSystem = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemUseCorrectionModeByDefault = new javax.swing.JCheckBoxMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -2328,6 +2329,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemSetConveyorViewCloneSystem);
+
+        jCheckBoxMenuItemUseCorrectionModeByDefault.setSelected(true);
+        jCheckBoxMenuItemUseCorrectionModeByDefault.setText("Use Correction Mode By Default");
+        jCheckBoxMenuItemUseCorrectionModeByDefault.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemUseCorrectionModeByDefault);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -3381,8 +3391,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                        .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                x -> continueAllActions());
+                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3451,24 +3461,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                            .thenComposeToVoid(x -> {
-                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                    try {
-                                        clearAllErrors();
-                                        connectAll();
-                                        jCheckBoxMenuItemPause.setSelected(false);
-                                        resume();
-                                        return startRandomTestFirstActionReversed2();
-                                    } catch (Exception e) {
-                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                        ret.completeExceptionally(e);
-                                        return ret;
-                                    }
-                                }).thenComposeToVoid(x3 -> x3);
-                                return innerRet;
-                            });
+                                    .thenComposeToVoid(x -> {
+                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                            try {
+                                                clearAllErrors();
+                                                connectAll();
+                                                jCheckBoxMenuItemPause.setSelected(false);
+                                                resume();
+                                                return startRandomTestFirstActionReversed2();
+                                            } catch (Exception e) {
+                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                                ret.completeExceptionally(e);
+                                                return ret;
+                                            }
+                                        }).thenComposeToVoid(x3 -> x3);
+                                        return innerRet;
+                                    });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3803,7 +3813,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFutureVoid iiraFuture
                     = fullAbortFuture
-                    .thenComposeToVoid(() -> internalInteractiveResetAll());
+                            .thenComposeToVoid(() -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -3959,6 +3969,20 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         interactivStart(() -> lookForPartsAll(),
                 null);
     }//GEN-LAST:event_jMenuItemLookForPartsAllActionPerformed
+
+    private void jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed
+        if (null != supervisor) {
+            supervisor.setCorrectionMode(jCheckBoxMenuItemUseCorrectionModeByDefault.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed
+
+    XFutureVoid setCheckBoxMenuItemUseCorrectionModeByDefaultSelected(boolean selected) {
+        return Utils.runOnDispatchThread(() -> {
+            if (jCheckBoxMenuItemUseCorrectionModeByDefault.isSelected() != selected) {
+                jCheckBoxMenuItemUseCorrectionModeByDefault.setSelected(selected);
+            }
+        });
+    }
 
     private XFutureVoid conveyorTest() {
         AprsSystem sys = this.getConveyorVisClonedSystem();
@@ -5446,6 +5470,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemRandomTest;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemRecordLiveImageMovie;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowSplashMessages;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseCorrectionModeByDefault;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachCamera;
     private javax.swing.JCheckBox jCheckBoxShowDoneFutures;
     private javax.swing.JCheckBox jCheckBoxShowUnnamedFutures;
