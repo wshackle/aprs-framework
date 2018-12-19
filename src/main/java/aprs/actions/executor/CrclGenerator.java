@@ -3008,7 +3008,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
         try {
-            takeSimViewSnapshot("checkKitsReturningFalse", null);
+            takeSimViewSnapshot("checkKitsReturningFalse"+origIndex, physicalItemsLocal);
         } catch (IOException ex) {
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -4466,14 +4466,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile int captured_item_index = -1;
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
-        this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
+        
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
+            this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = saveSnapshotCsv(f, itemsToPaint);
             Utils.runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
         } else {
-            File csvFile = saveSnapshotCsv(f, getItems());
+            List<PhysicalItem> items = getItems();
+            this.object2DJPanel1.takeSnapshot(f, items, w, h);
+            File csvFile = saveSnapshotCsv(f, items);
             Utils.runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
