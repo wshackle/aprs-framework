@@ -79,31 +79,31 @@ public class GoalLearnerTest {
 
         // Kit Tray has 4 slots two for small gears and two for large gears
         KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kit_s2l2_vessel", 1, 0, 50, 50);
-        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 1, 0.0, +32, +55);
+        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 1, 0.0, +32, +55,50);
         addMap(s11, map);
-        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "small_gear", 2, 0.0, -32, +55);
+        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 2, 0.0, -32, +55,50);
         addMap(s12, map);
-        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 1, 0.0, +54, -28);
+        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 1, 0.0, +54, -28,100);
         addMap(s13, map);
-        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXY(tray1, "large_gear", 2, 0.0, -54, -28);
+        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 2, 0.0, -54, -28,100);
         addMap(s14, map);
 
         // Small gear parts tray has two slots for small gears
         PartsTray tray2 = PartsTray.newPartsTrayFromSkuIdRotXY("small_gear_vessel", 1, 0, 200, 200);
-        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +26.5, +26.5);
+        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, +26.5,50);
         addMap(s21, map);
-        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -26.5, +26.5);
+        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, +26.5,50);
         addMap(s22, map);
-        Slot s23 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 1, 0.0, +26.5, -26.5);
+        Slot s23 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, -26.5,50);
         addMap(s23, map);
-        Slot s24 = Slot.slotFromTrayPartNameIndexRotationXY(tray2, "small_gear", 2, 0.0, -26.5, -26.5);
+        Slot s24 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, -26.5,50);
         addMap(s24, map);
 
         // Large gear parts tray has two slots for large gears
         PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("large_gear_vessel", 1, 0, 400, 400);
-        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 1, 0.0, +59, +0);
+        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 1, 0.0, +59, +0,100);
         addMap(s31, map);
-        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXY(tray3, "large_gear", 2, 0.0, -59, +0);
+        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 2, 0.0, -59, +0,100);
         addMap(s32, map);
 
         // The slot offset provider is a simple replacement for the part of 
@@ -217,6 +217,7 @@ public class GoalLearnerTest {
             item.setVzi(tray.getVzi());
             item.setVzj(tray.getVzj());
             item.setVzk(tray.getVzk());
+            item.setRotation(tray.getRotation());
             return item;
         }
     }
@@ -259,20 +260,24 @@ public class GoalLearnerTest {
         return AprsSystem.createEmptySystem()
                 .thenCompose((AprsSystem aprsSystem) -> {
                     return completeCreateSimpleViewer(aprsSystem, sop, testData)
-                           .thenApply(x -> aprsSystem);
+                            .thenApply(x -> aprsSystem);
                 });
     }
 
     private static XFutureVoid completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
         aprsSystem.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aprsSystem.setExternalSlotOffsetProvider(sop);
-        
+
         PoseProvider poseProvider = new PoseProvider() {
 
-            private @Nullable List<PhysicalItem> rawList;
-            private @Nullable Map<String, PoseType> poseMap;
-            private @Nullable Map<String, List<PhysicalItem>> instanceMap;
-            private @Nullable Map<String, List<String>> instanceNameMap;
+            private @Nullable
+            List<PhysicalItem> rawList;
+            private @Nullable
+            Map<String, PoseType> poseMap;
+            private @Nullable
+            Map<String, List<PhysicalItem>> instanceMap;
+            private @Nullable
+            Map<String, List<String>> instanceNameMap;
 
             @Override
             @SuppressWarnings("nullness") //getSku is checked for null 
@@ -303,7 +308,8 @@ public class GoalLearnerTest {
             }
 
             @Override
-            @Nullable public PoseType getPose(String name) {
+            @Nullable
+            public PoseType getPose(String name) {
                 if (null == poseMap) {
                     getNewPhysicalItems();
                 }
@@ -329,18 +335,23 @@ public class GoalLearnerTest {
             }
         };
 
-        aprsSystem.setPddlExecExternalPoseProvider(poseProvider);
-        XFutureVoid xfv1 = aprsSystem.startActionListExecutor();
+        XFutureVoid xfv1 = aprsSystem.startActionListExecutor()
+                .thenRun(() -> {
+                    aprsSystem.setPddlExecExternalPoseProvider(poseProvider);
+                });
         XFutureVoid xfv2 = aprsSystem.startObject2DJinternalFrame();
         XFutureVoid xfv3 = aprsSystem.startSimServerJInternalFrame();
         XFutureVoid xfv4 = aprsSystem.startCrclClientJInternalFrame();
         return XFutureVoid.allOf(xfv1, xfv2, xfv3, xfv4)
                 .thenComposeToVoid(() -> {
+                    aprsSystem.setSnapShotHeight(600);
+                    aprsSystem.setSnapShotWidth(800);
+                    aprsSystem.setSnapshotsSelected(true);
                     aprsSystem.setRobotName("SimulatedRobot");
                     aprsSystem.setTaskName("GoalLearnerTest");
                     aprsSystem.setSimItemsData(testData);
                     aprsSystem.setViewLimits(-100, -100, +500, +500);
-                    
+
                     aprsSystem.simViewSimulateAndDisconnect();
                     aprsSystem.setSimViewTrackCurrentPos(true);
                     aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);

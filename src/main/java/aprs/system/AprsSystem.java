@@ -171,7 +171,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @SuppressWarnings({"initialization", "guieffect"})
     private AprsSystem(boolean immediate) {
-        this(null);
+        this(null,AprsSystemPropDefaults.getSingle());
         if (immediate) {
             headlessEmptyInit();
         }
@@ -189,7 +189,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @SuppressWarnings({"guieffect"})
     private AprsSystem() {
-        this(null);
+        this(null,AprsSystemPropDefaults.getSingle());
     }
 
     /**
@@ -199,12 +199,12 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @UIEffect
     @SuppressWarnings({"initialization"})
-    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1) {
+    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1,AprsSystemPropDefaults propDefaults) {
         this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
         visionLineListener = this::visionLineCounter;
         simPublishCountListener = this::setSimPublishCount;
         try {
-            initPropertiesFileInfo();
+            initPropertiesFileInfo(propDefaults);
             this.asString = getTitle();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
@@ -728,7 +728,13 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public List<Slot> getSlots(Tray tray, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
+            List<Slot> offsets = externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
+            List<Slot> absSlots = new ArrayList<>();
+            for(Slot offset: offsets) {
+                Slot absSlot = absSlotFromTrayAndOffset(tray, offset);
+                absSlots.add(absSlot);
+            }
+            return absSlots;
         }
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -2953,20 +2959,30 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private static XFuture<AprsSystem> createEmptyAprsSystemWithSwingDisplay2() {
-        AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
-        aprsSystemDisplayJFrame1.setAprsSystem(system);
-        system.setVisible(true);
-        return system.emptyInit().
-                thenSupply(() -> {
-                    aprsSystemDisplayJFrame1.setAprsSystem(system);
-                    return system;
-                });
+        try {
+            AprsSystemPropDefaults emptyTemp = AprsSystemPropDefaults.getEmptyTemp();
+            AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
+            AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, emptyTemp);
+            aprsSystemDisplayJFrame1.setAprsSystem(system);
+            system.setVisible(true);
+            return system.emptyInit().
+                    thenSupply(() -> {
+                        aprsSystemDisplayJFrame1.setAprsSystem(system);
+                        return system;
+                    });
+        } catch (Exception exception) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            if(exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
+            }
+        }
     }
 
     private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,AprsSystemPropDefaults.getSingle());
         return system.defaultInit().
                 thenApply(x -> {
                     aprsSystemDisplayJFrame1.setAprsSystem(system);
@@ -2976,7 +2992,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private static XFuture<AprsSystem> createAprsSystemWithSwingDisplay2(File propertiesFile) {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1);
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,AprsSystemPropDefaults.getSingle());
         aprsSystemDisplayJFrame1.setAprsSystem(system);
         system.setVisible(true);
         if (null != propertiesFile) {
@@ -3016,7 +3032,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private static XFuture<AprsSystem> createAprsSystemHeadless(File propertiesFile) {
-        AprsSystem system = new AprsSystem(null);
+        AprsSystem system = new AprsSystem(null,AprsSystemPropDefaults.getSingle());
         if (null != propertiesFile) {
             system.setPropertiesFile(propertiesFile);
             return system.loadProperties()
@@ -3846,7 +3862,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
                 + (isAborting() ? " : Aborting" : "")
                 + (isReverseFlag() ? " : Reverse" : "")
-                 + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
+                + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
                 + pddlActionString();
         if (newTitle.length() > 100) {
             newTitle = newTitle.substring(0, 100) + " ... ";
@@ -4129,9 +4145,8 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public XFutureVoid startActionListExecutor() {
         try {
-            return Utils.supplyOnDispatchThread(
-                    this::startActionsToCrclJInternalFrame)
-                    .thenComposeToVoid(x -> x);
+            return Utils.composeToVoidOnDispatchThread(
+                    this::startActionsToCrclJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -4139,7 +4154,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     @UIEffect
-    private XFutureVoid startActionsToCrclJInternalFrame() {
+    public XFutureVoid startActionsToCrclJInternalFrame() {
         try {
             boolean alreadySelected = isExecutorStartupSelected();
             if (!alreadySelected) {
@@ -4149,12 +4164,13 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null == newExecFrame) {
                 newExecFrame = new ExecutorJInternalFrame(this);
                 this.pddlExecutorJInternalFrame1 = newExecFrame;
+                addInternalFrame(newExecFrame);
             }
 
             if (null == newExecFrame) {
                 throw new IllegalStateException("PDDL Executor View must be open to use this function. newExecFrame=null");
             }
-            addInternalFrame(newExecFrame);
+
             newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
             newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
             if (null != pddlPlannerJInternalFrame) {
@@ -6627,6 +6643,19 @@ public class AprsSystem implements SlotOffsetProvider {
 
         private static final AprsSystemPropDefaults single = new AprsSystemPropDefaults();
 
+        private AprsSystemPropDefaults(File propDir, File propFile, File lastAprsPropertiesFileFile) {
+            this.propDir = propDir;
+            this.propFile = propFile;
+            this.lastAprsPropertiesFileFile = lastAprsPropertiesFileFile;
+        }
+
+        static AprsSystemPropDefaults getEmptyTemp() throws IOException {
+            File base = File.createTempFile("empty_aprs_props", ".base");
+            File dir = new File(base.getParentFile(),base.getName().replace('.', '_')+"_dir");
+            dir.mkdirs();
+            return new AprsSystemPropDefaults(dir, new File(dir,"empty_aprs_props.txt"), new File(dir,"lastAprsPropertiesFileFile.txt"));
+        }
+        
         static AprsSystemPropDefaults getSingle() {
             return single;
         }
@@ -6715,6 +6744,15 @@ public class AprsSystem implements SlotOffsetProvider {
         lastAprsPropertiesFileFile = getDefaultLastPropertiesFileFile();
     }
 
+    private void initPropertiesFileInfo(AprsSystemPropDefaults propDefaults) {
+        if(null == propDefaults) {
+            initPropertiesFileInfo();
+        }
+        propertiesDirectory = propDefaults.getPropDir();
+        propertiesFile = propDefaults.getPropFile();
+        lastAprsPropertiesFileFile = propDefaults.getLastAprsPropertiesFileFile();
+    }
+    
     private int snapShotWidth = 800;
     private int snapShotHeight = 600;
 

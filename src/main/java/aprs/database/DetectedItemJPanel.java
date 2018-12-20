@@ -225,9 +225,10 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
             }
             Object Rot = map.get("rotation");
             if (Rot != null) {
-                itemToReturn.setRotation(Double.parseDouble(Rot.toString()));
-                itemToReturn.setVxi(Math.cos(itemToReturn.getRotation()));
-                itemToReturn.setVxj(Math.sin(itemToReturn.getRotation()));
+                double itemRot = Double.parseDouble(Rot.toString());
+                itemToReturn.setVxi(Math.cos(itemRot));
+                itemToReturn.setVxj(Math.sin(itemRot));
+                itemToReturn.setRotation(itemRot);
             }
         } else {
             throw new IllegalArgumentException("map may not be null");
