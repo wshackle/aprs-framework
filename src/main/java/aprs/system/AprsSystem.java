@@ -4844,12 +4844,16 @@ public class AprsSystem implements SlotOffsetProvider {
         outputList.addAll(fillInfo.getPartTrays());
         outputList.addAll(fillInfo.getPartsInKit());
         List<PhysicalItem> partsInPartsTrays = new ArrayList<>(fillInfo.getPartsInPartsTrays());
+        List<PhysicalItem> unassignedParts = new ArrayList<>(fillInfo.getUnassignedParts());
+        List<PhysicalItem> availableParts = new ArrayList<>();
+        availableParts.addAll(unassignedParts);
+        availableParts.addAll(partsInPartsTrays);
         List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
         List<PhysicalItem> movedPartsList = new ArrayList<>();
         for (TraySlotListItem emptySlotItem : emptyKitSlots) {
             int itemFoundIndex = -1;
-            for (int i = 0; i < partsInPartsTrays.size(); i++) {
-                PhysicalItem item = partsInPartsTrays.get(i);
+            for (int i = 0; i < availableParts.size(); i++) {
+                PhysicalItem item = availableParts.get(i);
                 String itemName = item.getName();
                 if (itemName.startsWith("sku_")) {
                     itemName = itemName.substring(4);
@@ -4877,7 +4881,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
             }
             if (-1 != itemFoundIndex) {
-                partsInPartsTrays.remove(itemFoundIndex);
+                availableParts.remove(itemFoundIndex);
             }
         }
         outputList.addAll(movedPartsList);

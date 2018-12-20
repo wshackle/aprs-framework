@@ -38,7 +38,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.eclipse.collections.impl.block.factory.Comparators;
 
 /**
  *
@@ -318,7 +317,7 @@ public class GoalLearner {
             }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                    .sorted(Comparators.byFunction(Map.Entry<String, String>::getKey))
+                    .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))
                     .map(e -> e.getKey() + "=" + e.getValue())
                     .collect(Collectors.joining(" "))
                     + ")");
