@@ -64,7 +64,7 @@ public class Slot extends PhysicalItem {
         this.slotIndexString = slotIndexString;
     }
 
-    public static Slot slotFromTrayPartNameIndexRotationXY(Tray tray,String partName,int index, double rotation, double x, double y) {
+    public static Slot slotFromTrayPartNameIndexRotationXYDiameter(Tray tray,String partName,int index, double rotation, double x, double y, double diameter) {
         String slotName = "slot_"+index+"_for_"+partName;
         Slot slot = new Slot(partName,rotation,x,y);
         slot.setIndex(index);
@@ -73,16 +73,17 @@ public class Slot extends PhysicalItem {
         slot.setFullName(slotName);
         slot.setPrpName(slotName);
         slot.setTray(tray);
+        slot.setDiameter(diameter);
         return slot;
     }
     
     public Slot(String SlotName) {
-        super(SlotName);
+        super(SlotName,"S");
         this.SlotName = SlotName;
     }
 
     public Slot(String name, double rotation, double x, double y) {
-        super(name, rotation, x, y);
+        super(name, rotation, x, y,"S");
         X_OFFSET = x;
         Y_OFFSET = y;
         this.SlotName = name;

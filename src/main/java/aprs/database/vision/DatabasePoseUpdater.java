@@ -1145,6 +1145,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         item.setVzi(tray.getVzi());
         item.setVzj(tray.getVzj());
         item.setVzk(tray.getVzk());
+        item.setRotation(tray.getRotation());
         return item;
     }
 

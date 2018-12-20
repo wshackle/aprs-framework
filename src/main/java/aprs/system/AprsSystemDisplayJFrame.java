@@ -571,7 +571,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
         jMenu3.setText("Startup");
 
-        jCheckBoxMenuItemStartupPDDLPlanner.setSelected(true);
         jCheckBoxMenuItemStartupPDDLPlanner.setText("PDDL Planner");
         jCheckBoxMenuItemStartupPDDLPlanner.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -580,7 +579,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupPDDLPlanner);
 
-        jCheckBoxMenuItemStartupExecutor.setSelected(true);
         jCheckBoxMenuItemStartupExecutor.setText("Executor");
         jCheckBoxMenuItemStartupExecutor.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -589,7 +587,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupExecutor);
 
-        jCheckBoxMenuItemStartupObjectSP.setSelected(true);
         jCheckBoxMenuItemStartupObjectSP.setText("Object SP");
         jCheckBoxMenuItemStartupObjectSP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -598,7 +595,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupObjectSP);
 
-        jCheckBoxMenuItemStartupObject2DView.setSelected(true);
         jCheckBoxMenuItemStartupObject2DView.setText("Object 2D View/Simulate");
         jCheckBoxMenuItemStartupObject2DView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -607,7 +603,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupObject2DView);
 
-        jCheckBoxMenuItemStartupRobotCrclGUI.setSelected(true);
         jCheckBoxMenuItemStartupRobotCrclGUI.setText("Robot CRCL Client Gui");
         jCheckBoxMenuItemStartupRobotCrclGUI.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -616,7 +611,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu3.add(jCheckBoxMenuItemStartupRobotCrclGUI);
 
-        jCheckBoxMenuItemShowDatabaseSetupOnStartup.setSelected(true);
         jCheckBoxMenuItemShowDatabaseSetupOnStartup.setText("Database Setup");
         jCheckBoxMenuItemShowDatabaseSetupOnStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

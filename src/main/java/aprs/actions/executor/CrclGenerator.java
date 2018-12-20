@@ -1700,12 +1700,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                    }
 //                    break;
                     case CLEAR_KITS_TO_CHECK:
-                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex="+gparams.startingIndex+",idx="+idx, action);
+                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex=" + gparams.startingIndex + ",idx=" + idx, action);
                         clearKitsToCheck(action, cmds, gparams);
                         break;
 
                     case ADD_KIT_TO_CHECK:
-                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex="+gparams.startingIndex+",idx="+idx, action);
+                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex=" + gparams.startingIndex + ",idx=" + idx, action);
                         addKitToCheck(action, cmds, gparams);
                         aprsSystem.logEvent("ADD_KIT_TO_CHECK kitsToCheck.size()=", kitsToCheck.size());
                         break;
@@ -2583,12 +2583,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             if (null == pose) {
+                logError("pose=null for kitInstanceName=" +kitInstanceName);
                 return Collections.emptyList();
             }
             Tray tray = new Tray(kitSkuName, pose, 0);
             tray.setType("KT");
             if (null != aprsSystem) {
-                return aprsSystem.getSlots(tray, false)
+                List<Slot> allSlots = aprsSystem.getSlots(tray, false);
+                if(allSlots.isEmpty()) {
+                    logError("tray="+tray+" has no slots");
+                    return allSlots;
+                }
+                return allSlots
                         .stream()
                         .filter(slot -> slot.getType().equals("S"))
                         .peek(slot -> {
@@ -2598,11 +2604,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             slot.setVzi(zAxis.getI());
                             slot.setVzj(zAxis.getJ());
                             slot.setVzk(zAxis.getK());
+                            slot.setRotation(Math.atan2(xAxis.getJ(), xAxis.getI()));
                         })
                         .collect(Collectors.toList());
             }
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "", ex);
+            logger.log(Level.SEVERE, "kitSkuName="+kitSkuName+", kitInstanceName="+kitInstanceName, ex);
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -2615,11 +2622,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private static final boolean IGNORE_KIT_CHECK_FAILURES = Boolean.getBoolean("aprs.ignoreKitCheckFailures");
 
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
-        boolean check1 =  recheckKitsOnly(true);
-        if(check1) {
+        boolean check1 = recheckKitsOnly(true);
+        if (check1) {
             return true;
         }
-        boolean check2 =  recheckKitsOnly(true);
+        boolean check2 = recheckKitsOnly(true);
         return check2;
     }
 
@@ -2731,60 +2738,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     logDebug("kitsToFix = " + kitsToFix);
                     printLastOptoInfo();
                     if (pauseInsteadOfRecover && !correctionMode) {
-                        StringBuilder errMsgSb = new StringBuilder();
-                        aprsSystem.setSnapshotsSelected(true);
-                        takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
-                        String errMsgStart = aprsSystem.getRunName();
-                        errMsgSb.append(errMsgStart);
-                        logError("checkKits: errMsgStart=" + errMsgStart);
-                        logError("checkKits: newItems = " + physicalItemsLocal);
-                        logError("checkKits: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
-                        logError("checkKits: parts = " + parts);
-                        logError("checkKits: matchedKitInstanceNames = " + matchedKitInstanceNames);
-                        logError("checkKits: kitsToFix.size() = " + kitsToFix.size());
-                        logError("checkKits: kitsToFix = " + kitsToFix);
-                        for (KitToCheck kit : kitsToFix) {
-                            logError("checkKits: kit = " + kit);
-                            logError("checkKits: kit.slotMap = " + kit.slotMap);
-                            String errMsgKitStart = " : " + kit.name + " needs ";
-                            errMsgSb.append(errMsgKitStart);
-                            logError("checkKits: errMsgKitStart=" + errMsgKitStart);
-                            for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
-
-                                logError("checkKits: info = " + info);
-                                logError("checkKits: info.failedItems.size()=" + info.failedItems.size());
-                                for (int i = 0; i < info.failedItems.size(); i++) {
-                                    KitToCheckFailedItemInfo failedItemInfo = info.failedItems.get(i);
-                                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " in " + failedItemInfo.failedAbsSlotPrpName;
-                                    errMsgSb.append(fiString);
-                                    if (i < info.failedItems.size() - 1) {
-                                        errMsgSb.append(", \n");
-                                    }
-                                    logError("checkKits: failedItemInfo = " + failedItemInfo);
-                                    logError("checkKits: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
-                                    logError("checkKits: failedItemInfo.failedClosestItem = " + failedItemInfo.failedClosestItem);
-                                    logError("checkKits: failedItemInfo.failedClosestItemDist = " + failedItemInfo.failedClosestItemDist);
-                                    logError("checkKits: failedItemInfo.failedAbsSlot = " + failedItemInfo.failedAbsSlot);
-                                }
-
-//                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg); 
-                            }
-                        }
-                        logError("prePubs = " + prePubs);
-                        logError("preVis = " + preVis);
-                        logError("preTimeDiff = " + preTimeDiff);
-                        logError("postPubs = " + postPubs);
-                        logError("postVis = " + postVis);
-                        logError("postTimeDiff = " + postTimeDiff);
-                        logError("checkKitsTimeDiff = " + checkKitsTimeDiff);
-                        CRCLProgramType program = new CRCLProgramType();
-                        program.setInitCanon(new InitCanonType());
-                        program.setEndCanon(new EndCanonType());
-                        program.getMiddleCommand().addAll(cmds);
-                        aprsSystem.logCrclProgFile(program);
-                        String errMsg = errMsgSb.toString();
-                        takeSimViewSnapshot(errMsg, physicalItemsLocal);
-                        aprsSystem.setTitleErrorString(errMsg);
+                        String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
                         throw new IllegalStateException(errMsg);
                     } else {
                         Map<String, Integer> prefixCountMap = new HashMap<>();
@@ -2927,6 +2881,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                         logError("entry.getKey = " + entry.getKey() + ",x=" + entryPoint.getX() + ",y=" + entryPoint.getY() + ", dist=" + dist + ", absSlotPoseDiff=" + absSlotDiff);
                                                     }
                                                 }
+                                                takeSimViewSnapshot("checkKits : physicalItemsLocal", physicalItemsLocal);
+                                                takeSimViewSnapshot("checkKits : absSlots", absSlots);
+                                                List<PhysicalItem> itemsPlusSlots = new ArrayList<>();
+                                                itemsPlusSlots.addAll(physicalItemsLocal);
+                                                itemsPlusSlots.addAll(absSlots);
+                                                takeSimViewSnapshot("checkKits : itemsPlusSlots", itemsPlusSlots);
+                                                takeSimViewSnapshot("checkKits : absSlotPose", absSlotPose,slotName);
+                                                takeSimViewSnapshot("checkKits : slotPose", slotPose,slotName);
+                                                takeSimViewSnapshot("checkKits : kitPose", pose,kitInstanceName);
                                                 throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
                                             }
                                             correctivedItems.add(absSlot);
@@ -2943,68 +2906,75 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
                             logDebug("kitsToFix = " + kitsToFix);
                         }
-                        List<Action> optimizedCorrectiveActions
-                                = optimizePddlActionsWithOptaPlanner(correctiveActions, 0);
-                        lastIndex.compareAndSet(origIndex, origIndex - 1);
-                        boolean placedPart = false;
-                        CORRECT_ACTIONS_LOOP:
-                        for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
-                            Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
-                            switch (correctiveAction.getType()) {
-                                case TAKE_PART:
-                                    String partName = correctiveAction.getArgs()[takePartArgIndex];
-                                    if (partName.contains("in_pt")) {
-                                        if (caIndex < optimizedCorrectiveActions.size() - 1) {
-                                            Action nextAction = optimizedCorrectiveActions.get(caIndex + 1);
-                                            String nextSlotName = nextAction.getArgs()[placePartSlotArgIndex];
-                                            if (!nextSlotName.contains("kit")) {
-                                                logDebug("nextSlotName = " + nextSlotName);
-                                                caIndex++;
-                                                continue CORRECT_ACTIONS_LOOP;
+                        if (!correctiveActions.isEmpty()) {
+                            List<Action> optimizedCorrectiveActions
+                                    = optimizePddlActionsWithOptaPlanner(correctiveActions, 0);
+                            lastIndex.compareAndSet(origIndex, origIndex - 1);
+                            boolean placedPart = false;
+                            CORRECT_ACTIONS_LOOP:
+                            for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
+                                Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
+                                switch (correctiveAction.getType()) {
+                                    case TAKE_PART:
+                                        String partName = correctiveAction.getArgs()[takePartArgIndex];
+                                        if (partName.contains("in_pt")) {
+                                            if (caIndex < optimizedCorrectiveActions.size() - 1) {
+                                                Action nextAction = optimizedCorrectiveActions.get(caIndex + 1);
+                                                String nextSlotName = nextAction.getArgs()[placePartSlotArgIndex];
+                                                if (!nextSlotName.contains("kit")) {
+                                                    logDebug("nextSlotName = " + nextSlotName);
+                                                    caIndex++;
+                                                    continue CORRECT_ACTIONS_LOOP;
+                                                }
                                             }
                                         }
-                                    }
-                                    takePartByName(partName, null, cmds);
-                                    break;
+                                        takePartByName(partName, null, cmds);
+                                        break;
 
-                                case PLACE_PART:
-                                    placedPart = true;
-                                    String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                    placePartBySlotName(slotName, cmds, correctiveAction, action, origIndex-1);  //ByName(slotName, null, cmds);
-                                    break;
-                            }
-                        }
-                        if (placedPart) {
-                            takeSimViewSnapshot("correctivedItems", correctivedItems);
-                            addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
-                                try {
-                                    List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
-                                    takeSimViewSnapshot("corrective lookForParts", null);
-                                    lookForParts(action, l, false, false);
-                                    addMarkerCommand(l, "checkKitsCorrectionEndAfterLookForParts", (CrclCommandWrapper wrapper2) -> {
-                                        try {
-                                            List<MiddleCommandType> l2 = wrapper2.getCurProgram().getMiddleCommand();
-                                            takeSimViewSnapshot("corrective recursive checkKits", null);
-                                            checkKits(action, l2, origIndex);
-                                        } catch (Exception ex) {
-                                            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
-                                            if (ex instanceof RuntimeException) {
-                                                throw (RuntimeException) ex;
-                                            } else {
-                                                throw new RuntimeException(ex);
-                                            }
-                                        }
-                                    });
-                                } catch (Exception ex2) {
-                                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex2);
-                                    if (ex2 instanceof RuntimeException) {
-                                        throw (RuntimeException) ex2;
-                                    } else {
-                                        throw new RuntimeException(ex2);
-                                    }
+                                    case PLACE_PART:
+                                        placedPart = true;
+                                        String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
+                                        placePartBySlotName(slotName, cmds, correctiveAction, action, origIndex - 1);  //ByName(slotName, null, cmds);
+                                        break;
                                 }
-                            });
-                            return true;
+                            }
+                            if (placedPart) {
+                                takeSimViewSnapshot("correctivedItems", correctivedItems);
+                                addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
+                                    try {
+                                        List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
+                                        takeSimViewSnapshot("corrective lookForParts", null);
+                                        lookForParts(action, l, false, false);
+                                        addMarkerCommand(l, "checkKitsCorrectionEndAfterLookForParts", (CrclCommandWrapper wrapper2) -> {
+                                            try {
+                                                List<MiddleCommandType> l2 = wrapper2.getCurProgram().getMiddleCommand();
+                                                takeSimViewSnapshot("corrective recursive checkKits", null);
+                                                checkKits(action, l2, origIndex);
+                                            } catch (Exception ex) {
+                                                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
+                                                if (ex instanceof RuntimeException) {
+                                                    throw (RuntimeException) ex;
+                                                } else {
+                                                    throw new RuntimeException(ex);
+                                                }
+                                            }
+                                        });
+                                    } catch (Exception ex2) {
+                                        Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex2);
+                                        if (ex2 instanceof RuntimeException) {
+                                            throw (RuntimeException) ex2;
+                                        } else {
+                                            throw new RuntimeException(ex2);
+                                        }
+                                    }
+                                });
+                                return true;
+                            } else {
+                                logError("correctiveActions.isEmpty(): kitsToFix = " + kitsToFix);
+                                lastIndex.set(origIndex);
+                                String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
+                                throw new IllegalStateException(errMsg);
+                            }
                         }
                     }
                 }
@@ -3014,11 +2984,77 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
         try {
-            takeSimViewSnapshot("checkKitsReturningFalse"+origIndex, physicalItemsLocal);
+            takeSimViewSnapshot("checkKitsReturningFalse" + origIndex, physicalItemsLocal);
         } catch (IOException ex) {
             Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
+    }
+
+    private String showKitToFixErrors(List<PhysicalItem> physicalItemsLocal, Map<String, List<Slot>> kitInstanceAbsSlotMap, List<PhysicalItem> parts, Set<String> matchedKitInstanceNames, List<KitToCheck> kitsToFix, int prePubs, int preVis, long preTimeDiff, int postPubs, int postVis, long postTimeDiff, long checkKitsTimeDiff, List<MiddleCommandType> cmds) throws IOException {
+        StringBuilder errMsgSb = new StringBuilder();
+        aprsSystem.setSnapshotsSelected(true);
+        takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
+        String errMsgStart = aprsSystem.getRunName();
+        errMsgSb.append(errMsgStart);
+        logError("checkKits: errMsgStart=" + errMsgStart);
+        logError("checkKits: newItems = " + physicalItemsLocal);
+        logError("checkKits: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
+        logError("checkKits: parts = " + parts);
+        logError("checkKits: matchedKitInstanceNames = " + matchedKitInstanceNames);
+        logError("checkKits: kitsToFix.size() = " + kitsToFix.size());
+        logError("checkKits: kitsToFix = " + kitsToFix);
+        for (KitToCheck kit : kitsToFix) {
+            logError("checkKits: kit = " + kit);
+            logError("checkKits: kit.slotMap = " + kit.slotMap);
+            
+            String errMsgKitStart = " : " + kit.name + " needs ";
+            errMsgSb.append(errMsgKitStart);
+            logError("checkKits: errMsgKitStart=" + errMsgKitStart);
+            for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
+                takeSimViewSnapshot("checkKitsFailed: info", info.pose,info.instanceName);
+                takeSimViewSnapshot("checkKitsFailed: info.absSlots", info.absSlots);
+                List<PhysicalItem> itemsPlusAbsSlots = new ArrayList<>();
+                itemsPlusAbsSlots.addAll(physicalItemsLocal);
+                itemsPlusAbsSlots.addAll(info.absSlots);
+                takeSimViewSnapshot("checkKitsFailed: itemsPlusAbsSlots", itemsPlusAbsSlots);
+                logError("checkKits: info = " + info);
+                logError("checkKits: info.failedItems.size()=" + info.failedItems.size());
+                for (int i = 0; i < info.failedItems.size(); i++) {
+                    KitToCheckFailedItemInfo failedItemInfo = info.failedItems.get(i);
+                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedAbsSlot", failedItemInfo.failedAbsSlot,failedItemInfo.failedAbsSlotPrpName);
+                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedItemInfo.failedClosestItem,failedItemInfo.failedClosestItem.getFullName());
+                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " in " + failedItemInfo.failedAbsSlotPrpName;
+                    errMsgSb.append(fiString);
+                    if (i < info.failedItems.size() - 1) {
+                        errMsgSb.append(", \n");
+                    }
+                    logError("checkKits: failedItemInfo = " + failedItemInfo);
+                    logError("checkKits: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
+                    logError("checkKits: failedItemInfo.failedClosestItem = " + failedItemInfo.failedClosestItem);
+                    logError("checkKits: failedItemInfo.failedClosestItemDist = " + failedItemInfo.failedClosestItemDist);
+                    logError("checkKits: failedItemInfo.failedAbsSlot = " + failedItemInfo.failedAbsSlot);
+                }
+
+//                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg);
+            }
+        }
+        logError("prePubs = " + prePubs);
+        logError("preVis = " + preVis);
+        logError("preTimeDiff = " + preTimeDiff);
+        logError("postPubs = " + postPubs);
+        logError("postVis = " + postVis);
+        logError("postTimeDiff = " + postTimeDiff);
+        logError("checkKitsTimeDiff = " + checkKitsTimeDiff);
+        CRCLProgramType program = new CRCLProgramType();
+        program.setInitCanon(new InitCanonType());
+        program.setEndCanon(new EndCanonType());
+        program.getMiddleCommand().addAll(cmds);
+        aprsSystem.logCrclProgFile(program);
+        String errMsg = errMsgSb.toString();
+        takeSimViewSnapshot(errMsg, physicalItemsLocal);
+        aprsSystem.setTitleErrorString(errMsg);
+        return errMsg;
     }
 
     private List<PhysicalItem> checkKitsItemsToParts(List<PhysicalItem> newItems) {
