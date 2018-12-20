@@ -29,10 +29,10 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import javax.swing.JPanel;
 import org.checkerframework.checker.guieffect.qual.UIType;
-import org.eclipse.collections.impl.block.factory.Comparators;
 
 /**
  *
@@ -190,7 +190,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                 newSortedTrays.add(item);
             }
         }
-        Collections.sort(newSortedTrays, Comparators.byDoubleFunction(this::positionOfItem));
+        Collections.sort(newSortedTrays, Comparator.comparingDouble(this::positionOfItem));
         this.sortedKitTrays = newSortedTrays;
         this.repaint();
     }

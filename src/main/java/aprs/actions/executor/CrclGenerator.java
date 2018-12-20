@@ -2615,7 +2615,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private static final boolean IGNORE_KIT_CHECK_FAILURES = Boolean.getBoolean("aprs.ignoreKitCheckFailures");
 
     public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
-        return recheckKitsOnly(true);
+        boolean check1 =  recheckKitsOnly(true);
+        if(check1) {
+            return true;
+        }
+        boolean check2 =  recheckKitsOnly(true);
+        return check2;
     }
 
     public boolean recheckKitsOnly(boolean getNewItems) throws InterruptedException, ExecutionException, IOException {
@@ -2660,6 +2665,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+            return kitsToFix.isEmpty();
         }
         return empty;
     }

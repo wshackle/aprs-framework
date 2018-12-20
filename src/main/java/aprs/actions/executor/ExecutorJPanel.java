@@ -137,7 +137,6 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.eclipse.collections.impl.block.factory.Comparators;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -5552,7 +5551,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             List<PhysicalItem> newItems = crclGenerator.getPhysicalItems();
             if (newItems != null) {
                 newItems = new ArrayList<>(newItems);
-                newItems.sort(Comparators.fromFunctions(PhysicalItem::getFullName));
+                newItems.sort(Comparator.comparing(PhysicalItem::getFullName));
                 for (PhysicalItem item : newItems) {
                     String fullName = item.getFullName();
                     if (null != fullName) {
