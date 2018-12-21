@@ -226,6 +226,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return this.executorJPanel1.incrementAndGetCommandId();
     }
 
+    public void reloadErrorMaps() throws IOException {
+        this.executorJPanel1.reloadErrorMaps();
+    }
+    
     /**
      * Add a position map.
      *

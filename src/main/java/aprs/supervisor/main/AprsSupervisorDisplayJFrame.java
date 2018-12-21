@@ -40,6 +40,7 @@ import static aprs.misc.Utils.getAprsIconUrl;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
+import crcl.base.PointType;
 
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
@@ -217,6 +218,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void handleRobotTableChange(int firstRow, int lastRow, int col, int type, Object source) {
 
+        if (supervisor.isResetting()) {
+            return;
+        }
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
@@ -936,6 +940,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
+        if (supervisor.isResetting()) {
+            return;
+        }
         supervisor.setRobotEnabled(robotName, enabled);
     }
 
@@ -1177,7 +1184,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      */
     public XFutureVoid showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, GraphicsDevice graphicsDevice) {
 
-        if (jCheckBoxMenuItemShowSplashMessages.isSelected()) {
+        if (jCheckBoxMenuItemShowSplashMessages.isSelected() && !supervisor.isResetting()) {
             return forceShowMessageFullScreen(message, fontSize, image, colors, graphicsDevice);
         } else {
             logEvent("ignoring showMessageFullScreen " + message.replace('\n', ' '));
@@ -1499,6 +1506,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemStartScanAllThenContinuousDemoRevFirst = new javax.swing.JMenuItem();
         jMenuItemConveyorTest = new javax.swing.JMenuItem();
         jMenuItemReloadSimFiles = new javax.swing.JMenuItem();
+        jMenuItemRestoreOrigRobotInfo = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -2447,6 +2455,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuSpecialTests.add(jMenuItemReloadSimFiles);
 
+        jMenuItemRestoreOrigRobotInfo.setText("Restore Original Robot Info");
+        jMenuItemRestoreOrigRobotInfo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemRestoreOrigRobotInfoActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemRestoreOrigRobotInfo);
+
         jMenuBar1.add(jMenuSpecialTests);
 
         setJMenuBar(jMenuBar1);
@@ -2757,9 +2773,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         XFutureVoid fullAbortAllFuture
                 = immediateAbortAllFuture.thenComposeToVoid(this::fullAbortAll);
         return fullAbortAllFuture.thenRun(() -> {
-            forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
-                    SplashScreen.getRobotArmImage(),
-                    SplashScreen.getBlueWhiteGreenColorList(), gd);
+            if (!supervisor.isResetting()) {
+                forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
+                        SplashScreen.getRobotArmImage(),
+                        SplashScreen.getBlueWhiteGreenColorList(), gd);
+            }
         });
     }
 
@@ -3805,6 +3823,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 throw new NullPointerException("supervisor");
             }
             supervisor.setResetting(true);
+            if (null != internalInteractiveResetAllFuture) {
+                internalInteractiveResetAllFuture.cancelAll(false);
+                internalInteractiveResetAllFuture = null;
+            }
+            if (null != interactivStartFuture) {
+                interactivStartFuture.cancelAll(false);
+                interactivStartFuture = null;
+            }
             supervisor.setIconImage(IconImages.BASE_IMAGE);
             supervisor.setTitleMessage("starting action ...");
 
@@ -3813,7 +3839,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFutureVoid iiraFuture
                     = fullAbortFuture
-                            .thenComposeToVoid(() -> internalInteractiveResetAll());
+                            .thenComposeToVoid(
+                                    "interactivStart(" + actionName + ")internalInteractiveResetAll",
+                                    () -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -3821,19 +3849,67 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         MultiLineStringJPanel.setIgnoreForceShow(false);
                     })
                     .always(() -> supervisor.setResetting(false))
-                    .thenComposeAsyncToVoid(x -> lookForPartsAll(), getSupervisorExecutorService())
-                    .thenComposeToVoid(() -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            if (null != actionName && null != runnable) {
-                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
-                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
-                                if (confirmed) {
-                                    supervisor.setTitleMessage(actionName);
-                                    runnable.run();
+                    .thenComposeAsyncToVoid(
+                            "interactivStart(" + actionName + ")LookForParts",
+                            x -> {
+                                List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
+                                List<AprsSystem> aprsSystems = supervisor.getAprsSystems();
+                                for (int i = 0; i < aprsSystems.size(); i++) {
+                                    AprsSystem sys = aprsSystems.get(i);
+                                    boolean limitsEnforced = sys.isEnforceMinMaxLimits();
+                                    logEvent("sys="+sys+", limitsEnforced="+limitsEnforced);
+                                    if (!limitsEnforced) {
+                                        continue;
+                                    }
+                                    boolean alertLimits = sys.isAlertLimitsCheckBoxSelected();
+                                    sys.setAlertLimitsCheckBoxSelected(false);
+                                    PointType currentPoint = sys.getCurrentPosePoint();
+                                    boolean inLimits = sys.isPointWithinLimits(currentPoint);
+                                    if(alertLimits) {
+                                        sys.setAlertLimitsCheckBoxSelected(true);
+                                    }
+                                    if (inLimits) {
+                                        continue;
+                                    }
+                                    int confirmRet
+                                    = JOptionPane.showConfirmDialog(this, "Disable cartesian limits on " + sys);
+                                    if (confirmRet == JOptionPane.YES_OPTION) {
+                                        sys.setEnforceMinMaxLimits(false);
+                                        sys.updateRobotLimits();
+                                        aprsSystemsToReEnableLimits.add(sys);
+                                    }
                                 }
-                            }
-                        });
-                    });
+                                return lookForPartsAll()
+                                        .thenRun(() -> {
+                                            for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
+                                                AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
+                                                sys.setEnforceMinMaxLimits(true);
+                                                sys.updateRobotLimits();
+                                            }
+                                        });
+                            },
+                            getSupervisorExecutorService())
+                    .thenComposeToVoid(
+                            "interactivStart(" + actionName + ")afterLookForParts",
+                            () -> {
+                                return Utils.runOnDispatchThread(
+                                        "interactivStart(" + actionName + ")confirmContinue",
+                                        () -> {
+                                            if (null != actionName && null != runnable) {
+                                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
+                                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
+                                                if (confirmed) {
+                                                    supervisor.setTitleMessage(actionName);
+                                                    this.interactivStartFuture = null;
+                                                    this.internalInteractiveResetAllFuture = null;
+                                                    runnable.run();
+                                                } else {
+                                                    this.interactivStartFuture = null;
+                                                    this.internalInteractiveResetAllFuture = null;
+                                                }
+                                            }
+                                        });
+                            });
             interactivStartFuture = ret;
             return ret;
         } catch (Exception exception) {
@@ -3975,6 +4051,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             supervisor.setCorrectionMode(jCheckBoxMenuItemUseCorrectionModeByDefault.isSelected());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed
+
+    private void jMenuItemRestoreOrigRobotInfoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRestoreOrigRobotInfoActionPerformed
+        restoreOrigRobotInfo();
+    }//GEN-LAST:event_jMenuItemRestoreOrigRobotInfoActionPerformed
 
     XFutureVoid setCheckBoxMenuItemUseCorrectionModeByDefaultSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
@@ -5077,7 +5157,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalThreadStateException("call me from AWT event thread.");
         }
         if (ignoreRobotTableChanges && !resetting) {
-            throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+            System.err.println("ignoreRobotTableChanges set twice");
+            System.err.println("disableRobotTableModelListenerTrace="
+                    +Utils.traceToString(disableRobotTableModelListenerTrace));
+            Thread.dumpStack();
         }
 //        jTableRobots.getModel().removeTableModelListener(robotTableModelListener);
         ignoreRobotTableChanges = true;
@@ -5503,6 +5586,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemReloadSimFiles;
     private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemResetAll;
+    private javax.swing.JMenuItem jMenuItemRestoreOrigRobotInfo;
     private javax.swing.JMenuItem jMenuItemRunCustom;
     private javax.swing.JMenuItem jMenuItemSafeAbortAll;
     private javax.swing.JMenuItem jMenuItemSaveAll;
