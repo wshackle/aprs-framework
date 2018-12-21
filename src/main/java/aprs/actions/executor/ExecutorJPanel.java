@@ -7541,7 +7541,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile String errorMapFilesArray[] = null;
     private void loadErrorMapFiles(String errorMapFiles) throws IOException {
-        positionMapJPanel1.clearCurrentMap();
         errorMapFilesArray = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
         reloadErrorMaps();
     }
@@ -7550,6 +7549,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if(null == errorMapFilesArray) {
             throw new NullPointerException("errorMapFilesArray");
         }
+        positionMapJPanel1.clearCurrentMap();
         for (String emf : errorMapFilesArray) {
             if (null == emf) {
                 continue;
