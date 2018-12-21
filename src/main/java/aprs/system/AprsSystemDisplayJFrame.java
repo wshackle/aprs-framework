@@ -476,6 +476,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemEnableDebugDumpstacks = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetPoseMinMaxLimits = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemEnforceMinMaxLimits = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemAlertLimits = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSnapshotImageSize = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemReloadSimFilesOnReverse = new javax.swing.JCheckBoxMenuItem();
@@ -722,6 +723,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemSetPoseMinMaxLimits);
+
+        jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(true);
+        jCheckBoxMenuItemEnforceMinMaxLimits.setText("Enforce Min/Max Limits");
+        jCheckBoxMenuItemEnforceMinMaxLimits.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemEnforceMinMaxLimits);
 
         jCheckBoxMenuItemAlertLimits.setSelected(true);
         jCheckBoxMenuItemAlertLimits.setText("Alert Limits");
@@ -2002,6 +2012,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
 
+    private void jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
+        aprsSystem.setEnforceMinMaxLimits(jCheckBoxMenuItemEnforceMinMaxLimits.isSelected());
+        aprsSystem.updateRobotLimits();
+    }//GEN-LAST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
+
+    public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
+        return Utils.runOnDispatchThread(() -> {
+            jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(selected);
+        });
+    }
+    
     CachedCheckBox connectDatabaseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
     }
@@ -2070,6 +2091,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemCorrectionMode;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableDebugDumpstacks;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnforceMinMaxLimits;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;

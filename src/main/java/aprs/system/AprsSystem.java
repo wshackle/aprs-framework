@@ -53,7 +53,6 @@ import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
 import aprs.misc.AprsCommonLogger;
-import aprs.misc.AprsCommonPrintStream;
 import aprs.misc.IconImages;
 import aprs.misc.PmCartesianMinMaxLimit;
 import aprs.simview.Object2DOuterDialogPanel;
@@ -171,7 +170,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @SuppressWarnings({"initialization", "guieffect"})
     private AprsSystem(boolean immediate) {
-        this(null,AprsSystemPropDefaults.getSingle());
+        this(null, AprsSystemPropDefaults.getSingle());
         if (immediate) {
             headlessEmptyInit();
         }
@@ -189,7 +188,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @SuppressWarnings({"guieffect"})
     private AprsSystem() {
-        this(null,AprsSystemPropDefaults.getSingle());
+        this(null, AprsSystemPropDefaults.getSingle());
     }
 
     /**
@@ -199,7 +198,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     @UIEffect
     @SuppressWarnings({"initialization"})
-    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1,AprsSystemPropDefaults propDefaults) {
+    private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1, AprsSystemPropDefaults propDefaults) {
         this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
         visionLineListener = this::visionLineCounter;
         simPublishCountListener = this::setSimPublishCount;
@@ -420,6 +419,60 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
         this.pddlExecutorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
+    }
+
+    public void reloadErrorMaps() throws IOException {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
+        this.pddlExecutorJInternalFrame1.reloadErrorMaps();
+    }
+
+    public XFutureVoid restoreOrigRobotInfo() {
+        String origRobotName1 = this.getOrigRobotName();
+        if (null == origRobotName1 || origRobotName1.length() < 1) {
+            throw new IllegalStateException("origRobotName=" + origRobotName1);
+        }
+        String origCrclRobotHost1 = this.getOrigCrclRobotHost();
+        if (null == origCrclRobotHost1 || origCrclRobotHost1.length() < 1) {
+            throw new IllegalStateException("origCrclRobotHost1=" + origCrclRobotHost1);
+        }
+        int origCrclRobotPort1 = this.getOrigCrclRobotPort();
+        if (origCrclRobotPort1 < 1) {
+            throw new IllegalStateException("origCrclRobotPort1=" + origCrclRobotPort1);
+        }
+        XFutureVoid immediateAbortFuture
+                = this.immediateAbort();
+        return immediateAbortFuture
+                .thenRunAsync("disconnectRobot(" + getRobotName() + ")",
+                        this::disconnectRobotPrivate,
+                        connectService)
+                .thenRun(
+                        "restoreOrigRobotInfo" + getTaskName(),
+                        () -> {
+                            try {
+                                this.setRobotName(origRobotName1);
+                                File limitsCsv = getCartLimitsCsvFile();
+                                if (null != limitsCsv && limitsCsv.exists()) {
+                                    readLimitsFromCsv(limitsCsv);
+                                }
+                                reloadErrorMaps();
+                                updateRobotLimits();
+                                resume();
+                                clearErrors();
+                            } catch (Exception ex) {
+                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                if (ex instanceof RuntimeException) {
+                                    throw (RuntimeException) ex;
+                                } else {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                        })
+                .thenRunAsync(
+                        "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
+                        () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1),
+                        connectService);
     }
 
     private void setStopRunTime() {
@@ -730,7 +783,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != externalSlotOffsetProvider) {
             List<Slot> offsets = externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
             List<Slot> absSlots = new ArrayList<>();
-            for(Slot offset: offsets) {
+            for (Slot offset : offsets) {
                 Slot absSlot = absSlotFromTrayAndOffset(tray, offset);
                 absSlots.add(absSlot);
             }
@@ -1024,6 +1077,30 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         return null;
     }
+
+    private volatile boolean enforceMinMaxLimits = true;
+
+    /**
+     * Get the value of enforceMinMaxLimits
+     *
+     * @return the value of enforceMinMaxLimits
+     */
+    public boolean isEnforceMinMaxLimits() {
+        return enforceMinMaxLimits;
+    }
+
+    /**
+     * Set the value of enforceMinMaxLimits
+     *
+     * @param enforceMinMaxLimits new value of enforceMinMaxLimits
+     */
+    public void setEnforceMinMaxLimits(boolean enforceMinMaxLimits) {
+        this.enforceMinMaxLimits = enforceMinMaxLimits;
+        if(null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setEnforceMinMaxLimitsSelected(enforceMinMaxLimits);
+        }
+    }
+    
 
     /**
      * Get the current point(translation only) from current pose of the robot.
@@ -2131,7 +2208,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     public void updateRobotLimits() {
         if (null != crclClientJInternalFrame) {
-            if (!limits.isEmpty()) {
+            if (!limits.isEmpty() && isEnforceMinMaxLimits()) {
                 PmCartesian maxLimit = new PmCartesian(-100000.0, -100000.0, -100000.0);
                 PmCartesian minLimit = new PmCartesian(+100000.0, +100000.0, +100000.0);
                 for (PmCartesianMinMaxLimit minMaxLimit : limits) {
@@ -2972,7 +3049,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     });
         } catch (Exception exception) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
-            if(exception instanceof RuntimeException) {
+            if (exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;
             } else {
                 throw new RuntimeException(exception);
@@ -2982,7 +3059,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,AprsSystemPropDefaults.getSingle());
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSingle());
         return system.defaultInit().
                 thenApply(x -> {
                     aprsSystemDisplayJFrame1.setAprsSystem(system);
@@ -2992,7 +3069,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private static XFuture<AprsSystem> createAprsSystemWithSwingDisplay2(File propertiesFile) {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,AprsSystemPropDefaults.getSingle());
+        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSingle());
         aprsSystemDisplayJFrame1.setAprsSystem(system);
         system.setVisible(true);
         if (null != propertiesFile) {
@@ -3032,7 +3109,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private static XFuture<AprsSystem> createAprsSystemHeadless(File propertiesFile) {
-        AprsSystem system = new AprsSystem(null,AprsSystemPropDefaults.getSingle());
+        AprsSystem system = new AprsSystem(null, AprsSystemPropDefaults.getSingle());
         if (null != propertiesFile) {
             system.setPropertiesFile(propertiesFile);
             return system.loadProperties()
@@ -4558,7 +4635,14 @@ public class AprsSystem implements SlotOffsetProvider {
         return ret;
     }
 
+    public boolean isPointWithinLimits(PointType point) {
+        return isWithinLimits(CRCLPosemath.toPmCartesian(point));
+    }
+    
     public boolean isWithinLimits(PmCartesian cart) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         for (int i = 0; i < limits.size(); i++) {
             PmCartesianMinMaxLimit lim = limits.get(i);
             if (isWithinLimits(cart, lim)) {
@@ -4574,46 +4658,42 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean isWithinMaxLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         PmCartesian maxLimit = minMax.getMax();
         boolean ret = cart != null
                 && cart.x + radius <= maxLimit.x
                 && cart.y + radius <= maxLimit.y
                 && cart.z <= maxLimit.z;
-//        if (!ret && isAlertLimitsCheckBoxSelected()) {
-//            setTitleErrorString("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-//            throw new IllegalStateException("Position is not within max limits : cart =" + cart + ", maxLimit=" + maxLimit);
-//        }
         return ret;
     }
 
     private boolean isWithinMinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         PmCartesian minLimit = minMax.getMin();
         boolean ret = cart != null
                 && cart.x - radius >= minLimit.x
                 && cart.y - radius >= minLimit.y
                 && cart.z >= minLimit.z;
-//        if (!ret && isAlertLimitsCheckBoxSelected()) {
-//            setTitleErrorString("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-//            throw new IllegalStateException("Position is not within min limits : cart =" + cart + ", minLimit=" + minLimit);
-//        }
         return ret;
     }
 
     public boolean isWithinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         boolean ret = isWithinMaxLimits(cart, radius, minMax) && isWithinMinLimits(cart, radius, minMax);
-//        if (!ret && isAlertLimitsCheckBoxSelected()) {
-//            setTitleErrorString("Position is not within limits : cart =" + cart);
-//            throw new IllegalStateException("Position is not within limits : cart =" + cart);
-//        }
         return ret;
     }
 
     private boolean isItemWithinLimits(PhysicalItem item, PmCartesianMinMaxLimit minMax) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         boolean ret = isWithinMaxLimits(item, minMax) && isWithinMinLimits(item, minMax);
-//        if (!ret && isAlertLimitsCheckBoxSelected()) {
-//            setTitleErrorString("Position is not within limits : cart =" + item);
-//            throw new IllegalStateException("Position is not within limits : cart =" + item);
-//        }
         if (!ret) {
             return false;
         }
@@ -4626,6 +4706,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public boolean isItemWithinLimits(PhysicalItem item) {
+        if(!enforceMinMaxLimits) {
+            return true;
+        }
         for (int i = 0; i < limits.size(); i++) {
             PmCartesianMinMaxLimit minMax = limits.get(i);
             if (isItemWithinLimits(item, minMax)) {
@@ -4639,58 +4722,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return limits.isEmpty();
     }
 
-//    private volatile PmCartesian minLimit = new PmCartesian(-10000, -10000, -10000);
-//
-//    /**
-//     * Get the value of minLimit
-//     *
-//     * @return the value of minLimit
-//     */
-//    public PmCartesian getMinLimit() {
-//        return new PmCartesian(minLimit.x, minLimit.y, minLimit.z);
-//    }
-//
-//    /**
-//     * Set the value of minLimit
-//     *
-//     * @param minLimit new value of minLimit
-//     */
-//    public void setMinLimit(PmCartesian minLimit) {
-//        this.minLimit = minLimit;
-//        if (null != this.aprsSystemDisplayJFrame) {
-//            Utils.runOnDispatchThread(() -> {
-//                if (null != this.aprsSystemDisplayJFrame) {
-//                    this.aprsSystemDisplayJFrame.setMinLimitMenuDisplay(minLimit);
-//                }
-//            });
-//        }
-//    }
-//
-//    private volatile PmCartesian maxLimit = new PmCartesian(10000, 10000, 10000);
-//    /**
-//     * Get the value of maxLimit
-//     *
-//     * @return the value of maxLimit
-//     */
-//    public PmCartesian getMaxLimit() {
-//        return new PmCartesian(maxLimit.x, maxLimit.y, maxLimit.z);
-//    }
-//
-//    /**
-//     * Set the value of maxLimit
-//     *
-//     * @param maxLimit new value of maxLimit
-//     */
-//    public void setMaxLimit(PmCartesian maxLimit) {
-//        this.maxLimit = maxLimit;
-//        if (null != this.aprsSystemDisplayJFrame) {
-//            Utils.runOnDispatchThread(() -> {
-//                if (null != this.aprsSystemDisplayJFrame) {
-//                    this.aprsSystemDisplayJFrame.setMaxLimitMenuDisplay(maxLimit);
-//                }
-//            });
-//        }
-//    }
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
@@ -6651,11 +6682,11 @@ public class AprsSystem implements SlotOffsetProvider {
 
         static AprsSystemPropDefaults getEmptyTemp() throws IOException {
             File base = File.createTempFile("empty_aprs_props", ".base");
-            File dir = new File(base.getParentFile(),base.getName().replace('.', '_')+"_dir");
+            File dir = new File(base.getParentFile(), base.getName().replace('.', '_') + "_dir");
             dir.mkdirs();
-            return new AprsSystemPropDefaults(dir, new File(dir,"empty_aprs_props.txt"), new File(dir,"lastAprsPropertiesFileFile.txt"));
+            return new AprsSystemPropDefaults(dir, new File(dir, "empty_aprs_props.txt"), new File(dir, "lastAprsPropertiesFileFile.txt"));
         }
-        
+
         static AprsSystemPropDefaults getSingle() {
             return single;
         }
@@ -6745,14 +6776,14 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void initPropertiesFileInfo(AprsSystemPropDefaults propDefaults) {
-        if(null == propDefaults) {
+        if (null == propDefaults) {
             initPropertiesFileInfo();
         }
         propertiesDirectory = propDefaults.getPropDir();
         propertiesFile = propDefaults.getPropFile();
         lastAprsPropertiesFileFile = propDefaults.getLastAprsPropertiesFileFile();
     }
-    
+
     private int snapShotWidth = 800;
     private int snapShotHeight = 600;
 
