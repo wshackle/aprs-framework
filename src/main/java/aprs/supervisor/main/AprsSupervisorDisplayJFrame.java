@@ -3409,8 +3409,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                        x -> continueAllActions());
+                        .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3479,24 +3479,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                                    .thenComposeToVoid(x -> {
-                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                            try {
-                                                clearAllErrors();
-                                                connectAll();
-                                                jCheckBoxMenuItemPause.setSelected(false);
-                                                resume();
-                                                return startRandomTestFirstActionReversed2();
-                                            } catch (Exception e) {
-                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                                ret.completeExceptionally(e);
-                                                return ret;
-                                            }
-                                        }).thenComposeToVoid(x3 -> x3);
-                                        return innerRet;
-                                    });
+                            .thenComposeToVoid(x -> {
+                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                    try {
+                                        clearAllErrors();
+                                        connectAll();
+                                        jCheckBoxMenuItemPause.setSelected(false);
+                                        resume();
+                                        return startRandomTestFirstActionReversed2();
+                                    } catch (Exception e) {
+                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                        ret.completeExceptionally(e);
+                                        return ret;
+                                    }
+                                }).thenComposeToVoid(x3 -> x3);
+                                return innerRet;
+                            });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3833,15 +3833,19 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             supervisor.setIconImage(IconImages.BASE_IMAGE);
             supervisor.setTitleMessage("starting action ...");
-
+            disableRobotTableModelListener();
+            for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+                jTableRobotsSetValueAt(true, i, 1);
+            }
+            enableRobotTableModelListener();
             MultiLineStringJPanel.setIgnoreForceShow(true);
             MultiLineStringJPanel.closeAllPanels();
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFutureVoid iiraFuture
                     = fullAbortFuture
-                            .thenComposeToVoid(
-                                    "interactivStart(" + actionName + ")internalInteractiveResetAll",
-                                    () -> internalInteractiveResetAll());
+                    .thenComposeToVoid(
+                            "interactivStart(" + actionName + ")internalInteractiveResetAll",
+                            () -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -3857,7 +3861,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                 for (int i = 0; i < aprsSystems.size(); i++) {
                                     AprsSystem sys = aprsSystems.get(i);
                                     boolean limitsEnforced = sys.isEnforceMinMaxLimits();
-                                    logEvent("sys="+sys+", limitsEnforced="+limitsEnforced);
+                                    logEvent("sys=" + sys + ", limitsEnforced=" + limitsEnforced);
                                     if (!limitsEnforced) {
                                         continue;
                                     }
@@ -3865,7 +3869,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                     sys.setAlertLimitsCheckBoxSelected(false);
                                     PointType currentPoint = sys.getCurrentPosePoint();
                                     boolean inLimits = sys.isPointWithinLimits(currentPoint);
-                                    if(alertLimits) {
+                                    if (alertLimits) {
                                         sys.setAlertLimitsCheckBoxSelected(true);
                                     }
                                     if (inLimits) {
@@ -3880,13 +3884,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                     }
                                 }
                                 return lookForPartsAll()
-                                        .thenRun(() -> {
-                                            for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
-                                                AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
-                                                sys.setEnforceMinMaxLimits(true);
-                                                sys.updateRobotLimits();
-                                            }
-                                        });
+                                .thenRun(() -> {
+                                    for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
+                                        AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
+                                        sys.setEnforceMinMaxLimits(true);
+                                        sys.updateRobotLimits();
+                                    }
+                                });
                             },
                             getSupervisorExecutorService())
                     .thenComposeToVoid(
@@ -3895,6 +3899,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                 return Utils.runOnDispatchThread(
                                         "interactivStart(" + actionName + ")confirmContinue",
                                         () -> {
+                                            supervisor.setResetting(true);
+                                            disableRobotTableModelListener();
+                                            for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+                                                jTableRobotsSetValueAt(true, i, 1);
+                                            }
+                                            enableRobotTableModelListener();
+                                            MultiLineStringJPanel.setIgnoreForceShow(false);
+                                            MultiLineStringJPanel.closeAllPanels();
+                                            supervisor.setResetting(false);
                                             if (null != actionName && null != runnable) {
                                                 String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
                                                 boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
@@ -5159,7 +5172,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (ignoreRobotTableChanges && !resetting) {
             System.err.println("ignoreRobotTableChanges set twice");
             System.err.println("disableRobotTableModelListenerTrace="
-                    +Utils.traceToString(disableRobotTableModelListenerTrace));
+                    + Utils.traceToString(disableRobotTableModelListenerTrace));
             Thread.dumpStack();
         }
 //        jTableRobots.getModel().removeTableModelListener(robotTableModelListener);
