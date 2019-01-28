@@ -3833,11 +3833,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             supervisor.setIconImage(IconImages.BASE_IMAGE);
             supervisor.setTitleMessage("starting action ...");
-            disableRobotTableModelListener();
-            for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                jTableRobotsSetValueAt(true, i, 1);
-            }
-            enableRobotTableModelListener();
             MultiLineStringJPanel.setIgnoreForceShow(true);
             MultiLineStringJPanel.closeAllPanels();
             XFutureVoid fullAbortFuture = fullAbortAll();
@@ -3905,6 +3900,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                                 jTableRobotsSetValueAt(true, i, 1);
                                             }
                                             enableRobotTableModelListener();
+                                            Utils.autoResizeTableColWidths(jTableRobots);
                                             MultiLineStringJPanel.setIgnoreForceShow(false);
                                             MultiLineStringJPanel.closeAllPanels();
                                             supervisor.setResetting(false);
