@@ -84,10 +84,10 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
             long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
             long softScoreLong = (long) (-1000.0 * costTotal);
-            HardSoftLongScore score = HardSoftLongScore.valueOf(hardScoreLong, softScoreLong);
+            HardSoftLongScore score = HardSoftLongScore.of(hardScoreLong, softScoreLong);
             return score;
         } else {
-            return HardSoftLongScore.valueOf(Long.MIN_VALUE, Long.MIN_VALUE);
+            return HardSoftLongScore.of(Long.MIN_VALUE, Long.MIN_VALUE);
         }
     }
 

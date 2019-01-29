@@ -76,17 +76,23 @@ public class LogDisplayPanelOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] buf, int off, int len) {
+        final String s = new String(buf, off, len);
+       
         if (null != logDisplayJPanel) {
-            final String s = new String(buf, off, len);
             sb.append(s);
-            if (s.contains("\n")) {
+            if (s.contains("\n") || s.contains("\r")) {
                 String fullString = sb.toString();
+//                System.out.println("fullString = " + fullString.replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
                 notifiyLineConsumers(fullString);
                 Utils.runOnDispatchThread(() -> {
                     logDisplayJPanel.appendText(fullString);
                 });
                 sb = new StringBuffer();
+            } else {
+//                System.out.println("sb = " + sb.toString().replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
             }
+        } else {
+             System.out.println("logDisplayJPanel="+logDisplayJPanel+",s="+s);
         }
     }
 

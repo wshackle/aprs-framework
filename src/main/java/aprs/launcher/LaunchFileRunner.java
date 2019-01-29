@@ -40,8 +40,10 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.Timer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -179,32 +181,44 @@ public class LaunchFileRunner {
     }
 
     @SuppressWarnings("guieffect")
-    XFutureVoid newTimeoutFuture() {
+    XFutureVoid newTimeoutFuture(javax.swing.Timer timerRefArray[]) {
         int timeoutMillisLocal = timeoutMillis;
         if (timeoutMillisLocal < 1) {
             throw new IllegalStateException("timeoutMillis=" + timeoutMillisLocal);
         }
-        XFutureVoid ret = new XFutureVoid("timeoutFuture");
+        XFutureVoid future1 = new XFutureVoid("timeoutFuture");
         long timeoutStartLocal = System.currentTimeMillis();
         this.timeoutStart = timeoutStartLocal;
         if (GraphicsEnvironment.isHeadless()) {
             if (timeoutScheduledThreadPoolExecutor == null) {
                 timeoutScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
             }
-            timeoutScheduledThreadPoolExecutor.schedule(() -> completeTimeoutFuture(ret, timeoutStartLocal), timeoutMillisLocal, TimeUnit.MILLISECONDS);
+            timeoutScheduledThreadPoolExecutor.schedule(() -> completeTimeoutFuture(future1, timeoutStartLocal), timeoutMillisLocal, TimeUnit.MILLISECONDS);
         } else {
             Utils.runOnDispatchThread(() -> {
                 javax.swing.Timer timer = new Timer(timeoutMillisLocal, (evt) -> {
-                    completeTimeoutFuture(ret, timeoutStartLocal);
+                    completeTimeoutFuture(future1, timeoutStartLocal);
                 });
+                if (null != timerRefArray && timerRefArray.length == 1) {
+                    timerRefArray[0] = timer;
+                }
                 lastTimeoutSwingTimer = timer;
                 timer.setRepeats(false);
                 timer.setInitialDelay(timeoutMillisLocal);
                 timer.start();
             });
         }
-        lastNewTimeoutFuture = ret;
-        return ret;
+        XFutureVoid future2
+                = future1
+                        .thenRun("afterTimeout", () -> {
+                            String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
+                            System.out.println(timeoutMsg);
+                            if (!GraphicsEnvironment.isHeadless()) {
+                                JOptionPane.showMessageDialog(null, timeoutMsg);
+                            }
+                        });
+        lastNewTimeoutFuture = future2;
+        return future2;
     }
 
     private static String replaceDotDir(File dir, String in) {
@@ -754,7 +768,7 @@ public class LaunchFileRunner {
         StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
         ifStack.push(true);
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
                 WrappedProcess p = parseLaunchFileLine(line, futures, stringBuilder);
@@ -767,11 +781,31 @@ public class LaunchFileRunner {
             }
             stringBuilder = null;
         }
-        XFutureVoid allOfXFuture = XFuture.allOf(futures);
+        XFutureVoid allOfXFuture = XFuture.allOfWithName("LaunchFileRunner.allOf_f=" + f, futures);
         this.lastRunAllOfFuture = allOfXFuture;
         if (this.timeoutMillis > 0) {
-            return XFutureVoid.anyOf(allOfXFuture, newTimeoutFuture())
-                    .thenRun(() -> {
+            javax.swing.Timer timerRefArray[] = new javax.swing.Timer[1];
+            XFutureVoid timeoutFuture = newTimeoutFuture(timerRefArray);
+            XFutureVoid timeoutCancelledFuture
+                    = allOfXFuture.thenRun("LaunchFileRunner.timeoutCancel", () -> {
+                        if (null != timerRefArray && timerRefArray.length == 1) {
+                            javax.swing.Timer timer = timerRefArray[0];
+                            timerRefArray[0] = null;
+                            if (timer != null) {
+                                timer.stop();
+                            }
+                            timeoutFuture.cancelAll(false);
+                        }
+                    });
+            XFutureVoid handledTimeoutFuture
+                    = timeoutFuture.handle(new BiFunction<Void, Throwable, Void>() {
+                        @Override
+                        public Void apply(Void arg0, Throwable arg1) {
+                            return (Void) null;
+                        }
+                    }).thenRun(()-> {});
+            return XFutureVoid.anyOfWithName("LaunchFileRunner.timeoutOrNot", timeoutCancelledFuture, handledTimeoutFuture)
+                    .thenRun("LaunchFileRunner.printComplete", () -> {
                         try {
                             System.out.println(f.getCanonicalPath() + " complete.");
                         } catch (IOException ex) {
