@@ -400,6 +400,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     private volatile File lastRunFile = null;
     private volatile XFutureVoid lastRunFuture = null;
     
+    
+    
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
         setTitle("Process Launcher Running "+f);
