@@ -187,6 +187,11 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         for (LineConsumer lc : lineConsumers) {
             System.out.println("lc.isFinished() = " + lc.isFinished());
         }
+        System.out.println("lastRunFuture = " + lastRunFuture);
+        System.out.println("lastRunFile = " + lastRunFile);
+        if(null != lastRunFuture) {
+            lastRunFuture.printStatus();
+        }
     }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
 
     public List<WrappedProcess> getProcesses() {
@@ -392,9 +397,16 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private final LaunchFileRunner launchFileRunner;
 
+    private volatile File lastRunFile = null;
+    private volatile XFutureVoid lastRunFuture = null;
+    
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
-        return launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
+        setTitle("Process Launcher Running "+f);
+        XFutureVoid ret =  launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
+        lastRunFuture = ret;
+        lastRunFile = f;
+        return ret.thenRun(() -> setTitle("Process Launcher completed "+f));
     }
 
    

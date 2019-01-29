@@ -1,18 +1,18 @@
 
-plj-timeout 30000
+plj-timeout 90000
 
 if!connectOK localhost 7484
 plj-waitfor Successfully started database
-..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat
+cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat&& echo done"
 endif
 
 if!connectOK localhost 7474
 plj-waitfor Successfully started database
-..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat
+cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat&& echo done"
 endif
 
 if!connectOK localhost 6001
 cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
-C:\Windows\System32\cmd.exe /k start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
+cmd /V /K start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
 endif
 
