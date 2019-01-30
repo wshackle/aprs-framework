@@ -1,10 +1,10 @@
-plj-onfail ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 plj-waitfor Neo4j Server is running
 plj-recoverWaitFor is ready
 plj-checkfail Neo4j Server is not running
 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
-plj-onfail ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 plj-checkfail Neo4j Server is not running
 plj-waitfor Neo4j Server is running
 plj-recoverWaitFor is ready

@@ -660,6 +660,10 @@ public class Utils {
             }
             for (int r = 0; r < table.getRowCount(); r++) {
                 renderer = table.getCellRenderer(r, i);
+                if(r >= table.getRowCount()) {
+                    System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed.");
+                    return;
+                }
                 Object tableValue = table.getValueAt(r, i);
                 if (null != tableValue) {
                     Component comp = renderer.getTableCellRendererComponent(table,
