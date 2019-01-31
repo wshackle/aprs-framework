@@ -1064,6 +1064,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 {"placePartSlotArgIndex", "0"},
                 {"takePartArgIndex", "0"},
                 {"settleDwellTime", "0.1"},
+                {"toolChangerDwellTime", "0.25"},
                 {"useJointLookFor", "false"},
                 {"jointSpeed", "5.0"},
                 {"jointAccel", "100.0"},

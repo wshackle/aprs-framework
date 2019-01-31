@@ -2498,7 +2498,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void clearWayToHolder(String holder) {
         if (null != aprsSystem) {
-            aprsSystem.pause();
+           
             aprsSystem.clearWayToHolders(holder)
                     .thenRun(() -> completeClearWayToHolder());
         }
@@ -5220,6 +5220,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
+        
+        String toolChangerDwellTimeString = optionsMap.get("toolChangerDwellTime");
+        if (null != toolChangerDwellTimeString && toolChangerDwellTimeString.length() > 0) {
+            try {
+                toolChangerDwellTime = Double.parseDouble(toolChangerDwellTimeString);
+            } catch (NumberFormatException numberFormatException) {
+                logger.log(Level.SEVERE, "", numberFormatException);
+            }
+        }
 
         String lookDwellTimeString = optionsMap.get("lookDwellTime");
         if (null != lookDwellTimeString && lookDwellTimeString.length() > 0) {
@@ -5432,21 +5441,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return name.trim().replace(' ', '_').replace('=', '_');
     }
 
+    private double toolChangerDwellTime = 0.25;
+    
     private void addOpenToolChanger(List<MiddleCommandType> cmds) {
-        addDwell(cmds, 0.1);
+        addSettleDwell(cmds);
+        addDwell(cmds, toolChangerDwellTime);
         OpenToolChangerType openToolChangerCmd = new OpenToolChangerType();
         setCommandId(openToolChangerCmd);
         cmds.add(openToolChangerCmd);
-        addDwell(cmds, 0.1);
+        addDwell(cmds, toolChangerDwellTime);
 //        setCurrentToolName(currentToolName);
     }
 
     private void addCloseToolChanger(List<MiddleCommandType> cmds) {
-        addDwell(cmds, 0.1);
+        addSettleDwell(cmds);
+        addDwell(cmds, toolChangerDwellTime);
         CloseToolChangerType openToolChangerCmd = new CloseToolChangerType();
         setCommandId(openToolChangerCmd);
         cmds.add(openToolChangerCmd);
-        addDwell(cmds, 0.1);
+        addDwell(cmds, toolChangerDwellTime);
     }
 
     private void addMoveTo(List<MiddleCommandType> cmds, PoseType pose, boolean straight, String message) {
@@ -6228,7 +6241,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             break;
         }
         if (null == toolHolderName) {
-            throw new IllegalStateException("null == toolHolderName");
+            throw new IllegalStateException("null == toolHolderName,toolInRobot="+toolInRobot+",expectedContents="+getExpectedToolHolderContentsMap());
         }
         dropToolByHolderName(toolHolderName, out);
     }
@@ -6279,7 +6292,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             break;
         }
         if (null == toolHolderName) {
-            throw new IllegalStateException("null == toolHolderName");
+            throw new IllegalStateException("null == toolHolderName, desiredToolName="+desiredToolName+",expectedContents="+getExpectedToolHolderContentsMap());
         }
         pickupToolByHolderName(toolHolderName, out);
     }

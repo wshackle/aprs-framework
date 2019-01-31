@@ -46,6 +46,7 @@ import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.utils.CRCLPosemath;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -3860,13 +3861,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                     if (!limitsEnforced) {
                                         continue;
                                     }
-                                    boolean alertLimits = sys.isAlertLimitsCheckBoxSelected();
-                                    sys.setAlertLimitsCheckBoxSelected(false);
                                     PointType currentPoint = sys.getCurrentPosePoint();
-                                    boolean inLimits = sys.isPointWithinLimits(currentPoint);
-                                    if (alertLimits) {
-                                        sys.setAlertLimitsCheckBoxSelected(true);
-                                    }
+                                    boolean inLimits = sys.checkLimitsNoAlert(CRCLPosemath.toPmCartesian(currentPoint));
                                     if (inLimits) {
                                         continue;
                                     }
@@ -4664,6 +4660,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == supervisor");
         }
         supervisor.resume();
+        
     }
 
     private static String shortTrace(StackTraceElement @Nullable [] trace) {
