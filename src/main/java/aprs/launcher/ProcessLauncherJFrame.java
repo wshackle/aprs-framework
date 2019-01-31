@@ -22,28 +22,16 @@
  */
 package aprs.launcher;
 
-import static aprs.launcher.Neo4JKiller.JPS_COMMAND_FILENAME_STRING;
 import aprs.misc.Utils;
-import aprs.logdisplay.LogDisplayJPanel;
 import aprs.misc.AprsCommonLogger;
 import aprs.misc.IconImages;
-import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;

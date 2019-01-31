@@ -236,7 +236,7 @@
               <Properties>
                 <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="30">
+                  <Table columnCount="2" rowCount="31">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
@@ -256,6 +256,7 @@
                       <Data value="placePartSlotArgIndex"/>
                       <Data value="takePartArgIndex"/>
                       <Data value="settleDwellTime"/>
+                      <Data value="toolChangerDwellTime"/>
                       <Data value="useJointLookFor"/>
                       <Data value="jointSpeed"/>
                       <Data value="jointAccel"/>
@@ -288,6 +289,7 @@
                       <Data value="0"/>
                       <Data value="0"/>
                       <Data value="0.1"/>
+                      <Data value="0.25"/>
                       <Data value="false"/>
                       <Data value="5.0"/>
                       <Data value="100.0"/>

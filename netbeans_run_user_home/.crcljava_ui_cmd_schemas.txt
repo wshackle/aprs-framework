@@ -1,0 +1,5 @@
+crclXmlSchemas\CRCLCommandInstance.xsd
+crclXmlSchemas\CRCLCommands.xsd
+crclXmlSchemas\CRCLProgramInstance.xsd
+crclXmlSchemas\CRCLStatus.xsd
+crclXmlSchemas\DataPrimitives.xsd

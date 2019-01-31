@@ -1096,11 +1096,10 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void setEnforceMinMaxLimits(boolean enforceMinMaxLimits) {
         this.enforceMinMaxLimits = enforceMinMaxLimits;
-        if(null != aprsSystemDisplayJFrame) {
+        if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setEnforceMinMaxLimitsSelected(enforceMinMaxLimits);
         }
     }
-    
 
     /**
      * Get the current point(translation only) from current pose of the robot.
@@ -4638,17 +4637,13 @@ public class AprsSystem implements SlotOffsetProvider {
     public boolean isPointWithinLimits(PointType point) {
         return isWithinLimits(CRCLPosemath.toPmCartesian(point));
     }
-    
+
     public boolean isWithinLimits(PmCartesian cart) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
-        for (int i = 0; i < limits.size(); i++) {
-            PmCartesianMinMaxLimit lim = limits.get(i);
-            if (isWithinLimits(cart, lim)) {
-
-                return true;
-            }
+        if (checkLimitsNoAlert(cart)) {
+            return true;
         }
         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
             setTitleErrorString("Position is not within limits : cart =" + cart);
@@ -4657,8 +4652,18 @@ public class AprsSystem implements SlotOffsetProvider {
         return limits.isEmpty();
     }
 
+    public boolean checkLimitsNoAlert(PmCartesian cart) {
+        for (int i = 0; i < limits.size(); i++) {
+            PmCartesianMinMaxLimit lim = limits.get(i);
+            if (isWithinLimits(cart, lim)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isWithinMaxLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
         PmCartesian maxLimit = minMax.getMax();
@@ -4670,7 +4675,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean isWithinMinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
         PmCartesian minLimit = minMax.getMin();
@@ -4682,7 +4687,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public boolean isWithinLimits(PmCartesian cart, double radius, PmCartesianMinMaxLimit minMax) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
         boolean ret = isWithinMaxLimits(cart, radius, minMax) && isWithinMinLimits(cart, radius, minMax);
@@ -4690,7 +4695,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean isItemWithinLimits(PhysicalItem item, PmCartesianMinMaxLimit minMax) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
         boolean ret = isWithinMaxLimits(item, minMax) && isWithinMinLimits(item, minMax);
@@ -4706,7 +4711,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public boolean isItemWithinLimits(PhysicalItem item) {
-        if(!enforceMinMaxLimits) {
+        if (!enforceMinMaxLimits) {
             return true;
         }
         for (int i = 0; i < limits.size(); i++) {
@@ -6036,15 +6041,15 @@ public class AprsSystem implements SlotOffsetProvider {
      * cause future actions to wait until resume is called.
      */
     public void pause() {
+        checkResuming();
+        boolean badState = checkResuming();
         Utils.runOnDispatchThread(Utils::PlayAlert2);
-        boolean badState = resuming;
+        badState = badState || checkResuming();
         pauseOnDisplay();
-        badState = badState || resuming;
+        badState = badState || checkResuming();
         updateTitle("", "");
-        badState = badState || resuming;
+        badState = badState || checkResuming();
         if (badState) {
-            System.err.println("resumingThread = " + resumingThread);
-            System.err.println("resumingTrace = " + Arrays.toString(resumingTrace));
             throw new IllegalStateException("Attempt to pause while resuming:");
         }
     }
@@ -6059,12 +6064,12 @@ public class AprsSystem implements SlotOffsetProvider {
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
         pausing = true;
-        boolean badState = resuming;
+        boolean badState = checkResuming();
         try {
             if (!isPauseCheckBoxSelected()) {
                 setPauseCheckBoxSelected(true);
             }
-            badState = badState || resuming;
+            badState = badState || checkResuming();
             if (null != crclClientJInternalFrame && titleErrorString != null && titleErrorString.length() > 0) {
                 String lastMessage = crclClientJInternalFrame.getLastMessage();
                 System.out.println("lastMessage = " + lastMessage);
@@ -6082,22 +6087,31 @@ public class AprsSystem implements SlotOffsetProvider {
                     takeSnapshots("pause :" + lastMessage);
                 }
             }
-            badState = badState || resuming;
+            badState = badState || checkResuming();
             if (null != pddlExecutorJInternalFrame1) {
                 pddlExecutorJInternalFrame1.showPaused(true);
             }
             this.pauseCrclProgram();
-
+            badState = badState || checkResuming();
+            if (badState) {
+                throw new IllegalStateException("Attempt to pause while resuming");
+            }
         } finally {
             pausing = false;
+            resuming = false;
         }
-        badState = badState || resuming;
-        if (badState) {
-            System.err.println("resumingThread = " + resumingThread);
-            System.err.println("resumingTrace = " + Arrays.toString(resumingTrace));
-            throw new IllegalStateException("Attempt to pause while resuming");
-        }
+    }
 
+    private boolean checkResuming() throws IllegalStateException {
+        if (resuming) {
+            System.err.println("Attempt to pause while resuming");
+            System.err.println("resumingThread = " + resumingThread);
+            System.err.println("resumingTrace = " + Utils.traceToString(resumingTrace));
+            System.err.println("currentThread=" + Thread.currentThread());
+            System.err.println("currentTrace = " + Utils.traceToString(Thread.currentThread().getStackTrace()));
+            return true;
+        }
+        return false;
     }
 
     /**

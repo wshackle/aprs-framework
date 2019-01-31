@@ -1558,7 +1558,7 @@ public class Supervisor {
     private final AtomicReference< @Nullable Supplier<XFutureVoid>> unStealRobotsSupplier = new AtomicReference<>(null);
 
     private XFutureVoid unStealRobots() {
-        if(restoringOrigRobotInfo) {
+        if (restoringOrigRobotInfo) {
             throw new IllegalStateException("restoringOrigRobotInfo");
         }
         Supplier<XFutureVoid> supplier = unStealRobotsSupplier.getAndSet(null);
@@ -2233,33 +2233,32 @@ public class Supervisor {
 
     private volatile XFutureVoid executeUnstealRobotsFuture = null;
 
-    private final ConcurrentLinkedDeque<XFuture<?>>
-            allFuturesDeque = new ConcurrentLinkedDeque<>();
-    
+    private final ConcurrentLinkedDeque<XFuture<?>> allFuturesDeque = new ConcurrentLinkedDeque<>();
+
     private void cleanAllFuturesSet() {
         List<XFuture<?>> futuresToRemove = new ArrayList<>();
-        for(XFuture<?> future : allFuturesDeque) {
-            if(future.isCancelled() || future.isCompletedExceptionally() || future.isDone()) {
+        for (XFuture<?> future : allFuturesDeque) {
+            if (future.isCancelled() || future.isCompletedExceptionally() || future.isDone()) {
                 futuresToRemove.add(future);
             }
         }
         allFuturesDeque.removeAll(futuresToRemove);
     }
-    
+
     public void addToAllFuturesSet(XFuture<?> future) {
         cleanAllFuturesSet();
         allFuturesDeque.add(future);
     }
-    
+
     public void cancelAllFuturesSet() {
-        for(XFuture<?> future : allFuturesDeque) {
+        for (XFuture<?> future : allFuturesDeque) {
             future.cancelAll(false);
         }
         cleanAllFuturesSet();
     }
-    
+
     private XFutureVoid executeUnstealRobots(final int srn, AprsSystem stealFor, AprsSystem stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd) {
-        if(restoringOrigRobotInfo) {
+        if (restoringOrigRobotInfo) {
             throw new IllegalStateException("restoringOrigRobotInfo");
         }
         String revBlocker = "reverseRobotTransfer" + reverseRobotTransferNumber.incrementAndGet();
@@ -5328,6 +5327,7 @@ public class Supervisor {
         try {
             resumeForPrepOnly();
             startUpdateRunningTimeTimer();
+            setTitleMessage("");
         } finally {
             resuming = false;
         }
@@ -5742,7 +5742,7 @@ public class Supervisor {
             oldMonitor.stop();
             lastCompleteScanTillNewInternalTeachScanMonitor = null;
         }
-       if (null != executeUnstealRobotsFuture) {
+        if (null != executeUnstealRobotsFuture) {
             executeUnstealRobotsFuture.cancelAll(false);
             executeUnstealRobotsFuture = null;
         }
@@ -5773,7 +5773,7 @@ public class Supervisor {
     }
 
     private volatile boolean restoringOrigRobotInfo = false;
-    
+
     XFutureVoid restoreOrigRobotInfo() {
         restoringOrigRobotInfo = true;
         logEvent("Starting restoreOrigRobotInfo");
@@ -5785,14 +5785,14 @@ public class Supervisor {
         disconnectAllNoLog();
         List<XFutureVoid> futuresList = new ArrayList<>();
         for (AprsSystem aprsSys : aprsSystems) {
-            XFutureVoid restoreFuture = 
-                    aprsSys.restoreOrigRobotInfo()
-                    .thenRun(() ->  {
-                        logEvent("restoreOrigRobotInfo : aprsSys="+aprsSys);
-                    });
+            XFutureVoid restoreFuture
+                    = aprsSys.restoreOrigRobotInfo()
+                            .thenRun(() -> {
+                                logEvent("restoreOrigRobotInfo : aprsSys=" + aprsSys);
+                            });
             futuresList.add(restoreFuture);
         }
-        return XFutureVoid.allOfWithName("restoreOrigRobotInfo.allOf(futuresList)",futuresList)
+        return XFutureVoid.allOfWithName("restoreOrigRobotInfo.allOf(futuresList)", futuresList)
                 .thenRunAsync("complete restoreOrigRobotInfo", () -> {
                     logEvent("Completing restoreOrigRobotInfo");
                     restoringOrigRobotInfo = false;
@@ -6789,7 +6789,11 @@ public class Supervisor {
         aprsSys.setVisible(true);
     }
 
+    private volatile boolean clearingWayToHolders = false;
+
     public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
+        clearingWayToHolders = true;
+        requester.pause();
         List<XFutureVoid> l = new ArrayList<>();
         String name = "clearWayToHolders." + holderName + "." + requester.getTaskName();
         for (AprsSystem sys : aprsSystems) {
@@ -6809,7 +6813,10 @@ public class Supervisor {
                 l.add(sys.startLookForParts());
             }
         }
-        return XFutureVoid.allOfWithName("allof" + name, l);
+        return XFutureVoid.allOfWithName("allof" + name, l)
+                .thenRun(() -> {
+                    this.clearingWayToHolders = false;
+                });
     }
 
     int incrementAndGetContinuousDemoCycle() {
@@ -7000,7 +7007,7 @@ public class Supervisor {
                     logEventErr(aprsSystemInterface + " has title error " + titleErr);
                     logEventErr(aprsSystemInterface + " title error trace=" + shortTrace(aprsSystemInterface.getSetTitleErrorStringTrace()));
                 }
-                if (aprsSystemInterface.isPaused() && isPauseAllForOneSelected() && !resuming) {
+                if (aprsSystemInterface.isPaused() && isPauseAllForOneSelected() && !resuming && !clearingWayToHolders) {
                     logEvent(aprsSystemInterface + " is paused");
                     pause();
                 }

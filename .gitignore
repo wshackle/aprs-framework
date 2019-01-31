@@ -2,6 +2,9 @@
 .project
 .settings
 *.class
+*.timestamp
+/netbeans_run_user_home/.oracle_jre_usage/
+/netbeans_run_user_home/.java/
 addons.sccs
 
 # Mobile Tools for Java (J2ME)

@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="qualified"
+  attributeFormDefault="unqualified"
+  version="2014Jul2">
+
+  <xs:annotation>
+    <xs:documentation>
+      This ontology models primitive types useful for building
+      information models for automated manufacturing.
+    </xs:documentation>
+    <xs:documentation>
+      In order that models using this file may be translateable into
+      OWL, all complexTypes in this file include the Name element. This
+      is done by putting the Name element in the top-level data type,
+      DataThingType and having all other complexTypes be descended
+      directly or indirectly from DataThingType.
+
+      In order that models using this file are not required to assign
+      a name to each complex data instance, the Name element of
+      DataThingType is optional. If an instance file has instances of
+      complex data without names, it will not be translateable into
+      OWL.
+    </xs:documentation>
+    <xs:documentation>owlPrefix=prim</xs:documentation>
+  </xs:annotation>
+
+  <xs:simpleType name="AngleUnitEnumType">
+    <xs:annotation>
+      <xs:documentation>
+        AngleUnitEnumType enumerates angle units. This might be used,
+        for example, in a command that sets angle units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="degree"/>
+      <xs:enumeration value="radian"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="DataThingType"
+    abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        An instance of DataThingType has the following elements:
+          Name (optional)
+          .
+
+        DataThingType is an abstract type from which more specific types
+        of data thing are derived. That includes all complex data
+        types such as Vector, PoseType, etc.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Name"
+        type="xs:ID"
+        minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="ForceUnitEnumType">
+    <xs:annotation>
+      <xs:documentation>
+        ForceUnitEnumType enumerates force units. This might be used,
+        for example, in a command that sets force units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="newton"/>
+      <xs:enumeration value="pound"/>
+      <xs:enumeration value="ounce"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="FractionType">
+    <xs:annotation>
+      <xs:documentation>
+        FractionType is a number between zero and 1 representing a fraction.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:double">
+      <xs:minInclusive value="0.0"/>
+      <xs:maxInclusive value="1.0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="LengthUnitEnumType">
+    <xs:annotation>
+      <xs:documentation>
+        LengthUnitEnumType enumerates length units. This might be used,
+        for example, in a command that sets length units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="meter"/>
+      <xs:enumeration value="millimeter"/>
+      <xs:enumeration value="inch"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="PointType">
+    <xs:annotation>
+      <xs:documentation>
+        PointType is derived from DataThingType.
+        An instance of PointType has the following elements:
+          Name (inherited, optional)
+          X
+          Y
+          Z.
+ 
+        X, Y, and Z are the Cartesian coordinates of the Point.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="X"
+            type="xs:double"/>
+          <xs:element name="Y"
+            type="xs:double"/>
+          <xs:element name="Z"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="PoseType">
+    <xs:annotation>
+      <xs:documentation>
+        PoseType is derived from DataThingType.
+        An instance of PoseType has the following elements:
+          Name (inherited, optional)
+          Point
+          XAxis
+          ZAxis.
+ 
+        The Point locates the origin of a coordinate system. The XAxis and
+        ZAxis give the orientation of the coordinate system. The data for
+        the Point, the ZAxis and the XAxis are expressed relative to another
+        coordinate system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="Point"
+            type="PointType"/>
+          <xs:element name="XAxis"
+            type="VectorType"/>
+          <xs:element name="ZAxis"
+            type="VectorType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="PositiveDecimalType">
+    <xs:restriction base="xs:double">
+      <xs:minExclusive value="0"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="TorqueUnitEnumType">
+    <xs:annotation>
+      <xs:documentation>
+        TorqueUnitEnumType enumerates torque units. This might be used,
+        for example in a command that sets torque units.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:NMTOKEN">
+      <xs:enumeration value="newtonMeter"/>
+      <xs:enumeration value="footPound"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="TwistType">
+    <xs:annotation>
+      <xs:documentation>
+        TwistType is derived from DataThingType.
+        An instance of TwistType has the following elements:
+          Name (inherited, optional)
+          LinearVelocity
+          AngularVelocity.
+
+        A TwistType object represents the velocity of a
+        rigid object in SE(3).
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="LinearVelocity"
+            type="VectorType"/>
+          <xs:element name="AngularVelocity"
+            type="VectorType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="VectorType">
+    <xs:annotation>
+      <xs:documentation>
+        VectorType is derived from DataThingType.
+        An instance of VectorType has the following elements:
+          Name (inherited, optional)
+          I
+          J
+          K.
+ 
+        I, J, and K represent the usual i, j, and k components of a 3D
+        vector.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="I"
+            type="xs:double"/>
+          <xs:element name="J"
+            type="xs:double"/>
+          <xs:element name="K"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="WrenchType">
+    <xs:annotation>
+      <xs:documentation>
+        WrenchType is derived from DataThingType.
+        An instance of WrenchType has the following elements:
+          Name (inherited, optional)
+          Force
+          Moment.
+
+        A WrenchType object represents generalized forces and torques on a
+        rigid object in SE(3).
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="Force"
+            type="VectorType"/>
+          <xs:element name="Moment"
+            type="VectorType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+<xs:complexType name="PoseToleranceType">
+    <xs:annotation>
+      <xs:documentation>
+        PoseToleranceType is derived from DataThingType. 
+        An instance of PoseToleranceType has the following elements:
+          Name (inherited, optional)
+          XPointTolerance (optional)
+          YPointTolerance (optional)
+          ZPointTolerance (optional)
+          XAxisTolerance (optional)
+          ZAxisTolerance (optional).
+
+        The XPointTolerance is the distance along the XAxis in current
+        length units within which the controlled point must come from the X
+        value of the point given in the pose with which the pose tolerance
+        is associated. The YPointTolerance and ZPointTolerance are similar.
+        The XAxisTolerance is the angle in current angle units within which
+        the XAxis must come from the given XAxis. The ZAxisTolerance is
+        similar. All five tolerances must be satisfied at the same instant.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="XPointTolerance"
+            type="xs:double"
+            minOccurs="0"/>
+          <xs:element name="YPointTolerance"
+            type="xs:double"
+            minOccurs="0"/>
+          <xs:element name="ZPointTolerance"
+            type="xs:double"
+            minOccurs="0"/>
+          <xs:element name="XAxisTolerance"
+            type="xs:double"
+            minOccurs="0"/>
+          <xs:element name="ZAxisTolerance"
+            type="xs:double"
+            minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  
+<xs:complexType name="ParameterSettingType">
+    <xs:annotation>
+      <xs:documentation>
+        ParameterSettingType is derived from DataThingType. 
+        An instance of ParameterSettingType has the following elements:
+          Name (inherited, optional)
+          ParameterName
+          ParameterValue.
+
+        ParameterSettingType is used to set values of parameters. The
+        ParameterName and ParameterValue are both strings. The
+        ParameterValue string may represent a data type known to the
+        receiving system.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType">
+        <xs:sequence>
+          <xs:element name="ParameterName"
+            type="xs:token"/>
+          <xs:element name="ParameterValue"
+            type="xs:token"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  
+  
+
+  <xs:complexType name="RotAccelAbsoluteType">
+    <xs:annotation>
+      <xs:documentation>
+        RotAccelAbsoluteType is derived from RotAccelType.
+        An instance of RotAccelAbsoluteType has the following elements:
+          Name (inherited, optional)
+          Setting.
+
+        Setting is a real number that represents the target single axis
+        rotational acceleration for the robot, in current angle units per
+        second per second.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="RotAccelType">
+        <xs:sequence>
+          <xs:element name="Setting"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RotAccelRelativeType">
+    <xs:annotation>
+      <xs:documentation>
+        RotAccelRelativeType is derived from RotAccelType.
+        An instance of RotAccelRelativeType has the following elements:
+          Name (inherited, optional)
+          Fraction.
+
+        Fraction is a real number that represents the fraction of the
+        robot's maximum rotational acceleration that it should use.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="RotAccelType">
+        <xs:sequence>
+          <xs:element name="Fraction"
+            type="FractionType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RotAccelType"
+    abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        The abstract RotAccelType is derived from DataThingType.
+        An instance of RotAccelType has the following
+        elements:
+          Name (inherited, optional)
+          .
+
+        RotAccelType is an abstract type used as the parent type of:
+          RotAccelAbsoluteType
+          RotAccelRelativeType.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RotSpeedAbsoluteType">
+    <xs:annotation>
+      <xs:documentation>
+        RotSpeedAbsoluteType is derived from RotSpeedType.
+        An instance of RotSpeedAbsoluteType has the following
+        elements:
+          Name (inherited, optional)
+          Setting.
+
+        Setting is a real number that represents the target single axis
+        rotational speed for the robot, in current angle units per second.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="RotSpeedType">
+        <xs:sequence>
+          <xs:element name="Setting"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RotSpeedRelativeType">
+    <xs:annotation>
+      <xs:documentation>
+        RotSpeedRelativeType is derived from RotSpeedType.
+        An instance of RotSpeedRelativeType has the following elements:
+          Name (inherited, optional)
+          Fraction.
+
+        Fraction is a real number that represents the fraction of the
+        robot's maximum rotational speed that it should use.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="RotSpeedType">
+        <xs:sequence>
+          <xs:element name="Fraction"
+            type="FractionType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RotSpeedType"
+    abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        The abstract RotSpeedType is derived from DataThingType.
+        An instance of RotSpeedType has the following
+        elements:
+          Name (inherited, optional)
+          .
+
+        RotSpeedType is an abstract type used as the parent type of: 
+          RotSpeedAbsoluteType
+          RotSpeedRelativeType.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  
+  <xs:complexType name="TransAccelAbsoluteType">
+    <xs:annotation>
+      <xs:documentation>
+        TransAccelAbsoluteType is derived from TransAccelType.
+        An instance of TransAccelAbsoluteType has the following
+        elements:
+          Name (inherited, optional)
+          Setting.
+
+        Setting is a real number that represents the target
+        translational acceleration for the controlled point, in
+        current length units per second per second.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="TransAccelType">
+        <xs:sequence>
+          <xs:element name="Setting"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="TransAccelRelativeType">
+    <xs:annotation>
+      <xs:documentation>
+        TransAccelRelativeType is derived from TransAccelType.
+        An instance of TransAccelRelativeType has the following
+        elements:
+          Name (inherited, optional)
+          Fraction.
+        
+        Fraction is a real number that represents the fraction of the
+        robot's maximum translational acceleration that it should use.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="TransAccelType">
+        <xs:sequence>
+          <xs:element name="Fraction"
+            type="FractionType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="TransAccelType"
+    abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        The abstract TransAccelType is derived from DataThingType.
+        An instance of TransAccelType has the following elements:
+          Name (inherited, optional)
+          .
+
+        TransAccelType is an abstract type used as the parent type of: 
+          TransAccelAbsoluteType
+          TransAccelRelativeType.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="TransSpeedAbsoluteType">
+    <xs:annotation>
+      <xs:documentation>
+        TransSpeedAbsoluteType is derived from TransSpeedType.
+        An instance of TransSpeedAbsoluteType has the following
+        elements:
+          Name (inherited, optional)
+          Setting.
+
+        Setting is a real number that represents the target speed for the
+        controlled point, in current length units per second.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="TransSpeedType">
+        <xs:sequence>
+          <xs:element name="Setting"
+            type="xs:double"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="TransSpeedRelativeType">
+    <xs:annotation>
+      <xs:documentation>
+        TransSpeedRelativeType is derived from TransSpeedType.
+        An instance of TransSpeedRelativeType has the following elements:
+          Name (inherited, optional)
+          Fraction.
+
+        Fraction is a real number that represents the fraction of the
+        robot's maximum translational speed that it should use.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="TransSpeedType">
+        <xs:sequence>
+          <xs:element name="Fraction"
+            type="FractionType"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="TransSpeedType"
+    abstract="true">
+    <xs:annotation>
+      <xs:documentation>
+        The abstract TransSpeedType is derived from DataThingType.
+        An instance of TransSpeedType has the following
+        elements:
+          Name (inherited, optional)
+          .
+
+        TransSpeedType is an abstract type used as the parent type of: 
+          TransSpeedAbsoluteType
+          TransSpeedRelativeType.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="DataThingType"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+</xs:schema>
