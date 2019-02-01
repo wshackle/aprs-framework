@@ -4122,6 +4122,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
                 throw new RuntimeException(ex);
             }
+        } else {
+            conveyorVisJPanel1.connectMasterOnDisplay();
         }
         return XFutureVoid.allOf(futuresList)
                 .thenComposeToVoid(supervisor::conveyorTest);

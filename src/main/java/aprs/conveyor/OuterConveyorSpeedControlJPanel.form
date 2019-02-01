@@ -52,10 +52,10 @@
     <Container class="aprs.conveyor.InnerConveyorSpeedJPanel" name="conveyorSpeedJPanel1">
       <Events>
         <EventHandler event="mouseDragged" listener="java.awt.event.MouseMotionListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MouseDragged"/>
-        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MousePressed"/>
-        <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MouseReleased"/>
         <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MouseClicked"/>
         <EventHandler event="mouseExited" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MouseExited"/>
+        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MousePressed"/>
+        <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="conveyorSpeedJPanel1MouseReleased"/>
       </Events>
 
       <Layout>

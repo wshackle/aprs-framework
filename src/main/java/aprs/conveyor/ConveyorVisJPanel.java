@@ -24,6 +24,7 @@ package aprs.conveyor;
 
 import aprs.system.AprsSystem;
 import crcl.ui.XFutureVoid;
+import java.awt.HeadlessException;
 import java.util.Map;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
@@ -58,6 +59,10 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
         object2DOuterJPanel1.setObjectPanelToClone(clonedSystem.getObjectViewPanel());
     }
 
+    public void connectMasterOnDisplay() throws HeadlessException {
+        outerConveyorSpeedControlJPanel1.connectMasterOnDisplay();
+    }
+    
     /**
      * Creates new form ConveyorVisJPanel
      */
