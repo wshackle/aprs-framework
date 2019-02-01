@@ -4116,7 +4116,7 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
-                = fillTraysAndNextRepeating(sys)
+                = fillTraysAndNextRepeating(sys,false)
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
@@ -4127,7 +4127,7 @@ public class Supervisor {
     @Nullable
     private static volatile AprsSystem fillTraysAndNextRepeatingSys = null;
 
-    private XFutureVoid fillTraysAndNextRepeating(AprsSystem sys) {
+    private XFutureVoid fillTraysAndNextRepeating(AprsSystem sys, boolean useUnassignedParts) {
         fillTraysAndNextRepeatingSys = sys;
         logEvent("request vision update");
         sys.clearVisionRequiredParts();
@@ -4138,8 +4138,8 @@ public class Supervisor {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty()) {
                         sys.setCorrectionMode(true);
-                        return fillTraysAndNextWithItemList(sys, l)
-                                .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys));
+                        return fillTraysAndNextWithItemList(sys, l,useUnassignedParts)
+                                .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys,useUnassignedParts));
                     } else {
                         return XFutureVoid.completedFutureWithName("fillTraysAndNextRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
                     }
@@ -4172,17 +4172,17 @@ public class Supervisor {
         }
     }
 
-    private XFutureVoid fillTraysAndNext(AprsSystem sys) {
+    private XFutureVoid fillTraysAndNext(AprsSystem sys, boolean useUnassignedParts) {
         logEvent("Fill Kit Trays");
         sys.clearVisionRequiredParts();
-        return sys.fillKitTrays()
+        return sys.fillKitTrays(useUnassignedParts)
                 .thenRun(() -> sys.clearVisionRequiredParts())
                 .thenComposeToVoid(x -> conveyorVisNext());
     }
 
     private final AtomicInteger fillTraysCount = new AtomicInteger();
 
-    private XFutureVoid fillTraysAndNextWithItemList(AprsSystem sys, List<PhysicalItem> items) {
+    private XFutureVoid fillTraysAndNextWithItemList(AprsSystem sys, List<PhysicalItem> items, boolean useUnassignedParts) {
         logEvent("Fill Kit Trays " + fillTraysCount.incrementAndGet());
         sys.clearVisionRequiredParts();
         try {
@@ -4190,7 +4190,7 @@ public class Supervisor {
         } catch (IOException ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return sys.fillKitTraysWithItemList(items)
+        return sys.fillKitTraysWithItemList(items,useUnassignedParts)
                 .thenRun(() -> sys.clearVisionRequiredParts())
                 .thenComposeToVoid(x -> conveyorVisNext());
     }

@@ -4766,9 +4766,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
     }
 
-    public void showFilledKitTrays() {
+    public void showFilledKitTrays(boolean useUnassignedParts) {
         try {
-            fillKitTrays(false, 0, true);
+            fillKitTrays(false, 0, true,useUnassignedParts);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -4782,15 +4782,15 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    public XFuture<Boolean> fillKitTrays() {
-        return fillKitTrays(false, 0, false);
+    public XFuture<Boolean> fillKitTrays(boolean useUnassignedParts) {
+        return fillKitTrays(false, 0, false,useUnassignedParts);
     }
 
-    public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items) {
-        return fillKitTraysWithItemList(items, false, 0, false);
+    public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items,boolean useUnassignedParts) {
+        return fillKitTraysWithItemList(items, false, 0, false,useUnassignedParts);
     }
 
-    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) {
+    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) {
 
         setCorrectionMode(true);
         XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
@@ -4799,21 +4799,21 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         return itemsFuture
                 .thenCompose((List<PhysicalItem> l) -> {
-                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showFilledListOnly);
+                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showFilledListOnly,useUnassignedParts);
                 });
     }
 
-    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) {
+    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) {
         List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly);
+        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly,useUnassignedParts);
     }
 
-    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly) throws RuntimeException {
+    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) throws RuntimeException {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (IOException ex) {
@@ -4823,7 +4823,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (fillInfo.getKitTrays().isEmpty()) {
             return XFuture.completedFuture(true);
         }
-        List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo);
+        List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo,useUnassignedParts);
 
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
@@ -4890,15 +4890,17 @@ public class AprsSystem implements SlotOffsetProvider {
 
     }
 
-    private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo) throws IllegalStateException {
+    private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo, boolean useUnassignedParts) throws IllegalStateException {
         List<PhysicalItem> outputList = new ArrayList<>();
         outputList.addAll(fillInfo.getKitTrays());
         outputList.addAll(fillInfo.getPartTrays());
         outputList.addAll(fillInfo.getPartsInKit());
         List<PhysicalItem> partsInPartsTrays = new ArrayList<>(fillInfo.getPartsInPartsTrays());
-        List<PhysicalItem> unassignedParts = new ArrayList<>(fillInfo.getUnassignedParts());
         List<PhysicalItem> availableParts = new ArrayList<>();
-        availableParts.addAll(unassignedParts);
+        if (useUnassignedParts) {
+            List<PhysicalItem> unassignedParts = new ArrayList<>(fillInfo.getUnassignedParts());
+            availableParts.addAll(unassignedParts);
+        }
         availableParts.addAll(partsInPartsTrays);
         List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
         List<PhysicalItem> movedPartsList = new ArrayList<>();
