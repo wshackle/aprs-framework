@@ -1933,7 +1933,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             reverseFlag = false;
             reloadForReverse(false);
             if (null != aprsSystem) {
-                aprsSystem.fillKitTrays();
+                aprsSystem.fillKitTrays(true);
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -1950,7 +1950,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private void jMenuItemShowFilledKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemShowFilledKitTraysActionPerformed
         try {
             if (null != aprsSystem) {
-                aprsSystem.showFilledKitTrays();
+                aprsSystem.showFilledKitTrays(true);
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
