@@ -442,7 +442,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         this.modBusHost = modBusHost;
     }
 
-    private void connectMasterOnDisplay() throws HeadlessException {
+    public void connectMasterOnDisplay() throws HeadlessException {
         try {
             String newModBustHost = JOptionPane.showInputDialog(this, "ModBus Host:", modBusHost);
             if (newModBustHost != null && newModBustHost.length() > 0 && !newModBustHost.equals(modBusHost)) {
