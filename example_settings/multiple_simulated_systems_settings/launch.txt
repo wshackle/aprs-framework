@@ -1,14 +1,34 @@
-plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-plj-waitfor Neo4j Server is running
-plj-recoverWaitFor is ready
-plj-checkfail Neo4j Server is not running
-${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
-plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-plj-checkfail Neo4j Server is not running
-plj-waitfor Neo4j Server is running
-plj-recoverWaitFor is ready
-${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
+
+
+plj-timeout 90000
+
+if!connectOK localhost 7496
+plj-connectWaitFor host=localhost port=7496 delay=100 timeout=100 max_tries=100
+env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+endif
+
+if!connectOK localhost 7494
+plj-connectWaitFor host=localhost port=7494 delay=100 timeout=100 max_tries=100
+env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+endif
+
+#if!connectOK localhost 6001
+#cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
+#cmd /V /K start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
+#endif
+
+#plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+#plj-waitfor Neo4j Server is running
+#plj-recoverWaitFor is ready
+#plj-checkfail Neo4j Server is not running
+#${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
+
+#plj-onfail env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+#plj-checkfail Neo4j Server is not running
+#plj-waitfor Neo4j Server is running
+#plj-recoverWaitFor is ready
+#${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j status
 
 
 

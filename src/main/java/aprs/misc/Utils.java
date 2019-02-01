@@ -659,21 +659,29 @@ public class Utils {
                 System.err.println("table has invalid renderer for header (" + i + ") colHeaderVal=" + colHeaderVal);
             }
             for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                if(r >= table.getRowCount()) {
-                    System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed.");
-                    return;
-                }
-                Object tableValue = table.getValueAt(r, i);
-                if (null != tableValue) {
-                    Component comp = renderer.getTableCellRendererComponent(table,
-                            tableValue,
-                            false, false, r, i);
-                    if (null != comp && null != comp.getPreferredSize()) {
-                        width = Math.max(width, comp.getPreferredSize().width);
-                    } else {
-                        System.err.println("table has invalid renderer for cell (" + r + "," + i + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                try {
+                    renderer = table.getCellRenderer(r, i);
+                    if (r >= table.getRowCount()) {
+                        System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed.");
+                        return;
                     }
+                    if (i >= table.getColumnCount()) {
+                        System.err.println("autoResizeTableColWidthsOnDisplay colCount changed.");
+                        return;
+                    }
+                    Object tableValue = table.getValueAt(r, i);
+                    if (null != tableValue) {
+                        Component comp = renderer.getTableCellRendererComponent(table,
+                                tableValue,
+                                false, false, r, i);
+                        if (null != comp && null != comp.getPreferredSize()) {
+                            width = Math.max(width, comp.getPreferredSize().width);
+                        } else {
+                            System.err.println("table has invalid renderer for cell (" + r + "," + i + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("r="+r+",i="+i+",table.getRowCount()="+table.getRowCount()+",table.getColumnCount()="+table.getColumnCount(), e);
                 }
             }
             if (i == table.getColumnCount() - 1) {

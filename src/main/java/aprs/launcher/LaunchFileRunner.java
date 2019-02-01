@@ -501,7 +501,54 @@ public class LaunchFileRunner {
     public void setTabs(String tabs) {
         this.tabs = tabs;
     }
+    
+    static int getIntFromWords(String name, String words[],int defaultValue) {
+        for (int i = 0; i < words.length; i++) {
+            String wordi = words[i];
+            if(i < words.length -1) {
+                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
+                    return Integer.parseInt(words[i+1]);
+                }
+            }
+            if(wordi.startsWith(name+"=")) {
+                return Integer.parseInt(wordi.substring(name.length()+1));
+            }
+        }
+        return defaultValue;
+    }
 
+    
+    static long getLongFromWords(String name, String words[],long defaultValue) {
+        for (int i = 0; i < words.length; i++) {
+            String wordi = words[i];
+            if(i < words.length -1) {
+                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
+                    return Long.parseLong(words[i+1]);
+                }
+            }
+            if(wordi.startsWith(name+"=")) {
+                return Long.parseLong(wordi.substring(name.length()+1));
+            }
+        }
+        return defaultValue;
+    }
+    
+    static String getStringFromWords(String name, String words[],String defaultValue) {
+        for (int i = 0; i < words.length; i++) {
+            String wordi = words[i];
+            if(i < words.length -1) {
+                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
+                    return words[i+1];
+                }
+            }
+            if(wordi.startsWith(name+"=")) {
+                return wordi.substring(name.length()+1);
+            }
+        }
+        return defaultValue;
+    }
+    
+    
     @Nullable
     @SuppressWarnings("nullness")
     private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
@@ -683,6 +730,19 @@ public class LaunchFileRunner {
                 containingList.add(consumer);
                 futures.add(xf);
                 waitForFuture = xf;
+            } else if (firstWord.equals("plj-connectWaitFor")) {
+                String text = afterFirstWord(line, firstWord);
+                int port = getIntFromWords("port", words, -1);
+                String host = getStringFromWords("host", words, null);
+                int timeout = getIntFromWords("timeout", words, 100);
+                int max_tries = getIntFromWords("max_tries", words, 100);
+                long delay =  getLongFromWords("delay", words, 100);
+                ConnectWaitFor cnf = new ConnectWaitFor(host, port, max_tries, timeout, delay);
+                XFutureVoid xf = cnf.getSocketFuture().thenRun(()-> {
+                    System.out.println("Connected to "+host+":"+port);
+                });
+                futures.add(xf);
+                waitForFuture = xf;
             } else if (firstWord.equals("plj-killNeo4J")) {
                 Neo4JKiller.killNeo4J();
             } else if (firstWord.equals("plj-cd") || firstWord.equals("cd") || firstWord.equals("chdir")) {
@@ -768,7 +828,7 @@ public class LaunchFileRunner {
         StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
         ifStack.push(true);
-        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
                 WrappedProcess p = parseLaunchFileLine(line, futures, stringBuilder);
@@ -803,7 +863,8 @@ public class LaunchFileRunner {
                         public Void apply(Void arg0, Throwable arg1) {
                             return (Void) null;
                         }
-                    }).thenRun(()-> {});
+                    }).thenRun(() -> {
+                    });
             return XFutureVoid.anyOfWithName("LaunchFileRunner.timeoutOrNot", timeoutCancelledFuture, handledTimeoutFuture)
                     .thenRun("LaunchFileRunner.printComplete", () -> {
                         try {
