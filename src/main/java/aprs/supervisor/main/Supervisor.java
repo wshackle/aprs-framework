@@ -4110,13 +4110,16 @@ public class Supervisor {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
-        logEvent("Start ConveyorTest");
+        logEvent("Start reverseConveyorTest");
+         conveyorVisNextCount.set(0);
+        conveyorVisPrevCount.set(0);
         AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
         if (null == sys) {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
                 = emptyTraysAndPrevRepeating(sys,false)
+                         .thenComposeToVoid(x -> conveyorVisNext())
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
@@ -4127,12 +4130,15 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame");
         }
         logEvent("Start ConveyorTest");
+        conveyorVisNextCount.set(0);
+        conveyorVisPrevCount.set(0);
         AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
         if (null == sys) {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
                 = fillTraysAndNextRepeating(sys,false)
+                        .thenComposeToVoid(x -> conveyorVisPrev())
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
@@ -4152,7 +4158,7 @@ public class Supervisor {
         XFutureVoid ret = itemsFuture
                 .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-                    if (!l.isEmpty()) {
+                    if (!l.isEmpty() || conveyorVisNextCount.get() == 0) {
                         sys.setCorrectionMode(true);
                         return fillTraysAndNextWithItemList(sys, l,useUnassignedParts)
                                 .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys,useUnassignedParts));
@@ -4182,7 +4188,7 @@ public class Supervisor {
         XFutureVoid ret = itemsFuture
                 .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-                    if (!l.isEmpty()) {
+                    if (!l.isEmpty() || conveyorVisPrevCount.get() == 0) {
                         sys.setCorrectionMode(true);
                         return emptyTraysAndPrevWithItemList(sys, l,useUnassignedParts)
                                 .thenComposeToVoid(() -> emptyTraysAndPrevRepeating(sys,useUnassignedParts));
@@ -4257,13 +4263,13 @@ public class Supervisor {
     }
 
     
-    private final AtomicInteger conveyorVisCount = new AtomicInteger();
+    private final AtomicInteger conveyorVisNextCount = new AtomicInteger();
 
     private XFutureVoid conveyorVisNext() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
-        int count = conveyorVisCount.incrementAndGet();
+        int count = conveyorVisNextCount.incrementAndGet();
         logEvent("Conveyor Next Starting " + count);
         XFutureVoid ret
                 = displayJFrame.conveyorVisNextTray()
@@ -4273,15 +4279,16 @@ public class Supervisor {
     }
 
     private void conveyorVisNextFinish() {
-        logEvent("Conveyor Next finished. " + conveyorVisCount.get());
+        logEvent("Conveyor Next finished. " + conveyorVisNextCount.get());
     }
 
-    
+     private final AtomicInteger conveyorVisPrevCount = new AtomicInteger();
+     
     private XFutureVoid conveyorVisPrev() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
-        int count = conveyorVisCount.incrementAndGet();
+        int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
         XFutureVoid ret
                 = displayJFrame.conveyorVisPrevTray()
@@ -4291,7 +4298,7 @@ public class Supervisor {
     }
 
     private void conveyorVisPrevFinish() {
-        logEvent("Conveyor Prev finished. " + conveyorVisCount.get());
+        logEvent("Conveyor Prev finished. " + conveyorVisPrevCount.get());
     }
     
     private final AtomicInteger srts2Count = new AtomicInteger();

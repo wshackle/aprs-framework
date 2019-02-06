@@ -4151,11 +4151,31 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public XFutureVoid conveyorVisNextTray() {
-        return conveyorVisJPanel1.nextTray();
+         try {
+             return conveyorVisJPanel1.nextTray();
+         } catch (Exception e) {
+             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+             showErrorSplash(e.getMessage());
+             if(e instanceof RuntimeException) {
+                 throw e;
+             } else {
+                throw new RuntimeException(e);
+             }
+        }
     }
 
     public XFutureVoid conveyorVisPrevTray() {
-        return conveyorVisJPanel1.prevTray();
+        try {
+            return conveyorVisJPanel1.prevTray();
+        } catch (Exception e) {
+             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+             showErrorSplash(e.getMessage());
+             if(e instanceof RuntimeException) {
+                 throw e;
+             } else {
+                throw new RuntimeException(e);
+             }
+        }
     }
 
     public void setConveyorClonedViewSystemTaskName(String taskName) {
