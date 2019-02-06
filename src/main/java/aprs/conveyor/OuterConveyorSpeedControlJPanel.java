@@ -180,6 +180,22 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         nextPrevTrayFuture = new XFutureVoid("nextTray");
         return nextPrevTrayFuture;
     }
+    
+    
+    public XFutureVoid prevTray() {
+//        computeTrayDiff();
+        setGoalSet(false);
+        updateEstimatedPosition();
+        setGoalPosition(getEstimatedPosition() - trayDiff);
+        setGoalSet(true);
+        setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
+        if (null != nextPrevTrayFuture) {
+            nextPrevTrayFuture.cancelAll(true);
+        }
+        nextPrevTrayFutureStartTime = System.currentTimeMillis();
+        nextPrevTrayFuture = new XFutureVoid("prevTray");
+        return nextPrevTrayFuture;
+    }
 
     @Nullable
     private JFrame getOwner() {

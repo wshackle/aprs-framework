@@ -4105,6 +4105,22 @@ public class Supervisor {
     public XFutureVoid getConveyorTestFuture() {
         return conveyorTestFuture;
     }
+    
+    public XFutureVoid reverseConveyorTest() {
+        if (null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
+        logEvent("Start ConveyorTest");
+        AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        XFutureVoid ret
+                = emptyTraysAndPrevRepeating(sys,false)
+                        .thenComposeToVoid(x -> finishConveyorTest());
+        conveyorTestFuture = ret;
+        return ret;
+    }
 
     public XFutureVoid conveyorTest() {
         if (null == displayJFrame) {
@@ -4152,6 +4168,36 @@ public class Supervisor {
         return ret;
     }
 
+    @Nullable
+    private static volatile XFutureVoid emptyTraysAndPrevRepeatingFuture = null;
+    @Nullable
+    private static volatile AprsSystem emptyTraysAndPrevRepeatingSys = null;
+
+    private XFutureVoid emptyTraysAndPrevRepeating(AprsSystem sys, boolean useUnassignedParts) {
+        emptyTraysAndPrevRepeatingSys = sys;
+        logEvent("request vision update");
+        sys.clearVisionRequiredParts();
+
+        XFuture<List<PhysicalItem>> itemsFuture = sys.getSingleRawVisionUpdate();
+        XFutureVoid ret = itemsFuture
+                .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
+                    logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
+                    if (!l.isEmpty()) {
+                        sys.setCorrectionMode(true);
+                        return emptyTraysAndPrevWithItemList(sys, l,useUnassignedParts)
+                                .thenComposeToVoid(() -> emptyTraysAndPrevRepeating(sys,useUnassignedParts));
+                    } else {
+                        return XFutureVoid.completedFutureWithName("emptyTraysAndPrevRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
+                    }
+                }, supervisorExecutorService);
+        emptyTraysAndPrevRepeatingFuture = ret;
+        if (sys.isObjectViewSimulated()) {
+            logEvent("refreshSimView");
+            sys.refreshSimView();
+        }
+        return ret;
+    }
+    
     private XFutureVoid finishConveyorTest() {
         logEvent("ConveyorTest finished");
         if (null != displayJFrame) {
@@ -4195,6 +4241,22 @@ public class Supervisor {
                 .thenComposeToVoid(x -> conveyorVisNext());
     }
 
+    private final AtomicInteger emptyTraysCount = new AtomicInteger();
+
+    private XFutureVoid emptyTraysAndPrevWithItemList(AprsSystem sys, List<PhysicalItem> items, boolean useUnassignedParts) {
+        logEvent("Empty Kit Trays " + emptyTraysCount.incrementAndGet());
+        sys.clearVisionRequiredParts();
+        try {
+            sys.takeSimViewSnapshot("emptyTraysAndPrevWithItemList", items);
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return sys.emptyKitTraysWithItemList(items)
+                .thenRun(() -> sys.clearVisionRequiredParts())
+                .thenComposeToVoid(x -> conveyorVisPrev());
+    }
+
+    
     private final AtomicInteger conveyorVisCount = new AtomicInteger();
 
     private XFutureVoid conveyorVisNext() {
@@ -4214,6 +4276,24 @@ public class Supervisor {
         logEvent("Conveyor Next finished. " + conveyorVisCount.get());
     }
 
+    
+    private XFutureVoid conveyorVisPrev() {
+        if (null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
+        int count = conveyorVisCount.incrementAndGet();
+        logEvent("Conveyor Prev Starting " + count);
+        XFutureVoid ret
+                = displayJFrame.conveyorVisPrevTray()
+                        .thenRun(this::conveyorVisPrevFinish);
+        conveyorTestFuture = ret;
+        return ret;
+    }
+
+    private void conveyorVisPrevFinish() {
+        logEvent("Conveyor Prev finished. " + conveyorVisCount.get());
+    }
+    
     private final AtomicInteger srts2Count = new AtomicInteger();
 
     private XFutureVoid startRandomTestStep2() {

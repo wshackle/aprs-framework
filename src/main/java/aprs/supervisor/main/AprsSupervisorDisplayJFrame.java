@@ -4085,6 +4085,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
 
+        Boolean reverseConvTest = (Boolean)
+                JOptionPane.showInputDialog(this,
+                        "Reverse Conveyor Test?", "",  
+                        JOptionPane.QUESTION_MESSAGE, null,
+                        new Boolean[]{Boolean.FALSE,Boolean.TRUE}, 
+                        Boolean.FALSE);
         List<XFutureVoid> futuresList = new ArrayList<>();
         if (sys.isObjectViewSimulated()) {
             try {
@@ -4125,8 +4131,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } else {
             conveyorVisJPanel1.connectMasterOnDisplay();
         }
-        return XFutureVoid.allOf(futuresList)
-                .thenComposeToVoid(supervisor::conveyorTest);
+        XFutureVoid conveyorTestPrep =  XFutureVoid.allOf(futuresList);
+        
+        if(reverseConvTest){
+            return conveyorTestPrep
+                    .thenComposeToVoid(supervisor::reverseConveyorTest);
+        } else {
+            return conveyorTestPrep
+                    .thenComposeToVoid(supervisor::conveyorTest);
+        }
+                
     }
 
     private static final String titleStart = "Multi Aprs Supervisor";
@@ -4138,6 +4152,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public XFutureVoid conveyorVisNextTray() {
         return conveyorVisJPanel1.nextTray();
+    }
+
+    public XFutureVoid conveyorVisPrevTray() {
+        return conveyorVisJPanel1.prevTray();
     }
 
     public void setConveyorClonedViewSystemTaskName(String taskName) {

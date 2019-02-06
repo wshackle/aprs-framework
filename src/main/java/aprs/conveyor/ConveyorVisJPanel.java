@@ -82,6 +82,10 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
         return outerConveyorSpeedControlJPanel1.nextTray();
     }
     
+    public XFutureVoid prevTray() {
+        return outerConveyorSpeedControlJPanel1.prevTray();
+    }
+    
     public void mapToProperties(Map<String, String> map1) throws NumberFormatException {
         outerConveyorSpeedControlJPanel1.mapToProperties(map1);
     }
