@@ -4105,21 +4105,21 @@ public class Supervisor {
     public XFutureVoid getConveyorTestFuture() {
         return conveyorTestFuture;
     }
-    
+
     public XFutureVoid reverseConveyorTest() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
         logEvent("Start reverseConveyorTest");
-         conveyorVisNextCount.set(0);
+        conveyorVisNextCount.set(0);
         conveyorVisPrevCount.set(0);
         AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
         if (null == sys) {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
-                = emptyTraysAndPrevRepeating(sys,false)
-                         .thenComposeToVoid(x -> conveyorVisNext())
+                = emptyTraysAndPrevRepeating(sys, false)
+                        .thenComposeToVoid(x -> conveyorVisNext())
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
@@ -4137,9 +4137,62 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
-                = fillTraysAndNextRepeating(sys,false)
+                = fillTraysAndNextRepeating(sys, false)
                         .thenComposeToVoid(x -> conveyorVisPrev())
                         .thenComposeToVoid(x -> finishConveyorTest());
+        conveyorTestFuture = ret;
+        return ret;
+    }
+
+    public XFutureVoid repeatingConveyorTest(int maxCount) {
+        if (null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
+
+        AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        return continueRepeatingConveyorTest(sys, maxCount, 0);
+    }
+
+    public XFutureVoid reverseRepeatingConveyorTest(int maxCount) {
+        if (null == displayJFrame) {
+            throw new NullPointerException("displayJFrame");
+        }
+        AprsSystem sys = displayJFrame.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        return continueReverseRepeatingConveyorTest(sys, maxCount, 0);
+    }
+
+    private XFutureVoid continueRepeatingConveyorTest(AprsSystem sys, int maxCount, int count) {
+        if (maxCount > 0 && count > maxCount) {
+            return finishConveyorTest();
+        }
+        logEvent("Start ConveyorTest");
+        conveyorVisNextCount.set(0);
+        conveyorVisPrevCount.set(0);
+        XFutureVoid ret
+                = fillTraysAndNextRepeating(sys, false)
+                        .thenComposeToVoid(x -> conveyorVisPrev())
+                        .thenComposeToVoid(x -> continueReverseRepeatingConveyorTest(sys, maxCount, count + 1));
+        conveyorTestFuture = ret;
+        return ret;
+    }
+
+    private XFutureVoid continueReverseRepeatingConveyorTest(AprsSystem sys, int maxCount, int count) {
+        if (maxCount > 0 && count > maxCount) {
+            return finishConveyorTest();
+        }
+        logEvent("Start reverseConveyorTest");
+        conveyorVisNextCount.set(0);
+        conveyorVisPrevCount.set(0);
+        XFutureVoid ret
+                = emptyTraysAndPrevRepeating(sys, false)
+                        .thenComposeToVoid(x -> conveyorVisNext())
+                        .thenComposeToVoid(x -> continueRepeatingConveyorTest(sys, maxCount, count + 1));
         conveyorTestFuture = ret;
         return ret;
     }
@@ -4160,8 +4213,8 @@ public class Supervisor {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty() || conveyorVisNextCount.get() == 0) {
                         sys.setCorrectionMode(true);
-                        return fillTraysAndNextWithItemList(sys, l,useUnassignedParts)
-                                .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys,useUnassignedParts));
+                        return fillTraysAndNextWithItemList(sys, l, useUnassignedParts)
+                                .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys, useUnassignedParts));
                     } else {
                         return XFutureVoid.completedFutureWithName("fillTraysAndNextRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
                     }
@@ -4190,8 +4243,8 @@ public class Supervisor {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
                     if (!l.isEmpty() || conveyorVisPrevCount.get() == 0) {
                         sys.setCorrectionMode(true);
-                        return emptyTraysAndPrevWithItemList(sys, l,useUnassignedParts)
-                                .thenComposeToVoid(() -> emptyTraysAndPrevRepeating(sys,useUnassignedParts));
+                        return emptyTraysAndPrevWithItemList(sys, l, useUnassignedParts)
+                                .thenComposeToVoid(() -> emptyTraysAndPrevRepeating(sys, useUnassignedParts));
                     } else {
                         return XFutureVoid.completedFutureWithName("emptyTraysAndPrevRepeating : sys.getSingleVisionToDbUpdate().isEmpty()");
                     }
@@ -4203,7 +4256,7 @@ public class Supervisor {
         }
         return ret;
     }
-    
+
     private XFutureVoid finishConveyorTest() {
         logEvent("ConveyorTest finished");
         if (null != displayJFrame) {
@@ -4242,7 +4295,7 @@ public class Supervisor {
         } catch (IOException ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return sys.fillKitTraysWithItemList(items,useUnassignedParts)
+        return sys.fillKitTraysWithItemList(items, useUnassignedParts)
                 .thenRun(() -> sys.clearVisionRequiredParts())
                 .thenComposeToVoid(x -> conveyorVisNext());
     }
@@ -4262,7 +4315,6 @@ public class Supervisor {
                 .thenComposeToVoid(x -> conveyorVisPrev());
     }
 
-    
     private final AtomicInteger conveyorVisNextCount = new AtomicInteger();
 
     private XFutureVoid conveyorVisNext() {
@@ -4282,8 +4334,8 @@ public class Supervisor {
         logEvent("Conveyor Next finished. " + conveyorVisNextCount.get());
     }
 
-     private final AtomicInteger conveyorVisPrevCount = new AtomicInteger();
-     
+    private final AtomicInteger conveyorVisPrevCount = new AtomicInteger();
+
     private XFutureVoid conveyorVisPrev() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
@@ -4300,7 +4352,7 @@ public class Supervisor {
     private void conveyorVisPrevFinish() {
         logEvent("Conveyor Prev finished. " + conveyorVisPrevCount.get());
     }
-    
+
     private final AtomicInteger srts2Count = new AtomicInteger();
 
     private XFutureVoid startRandomTestStep2() {
