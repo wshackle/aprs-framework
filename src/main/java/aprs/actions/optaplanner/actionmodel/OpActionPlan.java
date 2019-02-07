@@ -111,6 +111,26 @@ public class OpActionPlan {
         this.useDistForCost = useDistForCost;
     }
 
+    private boolean useStartEndCost = true;
+
+    /**
+     * Get the value of useStartEndCost
+     *
+     * @return the value of useStartEndCost
+     */
+    public boolean isUseStartEndCost() {
+        return useStartEndCost;
+    }
+
+    /**
+     * Set the value of useStartEndCost
+     *
+     * @param useStartEndCost new value of useStartEndCost
+     */
+    public void setUseStartEndCost(boolean useStartEndCost) {
+        this.useStartEndCost = useStartEndCost;
+    }
+    
     private boolean debug;
 
     /**
