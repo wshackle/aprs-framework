@@ -3410,8 +3410,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                        .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                x -> continueAllActions());
+                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3480,24 +3480,24 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                            .thenComposeToVoid(x -> {
-                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                    try {
-                                        clearAllErrors();
-                                        connectAll();
-                                        jCheckBoxMenuItemPause.setSelected(false);
-                                        resume();
-                                        return startRandomTestFirstActionReversed2();
-                                    } catch (Exception e) {
-                                        Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                        JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
-                                        XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                        ret.completeExceptionally(e);
-                                        return ret;
-                                    }
-                                }).thenComposeToVoid(x3 -> x3);
-                                return innerRet;
-                            });
+                                    .thenComposeToVoid(x -> {
+                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
+                                            try {
+                                                clearAllErrors();
+                                                connectAll();
+                                                jCheckBoxMenuItemPause.setSelected(false);
+                                                resume();
+                                                return startRandomTestFirstActionReversed2();
+                                            } catch (Exception e) {
+                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                                JOptionPane.showMessageDialog(this, "Exception occurred: " + e);
+                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                                ret.completeExceptionally(e);
+                                                return ret;
+                                            }
+                                        }).thenComposeToVoid(x3 -> x3);
+                                        return innerRet;
+                                    });
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3839,9 +3839,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFutureVoid iiraFuture
                     = fullAbortFuture
-                    .thenComposeToVoid(
-                            "interactivStart(" + actionName + ")internalInteractiveResetAll",
-                            () -> internalInteractiveResetAll());
+                            .thenComposeToVoid(
+                                    "interactivStart(" + actionName + ")internalInteractiveResetAll",
+                                    () -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
                     .thenRun(() -> {
@@ -3875,13 +3875,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                     }
                                 }
                                 return lookForPartsAll()
-                                .thenRun(() -> {
-                                    for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
-                                        AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
-                                        sys.setEnforceMinMaxLimits(true);
-                                        sys.updateRobotLimits();
-                                    }
-                                });
+                                        .thenRun(() -> {
+                                            for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
+                                                AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
+                                                sys.setEnforceMinMaxLimits(true);
+                                                sys.updateRobotLimits();
+                                            }
+                                        });
                             },
                             getSupervisorExecutorService())
                     .thenComposeToVoid(
@@ -4085,12 +4085,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
 
-        Boolean reverseConvTest = (Boolean)
-                JOptionPane.showInputDialog(this,
-                        "Reverse Conveyor Test?", "",  
-                        JOptionPane.QUESTION_MESSAGE, null,
-                        new Boolean[]{Boolean.FALSE,Boolean.TRUE}, 
-                        Boolean.FALSE);
+        Boolean reverseConvTest = (Boolean) JOptionPane.showInputDialog(this,
+                "Reverse Conveyor Test?", "",
+                JOptionPane.QUESTION_MESSAGE, null,
+                new Boolean[]{Boolean.FALSE, Boolean.TRUE},
+                Boolean.FALSE);
+        Boolean repeating = (Boolean) JOptionPane.showInputDialog(this,
+                "Repeating?", "",
+                JOptionPane.QUESTION_MESSAGE, null,
+                new Boolean[]{Boolean.FALSE, Boolean.TRUE},
+                Boolean.FALSE);
+
         List<XFutureVoid> futuresList = new ArrayList<>();
         if (sys.isObjectViewSimulated()) {
             try {
@@ -4131,16 +4136,31 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } else {
             conveyorVisJPanel1.connectMasterOnDisplay();
         }
-        XFutureVoid conveyorTestPrep =  XFutureVoid.allOf(futuresList);
-        
-        if(reverseConvTest){
-            return conveyorTestPrep
-                    .thenComposeToVoid(supervisor::reverseConveyorTest);
+        XFutureVoid conveyorTestPrep = XFutureVoid.allOf(futuresList);
+
+        if (repeating) {
+            String repeatCountText
+                    = JOptionPane.showInputDialog(this,
+                            "Repeating Count?",
+                            "10");
+            int repeatCount = Integer.parseInt(repeatCountText);
+            if (reverseConvTest) {
+                return conveyorTestPrep
+                        .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));
+            } else {
+                return conveyorTestPrep
+                        .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));
+            }
         } else {
-            return conveyorTestPrep
-                    .thenComposeToVoid(supervisor::conveyorTest);
+            if (reverseConvTest) {
+                return conveyorTestPrep
+                        .thenComposeToVoid(supervisor::reverseConveyorTest);
+            } else {
+                return conveyorTestPrep
+                        .thenComposeToVoid(supervisor::conveyorTest);
+            }
         }
-                
+
     }
 
     private static final String titleStart = "Multi Aprs Supervisor";
@@ -4151,16 +4171,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public XFutureVoid conveyorVisNextTray() {
-         try {
-             return conveyorVisJPanel1.nextTray();
-         } catch (Exception e) {
-             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
-             showErrorSplash(e.getMessage());
-             if(e instanceof RuntimeException) {
-                 throw e;
-             } else {
+        try {
+            return conveyorVisJPanel1.nextTray();
+        } catch (Exception e) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+            showErrorSplash(e.getMessage());
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
                 throw new RuntimeException(e);
-             }
+            }
         }
     }
 
@@ -4168,13 +4188,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         try {
             return conveyorVisJPanel1.prevTray();
         } catch (Exception e) {
-             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
-             showErrorSplash(e.getMessage());
-             if(e instanceof RuntimeException) {
-                 throw e;
-             } else {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+            showErrorSplash(e.getMessage());
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
                 throw new RuntimeException(e);
-             }
+            }
         }
     }
 
@@ -4700,7 +4720,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == supervisor");
         }
         supervisor.resume();
-        
+
     }
 
     private static String shortTrace(StackTraceElement @Nullable [] trace) {
