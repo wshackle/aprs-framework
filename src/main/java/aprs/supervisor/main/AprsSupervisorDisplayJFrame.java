@@ -4146,7 +4146,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             int repeatCount = Integer.parseInt(repeatCountText);
             if (reverseConvTest) {
                 return conveyorTestPrep
-                        .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));
+                        .thenComposeToVoid(() -> supervisor.reverseRepeatingConveyorTest(repeatCount));
             } else {
                 return conveyorTestPrep
                         .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));

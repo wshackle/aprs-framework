@@ -412,12 +412,18 @@ public class OpAction implements OpActionInterface {
         if (plan.isUseDistForCost()) {
             return distance(false);
         }
+        if (this.opActionType == START && !plan.isUseStartEndCost()) {
+            return 0;
+        }
         if (this.opActionType == START) {
             return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());
         }
         OpActionInterface effNext = effectiveNext(false);
         if (null == effNext) {
             return Double.POSITIVE_INFINITY;
+        }
+        if (effNext.getOpActionType() == END && !plan.isUseStartEndCost() ) {
+            return 0;
         }
         if (effNext.getOpActionType() == END) {
             return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());

@@ -2317,6 +2317,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        List<OpAction> opActionsCopy = new ArrayList<>(opActions);
         OpActionPlan inputPlan = new OpActionPlan();
         inputPlan.setUseDistForCost(false);
+        inputPlan.setUseStartEndCost(false);
         inputPlan.setAccelleration(fastTransSpeed);
         inputPlan.setMaxSpeed(fastTransSpeed);
         inputPlan.setStartEndMaxSpeed(2 * fastTransSpeed);
@@ -2498,7 +2499,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void clearWayToHolder(String holder) {
         if (null != aprsSystem) {
-           
+
             aprsSystem.clearWayToHolders(holder)
                     .thenRun(() -> completeClearWayToHolder());
         }
@@ -2583,15 +2584,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             if (null == pose) {
-                logError("pose=null for kitInstanceName=" +kitInstanceName);
+                logError("pose=null for kitInstanceName=" + kitInstanceName);
                 return Collections.emptyList();
             }
             Tray tray = new Tray(kitSkuName, pose, 0);
             tray.setType("KT");
             if (null != aprsSystem) {
                 List<Slot> allSlots = aprsSystem.getSlots(tray, false);
-                if(allSlots.isEmpty()) {
-                    logError("tray="+tray+" has no slots");
+                if (allSlots.isEmpty()) {
+                    logError("tray=" + tray + " has no slots");
                     return allSlots;
                 }
                 return allSlots
@@ -2609,7 +2610,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         .collect(Collectors.toList());
             }
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "kitSkuName="+kitSkuName+", kitInstanceName="+kitInstanceName, ex);
+            logger.log(Level.SEVERE, "kitSkuName=" + kitSkuName + ", kitInstanceName=" + kitInstanceName, ex);
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -2798,7 +2799,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                     (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                             lastTakenPart = closestItem.getName();
 ////                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+                                            correctivedItems.add(closestItem);
                                             correctiveActions.add(new Action(TAKE_PART, closestItem.getFullName()));
+                                            correctivedItems.add(absSlot);
                                             correctiveActions.add(new Action(PLACE_PART, slotPrefix + "_" + count));
                                         }
                                         if (!slotItemSkuName.equals("empty")) {
@@ -2887,9 +2890,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 itemsPlusSlots.addAll(physicalItemsLocal);
                                                 itemsPlusSlots.addAll(absSlots);
                                                 takeSimViewSnapshot("checkKits : itemsPlusSlots", itemsPlusSlots);
-                                                takeSimViewSnapshot("checkKits : absSlotPose", absSlotPose,slotName);
-                                                takeSimViewSnapshot("checkKits : slotPose", slotPose,slotName);
-                                                takeSimViewSnapshot("checkKits : kitPose", pose,kitInstanceName);
+                                                takeSimViewSnapshot("checkKits : absSlotPose", absSlotPose, slotName);
+                                                takeSimViewSnapshot("checkKits : slotPose", slotPose, slotName);
+                                                takeSimViewSnapshot("checkKits : kitPose", pose, kitInstanceName);
                                                 throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
                                             }
                                             correctivedItems.add(absSlot);
@@ -3007,12 +3010,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         for (KitToCheck kit : kitsToFix) {
             logError("checkKits: kit = " + kit);
             logError("checkKits: kit.slotMap = " + kit.slotMap);
-            
+
             String errMsgKitStart = " : " + kit.name + " needs ";
             errMsgSb.append(errMsgKitStart);
             logError("checkKits: errMsgKitStart=" + errMsgKitStart);
             for (KitToCheckInstanceInfo info : kit.instanceInfoMap.values()) {
-                takeSimViewSnapshot("checkKitsFailed: info", info.pose,info.instanceName);
+                takeSimViewSnapshot("checkKitsFailed: info", info.pose, info.instanceName);
                 takeSimViewSnapshot("checkKitsFailed: info.absSlots", info.absSlots);
                 List<PhysicalItem> itemsPlusAbsSlots = new ArrayList<>();
                 itemsPlusAbsSlots.addAll(physicalItemsLocal);
@@ -3022,8 +3025,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logError("checkKits: info.failedItems.size()=" + info.failedItems.size());
                 for (int i = 0; i < info.failedItems.size(); i++) {
                     KitToCheckFailedItemInfo failedItemInfo = info.failedItems.get(i);
-                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedAbsSlot", failedItemInfo.failedAbsSlot,failedItemInfo.failedAbsSlotPrpName);
-                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedItemInfo.failedClosestItem,failedItemInfo.failedClosestItem.getFullName());
+                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedAbsSlot", failedItemInfo.failedAbsSlot, failedItemInfo.failedAbsSlotPrpName);
+                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedItemInfo.failedClosestItem, failedItemInfo.failedClosestItem.getFullName());
                     String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " in " + failedItemInfo.failedAbsSlotPrpName;
                     errMsgSb.append(fiString);
                     if (i < info.failedItems.size() - 1) {
@@ -5220,7 +5223,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", numberFormatException);
             }
         }
-        
+
         String toolChangerDwellTimeString = optionsMap.get("toolChangerDwellTime");
         if (null != toolChangerDwellTimeString && toolChangerDwellTimeString.length() > 0) {
             try {
@@ -5442,7 +5445,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private double toolChangerDwellTime = 0.25;
-    
+
     private void addOpenToolChanger(List<MiddleCommandType> cmds) {
         addSettleDwell(cmds);
         addDwell(cmds, toolChangerDwellTime);
@@ -5651,10 +5654,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
         double joint0 = jointVals[0];
         double joint0diff = joint0 - expectedJoint0Val;
-        addMessageCommand(out, "addJointPrepMove");
-        if (toolHolderOperationEnabled && Double.isFinite(expectedJoint0Val) && Math.abs(joint0diff) > joint0DiffTolerance) {
+        
+        if (toolHolderOperationEnabled 
+                && Double.isFinite(expectedJoint0Val)
+                && joint0DiffTolerance > 0 
+                && Math.abs(joint0diff) > joint0DiffTolerance) {
             double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
             jointValsCopy[0] = expectedJoint0Val;
+            addMessageCommand(out, "addJointPrepMove");
             addJointMove(out, jointValsCopy, 1.0);
         }
     }
@@ -6241,7 +6248,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             break;
         }
         if (null == toolHolderName) {
-            throw new IllegalStateException("null == toolHolderName,toolInRobot="+toolInRobot+",expectedContents="+getExpectedToolHolderContentsMap());
+            throw new IllegalStateException("null == toolHolderName,toolInRobot=" + toolInRobot + ",expectedContents=" + getExpectedToolHolderContentsMap());
         }
         dropToolByHolderName(toolHolderName, out);
     }
@@ -6292,7 +6299,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             break;
         }
         if (null == toolHolderName) {
-            throw new IllegalStateException("null == toolHolderName, desiredToolName="+desiredToolName+",expectedContents="+getExpectedToolHolderContentsMap());
+            throw new IllegalStateException("null == toolHolderName, desiredToolName=" + desiredToolName + ",expectedContents=" + getExpectedToolHolderContentsMap());
         }
         pickupToolByHolderName(toolHolderName, out);
     }

@@ -4704,7 +4704,13 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         if (item instanceof Tray) {
             Tray tray = (Tray) item;
-            return isWithinLimits(tray, tray.getMaxSlotDist(), minMax);
+            List<Slot> slots = tray.getAbsSlotList();
+            for (int i = 0; i < slots.size(); i++) {
+                Slot sloti = slots.get(i);
+                if(!isWithinLimits(sloti, sloti.getDiameter()/2.0, minMax)) {
+                    return false;
+                }
+            }
         } else if (item.getType().equals("KT")) {
         }
         return ret;
@@ -4768,7 +4774,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     public void showFilledKitTrays(boolean useUnassignedParts) {
         try {
-            fillKitTrays(false, 0, true,useUnassignedParts);
+            fillKitTrays(false, 0, true, useUnassignedParts);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -4783,14 +4789,14 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFuture<Boolean> fillKitTrays(boolean useUnassignedParts) {
-        return fillKitTrays(false, 0, false,useUnassignedParts);
+        return fillKitTrays(false, 0, false, useUnassignedParts);
     }
 
-    public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items,boolean useUnassignedParts) {
-        return fillKitTraysWithItemList(items, false, 0, false,useUnassignedParts);
+    public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items, boolean useUnassignedParts) {
+        return fillKitTraysWithItemList(items, false, 0, false, useUnassignedParts);
     }
 
-    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) {
+    public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) {
 
         setCorrectionMode(true);
         XFuture<List<PhysicalItem>> itemsFuture = getSingleRawVisionUpdate();
@@ -4799,21 +4805,21 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         return itemsFuture
                 .thenCompose((List<PhysicalItem> l) -> {
-                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showFilledListOnly,useUnassignedParts);
+                    return fillKitTraysWithItemList(l, overrideRotationOffset, newRotationOffset, showFilledListOnly, useUnassignedParts);
                 });
     }
 
-    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) {
+    private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) {
         List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly,useUnassignedParts);
+        return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly, useUnassignedParts);
     }
 
-    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly,boolean useUnassignedParts) throws RuntimeException {
+    private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) throws RuntimeException {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (IOException ex) {
@@ -4823,7 +4829,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (fillInfo.getKitTrays().isEmpty()) {
             return XFuture.completedFuture(true);
         }
-        List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo,useUnassignedParts);
+        List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo, useUnassignedParts);
 
         if (filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
@@ -6913,7 +6919,13 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+            if (null == itemsToPaint) {
+                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile("nullItems_" + imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+            } else if (itemsToPaint.isEmpty()) {
+                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile("emptyItems_" + imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+            } else {
+                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+            }
         }
     }
 
@@ -7150,9 +7162,12 @@ public class AprsSystem implements SlotOffsetProvider {
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            String alertLimitsString = props.getProperty(ALERT_LIMITS);
-            if (null != alertLimitsString) {
-                setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+
+            if (null != this.pddlExecutorJInternalFrame1) {
+                String alertLimitsString = props.getProperty(ALERT_LIMITS);
+                if (null != alertLimitsString) {
+                    setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+                }
             }
             String useTeachTableString = props.getProperty(USETEACHTABLE);
             if (null != useTeachTableString) {
@@ -7244,6 +7259,10 @@ public class AprsSystem implements SlotOffsetProvider {
                                     }
                                 }, runProgramService)
                                 .thenComposeToVoid(() -> {
+                                    String alertLimitsString = props.getProperty(ALERT_LIMITS);
+                                    if (null != alertLimitsString) {
+                                        setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+                                    }
                                     return syncPauseRecoverCheckbox();
                                 });
                 futures.add(loadPropertiesFuture);
