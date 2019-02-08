@@ -4646,8 +4646,14 @@ public class AprsSystem implements SlotOffsetProvider {
             return true;
         }
         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within limits : cart =" + cart);
-            throw new IllegalStateException("Position is not within limits : cart =" + cart);
+            final String errmsg = "Position is not within limits : cart =" + cart;
+            try {
+                takeSimViewSnapshot(errmsg, cart, "bad point");
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            setTitleErrorString(errmsg);
+            throw new IllegalStateException(errmsg);
         }
         return limits.isEmpty();
     }
@@ -4727,8 +4733,14 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
-            setTitleErrorString("Position is not within limits : item =" + item);
-            throw new IllegalStateException("Position is not within limits : item =" + item);
+            final String errmsg = "Position is not within limits : item =" + item;
+            try {
+                takeSimViewSnapshot(errmsg, item, item.getFullName());
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            setTitleErrorString(errmsg);
+            throw new IllegalStateException(errmsg);
         }
         return limits.isEmpty();
     }

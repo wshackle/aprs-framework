@@ -5607,7 +5607,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new NullPointerException("aprsSystem");
         }
         if (!aprsSystem.isWithinLimits(cart)) {
-            throw new IllegalStateException("lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits");
+            
+            final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
+            try {
+                takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
+            } catch (IOException ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            throw new IllegalStateException(errmsg);
         }
         return CRCLPosemath.toPointType(cart);
     }

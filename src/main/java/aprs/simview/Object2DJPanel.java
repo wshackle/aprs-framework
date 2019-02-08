@@ -357,25 +357,25 @@ public class Object2DJPanel extends JPanel {
         updateAddedExtras();
     }
 
-    private List<PhysicalItem> addedOutputSlots = Collections.emptyList();
+    private List<Slot> addedOutputSlots = Collections.emptyList();
 
     /**
      * Get the value of addedOutputSlots
      *
      * @return the value of addedOutputSlots
      */
-    public List<PhysicalItem> getAddedOutputSlots() {
+    public List<Slot> getAddedOutputSlots() {
         return addedOutputSlots;
     }
 
-    private List<PhysicalItem> addedSlots = Collections.emptyList();
+    private List<Slot> addedSlots = Collections.emptyList();
 
     /**
      * Get the value of addedSlots
      *
      * @return the value of addedSlots
      */
-    public List<PhysicalItem> getAddedSlots() {
+    public List<Slot> getAddedSlots() {
         return addedSlots;
     }
 
@@ -435,7 +435,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param addedSlots new value of addedSlots
      */
-    public void setAddedSlots(List<PhysicalItem> addedSlots) {
+    public void setAddedSlots(List<Slot> addedSlots) {
         this.addedSlots = addedSlots;
     }
 
@@ -1453,8 +1453,8 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
-        List<PhysicalItem> absSlotList = new ArrayList<>();
+    List<Slot> computeAbsSlotPositions(List<PhysicalItem> l) {
+        List<Slot> absSlotList = new ArrayList<>();
         for (PhysicalItem item : l) {
             if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
                 absSlotList.addAll(computeSlotPositions(item));
@@ -1475,23 +1475,28 @@ public class Object2DJPanel extends JPanel {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    private List<PhysicalItem> computeSlotPositions(PhysicalItem item) {
+    private List<Slot> computeSlotPositions(PhysicalItem item) {
         if (null == slotOffsetProvider) {
             throw new IllegalStateException("slotOffsetProvider is null");
         }
-        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
-        List<PhysicalItem> slotList = new ArrayList<>();
-        if (null != offsets) {
-            for (PhysicalItem offset : offsets) {
-                String prpName = offset.getPrpName();
+        List<Slot> slotOffsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
+        List<Slot> slotList = new ArrayList<>();
+        if (null != slotOffsets) {
+            for (Slot relSlot : slotOffsets) {
+                Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot);
+                String prpName = relSlot.getPrpName();
                 String slotDisplayName = "slot_" + prpName;
                 if (slotDisplayName.startsWith("slot_slot_")) {
                     slotDisplayName = slotDisplayName.substring(5);
                 }
-                slotList.add(newPhysicalItemNameRotXYScoreType(slotDisplayName, 0.0,
-                        item.x + (offset.x * Math.cos(item.getRotation()) + offset.y * Math.sin(item.getRotation())),
-                        item.y + (-offset.x * Math.sin(item.getRotation()) + offset.y * Math.cos(item.getRotation())),
-                        item.getScore(), "S"));
+                Slot copySlot = new Slot(slotDisplayName, 
+                        item.getRotation(),
+                        absSlot.x,
+                        absSlot.y,
+                        item.getScore(), 
+                        "S");
+                copySlot.setDiameter(relSlot.getDiameter());
+                slotList.add(copySlot);
             }
         }
         return slotList;
@@ -2001,6 +2006,13 @@ public class Object2DJPanel extends JPanel {
                     if (viewDetails) {
                         if (item.getMaxSlotDist() > 0) {
                             g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, -item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
+                        }
+                        if(item instanceof Slot) {
+                            Slot slot = (Slot) item;
+                            double diameter = slot.getDiameter();
+                            if(diameter > 0) {
+                                g2d.draw(new Arc2D.Double(-diameter *0.5* new_scale, -diameter *0.5* new_scale, diameter * new_scale, diameter * new_scale, 0.0, 360.0, Arc2D.OPEN));
+                            }
                         }
                     }
                 } catch (Exception e) {

@@ -33,6 +33,7 @@ takePartArgIndex=0
 takeSnapshots=false
 takeZOffset=0.0
 testTransSpeed=50.0
+toolChangerDwellTime=0.25
 useJointLookFor=false
 useJointMovesForToolHolderApproach=false
 verySlowTransSpeed=25
