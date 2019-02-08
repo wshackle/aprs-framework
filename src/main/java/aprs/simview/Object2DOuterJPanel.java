@@ -748,7 +748,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         settingItems = origSettingItems;
     }
 
-    public List<PhysicalItem> computeAbsSlotPositions(List<PhysicalItem> l) {
+    public List<Slot> computeAbsSlotPositions(List<PhysicalItem> l) {
         return object2DJPanel1.computeAbsSlotPositions(l);
     }
 
