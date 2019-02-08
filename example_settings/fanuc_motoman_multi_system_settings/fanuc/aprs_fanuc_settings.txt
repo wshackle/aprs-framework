@@ -8,8 +8,6 @@ aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
 fanuc.crclLocalPort=64444
 fanuc.robotHost=192.168.1.34
-maxLimit= { x=+750.000, y=+200.000, z=+1000.000 } 
-minLimit= { x=+100.000, y=-300.000, z=-1000.000 } 
 reloadSimFilesOnReverse=false
 snapShotEnable=false
 snapShotHeight=700
