@@ -255,7 +255,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+    public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint, w, h);
     }
 

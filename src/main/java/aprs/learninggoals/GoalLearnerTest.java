@@ -179,10 +179,6 @@ public class GoalLearnerTest {
             return slots;
         }
 
-        @Override
-        public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-            return absSlotFromTrayAndOffset(tray, offsetItem, 0);
-        }
 
         @Override
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {

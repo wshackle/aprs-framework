@@ -100,8 +100,8 @@ public class CachedCheckBox extends CachedComponentBase {
         return selected;
     }
 
-    private volatile StackTraceElement falseTrace[] = null;
-    private volatile StackTraceElement trueTrace[] = null;
+    private volatile StackTraceElement falseTrace @Nullable [] = null;
+    private volatile StackTraceElement trueTrace @Nullable [] = null;
     
     public XFutureVoid setSelected(boolean newSelectedVal) {
         boolean oldSelectedVal = this.selected;

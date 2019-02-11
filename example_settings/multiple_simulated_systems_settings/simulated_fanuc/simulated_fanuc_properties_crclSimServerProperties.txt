@@ -1,5 +1,5 @@
 #
-#Fri Feb 08 10:03:58 EST 2019
+#Fri Feb 08 13:52:00 EST 2019
 crcl.sim.robotType=SIMPLE
 crcl.port=64444
 crcl.sim.initStatus=simulatedInitialStatus.xml

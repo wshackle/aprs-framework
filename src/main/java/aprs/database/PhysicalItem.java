@@ -428,7 +428,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         return displayTransform;
     }
 
-    public void setDisplayTransform(AffineTransform displayTransform) {
+    public void setDisplayTransform(@Nullable AffineTransform displayTransform) {
         this.displayTransform = displayTransform;
     }
 
@@ -455,7 +455,7 @@ public class PhysicalItem extends PM_CARTESIAN {
         return displayRect;
     }
 
-    public void setDisplayRect(Rectangle2D.Double displayRect) {
+    public void setDisplayRect(Rectangle2D. @Nullable Double displayRect) {
         this.displayRect = displayRect;
     }
 

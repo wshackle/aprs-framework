@@ -180,7 +180,7 @@ public class LaunchFileRunner {
         future.complete();
     }
 
-    @SuppressWarnings("guieffect")
+    @SuppressWarnings({"guieffect","nullness"})
     XFutureVoid newTimeoutFuture(javax.swing.Timer timerRefArray[]) {
         int timeoutMillisLocal = timeoutMillis;
         if (timeoutMillisLocal < 1) {
@@ -807,7 +807,7 @@ public class LaunchFileRunner {
     @Nullable
     private volatile XFutureVoid lastRunAllOfFuture = null;
 
-    @SuppressWarnings({"unchecked", "raw_types"})
+    @SuppressWarnings({"unchecked", "rawtypes","nullness","guieffect"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
         this.timeoutMillis = timeoutMillis;
@@ -820,11 +820,7 @@ public class LaunchFileRunner {
             frm.setStopLineSeen(false);
             frm.setProcessLaunchDirectory(parentFile);
         }
-
-//        File jpsCommandFile = Neo4JKiller.getJpsCommandFile();
-//        if (null == jpsCommandFile) {
-//            jpsCommandFile = new File(processLauncherJFrame.processLaunchDirectory, JPS_COMMAND_FILENAME_STRING);
-//        }
+        
         StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
         ifStack.push(true);

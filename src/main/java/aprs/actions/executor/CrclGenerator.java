@@ -612,14 +612,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         public void print(PrintWriter pw, String prefix) {
             pw.println(prefix + "class=" + this.getClass().getName());
             pw.println(prefix + "name=" + name);
-            saveSimpleList(pw, prefix + "kitInstanceNames", kitInstanceNames);
+            if (null != kitInstanceNames) {
+                saveSimpleList(pw, prefix + "kitInstanceNames", kitInstanceNames);
+            }
             saveSimpleMap(pw, prefix + "slotMap", slotMap);
             saveComplexValueMap(pw, prefix + "instanceInfoMap", instanceInfoMap, kitToCheckInstanceInfoPrinter);
         }
 
     }
 
-    static void saveSimpleList(PrintWriter pw, String listPrefix, List list) {
+    static void saveSimpleList(PrintWriter pw, String listPrefix, List<?> list) {
         pw.println(listPrefix + ".size()=" + list.size());
         for (int i = 0; i < list.size(); i++) {
             pw.println(listPrefix + ".get(" + i + ")=" + list.get(i));
@@ -646,7 +648,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             = (PrintWriter pw, String prefix, KitToCheck kit) -> kit.print(pw, prefix);
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
-        try (PrintWriter pw = new PrintWriter(this.aprsSystem.createTempFile(label, ".txt"))) {
+        final AprsSystem aprsSystem1 = this.aprsSystem;
+        if (null == aprsSystem1) {
+            throw new NullPointerException("aprsSystem");
+        }
+        try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
     }
@@ -1789,7 +1795,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             int idx,
             List<MiddleCommandType> cmds,
             List<Action> fixedActionsCopy,
-            List<Action> fixedOrigActionsCopy,
+            @Nullable List<Action> fixedOrigActionsCopy,
             List<String> skippedParts,
             List<String> foundParts,
             GenerateParams gparams,
@@ -2554,6 +2560,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return skuNameToInstanceNamesMap.computeIfAbsent(kitName, this::getPartTrayInstancesFromSkuName);
     }
 
+    @SuppressWarnings("nullness")
     private List<PoseType> getKitInstancePoses(String kitName) {
         return getKitInstanceNames(kitName)
                 .stream()
@@ -2996,6 +3003,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private String showKitToFixErrors(List<PhysicalItem> physicalItemsLocal, Map<String, List<Slot>> kitInstanceAbsSlotMap, List<PhysicalItem> parts, Set<String> matchedKitInstanceNames, List<KitToCheck> kitsToFix, int prePubs, int preVis, long preTimeDiff, int postPubs, int postVis, long postTimeDiff, long checkKitsTimeDiff, List<MiddleCommandType> cmds) throws IOException {
         StringBuilder errMsgSb = new StringBuilder();
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         aprsSystem.setSnapshotsSelected(true);
         takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
         String errMsgStart = aprsSystem.getRunName();
@@ -3026,7 +3036,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 for (int i = 0; i < info.failedItems.size(); i++) {
                     KitToCheckFailedItemInfo failedItemInfo = info.failedItems.get(i);
                     takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedAbsSlot", failedItemInfo.failedAbsSlot, failedItemInfo.failedAbsSlotPrpName);
-                    takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedItemInfo.failedClosestItem, failedItemInfo.failedClosestItem.getFullName());
+                    final PhysicalItem failedClosestItem = failedItemInfo.failedClosestItem;
+                    if (null != failedClosestItem) {
+                        takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedClosestItem, failedClosestItem.getFullName());
+                    }
                     String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " in " + failedItemInfo.failedAbsSlotPrpName;
                     errMsgSb.append(fiString);
                     if (i < info.failedItems.size() - 1) {
@@ -3174,7 +3187,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         for (Entry<String, Integer> entry : kitNameCountMap.entrySet()) {
             List<PoseType> poses = kitNamePoseListMap.get(entry.getKey());
-            if (poses.size() < entry.getValue()) {
+            if (null == poses) {
+                throw new IllegalStateException("need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ");
+            } else if (poses.size() < entry.getValue()) {
                 throw new IllegalStateException("need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + poses.size());
             }
         }
@@ -3544,7 +3559,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    private void takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != aprsSystem) {
             aprsSystem.takeSimViewSnapshot(imgLabel, itemsToPaint);
         }
@@ -5607,7 +5622,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new NullPointerException("aprsSystem");
         }
         if (!aprsSystem.isWithinLimits(cart)) {
-            
+
             final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
             try {
                 takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
@@ -5661,10 +5676,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
         double joint0 = jointVals[0];
         double joint0diff = joint0 - expectedJoint0Val;
-        
-        if (toolHolderOperationEnabled 
+
+        if (toolHolderOperationEnabled
                 && Double.isFinite(expectedJoint0Val)
-                && joint0DiffTolerance > 0 
+                && joint0DiffTolerance > 0
                 && Math.abs(joint0diff) > joint0DiffTolerance) {
             double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
             jointValsCopy[0] = expectedJoint0Val;

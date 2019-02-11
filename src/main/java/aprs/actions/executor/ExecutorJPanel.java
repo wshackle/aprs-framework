@@ -722,7 +722,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Action parentAction = ppi.getParentAction();
             crclGenerator.setLastProgramAborted(true);
             if (null != parentAction && parentAction.getType() == CHECK_KITS) {
-                hppcIndex = ppi.getParentActionIndex()+1;
+                hppcIndex = ppi.getParentActionIndex() + 1;
 
                 setReplanFromIndex(hppcIndex, true);
                 appendGenerateAbortLog(logMsg + ".handlePlacePartCompleted.checkKits.abort", actionsList.size(), isReverseFlag(), ppi.getParentActionIndex(), sarc, -1);
@@ -4575,11 +4575,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String jointStatusListToString(List<JointStatusType> jointList) {
         String jointVals
                 = jointList
-                .stream()
-                .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                .map(JointStatusType::getJointPosition)
-                .map(Objects::toString)
-                .collect(Collectors.joining(","));
+                        .stream()
+                        .sorted(Comparator.comparing(JointStatusType::getJointNumber))
+                        .map(JointStatusType::getJointPosition)
+                        .map(Objects::toString)
+                        .collect(Collectors.joining(","));
         return jointVals;
     }
 
@@ -6246,7 +6246,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //                }
 //            }
 //        }
-        if (lastIndex < startReplanFromIndex-1) {
+        if (lastIndex < startReplanFromIndex - 1) {
             throw new IllegalStateException("lastIndex=" + lastIndex + ",startReplanFromIndex=" + startReplanFromIndex);
         }
         if (lastIndex < actionsList.size() - 1) {
@@ -7540,42 +7540,29 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private volatile String errorMapFilesArray[] = null;
+    private volatile String errorMapFilesArray @Nullable []  = null;
+
     private void loadErrorMapFiles(String errorMapFiles) throws IOException {
         errorMapFilesArray = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
         reloadErrorMaps();
     }
 
     public void reloadErrorMaps() throws IOException {
-        if(null == errorMapFilesArray) {
+        if (null == errorMapFilesArray) {
             throw new NullPointerException("errorMapFilesArray");
         }
         positionMapJPanel1.clearCurrentMap();
-        for (String emf : errorMapFilesArray) {
-            if (null == emf) {
-                continue;
-            }
-            String fname = emf.trim();
-            if (fname.length() < 1 || "null".equals(fname)) {
-                continue;
-            }
-            File f = new File(fname);
-            if (f.exists()) {
-                try {
-                    positionMapJPanel1.addPositionMapFile(f);
-                } catch (PositionMap.BadErrorMapFormatException ex) {
-                    LOGGER.log(Level.SEVERE, "", ex);
+        String emfa[] = errorMapFilesArray;
+        if (null != emfa) {
+            for (String emf : emfa) {
+                if (null == emf) {
+                    continue;
                 }
-            } else {
-                File parentFile = propertiesFile.getParentFile();
-                if (null == parentFile) {
-                    String errString = "Can't load errorMapFile : " + fname + ", parentFile is null";
-                    setErrorString(errString);
-                    logDebug(errString);
-                    return;
+                String fname = emf.trim();
+                if (fname.length() < 1 || "null".equals(fname)) {
+                    continue;
                 }
-                String fullPath = parentFile.toPath().resolve(fname).normalize().toString();
-                f = new File(fullPath);
+                File f = new File(fname);
                 if (f.exists()) {
                     try {
                         positionMapJPanel1.addPositionMapFile(f);
@@ -7583,9 +7570,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         LOGGER.log(Level.SEVERE, "", ex);
                     }
                 } else {
-                    String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
-                    setErrorString(errString);
-                    logDebug(errString);
+                    File parentFile = propertiesFile.getParentFile();
+                    if (null == parentFile) {
+                        String errString = "Can't load errorMapFile : " + fname + ", parentFile is null";
+                        setErrorString(errString);
+                        logDebug(errString);
+                        return;
+                    }
+                    String fullPath = parentFile.toPath().resolve(fname).normalize().toString();
+                    f = new File(fullPath);
+                    if (f.exists()) {
+                        try {
+                            positionMapJPanel1.addPositionMapFile(f);
+                        } catch (PositionMap.BadErrorMapFormatException ex) {
+                            LOGGER.log(Level.SEVERE, "", ex);
+                        }
+                    } else {
+                        String errString = "Can't load errorMapFile : " + fname + "   or " + fullPath;
+                        setErrorString(errString);
+                        logDebug(errString);
+                    }
                 }
             }
         }

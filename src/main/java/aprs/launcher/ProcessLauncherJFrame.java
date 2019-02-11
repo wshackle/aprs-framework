@@ -385,8 +385,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private final LaunchFileRunner launchFileRunner;
 
-    private volatile File lastRunFile = null;
-    private volatile XFutureVoid lastRunFuture = null;
+    @Nullable private volatile File lastRunFile = null;
+    @Nullable private volatile XFutureVoid lastRunFuture = null;
     
     
     

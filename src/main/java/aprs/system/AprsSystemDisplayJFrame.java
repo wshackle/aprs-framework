@@ -1717,6 +1717,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItemSetPoseMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinMaxLimitsActionPerformed
         try {
+            if(null == aprsSystem) {
+                throw new NullPointerException("aprsSystem");
+            }
             File csvFile = aprsSystem.getCartLimitsCsvFile();
             if (csvFile.exists()) {
                 aprsSystem.readLimitsFromCsv(csvFile);
@@ -1957,6 +1960,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemShowFilledKitTraysActionPerformed
 
+    @UIEffect
     private void jMenuItemEmptyKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemEmptyKitTraysActionPerformed
         try {
             jCheckBoxMenuItemPause.setSelected(false);
@@ -1984,6 +1988,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemShowEmptiedKitTraysActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemCorrectionModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemCorrectionModeActionPerformed
         try {
             if (null != aprsSystem) {
@@ -2006,13 +2011,18 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemRestoreOriginalRobotConnectionActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
         if(jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
             setForceFakeTakeEnabled(true);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
 
+    @UIEffect
     private void jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
+        if(null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         aprsSystem.setEnforceMinMaxLimits(jCheckBoxMenuItemEnforceMinMaxLimits.isSelected());
         aprsSystem.updateRobotLimits();
     }//GEN-LAST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed

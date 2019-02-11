@@ -26,7 +26,6 @@ import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.readFirstLine;
 import static aprs.misc.Utils.runTimeToString;
-import static aprs.misc.Utils.tableHeaders;
 
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
@@ -38,7 +37,6 @@ import aprs.launcher.ProcessLauncherJFrame;
 import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.MultiFileDialogJPanel;
-import static aprs.misc.Utils.PlayAlert;
 import aprs.misc.Utils.UiSupplier;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
@@ -117,7 +115,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -146,19 +143,6 @@ import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
 import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tableHeaders;
-import static aprs.misc.Utils.PlayAlert;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -698,23 +682,17 @@ public class Supervisor {
         }
 
         @Override
-        @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-            AprsSystem sys = slotProvidersMap.get(tray.origName);
-            if (null != sys) {
-                return sys.absSlotFromTrayAndOffset(tray, offsetItem, 0);
-            }
-            return null;
+            return absSlotFromTrayAndOffset(tray,offsetItem,0);
         }
 
         @Override
-        @Nullable
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
             AprsSystem sys = slotProvidersMap.get(tray.origName);
-            if (null != sys) {
-                return sys.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
+            if (null == sys) {
+                throw new NullPointerException("lotProvidersMap.get(" + tray.origName + ") slotProvidersMap.keys()= " + slotProvidersMap.keys());
             }
-            return null;
+            return sys.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
         }
     }
 
@@ -2231,7 +2209,7 @@ public class Supervisor {
         unStealRobotsSupplier.set(() -> executeUnstealRobots(srn, stealFor, stealFrom, stealForRobotName, gd));
     }
 
-    private volatile XFutureVoid executeUnstealRobotsFuture = null;
+    @Nullable private volatile XFutureVoid executeUnstealRobotsFuture = null;
 
     private final ConcurrentLinkedDeque<XFuture<?>> allFuturesDeque = new ConcurrentLinkedDeque<>();
 
@@ -3761,7 +3739,7 @@ public class Supervisor {
         }
     }
 
-    private volatile TeachScanMonitor lastCompleteScanTillNewInternalTeachScanMonitor = null;
+    @Nullable private volatile TeachScanMonitor lastCompleteScanTillNewInternalTeachScanMonitor = null;
 
     private XFutureVoid completeScanTillNewInternal() {
         TeachScanMonitor oldMonitor = lastCompleteScanTillNewInternalTeachScanMonitor;

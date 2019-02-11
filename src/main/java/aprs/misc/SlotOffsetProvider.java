@@ -29,8 +29,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Interface for classes that can provide slot offset information. Each
- * AprsSystemInterface provides this and the supervisor combines output from multiple
- * systems to create its own SlotOffsetProvider.
+ * AprsSystemInterface provides this and the supervisor combines output from
+ * multiple systems to create its own SlotOffsetProvider.
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -41,16 +41,14 @@ public interface SlotOffsetProvider {
      * kit or parts tray name.
      *
      * @param name name of the type of kit or slot tray
-     * @param ignoreEmpty if false  
-     *          no slots being found logs a verbose error message 
-     *          and throws IllegalStateException (good for fail fast) or
-     *  if true 
-     *          simply returns an empty list (good or display or when multiple 
-     *          will be checked.
-     * 
+     * @param ignoreEmpty if false no slots being found logs a verbose error
+     * message and throws IllegalStateException (good for fail fast) or if true
+     * simply returns an empty list (good or display or when multiple will be
+     * checked.
+     *
      * @return list of slots with relative position offsets.
      */
-    public List<Slot> getSlotOffsets(String name,boolean ignoreEmpty);
+    public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty);
 
     /**
      * Compute the absolute position of a slot from a slot offset and a tray
@@ -61,8 +59,10 @@ public interface SlotOffsetProvider {
      * tray
      * @return slot with absolute position
      */
-    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem);
-    
+    default public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
+        return absSlotFromTrayAndOffset(tray, offsetItem, 0);
+    }
+
     /**
      * Compute the absolute position of a slot from a slot offset and a tray
      * instance.
@@ -72,5 +72,5 @@ public interface SlotOffsetProvider {
      * tray
      * @return slot with absolute position
      */
-    @Nullable public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem,double rotationOffset);
+    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset);
 }
