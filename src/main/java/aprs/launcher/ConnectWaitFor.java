@@ -28,6 +28,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -40,13 +41,15 @@ public class ConnectWaitFor {
     private final int max_tries;
     private final int timeout;
     private final SocketAddress endpoint;
-    private Throwable lastException = null;
+    @Nullable private Throwable lastException = null;
     private final XFuture<Socket> socketFuture;
     private final long delay;
     private final Thread thread;
     private volatile int tries;
     private final long startTime;
     
+    
+    @SuppressWarnings("initialization")
     public ConnectWaitFor(String host, int port, int max_tries, int timeout, long delay) {
         if(host == null) {
             throw new NullPointerException("host");

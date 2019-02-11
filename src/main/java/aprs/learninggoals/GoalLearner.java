@@ -151,6 +151,7 @@ public class GoalLearner {
         this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 
+    @Nullable
     public static String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
             return "sizes differ : " + kitToCheckStrings1.size()+"!="+ kitToCheckStrings2.size();

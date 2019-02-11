@@ -1484,19 +1484,21 @@ public class Object2DJPanel extends JPanel {
         if (null != slotOffsets) {
             for (Slot relSlot : slotOffsets) {
                 Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot);
-                String prpName = relSlot.getPrpName();
-                String slotDisplayName = "slot_" + prpName;
-                if (slotDisplayName.startsWith("slot_slot_")) {
-                    slotDisplayName = slotDisplayName.substring(5);
+                if (null != absSlot) {
+                    String prpName = relSlot.getPrpName();
+                    String slotDisplayName = "slot_" + prpName;
+                    if (slotDisplayName.startsWith("slot_slot_")) {
+                        slotDisplayName = slotDisplayName.substring(5);
+                    }
+                    Slot copySlot = new Slot(slotDisplayName,
+                            item.getRotation(),
+                            absSlot.x,
+                            absSlot.y,
+                            item.getScore(),
+                            "S");
+                    copySlot.setDiameter(relSlot.getDiameter());
+                    slotList.add(copySlot);
                 }
-                Slot copySlot = new Slot(slotDisplayName, 
-                        item.getRotation(),
-                        absSlot.x,
-                        absSlot.y,
-                        item.getScore(), 
-                        "S");
-                copySlot.setDiameter(relSlot.getDiameter());
-                slotList.add(copySlot);
             }
         }
         return slotList;
@@ -2007,11 +2009,11 @@ public class Object2DJPanel extends JPanel {
                         if (item.getMaxSlotDist() > 0) {
                             g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, -item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
                         }
-                        if(item instanceof Slot) {
+                        if (item instanceof Slot) {
                             Slot slot = (Slot) item;
                             double diameter = slot.getDiameter();
-                            if(diameter > 0) {
-                                g2d.draw(new Arc2D.Double(-diameter *0.5* new_scale, -diameter *0.5* new_scale, diameter * new_scale, diameter * new_scale, 0.0, 360.0, Arc2D.OPEN));
+                            if (diameter > 0) {
+                                g2d.draw(new Arc2D.Double(-diameter * 0.5 * new_scale, -diameter * 0.5 * new_scale, diameter * new_scale, diameter * new_scale, 0.0, 360.0, Arc2D.OPEN));
                             }
                         }
                     }

@@ -755,7 +755,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     /**
      * Creates new form Object2DOuterJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"initialization", "rawtypes", "unchecked"})
     @UIEffect
     public Object2DOuterJPanel() {
         initComponents();
@@ -825,6 +825,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public void addColumn(Object columnName, Vector columnData) {
                 origTraySlotsTableModel.addColumn(columnName, columnData); //To change body of generated methods, choose Tools | Templates.
             }
@@ -845,6 +846,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public void setColumnIdentifiers(Vector columnIdentifiers) {
                 origTraySlotsTableModel.setColumnIdentifiers(columnIdentifiers); //To change body of generated methods, choose Tools | Templates.
             }
@@ -865,6 +867,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public void insertRow(int row, Vector rowData) {
                 origTraySlotsTableModel.insertRow(row, rowData); //To change body of generated methods, choose Tools | Templates.
             }
@@ -875,6 +878,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public void addRow(Vector rowData) {
                 origTraySlotsTableModel.addRow(rowData); //To change body of generated methods, choose Tools | Templates.
             }
@@ -910,11 +914,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public void setDataVector(Vector dataVector, Vector columnIdentifiers) {
                 origTraySlotsTableModel.setDataVector(dataVector, columnIdentifiers); //To change body of generated methods, choose Tools | Templates.
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public Vector getDataVector() {
                 return origTraySlotsTableModel.getDataVector(); //To change body of generated methods, choose Tools | Templates.
             }
@@ -980,6 +986,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
 
             @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
             public Class getColumnClass(int columnIndex) {
                 return origTraySlotsTableModel.getColumnClass(columnIndex);
             }
@@ -3427,6 +3434,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
      * @param showAddedToolsAndToolHolders new value of
      * showAddedToolsAndToolHolders
      */
+    @UIEffect
     void setShowAddedToolsAndToolHolders(boolean showAddedToolsAndToolHolders) {
         jCheckBoxTools.setSelected(showAddedToolsAndToolHolders);
         object2DJPanel1.setShowAddedToolsAndToolHolders(showAddedToolsAndToolHolders);
@@ -4465,8 +4473,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
 
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
-        
+    public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = saveSnapshotCsv(f, itemsToPaint);

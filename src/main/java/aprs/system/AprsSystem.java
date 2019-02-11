@@ -4713,7 +4713,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<Slot> slots = tray.getAbsSlotList();
             for (int i = 0; i < slots.size(); i++) {
                 Slot sloti = slots.get(i);
-                if(!isWithinLimits(sloti, sloti.getDiameter()/2.0, minMax)) {
+                if (!isWithinLimits(sloti, sloti.getDiameter() / 2.0, minMax)) {
                     return false;
                 }
             }
@@ -4745,25 +4745,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return limits.isEmpty();
     }
 
-    /**
-     * Get a Slot with an absolute position from the slot offset and a tray.
-     *
-     * @param tray slot is within
-     * @param offsetItem slot with relative position offset for this type of
-     * tray
-     * @return slot with absolute position
-     */
-    @Nullable
-    @Override
-    public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-        if (null != externalSlotOffsetProvider) {
-            return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem);
-        }
-        if (null == visionToDbJInternalFrame) {
-            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
-        }
-        return visionToDbJInternalFrame.absSlotFromTrayAndOffset(tray, offsetItem);
-    }
 
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
@@ -4773,7 +4754,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * tray
      * @return slot with absolute position
      */
-    @Nullable
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
         if (null != externalSlotOffsetProvider) {
             return externalSlotOffsetProvider.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
@@ -4850,15 +4831,23 @@ public class AprsSystem implements SlotOffsetProvider {
         if (showFilledListOnly) {
             XFuture<Boolean> filledListShowFuture
                     = Utils.supplyOnDispatchThread(() -> {
-                        return Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
-                                "Filled Kit Items", true,
-                                object2DViewJInternalFrame.getPropertiesOnDisplay(),
-                                filledkitTraysList);
+                        if (null == object2DViewJInternalFrame) {
+                            throw new NullPointerException("object2DViewJInternalFrame");
+                        }
+                        final Properties viewProperties
+                                = object2DViewJInternalFrame.getPropertiesOnDisplay();
+                        boolean userCancelled
+                                = Object2DOuterDialogPanel
+                                        .showObject2DDialog(
+                                                aprsSystemDisplayJFrame, //owner
+                                                "Filled Kit Items", //title
+                                                true, //modal 
+                                                viewProperties, //props
+                                                filledkitTraysList //items
+                                        );
+                        return userCancelled;
                     });
             return filledListShowFuture;
-//                    .thenCompose(x -> {
-//                        return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
-//                    });
         } else {
             return fillKitTraysInternal(filledkitTraysList, overrideRotationOffset, newRotationOffset);
         }
@@ -4874,7 +4863,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
             loadActionsFile(actionFile, false);
-            return startActions("fillKitTrays", false)
+            return privateStartActions("fillKitTrays", false, null)
                     .exceptionally((Throwable throwable) -> {
                         System.err.println("fillKitTraysTrace = " + Utils.traceToString(fillKitTraysTrace));
                         System.err.println("actionFile = " + actionFile);
@@ -5016,8 +5005,13 @@ public class AprsSystem implements SlotOffsetProvider {
         if (showEmptiedListOnly) {
             XFuture<Boolean> emptiedListShowFuture
                     = Utils.supplyOnDispatchThread(() -> {
-                        return Object2DOuterDialogPanel.showObject2DDialog(aprsSystemDisplayJFrame,
-                                "Emptied Kit Items", true,
+                        if (null == object2DViewJInternalFrame) {
+                            throw new NullPointerException("object2DViewJInternalFrame");
+                        }
+                        return Object2DOuterDialogPanel.showObject2DDialog(
+                                aprsSystemDisplayJFrame,
+                                "Emptied Kit Items",
+                                true,
                                 object2DViewJInternalFrame.getPropertiesOnDisplay(),
                                 emptiedkitTraysList);
                     });
@@ -5040,7 +5034,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
             loadActionsFile(actionFile, false);
-            return startActions("emptyKitTrays", false)
+            return privateStartActions("emptyKitTrays", false, null)
                     .exceptionally((Throwable throwable) -> {
                         System.err.println("emptyKitTraysTrace = " + Utils.traceToString(emptyKitTraysTrace));
                         System.err.println("actionFile = " + actionFile);
@@ -6229,7 +6223,7 @@ public class AprsSystem implements SlotOffsetProvider {
     @Nullable
     private volatile XFuture<Boolean> lastStartCheckEnabledFuture2 = null;
     private volatile boolean startingCheckEnabled = false;
-    private volatile StackTraceElement startingCheckEnabledTrace[] = null;
+    private volatile StackTraceElement startingCheckEnabledTrace @Nullable []  = null;
 
     /**
      * Test that the robot can be connected by running an empty program.
@@ -6438,7 +6432,7 @@ public class AprsSystem implements SlotOffsetProvider {
         for (Action action : actions) {
             actionsCopy.add(action);
         }
-        return startActions(comment, newReverseFlag, actionsCopy);
+        return privateStartActions(comment, newReverseFlag, actionsCopy);
     }
 
     /**
@@ -6468,10 +6462,10 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions(String comment, boolean reverseFlag) {
-        return startActions(comment, reverseFlag, null);
+        return privateStartActions(comment, reverseFlag, null);
     }
 
-    private XFuture<Boolean> startActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
+    private XFuture<Boolean> privateStartActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -6929,7 +6923,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param itemsToPaint list of items to paint
      * @throws java.io.IOException problem writing to the file
      */
-    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    public void takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             if (null == itemsToPaint) {
                 this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile("nullItems_" + imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
@@ -7857,6 +7851,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public File getCartLimitsCsvFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
         return cartLimitsCsvFile(propertiesDirectory, propertiesFileBaseString());
     }
 
