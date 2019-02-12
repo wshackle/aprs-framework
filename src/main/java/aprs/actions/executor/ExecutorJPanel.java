@@ -2490,6 +2490,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Override
     public void clearActionsList() {
         warnIfNewActionsNotReady();
+        noWarnClearActionsList();
+    }
+
+    public void noWarnClearActionsList() {
         synchronized (actionsList) {
             if (actionsList.size() > 0) {
                 actionsList.clear();
@@ -2497,8 +2501,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
         pddlOutputCachedTableModel.setRowCount(0);
+        crclGenerator.partialReset();
     }
-
+    
     private File propertiesFile;
 
     /**
