@@ -94,6 +94,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.clearKitsToCheck();
     }
     
+    
      public void setPauseInsteadOfRecover(boolean val) {
        executorJPanel1.setPauseInsteadOfRecover(val);
     }
@@ -429,6 +430,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.clearActionsList();
     }
 
+    public void noWarnClearActionsList() {
+        executorJPanel1.noWarnClearActionsList();
+    }
+    
     public List<PhysicalItem> getAvailableToolHolders() {
         return executorJPanel1.getAvailableToolHolders();
     }

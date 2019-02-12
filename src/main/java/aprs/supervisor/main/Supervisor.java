@@ -4096,8 +4096,7 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
-                = emptyTraysAndPrevRepeating(sys, false)
-                        .thenComposeToVoid(x -> conveyorVisNext())
+                = conveyorBack(sys)
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
@@ -4115,11 +4114,15 @@ public class Supervisor {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
         }
         XFutureVoid ret
-                = fillTraysAndNextRepeating(sys, false)
-                        .thenComposeToVoid(x -> conveyorVisPrev())
+                = conveyorForward(sys)
                         .thenComposeToVoid(x -> finishConveyorTest());
         conveyorTestFuture = ret;
         return ret;
+    }
+
+    public XFutureVoid conveyorForward(AprsSystem sys) {
+        return fillTraysAndNextRepeating(sys, false)
+                .thenComposeToVoid(x -> conveyorVisPrev());
     }
 
     public XFutureVoid repeatingConveyorTest(int maxCount) {
@@ -4153,8 +4156,7 @@ public class Supervisor {
         conveyorVisNextCount.set(0);
         conveyorVisPrevCount.set(0);
         XFutureVoid ret
-                = fillTraysAndNextRepeating(sys, false)
-                        .thenComposeToVoid(x -> conveyorVisPrev())
+                = conveyorForward(sys)
                         .thenComposeToVoid(x -> continueReverseRepeatingConveyorTest(sys, maxCount, count + 1));
         conveyorTestFuture = ret;
         return ret;
@@ -4168,11 +4170,15 @@ public class Supervisor {
         conveyorVisNextCount.set(0);
         conveyorVisPrevCount.set(0);
         XFutureVoid ret
-                = emptyTraysAndPrevRepeating(sys, false)
-                        .thenComposeToVoid(x -> conveyorVisNext())
+                = conveyorBack(sys)
                         .thenComposeToVoid(x -> continueRepeatingConveyorTest(sys, maxCount, count + 1));
         conveyorTestFuture = ret;
         return ret;
+    }
+
+    public XFutureVoid conveyorBack(AprsSystem sys) {
+        return emptyTraysAndPrevRepeating(sys, false)
+                .thenComposeToVoid(x -> conveyorVisNext());
     }
 
     @Nullable

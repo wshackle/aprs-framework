@@ -1508,6 +1508,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemConveyorTest = new javax.swing.JMenuItem();
         jMenuItemReloadSimFiles = new javax.swing.JMenuItem();
         jMenuItemRestoreOrigRobotInfo = new javax.swing.JMenuItem();
+        jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -1669,7 +1670,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 745, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 746, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
@@ -1759,7 +1760,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addGroup(jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
                     .addComponent(jTextFieldSelectedPosMapFilename)
-                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 727, Short.MAX_VALUE))
+                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 728, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanelPosMapSelectedFileLayout.setVerticalGroup(
@@ -1945,7 +1946,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelEventsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelEventsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
                     .addGroup(jPanelEventsLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1988,7 +1989,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2052,7 +2053,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 737, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2463,6 +2464,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuSpecialTests.add(jMenuItemRestoreOrigRobotInfo);
+
+        jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst.setText("Start Scan All Then Continuous Conveyor Demo Rev First");
+        jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStartScanAllThenContinuousConveyorDemoRevFirstActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst);
 
         jMenuBar1.add(jMenuSpecialTests);
 
@@ -4061,6 +4070,40 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         restoreOrigRobotInfo();
     }//GEN-LAST:event_jMenuItemRestoreOrigRobotInfoActionPerformed
 
+    private void jMenuItemStartScanAllThenContinuousConveyorDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartScanAllThenContinuousConveyorDemoRevFirstActionPerformed
+
+        AprsSystem sys = this.getConveyorVisClonedSystem();
+        if (null == sys) {
+            throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
+        }
+        if (sys.isAlertLimitsCheckBoxSelected()) {
+            int confirm = JOptionPane.showConfirmDialog(this, "Disable Alert Limits on " + sys);
+            if (confirm == JOptionPane.YES_OPTION) {
+                sys.setAlertLimitsCheckBoxSelected(false);
+            }
+        }
+        sys.setAlternativeForwardStartActions(() -> {
+            return supervisor.conveyorForward(sys)
+                    .thenApply(x -> true);
+        });
+        sys.setAlternativeForwardContinueActions(() -> {
+            return supervisor.conveyorForward(sys)
+                    .thenApply(x -> true);
+        });
+        sys.setAlternativeReverseStartActions(() -> {
+            return supervisor.conveyorBack(sys)
+                    .thenApply(x -> true);
+        });
+        sys.setAlternativeReverseContinueActions(() -> {
+            return supervisor.conveyorBack(sys)
+                    .thenApply(x -> true);
+        });
+        interactivStart(()
+                -> setMainFuture(conveyorTestPrep(sys)
+                        .thenCompose(x -> startScanAllThenContinuousDemoRevFirst())),
+                jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst.getText());
+    }//GEN-LAST:event_jMenuItemStartScanAllThenContinuousConveyorDemoRevFirstActionPerformed
+
     XFutureVoid setCheckBoxMenuItemUseCorrectionModeByDefaultSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             if (jCheckBoxMenuItemUseCorrectionModeByDefault.isSelected() != selected) {
@@ -4096,6 +4139,34 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 new Boolean[]{Boolean.FALSE, Boolean.TRUE},
                 Boolean.FALSE);
 
+        XFutureVoid conveyorTestPrep = conveyorTestPrep(sys);
+
+        if (repeating) {
+            String repeatCountText
+                    = JOptionPane.showInputDialog(this,
+                            "Repeating Count?",
+                            "10");
+            int repeatCount = Integer.parseInt(repeatCountText);
+            if (reverseConvTest) {
+                return conveyorTestPrep
+                        .thenComposeToVoid(() -> supervisor.reverseRepeatingConveyorTest(repeatCount));
+            } else {
+                return conveyorTestPrep
+                        .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));
+            }
+        } else {
+            if (reverseConvTest) {
+                return conveyorTestPrep
+                        .thenComposeToVoid(supervisor::reverseConveyorTest);
+            } else {
+                return conveyorTestPrep
+                        .thenComposeToVoid(supervisor::conveyorTest);
+            }
+        }
+
+    }
+
+    public XFutureVoid conveyorTestPrep(AprsSystem sys) throws RuntimeException {
         List<XFutureVoid> futuresList = new ArrayList<>();
         if (sys.isObjectViewSimulated()) {
             try {
@@ -4137,30 +4208,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             conveyorVisJPanel1.connectMasterOnDisplay();
         }
         XFutureVoid conveyorTestPrep = XFutureVoid.allOf(futuresList);
-
-        if (repeating) {
-            String repeatCountText
-                    = JOptionPane.showInputDialog(this,
-                            "Repeating Count?",
-                            "10");
-            int repeatCount = Integer.parseInt(repeatCountText);
-            if (reverseConvTest) {
-                return conveyorTestPrep
-                        .thenComposeToVoid(() -> supervisor.reverseRepeatingConveyorTest(repeatCount));
-            } else {
-                return conveyorTestPrep
-                        .thenComposeToVoid(() -> supervisor.repeatingConveyorTest(repeatCount));
-            }
-        } else {
-            if (reverseConvTest) {
-                return conveyorTestPrep
-                        .thenComposeToVoid(supervisor::reverseConveyorTest);
-            } else {
-                return conveyorTestPrep
-                        .thenComposeToVoid(supervisor::conveyorTest);
-            }
-        }
-
+        return conveyorTestPrep;
     }
 
     private static final String titleStart = "Multi Aprs Supervisor";
@@ -4425,6 +4473,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return showMessageFullScreen("All Tasks Complete", 80.0f,
                 null,
                 SplashScreen.getBlueWhiteGreenColorList(), gd);
+    }
+
+    private XFuture<?> startScanAllThenContinuousConveyorDemoRevFirst() {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.startScanAllThenContinuousDemoRevFirst();
     }
 
     private XFuture<?> startScanAllThenContinuousDemoRevFirst() {
@@ -5666,6 +5721,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemStartAllReverse;
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;
     private javax.swing.JMenuItem jMenuItemStartContinuousScanAndRun;
+    private javax.swing.JMenuItem jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst;
     private javax.swing.JMenuItem jMenuItemStartScanAllThenContinuousDemoRevFirst;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JMenu jMenuSpecialTests;

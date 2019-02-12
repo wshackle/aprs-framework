@@ -1721,6 +1721,13 @@ public class AprsSystem implements SlotOffsetProvider {
      * underlying task.
      */
     public XFuture<Boolean> continueActionList(String comment) {
+        if (!this.isReverseFlag()) {
+            if (alternativeForwardContinueActions != null) {
+                return alternativeForwardContinueActions.doActions();
+            }
+        } else if (alternativeReverseContinueActions != null) {
+            return alternativeReverseContinueActions.doActions();
+        }
         setStartRunTime();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continueActionListTrace = trace;
@@ -4745,7 +4752,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return limits.isEmpty();
     }
 
-
     /**
      * Get a Slot with an absolute position from the slot offset and a tray.
      *
@@ -4856,12 +4862,13 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            clearKitsToCheck();
             File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
+            noWarnClearActionsList();
+            clearKitsToCheck();
             loadActionsFile(actionFile, false);
             return privateStartActions("fillKitTrays", false, null)
                     .exceptionally((Throwable throwable) -> {
@@ -5027,12 +5034,13 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> emptyKitTraysInternal(List<PhysicalItem> emptiedkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            clearKitsToCheck();
             File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, false, true, true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
+            noWarnClearActionsList();
+            clearKitsToCheck();
             loadActionsFile(actionFile, false);
             return privateStartActions("emptyKitTrays", false, null)
                     .exceptionally((Throwable throwable) -> {
@@ -6170,6 +6178,18 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    public void clearActionsList() {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.clearActionsList();
+        }
+    }
+    
+    public void noWarnClearActionsList() {
+        if (null != pddlExecutorJInternalFrame1) {
+            pddlExecutorJInternalFrame1.noWarnClearActionsList();
+        }
+    }
+    
     private void setCommandID(CRCLCommandType cmd) {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
@@ -6448,6 +6468,56 @@ public class AprsSystem implements SlotOffsetProvider {
         return pddlExecutorJInternalFrame1.readyForNewActionsList();
     }
 
+    @FunctionalInterface
+    public static interface AlternativeActionsInterface<T> {
+
+        public XFuture<T> doActions();
+    }
+
+    @Nullable
+    private volatile AlternativeActionsInterface<Boolean> alternativeForwardStartActions = null;
+
+    @Nullable
+    private volatile AlternativeActionsInterface<Boolean> alternativeReverseStartActions = null;
+
+    public AlternativeActionsInterface<Boolean> getAlternativeForwardStartActions() {
+        return alternativeForwardStartActions;
+    }
+
+    public void setAlternativeForwardStartActions(AlternativeActionsInterface<Boolean> alternativeForwardStartActions) {
+        this.alternativeForwardStartActions = alternativeForwardStartActions;
+    }
+
+    public AlternativeActionsInterface<Boolean> getAlternativeReverseStartActions() {
+        return alternativeReverseStartActions;
+    }
+
+    public void setAlternativeReverseStartActions(AlternativeActionsInterface<Boolean> alternativeReverseStartActions) {
+        this.alternativeReverseStartActions = alternativeReverseStartActions;
+    }
+
+    @Nullable
+    private volatile AlternativeActionsInterface<Boolean> alternativeForwardContinueActions = null;
+
+    @Nullable
+    private volatile AlternativeActionsInterface<Boolean> alternativeReverseContinueActions = null;
+
+    public AlternativeActionsInterface<Boolean> getAlternativeForwardContinueActions() {
+        return alternativeForwardContinueActions;
+    }
+
+    public void setAlternativeForwardContinueActions(AlternativeActionsInterface<Boolean> alternativeForwardContinueActions) {
+        this.alternativeForwardContinueActions = alternativeForwardContinueActions;
+    }
+
+    public AlternativeActionsInterface<Boolean> getAlternativeReverseContinueActions() {
+        return alternativeReverseContinueActions;
+    }
+
+    public void setAlternativeReverseContinueActions(AlternativeActionsInterface<Boolean> alternativeReverseContinueActions) {
+        this.alternativeReverseContinueActions = alternativeReverseContinueActions;
+    }
+
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -6459,16 +6529,29 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @param comment comment used for tracking/logging tasks starting the
      * actions
+     * @param reverseFlag are the actions reversed (take parts from kit trays
+     * and put back in part trays)
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActions(String comment, boolean reverseFlag) {
+        if (!reverseFlag) {
+            if (alternativeForwardStartActions != null) {
+                return alternativeForwardStartActions.doActions();
+            }
+        } else if (alternativeReverseStartActions != null) {
+            return alternativeReverseStartActions.doActions();
+        }
         return privateStartActions(comment, reverseFlag, null);
     }
 
+    private volatile StackTraceElement privateStartActionsTrace  @Nullable []  = null;
+
     private XFuture<Boolean> privateStartActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
+        StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+        privateStartActionsTrace = trace1;
         setStartRunTime();
 
         long startRunNumber = runNumber.incrementAndGet();
@@ -6491,6 +6574,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         return startActionsInternal(comment, startRunNumber, startAbortCount, reverseFlag, reloadSimFiles, actionsToLoad);
                     } catch (Exception exception) {
                         Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+                        System.err.println("privateStartActions : comment=" + comment);
+                        System.err.println("privateStartActions : trace1=" + Utils.traceToString(trace1));
                         setTitleErrorString(exception.getMessage());
                         showException(exception);
                         if (exception instanceof RuntimeException) {
@@ -6501,16 +6586,6 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                 }, runProgramService
                 );
-//                .thenCompose(x -> {
-//                   return Utils.supplyOnDispatchThread(() -> {
-//                       if(JOptionPane.YES_OPTION != 
-//                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
-//                                       "startActions "+comment+" Complete. Continue?")) {
-//                           throw new RuntimeException("canceled by user");
-//                       }
-//                       return x;
-//                   });
-//                });
         return lastStartActionsFuture;
     }
 
