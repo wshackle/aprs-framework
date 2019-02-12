@@ -2425,10 +2425,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.err.println("actions = " + actions);
             System.err.println("startingIndex = " + startingIndex);
             System.err.println("physicalItems = " + physicalItemsLocal);
-            System.out.println("solverToRun = " + solverToRun);
-            System.out.println("solveCount = " + solveCount);
-            System.out.println("solverRunCount.get() = " + solverRunCount.get());
+            System.err.println("solverToRun = " + solverToRun);
+            System.err.println("solveCount = " + solveCount);
+            System.err.println("solverRunCount.get() = " + solverRunCount.get());
             logger.log(Level.SEVERE, "", ex);
+            try {
+                takeSimViewSnapshot(ex.getMessage(), physicalItemsLocal);
+            } catch (IOException ex1) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex1);
+            }
             throw new RuntimeException(ex);
         }
         return actions;

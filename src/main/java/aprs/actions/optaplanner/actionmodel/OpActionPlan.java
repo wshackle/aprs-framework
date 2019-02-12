@@ -203,6 +203,8 @@ public class OpActionPlan {
         for (OpAction act : tmpActions) {
             act.addPossibleNextActions(allActions);
             if (act.getPossibleNextActions().isEmpty()) {
+                System.err.println("act = " + act);
+                System.err.println("tmpActions = " + tmpActions);
                 throw new IllegalStateException("action has no possible next action=" + act + ", act.getPartType()=" + act.getPartType() + ",\norigActions=" + origActions + ",\nallActions=" + allActions + ",\nmultimapWithList=" + multimapWithList);
             }
         }

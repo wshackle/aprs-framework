@@ -4917,6 +4917,20 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         availableParts.addAll(partsInPartsTrays);
         List<TraySlotListItem> emptyKitSlots = fillInfo.getEmptyKitSlots();
+        try {
+            List<PhysicalItem> emptyKitSlotsList = new ArrayList<>();
+            for (TraySlotListItem emptySlotItem : emptyKitSlots) {
+                if(null != emptySlotItem.getAbsSlot()) {
+                    emptyKitSlotsList.add(emptySlotItem.getAbsSlot());
+                }
+                if(null != emptySlotItem.getClosestPart()) {
+                    emptyKitSlotsList.add(emptySlotItem.getClosestPart());
+                }
+            }
+            takeSimViewSnapshot("createFilledKitsList_emptyKitSlotsList", emptyKitSlotsList);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
         List<PhysicalItem> movedPartsList = new ArrayList<>();
         for (TraySlotListItem emptySlotItem : emptyKitSlots) {
             int itemFoundIndex = -1;
@@ -4953,6 +4967,11 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
         outputList.addAll(movedPartsList);
+        try {
+            takeSimViewSnapshot("createFilledKitsList_movedPartsList", movedPartsList);
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
         outputList.addAll(partsInPartsTrays);
         try {
             takeSimViewSnapshot("createFilledKitsList_outputList", outputList);
@@ -5353,6 +5372,8 @@ public class AprsSystem implements SlotOffsetProvider {
             goalLearnerLocal.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
+            takeSimViewSnapshot("createActionListFromVision:teachItems", teachItems);
+            goalLearnerLocal.setAprsSystem(this);
             List<Action> actions = goalLearnerLocal.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             t1 = System.currentTimeMillis();
             boolean allEmpty = allEmptyA[0];
