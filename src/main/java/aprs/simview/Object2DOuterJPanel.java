@@ -1276,34 +1276,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jButtonViewSnapshotImage = new javax.swing.JButton();
         jButtonViewSnapshotCsv = new javax.swing.JButton();
 
-        setLayout(new java.awt.GridLayout(1, 0));
-
-        jPanelBottomMain.setLayout(new java.awt.GridLayout(1, 0));
-
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseMoved(evt);
-            }
             public void mouseDragged(java.awt.event.MouseEvent evt) {
                 object2DJPanel1MouseDragged(evt);
             }
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseMoved(evt);
+            }
         });
         object2DJPanel1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                object2DJPanel1MouseExited(evt);
+            }
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 object2DJPanel1MousePressed(evt);
             }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 object2DJPanel1MouseReleased(evt);
-            }
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseClicked(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseExited(evt);
-            }
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                object2DJPanel1MouseEntered(evt);
             }
         });
         object2DJPanel1.addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -1320,10 +1316,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         );
         object2DJPanel1Layout.setVerticalGroup(
             object2DJPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 499, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
-
-        jPanelBottomMain.add(object2DJPanel1);
 
         jPanelConnectionsTab.setMaximumSize(new java.awt.Dimension(407, 32767));
 
@@ -2184,9 +2178,35 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Snapshots", jPanelSnapshots);
 
-        jPanelBottomMain.add(jTabbedPane1);
+        javax.swing.GroupLayout jPanelBottomMainLayout = new javax.swing.GroupLayout(jPanelBottomMain);
+        jPanelBottomMain.setLayout(jPanelBottomMainLayout);
+        jPanelBottomMainLayout.setHorizontalGroup(
+            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelBottomMainLayout.createSequentialGroup()
+                .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 468, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+        jPanelBottomMainLayout.setVerticalGroup(
+            jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+        );
 
-        add(jPanelBottomMain);
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanelBottomMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
     }// </editor-fold>//GEN-END:initComponents
 
     private double posNoise = 1.0;
@@ -2705,17 +2725,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double last_drag_max_y;
 
     private volatile long mouseDragTime = -1;
-    private volatile boolean mouseDown = false;
-
+    
     public boolean isUserMouseDown() {
-        return null != this.draggedItem || mouseDown;
+        return null != this.draggedItem || object2DJPanel1.isMouseDown();
     }
 
     private volatile long mouseDraggedUpdateTableTime = -1;
 
     @UIEffect
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
-        mouseDown = true;
+        object2DJPanel1.setMouseDown(true);
         double scale = object2DJPanel1.getScale();
         double min_x = object2DJPanel1.getMinX();
         double max_x = object2DJPanel1.getMaxX();
@@ -2726,27 +2745,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
             double orig_y = itemToDrag.y;
-            switch (object2DJPanel1.getDisplayAxis()) {
-                case POS_X_POS_Y:
-                    itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
-                    itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
-                    break;
-
-                case POS_Y_NEG_X:
-                    itemToDrag.x = ((evt.getY() - 20) / scale) + min_x;
-                    itemToDrag.y = ((evt.getX() - 15) / scale) + min_y;
-                    break;
-
-                case NEG_X_NEG_Y:
-                    itemToDrag.x = max_x - ((evt.getX() - 15) / scale);
-                    itemToDrag.y = ((evt.getY() - 20) / scale) + min_y;
-                    break;
-
-                case NEG_Y_POS_X:
-                    itemToDrag.x = max_x - ((evt.getY() - 20) / scale);
-                    itemToDrag.y = max_y - ((evt.getX() - 15) / scale);
-                    break;
-            }
+            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY());
+            itemToDrag.x = worldPoint.x;
+            itemToDrag.y = worldPoint.y;
+//            switch (object2DJPanel1.getDisplayAxis()) {
+//                case POS_X_POS_Y:
+//                    itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
+//                    itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
+//                    break;
+//
+//                case POS_Y_NEG_X:
+//                    itemToDrag.x = ((evt.getY() - 20) / scale) + min_x;
+//                    itemToDrag.y = ((evt.getX() - 15) / scale) + min_y;
+//                    break;
+//
+//                case NEG_X_NEG_Y:
+//                    itemToDrag.x = max_x - ((evt.getX() - 15) / scale);
+//                    itemToDrag.y = ((evt.getY() - 20) / scale) + min_y;
+//                    break;
+//
+//                case NEG_Y_POS_X:
+//                    itemToDrag.x = max_x - ((evt.getY() - 20) / scale);
+//                    itemToDrag.y = max_y - ((evt.getX() - 15) / scale);
+//                    break;
+//            }
 //            itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
 //            itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
             double xdiff = itemToDrag.x - orig_x;
@@ -2775,7 +2797,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 mouseDraggedUpdateTableTime = System.currentTimeMillis();
                 object2DJPanel1.checkedRepaint();
             }
-            mouseDown = true;
+            object2DJPanel1.setMouseDown(true);
         }
         object2DJPanel1.setMousePoint(evt.getPoint());
     }//GEN-LAST:event_object2DJPanel1MouseDragged
@@ -2811,7 +2833,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void object2DJPanel1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MousePressed
-        mouseDown = true;
+        object2DJPanel1.setMouseDown(true);
+        this.object2DJPanel1.setMouseDownPoint(evt.getPoint());
         int x = evt.getX();
         int y = evt.getY();
         int minIndex = -1;
@@ -2845,7 +2868,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         draggedItem = closestItem;
-        mouseDown = true;
+        object2DJPanel1.setMouseDown(true);
 
     }//GEN-LAST:event_object2DJPanel1MousePressed
 
@@ -2895,7 +2918,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
-        mouseDown = false;
+        object2DJPanel1.setMouseDown(false);
         draggedItemsList = null;
         if (null != draggedItem) {
             draggedItem = null;
@@ -2907,7 +2930,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         draggedItem = null;
         draggedItemsList = null;
-        mouseDown = false;
+        object2DJPanel1.setMouseDown(false);
     }//GEN-LAST:event_object2DJPanel1MouseReleased
 
     @UIEffect
@@ -3386,6 +3409,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         int y = evt.getY();
         int minIndex = -1;
         boolean includeTrays = evt.isShiftDown();
+        this.object2DJPanel1.setMouseDownPoint(evt.getPoint());
         ClosestItemInfo closestItemInfo = new ClosestItemInfo(x, y, minIndex, includeTrays);
 //        PhysicalItem closestItem = closestItemInfo.getClosestItem();
         minIndex = closestItemInfo.getMinIndex();
@@ -3414,6 +3438,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.draggedItemsList = null;
         this.object2DJPanel1.setMouseInside(true);
         this.object2DJPanel1.setMousePoint(null);
+        this.object2DJPanel1.setMouseDownPoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseEntered
 
     private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
@@ -3421,6 +3446,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.draggedItemsList = null;
         this.object2DJPanel1.setMouseInside(false);
         this.object2DJPanel1.setMousePoint(null);
+        this.object2DJPanel1.setMouseDownPoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseExited
 
     /**
@@ -5054,7 +5080,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y);
-
                 double diff_x = screenItemPoint.x - x;
                 double diff_y = screenItemPoint.y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
