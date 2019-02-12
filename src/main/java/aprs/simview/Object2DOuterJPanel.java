@@ -3112,7 +3112,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
             for (PhysicalItem item : items) {
-                pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
+                if (null != item) {
+                    pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
+                } else {
+                    System.err.println("contains null : items="+items);
+                    Thread.dumpStack();
+                }
             }
         }
 

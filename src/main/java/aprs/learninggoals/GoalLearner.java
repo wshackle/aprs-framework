@@ -26,6 +26,8 @@ import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
+import aprs.system.AprsSystem;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,6 +37,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -83,6 +87,18 @@ public class GoalLearner {
         return kitTrayListPredicate.test(kitTrays);
     }
 
+    @Nullable
+    private volatile AprsSystem aprsSystem = null;
+
+    public AprsSystem getAprsSystem() {
+        return aprsSystem;
+    }
+
+    public void setAprsSystem(AprsSystem aprsSystem) {
+        this.aprsSystem = aprsSystem;
+    }
+    
+    
     private @Nullable
     SlotOffsetProvider slotOffsetProvider;
 
@@ -154,7 +170,7 @@ public class GoalLearner {
     @Nullable
     public static String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
-            return "sizes differ : " + kitToCheckStrings1.size()+"!="+ kitToCheckStrings2.size();
+            return "sizes differ : " + kitToCheckStrings1.size() + "!=" + kitToCheckStrings2.size();
         }
         for (String s1 : kitToCheckStrings1) {
             boolean matchFound = false;
@@ -165,7 +181,7 @@ public class GoalLearner {
                 }
             }
             if (!matchFound) {
-                return "no match for "+s1  + " in first list";
+                return "no match for " + s1 + " in first list";
             }
         }
         for (String s2 : kitToCheckStrings2) {
@@ -177,7 +193,7 @@ public class GoalLearner {
                 }
             }
             if (!matchFound) {
-                 return "no match for "+s2 + " in second list";
+                return "no match for " + s2 + " in second list";
             }
         }
         return null;
@@ -217,8 +233,8 @@ public class GoalLearner {
             double newRotationOffset) {
         Map<String, Integer> requiredItemsMap
                 = requiredItems.stream()
-                .filter(this::isWithinLimits)
-                .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
+                        .filter(this::isWithinLimits)
+                        .collect(Collectors.toMap(PhysicalItem::getName, x -> 1, (a, b) -> a + b));
 
         SlotOffsetProvider localSlotOffsetProvider = this.slotOffsetProvider;
         if (null == localSlotOffsetProvider) {
@@ -227,10 +243,10 @@ public class GoalLearner {
 
         String requiredItemsString
                 = requiredItemsMap
-                .entrySet()
-                .stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .collect(Collectors.joining(" "));
+                        .entrySet()
+                        .stream()
+                        .map(entry -> entry.getKey() + "=" + entry.getValue())
+                        .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = filterForKitTrays(teachItems);
         if (!checkKitTrays(kitTrays)) {
             return Collections.emptyList();
@@ -245,6 +261,7 @@ public class GoalLearner {
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
         ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
         List<String> kitToCheckStrings = new ArrayList<>();
+        List<Slot> allAbsSlots = new ArrayList<>();
         for (PhysicalItem kit : kitTrays) {
             Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
             assert (null != localSlotOffsetProvider) : "@AssumeAssertion(nullness)";
@@ -258,7 +275,7 @@ public class GoalLearner {
             }
             int kitNumber = -1;
             for (Slot slotOffset : slotOffsetList) {
-                PhysicalItem absSlot;
+                Slot absSlot;
                 if (!overrideRotationOffset) {
                     absSlot = localSlotOffsetProvider.absSlotFromTrayAndOffset(kit, slotOffset);
                 } else {
@@ -267,6 +284,7 @@ public class GoalLearner {
                 if (null == absSlot) {
                     throw new IllegalStateException("No absSlot obtainable for slotOffset name " + slotOffset.getName() + " in kit " + kit.getName());
                 }
+                allAbsSlots.add(absSlot);
                 PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
                 if (null == closestPart) {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
@@ -316,11 +334,21 @@ public class GoalLearner {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                 }
             }
+            if(null != aprsSystem) {
+                List<PhysicalItem> snapShotList = new ArrayList<>();
+                snapShotList.addAll(teachItems);
+                snapShotList.addAll(allAbsSlots);
+                try {
+                    aprsSystem.takeSimViewSnapshot("createActionListFromVision:snapShotList", snapShotList);
+                } catch (IOException ex) {
+                    Logger.getLogger(GoalLearner.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
-                    .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))
-                    .map(e -> e.getKey() + "=" + e.getValue())
-                    .collect(Collectors.joining(" "))
+                            .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .collect(Collectors.joining(" "))
                     + ")");
         }
         if (!correctionMode) {
