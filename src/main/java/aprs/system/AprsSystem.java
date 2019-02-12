@@ -4809,6 +4809,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) {
+        if(l.isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
         List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
@@ -4819,6 +4822,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) throws RuntimeException {
+        if(items.isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (IOException ex) {
@@ -4828,9 +4834,12 @@ public class AprsSystem implements SlotOffsetProvider {
         if (fillInfo.getKitTrays().isEmpty()) {
             return XFuture.completedFuture(true);
         }
+        if (fillInfo.getEmptyKitSlots().isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
         List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo, useUnassignedParts);
 
-        if (filledkitTraysList.isEmpty()) {
+        if (filledkitTraysList == null || filledkitTraysList.isEmpty()) {
             return XFuture.completedFuture(true);
         }
 
@@ -4927,6 +4936,9 @@ public class AprsSystem implements SlotOffsetProvider {
                     emptyKitSlotsList.add(emptySlotItem.getClosestPart());
                 }
             }
+            if(emptyKitSlotsList.isEmpty()) {
+                return Collections.emptyList();
+            }
             takeSimViewSnapshot("createFilledKitsList_emptyKitSlotsList", emptyKitSlotsList);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
@@ -4968,6 +4980,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         outputList.addAll(movedPartsList);
         try {
+            if(movedPartsList.isEmpty()) {
+                return Collections.emptyList();
+            }
             takeSimViewSnapshot("createFilledKitsList_movedPartsList", movedPartsList);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
@@ -5003,6 +5018,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> emptyKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) {
+        if (l.isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
         List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
         try {
             takeSimViewSnapshot("emptyKitTraysWithItemList.filteredItems", filteredItems);
@@ -5013,6 +5031,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private XFuture<Boolean> emptyKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) throws RuntimeException {
+        if (items.isEmpty()) {
+            return XFuture.completedFuture(true);
+        }
         try {
             takeSimViewSnapshot("emptyKitTrays", items);
         } catch (IOException ex) {
@@ -6796,6 +6817,55 @@ public class AprsSystem implements SlotOffsetProvider {
         private final File propFile;
         private final File lastAprsPropertiesFileFile;
 
+        private int screenDownX = 0;
+        private int screenDownY = 0;
+        private int screenDragX = 0;
+        private int screenDragY = 0;
+        private boolean mouseDown = false;
+
+        public boolean isMouseDown() {
+            return mouseDown;
+        }
+
+        public void setMouseDown(boolean mouseDown) {
+            this.mouseDown = mouseDown;
+        }
+        
+
+        public int getScreenDownX() {
+            return screenDownX;
+        }
+
+        public void setScreenDownX(int screenDownX) {
+            this.screenDownX = screenDownX;
+        }
+
+        public int getScreenDownY() {
+            return screenDownY;
+        }
+
+        public void setScreenDownY(int screenDownY) {
+            this.screenDownY = screenDownY;
+        }
+
+        public int getScreenDragX() {
+            return screenDragX;
+        }
+
+        public void setScreenDragX(int screenDragX) {
+            this.screenDragX = screenDragX;
+        }
+
+        public int getScreenDragY() {
+            return screenDragY;
+        }
+
+        public void setScreenDragY(int screenDragY) {
+            this.screenDragY = screenDragY;
+        }
+        
+        
+        
         private static final AprsSystemPropDefaults single = new AprsSystemPropDefaults();
 
         private AprsSystemPropDefaults(File propDir, File propFile, File lastAprsPropertiesFileFile) {

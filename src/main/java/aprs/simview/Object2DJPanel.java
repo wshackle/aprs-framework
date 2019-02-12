@@ -715,6 +715,10 @@ public class Object2DJPanel extends JPanel {
         }
         return img;
     }
+    
+    private volatile double autoScaledScale = -1;
+    
+    @Nullable private volatile Point2DMinMax autoScaledMinMax = null;
 
     @SuppressWarnings("guieffect")
     private void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
@@ -763,6 +767,10 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.x = maxX;
             tempMinMax.min.y = minY;
             tempMinMax.max.y = maxY;
+            if(opts.paintingComponent) {
+                autoScaledMinMax = tempMinMax;
+                autoScaledScale = computeNewScale(tempMinMax, opts);
+            }
             this.paintItems(g2d, itemsToPaint, selectedItem, tempMinMax, opts);
         } catch (Exception e) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", e);
@@ -996,6 +1004,20 @@ public class Object2DJPanel extends JPanel {
         return minmax;
     }
 
+     public Point2DMinMax getAutoScaledMinmax() {
+       if(autoscale && null != autoScaledMinMax) {
+           return autoScaledMinMax;
+       }
+       return getMinmax();
+    }
+     
+     public double  getAutoScaledScale() {
+       if(autoscale && autoScaledScale > 0) {
+           return autoScaledScale;
+       }
+       return getScale();
+    }
+     
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
 
@@ -1028,7 +1050,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     public Point2D.Double worldToScreenPoint(double worldx, double worldy) {
-        return toScreenPoint(getDisplayAxis(), worldx, worldy, getMinmax(), getScale());
+        return toScreenPoint(getDisplayAxis(), worldx, worldy, getAutoScaledMinmax(), getAutoScaledScale());
     }
 
     private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double worldx, double worldy, Point2DMinMax minmax, double currentScale) {
@@ -1053,7 +1075,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     public Point2D.Double screenToWorldPoint(double scrrenx, double screeny) {
-        return toWorldPoint(getDisplayAxis(), scrrenx, screeny, getMinmax(), getScale());
+        return toWorldPoint(getDisplayAxis(), scrrenx, screeny, getAutoScaledMinmax(), getAutoScaledScale());
     }
 
     private static Point2D.Double toWorldPoint(DisplayAxis displayAxis, double screenx, double screeny, Point2DMinMax minmax, double currentScale) {
@@ -1633,6 +1655,17 @@ public class Object2DJPanel extends JPanel {
     }
 
     @Nullable
+    private Point mouseDownPoint = null;
+
+    public Point getMouseDownPoint() {
+        return mouseDownPoint;
+    }
+
+    public void setMouseDownPoint(Point mouseDownPoint) {
+        this.mouseDownPoint = mouseDownPoint;
+    }
+
+    @Nullable
     private Point mousePoint = null;
 
     /**
@@ -1686,6 +1719,16 @@ public class Object2DJPanel extends JPanel {
             }
         }
         this.repaint();
+    }
+
+    private volatile boolean mouseDown = false;
+
+    public boolean isMouseDown() {
+        return mouseDown;
+    }
+
+    public void setMouseDown(boolean mouseDown) {
+        this.mouseDown = mouseDown;
     }
 
     @SuppressWarnings("guieffect")
