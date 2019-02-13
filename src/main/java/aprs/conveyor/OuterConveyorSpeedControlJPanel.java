@@ -180,8 +180,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         nextPrevTrayFuture = new XFutureVoid("nextTray");
         return nextPrevTrayFuture;
     }
-    
-    
+
     public XFutureVoid prevTray() {
 //        computeTrayDiff();
         setGoalSet(false);
@@ -261,7 +260,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setAxisY(parseDouble(map1.get(AXIS_Y), getAxisY()));
         setMaxPosition(parseDouble(map1.get(MAX_POSITION), getMaxPosition()));
         setEstimatedPosition(parseDouble(map1.get(CURRENT_POSITION), getEstimatedPosition()));
-        
+
         setMinPosition(parseDouble(map1.get(MIN_POSITION), getMinPosition()));
         double g = parseDouble(map1.get(GOAL_POSITION), getGoalPosition());
         setGoalPosition(Math.min(getMaxPosition(), Math.max(g, getMinPosition())));
@@ -273,6 +272,10 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         String nextDelayMillisString = map1.get(NEXT_DELAY_MILLIS);
         if (null != nextDelayMillisString) {
             setNextDelayMillis(Integer.parseInt(nextDelayMillisString));
+        }
+        String maxSpeedString = map1.get(MAX_SPEED);
+        if (null != maxSpeedString) {
+            setMaxSpeed(Integer.parseInt(maxSpeedString));
         }
     }
 
@@ -288,19 +291,22 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         map0.put(TRAY_DIFF, Double.toString(getTrayDiff()));
         map0.put(MODBUS_HOST, getModBusHost());
         map0.put(NEXT_DELAY_MILLIS, Integer.toString(getNextDelayMillis()));
+        map0.put(MAX_SPEED, Integer.toString(getMaxSpeed()));
         return map0;
     }
+    
     private static final String MODBUS_HOST = "modbusHost";
     private static final String TRAY_DIFF = "trayDiff";
     private static final String MIN_POSITION = "MinPosition";
     private static final String MAX_POSITION = "MaxPosition";
     private static final String CURRENT_POSITION = "CurrentPosition";
     private static final String GOAL_POSITION = "GoalPosition";
-    
+
     private static final String AXIS_Y = "AxisY";
     private static final String AXIS_X = "AxisX";
     private static final String SCALE = "Scale";
     private static final String NEXT_DELAY_MILLIS = "nextDelayMillis";
+    private static final String MAX_SPEED = "maxSpeed";
 
     private void handlePostionUpateTimerEvent() {
         try {
@@ -460,14 +466,16 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     public void connectMasterOnDisplay() throws HeadlessException {
         try {
-            String newModBustHost = JOptionPane.showInputDialog(this, "ModBus Host:", modBusHost);
-            if (newModBustHost != null && newModBustHost.length() > 0 && !newModBustHost.equals(modBusHost)) {
-                setModBusHost(newModBustHost);
-                modBusHost = newModBustHost;
+            if (null == master) {
+                String newModBustHost = JOptionPane.showInputDialog(this, "Conveyor ModBus Host:", modBusHost);
+                if (newModBustHost != null && newModBustHost.length() > 0 && !newModBustHost.equals(modBusHost)) {
+                    setModBusHost(newModBustHost);
+                    modBusHost = newModBustHost;
+                }
+                master = new ModbusTCPMaster(modBusHost);
+                master.connect();
+                System.out.println("master.connect() succeeded : master=" + master);
             }
-            master = new ModbusTCPMaster(modBusHost);
-            master.connect();
-            System.out.println("master.connect() succeeded : master=" + master);
         } catch (Exception ex) {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
             String message = ex.getMessage();
@@ -655,6 +663,24 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
      */
     public void setNextDelayMillis(int nextDelayMillis) {
         this.nextDelayMillis = nextDelayMillis;
+    }
+
+    /**
+     * Get the value of nextDelayMillis
+     *
+     * @return the value of maxSpeed in unknown conveyor specific units
+     */
+    public int getMaxSpeed() {
+        return this.conveyorSpeedJPanel1.getMaxSpeed();
+    }
+
+    /**
+     * Set the value of nextDelayMillis
+     *
+     * @param maxSpeed in unknown conveyor specific units
+     */
+    public void setMaxSpeed(int maxSpeed) {
+        this.conveyorSpeedJPanel1.setMaxSpeed(maxSpeed);
     }
 
     private final javax.swing.Timer positionUpdateTimer;

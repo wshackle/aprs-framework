@@ -4195,7 +4195,7 @@ public class Supervisor {
         XFutureVoid ret = itemsFuture
                 .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-                    if (!l.isEmpty() || conveyorVisNextCount.get() == 0) {
+                    if (!l.isEmpty() || conveyorVisNextCount.get() < 2) {
                         sys.setCorrectionMode(true);
                         return fillTraysAndNextWithItemList(sys, l, useUnassignedParts)
                                 .thenComposeToVoid(() -> fillTraysAndNextRepeating(sys, useUnassignedParts));
@@ -4225,7 +4225,7 @@ public class Supervisor {
         XFutureVoid ret = itemsFuture
                 .thenComposeAsyncToVoid((List<PhysicalItem> l) -> {
                     logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-                    if (!l.isEmpty() || conveyorVisPrevCount.get() == 0) {
+                    if (!l.isEmpty() || conveyorVisPrevCount.get() < 2) {
                         sys.setCorrectionMode(true);
                         return emptyTraysAndPrevWithItemList(sys, l, useUnassignedParts)
                                 .thenComposeToVoid(() -> emptyTraysAndPrevRepeating(sys, useUnassignedParts));
