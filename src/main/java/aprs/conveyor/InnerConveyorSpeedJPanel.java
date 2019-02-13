@@ -233,7 +233,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
         this.forwardDirection = forwardDirection;
     }
 
-    private int maxSpeed = 5000;
+    private int maxSpeed = 30000;
 
     /**
      * Get the value of maxSpeed

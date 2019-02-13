@@ -1441,7 +1441,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         List<MiddleCommandType> cmds = new ArrayList<>();
         if (null != solver && gparams.replan) {
-            return runOptaPlanner(gparams.actions, gparams.startingIndex, gparams.options, gparams.startSafeAbortRequestCount);
+            return runOptaPlanner(gparams.actions,
+                    gparams.startingIndex,
+                    gparams.options, 
+                    gparams.startSafeAbortRequestCount,
+                    this.physicalItems);
         } else {
             String messageString = "\n"
                     + "gparams.startingIndex=" + gparams.startingIndex + "\n"
@@ -2042,7 +2046,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<MiddleCommandType> runOptaPlanner(
             List<Action> actions,
             int startingIndex, Map<String, String> options1,
-            int startSafeAbortRequestCount1)
+            int startSafeAbortRequestCount1,
+            List<PhysicalItem> physicalItemsLocal)
             throws Exception {
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
         assert (null != this.solver) : "null == solver";
@@ -2083,7 +2088,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             gparams.newItemsReceived = true;
         }
         List<Action> origActions = new ArrayList<>(actions);
-        List<Action> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex);
+        List<Action> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex,physicalItemsLocal);
         int skippedActionsCount = skippedActions.get();
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActionsCount || fullReplanPddlActions.size() < 1) {
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActionsCount);
@@ -2204,10 +2209,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private List<Action> optimizePddlActionsWithOptaPlanner(
             List<Action> actions,
-            int startingIndex)
+            int startingIndex,
+            List<PhysicalItem> physicalItemsLocal)
             throws SQLException {
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
 
+        if (null == physicalItemsLocal) {
+            throw new NullPointerException("physicalItemsLocal");
+        }
+        try {
+            takeSimViewSnapshot("optimizePddlActionsWithOptaPlanner.physicalItemsLocal", physicalItemsLocal);
+        } catch (IOException ex) {
+            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Solver<OpActionPlan> solverToRun = this.solver;
         if (null == solverToRun) {
             return actions;
@@ -2229,10 +2243,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (Thread.currentThread() != optoThread) {
             throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
         }
-        List<PhysicalItem> physicalItemsLocal = physicalItems;
-        if (null == physicalItemsLocal) {
-            throw new NullPointerException("physicalItems");
-        }
+        
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
@@ -2923,7 +2934,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         if (!correctiveActions.isEmpty()) {
                             List<Action> optimizedCorrectiveActions
-                                    = optimizePddlActionsWithOptaPlanner(correctiveActions, 0);
+                                    = optimizePddlActionsWithOptaPlanner(
+                                            correctiveActions, 
+                                            0, // starting index
+                                            physicalItemsLocal);
                             lastIndex.compareAndSet(origIndex, origIndex - 1);
                             boolean placedPart = false;
                             CORRECT_ACTIONS_LOOP:
@@ -2955,6 +2969,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             }
                             if (placedPart) {
                                 takeSimViewSnapshot("correctivedItems", correctivedItems);
+                                takeSimViewSnapshot("correctivedItems.physicalItemsLocal", physicalItemsLocal);
                                 addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
                                     try {
                                         List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();

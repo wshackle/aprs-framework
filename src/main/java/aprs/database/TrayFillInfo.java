@@ -22,15 +22,11 @@
  */
 package aprs.database;
 
-import aprs.learninggoals.GoalLearner;
 import aprs.misc.SlotOffsetProvider;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

@@ -1505,7 +1505,7 @@ public class Object2DJPanel extends JPanel {
         List<Slot> slotList = new ArrayList<>();
         if (null != slotOffsets) {
             for (Slot relSlot : slotOffsets) {
-                Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot);
+                Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot,rotationOffset);
                 if (null != absSlot) {
                     String prpName = relSlot.getPrpName();
                     String slotDisplayName = "slot_" + prpName;

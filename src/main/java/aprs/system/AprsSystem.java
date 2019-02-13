@@ -4788,11 +4788,11 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFuture<Boolean> fillKitTrays(boolean useUnassignedParts) {
-        return fillKitTrays(false, 0, false, useUnassignedParts);
+        return fillKitTrays(true, getVisionToDBRotationOffset(), false, useUnassignedParts);
     }
 
     public XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> items, boolean useUnassignedParts) {
-        return fillKitTraysWithItemList(items, false, 0, false, useUnassignedParts);
+        return fillKitTraysWithItemList(items, true, getVisionToDBRotationOffset(), false, useUnassignedParts);
     }
 
     public XFuture<Boolean> fillKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) {
@@ -4997,11 +4997,11 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFuture<Boolean> emptyKitTrays() {
-        return emptyKitTrays(false, 0, false);
+        return emptyKitTrays(true, getVisionToDBRotationOffset(), false);
     }
 
     public XFuture<Boolean> emptyKitTraysWithItemList(List<PhysicalItem> items) {
-        return emptyKitTraysWithItemList(items, false, 0, false);
+        return emptyKitTraysWithItemList(items, true, getVisionToDBRotationOffset(), false);
     }
 
     public XFuture<Boolean> emptyKitTrays(boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) {
@@ -5421,7 +5421,6 @@ public class AprsSystem implements SlotOffsetProvider {
                     setReverseFlag(newReverseFlag, false, false);
                 }
                 saveActionsListToFile(f, actions);
-                loadActionsFile(f, newReverseFlag);
                 ret = f;
             }
             if (requiredItems != teachItems) {
