@@ -3732,9 +3732,27 @@ public class Supervisor {
         for (AprsSystem aprsSys : aprsSystems) {
             aprsSys.setCorrectionMode(correctionMode);
             if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true);
+                File f  = 
+                        aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true);
+                if(null != f) {
+                    try {
+                        aprsSys.loadActionsFile(f, false);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new RuntimeException(ex);
+                    }
+                }
             } else {
-                aprsSys.createActionListFromVision();
+                File f = 
+                        aprsSys.createActionListFromVision();
+                if(null != f) {
+                    try {
+                        aprsSys.loadActionsFile(f, false);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new RuntimeException(ex);
+                    }
+                }
             }
         }
     }

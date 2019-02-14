@@ -5421,6 +5421,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     setReverseFlag(newReverseFlag, false, false);
                 }
                 saveActionsListToFile(f, actions);
+                loadActionsFile(f, newReverseFlag);
                 ret = f;
             }
             if (requiredItems != teachItems) {
@@ -5454,7 +5455,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
+    public void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Executor View must be open to use this function.");
         }
