@@ -5421,7 +5421,6 @@ public class AprsSystem implements SlotOffsetProvider {
                     setReverseFlag(newReverseFlag, false, false);
                 }
                 saveActionsListToFile(f, actions);
-                loadActionsFile(f, newReverseFlag);
                 ret = f;
             }
             if (requiredItems != teachItems) {
