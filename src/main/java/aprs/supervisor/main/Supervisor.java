@@ -3708,19 +3708,6 @@ public class Supervisor {
         return XFuture.allOfWithName("lookForPartsAll", futures);
     }
 
-//    private XFutureVoid clearReverseAll() {
-//        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
-//        for (int i = 0; i < aprsSystems.size(); i++) {
-//            AprsSystem aprsSys = aprsSystems.get(i);
-//            if (aprsSys.isReverseFlag()) {
-//                logEvent("Set reverse flag false for " + aprsSys);
-//                futures[i] = aprsSys.startSetReverseFlag(false, false);
-//            } else {
-//                futures[i] = XFuture.completedFuture(null);
-//            }
-//        }
-//        return XFuture.allOfWithName("clearReverseAll", futures);
-//    }
     private void completeScanAllInternal() {
         if (aprsSystems.isEmpty()) {
             throw new IllegalStateException("aprsSystems.isEmpty()");
