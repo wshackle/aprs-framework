@@ -2490,7 +2490,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Override
     public void clearActionsList() {
         warnIfNewActionsNotReady();
-        checkReverse();
         noWarnClearActionsList(this.reverseFlag);
     }
 
