@@ -4082,20 +4082,25 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 sys.setAlertLimitsCheckBoxSelected(false);
             }
         }
+        
         sys.setAlternativeForwardStartActions(() -> {
-            return supervisor.conveyorForward(sys)
+            int startAbortCount = sys.getSafeAbortRequestCount();
+            return supervisor.conveyorForward(sys,startAbortCount)
                     .thenApply(x -> true);
         });
         sys.setAlternativeForwardContinueActions(() -> {
-            return supervisor.conveyorForward(sys)
+            int startAbortCount = sys.getSafeAbortRequestCount();
+            return supervisor.conveyorForward(sys,startAbortCount)
                     .thenApply(x -> true);
         });
         sys.setAlternativeReverseStartActions(() -> {
-            return supervisor.conveyorBack(sys)
+            int startAbortCount = sys.getSafeAbortRequestCount();
+            return supervisor.conveyorBack(sys,startAbortCount)
                     .thenApply(x -> true);
         });
         sys.setAlternativeReverseContinueActions(() -> {
-            return supervisor.conveyorBack(sys)
+            int startAbortCount = sys.getSafeAbortRequestCount();
+            return supervisor.conveyorBack(sys,startAbortCount)
                     .thenApply(x -> true);
         });
         interactivStart(()

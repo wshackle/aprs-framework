@@ -2490,20 +2490,24 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Override
     public void clearActionsList() {
         warnIfNewActionsNotReady();
-        noWarnClearActionsList();
+        checkReverse();
+        noWarnClearActionsList(this.reverseFlag);
     }
 
-    public void noWarnClearActionsList() {
+    public void noWarnClearActionsList(boolean revFlag) {
+        this.reverseFlag = revFlag;
         synchronized (actionsList) {
             if (actionsList.size() > 0) {
                 actionsList.clear();
-                resetReadOnlyActionsList(reverseFlag);
+                crclGenerator.partialReset();
+                this.reverseFlag = aprsSystem.isReverseFlag();
+                resetReadOnlyActionsList(revFlag);
             }
         }
         pddlOutputCachedTableModel.setRowCount(0);
         crclGenerator.partialReset();
     }
-    
+
     private File propertiesFile;
 
     /**
