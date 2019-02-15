@@ -855,6 +855,12 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private final AtomicLong runNumber = new AtomicLong((System.currentTimeMillis() / 10000) % 1000);
+    
+    
+    public long getRunNumber() {
+        return runNumber.get();
+    }
+    
 
     /**
      * Return the user's preference on whether the stack trace be dumped for
@@ -885,10 +891,6 @@ public class AprsSystem implements SlotOffsetProvider {
                 + ((this.robotName != null) ? this.robotName : "") + (isReverseFlag() ? "-Reverse" : "");
         this.runName = ret;
         return ret;
-    }
-
-    public long getRunNumber() {
-        return runNumber.get();
     }
 
     /**
@@ -1735,7 +1737,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startAbortCount = getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
         logEvent("continueActionList", comment);
         lastContinueActionListFuture
@@ -1748,9 +1750,9 @@ public class AprsSystem implements SlotOffsetProvider {
                                     if (null == pddlExecutorJInternalFrame1) {
                                         throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
                                     }
-                                    if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount) {
+                                    if (getSafeAbortRequestCount() == startAbortCount) {
                                         return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace)
-                                        && (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount);
+                                        && (getSafeAbortRequestCount() == startAbortCount);
                                     }
                                     return false;
                                 }, runProgramService);
@@ -4724,7 +4726,10 @@ public class AprsSystem implements SlotOffsetProvider {
                     return false;
                 }
             }
-        } else if (item.getType().equals("KT")) {
+        } else if (null != item.getTray()) {
+            if(!isWithinLimits(item.getTray(), minMax)) {
+                return false;
+            }
         }
         return ret;
     }
@@ -4876,7 +4881,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
-            noWarnClearActionsList();
+            noWarnClearActionsList(false);
             clearKitsToCheck();
             loadActionsFile(actionFile, false);
             return privateStartActions("fillKitTrays", false, null)
@@ -5074,15 +5079,15 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> emptyKitTraysInternal(List<PhysicalItem> emptiedkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, false, true, true);
+            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
-            noWarnClearActionsList();
+            noWarnClearActionsList(true);
             clearKitsToCheck();
-            loadActionsFile(actionFile, false);
-            return privateStartActions("emptyKitTrays", false, null)
+            loadActionsFile(actionFile, true);
+            return privateStartActions("emptyKitTrays", true, null)
                     .exceptionally((Throwable throwable) -> {
                         System.err.println("emptyKitTraysTrace = " + Utils.traceToString(emptyKitTraysTrace));
                         System.err.println("actionFile = " + actionFile);
@@ -5736,7 +5741,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
         logEvent("startContinuousDemo", null);
-        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startAbortCount = getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet());
         return continuousDemoFuture.always(() -> logEvent("finished startContinuousDemo", null));
@@ -5749,7 +5754,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
             System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
         }
-        if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount()) {
+        if (startAbortCount != getSafeAbortRequestCount()) {
             return XFuture.completedFuture(false);
         }
         setStartRunTime();
@@ -5794,7 +5799,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         int cdCurLocal = 1;
         while (x && !isAborting()
-                && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
+                && getSafeAbortRequestCount() == startAbortCount
                 && startDisconnectCount == disconnectRobotCount.get()) {
             String logLabel2 = "startContinuousDemo(task=" + getTaskName() + ")." + comment + "." + startAbortCount + "." + startDisconnectCount + "." + cdStart + "." + cdCurLocal;
             logToSuper(logLabel2);
@@ -5873,7 +5878,7 @@ public class AprsSystem implements SlotOffsetProvider {
         doActionsWithReverseTrace = trace;
         if (x
                 && !isAborting()
-                && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
+                && getSafeAbortRequestCount() == startAbortCount
                 && startDisconnectCount == disconnectRobotCount.get()) {
             logToSuper(getTaskName() + ": doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
             long doActions1TimeStart = System.currentTimeMillis();
@@ -5887,7 +5892,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             if (actionsOk
                     && !isAborting()
-                    && pddlExecutorJInternalFrame1.getSafeAbortRequestCount() == startAbortCount
+                    && getSafeAbortRequestCount() == startAbortCount
                     && startDisconnectCount == disconnectRobotCount.get()) {
                 setReverseFlag(!reverseFirst, true, true);
                 logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
@@ -5920,7 +5925,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startAbortCount = getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startPreCheckedContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount);
         return continuousDemoFuture;
@@ -5930,7 +5935,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        int safeAbortRequestCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int safeAbortRequestCount = getSafeAbortRequestCount();
         if (startAbortCount != safeAbortRequestCount || isAborting()) {
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount=" + safeAbortRequestCount, false);
             return continuousDemoFuture;
@@ -5950,7 +5955,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
                     }
                     this.setReverseFlag(reverseFirst, true, true);
-                    if (startAbortCount != pddlExecutorJInternalFrame1.getSafeAbortRequestCount() || isAborting()) {
+                    if (startAbortCount != getSafeAbortRequestCount() || isAborting()) {
                         return false;
                     }
                     return doActionsWithReverse(comment, true, reverseFirst, startAbortCount, startDisconnectCount, trace);
@@ -6225,9 +6230,10 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
     
-    public void noWarnClearActionsList() {
+    public void noWarnClearActionsList(boolean revFlag) {
+        setReverseCheckBoxSelected(revFlag);
         if (null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.noWarnClearActionsList();
+            pddlExecutorJInternalFrame1.noWarnClearActionsList(revFlag);
         }
     }
     
@@ -6303,7 +6309,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("null == pddlExecutorJInternalFrame1");
         }
-        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startAbortCount = getSafeAbortRequestCount();
         String startRobotName = this.robotName;
         if (null == startRobotName) {
             throw new IllegalStateException("null == startRobotName");
@@ -6334,6 +6340,13 @@ public class AprsSystem implements SlotOffsetProvider {
         return xf2;
     }
 
+    public int getSafeAbortRequestCount() {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function. : null == pddlExecutorJInternalFrame1");
+        }
+        return pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+    }
+
     private boolean doCheckEnabled(int startAbortCount, String startRobotName) {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Executor View must be open to use this function.");
@@ -6341,7 +6354,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("CRCL Client View must be open to use this function.");
         }
-        if (pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+        if (getSafeAbortRequestCount() != startAbortCount) {
             startingCheckEnabled = false;
             return false;
         }
@@ -6598,7 +6611,7 @@ public class AprsSystem implements SlotOffsetProvider {
         long startRunNumber = runNumber.incrementAndGet();
         clearLogDirCache();
         startActionsStartComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + runNumber);
-        int startAbortCount = pddlExecutorJInternalFrame1.getSafeAbortRequestCount();
+        int startAbortCount = getSafeAbortRequestCount();
         lastContinueStartAbortCount = startAbortCount;
         boolean reloadSimFiles = isReloadSimFilesOnReverseCheckBoxSelected();
         if (null != object2DViewJInternalFrame) {
@@ -6648,7 +6661,7 @@ public class AprsSystem implements SlotOffsetProvider {
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         startActionsInternalTrace = trace;
         if (currentRunNumber != startRunNumber
-                || pddlExecutorJInternalFrame1.getSafeAbortRequestCount() != startAbortCount) {
+                || getSafeAbortRequestCount() != startAbortCount) {
             return false;
         }
         this.setReverseFlag(newReverseFlag, reloadSimFiles, false);

@@ -327,6 +327,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }// </editor-fold>//GEN-END:initComponents
 
     public void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
+        
         this.executorJPanel1.loadActionsFile(f, false, newReverseFlag);
     }
 
@@ -430,8 +431,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.clearActionsList();
     }
 
-    public void noWarnClearActionsList() {
-        executorJPanel1.noWarnClearActionsList();
+    public void noWarnClearActionsList(boolean revFlag) {
+        executorJPanel1.noWarnClearActionsList( revFlag);
     }
     
     public List<PhysicalItem> getAvailableToolHolders() {

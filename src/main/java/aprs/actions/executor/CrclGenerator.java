@@ -1443,7 +1443,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != solver && gparams.replan) {
             return runOptaPlanner(gparams.actions,
                     gparams.startingIndex,
-                    gparams.options, 
+                    gparams.options,
                     gparams.startSafeAbortRequestCount,
                     this.physicalItems);
         } else {
@@ -1964,7 +1964,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == externalPoseProvider) {
             waitForCompleteVisionUpdates(label, lastRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT);
         } else {
-            physicalItems = externalPoseProvider.getNewPhysicalItems();
+            List<PhysicalItem> newPhysicalItems = externalPoseProvider.getNewPhysicalItems();
+            this.physicalItems = newPhysicalItems;
+            try {
+                takeSimViewSnapshot("crclGenerator.externalPoseProvider.getNewPhysicalItems", newPhysicalItems);
+            } catch (IOException ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
             loadNewItemsIntoPoseCache(physicalItems);
         }
     }
@@ -2088,7 +2094,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             gparams.newItemsReceived = true;
         }
         List<Action> origActions = new ArrayList<>(actions);
-        List<Action> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex,physicalItemsLocal);
+        List<Action> fullReplanPddlActions = optimizePddlActionsWithOptaPlanner(actions, startingIndex, physicalItemsLocal);
         int skippedActionsCount = skippedActions.get();
         if (Math.abs(fullReplanPddlActions.size() - actions.size()) > skippedActionsCount || fullReplanPddlActions.size() < 1) {
             throw new IllegalStateException("fullReplanPddlActions.size() = " + fullReplanPddlActions.size() + ",actions.size() = " + actions.size() + ",rc=" + rc + ", skippedActions=" + skippedActionsCount);
@@ -2243,7 +2249,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (Thread.currentThread() != optoThread) {
             throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
         }
-        
+
         if (true /*!getReverseFlag() */) {
             MutableMultimap<String, PhysicalItem> availItemsMap
                     = Lists.mutable.ofAll(physicalItemsLocal)
@@ -2935,7 +2941,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         if (!correctiveActions.isEmpty()) {
                             List<Action> optimizedCorrectiveActions
                                     = optimizePddlActionsWithOptaPlanner(
-                                            correctiveActions, 
+                                            correctiveActions,
                                             0, // starting index
                                             physicalItemsLocal);
                             lastIndex.compareAndSet(origIndex, origIndex - 1);
@@ -6637,6 +6643,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 = l.stream().filter(aprsSystem::isItemWithinLimits).collect(Collectors.toList());
         synchronized (this) {
             clearPoseCache();
+            try {
+                takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
+                takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
+            } catch (IOException ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
             physicalItems = filteredList;
             loadNewItemsIntoPoseCache(filteredList);
         }
