@@ -2222,9 +2222,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File f = chooser.getSelectedFile();
-            pddlOutputActionsCachedText.setText(f.getCanonicalPath());
+            setPddlOutputActionsText(f.getCanonicalPath());
             saveProperties();
         }
+    }
+
+    private void setPddlOutputActionsText(String newText) {
+        pddlOutputActionsCachedText.setText(newText);
     }
 
     private final AtomicInteger actionSetsCompleted = new AtomicInteger();
@@ -2403,7 +2407,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         if (revFlag != resetReadOnlyActionsListReverseFlag) {
             System.err.println("setReverseFlagTrueTrace = " + Utils.traceToString(setReverseFlagTrueTrace));
-            System.err.println("setReverseFlagFalseTrace = " +  Utils.traceToString(setReverseFlagFalseTrace));
+            System.err.println("setReverseFlagFalseTrace = " + Utils.traceToString(setReverseFlagFalseTrace));
             System.err.println("revFlag = " + revFlag);
             System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
             System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
@@ -2590,7 +2594,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void saveProperties() {
         Map<String, String> propsMap = new HashMap<>();
         try {
-            updateActionFileStrings();
+            updateActionFileStrings(true);
         } catch (HeadlessException | IllegalStateException | IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -2642,18 +2646,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return newNames;
     }
 
-    private void updateActionFileStrings() throws HeadlessException, IllegalStateException, IOException {
+    private void updateActionFileStrings(boolean forceNameChange) throws HeadlessException, IllegalStateException, IOException {
         if (reverseFlag) {
             String newReverseActionsFileString = pddlOutputActionsCachedText.getText();
-            setInternalReverseActionsFileString(newReverseActionsFileString);
+            setInternalReverseActionsFileString(newReverseActionsFileString, forceNameChange);
         } else {
             this.actionsFileString = pddlOutputActionsCachedText.getText();
             checkFilename(actionsFileString);
         }
     }
 
-    private void setInternalReverseActionsFileString(@Nullable String newReverseActionsFileString) throws IllegalStateException, HeadlessException, IOException {
-        if (reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
+    private void setInternalReverseActionsFileString(@Nullable String newReverseActionsFileString, boolean forceNameChange) throws IllegalStateException, HeadlessException, IOException {
+        if (forceNameChange || reverseActionsFileString == null || reverseActionsFileString.length() < 1) {
             checkFilename(newReverseActionsFileString);
             this.reverseActionsFileString = newReverseActionsFileString;
         } else if (!Objects.equals(newReverseActionsFileString, reverseActionsFileString)) {
@@ -2768,7 +2772,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private List<Action> loadActionsList(Iterable<? extends Action> newActions, boolean newReverseFlag) {
+    private List<Action> loadActionsList(Iterable<? extends Action> newActions, boolean newReverseFlag, boolean forceNameChange) {
         warnIfNewActionsNotReady();
         setReverseFlag(newReverseFlag);
         List<Action> ret;
@@ -2779,11 +2783,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             ret = resetReadOnlyActionsList(newReverseFlag);
         }
-        finishLoadActionsList(pddlOutputActionsCachedText.getText());
+        finishLoadActionsList(pddlOutputActionsCachedText.getText(), forceNameChange);
         return ret;
     }
 
-    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag) throws IOException {
+    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag, boolean forceNameChange) throws IOException {
 
         warnIfNewActionsNotReady();
         setReverseFlag(newReverseFlag);
@@ -2826,13 +2830,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             LOGGER.log(Level.SEVERE, "", ex);
         }
         String canonName = f.getCanonicalPath();
-        finishLoadActionsList(canonName);
+        finishLoadActionsList(canonName, forceNameChange);
         return ret;
     }
 
     private final CachedTextField indexCachedTextField;
 
-    private void finishLoadActionsList(String canonName) {
+    private void finishLoadActionsList(String canonName, boolean forceNameChange) {
         setReplanFromIndex(0);
         autoResizeTableColWidthsPddlOutput();
         indexCachedTextField.setText("0");
@@ -2841,10 +2845,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         String origActionsName = pddlOutputActionsCachedText.getText();
         if (!origActionsName.equals(canonName)) {
             try {
-                pddlOutputActionsCachedText.setText(canonName);
-                updateActionFileStrings();
+                setPddlOutputActionsText(canonName);
+                updateActionFileStrings(forceNameChange);
             } catch (Exception ex) {
                 Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }
@@ -2952,7 +2961,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         File f = new File(fname);
         if (f.exists() && f.canRead()) {
             try {
-                loadActionsFile(f, true, reverseFlag);
+                loadActionsFile(f, // File f, 
+                        true, //  boolean showInOptaPlanner,
+                        reverseFlag, // newReverseFlag
+                        false // forceNameChange
+                );
                 if (Objects.equals(this.getErrorString(), origErrorString)) {
                     setErrorString(null);
                 }
@@ -2969,7 +2982,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             browseActionsFile();
-            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
+            loadActionsFile(
+                    new File(pddlOutputActionsCachedText.getText()), // File f, 
+                    true, //  boolean showInOptaPlanner,
+                    reverseFlag, // newReverseFlag
+                    true // forceNameChange
+            );
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -2982,7 +3000,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (checkResetReverseActionsFile()) {
                 return;
             }
-            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
+            loadActionsFile(
+                    new File(pddlOutputActionsCachedText.getText()), // File f, 
+                    true, //  boolean showInOptaPlanner,
+                    reverseFlag, // newReverseFlag
+                    true // boolean forceNameChange
+            );
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
@@ -3006,7 +3029,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jTextFieldPddlOutputActionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPddlOutputActionsActionPerformed
         try {
-            loadActionsFile(new File(pddlOutputActionsCachedText.getText()), true, reverseFlag);
+            loadActionsFile(
+                    new File(pddlOutputActionsCachedText.getText()), // File f, 
+                    true, //  boolean showInOptaPlanner,
+                    reverseFlag, // newReverseFlag
+                    true // boolean forceNameChange
+            );
 
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
@@ -6977,7 +7005,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
-        this.loadActionsList(actionsList, reverseFlag);
+        this.loadActionsList(
+                actionsList, //Iterable<? extends Action> newActions, 
+                reverseFlag, //  boolean newReverseFlag,
+                false //  boolean forceNameChange
+        );
         ExecutorService service = this.generateCrclService;
         if (null == service) {
             service = aprsSystem.getRunProgramService();
@@ -7395,7 +7427,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             } else {
                 checkFilename(propsReverseActionsFileString);
             }
-            setInternalReverseActionsFileString(propsReverseActionsFileString);
+            setInternalReverseActionsFileString(propsReverseActionsFileString, true);
             boolean reverseFlagFromProperty = false;
             String reverseFlagProperty = props.getProperty(REVERSE_FLAG);
             if (null != reverseFlagProperty) {
@@ -7644,8 +7676,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         File f = new File(output);
         List<Action> ret;
         if (f.exists() && f.canRead() && !f.isDirectory()) {
-            ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
-            pddlOutputActionsCachedText.setText(f.getCanonicalPath());
+            ret = loadActionsFile(
+                    f, // File f
+                    showInOptaplanner, //  boolean showInOptaPlanner
+                    newReverseFlag, // newReverseFlag
+                    false // boolean forceNameChange
+            );
+            // ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
+            setPddlOutputActionsText(f.getCanonicalPath());
         } else {
             File parentFile = propertiesFile.getParentFile();
             if (null == parentFile) {
@@ -7657,14 +7695,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String fullPath = parentFile.toPath().resolve(output).normalize().toString();
             f = new File(fullPath);
             if (f.exists() && f.canRead() && !f.isDirectory()) {
-                ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
-                pddlOutputActionsCachedText.setText(f.getCanonicalPath());
+                ret = loadActionsFile(
+                        f, // File f, 
+                        showInOptaplanner, //  boolean showInOptaPlanner,
+                        newReverseFlag, // newReverseFlag
+                        false // boolean forceNameChange
+                );
+                //ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
+                setPddlOutputActionsText(f.getCanonicalPath());
             } else {
                 String fullPath2 = parentFile.toPath().resolveSibling(output).normalize().toString();
                 f = new File(fullPath2);
                 if (f.exists() && f.canRead() && !f.isDirectory()) {
-                    pddlOutputActionsCachedText.setText(f.getCanonicalPath());
-                    ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
+                    setPddlOutputActionsText(f.getCanonicalPath());
+                    ret = loadActionsFile(
+                            f, // File f, 
+                            showInOptaplanner, //  boolean showInOptaPlanner,
+                            newReverseFlag, // newReverseFlag
+                            false // boolean forceNameChange
+                    );
+                    //ret = loadActionsFile(f, showInOptaplanner, newReverseFlag);
                 } else {
                     System.err.println("newReverseFlag = " + newReverseFlag);
                     System.err.println("reverseActionsFileString = " + reverseActionsFileString);
