@@ -22,6 +22,7 @@
  */
 package aprs.supervisor.main;
 
+import aprs.actions.executor.Action;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
 import static aprs.misc.Utils.readFirstLine;
@@ -3724,7 +3725,14 @@ public class Supervisor {
                         = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true);
                 if (null != f) {
                     try {
-                        aprsSys.loadActionsFile(f, false);
+                        List<Action> loadedActions
+                                = aprsSys.loadActionsFile(
+                                        f, // File f, 
+                                        false, //  boolean showInOptaPlanner,
+                                        false, // newReverseFlag
+                                        true // boolean forceNameChange
+                                );
+//                        aprsSys.loadActionsFile(f, false);
                     } catch (IOException ex) {
                         Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                         throw new RuntimeException(ex);
@@ -3735,7 +3743,13 @@ public class Supervisor {
                         = aprsSys.createActionListFromVision();
                 if (null != f) {
                     try {
-                        aprsSys.loadActionsFile(f, false);
+                        List<Action> loadedActions
+                                = aprsSys.loadActionsFile(
+                                        f, // File f, 
+                                        false, //  boolean showInOptaPlanner,
+                                        false, // newReverseFlag
+                                        true // boolean forceNameChange
+                                );
                     } catch (IOException ex) {
                         Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                         throw new RuntimeException(ex);

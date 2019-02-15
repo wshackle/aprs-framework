@@ -326,9 +326,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public void loadActionsFile(File f, boolean newReverseFlag) throws IOException {
+    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag, boolean forceNameChange) throws IOException {
         
-        this.executorJPanel1.loadActionsFile(f, false, newReverseFlag);
+        return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag,forceNameChange);
     }
 
 //    public void loadActionsList(Iterable<Action> newActions, boolean newReverseFlag) {
