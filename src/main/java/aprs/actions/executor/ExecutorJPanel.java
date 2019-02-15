@@ -2402,8 +2402,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
 
         if (revFlag != resetReadOnlyActionsListReverseFlag) {
-            System.err.println("setReverseFlagTrueTrace = " + Arrays.toString(setReverseFlagTrueTrace));
-            System.err.println("setReverseFlagFalseTrace = " + Arrays.toString(setReverseFlagFalseTrace));
+            System.err.println("setReverseFlagTrueTrace = " + Utils.traceToString(setReverseFlagTrueTrace));
+            System.err.println("setReverseFlagFalseTrace = " +  Utils.traceToString(setReverseFlagFalseTrace));
             System.err.println("revFlag = " + revFlag);
             System.err.println("resetReadOnlyActionsListReverseFlag = " + resetReadOnlyActionsListReverseFlag);
             System.err.println("resetReadOnlyActionsListThread = " + resetReadOnlyActionsListThread);
