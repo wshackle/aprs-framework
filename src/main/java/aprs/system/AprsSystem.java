@@ -555,7 +555,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
         }
+        if(null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.clearPrevVisionListSize();
+        }
         visionToDbJInternalFrame.clearVisionRequiredParts();
+        
     }
 
     /**
@@ -606,6 +610,21 @@ public class AprsSystem implements SlotOffsetProvider {
         });
     }
 
+    
+    public XFuture<List<PhysicalItem>> getSimViewUpdate() {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        return object2DViewJInternalFrame.getSimViewUpdate();
+    }
+    
+    public void clearPrevVisionListSize() {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
+        }
+        object2DViewJInternalFrame.clearPrevVisionListSize();
+    }
+    
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
