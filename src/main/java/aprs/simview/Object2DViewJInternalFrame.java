@@ -28,6 +28,7 @@ import aprs.database.PhysicalItem;
 import aprs.misc.Utils;
 import crcl.base.PointType;
 import crcl.base.PoseType;
+import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -107,6 +108,14 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.removePublishCountListener(l);
     }
 
+    public XFuture<List<PhysicalItem>> getSimViewUpdate() {
+        return object2DOuterJPanel1.getSimViewUpdate();
+    }
+
+    public void clearPrevVisionListSize() {
+        object2DOuterJPanel1.clearPrevVisionListSize();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -165,10 +174,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.getItems();
     }
 
-    
     public List<PhysicalItem> getOutputItems() {
         return object2DOuterJPanel1.getOutputItems();
     }
+
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
         object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
     }
@@ -176,7 +185,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     public void setSimSenseLimits(double minX, double minY, double maxX, double maxY) {
         object2DOuterJPanel1.setViewLimits(minX, minY, maxX, maxY);
     }
-    
+
     @Override
     public XFutureVoid setItems(List<PhysicalItem> items) {
         return object2DOuterJPanel1.setItems(items);
@@ -198,9 +207,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     public Properties getPropertiesOnDisplay() {
         return object2DOuterJPanel1.getPropertiesOnDisplay();
     }
-    
-    @Nullable private volatile XFutureVoid loadPropertiesFuture=null;
-    
+
+    @Nullable
+    private volatile XFutureVoid loadPropertiesFuture = null;
+
     public XFutureVoid loadProperties() throws IOException {
         XFutureVoid ret = object2DOuterJPanel1.loadProperties();
         loadPropertiesFuture = ret;
@@ -215,7 +225,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
-    @Nullable public AprsSystem getAprsSystem() {
+    @Nullable
+    public AprsSystem getAprsSystem() {
         return object2DOuterJPanel1.getAprsSystem();
     }
 
@@ -266,15 +277,15 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     public XFutureVoid loadFile(File f) throws IOException {
         return this.object2DOuterJPanel1.loadFile(f);
     }
-    
+
     public void loadFile(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
         this.object2DOuterJPanel1.loadFile(f, convertRotToRad, zeroRotations);
     }
-    
+
     public boolean isConnected() {
         return this.object2DOuterJPanel1.isConnected();
     }
-    
+
     public int getPort() {
         return this.object2DOuterJPanel1.getPort();
     }

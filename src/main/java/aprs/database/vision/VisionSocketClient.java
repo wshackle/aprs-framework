@@ -200,6 +200,9 @@ public class VisionSocketClient implements AutoCloseable {
         return consecutiveIgnoreCount;
     }
 
+    public int getMaxConsecutiveIgnoreCount() {
+        return maxConsecutiveIgnoreCount;
+    }
     private final ConcurrentLinkedDeque<Consumer<Integer>> incrementCountListeners = new ConcurrentLinkedDeque<>();
 
     public void addCountListener(Consumer<Integer> l) {
@@ -447,6 +450,7 @@ public class VisionSocketClient implements AutoCloseable {
     private int prevVisionListSize = -1;
     private int ignoreCount = 0;
     private int consecutiveIgnoreCount = 0;
+    private int maxConsecutiveIgnoreCount = 0;
     private int parseeVisionLineCount = 0;
     private volatile long prevListSizeSetTime = -1;
 
@@ -491,7 +495,7 @@ public class VisionSocketClient implements AutoCloseable {
         this.updateListenersOnIgnoredLine = updateListenersOnIgnoredLine;
     }
 
-    private int prevListSizeDecrementInterval = 6000;
+    private int prevListSizeDecrementInterval = 1000;
 
     /**
      * Get the value of prevListSizeDecrementInterval
@@ -531,6 +535,10 @@ public class VisionSocketClient implements AutoCloseable {
     public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
+    
+    public void clearPrevVisionListSize() {
+        prevVisionListSize=0;
+    }
 
     public void parseVisionLine(final String line) {
         try {
@@ -546,7 +554,6 @@ public class VisionSocketClient implements AutoCloseable {
                 ignoreCount++;
                 consecutiveIgnoreCount++;
                 if (consecutiveIgnoreCount > 2
-                        && consecutiveIgnoreCount % 3 == 0
                         && System.currentTimeMillis() - prevListSizeSetTime > prevListSizeDecrementInterval) {
                     prevVisionListSize--;
                     prevListSizeSetTime = System.currentTimeMillis();
@@ -561,6 +568,9 @@ public class VisionSocketClient implements AutoCloseable {
             poseUpdatesParsed += newVisionList.size();
             this.visionList = newVisionList;
             updateListeners();
+            if(consecutiveIgnoreCount > maxConsecutiveIgnoreCount) {
+                maxConsecutiveIgnoreCount = consecutiveIgnoreCount;
+            }
             consecutiveIgnoreCount = 0;
             if (debug) {
                 long t1 = System.nanoTime();

@@ -4143,10 +4143,15 @@ public class Supervisor {
         return ret;
     }
 
+    private final AtomicInteger conveyorForwardCount = new AtomicInteger();
+
     public XFuture<Boolean> conveyorForward(AprsSystem sys, int startAbortCount) {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFutureVoid.completedFuture(false);
         }
+        int count = conveyorForwardCount.incrementAndGet();
+        logEvent("conveyorForward(" + sys + "," + startAbortCount + ") : count=" + count);
+        sys.takeSnapshots("conveyorForward:" + count);
         return fillTraysAndNextRepeating(sys, startAbortCount, false)
                 .thenCompose((Boolean fillCompleted) -> checkedConveyorVisPrev(sys, startAbortCount, fillCompleted));
     }
@@ -4210,10 +4215,15 @@ public class Supervisor {
         return ret;
     }
 
+    private final AtomicInteger conveyorBackCount = new AtomicInteger();
+
     public XFuture<Boolean> conveyorBack(AprsSystem sys, int startAbortCount) {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFutureVoid.completedFuture(false);
         }
+        int count = conveyorBackCount.incrementAndGet();
+        logEvent("conveyorBack(" + sys + "," + startAbortCount + ") : count =" + count);
+        sys.takeSnapshots("conveyorBack:" + count);
         return emptyTraysAndPrevRepeating(sys, startAbortCount, false)
                 .thenCompose((Boolean emptyCompleted) -> checkedConveyorVisNext(sys, startAbortCount, emptyCompleted));
     }
@@ -4248,8 +4258,15 @@ public class Supervisor {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFuture.completedFuture(false);
         }
+        int nextCount = conveyorVisNextCount.get();
+        logEvent("conveyorVisNextCount=" + nextCount);
         logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-        if (!l.isEmpty() || conveyorVisNextCount.get() < 2) {
+        try {
+            sys.takeSimViewSnapshot("fillTraysAndNextInnerRepeat:" + nextCount, l);
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (!l.isEmpty() || nextCount < 2) {
             sys.setCorrectionMode(true);
             return fillTraysAndNextWithItemList(sys, startAbortCount, l, useUnassignedParts)
                     .thenCompose((Boolean fillCompleted) -> {
@@ -4298,8 +4315,15 @@ public class Supervisor {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFuture.completedFuture(false);
         }
+        int prevCount = conveyorVisPrevCount.get();
+        logEvent("conveyorVisPrevCount=" + prevCount);
         logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
-        if (!l.isEmpty() || conveyorVisPrevCount.get() < 2) {
+        try {
+            sys.takeSimViewSnapshot("emptyTraysAndPrevInnerRepeat:" + prevCount, l);
+        } catch (IOException ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (!l.isEmpty() || prevCount < 2) {
             sys.setCorrectionMode(true);
             return emptyTraysAndPrevWithItemList(sys, startAbortCount, l, useUnassignedParts)
                     .thenCompose((Boolean fillCompleted) -> {
@@ -4361,9 +4385,21 @@ public class Supervisor {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFuture.completedFuture(false);
         }
+        String titleErrorString = sys.getTitleErrorString();
+        if (null != titleErrorString && titleErrorString.length() > 0) {
+            return XFuture.completedFuture(false);
+        }
         sys.clearVisionRequiredParts();
         if (null != lastStepOk && lastStepOk) {
             return conveyorVisNext()
+                    .thenCompose(x -> sys.getSimViewUpdate())
+                    .thenAccept((List<PhysicalItem> l) -> {
+                        try {
+                            sys.takeSimViewSnapshot("checkedConveyorVisNext:" + conveyorVisNextCount.get(), l);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    })
                     .thenApply(x -> lastStepOk && sys.getSafeAbortRequestCount() == startAbortCount);
         } else {
             return XFuture.completedFutureWithName("skippedConveyorVisNext", lastStepOk);
@@ -4374,9 +4410,21 @@ public class Supervisor {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFuture.completedFuture(false);
         }
+        String titleErrorString = sys.getTitleErrorString();
+        if (null != titleErrorString && titleErrorString.length() > 0) {
+            return XFuture.completedFuture(false);
+        }
         sys.clearVisionRequiredParts();
         if (null != lastStepOk && lastStepOk) {
             return conveyorVisPrev()
+                    .thenCompose(x -> sys.getSimViewUpdate())
+                    .thenAccept((List<PhysicalItem> l) -> {
+                        try {
+                            sys.takeSimViewSnapshot("checkedConveyorVisPrev:" + conveyorVisPrevCount.get(), l);
+                        } catch (IOException ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    })
                     .thenApply(x -> lastStepOk && sys.getSafeAbortRequestCount() == startAbortCount);
         } else {
             return XFutureVoid.completedFutureWithName("skippedConveyorVisPrev", lastStepOk);
@@ -4411,7 +4459,8 @@ public class Supervisor {
         int count = conveyorVisNextCount.incrementAndGet();
         logEvent("Conveyor Next Starting " + count);
         XFutureVoid ret
-                = displayJFrame.conveyorVisNextTray()
+                = this.waitResume()
+                        .thenComposeToVoid(() -> displayJFrame.conveyorVisNextTray())
                         .thenRun(this::conveyorVisNextFinish);
         conveyorTestFuture = ret;
         return ret;
@@ -4430,7 +4479,8 @@ public class Supervisor {
         int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
         XFutureVoid ret
-                = displayJFrame.conveyorVisPrevTray()
+                = this.waitResume()
+                        .thenComposeToVoid(() -> displayJFrame.conveyorVisPrevTray())
                         .thenRun(this::conveyorVisPrevFinish);
         conveyorTestFuture = ret;
         return ret;

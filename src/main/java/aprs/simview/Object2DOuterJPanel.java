@@ -142,6 +142,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setItemsListeners.remove(listener);
     }
 
+    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>>
+            futuresDeque = new ConcurrentLinkedDeque<>();
+    
+    public XFuture<List<PhysicalItem>> getSimViewUpdate() {
+        XFuture<List<PhysicalItem>> xfl = new XFuture<>("getSimViewUpate");
+        futuresDeque.add(xfl);
+        return xfl;
+    }
+    
     private final AtomicInteger notifyItemsTableCount = new AtomicInteger();
     private final AtomicLong notifyItemsTableTime = new AtomicLong();
     private final AtomicLong notifyItemsTableMaxTime = new AtomicLong();
@@ -167,6 +176,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 = Collections.unmodifiableList(new ArrayList<>(itemsList));
         for (Consumer<List<PhysicalItem>> consumer : notifyList) {
             consumer.accept(itemsListCopy);
+        }
+        XFuture<List<PhysicalItem>> xfl = futuresDeque.poll();
+        while(null != xfl) {
+            xfl.complete(itemsList);
+            xfl = futuresDeque.poll();
         }
         if (debugTimes) {
             long endTime = System.currentTimeMillis();
@@ -2431,6 +2445,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != connectedCachedCheckBox && connectedCachedCheckBox.isSelected()) {
             connectedCachedCheckBox.setSelected(false);
         }
+        max_time_diff = 0;
     }
 
     private final CachedTextField hostCachedTextField;
@@ -2485,6 +2500,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
             VisionSocketClient clnt = new VisionSocketClient();
+            clnt.setPrevListSizeDecrementInterval(prevListSizeDecrementInterval);
             clnt.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
             this.visionSocketClient = clnt;
             Map<String, String> argsMap = DbSetupBuilder.getDefaultArgsMap();
@@ -2505,6 +2521,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             clnt.addListener(this);
         }
+        max_time_diff = 0;
     }
 
     private double simulatedDropRate = 0.0;
@@ -3849,6 +3866,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return Utils.supplyOnDispatchThread(this::getPropertiesOnDisplay);
     }
 
+    private int prevListSizeDecrementInterval = 1000;
+    public int getPrevListSizeDecrementInterval() {
+        if(null != visionSocketClient) {
+            int ret = visionSocketClient.getPrevListSizeDecrementInterval();
+            this.prevListSizeDecrementInterval = ret;
+            return ret;
+        }
+        return prevListSizeDecrementInterval;
+    }
+    
+    public void setPrevListSizeDecrementInterval(int prevListSizeDecrementInterval) {
+        if(null != visionSocketClient) {
+            visionSocketClient.setPrevListSizeDecrementInterval(prevListSizeDecrementInterval);
+        }
+        this.prevListSizeDecrementInterval = prevListSizeDecrementInterval;
+    }
+    
     @UIEffect
     Properties getPropertiesOnDisplay() {
         Properties props = new Properties();
@@ -3881,6 +3915,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("senseMaxX", Double.toString(getSenseMaxX()));
         props.setProperty("senseMaxY", Double.toString(getSenseMaxY()));
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
+        props.setProperty("prevListSizeDecrementInterval",Integer.toString(getPrevListSizeDecrementInterval()));
         if (reverseFlag) {
             this.reverseDataFileString = filenameCachedTextField.getText().trim();
         } else {
@@ -4324,6 +4359,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jCheckBoxSeparateNames.setSelected(useSeparateNames);
             object2DJPanel1.setUseSeparateNames(useSeparateNames);
         }
+        String prevListSizeDecrementIntervalString = props.getProperty("prevListSizeDecrementInterval");
+        if(null != prevListSizeDecrementIntervalString) {
+            setPrevListSizeDecrementInterval(Integer.parseInt(prevListSizeDecrementIntervalString));
+        }
         updatingDisplayFromProperties = false;
     }
 
@@ -4451,6 +4490,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();
+    private volatile long max_time_diff = 0;
+    
+     public void clearPrevVisionListSize() {
+         if (null != visionSocketClient) {
+             visionSocketClient.clearPrevVisionListSize();
+         }
+    }
 
     @Override
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line) {
@@ -4459,13 +4505,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
             String detailsMessage = null;
             if (null != visionSocketClient) {
+                long timediff = now - lastVisionUpdateTime;
+                if(timediff > max_time_diff) {
+                    max_time_diff = timediff;
+                }
                 detailsMessage
                         = "size=" + l.size() + "\n"
                         + "count=" + visionSocketClient.getLineCount() + "\n"
                         + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
                         + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
                         + "consecutive=" + visionSocketClient.getConsecutiveIgnoreCount() + "\n"
-                        + "time=" + (now - lastVisionUpdateTime) + "\n";
+                        + "max_consecutive=" + visionSocketClient.getMaxConsecutiveIgnoreCount() + "\n"
+                        + "time=" + (timediff) + "\n"
+                        + "max_time=" + (max_time_diff) + "\n";
             }
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
