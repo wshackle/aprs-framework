@@ -340,6 +340,21 @@ public class VisionSocketClient implements AutoCloseable {
         return lineToList(line, null, convertRotToRadians, zeroRotations);
     }
 
+    public static String lineToHeading(String prefix,String line) {
+        String fa[] = line.split(",[ ]*");
+        StringBuilder sb = new StringBuilder();
+        sb.append(prefix);
+        for (int i = 0; i < fa.length - 5; i += 6) {
+            sb.append("name").append(i).append(",");
+            sb.append("rot").append(i).append(",");
+            sb.append("x").append(i).append(",");
+            sb.append("y").append(i).append(",");
+            sb.append("score").append(i).append(",");
+            sb.append("type").append(i).append(",");
+        }
+        return sb.toString();
+    }
+            
     public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface, boolean convertRotToRadians, boolean zeroRotations) {
         List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
