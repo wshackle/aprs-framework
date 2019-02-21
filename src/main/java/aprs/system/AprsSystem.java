@@ -5661,7 +5661,9 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             if (snapshotsEnabled()) {
                 takeSimViewSnapshot(createImageTempFile(comment), (PmCartesian) null, (String) null);
-                if (null != visionToDbJInternalFrame && visionToDbJInternalFrame.isDbConnected()) {
+                if (null != visionToDbJInternalFrame 
+                        && visionToDbJInternalFrame.isDbConnected()
+                        && visionToDbJInternalFrame.databasesUpdatesEnabled()) {
                     startVisionToDbNewItemsImageSave(createTempFile(comment + "_new_database_items", ".PNG"));
                 }
             }

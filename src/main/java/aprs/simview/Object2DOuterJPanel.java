@@ -142,15 +142,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setItemsListeners.remove(listener);
     }
 
-    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>>
-            futuresDeque = new ConcurrentLinkedDeque<>();
-    
+    private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> futuresDeque = new ConcurrentLinkedDeque<>();
+
     public XFuture<List<PhysicalItem>> getSimViewUpdate() {
         XFuture<List<PhysicalItem>> xfl = new XFuture<>("getSimViewUpate");
         futuresDeque.add(xfl);
         return xfl;
     }
-    
+
     private final AtomicInteger notifyItemsTableCount = new AtomicInteger();
     private final AtomicLong notifyItemsTableTime = new AtomicLong();
     private final AtomicLong notifyItemsTableMaxTime = new AtomicLong();
@@ -178,7 +177,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             consumer.accept(itemsListCopy);
         }
         XFuture<List<PhysicalItem>> xfl = futuresDeque.poll();
-        while(null != xfl) {
+        while (null != xfl) {
             xfl.complete(itemsList);
             xfl = futuresDeque.poll();
         }
@@ -1289,6 +1288,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableSnapshotFiles = new javax.swing.JTable();
         jButtonViewSnapshotImage = new javax.swing.JButton();
         jButtonViewSnapshotCsv = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        jTableLineLog = new javax.swing.JTable();
+        jCheckBoxRecordLines = new javax.swing.JCheckBox();
+        jTextFieldRecordLinesFile = new javax.swing.JTextField();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -1450,7 +1454,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                         .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxCloning)))
-                                .addGap(0, 149, Short.MAX_VALUE)))
+                                .addGap(0, 217, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1480,7 +1484,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 329, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1621,7 +1625,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jCheckBoxEnforceSensorLimits))
-                .addContainerGap(202, Short.MAX_VALUE))
+                .addContainerGap(224, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1660,7 +1664,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxEnforceSensorLimits)
-                .addContainerGap(134, Short.MAX_VALUE))
+                .addContainerGap(217, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -1700,7 +1704,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2)
                     .addComponent(jLabelTraySlotInfoStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1708,7 +1712,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 384, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabelTraySlotInfoStatus)
                 .addContainerGap())
@@ -1858,7 +1862,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2117,7 +2121,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPropertiesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -2182,7 +2186,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSnapshotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonViewSnapshotImage)
@@ -2191,6 +2195,53 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         );
 
         jTabbedPane1.addTab("Snapshots", jPanelSnapshots);
+
+        jTableLineLog.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {},
+                {},
+                {},
+                {}
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane5.setViewportView(jTableLineLog);
+
+        jCheckBoxRecordLines.setText("Record Lines");
+        jCheckBoxRecordLines.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxRecordLinesActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jCheckBoxRecordLines)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRecordLinesFile))
+                    .addComponent(jScrollPane5))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 437, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxRecordLines)
+                    .addComponent(jTextFieldRecordLinesFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        );
+
+        jTabbedPane1.addTab("Line Log", jPanel1);
 
         javax.swing.GroupLayout jPanelBottomMainLayout = new javax.swing.GroupLayout(jPanelBottomMain);
         jPanelBottomMain.setLayout(jPanelBottomMainLayout);
@@ -2742,7 +2793,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile double last_drag_max_y;
 
     private volatile long mouseDragTime = -1;
-    
+
     public boolean isUserMouseDown() {
         return null != this.draggedItem || object2DJPanel1.isMouseDown();
     }
@@ -3155,7 +3206,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != item) {
                     pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
                 } else {
-                    System.err.println("contains null : items="+items);
+                    System.err.println("contains null : items=" + items);
                     Thread.dumpStack();
                 }
             }
@@ -3572,6 +3623,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.clearSizes();
     }//GEN-LAST:event_object2DJPanel1ComponentResized
 
+    private void jCheckBoxRecordLinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxRecordLinesActionPerformed
+        if (jCheckBoxRecordLines.isSelected()) {
+            recordLines = true;
+        } else {
+            recordLines = false;
+            if(null != lineCsvWriter) {
+                lineCsvWriter.close();
+                lineCsvWriter = null;
+            }
+        }
+    }//GEN-LAST:event_jCheckBoxRecordLinesActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -3731,6 +3794,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxDetails;
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
     private javax.swing.JCheckBox jCheckBoxPause;
+    private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
     private javax.swing.JCheckBox jCheckBoxShowCurrent;
     private javax.swing.JCheckBox jCheckBoxShowRotations;
@@ -3755,6 +3819,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel jLabelHost;
     private javax.swing.JLabel jLabelTraySlotInfoStatus;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanelBottomMain;
     private javax.swing.JPanel jPanelBottomPropertiesButtons;
     private javax.swing.JPanel jPanelConnectionsTab;
@@ -3770,9 +3835,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPaneProperties;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableItems;
+    private javax.swing.JTable jTableLineLog;
     private javax.swing.JTable jTableProperties;
     private javax.swing.JTable jTableSnapshotFiles;
     private javax.swing.JTable jTableTraySlots;
@@ -3786,6 +3853,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldPickupDist;
     private javax.swing.JTextField jTextFieldPort;
     private javax.swing.JTextField jTextFieldPosNoise;
+    private javax.swing.JTextField jTextFieldRecordLinesFile;
     private javax.swing.JTextField jTextFieldRotNoise;
     private javax.swing.JTextField jTextFieldRotationOffset;
     private javax.swing.JTextField jTextFieldSimDropRate;
@@ -3867,22 +3935,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private int prevListSizeDecrementInterval = 1000;
+
     public int getPrevListSizeDecrementInterval() {
-        if(null != visionSocketClient) {
+        if (null != visionSocketClient) {
             int ret = visionSocketClient.getPrevListSizeDecrementInterval();
             this.prevListSizeDecrementInterval = ret;
             return ret;
         }
         return prevListSizeDecrementInterval;
     }
-    
+
     public void setPrevListSizeDecrementInterval(int prevListSizeDecrementInterval) {
-        if(null != visionSocketClient) {
+        if (null != visionSocketClient) {
             visionSocketClient.setPrevListSizeDecrementInterval(prevListSizeDecrementInterval);
         }
         this.prevListSizeDecrementInterval = prevListSizeDecrementInterval;
     }
-    
+
     @UIEffect
     Properties getPropertiesOnDisplay() {
         Properties props = new Properties();
@@ -3914,8 +3983,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("senseMinY", Double.toString(getSenseMinY()));
         props.setProperty("senseMaxX", Double.toString(getSenseMaxX()));
         props.setProperty("senseMaxY", Double.toString(getSenseMaxY()));
+        props.setProperty("recordLines", Boolean.toString(jCheckBoxRecordLines.isSelected()));
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
-        props.setProperty("prevListSizeDecrementInterval",Integer.toString(getPrevListSizeDecrementInterval()));
+        props.setProperty("prevListSizeDecrementInterval", Integer.toString(getPrevListSizeDecrementInterval()));
         if (reverseFlag) {
             this.reverseDataFileString = filenameCachedTextField.getText().trim();
         } else {
@@ -4282,6 +4352,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jCheckBoxTools.setSelected(tools);
             object2DJPanel1.setShowAddedToolsAndToolHolders(tools);
         }
+        
+        String recordLinesString = props.getProperty("recordLines");
+        if (null != recordLinesString && recordLinesString.length() > 0) {
+            boolean recordLinesLocal = Boolean.valueOf(recordLinesString);
+            setRecordLines(recordLinesLocal);
+        }
         reverseDataFileString = props.getProperty("reverse_datafile");
         dataFileString = props.getProperty("datafile");
 
@@ -4360,7 +4436,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setUseSeparateNames(useSeparateNames);
         }
         String prevListSizeDecrementIntervalString = props.getProperty("prevListSizeDecrementInterval");
-        if(null != prevListSizeDecrementIntervalString) {
+        if (null != prevListSizeDecrementIntervalString) {
             setPrevListSizeDecrementInterval(Integer.parseInt(prevListSizeDecrementIntervalString));
         }
         updatingDisplayFromProperties = false;
@@ -4491,22 +4567,59 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile long lastVisionUpdateTime = System.currentTimeMillis();
     private volatile long max_time_diff = 0;
-    
-     public void clearPrevVisionListSize() {
-         if (null != visionSocketClient) {
-             visionSocketClient.clearPrevVisionListSize();
-         }
+
+    public void clearPrevVisionListSize() {
+        if (null != visionSocketClient) {
+            visionSocketClient.clearPrevVisionListSize();
+        }
     }
+
+    private volatile boolean recordLines = false;
+
+    public boolean isRecordLines() {
+        return recordLines;
+    }
+
+    public void setRecordLines(boolean recordLines) {
+        this.recordLines = recordLines;
+        jCheckBoxRecordLines.setSelected(recordLines);
+    }
+
+    private volatile PrintWriter lineCsvWriter = null;
+    private final AtomicInteger lineCount = new AtomicInteger();
 
     @Override
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line) {
         try {
             long now = System.currentTimeMillis();
+            if (recordLines) {
+                int lc = lineCount.incrementAndGet();
+                if (null == lineCsvWriter || lc <2 ) {
+                    File f = createTempFile("vision_lines", ".csv");
+                    System.out.println("Recording vision lines to  " + f.getCanonicalPath());
+                    String headingLine = VisionSocketClient.lineToHeading("count,time,", line);
 
+                    String headersArray[] = headingLine.split(",[ ]*");
+                    jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
+                    lineCsvWriter = new PrintWriter(new FileWriter(f));
+                    String fullLine = lc + "," + now + "," + line;
+                    String fullLineArray[] = fullLine.split(",[ ]*");
+                    ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
+                    lineCsvWriter.println(headingLine);
+                    lineCsvWriter.println(fullLine);
+                    Utils.autoResizeTableColWidths(jTableLineLog);
+                    jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
+                } else {
+                    String fullLine = lc + "," + now + "," + line;
+                    String fullLineArray[] = fullLine.split(",[ ]*");
+                    ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
+                    lineCsvWriter.println(fullLine);
+                }
+            }
             String detailsMessage = null;
             if (null != visionSocketClient) {
                 long timediff = now - lastVisionUpdateTime;
-                if(timediff > max_time_diff) {
+                if (timediff > max_time_diff) {
                     max_time_diff = timediff;
                 }
                 detailsMessage

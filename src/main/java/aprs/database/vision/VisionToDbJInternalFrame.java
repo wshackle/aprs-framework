@@ -86,6 +86,10 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
         return visionToDBJPanel.isDbConnected();
     }
 
+    public boolean databasesUpdatesEnabled() {
+        return visionToDBJPanel.databasesUpdatesEnabled();
+    }
+    
     /**
      * Get the most recent list of parts and kit trays from the vision system.
      * This will not block waiting for the vision system or database but could

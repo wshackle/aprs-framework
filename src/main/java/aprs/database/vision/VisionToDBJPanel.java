@@ -1647,6 +1647,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         checkRequiredPartFailures.set(0);
         return true;
     }
+    
+    public boolean databasesUpdatesEnabled() {
+        return jCheckBoxDbUpdateEnabled.isSelected();
+    }
+    
 
     /**
      * Set the value of enableDatabaseUpdates

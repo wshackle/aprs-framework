@@ -4149,6 +4149,7 @@ public class Supervisor {
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
             return XFutureVoid.completedFuture(false);
         }
+        conveyorVisNextCount.set(0);
         int count = conveyorForwardCount.incrementAndGet();
         logEvent("conveyorForward(" + sys + "," + startAbortCount + ") : count=" + count);
         sys.takeSnapshots("conveyorForward:" + count);
@@ -4222,6 +4223,7 @@ public class Supervisor {
             return XFutureVoid.completedFuture(false);
         }
         int count = conveyorBackCount.incrementAndGet();
+        conveyorVisPrevCount.set(0);
         logEvent("conveyorBack(" + sys + "," + startAbortCount + ") : count =" + count);
         sys.takeSnapshots("conveyorBack:" + count);
         return emptyTraysAndPrevRepeating(sys, startAbortCount, false)
