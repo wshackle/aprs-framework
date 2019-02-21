@@ -218,7 +218,7 @@
             <version>1.2.3</version>
         </dependency>
     </dependencies>
-    <repositories>
+    <!-- <repositories>
         <repository>
             <id>neo4j-public</id>
             <url>http://m2.neo4j.org/content/groups/public</url>
@@ -239,7 +239,7 @@
                 <updatePolicy>daily</updatePolicy>
             </snapshots>
         </repository>
-    </repositories>
+    </repositories> -->
     <build>
         
         <!-- SKIP SETTING UP FILTERING LIKE THIS IF YOU USE THE GENERATE FILE MODE :-) -->
@@ -281,17 +281,17 @@
     <profiles>
         <profile>
             <!-- mvn -Dprofile.release  to activate this and the release,jar-with_depends profile. -->
-            <activation>
+            <!--  <activation>
                 <property>
                     <name>profile.release</name>
                 </property>
-            </activation>
+            </activation> -->
             <id>jar-with-depends</id>
             <build>
                 <plugins>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.1.1</version>
                         <configuration>
                             <archive>
                                 <manifest>
