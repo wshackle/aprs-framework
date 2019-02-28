@@ -1159,10 +1159,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public XFutureVoid showErrorSplash(String errMsgString) {
-        final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
-        return showMessageFullScreen(errMsgString, 80.0f,
-                null,
-                SplashScreen.getRedYellowColorList(), gd);
+        return fullAbortAll()
+                .thenComposeToVoid(() -> {
+                    final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
+                    return showMessageFullScreen(errMsgString, 80.0f,
+                            null,
+                            SplashScreen.getRedYellowColorList(), gd);
+                });
     }
 
     public boolean isShowSplashMessagesSelected() {
@@ -4049,8 +4052,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jMenuItemMultiCycleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleTestActionPerformed
         int numCycles
                 = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+        boolean useConveyor
+                = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         if (numCycles > 0) {
-            interactivStart(() -> supervisor.completeMultiCycleTest(System.currentTimeMillis(), numCycles),
+            interactivStart(() -> supervisor.completeMultiCycleTest(System.currentTimeMillis(), numCycles, useConveyor),
                     jMenuItemMultiCycleTest.getText());
         }
     }//GEN-LAST:event_jMenuItemMultiCycleTestActionPerformed
@@ -4082,27 +4087,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 sys.setAlertLimitsCheckBoxSelected(false);
             }
         }
-        
-        sys.setAlternativeForwardStartActions(() -> {
-            int startAbortCount = sys.getSafeAbortRequestCount();
-            return supervisor.conveyorForward(sys,startAbortCount)
-                    .thenApply(x -> true);
-        });
-        sys.setAlternativeForwardContinueActions(() -> {
-            int startAbortCount = sys.getSafeAbortRequestCount();
-            return supervisor.conveyorForward(sys,startAbortCount)
-                    .thenApply(x -> true);
-        });
-        sys.setAlternativeReverseStartActions(() -> {
-            int startAbortCount = sys.getSafeAbortRequestCount();
-            return supervisor.conveyorBack(sys,startAbortCount)
-                    .thenApply(x -> true);
-        });
-        sys.setAlternativeReverseContinueActions(() -> {
-            int startAbortCount = sys.getSafeAbortRequestCount();
-            return supervisor.conveyorBack(sys,startAbortCount)
-                    .thenApply(x -> true);
-        });
+
+        supervisor.setupSystemForConveyorTest(sys);
         interactivStart(()
                 -> setMainFuture(conveyorTestPrep(sys)
                         .thenCompose(x -> startScanAllThenContinuousDemoRevFirst())),
@@ -4228,6 +4214,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             return conveyorVisJPanel1.nextTray();
         } catch (Exception e) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, e);
+            fullAbortAll();
             showErrorSplash(e.getMessage());
             if (e instanceof RuntimeException) {
                 throw e;

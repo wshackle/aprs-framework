@@ -145,8 +145,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> futuresDeque = new ConcurrentLinkedDeque<>();
 
     public XFuture<List<PhysicalItem>> getSimViewUpdate() {
+        
         XFuture<List<PhysicalItem>> xfl = new XFuture<>("getSimViewUpate");
         futuresDeque.add(xfl);
+        refresh(false);
         return xfl;
     }
 

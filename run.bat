@@ -12,6 +12,6 @@ SET mypath=%~dp0
 @REM cd %mypath%
 
 
-java -jar %mypath%\target\aprs-framework-1.0-SNAPSHOT-jar-with-dependencies.jar  %*
+java -jar %mypath%\target\aprs-framework-1.4.dev2-SNAPSHOT.jar  %*
 @REM chdir /d %OLDDIR% 
 @REM restore current directory

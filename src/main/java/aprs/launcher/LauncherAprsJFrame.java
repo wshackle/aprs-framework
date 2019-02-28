@@ -570,7 +570,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         supervisor.multiCycleTestNoDisables(startTime, 10);
     }
 
-    private static void multiCycleTest(@Nullable File launchFile, int numCycles) {
+    private static void multiCycleTest(@Nullable File launchFile, int numCycles, boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
 
@@ -592,13 +592,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             if (null != processLauncher) {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
-                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles));
+                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles,useConveyor));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles);
+            supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles,useConveyor);
         }
     }
 
@@ -606,15 +606,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
         int numCycles
                 = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+         boolean useConveyor =
+               JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
-                multiCycleTest(getLastLaunchFile(), numCycles);
+                multiCycleTest(getLastLaunchFile(), numCycles,useConveyor);
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            multiCycleTest(null, numCycles);
+            multiCycleTest(null, numCycles,useConveyor);
         }
     }//GEN-LAST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
 
@@ -781,12 +783,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 break;
 
                             case "--tenCycleTest":
-                                if (argsLeft.length > 1) {
-                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]));
+                                if (argsLeft.length > 2) {
+                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]),Boolean.parseBoolean(argsLeft[2]));
+                                } else if (argsLeft.length > 1) {
+                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]),false);
                                 } else if (argsLeft.length > 0) {
-                                    multiCycleTest(new File(argsLeft[0]), 10);
+                                    multiCycleTest(new File(argsLeft[0]), 10,false);
                                 } else {
-                                    multiCycleTest(null, 10);
+                                    multiCycleTest(null, 10,false);
                                 }
                                 break;
 

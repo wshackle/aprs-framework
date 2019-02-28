@@ -85,12 +85,7 @@
             <artifactId>jcodec-javase</artifactId>
             <version>0.2.2</version>
         </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>eclipselink</artifactId>
-            <version>2.7.1</version>
-            <optional>true</optional>
-        </dependency>
+        
                 
         <!-- <dependency>
         <dependency>
@@ -267,7 +262,8 @@
             </resource>
         </resources>
         
-        <plugins>        
+        <plugins>
+                   
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -279,6 +275,67 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>install_zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-dependencies</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>
+                                        ${project.build.directory}/libs
+                                    </outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <classpathPrefix>libs/</classpathPrefix>
+                                    <mainClass>
+                                        ${main.class}
+                                    </mainClass>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.1.1</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly/dist.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <!-- mvn -Dprofile.release  to activate this and the release,jar-with_depends profile. -->
             <!--  <activation>
@@ -314,7 +371,7 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
+        </profile> 
         <profile> 
             <!-- mvn -Dprofile.release  to activate this and the release,jar-with_depends profile. -->
             <activation>
