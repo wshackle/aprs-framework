@@ -94,7 +94,14 @@ public class Utils {
     }
 
     public static String getAprsUserHomeDir() {
-        String dir = System.getProperty("aprs.user.home", System.getProperty("user.home"));
+        boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+
+        String dir;
+        if (isWindows) {
+            dir = System.getProperty("windows.aprs.user.home", System.getProperty("aprs.user.home", System.getProperty("user.home")));
+        } else {
+            dir = System.getProperty("linux.aprs.user.home", System.getProperty("aprs.user.home", System.getProperty("user.home")));
+        }
 //        if(!dir.endsWith("netbeans_run_user_home")) {
 //            System.out.println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
 //            System.out.println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
@@ -104,12 +111,12 @@ public class Utils {
 //        }
         return dir;
     }
-    
+
     public static String traceToString(StackTraceElement trace @Nullable []) {
         if (null == trace) {
             return "null";
         }
-        if (trace.length==0) {
+        if (trace.length == 0) {
             return "[]";
         }
         try (StringWriter stringWriter = new StringWriter()) {
@@ -681,7 +688,7 @@ public class Utils {
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException("r="+r+",i="+i+",table.getRowCount()="+table.getRowCount()+",table.getColumnCount()="+table.getColumnCount(), e);
+                    throw new RuntimeException("r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount() + ",table.getColumnCount()=" + table.getColumnCount(), e);
                 }
             }
             if (i == table.getColumnCount() - 1) {
@@ -1147,7 +1154,7 @@ public class Utils {
     public static void readCsvFileToTable(CachedTable cachedTable, File f) {
         readCsvFileToTableAndMap(cachedTable, f, null, null, null);
     }
-    
+
     public static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff, long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
         try (CSVPrinter printer = new CSVPrinter(
                 new FileWriter(f, true),
@@ -1178,7 +1185,6 @@ public class Utils {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
-
 
     public static <T> void readCsvFileToTableAndMap(CachedTable cachedTable, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 

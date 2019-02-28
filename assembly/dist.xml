@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is public domain software, however it is preferred
+that the following disclaimers be attached.
+Software Copywrite/Warranty Disclaimer
+
+This software was developed at the National Institute of Standards and
+Technology by employees of the Federal Government in the course of their
+official duties. Pursuant to title 17 Section 105 of the United States
+Code this software is not subject to copyright protection and is in the
+public domain.
+
+This software is experimental. NIST assumes no responsibility whatsoever 
+for its use by other parties, and makes no guarantees, expressed or 
+implied, about its quality, reliability, or any other characteristic. 
+We would appreciate acknowledgement if the software is used. 
+This software can be redistributed and/or modified freely provided 
+that any derivative works bear some notice that they are derived from it, 
+and any modified versions bear some notice that they have been modified.
+
+ See http://www.copyright.gov/title17/92chap1.html#105
+
+-->
+
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>install</id>
+    <baseDirectory>/</baseDirectory>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <outputDirectory>aprs-framework</outputDirectory>
+            <includes>
+                <include>README*</include>
+            </includes>
+            <lineEnding>dos</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>target/classes/</directory>
+            <outputDirectory>aprs-framework/resources</outputDirectory>
+            <includes>
+                <include>*.properties</include>
+                <include>*.xml</include>
+            </includes>
+            <lineEnding>dos</lineEnding>
+        </fileSet>
+  
+        <fileSet>
+            <outputDirectory>aprs-framework/bin</outputDirectory>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+        </fileSet>
+        
+        <fileSet>
+            <outputDirectory>aprs-framework/bin</outputDirectory>
+            <includes>
+                <include>*.bat</include>
+            </includes>
+            <lineEnding>dos</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>target/lib</directory>
+            <outputDirectory>aprs-framework/bin/lib</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+            
+        </fileSet>
+        <fileSet>
+            <directory>target/</directory>
+            <outputDirectory>aprs-framework/bin</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>target/libs</directory>
+            <outputDirectory>aprs-framework/bin/libs</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+    <!-- use this section if you want to package dependencies -->
+    <!-- <dependencySets>
+      <dependencySet>
+        <outputDirectory>lib</outputDirectory>
+        <excludes>
+          <exclude>*:pom</exclude>
+        </excludes>
+        <useStrictFiltering>true</useStrictFiltering>
+        <useProjectArtifact>true</useProjectArtifact>
+        <scope>runtime</scope>
+      </dependencySet>
+    </dependencySets> -->
+</assembly>
+
+
