@@ -650,11 +650,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 if (null != resDirSuffix && !"none".equals(resDirSuffix)) {
                     this.lastResourceDirSet = resDirSuffix;
                     resourceDirCachedComboBox.setSelectedItem(resDirSuffix);
-                    updateResDirSuffix(resDirSuffix, () -> {
-                        if (!updatingFromDbSetup) {
-                            notifyAllDbSetupListeners(null);
-                        }
-                    });
+                    updateResDirSuffixOnDisplay(resDirSuffix);
+                    if (!updatingFromDbSetup) {
+                        notifyAllDbSetupListeners(null);
+                    }
                 }
             }
         } catch (IOException iOException) {
@@ -662,7 +661,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jComboBoxResourceDirActionPerformed
 
-    private XFutureVoid updateResDirSuffix(String resDirSuffix, @Nullable Runnable r) throws IOException {
+    private XFutureVoid updateResDirSuffix(String resDirSuffix) throws IOException {
         if (resDirSuffix == null) {
             resDirSuffix = "neo4j/v1/";
         }
@@ -675,7 +674,24 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         String resDir = RESOURCE_BASE + resDirSuffix;
         queriesMap
                 = DbSetupBuilder.readResourceQueriesDirectory(resDir);
-        return loadQueriesMap(queriesMap, r, false, resDir);
+        return loadQueriesMap(queriesMap, false, resDir);
+    }
+
+    @UIEffect
+    private void updateResDirSuffixOnDisplay(String resDirSuffix) throws IOException {
+        if (resDirSuffix == null) {
+            resDirSuffix = "neo4j/v1/";
+        }
+        if (!resDirSuffix.startsWith("/")) {
+            resDirSuffix = "/" + resDirSuffix;
+        }
+        if (!resDirSuffix.endsWith("/")) {
+            resDirSuffix = resDirSuffix + "/";
+        }
+        String resDir = RESOURCE_BASE + resDirSuffix;
+        queriesMap
+                = DbSetupBuilder.readResourceQueriesDirectory(resDir);
+        loadQueriesMapOnDisplay(queriesMap, false, resDir);
     }
 
     @UIEffect
@@ -703,7 +719,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             String filename = f.getCanonicalPath();
             queriesMap
                     = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
-            return loadQueriesMap(queriesMap, null, true, filename);
+            return loadQueriesMap(queriesMap, true, filename);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -766,7 +782,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 if (internal) {
                     lastResourceDirSet = queryDir;
                     futures.add(resourceDirCachedComboBox.setSelectedItem(queryDir));
-                    updateResDirSuffix(queryDir, null);
+                    updateResDirSuffix(queryDir);
                     futures.add(updateQueriesDir());
                     queriesMapReloaded = true;
                 } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
@@ -781,7 +797,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             if (!queriesMapReloaded) {
                 Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
                 if (null != queriesMap) {
-                    futures.add(loadQueriesMap(queriesMap, null, false, ""));
+                    futures.add(loadQueriesMap(queriesMap, false, ""));
                 }
             }
         } catch (IOException ex) {
@@ -858,7 +874,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     @UIEffect
-    private void loadQueriesMapOnDisplay(Map<DbQueryEnum, DbQueryInfo> queriesMap, @Nullable Runnable r, boolean externDir, String filename) {
+    private void loadQueriesMapOnDisplay(Map<DbQueryEnum, DbQueryInfo> queriesMap, boolean externDir, String filename) {
         if (!queriesDirectoryCachedTextField.getText().equals(filename)) {
             queriesDirectoryCachedTextField.setText(filename);
         }
@@ -870,13 +886,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         autoResizeTableColWidths(jTableQueries);
         autoResizeTableRowHeights(jTableQueries);
-        if (null != r) {
-            r.run();
-        }
     }
 
-    private XFutureVoid loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, @Nullable Runnable r, boolean externDir, String filename) {
-        return Utils.runOnDispatchThread(() -> loadQueriesMapOnDisplay(queriesMap, r, externDir, filename));
+    private XFutureVoid loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, boolean externDir, String filename) {
+        return Utils.runOnDispatchThread(() -> loadQueriesMapOnDisplay(queriesMap, externDir, filename));
     }
 
     @UIEffect
@@ -1238,7 +1251,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
     private final File recentSettingsFile = new File(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
-    @MonotonicNonNull private File propertiesFile = null;
+    @MonotonicNonNull
+    private File propertiesFile = null;
 
     private final CachedComboBox<String> propertiesFilesCachedComboBox;
 
@@ -1272,7 +1286,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return properties file
      */
-    @Nullable public File getPropertiesFile() {
+    @Nullable
+    public File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
@@ -1432,10 +1447,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private DbType getDbTypeComboDefaultITem() {
         return DbType.NEO4J;
     }
-    private int  getDbTypeComboDefaultIndex() {
+
+    private int getDbTypeComboDefaultIndex() {
         return DbType.NEO4J.ordinal();
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroupQueryDirType;
     private javax.swing.JButton jButtonBrowse;

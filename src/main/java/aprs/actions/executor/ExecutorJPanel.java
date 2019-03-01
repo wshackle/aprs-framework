@@ -193,12 +193,14 @@ import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import static java.util.Objects.requireNonNull;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.autoResizeTableRowHeights;
+import static aprs.misc.Utils.autoResizeTableRowHeightsOnDisplay;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import static java.util.Objects.requireNonNull;
+import javax.swing.SwingUtilities;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -304,7 +306,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.addActionCompletedListener(this::handleActionCompleted);
         jTablePddlOutput.setDefaultRenderer(Object.class, new PddlOutputTableCellRendererer());
         jTablePddlOutput.addMouseListener(new PddlOutputTableMouseListener());
-        setToolOffsetTableModelListener();
+        toolOffsetTablemModelListenerEnabled = true;
+        setToolOffsetTableModelListenerOnDisplay();
         setTrayAttachOffsetTableModelListener();
         toolMenu = new JMenu("Tools");
         toolDropByHolderMenu = new JMenu("Drop By Holder");
@@ -597,9 +600,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private class TrayAttachOffsetModelListenerClass implements TableModelListener {
 
         @Override
+        @UIEffect
         public void tableChanged(TableModelEvent e) {
             if (trayAttachOffsetTablemModelListenerEnabled) {
-                Utils.autoResizeTableColWidths(jTableTrayAttachOffsets);
+                Utils.autoResizeTableColWidthsOnDisplay(jTableTrayAttachOffsets);
                 saveTrayAttachOffsetPoseMap();
                 loadTrayAttachOffsetsTableToMap();
             }
@@ -613,9 +617,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private class ToolOffsetModelListenerClass implements TableModelListener {
 
         @Override
+        @UIEffect
         public void tableChanged(TableModelEvent e) {
             if (toolOffsetTablemModelListenerEnabled) {
-                Utils.autoResizeTableColWidths(jTableToolOffsets);
+                Utils.autoResizeTableColWidthsOnDisplay(jTableToolOffsets);
                 saveToolOffsetPoseMap();
                 loadToolOffsetsTableToMap();
             }
@@ -660,8 +665,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void handleToolHolderContentsChange() {
         if (toolHolderContentsModelListenerEnabled) {
-            syncPanelToGeneratorToolData();
-            Utils.autoResizeTableColWidths(jTableHolderContents);
+            syncPanelToGeneratorToolDataOnDisplay();
+            Utils.autoResizeTableColWidthsOnDisplay(jTableHolderContents);
             saveToolHolderContentsMap();
             loadToolMenus();
         }
@@ -3124,7 +3129,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private Color progColor = Color.white;
 
     private XFutureVoid loadProgramToTable(CRCLProgramType crclProgram) {
-        return Utils.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgram));
+        if (SwingUtilities.isEventDispatchThread()) {
+            loadProgramToTableInternal(crclProgram);
+            return XFutureVoid.completedFuture();
+        } else {
+            CRCLProgramType crclProgramCopy = CRCLPosemath.copy(crclProgram);
+            return Utils.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
+        }
     }
 
     @UIType
@@ -3223,7 +3234,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 LOGGER.log(Level.SEVERE, "", ex);
             }
         }
-        for (MiddleCommandType midCmd : crclProgram.getMiddleCommand()) {
+        final List<MiddleCommandType> middleCommands = crclProgram.getMiddleCommand();
+        int initialSize = middleCommands.size();
+        for (int i = 0; i < middleCommands.size() && initialSize == middleCommands.size(); i++) {
+            MiddleCommandType midCmd = middleCommands.get(i);
             if (midCmd instanceof CrclCommandWrapper) {
                 CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
                 midCmd = wrapper.getWrappedCommand();
@@ -3336,6 +3350,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -3479,7 +3498,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 currentPart = null;
             }
             Utils.runOnDispatchThread(() -> {
-                updateSelectionInterval();
+                updateSelectionIntervalOnDisplay();
                 jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
                 if (replanFromIndex == 0) {
                     jTextFieldCurrentPart.setText("");
@@ -5241,7 +5260,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null == toolHolderPoseName || toolHolderPoseName.equals("Default") || toolHolderPoseName.length() < 1) {
                 return;
             }
-            syncPanelToGeneratorToolData();
+            syncPanelToGeneratorToolDataOnDisplay();
             Map<String, PoseType> toolHolderPoseMap
                     = crclGenerator.getToolHolderPoseMap();
             PoseType toolHolderPose = toolHolderPoseMap.get(toolHolderPoseName);
@@ -5257,9 +5276,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonDropToolActionPerformed
 
-    private void syncPanelToGeneratorToolData() {
-        Utils.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
-    }
+//    private void syncPanelToGeneratorToolData() {
+//        Utils.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
+//    }
 
     @UIEffect
     private void syncPanelToGeneratorToolDataOnDisplay() {
@@ -5306,7 +5325,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null == holderPosName || holderPosName.length() < 1) {
                 return;
             }
-            syncPanelToGeneratorToolData();
+            syncPanelToGeneratorToolDataOnDisplay();
 //            String newToolName = queryUserForToolName("What tool will be in the robot?");
 //            if (null == newToolName || newToolName.length() < 1) {
 //                return;
@@ -5340,7 +5359,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         deleteFromToolHolderContentsTable(nameToDelete);
         Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
         Utils.autoResizeTableColWidths(holderContentsCachedTable);
-        syncPanelToGeneratorToolData();
+        syncPanelToGeneratorToolDataOnDisplay();
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonDeleteToolHolderPoseActionPerformed
@@ -5552,7 +5571,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Utils.autoResizeTableColWidths(jTableToolOffsets);
         saveToolOffsetPoseMap();
         loadToolOffsetsTableToMap();
-        setToolOffsetTableModelListener();
+        toolOffsetTablemModelListenerEnabled = true;
+        setToolOffsetTableModelListenerOnDisplay();
     }//GEN-LAST:event_jButtonAddToolOffsetActionPerformed
 
     @UIEffect
@@ -5570,7 +5590,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Utils.autoResizeTableColWidths(jTableToolOffsets);
         saveToolOffsetPoseMap();
         loadToolOffsetsTableToMap();
-        setToolOffsetTableModelListener();
+        toolOffsetTablemModelListenerEnabled = true;
+        setToolOffsetTableModelListenerOnDisplay();
     }//GEN-LAST:event_jButtonDeleteToolOffsetActionPerformed
 
     @UIEffect
@@ -5619,7 +5640,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String newToolName = queryUserForToolName("Which tool is currently in the robot? ");
             if (null != newToolName && newToolName.length() > 0) {
                 crclGenerator.setCurrentToolName(newToolName);
-                syncPanelToGeneratorToolData();
+                syncPanelToGeneratorToolDataOnDisplay();
 //                jTextFieldCurrentToolName.setText(newToolName);
 //                PoseType newPose = crclGenerator.getToolOffsetMap().get(newToolName);
 //                if (null != newPose) {
@@ -5664,7 +5685,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         renameFromToolHolderContentsTable(oldName, newName);
         Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
         Utils.autoResizeTableColWidths(holderContentsCachedTable);
-        syncPanelToGeneratorToolData();
+        syncPanelToGeneratorToolDataOnDisplay();
         saveToolChangerPoseMap();
         saveToolHolderContentsMap();
     }//GEN-LAST:event_jButtonRenameToolHolderPoseActionPerformed
@@ -7513,7 +7534,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void completeLoadPropertiesOnDisplay() {
         Map<String, String> optionsMap = getTableOptions();
         crclGenerator.loadOptionsMap(optionsMap, false);
-        syncPanelToGeneratorToolData();
+        syncPanelToGeneratorToolDataOnDisplay();
         loadToolMenus();
     }
 

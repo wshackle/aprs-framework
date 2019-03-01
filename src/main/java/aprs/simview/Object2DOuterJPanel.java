@@ -145,7 +145,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> futuresDeque = new ConcurrentLinkedDeque<>();
 
     public XFuture<List<PhysicalItem>> getSimViewUpdate() {
-        
+
         XFuture<List<PhysicalItem>> xfl = new XFuture<>("getSimViewUpate");
         futuresDeque.add(xfl);
         refresh(false);
@@ -3178,14 +3178,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         futuresList.add(setItemsFuture);
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
-            XFutureVoid snapshotFuture = Utils.runOnDispatchThread(() -> {
-                try {
-                    takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
-                } catch (IOException ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                }
-            });
-            futuresList.add(snapshotFuture);
+            try {
+                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+            } catch (IOException ex) {
+                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            }
         }
         return XFutureVoid.allOf(futuresList)
                 .thenComposeToVoid(() -> {
@@ -3433,7 +3430,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @UIEffect
-    private void setShowOutputItemsOnDisplay(boolean showOutputItems) {
+    public void setShowOutputItemsOnDisplay(boolean showOutputItems) {
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
             List<PhysicalItem> items = getItems();
@@ -3630,7 +3627,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             recordLines = true;
         } else {
             recordLines = false;
-            if(null != lineCsvWriter) {
+            if (null != lineCsvWriter) {
                 lineCsvWriter.close();
                 lineCsvWriter = null;
             }
@@ -4052,14 +4049,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public XFutureVoid loadProperties(Properties props) {
         XFutureVoid ret = Utils.runOnDispatchThread(() -> {
-            completeLoadPropertiesOnDisplay(props);
+            loadPropertiesOnDisplay(props);
         });
         loadPropertiesFuture2 = ret;
         return ret;
     }
 
     @UIEffect
-    private void completeLoadPropertiesOnDisplay(Properties props) {
+    private void loadPropertiesOnDisplay(Properties props) {
         updateDisplayFromProperties(props);
         loadPropertiesTableOnDisplay(props);
         loadingProperties = false;
@@ -4354,7 +4351,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jCheckBoxTools.setSelected(tools);
             object2DJPanel1.setShowAddedToolsAndToolHolders(tools);
         }
-        
+
         String recordLinesString = props.getProperty("recordLines");
         if (null != recordLinesString && recordLinesString.length() > 0) {
             boolean recordLinesLocal = Boolean.valueOf(recordLinesString);
@@ -4596,7 +4593,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             long now = System.currentTimeMillis();
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();
-                if (null == lineCsvWriter || lc <2 ) {
+                if (null == lineCsvWriter || lc < 2) {
                     File f = createTempFile("vision_lines", ".csv");
                     System.out.println("Recording vision lines to  " + f.getCanonicalPath());
                     String headingLine = VisionSocketClient.lineToHeading("count,time,", line);
