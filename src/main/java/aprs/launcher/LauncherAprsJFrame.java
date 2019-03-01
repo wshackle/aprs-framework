@@ -592,13 +592,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             if (null != processLauncher) {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
-                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles,useConveyor));
+                            Utils.runOnDispatchThread(() -> supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles, useConveyor));
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles,useConveyor);
+            supervisor.completeMultiCycleTestWithPrevMulti(startTime, numCycles, useConveyor);
         }
     }
 
@@ -606,17 +606,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
         int numCycles
                 = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
-         boolean useConveyor =
-               JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
+        boolean useConveyor
+                = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
-                multiCycleTest(getLastLaunchFile(), numCycles,useConveyor);
+                multiCycleTest(getLastLaunchFile(), numCycles, useConveyor);
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
             }
         } else {
-            multiCycleTest(null, numCycles,useConveyor);
+            multiCycleTest(null, numCycles, useConveyor);
         }
     }//GEN-LAST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
 
@@ -784,16 +784,20 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
                             case "--tenCycleTest":
                                 if (argsLeft.length > 2) {
-                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]),Boolean.parseBoolean(argsLeft[2]));
+                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]), Boolean.parseBoolean(argsLeft[2]));
                                 } else if (argsLeft.length > 1) {
-                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]),false);
+                                    multiCycleTest(new File(argsLeft[0]), Integer.parseInt(argsLeft[1]), false);
                                 } else if (argsLeft.length > 0) {
-                                    multiCycleTest(new File(argsLeft[0]), 10,false);
+                                    multiCycleTest(new File(argsLeft[0]), 10, false);
                                 } else {
-                                    multiCycleTest(null, 10,false);
+                                    multiCycleTest(getLastLaunchFile(), 10, false);
                                 }
                                 break;
 
+                            case "--tenCycleTestNoDisables":
+                                tenCycleTestNoDisables();
+                                break;
+                                
                             default:
                                 System.err.println("Invalid argumens args=" + Arrays.toString(args));
                                 System.err.println("args[0] = " + args[0]);

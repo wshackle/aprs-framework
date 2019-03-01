@@ -224,6 +224,7 @@ public class Supervisor {
                     if (!xf3.isDone()) {
                         System.err.println("wtf");
                     }
+                    Utils.printOnlyOnDispatchCallers();
                     Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
@@ -330,6 +331,7 @@ public class Supervisor {
                     if (!randomTestFirstActionReversedFuture.isDone()) {
                         System.err.println("wtf");
                     }
+                    Utils.printOnlyOnDispatchCallers();
                     return Utils.runOnDispatchThread(() -> {
 
                         System.out.println("timeDiff = " + timeDiff);
@@ -4148,27 +4150,21 @@ public class Supervisor {
 
         XFutureVoid resetAllXF = resetAll(false);
         xf[0] = resetAllXF;
-        XFutureVoid step2Xf = resetAllXF
-                .thenComposeToVoid(x -> {
-                    Utils.SwingFuture<XFutureVoid> supplyFuture = Utils.supplyXVoidOnDispatchThread(() -> {
-                        logEvent("Scan all started.");
-                        XFuture<Boolean> startCheckAndEnableXF = startCheckAndEnableAllRobots();
-                        xf[3] = startCheckAndEnableXF;
-                        XFutureVoid scanAll2XF
-                                = startCheckAndEnableXF
-                                        .thenComposeAsyncToVoid("scanAll2",
-                                                ok -> {
-                                                    return checkOkElseToVoid(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash);
-                                                }, supervisorExecutorService);
-                        xf[4] = scanAll2XF;
-                        return scanAll2XF;
-                    });
-                    xf[2] = supplyFuture;
-                    XFutureVoid extractedFuture = supplyFuture.thenComposeToVoid(x2 -> x2);
-                    xf[5] = extractedFuture;
-                    return extractedFuture;
-                });
-        xf[1] = step2Xf;
+        XFuture<Boolean> checkAndEnableXF
+                = resetAllXF
+                        .thenCompose(x -> {
+                            logEvent("Scan all started.");
+                            return startCheckAndEnableAllRobots();
+                        });
+        xf[1] = checkAndEnableXF;
+        XFutureVoid step2Xf
+                = checkAndEnableXF
+                        .thenComposeAsyncToVoid("scanAll2",
+                                ok -> {
+                                    return checkOkElseToVoid(ok, this::scanAllInternal, this::showCheckEnabledErrorSplash);
+                                },
+                                supervisorExecutorService);
+        xf[2] = step2Xf;
         lastStartScanAllFutures = xf;
         return step2Xf;
     }
@@ -5546,10 +5542,10 @@ public class Supervisor {
     private synchronized void checkFutures() {
 
         XFuture<?> xfStealUnsteal = stealUnstealList.poll();
-        while(null != xfStealUnsteal) {
-            if(!xfStealUnsteal.isDone() && !xfStealUnsteal.isCancelled() && !xfStealUnsteal.isCompletedExceptionally()) {
+        while (null != xfStealUnsteal) {
+            if (!xfStealUnsteal.isDone() && !xfStealUnsteal.isCancelled() && !xfStealUnsteal.isCompletedExceptionally()) {
                 stealUnstealList.add(xfStealUnsteal);
-                String msg = "stealUnstealFuture = "+xfStealUnsteal+" not completed";
+                String msg = "stealUnstealFuture = " + xfStealUnsteal + " not completed";
                 Thread.dumpStack();
                 System.err.println(msg);
                 xfStealUnsteal.printProfile(System.err);
@@ -5646,7 +5642,7 @@ public class Supervisor {
                                     this::showCheckEnabledErrorSplash);
                             XFutureVoid allowTogglesRet = allowToggles(blockerName, sysArray);
                             logEvent("completed startReverseActions continousDemoCycleCount=" + continousDemoCycleCount);
-                            return XFutureVoid.allOf(checkOkRet,allowTogglesRet);
+                            return XFutureVoid.allOf(checkOkRet, allowTogglesRet);
                         }, supervisorExecutorService);
         lastStartReverseActionsFuture = ret;
         return ret;
@@ -5743,6 +5739,11 @@ public class Supervisor {
      */
     private XFuture<Boolean> startCheckAndEnableAllRobots() {
 
+        if (areAllSystemsAlreadyChecked()) {
+            logEvent("alSystemsAlreadyChecked");
+            checkAllRunningOrDoingActions(-1, "startCheckAndEnableAllRobots");
+            return XFuture.completedFutureWithName("allSystemsAlreadyChecked", true);
+        }
         String blockerName = "startCheckAndEnableAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture
@@ -5816,6 +5817,10 @@ public class Supervisor {
 
     private XFuture<Boolean> checkEnabledAll() {
         logEvent("checkEnabledAll");
+        if (areAllSystemsAlreadyChecked()) {
+            logEvent("alSystemsAlreadyChecked");
+            return XFuture.completedFutureWithName("alSystemsAlreadyChecked", true);
+        }
         boolean origIgnoreTitleErrs = ignoreTitleErrors.getAndSet(true);
         @SuppressWarnings("unchecked")
         XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
@@ -5848,6 +5853,17 @@ public class Supervisor {
                 ignoreTitleErrors.set(false);
             }
         });
+    }
+
+    private boolean areAllSystemsAlreadyChecked() {
+        boolean allAlreadyCheckedAndEnbled = true;
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            AprsSystem sys = aprsSystems.get(i);
+            if (!sys.isEnableCheckedAlready()) {
+                allAlreadyCheckedAndEnbled = false;
+            }
+        }
+        return allAlreadyCheckedAndEnbled;
     }
 
     private final AtomicInteger pauseCount = new AtomicInteger();

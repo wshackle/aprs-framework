@@ -3426,6 +3426,7 @@ public class AprsSystem implements SlotOffsetProvider {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private XFutureVoid startWindowsFromMenuCheckBoxesInternal() {
         try {
+            boolean onDispatchThread = SwingUtilities.isEventDispatchThread();
             List<XFuture<?>> futures = new ArrayList<>();
             if (isKitInspectionStartupSelected()) {
                 XFutureVoid startKitInspectionFuture = startKitInspection();
@@ -3495,7 +3496,13 @@ public class AprsSystem implements SlotOffsetProvider {
                 createDbSetupFrame();
             }
             if (isShowDatabaseSetupStartupSelected()) {
-                showDatabaseSetupWindow();
+                if(onDispatchThread) {
+                    showDatabaseSetupWindowOnDisplay();
+                } else {
+                    
+                    XFutureVoid setupDatabaseFuture = showDatabaseSetupWindow();
+            futures.add(setupDatabaseFuture);
+                }
             } else {
                 setConnectDatabaseOnStartupSelected(false);
             }
@@ -3707,8 +3714,9 @@ public class AprsSystem implements SlotOffsetProvider {
 //            e.printStackTrace();
 //        }
 //    }
-    public void showDatabaseSetupWindow() {
-        Utils.runOnDispatchThread(this::showDatabaseSetupWindowOnDisplay);
+    
+    public XFutureVoid showDatabaseSetupWindow() {
+        return Utils.runOnDispatchThread(this::showDatabaseSetupWindowOnDisplay);
     }
 
     @UIEffect
@@ -4718,9 +4726,11 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private void setImageSizeMenuText() {
+    private XFutureVoid setImageSizeMenuText() {
         if (null != aprsSystemDisplayJFrame) {
-            Utils.runOnDispatchThread(() -> setImageSizeMenuTextOnDisplay(snapShotWidth, snapShotHeight));
+            return Utils.runOnDispatchThread(() -> setImageSizeMenuTextOnDisplay(snapShotWidth, snapShotHeight));
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
@@ -6444,6 +6454,11 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile boolean enableCheckedAlready = false;
 
+    public boolean isEnableCheckedAlready() {
+        return enableCheckedAlready;
+    }
+
+    
     @Nullable
     private volatile XFuture<Boolean> lastStartCheckEnabledFuture1 = null;
     @Nullable
@@ -7832,7 +7847,8 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
                 snapShotHeight = Integer.parseInt(snapShotHeightString);
             }
-            setImageSizeMenuText();
+            XFutureVoid setMenuTextFuture = setImageSizeMenuText();
+            futures.add(setMenuTextFuture);
             String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
             if (null != taskNameString) {
                 setTaskName(taskNameString);

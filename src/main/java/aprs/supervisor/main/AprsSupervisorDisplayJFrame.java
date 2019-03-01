@@ -338,8 +338,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jTablePositionMappings.getSelectionModel().addListSelectionListener(x -> updateSelectedPosMapFileTable());
         jTableSelectedPosMapFile.getModel().addTableModelListener(tableSelectedPosMapFileModelListener);
         crcl.ui.misc.MultiLineStringJPanel.disableShowText = jCheckBoxMenuItemDisableTextPopups.isSelected();
-        Utils.autoResizeTableColWidths(jTablePositionMappings);
-        Utils.autoResizeTableRowHeights(jTablePositionMappings);
+        Utils.autoResizeTableColWidthsOnDisplay(jTablePositionMappings);
+        Utils.autoResizeTableRowHeightsOnDisplay(jTablePositionMappings);
 
         jListFutures.addListSelectionListener(jTableTasks);
         jListFutures.addListSelectionListener(jListFuturesSelectionListener);
@@ -3761,12 +3761,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             List<AprsSystem> aprsSystems = getAprsSystems();
             String sysString = (String) jComboBoxTeachSystemView.getSelectedItem();
             if (null == sysString || sysString.equals("All")) {
-                setTeachSystemFilter(null);
+                setTeachSystemFilterOnDisplay(null);
             } else {
                 int id = Integer.parseInt(sysString.trim().split("[ \t:]+")[0]);
                 for (AprsSystem sys : aprsSystems) {
                     if (sys.getMyThreadId() == id) {
-                        setTeachSystemFilter(sys);
+                        setTeachSystemFilterOnDisplay(sys);
                         break;
                     }
                 }
@@ -4406,18 +4406,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private XFutureVoid setTeachSystemFilter(@Nullable AprsSystem sys) {
+    @UIEffect
+    private void setTeachSystemFilterOnDisplay(@Nullable AprsSystem sys) {
         if (null == sys) {
             object2DOuterJPanel1.setForceOutputFlag(false);
-            XFutureVoid setShowFuture = object2DOuterJPanel1.setShowOutputItems(false);
-            return setShowFuture
-                    .thenComposeToVoid(() -> object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems()));
+            object2DOuterJPanel1.setShowOutputItemsOnDisplay(false);
+            object2DOuterJPanel1.setOutputItems(object2DOuterJPanel1.getItems());
         } else {
             object2DOuterJPanel1.setForceOutputFlag(true);
             object2DOuterJPanel1.setSimulated(true);
-            XFutureVoid setShowFuture = object2DOuterJPanel1.setShowOutputItems(true);
-            return setShowFuture
-                    .thenComposeToVoid(() -> object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems())));
+            object2DOuterJPanel1.setShowOutputItemsOnDisplay(true);
+            object2DOuterJPanel1.setOutputItems(filterForSystem(sys, object2DOuterJPanel1.getItems()));
         }
     }
 
@@ -4689,7 +4688,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.savePosFile(f);
     }
 
-    private void clearPosTable() {
+    @UIEffect
+    private void clearPosTableOnDisplay() {
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
@@ -4705,8 +4705,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             data[0] = name;
             tm.addRow(data);
         }
-        Utils.autoResizeTableColWidths(jTablePositionMappings);
-        Utils.autoResizeTableRowHeights(jTablePositionMappings);
+        Utils.autoResizeTableColWidthsOnDisplay(jTablePositionMappings);
+        Utils.autoResizeTableRowHeightsOnDisplay(jTablePositionMappings);
         if (null != posTablePopupMenu) {
             posTablePopupMenu.setVisible(false);
         }
@@ -4720,7 +4720,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (menu == null) {
             menu = new JPopupMenu();
             JMenuItem mi = new JMenuItem("Clear");
-            mi.addActionListener(l -> clearPosTable());
+            mi.addActionListener(l -> clearPosTableOnDisplay());
             menu.add(mi);
             posTablePopupMenu = menu;
         }

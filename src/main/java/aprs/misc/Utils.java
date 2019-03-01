@@ -52,9 +52,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -400,6 +403,9 @@ public class Utils {
         return SwingUtilities.isEventDispatchThread();
     }
 
+    static final ConcurrentHashMap<String, Integer> onDispatchCallerMap = new ConcurrentHashMap<>();
+    static final ConcurrentHashMap<String, Integer> offDispatchCallerMap = new ConcurrentHashMap<>();
+
     /**
      * Run something on the dispatch thread that may throw a checked exception.
      *
@@ -409,13 +415,20 @@ public class Utils {
     @SuppressWarnings("guieffect")
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        String callerString = trace[1].toString();
         try {
             if (isEventDispatchThread()) {
+                if (RECORD_DISPATCH_CALLERS) {
+                    onDispatchCallerMap.putIfAbsent(callerString, 1);
+                }
                 r.run();
                 ret.complete(null);
                 return ret;
             } else {
-
+                if (RECORD_DISPATCH_CALLERS) {
+                    offDispatchCallerMap.putIfAbsent(callerString, 1);
+                }
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     try {
                         r.run();
@@ -444,7 +457,30 @@ public class Utils {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
+    private static final boolean RECORD_DISPATCH_CALLERS
+            = Boolean.getBoolean("aprs.recordDispatchCallers");
+
     private static final AtomicInteger dispathThreadExceptionCount = new AtomicInteger();
+
+    public static void printOnlyOnDispatchCallers() {
+        if (RECORD_DISPATCH_CALLERS) {
+            Set<String> onDispatchCallers = onDispatchCallerMap.keySet();
+            Set<String> offDispatchCallers = offDispatchCallerMap.keySet();
+            Set<String> onlyOnDispatchCallers = new HashSet<>(onDispatchCallers);
+            onlyOnDispatchCallers.removeAll(offDispatchCallers);
+            System.err.println("");
+            System.out.println("");
+            System.out.println("BEGIN printOnlyOnDispatchCallers");
+            System.out.println("");
+            for (String caller : onlyOnDispatchCallers) {
+                System.out.println("\tat " + caller);
+            }
+            System.out.println("");
+            System.out.println("END printOnlyOnDispatchCallers");
+            System.out.println("");
+            System.err.println("");
+        }
+    }
 
     /**
      * Run something on the dispatch thread and attach a name to it for
@@ -457,13 +493,20 @@ public class Utils {
     @SuppressWarnings("guieffect")
     public static XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
         XFutureVoid ret = new XFutureVoid(name);
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        String callerString = trace[2].toString();
+        if (callerString.contains("runOnDispatchThread")) {
+            callerString = trace[3].toString();
+        }
         if (isEventDispatchThread()) {
             try {
+                if (RECORD_DISPATCH_CALLERS) {
+                    onDispatchCallerMap.putIfAbsent(callerString, 1);
+                }
                 r.run();
                 ret.complete(null);
             } catch (Exception e) {
                 int count = dispathThreadExceptionCount.incrementAndGet();
-
                 LOGGER.log(Level.SEVERE, name, e);
                 if (count < 2) {
                     showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
@@ -473,6 +516,9 @@ public class Utils {
 
             return ret;
         } else {
+            if (RECORD_DISPATCH_CALLERS) {
+                offDispatchCallerMap.putIfAbsent(callerString, 1);
+            }
             javax.swing.SwingUtilities.invokeLater(() -> {
                 try {
                     r.run();
@@ -732,7 +778,7 @@ public class Utils {
      * @param table table to be resized
      */
     @UIEffect
-    static private void autoResizeTableRowHeightsOnDisplay(JTable table) {
+    static public void autoResizeTableRowHeightsOnDisplay(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         for (int rowIndex = 0; rowIndex < table.getRowCount(); rowIndex++) {
