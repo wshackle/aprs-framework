@@ -721,7 +721,11 @@ public class Object2DJPanel extends JPanel {
     @Nullable private volatile Point2DMinMax autoScaledMinMax = null;
 
     @SuppressWarnings("guieffect")
-    private void paintWithAutoScale(Collection<? extends PhysicalItem> itemsToPaint, @Nullable PhysicalItem selectedItem, Graphics2D g2d, @Nullable ViewOptions opts) {
+    private void paintWithAutoScale(
+            Collection<? extends PhysicalItem> itemsToPaint,
+            @Nullable PhysicalItem selectedItem, 
+            Graphics2D g2d,
+            @Nullable ViewOptions opts) {
         try {
             if (itemsToPaint.isEmpty()) {
                 return;

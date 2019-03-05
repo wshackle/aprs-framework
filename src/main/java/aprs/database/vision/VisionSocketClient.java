@@ -76,7 +76,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     public XFutureVoid setTransform(PoseType transform) {
         this.transform = transform;
-        return this.updateListeners();
+        return this.updateListeners(visionList,getLine(),false);
     }
 
     @Nullable
@@ -103,7 +103,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     public static interface VisionSocketClientListener {
 
-        public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> list, String line);
+        public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> list, String line, boolean ignored);
     }
 
     private final List<VisionSocketClientListener> listListeners = new ArrayList<>();
@@ -119,20 +119,37 @@ public class VisionSocketClient implements AutoCloseable {
             listListeners.remove(listener);
         }
     }
+    
+    private final List<VisionSocketClientListener> ignoredLineListListeners = new ArrayList<>();
+
+    public void addIgnoredLineListener(VisionSocketClientListener listener) {
+        synchronized (ignoredLineListListeners) {
+            ignoredLineListListeners.add(listener);
+        }
+    }
+
+    public void removeIgnoredLineListListener(VisionSocketClientListener listener) {
+        synchronized (ignoredLineListListeners) {
+            ignoredLineListListeners.remove(listener);
+        }
+    }
 
     public XFutureVoid updateListeners() {
+        return updateListeners(visionList, getLine(), false);
+    }
+    
+    public XFutureVoid updateListeners(List<PhysicalItem> localVisionList, String localLineRecieved, boolean ignored) {
         List<XFutureVoid> futures = new ArrayList<>();
-        if (null != visionList) {
-            List<PhysicalItem> listToSend = new ArrayList<>(visionList);
+        if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
+            List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
 
             synchronized (listListeners) {
-                String lineReceived = this.getLine();
-                if (null != lineReceived) {
+                if (null != localLineRecieved) {
                     for (VisionSocketClientListener listListener : listListeners) {
                         try {
                             VisionSocketClientListener listener = listListener;
                             if (null != listener) {
-                                futures.add(listener.visionClientUpdateReceived(listToSend, lineReceived));
+                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved,ignored));
                             }
                         } catch (Exception e) {
                             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
@@ -144,6 +161,29 @@ public class VisionSocketClient implements AutoCloseable {
         return XFutureVoid.allOf(futures);
     }
 
+    public XFutureVoid updateIgnoredLineListeners(List<PhysicalItem> localVisionList, String localLineRecieved) {
+        List<XFutureVoid> futures = new ArrayList<>();
+        if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
+            List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
+
+            synchronized (listListeners) {
+                if (null != localLineRecieved) {
+                    for (VisionSocketClientListener listListener : listListeners) {
+                        try {
+                            VisionSocketClientListener listener = listListener;
+                            if (null != listener) {
+                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved,true));
+                            }
+                        } catch (Exception e) {
+                            Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
+                        }
+                    }
+                }
+            }
+        }
+        return XFutureVoid.allOf(futures);
+    }
+    
     @Nullable
     private VisionToDBJFrameInterface displayInterface;
 
@@ -254,6 +294,9 @@ public class VisionSocketClient implements AutoCloseable {
 
                 @Override
                 public void call(final String line, PrintStream os) {
+                    if(line.length() < 0) {
+                        return;
+                    }
                     incrementLineCount();
 //                    System.out.println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
@@ -289,7 +332,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
-            return updateListeners();
+            return updateListeners(visionList,getLine(),false);
         } catch (IOException exception) {
             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
             System.err.println("Connect to vision on host " + host + " with port " + port + " failed with message " + exception);
@@ -510,7 +553,7 @@ public class VisionSocketClient implements AutoCloseable {
         this.updateListenersOnIgnoredLine = updateListenersOnIgnoredLine;
     }
 
-    private int prevListSizeDecrementInterval = 1000;
+    private int prevListSizeDecrementInterval = 2000;
 
     /**
      * Get the value of prevListSizeDecrementInterval
@@ -574,15 +617,16 @@ public class VisionSocketClient implements AutoCloseable {
                     prevListSizeSetTime = System.currentTimeMillis();
                 }
                 if (updateListenersOnIgnoredLine) {
-                    updateListeners();
+                    updateListeners(newVisionList,line,true);
                 }
+                updateIgnoredLineListeners(newVisionList, line);
                 return;
             }
             prevListSizeSetTime = System.currentTimeMillis();
             prevVisionListSize = newVisionList.size();
             poseUpdatesParsed += newVisionList.size();
             this.visionList = newVisionList;
-            updateListeners();
+            updateListeners(newVisionList,line,false);
             if(consecutiveIgnoreCount > maxConsecutiveIgnoreCount) {
                 maxConsecutiveIgnoreCount = consecutiveIgnoreCount;
             }

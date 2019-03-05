@@ -2675,7 +2675,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
         Set<String> matchedKitInstanceNames = new HashSet<>();
-        List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+        List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
         boolean empty = kitsToFix.isEmpty();
         if (!empty) {
             saveComplexValueList("kitsToFix", "kitsToFix", kitsToFix, kitToCheckPrinter);
@@ -2701,7 +2701,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     logError("recheckKitsOnly: info.failedSlots = " + info.failedSlots);
                 }
             }
-            kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+            kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
             return kitsToFix.isEmpty();
         }
         return empty;
@@ -2756,7 +2756,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
                 Set<String> matchedKitInstanceNames = new HashSet<>();
-                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts);
+                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
 
                 if (optoThread == null) {
                     optoThread = Thread.currentThread();
@@ -2979,7 +2979,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
                                     try {
                                         List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
-                                        takeSimViewSnapshot("corrective lookForParts", null);
+                                        takeSimViewSnapshot("checkKitsBeforeCorrectiveLookForParts", null);
                                         lookForParts(action, l, false, false);
                                         addMarkerCommand(l, "checkKitsCorrectionEndAfterLookForParts", (CrclCommandWrapper wrapper2) -> {
                                             try {
@@ -3114,13 +3114,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             boolean newCheck,
             Map<String, List<Slot>> kitInstanceAbsSlotMap,
             Set<String> matchedKitInstanceNames,
-            List<PhysicalItem> parts) throws IOException {
+            List<PhysicalItem> parts,
+            List<PhysicalItem> physicalItemsLocal) throws IOException {
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
-        checkKitsToCheckInstanceCounts();
+        checkKitsToCheckInstanceCounts(physicalItemsLocal);
         if (kitsToFix.isEmpty()) {
             if (!newCheck && null != lastKitsToCheckCopy && !lastKitsToCheckCopy.isEmpty()) {
                 kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
             } else {
+                takeSimViewSnapshot("kitsToCheck is empty:physicalItemsLocal", physicalItemsLocal);
                 throw new IllegalStateException("kitsToCheck is empty");
             }
         }
@@ -3131,6 +3133,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else if (lastKitsToCheckCopy != null) {
             kitsToCheckCopy = lastKitsToCheckCopy;
         } else {
+            takeSimViewSnapshot("no lastKitsToCheckCopy to reuse:physicalItemsLocal", physicalItemsLocal);
             throw new IllegalStateException("no lastKitsToCheckCopy to reuse");
         }
         for (KitToCheck kit : kitsToCheckCopy) {
@@ -3204,7 +3207,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return kitsToFix;
     }
 
-    private void checkKitsToCheckInstanceCounts() throws IllegalStateException {
+    private void checkKitsToCheckInstanceCounts(
+            List<PhysicalItem> physicalItemsLocal) throws IllegalStateException {
         ConcurrentHashMap<String, Integer> kitNameCountMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, List<PoseType>> kitNamePoseListMap = new ConcurrentHashMap<>();
         for (KitToCheck kit : kitsToCheck) {
@@ -3214,9 +3218,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         for (Entry<String, Integer> entry : kitNameCountMap.entrySet()) {
             List<PoseType> poses = kitNamePoseListMap.get(entry.getKey());
             if (null == poses) {
-                throw new IllegalStateException("need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ");
+                System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
+                final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ";
+                try {
+                    takeSimViewSnapshot(errmsg+"physicalItemsLocal", physicalItemsLocal);
+                } catch (IOException ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                throw new IllegalStateException(errmsg);
             } else if (poses.size() < entry.getValue()) {
-                throw new IllegalStateException("need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + poses.size());
+                System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
+                final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + poses.size();
+                try {
+                    takeSimViewSnapshot(errmsg+"physicalItemsLocal", physicalItemsLocal);
+                } catch (IOException ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                throw new IllegalStateException(errmsg);
             }
         }
     }

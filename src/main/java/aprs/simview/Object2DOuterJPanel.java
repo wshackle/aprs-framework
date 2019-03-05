@@ -83,17 +83,17 @@ import crcl.base.CommandStatusType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import java.awt.Desktop;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import static java.lang.Double.parseDouble;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.EventListener;
-import java.util.HashMap;
-import static java.util.Objects.requireNonNull;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -106,8 +106,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import static java.util.Objects.requireNonNull;
-import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -1295,6 +1293,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTableLineLog = new javax.swing.JTable();
         jCheckBoxRecordLines = new javax.swing.JCheckBox();
         jTextFieldRecordLinesFile = new javax.swing.JTextField();
+        jButtonOpenLogLinesFile = new javax.swing.JButton();
+        jButtonShowSelectedLogLine = new javax.swing.JButton();
+        jButtonLineLogPrev = new javax.swing.JButton();
+        jButtonLineLogNext = new javax.swing.JButton();
+        jButtonSeperateLineLogWindow = new javax.swing.JButton();
 
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
@@ -2218,6 +2221,41 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jButtonOpenLogLinesFile.setText("Open");
+        jButtonOpenLogLinesFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonOpenLogLinesFileActionPerformed(evt);
+            }
+        });
+
+        jButtonShowSelectedLogLine.setText("Show");
+        jButtonShowSelectedLogLine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonShowSelectedLogLineActionPerformed(evt);
+            }
+        });
+
+        jButtonLineLogPrev.setText("Prev");
+        jButtonLineLogPrev.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLineLogPrevActionPerformed(evt);
+            }
+        });
+
+        jButtonLineLogNext.setText("Next");
+        jButtonLineLogNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLineLogNextActionPerformed(evt);
+            }
+        });
+
+        jButtonSeperateLineLogWindow.setText("Separate");
+        jButtonSeperateLineLogWindow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonSeperateLineLogWindowActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -2225,22 +2263,42 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane5)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(4, 4, 4)
                         .addComponent(jCheckBoxRecordLines)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRecordLinesFile))
-                    .addComponent(jScrollPane5))
+                        .addComponent(jButtonOpenLogLinesFile)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonShowSelectedLogLine)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLineLogPrev)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLineLogNext)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSeperateLineLogWindow)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jTextFieldRecordLinesFile, javax.swing.GroupLayout.PREFERRED_SIZE, 452, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 437, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonOpenLogLinesFile)
                     .addComponent(jCheckBoxRecordLines)
-                    .addComponent(jTextFieldRecordLinesFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jButtonShowSelectedLogLine)
+                    .addComponent(jButtonLineLogPrev)
+                    .addComponent(jButtonLineLogNext)
+                    .addComponent(jButtonSeperateLineLogWindow))
+                .addGap(9, 9, 9)
+                .addComponent(jTextFieldRecordLinesFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Line Log", jPanel1);
@@ -3634,6 +3692,84 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jCheckBoxRecordLinesActionPerformed
 
+    private void jButtonOpenLogLinesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenLogLinesFileActionPerformed
+        try {
+            Desktop.getDesktop().open(new File(jTextFieldRecordLinesFile.getText()));
+        } catch (IOException ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButtonOpenLogLinesFileActionPerformed
+
+    private void jButtonShowSelectedLogLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowSelectedLogLineActionPerformed
+        int selectedRow = jTableLineLog.getSelectedRow();
+        showSelectedLogLine(selectedRow);
+    }//GEN-LAST:event_jButtonShowSelectedLogLineActionPerformed
+
+    private void showSelectedLogLine(int selectedRow) throws NumberFormatException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 5; i < jTableLineLog.getColumnCount(); i++) {
+            final Object valueAtI = jTableLineLog.getValueAt(selectedRow, i);
+            if (valueAtI == null || valueAtI.toString().equals("null")) {
+                break;
+            }
+            sb.append(valueAtI).append(",");
+        }
+        String line = sb.toString();
+        List<PhysicalItem> l = VisionSocketClient.lineToList(line,
+                handleRotationEnum == HandleRotationEnum.DEGREES,
+                handleRotationEnum == HandleRotationEnum.IGNORE);
+        setItems(l);
+        Object xobj = jTableLineLog.getValueAt(selectedRow, 2);
+        object2DJPanel1.setCurrentX(Double.parseDouble(xobj.toString()));
+        Object yobj = jTableLineLog.getValueAt(selectedRow, 3);
+        object2DJPanel1.setCurrentY(Double.parseDouble(yobj.toString()));
+    }
+
+    private void jButtonSeperateLineLogWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSeperateLineLogWindowActionPerformed
+        File f = logLinesFile;
+        if(null != f) {
+            String name = f.getName();
+            logLinesFile=null;
+            if(null != lineCsvWriter) {
+                lineCsvWriter.close();
+                lineCsvWriter = null;
+            }
+            Object2DOuterDialogPanel.showObject2DDialog(null, name, false, propertiesFile, null, f);
+        }
+    }//GEN-LAST:event_jButtonSeperateLineLogWindowActionPerformed
+
+    private void jButtonLineLogPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogPrevActionPerformed
+        int selectedRow = jTableLineLog.getSelectedRow();
+        final int rowCount = jTableLineLog.getRowCount();
+        if(selectedRow > 0) {
+            showSelectedLogLine(selectedRow-1);
+            jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow-1, selectedRow-1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow-1, 0, true)));
+        } else if(rowCount > 0 ) {
+             showSelectedLogLine(rowCount-1);
+            jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            jTableLineLog.getSelectionModel().setSelectionInterval(rowCount-1, rowCount-1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(rowCount-1, 0, true)));
+        }
+    }//GEN-LAST:event_jButtonLineLogPrevActionPerformed
+
+    private void jButtonLineLogNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogNextActionPerformed
+        int selectedRow = jTableLineLog.getSelectedRow();
+        final int rowCount = jTableLineLog.getRowCount();
+        if(selectedRow > -1 && selectedRow < rowCount) {
+            showSelectedLogLine(selectedRow+1);
+            jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow+1, selectedRow+1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow+1, 0, true)));
+        } else if(rowCount > 0 ) {
+             showSelectedLogLine(0);
+            jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            jTableLineLog.getSelectionModel().setSelectionInterval(0, 0);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(0, 0, true)));
+        }
+    }//GEN-LAST:event_jButtonLineLogNextActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -3775,13 +3911,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JButton jButtonCurrent;
     private javax.swing.JButton jButtonDelete;
     private javax.swing.JButton jButtonForceUpdate;
+    private javax.swing.JButton jButtonLineLogNext;
+    private javax.swing.JButton jButtonLineLogPrev;
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonOffsetAll;
+    private javax.swing.JButton jButtonOpenLogLinesFile;
     private javax.swing.JButton jButtonReadProperties;
     private javax.swing.JButton jButtonRefresh;
     private javax.swing.JButton jButtonReset;
     private javax.swing.JButton jButtonSave;
+    private javax.swing.JButton jButtonSeperateLineLogWindow;
     private javax.swing.JButton jButtonSetProperies;
+    private javax.swing.JButton jButtonShowSelectedLogLine;
     private javax.swing.JButton jButtonViewSnapshotCsv;
     private javax.swing.JButton jButtonViewSnapshotImage;
     private javax.swing.JCheckBox jCheckBoxAddPosNoise;
@@ -3933,7 +4074,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return Utils.supplyOnDispatchThread(this::getPropertiesOnDisplay);
     }
 
-    private int prevListSizeDecrementInterval = 1000;
+    private int prevListSizeDecrementInterval = 2000;
 
     public int getPrevListSizeDecrementInterval() {
         if (null != visionSocketClient) {
@@ -3985,6 +4126,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("recordLines", Boolean.toString(jCheckBoxRecordLines.isSelected()));
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
         props.setProperty("prevListSizeDecrementInterval", Integer.toString(getPrevListSizeDecrementInterval()));
+        if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
+            double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
+            props.setProperty("visionToDBRotationOffset", Double.toString(visionToDBRotationOffset));
+            if (Math.abs(object2DJPanel1.getRotationOffset() - visionToDBRotationOffset) > 0.001) {
+                jTextFieldRotationOffset.setText(String.format("%.1f", toDegrees(visionToDBRotationOffset)));
+            }
+            object2DJPanel1.setRotationOffset(visionToDBRotationOffset);
+        }
+        props.setProperty("rotationOffset", Double.toString(object2DJPanel1.getRotationOffset()));
         if (reverseFlag) {
             this.reverseDataFileString = filenameCachedTextField.getText().trim();
         } else {
@@ -4438,6 +4588,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != prevListSizeDecrementIntervalString) {
             setPrevListSizeDecrementInterval(Integer.parseInt(prevListSizeDecrementIntervalString));
         }
+        String rotationOffsetString = props.getProperty("rotationOffset");
+        if (null != rotationOffsetString) {
+            object2DJPanel1.setRotationOffset(Double.parseDouble(rotationOffsetString));
+        }
         updatingDisplayFromProperties = false;
     }
 
@@ -4587,29 +4741,68 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile PrintWriter lineCsvWriter = null;
     private final AtomicInteger lineCount = new AtomicInteger();
 
+    public void loadLogFile(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line = br.readLine();
+            while (line != null && line.trim().length() < 2) {
+                line = br.readLine();
+            }
+            String headersArray[] = line.split(",[ ]*");
+            jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
+            line = br.readLine();
+            while (line != null) {
+                String fullLineArray[] = line.split(",[ ]*");
+                ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
+                line = br.readLine();
+            }
+            Utils.autoResizeTableColWidths(jTableLineLog);
+            jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            showException(ex);
+            disconnect();
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    private volatile File logLinesFile = null;
+    
+    private String getTaskName() {
+        if(null != aprsSystem) {
+            return aprsSystem.getTaskName();
+        } else {
+            return "";
+        }
+    }
+    
     @Override
-    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line) {
+    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
             long now = System.currentTimeMillis();
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();
                 if (null == lineCsvWriter || lc < 2) {
-                    File f = createTempFile("vision_lines", ".csv");
+                    File f = Utils.createTempFile("vision_lines_" +getTaskName() + "_"+ getHost() + "_" + getPort(), ".csv");
                     System.out.println("Recording vision lines to  " + f.getCanonicalPath());
-                    String headingLine = VisionSocketClient.lineToHeading("count,time,", line);
+                    String headingLine = VisionSocketClient.lineToHeading("count,time,currentX,currentY,ignored,", line);
 
                     String headersArray[] = headingLine.split(",[ ]*");
                     jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
                     lineCsvWriter = new PrintWriter(new FileWriter(f));
-                    String fullLine = lc + "," + now + "," + line;
+                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored+","+ line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
                     lineCsvWriter.println(headingLine);
                     lineCsvWriter.println(fullLine);
                     Utils.autoResizeTableColWidths(jTableLineLog);
                     jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
+                    logLinesFile = f;
                 } else {
-                    String fullLine = lc + "," + now + "," + line;
+                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY()  + "," + ignored+"," + line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
                     lineCsvWriter.println(fullLine);
