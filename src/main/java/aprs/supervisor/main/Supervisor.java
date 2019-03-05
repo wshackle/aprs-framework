@@ -3797,7 +3797,7 @@ public class Supervisor {
                 }
             }
         }
-        List<PhysicalItem> allPartsWithSysKiTrays =new ArrayList<>(allParts);
+        List<PhysicalItem> allPartsWithSysKiTrays =new ArrayList<>(sysKitTrays);
         allPartsWithSysKiTrays.addAll(allParts);
         try {
             sys.takeSimViewSnapshot("filterForSystem_allPartsWithSysKiTrays", allPartsWithSysKiTrays);
