@@ -3496,12 +3496,12 @@ public class AprsSystem implements SlotOffsetProvider {
                 createDbSetupFrame();
             }
             if (isShowDatabaseSetupStartupSelected()) {
-                if(onDispatchThread) {
+                if (onDispatchThread) {
                     showDatabaseSetupWindowOnDisplay();
                 } else {
-                    
+
                     XFutureVoid setupDatabaseFuture = showDatabaseSetupWindow();
-            futures.add(setupDatabaseFuture);
+                    futures.add(setupDatabaseFuture);
                 }
             } else {
                 setConnectDatabaseOnStartupSelected(false);
@@ -3714,7 +3714,6 @@ public class AprsSystem implements SlotOffsetProvider {
 //            e.printStackTrace();
 //        }
 //    }
-    
     public XFutureVoid showDatabaseSetupWindow() {
         return Utils.runOnDispatchThread(this::showDatabaseSetupWindowOnDisplay);
     }
@@ -5018,7 +5017,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false);
+            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false,true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
@@ -5230,7 +5229,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> emptyKitTraysInternal(List<PhysicalItem> emptiedkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true);
+            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true,true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
@@ -5346,7 +5345,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true);
+            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true,true);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -5528,7 +5527,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * when complete.
      */
     @Nullable
-    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag, boolean alwaysLoad, boolean allowEmptyKits) {
+    public File createActionListFromVision(List<PhysicalItem> requiredItems, List<PhysicalItem> teachItems, boolean overrideRotation, double newRotationOffsetParam, boolean newReverseFlag, boolean alwaysLoad, boolean allowEmptyKits, boolean checkLimits) {
 
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
@@ -5550,7 +5549,11 @@ public class AprsSystem implements SlotOffsetProvider {
                 this.goalLearner = goalLearnerLocal;
             }
 
-            goalLearnerLocal.setItemPredicate(this::isWithinLimits);
+            if(checkLimits) {
+                goalLearnerLocal.setItemPredicate(this::isWithinLimits);
+            } else {
+                goalLearnerLocal.setItemPredicate(null);
+            }
             if (goalLearnerLocal.isCorrectionMode() || allowEmptyKits) {
                 goalLearnerLocal.setKitTrayListPredicate(null);
             } else {
@@ -6458,7 +6461,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return enableCheckedAlready;
     }
 
-    
     @Nullable
     private volatile XFuture<Boolean> lastStartCheckEnabledFuture1 = null;
     @Nullable
@@ -7003,12 +7005,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         false
                 );
             } else {
-                try {
-                    reloadedActions = pddlExecutorJInternalFrame1.reloadActionsFile(newReverseFlag);
-                } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
-                    throw new RuntimeException(ex);
-                }
+                reloadedActions = pddlExecutorJInternalFrame1.reloadActionsFile(newReverseFlag);
             }
             ret = pddlExecutorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber, startAbortCount, trace);
             startActionsFinishComments.add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
@@ -7021,6 +7018,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new IllegalStateException("runNumbeChanged from " + startRunNumber + " to " + currentRunNumber);
             }
         } catch (Exception ex) {
+
             System.err.println("reloadedActions = " + reloadedActions);
             System.err.println("actionsToLoad = " + actionsToLoad);
             System.err.println("newReverseFlag = " + newReverseFlag);

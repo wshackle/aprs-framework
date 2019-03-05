@@ -1,5 +1,5 @@
 #  Automatically saved 
---visionhost=agility.el.nist.gov
+--visionhost=agility
 --visionport=5001
 addPosNoise=false
 alternativeRotation=0.00
@@ -8,12 +8,15 @@ connected=true
 displayAxis=(Y+,X-)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.0,428.82,-146.55,0.91,P,sku_part_large_gear,0.0,416.56,68.41,0.9,P,sku_part_medium_gear,0.0,333.35,-183.79,0.98,P,sku_part_medium_gear,0.0,333.76,-105.95,0.96,P,sku_part_medium_gear,0.0,608.78,-186.75,0.94,P,sku_part_medium_gear,0.0,621.68,-114.19,0.93,P,sku_large_gear_vessel,-0.09,610.11,81.82,0.97,PT,sku_medium_gear_vessel,-0.15,578.1,-142.36,0.91,PT,sku_kit_m2l1_vessel,-1.61,390.78,-143.44,0.56,KT,sku_kit_m2l1_vessel,-1.61,376.42,67.49,0.64,KT,
+items=sku_part_large_gear,0.0,606.55,149.4,0.99,P,sku_part_large_gear,0.0,609.27,39.66,0.91,P,sku_part_medium_gear,0.0,578.72,-165.11,0.96,P,sku_part_medium_gear,0.0,644.32,-81.85,0.96,P,sku_part_medium_gear,0.0,652.19,-154.81,0.95,P,sku_part_medium_gear,0.0,570.1,-92.03,0.94,P,sku_large_gear_vessel,0.011592653589793223,606.21,96.51,0.84,PT,sku_medium_gear_vessel,0.12,610.07,-121.34,0.95,PT,sku_kit_m2l1_vessel,-0.18,373.71,84.73,0.63,KT,sku_kit_m2l1_vessel,-3.0,413.12,-145.3,0.69,KT,
 
 pickupDist=5.00
 posNoise=1.00
+prevListSizeDecrementInterval=2000
+recordLines=true
 reverseFlag=false
 rotNoise=1.00
+rotationOffset=1.5707963267948966
 senseMaxX=NaN
 senseMaxY=NaN
 senseMinX=NaN
@@ -29,5 +32,6 @@ tools=true
 trackcurrentpos=true
 viewDetails=false
 viewOutput=false
+visionToDBRotationOffset=1.5707963267948966
 xmaxymax=800.0, 300.0
 xminymin=0.0, -350.0

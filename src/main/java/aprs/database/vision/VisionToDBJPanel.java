@@ -1922,8 +1922,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     @SafeEffect
-    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line) {
+    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line,boolean ignored) {
         try {
+            if(ignored) {
+                return XFutureVoid.completedFuture();
+            }
             visionClientUpdateCount.incrementAndGet();
             if (acquire == AcquireEnum.OFF) {
                 visionClientUpdateAquireOffCount.incrementAndGet();

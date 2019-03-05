@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -118,10 +119,10 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
 
     @UIEffect
     private void jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCancelActionPerformed
-            cancelled = true;
-            if (null != dialog) {
-                dialog.setVisible(false);
-            }
+        cancelled = true;
+        if (null != dialog) {
+            dialog.setVisible(false);
+        }
     }//GEN-LAST:event_jButtonCancelActionPerformed
 
     /**
@@ -192,7 +193,8 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             String title,
             boolean modal,
             File propsFile,
-            File itemsFile) {
+            File itemsFile,
+            File visionLogFile) {
         Object2DOuterDialogPanel panel = new Object2DOuterDialogPanel();
         try {
             panel.dialog = new JDialog(owner, title, modal);
@@ -203,8 +205,10 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             panel.object2DOuterJPanel1.setPropertiesFile(propsFile);
             panel.object2DOuterJPanel1.setShowAddedToolsAndToolHolders(false);
             Properties props = new Properties();
-            try (FileReader fr = new FileReader(propsFile)) {
-                props.load(fr);
+            if (null != propsFile) {
+                try (FileReader fr = new FileReader(propsFile)) {
+                    props.load(fr);
+                }
             }
             props.remove("tools");
             props.put("tools", "false");
@@ -213,7 +217,13 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             props.remove("connected");
             props.put("connected", "false");
             panel.object2DOuterJPanel1.loadProperties(props);
-            panel.object2DOuterJPanel1.loadFile(itemsFile);
+            if (null != itemsFile) {
+                panel.object2DOuterJPanel1.loadFile(itemsFile);
+            }
+            if(null != visionLogFile) {
+                panel.object2DOuterJPanel1.loadLogFile(visionLogFile);
+            }
+            
             panel.dialog.setVisible(true);
             return panel.cancelled;
         } catch (Exception ex) {
@@ -238,17 +248,48 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             if (JFileChooser.APPROVE_OPTION != propsFileChooser.showOpenDialog(null)) {
                 return;
             }
-            JFileChooser itemsFileChooser = new JFileChooser();
+            boolean single;
             if (args.length > 1) {
-                itemsFileChooser.setSelectedFile(new File(args[1]));
+                single = Boolean.valueOf(args[1]);
+            } else {
+                String fileTypeInputString
+                        = (String) JOptionPane.showInputDialog(
+                                null, // parent compenent
+                                "Object 2D File Type Query", // title
+                                "Open single items set file or vision log lines file?", // nessage
+                                JOptionPane.QUESTION_MESSAGE,
+                                null, // icon
+                                new String[]{"single item set", "vision log lines"},
+                                "vision log lines");
+                single = fileTypeInputString.startsWith("single");
             }
-            itemsFileChooser.setDialogTitle("Items File");
-            if (JFileChooser.APPROVE_OPTION != itemsFileChooser.showOpenDialog(null)) {
-                return;
+            File singleItemsFile = null;
+            File visionLogLinesFile = null;
+            if (single) {
+                JFileChooser itemsFileChooser = new JFileChooser();
+                if (args.length > 2) {
+                    itemsFileChooser.setSelectedFile(new File(args[2]));
+                }
+                itemsFileChooser.setDialogTitle("Items File");
+                if (JFileChooser.APPROVE_OPTION != itemsFileChooser.showOpenDialog(null)) {
+                    return;
+                }
+                singleItemsFile = itemsFileChooser.getSelectedFile();
+            } else {
+                JFileChooser visionLogFileChooser = new JFileChooser();
+                if (args.length > 2) {
+                    visionLogFileChooser.setSelectedFile(new File(args[2]));
+                }
+                visionLogFileChooser.setDialogTitle("Vision Log File");
+                if (JFileChooser.APPROVE_OPTION != visionLogFileChooser.showOpenDialog(null)) {
+                    return;
+                }
+                visionLogLinesFile = visionLogFileChooser.getSelectedFile();
             }
             showObject2DDialog(null, "Outer2D Dialog test", true,
                     propsFileChooser.getSelectedFile(),
-                    itemsFileChooser.getSelectedFile());
+                    singleItemsFile,
+                    visionLogLinesFile);
             System.exit(0);
         });
     }
