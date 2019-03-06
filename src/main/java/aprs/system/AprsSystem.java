@@ -2267,7 +2267,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
             ret = crclClientJInternalFrame.runCurrentProgram(isStepMode());
             if (!ret) {
-                System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Arrays.toString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
+                System.out.println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Utils.traceToString(crclClientJInternalFrame.getRunProgramReturnFalseTrace()));
             }
             int origSize = progCopy.getMiddleCommand().size();
             int curSize = program.getMiddleCommand().size();
@@ -5765,7 +5765,7 @@ public class AprsSystem implements SlotOffsetProvider {
         badState = badState || pausing;
         if (badState) {
             System.err.println("pauseThread = " + pauseThread);
-            System.err.println("pauseTrace = " + Arrays.toString(pauseTrace));
+            System.err.println("pauseTrace = " + Utils.traceToString(pauseTrace));
             throw new IllegalStateException("Attempt to resume while pausing");
         }
     }
@@ -5879,15 +5879,15 @@ public class AprsSystem implements SlotOffsetProvider {
     private void printNameSetInfo() {
         long curTime = System.currentTimeMillis();
         System.out.println("setRobotNameNullThread = " + setRobotNameNullThread);
-        System.out.println("setRobotNameNullStackTrace = " + Arrays.toString(setRobotNameNullStackTrace));
+        System.out.println("setRobotNameNullStackTrace = " + Utils.traceToString(setRobotNameNullStackTrace));
         System.out.println("setRobotNameNullThreadTime = " + (curTime - setRobotNameNullThreadTime));
 
         System.out.println("setRobotNameNonNullThread = " + setRobotNameNonNullThread);
-        System.out.println("setRobotNameNonNullStackTrace = " + Arrays.toString(setRobotNameNonNullStackTrace));
+        System.out.println("setRobotNameNonNullStackTrace = " +Utils.traceToString(setRobotNameNonNullStackTrace));
         System.out.println("setRobotNameNonNullThreadTime = " + (curTime - setRobotNameNonNullThreadTime));
 
         System.out.println("startSafeAbortAndDisconnectThread = " + startSafeAbortAndDisconnectThread);
-        System.out.println("startSafeAbortAndDisconnectStackTrace = " + Arrays.toString(startSafeAbortAndDisconnectStackTrace));
+        System.out.println("startSafeAbortAndDisconnectStackTrace = " +Utils.traceToString(startSafeAbortAndDisconnectStackTrace));
         System.out.println("startSafeAbortAndDisconnectTime = " + (curTime - startSafeAbortAndDisconnectTime));
     }
 
@@ -6538,10 +6538,10 @@ public class AprsSystem implements SlotOffsetProvider {
             System.out.println("startRobotName = " + startRobotName);
             System.out.println("this.robotName = " + this.robotName);
             System.out.println("setRobotNameNullThread = " + setRobotNameNullThread);
-            System.out.println("setRobotNameNullStackTrace = " + Arrays.toString(setRobotNameNullStackTrace));
+            System.out.println("setRobotNameNullStackTrace = " + Utils.traceToString(setRobotNameNullStackTrace));
             System.out.println("setRobotNameNullThreadTime = " + setRobotNameNullThreadTime);
             System.out.println("setRobotNameNonNullThread = " + setRobotNameNonNullThread);
-            System.out.println("setRobotNameNonNullStackTrace = " + Arrays.toString(setRobotNameNonNullStackTrace));
+            System.out.println("setRobotNameNonNullStackTrace = " + Utils.traceToString(setRobotNameNonNullStackTrace));
             System.out.println("setRobotNameNonNullThreadTime = " + setRobotNameNonNullThreadTime);
             startingCheckEnabled = false;
             return false;
@@ -6821,6 +6821,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastStartActionsFuture.isCompletedExceptionally()
                 && !lastStartActionsFuture.isCancelled()) {
             Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
             System.err.println("startActionsComment = " + startActionsComment);
             System.err.println("startActionsTrace=" + Utils.traceToString(startActionsTrace));
             System.err.println("startActionsInternalTrace=" + Utils.traceToString(startActionsInternalTrace));
@@ -6832,6 +6835,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastContinueActionListFuture.isCompletedExceptionally()
                 && !lastContinueActionListFuture.isCancelled()) {
             Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
             System.err.println("continueActionsComment = " + continueActionsComment);
             System.err.println("lastContinueActionListFutureComment=" + lastContinueActionListFutureComment);
             System.err.println("continueActionListTrace=" + Utils.traceToString(continueActionListTrace));
@@ -6843,6 +6849,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastPrivateContinueActionListFuture.isCompletedExceptionally()
                 && !lastPrivateContinueActionListFuture.isCancelled()) {
             Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
             System.err.println("lastContinueActionListFutureComment=" + lastContinueActionListFutureComment);
             System.err.println("privateContinueActionListTrace=" + Utils.traceToString(privateContinueActionListTrace));
             lastPrivateContinueActionListFuture.printStatus(System.err);
@@ -6853,6 +6862,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !safeAbortAndDisconnectFuture.isCompletedExceptionally()
                 && !safeAbortAndDisconnectFuture.isCancelled()) {
             Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
             System.err.println("startSafeAbortAndDisconnectComment = " + startSafeAbortAndDisconnectComment);
             System.err.println("startSafeAbortAndDisconnectThread = " + startSafeAbortAndDisconnectThread);
             System.err.println("startSafeAbortAndDisconnectTime = " + startSafeAbortAndDisconnectTime);
@@ -6869,6 +6881,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !safeAbortFuture.isCompletedExceptionally()
                 && !safeAbortFuture.isCancelled()) {
             Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
             System.err.println("startSafeAbortComment = " + startSafeAbortComment);
             System.err.println("startSafeAbortThread = " + startSafeAbortThread);
             System.err.println("startSafeAbortTime = " + startSafeAbortTime);
