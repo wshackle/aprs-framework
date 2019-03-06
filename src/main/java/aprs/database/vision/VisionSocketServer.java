@@ -201,8 +201,8 @@ public class VisionSocketServer implements AutoCloseable {
         return publishCount.get();
     }
 
-    public void publishList(List<PhysicalItem> list) {
-        String line = listToLine(list);
+    public void publishList(String prefix , List<PhysicalItem> list) {
+        String line = prefix + listToLine(list);
         byte ba[] = line.getBytes();
         this.bytesToSend = ba;
         for (Socket client : clients) {

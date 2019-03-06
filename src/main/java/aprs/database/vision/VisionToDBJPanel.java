@@ -1747,7 +1747,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public XFuture<List<PhysicalItem>> getNewSingleUpdate() {
 
-        XFuture<List<PhysicalItem>> ret = new XFuture<>("getSingleUpdate " + updateNotifyCountInfo() + " database=" + getDpuUrl() + " visionSocket=" + visionClient);
+        XFuture<List<PhysicalItem>> ret = new XFuture<>("getNewSingleUpdate " + updateNotifyCountInfo() + " database=" + getDpuUrl() + " visionSocket=" + visionClient);
         synchronized (singleUpdateListeners) {
             singleUpdateListeners.add(ret);
         }
@@ -1764,7 +1764,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public XFuture<List<PhysicalItem>> getRawUpdate() {
 
-        XFuture<List<PhysicalItem>> ret = new XFuture<>("getSingleUpdate " + updateNotifyCountInfo() + " database=" + getDpuUrl() + " visionSocket=" + visionClient);
+        XFuture<List<PhysicalItem>> ret = new XFuture<>("getRawUpdate " + updateNotifyCountInfo() + " database=" + getDpuUrl() + " visionSocket=" + visionClient);
         synchronized (rawUpdateListeners) {
             rawUpdateListeners.add(ret);
         }

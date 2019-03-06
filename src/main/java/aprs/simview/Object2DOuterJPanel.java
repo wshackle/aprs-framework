@@ -2760,6 +2760,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         enforceSensorLimitsCachedCheckBox.setSelected(enforceSensorLimits);
     }
 
+    private final AtomicInteger simUpdateCount = new AtomicInteger();
+    
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
@@ -2783,7 +2785,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         List<PhysicalItem> origList = getItems();
         List<PhysicalItem> newOutputList = computeNewOutputList(origList);
-        srv.publishList(newOutputList);
+        srv.publishList("simupdate"+simUpdateCount.incrementAndGet()+",,,,,P,",newOutputList);
         setOutputItems(newOutputList);
     }
 
