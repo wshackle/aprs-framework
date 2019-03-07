@@ -334,16 +334,16 @@ public class GoalLearner {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                 }
             }
-            if(null != aprsSystem) {
-                List<PhysicalItem> snapShotList = new ArrayList<>();
-                snapShotList.addAll(teachItems);
-                snapShotList.addAll(allAbsSlots);
-                try {
-                    aprsSystem.takeSimViewSnapshot("createActionListFromVision:snapShotList", snapShotList);
-                } catch (IOException ex) {
-                    Logger.getLogger(GoalLearner.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+//            if(null != aprsSystem) {
+//                List<PhysicalItem> snapShotList = new ArrayList<>();
+//                snapShotList.addAll(teachItems);
+//                snapShotList.addAll(allAbsSlots);
+//                try {
+//                    aprsSystem.takeSimViewSnapshot("createActionListFromVision:snapShotList", snapShotList);
+//                } catch (IOException ex) {
+//                    Logger.getLogger(GoalLearner.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
                             .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))

@@ -51,6 +51,10 @@ import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import aprs.misc.PmCartesianMinMaxLimit;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 
@@ -603,7 +607,7 @@ public class Object2DJPanel extends JPanel {
                     paintHighlightedPose(point, g2d, label, this.minmax, w, h, new_scale, origTransform);
                 }
             }
-            ImageIO.write(img, type, f);
+            writeImageFile(img, type, f);
 //            System.out.println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -635,6 +639,15 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, itemsToPaint, w, h);
     }
 
+    private static final Executor imageIOWriterService
+            = Executors.newSingleThreadExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                   return new Thread(r, "imageIOWriterService");
+                }
+            });
+    
+
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
         try {
             Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
@@ -646,6 +659,28 @@ public class Object2DJPanel extends JPanel {
             if (pindex > 0) {
                 type = f.getName().substring(pindex + 1);
             }
+            writeImageFile(img, type, f);
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    private static AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
+    private static AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
+    
+    private static void writeImageFile(BufferedImage img, String type, File f)  {
+        int submitCount = imageIOWriterServiceSubmittedCount.get();
+        int finishCount = imageIOWriterServiceFinishCount.get();
+        if(submitCount - finishCount > 100) {
+            System.err.println("writeImageFile: submitCount = " + submitCount);
+            System.err.println("writeImageFile: finishCount = " + finishCount);
+            System.err.println("writeImageFile: skipping "+f);
+            return;
+        }
+        imageIOWriterService.execute(() -> writeImageFileOnService(img,type,f));
+    }
+    private static void writeImageFileOnService(BufferedImage img, String type, File f)  {
+        try {
             if (ImageIO.write(img, type, f)) {
 //                System.out.println("Saved snapshot to " + f.getCanonicalPath());
             } else {
@@ -653,6 +688,8 @@ public class Object2DJPanel extends JPanel {
             }
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        } finally {
+            imageIOWriterServiceFinishCount.incrementAndGet();
         }
     }
 
@@ -715,15 +752,16 @@ public class Object2DJPanel extends JPanel {
         }
         return img;
     }
-    
+
     private volatile double autoScaledScale = -1;
-    
-    @Nullable private volatile Point2DMinMax autoScaledMinMax = null;
+
+    @Nullable
+    private volatile Point2DMinMax autoScaledMinMax = null;
 
     @SuppressWarnings("guieffect")
     private void paintWithAutoScale(
             Collection<? extends PhysicalItem> itemsToPaint,
-            @Nullable PhysicalItem selectedItem, 
+            @Nullable PhysicalItem selectedItem,
             Graphics2D g2d,
             @Nullable ViewOptions opts) {
         try {
@@ -771,7 +809,7 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.x = maxX;
             tempMinMax.min.y = minY;
             tempMinMax.max.y = maxY;
-            if(opts.paintingComponent) {
+            if (opts.paintingComponent) {
                 autoScaledMinMax = tempMinMax;
                 autoScaledScale = computeNewScale(tempMinMax, opts);
             }
@@ -1008,20 +1046,20 @@ public class Object2DJPanel extends JPanel {
         return minmax;
     }
 
-     public Point2DMinMax getAutoScaledMinmax() {
-       if(autoscale && null != autoScaledMinMax) {
-           return autoScaledMinMax;
-       }
-       return getMinmax();
+    public Point2DMinMax getAutoScaledMinmax() {
+        if (autoscale && null != autoScaledMinMax) {
+            return autoScaledMinMax;
+        }
+        return getMinmax();
     }
-     
-     public double  getAutoScaledScale() {
-       if(autoscale && autoScaledScale > 0) {
-           return autoScaledScale;
-       }
-       return getScale();
+
+    public double getAutoScaledScale() {
+        if (autoscale && autoScaledScale > 0) {
+            return autoScaledScale;
+        }
+        return getScale();
     }
-     
+
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
 
@@ -1509,7 +1547,7 @@ public class Object2DJPanel extends JPanel {
         List<Slot> slotList = new ArrayList<>();
         if (null != slotOffsets) {
             for (Slot relSlot : slotOffsets) {
-                Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot,rotationOffset);
+                Slot absSlot = slotOffsetProvider.absSlotFromTrayAndOffset(item, relSlot, rotationOffset);
                 if (null != absSlot) {
                     String prpName = relSlot.getPrpName();
                     String slotDisplayName = "slot_" + prpName;
@@ -2042,7 +2080,7 @@ public class Object2DJPanel extends JPanel {
 
                 try {
                     if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), false);
+                        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), true);
                         if (null != offsets) {
                             for (PhysicalItem offset : offsets) {
                                 double mag = offset.mag();

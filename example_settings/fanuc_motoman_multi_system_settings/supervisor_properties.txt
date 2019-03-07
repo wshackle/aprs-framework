@@ -1,7 +1,7 @@
 #  Automatically saved 
 aprs.supervisor.display.debug=false
 aprs.supervisor.display.recordLiveImageMovie=false
-aprs.supervisor.display.showSplashMessages=true
+aprs.supervisor.display.showSplashMessages=false
 aprs.supervisor.display.useTeachCamera=true
 aprs.supevisor.display.conveyor.AxisX=0.0
 aprs.supevisor.display.conveyor.AxisY=-1.0
