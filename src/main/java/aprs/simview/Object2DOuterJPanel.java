@@ -470,9 +470,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null == objectPanelToCloneLocal) {
             throw new NullPointerException("objectToClone");
         }
-        setItems(items, !pauseCachedCheckBox.isSelected());
+        XFutureVoid setItemsFuture
+                = setItems(items, !pauseCachedCheckBox.isSelected());
+        XFutureVoid ret = setItemsFuture;
         if (isViewingOutput()) {
-            setOutputItems(objectPanelToCloneLocal.getOutputItems());
+            ret = setItemsFuture
+                    .thenRun(() -> setOutputItems(objectPanelToCloneLocal.getOutputItems()));
         }
     }
 
@@ -483,12 +486,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile @Nullable
     Map<String, Integer> origNamesMap = null;
 
+    private volatile long lastSetItemsInternalTime = 0;
+    private volatile XFutureVoid lastSetItemsInternalFuture = null;
+
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
-        settingItems = true;
-        XFutureVoid future = Utils.runOnDispatchThread(() -> {
-            setItemsInternal(items);
-            settingItems = false;
-        });
+        notifySetItemsListeners(items);
+        long now = System.currentTimeMillis();
+        XFutureVoid future = XFutureVoid.completedFuture();
+        if (null == lastSetItemsInternalFuture
+                || lastSetItemsInternalFuture.isDone()
+                || (now - lastSetItemsInternalTime) > 500) {
+            settingItems = true;
+            lastSetItemsInternalTime = now;
+            future = Utils.runOnDispatchThread(() -> {
+                setItemsInternal(items);
+                settingItems = false;
+            });
+            lastSetItemsInternalFuture = future;
+        }
         if (captured_item_index > 0) {
             return XFutureVoid.completedFutureWithName("captured_item_index > 0");
         }
@@ -504,19 +519,37 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != srv) {
                     publishCurrentItems();
                 } else {
-                    setOutputItems(computeNewOutputList(items));
+                    List<PhysicalItem> newOutputItems = computeNewOutputList(items);
+                    future
+                            = future
+                                    .thenComposeToVoid(() -> setOutputItems(newOutputItems));
+                    ;
                 }
             }
         }
-        return future.thenRun(() -> notifySetItemsListeners(items));
+        return future;
     }
+
+    private volatile long lastSetOutputItemsInternalTime = 0;
+    private volatile XFutureVoid lastSetOutputItemsInternalFuture = null;
 
     public XFutureVoid setOutputItems(List<PhysicalItem> items) {
         settingItems = true;
-        return Utils.runOnDispatchThread(() -> {
-            setOutputItemsInternal(items);
+        long now = System.currentTimeMillis();
+        if (null == lastSetOutputItemsInternalFuture
+                || lastSetOutputItemsInternalFuture.isDone()
+                || (now - lastSetOutputItemsInternalTime) > 500) {
+            XFutureVoid ret = Utils.runOnDispatchThread(() -> {
+                lastSetOutputItemsInternalTime = now;
+                setOutputItemsInternal(items);
+                settingItems = false;
+            });
+            lastSetOutputItemsInternalFuture = ret;
+            return ret;
+        } else {
             settingItems = false;
-        });
+            return XFutureVoid.completedFuture();
+        }
     }
 
     @UIEffect
@@ -532,6 +565,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setItems(items);
             updateItemsTableOnDisplay(items);
             loadTraySlotInfo(items);
+            lastSetItemsInternalTime = System.currentTimeMillis();
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             showException(ex);
@@ -2761,7 +2795,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private final AtomicInteger simUpdateCount = new AtomicInteger();
-    
+
     private void publishCurrentItems() {
         if (forceOutputFlag) {
             return;
@@ -2785,7 +2819,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         List<PhysicalItem> origList = getItems();
         List<PhysicalItem> newOutputList = computeNewOutputList(origList);
-        srv.publishList("simupdate"+simUpdateCount.incrementAndGet()+",,,,,P,",newOutputList);
+        srv.publishList("simupdate" + simUpdateCount.incrementAndGet() + ",,,,,P,", newOutputList);
         setOutputItems(newOutputList);
     }
 
@@ -3729,10 +3763,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void jButtonSeperateLineLogWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSeperateLineLogWindowActionPerformed
         File f = logLinesFile;
-        if(null != f) {
+        if (null != f) {
             String name = f.getName();
-            logLinesFile=null;
-            if(null != lineCsvWriter) {
+            logLinesFile = null;
+            if (null != lineCsvWriter) {
                 lineCsvWriter.close();
                 lineCsvWriter = null;
             }
@@ -3743,29 +3777,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void jButtonLineLogPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogPrevActionPerformed
         int selectedRow = jTableLineLog.getSelectedRow();
         final int rowCount = jTableLineLog.getRowCount();
-        if(selectedRow > 0) {
-            showSelectedLogLine(selectedRow-1);
+        if (selectedRow > 0) {
+            showSelectedLogLine(selectedRow - 1);
             jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow-1, selectedRow-1);
-            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow-1, 0, true)));
-        } else if(rowCount > 0 ) {
-             showSelectedLogLine(rowCount-1);
+            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow - 1, selectedRow - 1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow - 1, 0, true)));
+        } else if (rowCount > 0) {
+            showSelectedLogLine(rowCount - 1);
             jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            jTableLineLog.getSelectionModel().setSelectionInterval(rowCount-1, rowCount-1);
-            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(rowCount-1, 0, true)));
+            jTableLineLog.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(rowCount - 1, 0, true)));
         }
     }//GEN-LAST:event_jButtonLineLogPrevActionPerformed
 
     private void jButtonLineLogNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogNextActionPerformed
         int selectedRow = jTableLineLog.getSelectedRow();
         final int rowCount = jTableLineLog.getRowCount();
-        if(selectedRow > -1 && selectedRow < rowCount) {
-            showSelectedLogLine(selectedRow+1);
+        if (selectedRow > -1 && selectedRow < rowCount) {
+            showSelectedLogLine(selectedRow + 1);
             jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow+1, selectedRow+1);
-            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow+1, 0, true)));
-        } else if(rowCount > 0 ) {
-             showSelectedLogLine(0);
+            jTableLineLog.getSelectionModel().setSelectionInterval(selectedRow + 1, selectedRow + 1);
+            jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(selectedRow + 1, 0, true)));
+        } else if (rowCount > 0) {
+            showSelectedLogLine(0);
             jTableLineLog.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             jTableLineLog.getSelectionModel().setSelectionInterval(0, 0);
             jTableLineLog.scrollRectToVisible(new Rectangle(jTableLineLog.getCellRect(0, 0, true)));
@@ -4772,15 +4806,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private volatile File logLinesFile = null;
-    
+
     private String getTaskName() {
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             return aprsSystem.getTaskName();
         } else {
             return "";
         }
     }
-    
+
     @Override
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
@@ -4788,14 +4822,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();
                 if (null == lineCsvWriter || lc < 2) {
-                    File f = Utils.createTempFile("vision_lines_" +getTaskName() + "_"+ getHost() + "_" + getPort(), ".csv");
+                    File f = Utils.createTempFile("vision_lines_" + getTaskName() + "_" + getHost() + "_" + getPort(), ".csv");
                     System.out.println("Recording vision lines to  " + f.getCanonicalPath());
                     String headingLine = VisionSocketClient.lineToHeading("count,time,currentX,currentY,ignored,", line);
 
                     String headersArray[] = headingLine.split(",[ ]*");
                     jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
                     lineCsvWriter = new PrintWriter(new FileWriter(f));
-                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored+","+ line;
+                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored + "," + line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
                     lineCsvWriter.println(headingLine);
@@ -4804,7 +4838,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
                     logLinesFile = f;
                 } else {
-                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY()  + "," + ignored+"," + line;
+                    String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored + "," + line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
                     lineCsvWriter.println(fullLine);
@@ -4828,6 +4862,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
+            setItems(l);
             return Utils.runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -4844,7 +4879,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void handleClientUpdateOnDisplay(List<PhysicalItem> l, @Nullable String detailsMessage) {
         try {
-            setItems(l);
             if (null != detailsMessage) {
                 jTextAreaConnectDetails.setText(detailsMessage);
             }

@@ -5562,7 +5562,7 @@ public class AprsSystem implements SlotOffsetProvider {
             goalLearnerLocal.setSlotOffsetProvider(visionToDbJInternalFrame);
 
             boolean allEmptyA[] = new boolean[1];
-            takeSimViewSnapshot("createActionListFromVision:teachItems", teachItems);
+//            takeSimViewSnapshot("createActionListFromVision:teachItems", teachItems);
             goalLearnerLocal.setAprsSystem(this);
             List<Action> actions = goalLearnerLocal.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
             t1 = System.currentTimeMillis();

@@ -1593,7 +1593,6 @@ public class Supervisor {
 //    }
     private final AtomicReference< @Nullable Supplier<XFutureVoid>> unStealRobotsSupplier = new AtomicReference<>(null);
 
-    
     private XFutureVoid unStealRobots() {
         boolean origBlockConveyorMoves = blockConveyorMoves;
         blockConveyorMoves = true;
@@ -3782,22 +3781,32 @@ public class Supervisor {
         return Stream.empty();
     }
 
-    private double getClosestSlotDist(Collection<PhysicalItem> kitTrays, PhysicalItem item) {
-        return kitTrays.stream()
-                .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
-                .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
+//    private double getClosestSlotDist(Collection<PhysicalItem> kitTrays, PhysicalItem item) {
+//        return kitTrays.stream()
+//                .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
+//                .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
+//                .mapToDouble(item::dist)
+//                .min().orElse(Double.POSITIVE_INFINITY);
+//    }
+//    
+    private double getClosestSlotDist(Collection<Slot> slots, PhysicalItem item) {
+        return slots.stream()
                 .mapToDouble(item::dist)
                 .min().orElse(Double.POSITIVE_INFINITY);
     }
 
     List<PhysicalItem> filterForSystem(AprsSystem sys, List<PhysicalItem> listIn) {
 
-        Set<PhysicalItem> allTrays = listIn.stream()
-                .filter(x -> "KT".equals(x.getType()) || "PT".equals(x.getType()))
-                .collect(Collectors.toSet());
-        Set<PhysicalItem> kitTrays = listIn.stream()
-                .filter(x -> "KT".equals(x.getType()))
-                .collect(Collectors.toSet());
+        Set<PhysicalItem> allTrays
+                = listIn
+                        .stream()
+                        .filter(x -> "KT".equals(x.getType()) || "PT".equals(x.getType()))
+                        .collect(Collectors.toSet());
+        Set<PhysicalItem> kitTrays
+                = listIn
+                        .stream()
+                        .filter(x -> "KT".equals(x.getType()))
+                        .collect(Collectors.toSet());
         Set<PhysicalItem> sysKitTrays = kitTrays.stream()
                 .filter(tray -> {
                     List<Slot> l2 = sys.getSlotOffsets(tray.getName(), true);
@@ -3807,23 +3816,40 @@ public class Supervisor {
         otherSysTrays.removeAll(sysKitTrays);
         List<PhysicalItem> listOut = new ArrayList<>(sysKitTrays);
         List<PhysicalItem> allParts = new ArrayList<>();
+        List<Slot> sysKitTraySlots
+                = sysKitTrays
+                        .stream()
+                        .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
+                        .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
+                        .collect(Collectors.toList());
+        List<Slot> otherKitTraySlots
+                = otherSysTrays
+                        .stream()
+                        .flatMap(kit -> slotOffsetProvider.getSlotOffsets(kit.getName(), false).stream()
+                        .flatMap(slotOffset -> absSlotStreamFromTrayAndOffset(kit, slotOffset)))
+                        .collect(Collectors.toList());
         for (PhysicalItem item : listIn) {
             if ("P".equals(item.getType())) {
                 allParts.add(item);
-                double sysKitDist = getClosestSlotDist(sysKitTrays, item);
-                double otherKitDist = getClosestSlotDist(otherSysTrays, item);
+                double sysKitDist = getClosestSlotDist(sysKitTraySlots, item);
+                double otherKitDist = getClosestSlotDist(otherKitTraySlots, item);
                 if (sysKitDist < otherKitDist) {
                     listOut.add(item);
                 }
             }
         }
-        List<PhysicalItem> allPartsWithSysKiTrays = new ArrayList<>(sysKitTrays);
-        allPartsWithSysKiTrays.addAll(allParts);
-        try {
-            sys.takeSimViewSnapshot("filterForSystem_allPartsWithSysKiTrays", allPartsWithSysKiTrays);
-        } catch (IOException ex) {
-            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        List<PhysicalItem> allPartsWithSysKiTrays = new ArrayList<>(sysKitTrays);
+//        allPartsWithSysKiTrays.addAll(allParts);
+//        allPartsWithSysKiTrays.addAll(sysKitTraySlots);
+//        List<PhysicalItem> listInWithSlots = new ArrayList<>(listIn);
+//        listInWithSlots.addAll(sysKitTraySlots);
+//        listInWithSlots.addAll(otherKitTraySlots);
+//        try {
+//            sys.takeSimViewSnapshot("filterForSystem_listInWithSlots", listInWithSlots);
+//            sys.takeSimViewSnapshot("filterForSystem_allPartsWithSysKiTrays", allPartsWithSysKiTrays);
+//        } catch (IOException ex) {
+//            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+//        }
         return listOut;
     }
 
@@ -3848,44 +3874,37 @@ public class Supervisor {
             teachItems = object2DOuterJPanel1.getItems();
         }
         for (AprsSystem aprsSys : aprsSystems) {
-            aprsSys.setCorrectionMode(correctionMode);
-            if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                File f
-                        = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true, false);
-                if (null != f) {
-                    try {
-                        List<Action> loadedActions
-                                = aprsSys.loadActionsFile(
-                                        f, // File f, 
-                                        false, //  boolean showInOptaPlanner,
-                                        false, // newReverseFlag
-                                        true // boolean forceNameChange
-                                );
+            File actionListFile = completeScanOneInternal(aprsSys, teachItems);
+        }
+    }
+
+    private File completeScanOneInternal(AprsSystem aprsSys, List<PhysicalItem> teachItems) throws RuntimeException {
+        aprsSys.setCorrectionMode(correctionMode);
+        File actionListFile;
+        if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
+            final List<PhysicalItem> filteredTeachItems = filterForSystem(aprsSys, teachItems);
+            actionListFile
+                    = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filteredTeachItems, true, 0, false, false, true, false);
+        } else {
+            actionListFile
+                    = aprsSys.createActionListFromVision();
+        }
+        if (null != actionListFile) {
+            try {
+                List<Action> loadedActions
+                        = aprsSys.loadActionsFile(
+                                actionListFile, // File f,
+                                false, //  boolean showInOptaPlanner,
+                                false, // newReverseFlag
+                                true // boolean forceNameChange
+                        );
 //                        aprsSys.loadActionsFile(f, false);
-                    } catch (IOException ex) {
-                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
-                        throw new RuntimeException(ex);
-                    }
-                }
-            } else {
-                File f
-                        = aprsSys.createActionListFromVision();
-                if (null != f) {
-                    try {
-                        List<Action> loadedActions
-                                = aprsSys.loadActionsFile(
-                                        f, // File f, 
-                                        false, //  boolean showInOptaPlanner,
-                                        false, // newReverseFlag
-                                        true // boolean forceNameChange
-                                );
-                    } catch (IOException ex) {
-                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
-                        throw new RuntimeException(ex);
-                    }
-                }
+            } catch (IOException ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
             }
         }
+        return actionListFile;
     }
 
     @Nullable
@@ -3914,6 +3933,8 @@ public class Supervisor {
         long start_time = System.currentTimeMillis();
         long last_time = start_time;
         long max_time_diff = 0;
+        long maxHandleTime = 0;
+        long totalHandleTime = 0;
         long max_kitTrays = 0;
         int skips = 0;
         final List<AprsSystem> aprsSystems;
@@ -3927,6 +3948,14 @@ public class Supervisor {
         private volatile boolean stopFlag = false;
 
         public void stop() {
+            long now = System.currentTimeMillis();
+            System.out.println("submitTeachItemsCount = " + submitTeachItemsCount);
+            System.out.println("handleTeachItemsCount = " + handleTeachItemsCount);
+            System.out.println("maxHandleTime = " + maxHandleTime);
+            System.out.println("totalHandleTime = " + totalHandleTime);
+            long avgHandleTime = totalHandleTime / handleTeachItemsCount;
+            System.out.println("avgHandleTime = " + avgHandleTime);
+            logEvent("TeachScanMonitor.stop after cycles=" + cycles + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",skips=" + skips + ",submitTeachItemsCount = " + submitTeachItemsCount + ",handleTeachItemsCount = " + handleTeachItemsCount + ",maxHandleTime = " + maxHandleTime + ",avgHandleTime = " + avgHandleTime);
             stopFlag = true;
             object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
             if (!future.isDone()) {
@@ -3979,7 +4008,12 @@ public class Supervisor {
         @SuppressWarnings({"initialization", "nullness"})
         private final Consumer<List<PhysicalItem>> teachItemsConsumer = this::submitTeachItems;
 
+        private volatile XFutureVoid handleTeachItemsFuture = null;
+
+        private volatile int submitTeachItemsCount = 0;
+
         private void submitTeachItems(@Nullable List<PhysicalItem> teachItems) {
+            submitTeachItemsCount++;
             if (futureCompleted || stopFlag) {
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 return;
@@ -3995,11 +4029,23 @@ public class Supervisor {
             }
             List<PhysicalItem> nonNullTeachItems = teachItems;
             if (!object2DOuterJPanel1.isUserMouseDown()) {
-                supervisorExecutorService.submit(() -> handleTeachItems(nonNullTeachItems));
+                XFutureVoid lastHandleTeachItemsFuture = handleTeachItemsFuture;
+                if (null == lastHandleTeachItemsFuture || lastHandleTeachItemsFuture.isDone()) {
+                    handleTeachItemsFuture
+                            = XFutureVoid.runAsync(
+                                    "handleTeachItems",
+                                    () -> handleTeachItems(nonNullTeachItems),
+                                    supervisorExecutorService
+                            );
+                }
             }
         }
 
+        private volatile int handleTeachItemsCount = 0;
+
         private void handleTeachItems(List<PhysicalItem> teachItems) {
+            handleTeachItemsCount++;
+            long handleTeachItemsStartTime = System.currentTimeMillis();
             if (futureCompleted) {
                 return;
             }
@@ -4055,27 +4101,7 @@ public class Supervisor {
                         throw new IllegalStateException(errMsg);
                     }
                 }
-                aprsSys.setCorrectionMode(true);
-                File actionListFile;
-                if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
-                    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filterForSystem(aprsSys, teachItems), true, 0, false, false, true, false);
-                } else {
-                    actionListFile = aprsSys.createActionListFromVision();
-                }
-                try {
-                    if (null != actionListFile) {
-                        List<Action> loadedActions
-                                = aprsSys.loadActionsFile(
-                                        actionListFile, // File f, 
-                                        false, //  boolean showInOptaPlanner,
-                                        false, // newReverseFlag
-                                        true // boolean forceNameChange
-                                );
-                    }
-                } catch (IOException iOException) {
-                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "failed loading actionsListFile " + actionListFile, iOException);
-                    throw new RuntimeException(iOException);
-                }
+                File actionListFile = completeScanOneInternal(aprsSys, teachItems);
                 List<String> endingKitStrings = aprsSys.getLastCreateActionListFromVisionKitToCheckStrings();
                 if (endingKitStrings.size() < startingKitStrings.size()) {
                     // lost a kitTray, here we assume the vision frame is bad
@@ -4098,16 +4124,27 @@ public class Supervisor {
             }
             long now = System.currentTimeMillis();
             long diff = now - last_time;
+            long handleTimeDiff = now - handleTeachItemsStartTime;
+            totalHandleTime += handleTimeDiff;
+            if (handleTimeDiff > maxHandleTime) {
+                maxHandleTime = handleTimeDiff;
+            }
             if (max_time_diff < diff) {
                 max_time_diff = diff;
             }
             last_time = now;
             if (anyChanged) {
                 futureCompleted = true;
-                logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips);
+                System.out.println("submitTeachItemsCount = " + submitTeachItemsCount);
+                System.out.println("handleTeachItemsCount = " + handleTeachItemsCount);
+                System.out.println("maxHandleTime = " + maxHandleTime);
+                System.out.println("totalHandleTime = " + totalHandleTime);
+                long avgHandleTime = totalHandleTime / handleTeachItemsCount;
+                System.out.println("avgHandleTime = " + avgHandleTime);
+                logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips + ",avgHandleTime = " + avgHandleTime + ",maxHandleTime = " + maxHandleTime);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 try {
-                    object2DOuterJPanel1.takeSnapshot(Utils.createTempFile("teachItems_" + teachItems.size() + "_", ".PNG"), teachItems);
+                    object2DOuterJPanel1.takeSnapshot(Utils.createTempFile("teachItems_" +newTeachCount.incrementAndGet()+"_"+ teachItems.size() + "_", ".PNG"), teachItems);
                 } catch (IOException ex) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -4116,6 +4153,8 @@ public class Supervisor {
         }
     }
 
+    private final AtomicInteger newTeachCount = new AtomicInteger();
+    
     private XFutureVoid scanAllInternal() {
         if (aprsSystems.isEmpty()) {
             throw new IllegalStateException("aprsSystems.isEmpty()");
@@ -4816,6 +4855,7 @@ public class Supervisor {
     private volatile StackTraceElement allowTogglesTrace @Nullable []  = null;
 
     private void clearAllToggleBlockers() {
+        logEvent("clearAllToggleBlockers toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
         allowTogglesCount.incrementAndGet();
         allowTogglesTrace = Thread.currentThread().getStackTrace();
         for (LockInfo li : toggleBlockerMap.values()) {
@@ -4840,12 +4880,16 @@ public class Supervisor {
     private final AtomicLong totalBlockTime = new AtomicLong();
 
     private XFutureVoid allowToggles(String blockerName, AprsSystem... systems) {
+        return allowTogglesInternal(blockerName, true, systems);
+    }
+
+    private XFutureVoid allowTogglesInternal(String blockerName, boolean withChecks, AprsSystem... systems) {
 
         if (closing) {
             return XFutureVoid.completedFutureWithName("closing");
         }
         try {
-            if (null != systems && systems.length > 0) {
+            if (null != systems && systems.length > 0 && withChecks) {
                 for (AprsSystem sys : systems) {
                     boolean sysConnected = sys.isConnected();
                     boolean sysAborting = sys.isAborting();
@@ -4872,19 +4916,23 @@ public class Supervisor {
             LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
             String blockerList = toggleBlockerMap.keySet().toString();
 
-            if (null == lockInfo) {
+            if (null == lockInfo && withChecks) {
                 final String errmsg = "allowToggle called for blocker " + blockerName + " not in toggleBlockerMap " + toggleBlockerMap;
                 logEventErr(errmsg);
                 throw new RuntimeException(errmsg);
             } else {
-                long time = lockInfo.getStartTime();
-                long blockTime = (System.currentTimeMillis() - time);
-                togglesAllowed = toggleBlockerMap.isEmpty();
-                if (togglesAllowed && !origTogglesAllowed) {
-                    totalBlockTime.addAndGet(blockTime);
-                }
-                logEvent("allowToggles(" + blockerName + ") after " + blockTime + "ms : blockers=" + blockerList + ", totalBlockTime=" + (totalBlockTime.get() / 1000) + "s");
+                if (null != lockInfo) {
+                    long time = lockInfo.getStartTime();
+                    long blockTime = (System.currentTimeMillis() - time);
+                    togglesAllowed = toggleBlockerMap.isEmpty();
+                    if (togglesAllowed && !origTogglesAllowed) {
+                        totalBlockTime.addAndGet(blockTime);
+                    }
+                    logEvent("allowToggles(" + blockerName + ") after " + blockTime + "ms : blockers=" + blockerList + ", totalBlockTime=" + (totalBlockTime.get() / 1000) + "s");
 
+                } else {
+                    logEvent("allowToggles(" + blockerName + ") lockInfo == null,blockers=" + blockerList);
+                }
                 final boolean showTogglesEnabledArg = togglesAllowed;
                 return Utils.runOnDispatchThread(
                         () -> {
@@ -5543,11 +5591,11 @@ public class Supervisor {
                                     .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
                                     .thenCompose("disallowToggles" + part2blockerName, x -> disallowToggles(part2blockerName, new AprsSystem[0]))
                                     .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdCount, 
+                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdCount,
                                             ok -> {
-                                                logEvent("End Continue Continuous Demo : " + cdCount+", ok="+ok);
+                                                logEvent("End Continue Continuous Demo : " + cdCount + ", ok=" + ok);
                                                 return checkOkElse(ok, () -> continueContinuousDemo(part2blockerName), this::showCheckEnabledErrorSplash);
-                                            }, 
+                                            },
                                             supervisorExecutorService);
                     ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
@@ -7136,7 +7184,7 @@ public class Supervisor {
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
             return f.thenComposeToVoid(x -> displayJFrameLocal.showSafeAbortComplete())
-                    .alwaysCompose(() -> allowToggles(blockerName, systems));
+                    .alwaysCompose(() -> allowTogglesInternal(blockerName,false, systems));
         } else {
             return XFutureVoid.completedFuture();
         }
