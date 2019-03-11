@@ -1647,11 +1647,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         checkRequiredPartFailures.set(0);
         return true;
     }
-    
+
     public boolean databasesUpdatesEnabled() {
         return jCheckBoxDbUpdateEnabled.isSelected();
     }
-    
 
     /**
      * Set the value of enableDatabaseUpdates
@@ -1922,9 +1921,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     @SafeEffect
-    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line,boolean ignored) {
+    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line, boolean ignored) {
         try {
-            if(ignored) {
+            if (ignored) {
                 return XFutureVoid.completedFuture();
             }
             visionClientUpdateCount.incrementAndGet();
@@ -2317,7 +2316,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             this.queryDatabase();
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            JOptionPane.showMessageDialog(this, ex.toString());
+            MultiLineStringJPanel.showText(ex.toString());
         }
     }//GEN-LAST:event_jButtonAddItemActionPerformed
 
@@ -2357,7 +2356,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             String name = (String) jTableUpdateResults.getValueAt(index, 0);
             UpdateResults ur = resultsMap.get(name);
             if (null == ur) {
-                JOptionPane.showMessageDialog(this, "no results for " + name);
+                MultiLineStringJPanel.showText("no results for " + name);
                 return;
             }
             String value = ur.toString();
@@ -2579,34 +2578,35 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
     }
-    
+
     private void checkPhysicalItemCollectionNames(Collection<? extends PhysicalItem> itemsToPaint) throws RuntimeException {
-        for(PhysicalItem pi : itemsToPaint) {
-            if(pi.getName().contains("_in_pt_in_pt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+        for (PhysicalItem pi : itemsToPaint) {
+            if (pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getFullName().contains("_in_pt_in_pt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getFullName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getName().contains("_in_kt_in_kt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getFullName().contains("_in_kt_in_kt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getFullName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
         }
     }
 
     private void checkPoseQueryElemCollectionNames(Collection<? extends PoseQueryElem> itemsToPaint) throws RuntimeException {
-        for(PoseQueryElem pi : itemsToPaint) {
-            if(pi.getName().contains("_in_pt_in_pt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+        for (PoseQueryElem pi : itemsToPaint) {
+            if (pi.getName().contains("_in_pt_in_pt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
-            if(pi.getName().contains("_in_kt_in_kt")) {
-                throw new RuntimeException("bad name for item in collection : "+pi);
+            if (pi.getName().contains("_in_kt_in_kt")) {
+                throw new RuntimeException("bad name for item in collection : " + pi);
             }
         }
     }
+
     private List<PhysicalItem> poseQueryToPhysicalItemList(List<PoseQueryElem> listIn) {
         checkPoseQueryElemCollectionNames(listIn);
         List<PhysicalItem> listOut = new ArrayList<>();

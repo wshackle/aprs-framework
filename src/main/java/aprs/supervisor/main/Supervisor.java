@@ -1149,12 +1149,6 @@ public class Supervisor {
                 .stream().mapToInt(x -> x).sum();
     }
 
-    private void showMessageDialog(Object msg) {
-        if (null != displayJFrame) {
-            Component component = displayJFrame;
-            Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(component, msg));
-        }
-    }
 
     void setRobotEnabled(String robotName, Boolean enabled) {
         try {
@@ -1196,7 +1190,7 @@ public class Supervisor {
                                                     logEvent(t.toString());
                                                     setAbortTimeCurrent();
                                                     pause();
-                                                    showMessageDialog(t);
+                                                    MultiLineStringJPanel.showText(t.toString());
                                                 }
                                                 return t.toString();
                                             } else {
@@ -1263,7 +1257,7 @@ public class Supervisor {
                                                             log(Level.SEVERE, "", t);
                                                             setAbortTimeCurrent();
                                                             pause();
-                                                            showMessageDialog(t);
+                                                            MultiLineStringJPanel.showText(t.toString());
                                                         }
                                                         return t.toString();
                                                     }
@@ -3534,7 +3528,7 @@ public class Supervisor {
                                                 return startRandomTestFirstActionReversed2();
                                             } catch (Exception e) {
                                                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                                                showMessageDialog("Exception occurred: " + e);
+                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
                                                 XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
                                                 ret.completeExceptionally(e);
                                                 return ret;
@@ -3545,7 +3539,7 @@ public class Supervisor {
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                    showMessageDialog("Exception occurred: " + e);
+                    MultiLineStringJPanel.showText("Exception occurred: " + e);
                     XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
                     ret.completeExceptionally(e);
                     return ret;
@@ -3553,7 +3547,7 @@ public class Supervisor {
             });
         } catch (Exception e) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-            showMessageDialog("Exception occurred: " + e);
+            MultiLineStringJPanel.showText("Exception occurred: " + e);
             XFutureVoid ret = new XFutureVoid("startRandomTestFirstActionReversed with exception " + e);
             ret.completeExceptionally(e);
             return ret;
@@ -4295,7 +4289,7 @@ public class Supervisor {
         int startAbortCount = sys.getSafeAbortRequestCount();
         XFutureVoid ret
                 = conveyorBack(sys, startAbortCount)
-                        .thenComposeToVoid(x -> finishConveyorTest());
+                        .thenComposeToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void)null));
         conveyorTestFuture = ret;
         return ret;
     }
@@ -4314,7 +4308,7 @@ public class Supervisor {
         int startAbortCount = sys.getSafeAbortRequestCount();
         XFutureVoid ret
                 = conveyorForward(sys, startAbortCount)
-                        .thenComposeToVoid(x -> finishConveyorTest());
+                        .thenComposeToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void)null));
         conveyorTestFuture = ret;
         return ret;
     }
@@ -4533,18 +4527,23 @@ public class Supervisor {
     private XFutureVoid finishConveyorTest() {
         logEvent("ConveyorTest finished");
         if (null != displayJFrame) {
-            return Utils.runOnDispatchThread(() -> {
+            XFuture<Boolean> future=
+                    Utils.composeOnDispatchThread(() -> {
                 if (null != displayJFrame) {
                     if (displayJFrame.isShowSplashMessagesSelected()) {
                         final GraphicsDevice gd = displayJFrame.getGraphicsConfiguration().getDevice();
-                        displayJFrame.showMessageFullScreen("ConveyorTest finished", 80.0f,
+                        return displayJFrame.showMessageFullScreen("ConveyorTest finished", 80.0f,
                                 null,
-                                SplashScreen.getBlueWhiteGreenColorList(), gd);
+                                SplashScreen.getBlueWhiteGreenColorList(), gd)
+                                .thenApply(x -> true);
                     } else {
-                        JOptionPane.showMessageDialog(displayJFrame, "ConveyorTest finished");
+                        return MultiLineStringJPanel.showText( "ConveyorTest finished");
                     }
+                } else {
+                    return  MultiLineStringJPanel.showText( "ConveyorTest finished");
                 }
             });
+            return future.thenRun(() -> {});
         } else {
             return XFutureVoid.completedFuture();
         }
@@ -5116,7 +5115,7 @@ public class Supervisor {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
                         } else {
-                            JOptionPane.showMessageDialog(displayJFrame, splitLongMessage(err, 80));
+                            MultiLineStringJPanel.showText(err);
                         }
                     }
                     setIconImage(IconImages.ERROR_IMAGE);

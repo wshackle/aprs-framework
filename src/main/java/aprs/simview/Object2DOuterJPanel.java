@@ -82,6 +82,7 @@ import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Desktop;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -2565,7 +2566,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
             String message = exception.getMessage();
             if (null != message) {
-                JOptionPane.showMessageDialog(this, message);
+                MultiLineStringJPanel.showText(message);
             }
             if (null == visionSocketClient || !visionSocketClient.isConnected()) {
                 jCheckBoxConnected.setSelected(false);

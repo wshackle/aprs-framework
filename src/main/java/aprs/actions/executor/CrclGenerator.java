@@ -2590,6 +2590,26 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+    
+    @SuppressWarnings("nullness")
+    @Nullable 
+    private PhysicalItem getItemByName(List<PhysicalItem> localPhysicalItems, String name) {
+        return localPhysicalItems
+                .stream()
+                .filter(Objects::nonNull)
+                .filter((PhysicalItem item) -> item.getFullName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+    
+    @SuppressWarnings("nullness")
+    private List<PhysicalItem> getKitInstanceItems(List<PhysicalItem> localPhysicalItems, String kitName) {
+        return getKitInstanceNames(kitName)
+                .stream()
+                .map((String instanceName) -> getItemByName(localPhysicalItems, instanceName))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 
     private static <T> List<T> listFilter(List<T> listIn, Predicate<T> predicate) {
         return listIn
@@ -3210,14 +3230,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void checkKitsToCheckInstanceCounts(
             List<PhysicalItem> physicalItemsLocal) throws IllegalStateException {
         ConcurrentHashMap<String, Integer> kitNameCountMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<String, List<PoseType>> kitNamePoseListMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, List<PhysicalItem>> kitNameItemListMap = new ConcurrentHashMap<>();
         for (KitToCheck kit : kitsToCheck) {
             kitNameCountMap.compute(kit.name, (String name, Integer v) -> ((v != null) ? v + 1 : 1));
-            kitNamePoseListMap.compute(kit.name, (String name, List<PoseType> v) -> ((v != null) ? v : getKitInstancePoses(name)));
+            kitNameItemListMap.compute(kit.name, (String name, List<PhysicalItem> v) -> ((v != null) ? v : getKitInstanceItems(physicalItemsLocal,name)));
         }
         for (Entry<String, Integer> entry : kitNameCountMap.entrySet()) {
-            List<PoseType> poses = kitNamePoseListMap.get(entry.getKey());
-            if (null == poses) {
+            List<PhysicalItem> items = kitNameItemListMap.get(entry.getKey());
+            if (null == items) {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ";
                 try {
@@ -3226,9 +3246,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 throw new IllegalStateException(errmsg);
-            } else if (poses.size() < entry.getValue()) {
+            } else if (items.size() < entry.getValue()) {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
-                final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + poses.size();
+                System.err.println("items = " + items);
+                System.err.println("kitNameItemListMap = " + kitNameItemListMap);
+                System.out.println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
+                final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + items.size();
                 try {
                     takeSimViewSnapshot(errmsg+"physicalItemsLocal", physicalItemsLocal);
                 } catch (IOException ex) {
