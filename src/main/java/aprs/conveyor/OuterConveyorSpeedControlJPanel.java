@@ -28,6 +28,7 @@ import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
 import crcl.ui.XFutureVoid;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Component;
 import java.awt.HeadlessException;
 import java.awt.event.MouseEvent;
@@ -480,7 +481,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
             String message = ex.getMessage();
             if (null != message) {
-                JOptionPane.showMessageDialog(this, message);
+                MultiLineStringJPanel.showText(message);
             }
         }
     }

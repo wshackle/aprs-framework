@@ -27,6 +27,7 @@ import aprs.launcher.LauncherAprsJFrame;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLSocket;
 import java.awt.Component;
 import java.awt.Container;
@@ -1104,12 +1105,11 @@ public class Utils {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
         if (isEventDispatchThread()) {
-            JOptionPane.showMessageDialog(component, msgCopy);
+             MultiLineStringJPanel.showText(msgCopy);
         } else {
             try {
-                final Component componentFinal = component;
                 final String msgCopyFinal = msgCopy;
-                javax.swing.SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(componentFinal, msgCopyFinal));
+                javax.swing.SwingUtilities.invokeLater(() ->  MultiLineStringJPanel.showText( msgCopyFinal));
             } catch (Exception ex) {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
             }

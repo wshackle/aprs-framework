@@ -50,6 +50,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
+import crcl.ui.misc.MultiLineStringJPanel;
 
 /**
  *
@@ -332,7 +333,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             this.dispose();
         } catch (Exception e) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", e);
-            JOptionPane.showMessageDialog(this, "Exception caught: " + e);
+            MultiLineStringJPanel.showText("Exception caught: " + e);
         }
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
@@ -797,7 +798,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             case "--tenCycleTestNoDisables":
                                 tenCycleTestNoDisables();
                                 break;
-                                
+
                             default:
                                 System.err.println("Invalid argumens args=" + Arrays.toString(args));
                                 System.err.println("args[0] = " + args[0]);
