@@ -26,6 +26,7 @@ import aprs.logdisplay.LogDisplayJPanel;
 import aprs.misc.Utils;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.GraphicsEnvironment;
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,7 +44,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import javax.swing.Timer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -214,7 +214,7 @@ public class LaunchFileRunner {
                             String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
                             System.out.println(timeoutMsg);
                             if (!GraphicsEnvironment.isHeadless()) {
-                                JOptionPane.showMessageDialog(null, timeoutMsg);
+                                 MultiLineStringJPanel.showText(timeoutMsg);
                             }
                         });
         lastNewTimeoutFuture = future2;

@@ -643,10 +643,9 @@ public class Object2DJPanel extends JPanel {
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {
-                   return new Thread(r, "imageIOWriterService");
+                    return new Thread(r, "imageIOWriterService");
                 }
             });
-    
 
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
         try {
@@ -667,19 +666,20 @@ public class Object2DJPanel extends JPanel {
 
     private static AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
     private static AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
-    
-    private static void writeImageFile(BufferedImage img, String type, File f)  {
+
+    private static void writeImageFile(BufferedImage img, String type, File f) {
         int submitCount = imageIOWriterServiceSubmittedCount.get();
         int finishCount = imageIOWriterServiceFinishCount.get();
-        if(submitCount - finishCount > 100) {
+        if (submitCount - finishCount > 100) {
             System.err.println("writeImageFile: submitCount = " + submitCount);
             System.err.println("writeImageFile: finishCount = " + finishCount);
-            System.err.println("writeImageFile: skipping "+f);
+            System.err.println("writeImageFile: skipping " + f);
             return;
         }
-        imageIOWriterService.execute(() -> writeImageFileOnService(img,type,f));
+        imageIOWriterService.execute(() -> writeImageFileOnService(img, type, f));
     }
-    private static void writeImageFileOnService(BufferedImage img, String type, File f)  {
+
+    private static void writeImageFileOnService(BufferedImage img, String type, File f) {
         try {
             if (ImageIO.write(img, type, f)) {
 //                System.out.println("Saved snapshot to " + f.getCanonicalPath());
@@ -1863,9 +1863,43 @@ public class Object2DJPanel extends JPanel {
             if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
                 if (mouseInside && null != mousePoint) {
                     Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y);
-                    g2d.drawString(String.format("(%.2f,%.2f), scale=%.2f", worldMousePoint.x, worldMousePoint.y, new_scale), 10, height - 10);
+                    if (null != aprsSystem) {
+                        PmCartesian robotCart
+                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(worldMousePoint.x, worldMousePoint.y, 0));
+                        g2d.drawString(
+                                String.format(
+                                        "vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
+                                        worldMousePoint.x, worldMousePoint.y, robotCart.x, robotCart.y, new_scale
+                                ),
+                                10, height - 10);
+                    } else {
+                        g2d.drawString(
+                                String.format(
+                                        "vis(%.2f,%.2f), scale=%.2f",
+                                        worldMousePoint.x, worldMousePoint.y, new_scale
+                                ),
+                                10, height - 10);
+                    }
                 } else {
-                    g2d.drawString(String.format("MinX,MinY = (%.2f,%.2f), MaxX,MaxY= (%.2f,%.2f), scale=%.2f", minX, minY, maxX, maxY, new_scale), 10, height - 10);
+                    if (null != aprsSystem) {
+                    PmCartesian robotMinCart
+                            = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
+                    PmCartesian robotMaxCart
+                            = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
+                    g2d.drawString(
+                            String.format(
+                                    "MinX,MinY = vis(%.2f,%.2f):robot((%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
+                                    minX, minY, robotMinCart.x, robotMinCart.y, maxX, maxY, robotMaxCart.x, robotMaxCart.y, new_scale
+                            ),
+                             10, height - 10);
+                    } else {
+                        g2d.drawString(
+                            String.format(
+                                    "MinX,MinY = vis(%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f), scale=%.2f",
+                                    minX, minY,  maxX, maxY, new_scale
+                            ),
+                             10, height - 10);
+                    }
                 }
             }
             Collection<? extends PhysicalItem> displayItems = itemsToPaint;
