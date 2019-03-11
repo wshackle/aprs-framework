@@ -4144,7 +4144,7 @@ public class Supervisor {
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips + ",avgHandleTime = " + avgHandleTime + ",maxHandleTime = " + maxHandleTime);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 try {
-                    object2DOuterJPanel1.takeSnapshot(Utils.createTempFile("teachItems_" +newTeachCount.incrementAndGet()+"_"+ teachItems.size() + "_", ".PNG"), teachItems);
+                    object2DOuterJPanel1.takeSnapshot(Utils.createTempFile("teachItems_" + newTeachCount.incrementAndGet() + "_" + teachItems.size() + "_", ".PNG"), teachItems);
                 } catch (IOException ex) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -4154,7 +4154,7 @@ public class Supervisor {
     }
 
     private final AtomicInteger newTeachCount = new AtomicInteger();
-    
+
     private XFutureVoid scanAllInternal() {
         if (aprsSystems.isEmpty()) {
             throw new IllegalStateException("aprsSystems.isEmpty()");
@@ -4504,8 +4504,8 @@ public class Supervisor {
             return XFuture.completedFuture(false);
         }
         int prevCount = conveyorVisPrevCount.get();
-        logEvent("conveyorVisPrevCount=" + prevCount);
-        logEvent("l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
+        logEvent("emptyTraysAndPrevInnerRepeat: conveyorVisPrevCount=" + prevCount + ",startAbortCount=" + startAbortCount + ",sys=" + sys);
+        logEvent("emptyTraysAndPrevInnerRepeat: l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
         try {
             sys.takeSimViewSnapshot("emptyTraysAndPrevInnerRepeat:" + prevCount, l);
         } catch (IOException ex) {
@@ -4631,22 +4631,28 @@ public class Supervisor {
     }
 
     private XFuture<Boolean> checkedConveyorVisPrev(AprsSystem sys, int startAbortCount, Boolean lastStepOk) {
+        logEvent("checkedConveyorVisPrev(" + sys + "," + startAbortCount + "," + lastStepOk + ")");
         if (sys.getSafeAbortRequestCount() != startAbortCount) {
+            logEvent("checkedConveyorVisPrev: sys.getSafeAbortRequestCount() != startAbortCount");
             return XFuture.completedFuture(false);
         }
         String titleErrorString = sys.getTitleErrorString();
         if (null != titleErrorString && titleErrorString.length() > 0) {
+            logEvent("checkedConveyorVisPrev: null != titleErrorString && titleErrorString.length() > 0");
             return XFuture.completedFuture(false);
         }
         boolean sysConnected = sys.isConnected();
         if (!sysConnected) {
+            logEvent("checkedConveyorVisPrev: !sysConnected");
             return XFuture.completedFuture(false);
         }
         boolean sysAborting = sys.isAborting();
         if (sysAborting) {
+            logEvent("checkedConveyorVisPrev: sysAborting");
             return XFuture.completedFuture(false);
         }
         if (blockConveyorMoves) {
+            logEvent("checkedConveyorVisPrev: blockConveyorMoves");
             return XFuture.completedFuture(false);
         }
 //        if (!isTogglesAllowed()) {
@@ -5313,22 +5319,23 @@ public class Supervisor {
         logEvent("Start Continuous Demo (Reverse First) : " + c);
         connectAll();
         final XFuture<?> lfr = this.lastFutureReturned;
+        final int cdcCount = ContinuousDemoCycle.get();
         if (!checkMaxCycles()) {
-            logEvent("continue Continuous Demo quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + ContinuousDemoCycle.get());
+            logEvent("continue Continuous Demo quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + cdcCount);
             return XFutureVoid.completedFutureWithName("continueContinuousDemo.!checkMaxCycles()");
         }
         if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
-            String msg = "Continue Continuous Demo : " + ContinuousDemoCycle.get() + " quiting because checkbox not set";
+            String msg = "Continue Continuous Demo : " + cdcCount + " quiting because checkbox not set";
             logEvent(msg);
             return XFutureVoid.completedFutureWithName(msg);
         }
-        String blockerName = "startPrivateContinuousDemoRevFirst" + ContinuousDemoCycle.get();
-        String part2blockerName = "part2startPrivateContinuousDemoRevFirst" + ContinuousDemoCycle.get();
+        String part1BlockerName = "part1StartPrivateContinuousDemoRevFirst" + cdcCount;
+        String part2BlockerName = "part2StartPrivateContinuousDemoRevFirst" + cdcCount;
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture
-                = disallowToggles(blockerName, sysArray);
+                = disallowToggles(part1BlockerName, sysArray);
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        checkAllRunningOrDoingActions(-1, "continueContinuousDemo");
+        checkAllRunningOrDoingActions(-1, "startPrivateContinuousDemoRevFirst");
         if (this.stealingRobots) {
             System.err.println("trace = " + Utils.traceToString(trace));
             logEventErr("stealingRobots flag set when starting continueContinuousDemo");
@@ -5337,12 +5344,12 @@ public class Supervisor {
                 = disallowTogglesFuture
                         .thenCompose(x -> startCheckAndEnableAllRobots())
                         .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                        .thenCompose(x -> allowToggles(blockerName, sysArray))
+                        .thenCompose(x -> allowToggles(part1BlockerName, sysArray))
                         .thenComposeAsync("startContinuousDemoRevFirst.startReverseActions", x -> startReverseActions(), supervisorExecutorService)
                         .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
-                        .thenCompose(x -> disallowToggles(part2blockerName, new AprsSystem[0]))
+                        .thenCompose(x -> disallowToggles(part2BlockerName, new AprsSystem[0]))
                         .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                        .thenComposeAsyncToVoid("startContinuousDemoRevFirst", ok -> checkOkElseToVoid(ok, () -> continueContinuousDemo(part2blockerName), this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                        .thenComposeAsyncToVoid("startContinuousDemoRevFirst", ok -> checkOkElseToVoid(ok, () -> continueContinuousDemo(part2BlockerName), this::showCheckEnabledErrorSplash), supervisorExecutorService);
         ContinuousDemoFuture = ret;
         return ret;
     }
@@ -5374,14 +5381,18 @@ public class Supervisor {
      * @return future that can be used to determine if it fails or is cancelled
      */
     public XFutureVoid startContinuousDemo() {
-        logEvent("Start Continuous demo");
+        int cdcCount = ContinuousDemoCycle.get();
+        logEvent("Start Continuous demo " + cdcCount);
         connectAll();
-        String blockerName = "startContinuousDemo";
+        String blockerName = "startContinuousDemo" + cdcCount;
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         XFutureVoid ret
                 = disallowToggles(blockerName, sysArray)
                         .thenCompose(x -> startCheckAndEnableAllRobots())
-                        .thenComposeToVoid("startContinuousDemo", ok -> checkOkElse(ok, () -> continueContinuousDemo(blockerName), this::showCheckEnabledErrorSplash));
+                        .thenComposeToVoid(
+                                "startContinuousDemo" + cdcCount,
+                                ok -> checkOkElse(ok, () -> continueContinuousDemo(blockerName), this::showCheckEnabledErrorSplash)
+                        );
         ContinuousDemoFuture = ret;
         return ret;
     }
@@ -5492,18 +5503,19 @@ public class Supervisor {
     private final AtomicInteger continueContinuousScanAndRunCount = new AtomicInteger();
 
     private XFutureVoid continueContinuousScanAndRun() {
+        final int cdcCount = ContinuousDemoCycle.get();
         if (!checkMaxCycles()) {
-            logEvent("Continue Continuous Scan and Run quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + ContinuousDemoCycle.get());
+            logEvent("Continue Continuous Scan and Run quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + cdcCount);
             return XFutureVoid.completedFutureWithName("continueContinuousScanAndRun.!checkMaxCycles()");
         }
-        logEvent("Continue Continuous Scan and Run : " + ContinuousDemoCycle.get());
+        logEvent("Continue Continuous Scan and Run : " + cdcCount);
         String blockerName = "continueContinuousScanAndRun" + continueContinuousScanAndRunCount.incrementAndGet();
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         String part2blockerName = "part2continueContinuousScanAndRun" + continueContinuousScanAndRunCount.incrementAndGet();
         XFuture<LockInfo> disallowTogglesFuture
                 = disallowToggles(blockerName, sysArray);
         return disallowTogglesFuture
-                .thenCompose(x -> continuousDemoSetup())
+                .thenCompose(x -> continuousDemoSetup(cdcCount))
                 .thenComposeToVoid("continueContinuousScanAndRun.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
                     XFutureVoid ret
@@ -5517,7 +5529,7 @@ public class Supervisor {
                                     .thenCompose("disallowToggles" + part2blockerName, x -> disallowToggles(part2blockerName, new AprsSystem[0]))
                                     .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
                                     .thenCompose("allowToggles" + part2blockerName, x -> allowToggles(part2blockerName, sysArray).thenApply(v -> x))
-                                    .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + ContinuousDemoCycle.get(), ok -> checkOkElseToVoid(ok, this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
+                                    .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + cdcCount, ok -> checkOkElseToVoid(ok, this::continueContinuousScanAndRun, this::showCheckEnabledErrorSplash), supervisorExecutorService);
                     ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
@@ -5542,22 +5554,22 @@ public class Supervisor {
     private volatile StackTraceElement continueContinuousDemoTrace[] = null;
 
     private XFutureVoid continueContinuousDemo(String prevBlockerName) {
-        final int cdCount = ContinuousDemoCycle.get();
+        final int cdcCount = ContinuousDemoCycle.get();
         if (!checkMaxCycles()) {
-            logEvent("continue Continuous Demo quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + cdCount);
+            logEvent("continue Continuous Demo quitting because checkMaxCycles() returned false: ContinuousDemoCycle=" + cdcCount);
             return allowToggles(prevBlockerName, new AprsSystem[0]);
         }
-        logEvent("Start Continue Continuous Demo : " + cdCount);
+        logEvent("Start Continue Continuous Demo : cdcCount=" + cdcCount + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
         if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
-            String msg = "Continue Continuous Demo : " + cdCount + " quiting because checkbox not set";
+            String msg = "Continue Continuous Demo : " + cdcCount + " quiting because checkbox not set";
             logEvent(msg);
             return allowToggles(prevBlockerName, new AprsSystem[0]);
         }
-        String blockerName = "start continueContinuousDemo" + cdCount;
-        String part2blockerName = "part2continueContinuousDemo" + cdCount;
+        String part1BlockerName = "part1ContinueContinuousDemo" + cdcCount;
+        String part2BlockerName = "part2ContinueContinuousDemo" + cdcCount;
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture
-                = disallowToggles(blockerName, sysArray);
+                = disallowToggles(part1BlockerName, sysArray);
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continueContinuousDemoTrace = trace;
         checkAllRunningOrDoingActions(-1, "continueContinuousDemo");
@@ -5567,7 +5579,7 @@ public class Supervisor {
         }
         return disallowTogglesFuture
                 .thenComposeAsyncToVoid((LockInfo ignored) -> {
-                    return continuousDemoSetup();
+                    return continuousDemoSetup(cdcCount);
                 }, supervisorExecutorService)
                 .thenComposeToVoid("ContinuouseDemo.part2", x2 -> {
                     final XFuture<?> lfr = this.lastFutureReturned;
@@ -5575,8 +5587,8 @@ public class Supervisor {
                             = startCheckAndEnableAllRobots()
                                     .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
-                                        XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + cdCount, false);
-                                        XFutureVoid allowTogglesRet = allowToggles(blockerName, sysArray);
+                                        XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + cdcCount, false);
+                                        XFutureVoid allowTogglesRet = allowToggles(part1BlockerName, sysArray);
                                         XFutureVoid prevBlockerAllowRet;
                                         if (null != prevBlockerName && prevBlockerName.length() > 0) {
                                             prevBlockerAllowRet = allowToggles(prevBlockerName, new AprsSystem[0]);
@@ -5589,12 +5601,12 @@ public class Supervisor {
                                     .thenComposeAsync("continueContinuousDemo.startReverseActions", x -> startContinuousDemoReversActions(), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture3", x -> checkLastReturnedFuture(lfr), supervisorExecutorService)
                                     .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle())
-                                    .thenCompose("disallowToggles" + part2blockerName, x -> disallowToggles(part2blockerName, new AprsSystem[0]))
+                                    .thenCompose("disallowToggles" + part2BlockerName, x -> disallowToggles(part2BlockerName, new AprsSystem[0]))
                                     .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService)
-                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdCount,
+                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdcCount,
                                             ok -> {
-                                                logEvent("End Continue Continuous Demo : " + cdCount + ", ok=" + ok);
-                                                return checkOkElse(ok, () -> continueContinuousDemo(part2blockerName), this::showCheckEnabledErrorSplash);
+                                                logEvent("End Continue Continuous Demo : cdcCount=" + cdcCount + ", ok=" + ok + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
+                                                return checkOkElse(ok, () -> continueContinuousDemo(part2BlockerName), this::showCheckEnabledErrorSplash);
                                             },
                                             supervisorExecutorService);
                     ContinuousDemoFuture = ret;
@@ -5626,12 +5638,12 @@ public class Supervisor {
     private final AtomicInteger continousDemoSetupCount = new AtomicInteger();
     private volatile StackTraceElement continuousDemoSetupTrace[] = null;
 
-    private XFutureVoid continuousDemoSetup() {
+    private XFutureVoid continuousDemoSetup(int cdcCount) {
 
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continuousDemoSetupTrace = trace;
         int cdscount = continousDemoSetupCount.incrementAndGet();
-        String blocker = "continuousDemoSetup" + cdscount;
+        String blocker = "continuousDemoSetup" + cdscount + "_" + cdcCount;
         AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture
                 = disallowToggles(blocker, sysArray);
@@ -7184,7 +7196,7 @@ public class Supervisor {
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
             return f.thenComposeToVoid(x -> displayJFrameLocal.showSafeAbortComplete())
-                    .alwaysCompose(() -> allowTogglesInternal(blockerName,false, systems));
+                    .alwaysCompose(() -> allowTogglesInternal(blockerName, false, systems));
         } else {
             return XFutureVoid.completedFuture();
         }
