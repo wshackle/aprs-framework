@@ -4403,11 +4403,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             appendGenerateAbortLog("completeActionListReturning." + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
             return ret;
         } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
             System.err.println("prevSetReplanFromIndexLastThread = " + prevSetReplanFromIndexLastThread);
             System.err.println("setReplanFromIndexLastThread = " + setReplanFromIndexLastThread);
-            System.err.println("prevSetReplanFromIndexLastTrace = " + Arrays.toString(prevSetReplanFromIndexLastTrace));
-            System.err.println("setReplanFromIndexLastTrace = " + Arrays.toString(setReplanFromIndexLastTrace));
-            LOGGER.log(Level.SEVERE, "", ex);
+            System.err.println("prevSetReplanFromIndexLastTrace = " + Utils.traceToString(prevSetReplanFromIndexLastTrace));
+            System.err.println("setReplanFromIndexLastTrace = " + Utils.traceToString(setReplanFromIndexLastTrace));
             abortProgram();
             showExceptionInProgram(ex);
             if (ex instanceof RuntimeException) {
