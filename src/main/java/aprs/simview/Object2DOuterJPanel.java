@@ -2169,6 +2169,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jTabbedPane1.addTab("Properties", jPanelProperties);
 
+        jTableSnapshotFiles.setAutoCreateRowSorter(true);
         jTableSnapshotFiles.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -5007,7 +5008,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
 
     }
+    
+    
+    public PhysicalItem getClosestRobotPart() {
+        if (null == aprsSystem) {
+            return null;
+        }
+        PointType currentPoint = aprsSystem.getCurrentPosePoint();
+        if (null == currentPoint) {
+            return null;
+        }
+        return getClosestUncorrectedPart(currentPoint);
+    }
 
+    private PhysicalItem  getClosestUncorrectedPart(PointType ptIn) {
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
+        PointType uncorrectedPoint = aprsSystem.convertRobotToVisionPoint(ptIn);
+        List<PhysicalItem> l = new ArrayList<>(getItems());
+        DistIndex di =  getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l);
+        return l.get(di.index);
+    }
+    
     public double getClosestRobotPartDistance() {
         if (null == aprsSystem) {
             return Double.POSITIVE_INFINITY;

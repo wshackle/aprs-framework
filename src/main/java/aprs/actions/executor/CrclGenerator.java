@@ -21,6 +21,7 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.ActionType.CLEAR_KITS_TO_CHECK;
 import aprs.database.Slot;
 import aprs.database.PartsTray;
 import aprs.system.AprsSystem;
@@ -473,6 +474,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean takeSnapshots = false;
     private final AtomicInteger crclNumber = new AtomicInteger();
     private final ConcurrentMap<String, PoseType> poseCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, PhysicalItem> itemCache = new ConcurrentHashMap<>();
     private volatile @MonotonicNonNull
     KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
@@ -502,7 +504,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String failedAbsSlotPrpName;
 
         final private @Nullable
-        String failedItemSkuName;
+        String itemHaveName;
+
+        final private @Nullable
+        String itemNeededName;
 
         final private @Nullable
         PhysicalItem failedClosestItem;
@@ -512,17 +517,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         private final double failedClosestItemDist;
 
-        public KitToCheckFailedItemInfo(String failedAbsSlotPrpName, String failedItemSkuName, PhysicalItem failedClosestItem, Slot failedAbsSlot, double failedClosestItemDist) {
+        public KitToCheckFailedItemInfo(String failedAbsSlotPrpName, String itemHaveName, String itemNeededName, PhysicalItem failedClosestItem, Slot failedAbsSlot, double failedClosestItemDist) {
             this.failedAbsSlotPrpName = failedAbsSlotPrpName;
-            this.failedItemSkuName = failedItemSkuName;
+            this.itemHaveName = itemHaveName;
             this.failedClosestItem = failedClosestItem;
             this.failedAbsSlot = failedAbsSlot;
             this.failedClosestItemDist = failedClosestItemDist;
+            this.itemNeededName = itemNeededName;
         }
 
         @Override
         public String toString() {
-            return "KitToCheckFailedItemInfo{" + "failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", failedItemSkuName=" + failedItemSkuName + ", failedClosestItem=" + failedClosestItem + ", failedAbsSlot=" + failedAbsSlot + ", failedClosestItemDist=" + failedClosestItemDist + '}';
+            return "KitToCheckFailedItemInfo{" + "failedAbsSlotPrpName=" + failedAbsSlotPrpName + ", itemHaveName=" + itemHaveName + ", itemNeededName=" + itemNeededName + ", failedClosestItem=" + failedClosestItem + ", failedAbsSlot=" + failedAbsSlot + ", failedClosestItemDist=" + failedClosestItemDist + '}';
         }
 
     };
@@ -1215,6 +1221,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else {
             generateSinceZeroCount.incrementAndGet();
         }
+        if (!aprsSystem.isDoingActions()) {
+            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+            throw new IllegalStateException("!aprsSystem.isDoingActions()");
+        }
         final Thread curThread = Thread.currentThread();
         if (null == genThread) {
             genThread = curThread;
@@ -1331,15 +1341,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
+            this.startSafeAbortRequestCount = aprsSystem.getSafeAbortRequestCount();
         }
 
         @Override
         public String toString() {
-            return "GenerateParams{" + "actions=" + actions + ",\n startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n\n  replan=" + replan + ",\n optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
+            return "GenerateParams{" + "actions.size()=" + ((null != actions) ? actions.size() : -1) + ",\n startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n\n  replan=" + replan + ",\n optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
         }
 
     }
 
+    public GenerateParams newGenerateParams() {
+        return new GenerateParams();
+    }
     private boolean manualAction;
 
     /**
@@ -1363,54 +1377,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @MonotonicNonNull
     private volatile List<List<Action>> takePlaceActions = null;
 
-//    private static void checkTakePlaceActions(@Nullable List<List<Action>> tplist, List<Action> fullList) {
-//        if (null == tplist) {
-//            return;
-//        }
-//        int tplistTotal = 0;
-//        int listsizes[] = new int[tplist.size()];
-//        int executedcounts[]  = new int[tplist.size()];
-//        for (int i = 0; i < tplist.size() - 1; i++) {
-//            List<Action> l = tplist.get(i);
-//            int executedcount = 0;
-//            for (Action act : l) {
-//                if (act.getExecuted()) {
-//                    tplistTotal++;
-//                    executedcount++;
-//                }
-//            }
-//            listsizes[i] = tplist.size();
-//            executedcounts[i] = executedcount;
-//        }
-//        if (tplist.size() > 0) {
-//            tplistTotal += tplist.get(tplist.size() - 1).size();
-//        }
-//        int fullListTotal = 0;
-//        for (Action act : fullList) {
-//            switch (act.getType()) {
-//                case TAKE_PART:
-//                case PLACE_PART:
-//                    fullListTotal++;
-//                    break;
-//            }
-//        }
-//        if (tplistTotal > fullListTotal) {
-//            long time = System.currentTimeMillis();
-//            LOGGER.warning("tplistTotal > fullListTotal : redundant or repeated actions suspected");
-//            LOGGER.warning("tplistTotal= "+tplistTotal);
-//            LOGGER.warning("fullListTotal= "+fullListTotal);
-//            LOGGER.warning("listsizes = " + Arrays.toString(listsizes));
-//            LOGGER.warning("executedcounts = " + Arrays.toString(executedcounts));
-//            for (int i = 0; i < tplist.size(); i++) {
-//                List<Action> tplisti = tplist.get(i);
-//                LOGGER.info("i = " + i+", tplisti.size()="+tplisti.size());
-//                for (Action act : tplisti) {
-//                    LOGGER.info((act.getExecuted() ? (time - act.getExecTime()) : "--") + " : " + act.asPddlLine());
-//                }
-//            }
-//            LOGGER.warning("END tplistTotal > fullListTotal : redundant or repeated actions suspected");
-//        }
-//    }
     private final AtomicInteger generateCount = new AtomicInteger();
     private final AtomicInteger generateFromZeroCount = new AtomicInteger();
     private final AtomicInteger generateSinceZeroCount = new AtomicInteger();
@@ -1433,75 +1399,91 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
         assert (null != gparams.options) : "null == gparams.options";
-        assert (null != gparams.actions) : "null == gparams.actions";
+        final List<Action> gParamsActions = gparams.actions;
+        assert (null != gParamsActions) : "null == gparams.actions";
         AprsSystem localAprsSystem = this.aprsSystem;
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
         }
-
-        List<MiddleCommandType> cmds = new ArrayList<>();
-        if (null != solver && gparams.replan) {
-            return runOptaPlanner(gparams.actions,
-                    gparams.startingIndex,
-                    gparams.options,
-                    gparams.startSafeAbortRequestCount,
-                    this.physicalItems);
-        } else {
-            String messageString = "\n"
-                    + "gparams.startingIndex=" + gparams.startingIndex + "\n"
-                    + "gparams.replan=" + gparams.replan + "\n"
-                    + "gparams.actions.size()=" + gparams.actions.size() + "\n"
-                    + "gparams.actions=" + gparams.actions + "\n"
-                    + "gparams.actions.subList(gparams.startingIndex, gparams.actions.size())=" + gparams.actions.subList(gparams.startingIndex, gparams.actions.size()) + "\n";
-            addMessageCommand(cmds, messageString);
-        }
-        this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
-        checkDbReady();
-        if (localAprsSystem.isRunningCrclProgram()) {
-            throw new IllegalStateException("already running crcl while trying to generate it");
-        }
-
         int blockingCount = localAprsSystem.startBlockingCrclPrograms();
+        List<MiddleCommandType> cmds = new ArrayList<>();
+        final int startingIndex = gparams.startingIndex;
+        Action startingAction = gParamsActions.get(startingIndex);
+        try {
+            aprsSystem.logEvent("CrclGenerator.generate: gparams", gparams);
+            final int gparamsActionsSize = gParamsActions.size();
 
-        ActionCallbackInfo acbi = lastAcbi.get();
-        if (null != acbi && includeEndProgramMarker && includeSkipNotifyMarkers) {
-            int actionIndex = acbi.getActionIndex();
-            if (gparams.startingIndex < actionIndex) {
-                if (gparams.startingIndex != 0 || actionIndex < acbi.getActionsSize() - 2) {
-                    logDebug("Thread.currentThread() = " + Thread.currentThread());
-                    List<Action> actions = acbi.getActions();
-                    boolean actionsChanged = diffActions(gparams.actions, actions);
-                    logDebug("actionsChanged = " + actionsChanged);
-                    Action action = acbi.getAction();
-                    String errString = "generate called with startingIndex=" + gparams.startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + action;
-                    System.err.println(errString);
-                    System.err.println("acbi = " + acbi);
-                    localAprsSystem.setTitleErrorString(errString);
-                    throw new IllegalStateException(errString);
+            if (null != solver && gparams.replan) {
+                return runOptaPlanner(gParamsActions, startingIndex,
+                        gparams.options,
+                        gparams.startSafeAbortRequestCount,
+                        this.physicalItems);
+            } else {
+                String sublistString;
+                if (null != gParamsActions
+                        && !gParamsActions.isEmpty()
+                        && startingIndex < gparamsActionsSize) {
+                    System.out.println("startingIndex = " + startingIndex);
+                    System.out.println("gparamsActionsSize = " + gparamsActionsSize);
+                    final List<Action> subList = gParamsActions.subList(startingIndex, gparamsActionsSize);
+                    sublistString = "gparams.actions.subList(gparams.startingIndex, gparams.actions.size())=" + subList;
+                } else {
+                    sublistString = "";
+                }
+                String messageString = "\n"
+                        + "gparams.startingIndex=" + startingIndex + "\n"
+                        + "gparams.replan=" + gparams.replan + "\n"
+                        + "gparams.actions.size()=" + gparamsActionsSize + "\n"
+                        + "gparams.actions=" + gParamsActions + "\n"
+                        + sublistString
+                        + "\n";
+                addMessageCommand(cmds, messageString);
+            }
+            this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
+            checkDbReady();
+            if (localAprsSystem.isRunningCrclProgram()) {
+                System.err.println("sys.getLastRunningProgramTrueInfo=" + localAprsSystem.getLastRunningProgramTrueInfo());
+                throw new IllegalStateException("already running crcl while trying to generate it");
+            }
+
+            ActionCallbackInfo acbi = lastAcbi.get();
+            if (null != acbi && includeEndProgramMarker && includeSkipNotifyMarkers) {
+                int actionIndex = acbi.getActionIndex();
+                if (startingIndex < actionIndex) {
+                    if (startingIndex != 0 || actionIndex < acbi.getActionsSize() - 2) {
+                        logDebug("Thread.currentThread() = " + Thread.currentThread());
+                        List<Action> actions = acbi.getActions();
+                        boolean actionsChanged = diffActions(gParamsActions, actions);
+                        logDebug("actionsChanged = " + actionsChanged);
+                        Action action = acbi.getAction();
+                        String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + action;
+                        System.err.println(errString);
+                        System.err.println("acbi = " + acbi);
+                        localAprsSystem.setTitleErrorString(errString);
+                        throw new IllegalStateException(errString);
+                    }
                 }
             }
-        }
-        try {
 
             setOptions(gparams.options);
             final int currentCrclNumber = this.crclNumber.incrementAndGet();
 
-            if (null == actionToCrclIndexes || actionToCrclIndexes.length != gparams.actions.size()) {
-                actionToCrclIndexes = new int[gparams.actions.size()];
+            if (null == actionToCrclIndexes || actionToCrclIndexes.length != gparamsActionsSize) {
+                actionToCrclIndexes = new int[gparamsActionsSize];
             }
-            for (int i = gparams.startingIndex; i < actionToCrclIndexes.length; i++) {
+            for (int i = startingIndex; i < actionToCrclIndexes.length; i++) {
                 actionToCrclIndexes[i] = -1;
             }
-            if (null == actionToCrclLabels || actionToCrclLabels.length != gparams.actions.size()) {
-                actionToCrclLabels = new String[gparams.actions.size()];
+            if (null == actionToCrclLabels || actionToCrclLabels.length != gparamsActionsSize) {
+                actionToCrclLabels = new String[gparamsActionsSize];
             }
-            for (int i = gparams.startingIndex; i < actionToCrclLabels.length; i++) {
+            for (int i = startingIndex; i < actionToCrclLabels.length; i++) {
                 actionToCrclLabels[i] = "UNDEFINED";
             }
-            if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != gparams.actions.size()) {
-                actionToCrclTakenPartsNames = new String[gparams.actions.size()];
+            if (null == actionToCrclTakenPartsNames || actionToCrclTakenPartsNames.length != gparamsActionsSize) {
+                actionToCrclTakenPartsNames = new String[gparamsActionsSize];
             }
-            if (gparams.startingIndex == 0) {
+            if (startingIndex == 0) {
                 if (!manualAction) {
                     setLastTakenPart(null);
                 }
@@ -1513,15 +1495,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             addSetUnits(cmds);
 
-            String waitForCompleteVisionUpdatesCommentString = "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")";
+            String waitForCompleteVisionUpdatesCommentString = "generate(start=" + startingIndex + ",crclNumber=" + currentCrclNumber + ")";
             boolean isNewRetArray[] = new boolean[1];
-            updateStalePoseCache(gparams.startingIndex, acbi, waitForCompleteVisionUpdatesCommentString, isNewRetArray);
+            updateStalePoseCache(startingIndex, acbi, waitForCompleteVisionUpdatesCommentString, isNewRetArray, gparams.startSafeAbortRequestCount);
             if (isNewRetArray[0]) {
                 gparams.newItemsReceived = true;
             }
-            takeSnapshots("plan", "generate(start=" + gparams.startingIndex + ",crclNumber=" + currentCrclNumber + ")", null, null);
-            final List<Action> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(gparams.actions));
-            final List<Action> fixedOrigActionsCopy = (gparams.origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(gparams.actions));
+            if (aprsSystem.isEndLogged()) {
+                throw new IllegalStateException("aprsSystem.isEndLogged()");
+            }
+            takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + currentCrclNumber + ")", null, null);
+            final List<Action> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(gParamsActions));
+            final List<Action> fixedOrigActionsCopy = (gparams.origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(gParamsActions));
 
             int skipStartIndex = -1;
             List<String> skippedParts = new ArrayList<>();
@@ -1537,12 +1522,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             checkSettings();
             Action lastAction = null;
             if (null != physicalItems) {
-                takeSimViewSnapshot("generate.startingIndex=" + gparams.startingIndex, physicalItems);
+                takeSimViewSnapshot("generate.startingIndex=" + startingIndex, physicalItems);
             }
-            for (this.setLastActionsIndex(gparams.actions, gparams.startingIndex); getLastIndex() < gparams.actions.size(); incLastActionsIndex()) {
+
+            for (this.setLastActionsIndex(gParamsActions, startingIndex); getLastIndex() < gparamsActionsSize; incLastActionsIndex()) {
 
                 final int idx = getLastIndex();
-                Action action = gparams.actions.get(idx);
+                Action action = gParamsActions.get(idx);
                 if (debug) {
                     logDebug("action[" + idx + "] = " + action);
                 }
@@ -1610,7 +1596,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         if (poseCache.isEmpty()) {
                             logger.log(Level.WARNING, "newItems.isEmpty() on take-part for run " + getRunName());
                         }
-                        takePart(action, cmds, getNextPlacePartAction(idx, gparams.actions));
+                        takePart(action, cmds, getNextPlacePartAction(idx, gParamsActions));
                         break;
 
                     case FAKE_TAKE_PART:
@@ -1622,7 +1608,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         break;
                     case LOOK_FOR_PARTS:
                         lookForParts(action, cmds, (idx < 2),
-                                doInspectKit ? (idx == gparams.actions.size() - 1) : (idx >= gparams.actions.size() - 2)
+                                doInspectKit ? (idx == gparamsActionsSize - 1) : (idx >= gparamsActionsSize - 2),
+                                gparams.startSafeAbortRequestCount
                         );
                         List<MiddleCommandType> ret = endSection(
                                 action,
@@ -1689,7 +1676,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         if (null == lastTakenPart) {
                             System.err.println("newTakePlaceList = " + newTakePlaceList);
-                            throw new IllegalStateException("null == lastTakenPart when PLACE_PART encountered: idx=" + idx + ",gparams.startingIndex=" + gparams.startingIndex + ",lastAction=" + lastAction);
+                            throw new IllegalStateException("null == lastTakenPart when PLACE_PART encountered: idx=" + idx + ",gparams.startingIndex=" + startingIndex + ",lastAction=" + lastAction);
                         }
                         placePart(action, cmds);
                         break;
@@ -1710,12 +1697,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                    }
 //                    break;
                     case CLEAR_KITS_TO_CHECK:
-                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex=" + gparams.startingIndex + ",idx=" + idx, action);
+                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
                         clearKitsToCheck(action, cmds, gparams);
                         break;
 
                     case ADD_KIT_TO_CHECK:
-                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex=" + gparams.startingIndex + ",idx=" + idx, action);
+                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
                         addKitToCheck(action, cmds, gparams);
                         aprsSystem.logEvent("ADD_KIT_TO_CHECK kitsToCheck.size()=", kitsToCheck.size());
                         break;
@@ -1725,10 +1712,49 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         break;
 
                     case CHECK_KITS:
-                        boolean correctionDone = checkKits(action, cmds, idx);
-                        if (correctionDone) {
-                            addNotifyMarker(cmds, "checkKitstNeedCorrection", idx - 1, action, fixedActionsCopy, fixedOrigActionsCopy);
-                            return cmds;
+                        boolean lookForPartsNeeded = true;
+                        int lastLookForIndex = startingIndex > 0 ? startingIndex - 1 : 0;
+                        if (acbi.getAction().getType() == LOOK_FOR_PARTS) {
+                            lookForPartsNeeded = false;
+                        }
+                        for (int i = startingIndex; i < idx; i++) {
+                            if (gParamsActions.get(i).getType() == LOOK_FOR_PARTS) {
+                                lastLookForIndex = i;
+                                lookForPartsNeeded = false;
+                            }
+                        }
+                        final int finalLookForIndex = lastLookForIndex;
+                        if (lookForPartsNeeded) {
+                            System.err.println("gParamsActions = " + gParamsActions);
+                            System.err.println("gParamsActions.get(lastCheckKitsLookForIndex) = " + gParamsActions.get(lastCheckKitsLookForIndex));
+                            System.err.println("lastCheckKitsLookForIndex = " + lastCheckKitsLookForIndex);
+                            System.err.println("lastCheckKitsLookForIndexAction = " + lastCheckKitsLookForIndexAction);
+                            System.err.println("gparams = " + gparams);
+                            System.err.println("acbi = " + acbi);
+                            System.err.println("startingIndex=" + startingIndex);
+                            System.err.println("startingAction=" + startingAction);
+                            throw new RuntimeException("lookForPartsNeeded gparams=" + gparams.toString() + ", acbi=" + acbi);
+//                            lookForParts(action, cmds, false, false, gparams.startSafeAbortRequestCount);
+//                            addMarkerCommand(cmds, "checkKitsAfterAddedLookForParts", (CrclCommandWrapper wrapper2) -> {
+//                                try {
+//                                    if (gparams.startSafeAbortRequestCount != aprsSystem.getSafeAbortRequestCount()) {
+//                                        takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
+//                                        aprsSystem.logEvent("checkKits:aborting", action, idx, gparams.startSafeAbortRequestCount, aprsSystem.getSafeAbortRequestCount());
+//                                        return;
+//                                    }
+//                                    final CRCLProgramType curProgram = wrapper2.getCurProgram();
+//                                    List<MiddleCommandType> l2 = curProgram.getMiddleCommand();
+//                                    takeSimViewSnapshot("corrective recursive checkKits", null);
+//                                    checkKits(action, l2, idx, finalLookForIndex, gparams);
+//                                } catch (Exception ex) {
+//                                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
+//                                    if (ex instanceof RuntimeException) {
+//                                        throw (RuntimeException) ex;
+//                                    } else {
+//                                        throw new RuntimeException(ex);
+//                                    }
+//                                }
+//                            });
 //                            List<MiddleCommandType> ret2 = endSection(
 //                                    action,
 //                                    idx,
@@ -1742,6 +1768,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                            if (null != ret2) {
 //                                return ret2;
 //                            }
+                        } else {
+                            lastCheckKitsLookForIndexAction = gParamsActions.get(finalLookForIndex);
+                            boolean correctionDone = checkKits(action, cmds, idx, finalLookForIndex, gparams);
+                            kitsToCheck.clear();
+                            if (correctionDone) {
+                                addNotifyMarker(cmds, "checkKitsNeedCorrection", idx, action, fixedActionsCopy, fixedOrigActionsCopy);
+                                lookForParts(lastCheckKitsLookForIndexAction, cmds, false,
+                                        false,
+                                        gparams.startSafeAbortRequestCount
+                                );
+                                addNotifyMarker(cmds, "checkKitsNeedCorrection.repeatLookForParts", finalLookForIndex, lastCheckKitsLookForIndexAction, fixedActionsCopy, fixedOrigActionsCopy);
+                                setLastActionsIndex(gParamsActions, finalLookForIndex);
+                                return cmds;
+                            }
                         }
                         break;
 
@@ -1761,9 +1801,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             if (localAprsSystem.isRunningCrclProgram()) {
+                System.err.println("sys.getLastRunningProgramTrueInfo=" + localAprsSystem.getLastRunningProgramTrueInfo());
                 throw new IllegalStateException("already running crcl while trying to generate it");
             }
         } catch (Exception ex) {
+
+            aprsSystem.logEvent("ex", ex);
+            System.err.println("gparams=" + gparams);
+            System.err.println("startingIndex=" + startingIndex);
+            System.err.println("startingAction=" + startingAction);
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
             List<PhysicalItem> physicalItemsLocal = physicalItems;
@@ -1828,7 +1874,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             if (!gparams.newItemsReceived && visionUpdateCount.get() == gparams.startingVisionUpdateCount) {
-                checkNewItems(waitForCompleteVisionUpdatesCommentString);
+                checkNewItems(waitForCompleteVisionUpdatesCommentString, gparams.startSafeAbortRequestCount);
             }
             logger.log(Level.FINE, "Processed wrapper only commands without sending to robot.");
             if (null != gparams.runOptoToGenerateReturn) {
@@ -1890,7 +1936,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void addNotifyMarker(List<MiddleCommandType> cmds, String end_action_string, final int idx, Action action, final List<Action> fixedActionsCopy, @Nullable List<Action> fixedOrigActionsCopy) {
         addMarkerCommand(cmds, end_action_string,
                 (CrclCommandWrapper wrapper) -> {
-                    notifyActionCompletedListeners(idx, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
+                    notifyActionCompletedListeners(idx, end_action_string, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                 });
     }
 
@@ -1920,7 +1966,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             int startingIndex,
             @Nullable ActionCallbackInfo acbi,
             String label,
-            boolean isNewRetArray[])
+            boolean isNewRetArray[],
+            int startAbortCount)
             throws Exception {
 
         if (startingIndex > 0 && null != acbi) {
@@ -1930,7 +1977,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                     case LOOK_FOR_PARTS:
                         if (null == physicalItems) {
-                            checkNewItems(label);
+                            checkNewItems(label, startAbortCount);
                             if (null != isNewRetArray && isNewRetArray.length == 1) {
                                 isNewRetArray[0] = true;
                             }
@@ -1950,9 +1997,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 String fullName = item.getFullName();
                 if (null != fullName) {
                     poseCache.put(fullName, item.getPose());
+                    itemCache.put(fullName, item);
                 }
             }
         }
+    }
+
+    private PoseType getPose(String fullName, List<PhysicalItem> localPhysicalItems) {
+        synchronized (poseCache) {
+            for (PhysicalItem item : localPhysicalItems) {
+                String itemFullName = item.getFullName();
+                if (null != itemFullName && fullName.equals(itemFullName)) {
+                    return item.getPose();
+                }
+            }
+        }
+        return null;
     }
 
     @Nullable
@@ -1960,9 +2020,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return physicalItems;
     }
 
-    public void checkNewItems(String label) throws InterruptedException, ExecutionException {
+    public List<PhysicalItem> checkNewItems(String label, int startAbortCount) throws InterruptedException, ExecutionException {
         if (null == externalPoseProvider) {
-            waitForCompleteVisionUpdates(label, lastRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT);
+            return waitForCompleteVisionUpdates(label, lastRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT, startAbortCount);
         } else {
             List<PhysicalItem> newPhysicalItems = externalPoseProvider.getNewPhysicalItems();
             this.physicalItems = newPhysicalItems;
@@ -1972,6 +2032,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
             loadNewItemsIntoPoseCache(physicalItems);
+            return newPhysicalItems;
         }
     }
     public static final long WAIT_FOR_VISION_TIMEOUT
@@ -2089,7 +2150,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         ActionCallbackInfo acbi = lastAcbi.get();
         String waitForCompleteVisionUpdatesCommentString = "runOptaPlanner(start=" + startingIndex + ",crclNumber=" + crclNumber + ")";
         boolean isNewRetArray[] = new boolean[1];
-        updateStalePoseCache(startingIndex, acbi, waitForCompleteVisionUpdatesCommentString, isNewRetArray);
+        updateStalePoseCache(startingIndex, acbi, waitForCompleteVisionUpdatesCommentString, isNewRetArray, gparams.startSafeAbortRequestCount);
         if (isNewRetArray[0]) {
             gparams.newItemsReceived = true;
         }
@@ -2468,19 +2529,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @Nullable
     private volatile GenerateParams lastClearKitsToCheckGenerateParams = null;
     private volatile int lastClearKitsToCheckGenerateParamsIndex = -1;
+    private final AtomicInteger clearKitsToCheckCount = new AtomicInteger();
 
     private void clearKitsToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams)
             throws InterruptedException, IOException, ExecutionException {
 
         if (!kitsToCheck.isEmpty()) {
-            if (!recheckKitsOnly()) {
+            if (null == lastKitsToCheckCopy) {
+                lastKitsToCheckCopy = new ArrayList<>(kitsToCheck);
+            }
+            if (!recheckKitsOnly(gparams)) {
                 System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
                 System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
                 System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
                 System.err.println("lastAddKitToCheckGenerateIndex = " + lastAddKitToCheckGenerateIndex);
                 System.err.println("kitsToCheck = " + kitsToCheck);
                 System.err.println("gparams = " + gparams);
-                System.out.println("getLastIndex() = " + getLastIndex());
+                System.err.println("getLastIndex() = " + getLastIndex());
                 lastClearKitsToCheckGenerateParams = gparams;
                 lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
                 throw new IllegalStateException("clearing kits to check that do not recheck");
@@ -2488,15 +2553,21 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             lastClearKitsToCheckGenerateParams = gparams;
             lastClearKitsToCheckGenerateParamsIndex = getLastIndex();
             kitsToCheck.clear();
+            clearKitsToCheckCount.incrementAndGet();
+            clearKitsToCheckExternalGparams = gparams;
+            clearKitsToCheckExternalTrace = Thread.currentThread().getStackTrace();
         }
     }
 
-    public void clearKitsToCheckExternal(boolean withRecheck)
+    private volatile GenerateParams clearKitsToCheckExternalGparams = null;
+    private volatile StackTraceElement clearKitsToCheckExternalTrace[] = null;
+
+    public void clearKitsToCheckExternal(boolean withRecheck, GenerateParams gparams)
             throws InterruptedException, IOException, ExecutionException {
 
         if (!kitsToCheck.isEmpty()) {
             if (withRecheck) {
-                if (!recheckKitsOnly(false)) {
+                if (!recheckKitsOnly(false, gparams)) {
                     System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
                     System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
                     System.err.println("lastAddKitToCheckGenerateParams = " + lastAddKitToCheckGenerateParams);
@@ -2506,6 +2577,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             kitsToCheck.clear();
+            clearKitsToCheckCount.incrementAndGet();
+            clearKitsToCheckExternalGparams = gparams;
+            clearKitsToCheckExternalTrace = Thread.currentThread().getStackTrace();
         }
     }
 
@@ -2590,9 +2664,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
-    
+
     @SuppressWarnings("nullness")
-    @Nullable 
+    @Nullable
     private PhysicalItem getItemByName(List<PhysicalItem> localPhysicalItems, String name) {
         return localPhysicalItems
                 .stream()
@@ -2601,7 +2675,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 .findFirst()
                 .orElse(null);
     }
-    
+
     @SuppressWarnings("nullness")
     private List<PhysicalItem> getKitInstanceItems(List<PhysicalItem> localPhysicalItems, String kitName) {
         return getKitInstanceNames(kitName)
@@ -2671,112 +2745,142 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private static final boolean IGNORE_KIT_CHECK_FAILURES = Boolean.getBoolean("aprs.ignoreKitCheckFailures");
 
-    public boolean recheckKitsOnly() throws InterruptedException, ExecutionException, IOException {
-        boolean check1 = recheckKitsOnly(true);
+    public boolean recheckKitsOnly(GenerateParams gparams) throws InterruptedException, ExecutionException, IOException {
+        boolean check1 = recheckKitsOnly(true, gparams);
         if (check1) {
             return true;
         }
-        boolean check2 = recheckKitsOnly(true);
+        boolean check2 = recheckKitsOnly(true, gparams);
         return check2;
     }
 
-    public boolean recheckKitsOnly(boolean getNewItems) throws InterruptedException, ExecutionException, IOException {
-        if (IGNORE_KIT_CHECK_FAILURES) {
-            return true;
-        }
-        if (getNewItems) {
-            checkNewItems("recheckKitsOnly");
-        }
-        List<PhysicalItem> physicalItemsLocal = physicalItems;
-        if (null == physicalItemsLocal) {
-            throw new NullPointerException("physicalItems");
-        }
-        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
-        Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
+    public boolean recheckKitsOnly(boolean getNewItems, GenerateParams gparams) {
+        try {
+            if (IGNORE_KIT_CHECK_FAILURES) {
+                return true;
+            }
+            if (getNewItems) {
+                checkNewItems("recheckKitsOnly", gparams.startSafeAbortRequestCount);
+            }
+            List<PhysicalItem> physicalItemsLocal = physicalItems;
+            if (null == physicalItemsLocal) {
+                throw new NullPointerException("physicalItems");
+            }
+            List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
+            Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
-        Set<String> matchedKitInstanceNames = new HashSet<>();
-        List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
-        boolean empty = kitsToFix.isEmpty();
-        if (!empty) {
-            saveComplexValueList("kitsToFix", "kitsToFix", kitsToFix, kitToCheckPrinter);
-            takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItemsLocal);
-            takeSimViewSnapshot("recheckKitsOnly: parts", parts);
-            logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
-            logError("recheckKitsOnly: matchedKitInstanceNames = " + matchedKitInstanceNames);
-            logError("recheckKitsOnly: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
-            for (KitToCheck kit : kitsToFix) {
-                Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
-                for (Entry<String, KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
-                    KitToCheckInstanceInfo info = entry.getValue();
-                    takeSimViewSnapshot("recheckKitsOnly", info.pose, info.instanceName);
-                    for (KitToCheckFailedItemInfo failedItemInfo : info.failedItems) {
-                        logError("recheckKitsOnly: failedItemInfo = " + failedItemInfo);
-                        logError("recheckKitsOnly: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
-                        logError("recheckKitsOnly: failedItemInfo.failedItemSkuName = " + failedItemInfo.failedItemSkuName);
-                        takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedAbsSlot, "failedAbsSlot");
-                        if (null != failedItemInfo.failedClosestItem) {
-                            takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedClosestItem, "failedClosestItem");
+            Set<String> matchedKitInstanceNames = new HashSet<>();
+            List<KitToCheck> kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts, physicalItemsLocal, gparams);
+            boolean empty = kitsToFix.isEmpty();
+            if (!empty) {
+                saveComplexValueList("kitsToFix", "kitsToFix", kitsToFix, kitToCheckPrinter);
+                takeSimViewSnapshot("recheckKitsOnly: physicalItems", physicalItemsLocal);
+                takeSimViewSnapshot("recheckKitsOnly: parts", parts);
+                logError("recheckKitsOnly: kitsToFix = " + kitsToFix);
+                logError("recheckKitsOnly: matchedKitInstanceNames = " + matchedKitInstanceNames);
+                logError("recheckKitsOnly: kitInstanceAbsSlotMap = " + kitInstanceAbsSlotMap);
+                for (KitToCheck kit : kitsToFix) {
+                    Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = kit.instanceInfoMap;
+                    for (Entry<String, KitToCheckInstanceInfo> entry : kitInstanceInfoMap.entrySet()) {
+                        KitToCheckInstanceInfo info = entry.getValue();
+                        takeSimViewSnapshot("recheckKitsOnly", info.pose, info.instanceName);
+                        for (KitToCheckFailedItemInfo failedItemInfo : info.failedItems) {
+                            logError("recheckKitsOnly: failedItemInfo = " + failedItemInfo);
+                            logError("recheckKitsOnly: failedItemInfo.failedAbsSlotPrpName = " + failedItemInfo.failedAbsSlotPrpName);
+                            logError("recheckKitsOnly: failedItemInfo.failedItemSkuName = " + failedItemInfo.itemHaveName);
+                            takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedAbsSlot, "failedAbsSlot");
+                            if (null != failedItemInfo.failedClosestItem) {
+                                takeSimViewSnapshot("recheckKitsOnly", failedItemInfo.failedClosestItem, "failedClosestItem");
+                            }
                         }
+                        logError("recheckKitsOnly: info.failedSlots = " + info.failedSlots);
                     }
-                    logError("recheckKitsOnly: info.failedSlots = " + info.failedSlots);
+                }
+                kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts, physicalItemsLocal, gparams);
+                return kitsToFix.isEmpty();
+            }
+            return empty;
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+    private volatile int lastCheckKitsLookForIndex = -1;
+    private volatile Action lastCheckKitsLookForIndexAction = null;
+
+    private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex, int lastLookForIndex, GenerateParams gparams) {
+
+        lastCheckKitsLookForIndex = lastLookForIndex;
+        final Thread curThread = Thread.currentThread();
+        int startingClearKitsToCheckCount = clearKitsToCheckCount.get();
+        if (null != genThread
+                && genThread != curThread) {
+            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+        }
+        if (!aprsSystem.isDoingActions()) {
+            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+            throw new IllegalStateException("!aprsSystem.isDoingActions()");
+        }
+        List<PhysicalItem> origPhysicalItemsLocal = physicalItems;
+
+        try {
+
+            if (gparams.startSafeAbortRequestCount != aprsSystem.getSafeAbortRequestCount()) {
+                takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystem.getSafeAbortRequestCount(), origPhysicalItemsLocal);
+                aprsSystem.logEvent("checkKits:aborting", action, origIndex, lastLookForIndex, gparams.startSafeAbortRequestCount, aprsSystem.getSafeAbortRequestCount());
+                setLastProgramAborted(true);
+                addMoveToLookForPosition(cmds, false);
+                return true;
+            }
+            checkSettings();
+            if (null == aprsSystem) {
+                throw new NullPointerException("aprsSystem");
+            }
+            boolean correctionMode = aprsSystem.isCorrectionMode();
+            if (IGNORE_KIT_CHECK_FAILURES) {
+                if (!correctionMode && pauseInsteadOfRecover) {
+                    return false;
                 }
             }
-            kitsToFix = scanKitsToCheck(false, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
-            return kitsToFix.isEmpty();
-        }
-        return empty;
-    }
-
-    private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex)
-            throws IllegalStateException, SQLException, InterruptedException, ExecutionException, CRCLException, PmException {
-        checkSettings();
-        if (null == aprsSystem) {
-            throw new NullPointerException("aprsSystem");
-        }
-        boolean correctionMode = aprsSystem.isCorrectionMode();
-        if (IGNORE_KIT_CHECK_FAILURES) {
-            if (!correctionMode && pauseInsteadOfRecover) {
-                return false;
+            int prePubs = aprsSystem.getSimLineCount();
+            int preVis = aprsSystem.getVisionLineCount();
+            long preTimeDiff = aprsSystem.getSimVisionTimeDiff();
+            long preCheckKitsTime = System.currentTimeMillis();
+            List<PhysicalItem> physicalItemsLocal
+                    = checkNewItems("checkKits", gparams.startSafeAbortRequestCount);
+            if (null == physicalItemsLocal) {
+                throw new NullPointerException("physicalItemsLocal");
             }
-        }
-        int prePubs = aprsSystem.getSimLineCount();
-        int preVis = aprsSystem.getVisionLineCount();
-        long preTimeDiff = aprsSystem.getSimVisionTimeDiff();
-        long preCheckKitsTime = System.currentTimeMillis();
-        checkNewItems("checkKits");
-        long postCheckKitsTime = System.currentTimeMillis();
-        long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
-        int postPubs = aprsSystem.getSimLineCount();
-        int postVis = aprsSystem.getVisionLineCount();
-        long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
-        List<PhysicalItem> physicalItemsLocal = physicalItems;
-        if (null == physicalItemsLocal) {
-            throw new NullPointerException("physicalItemsLocal");
-        }
-        takeSnapshots("plan", "checkKits-", null, "");
+            long postCheckKitsTime = System.currentTimeMillis();
+            long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
+            int postPubs = aprsSystem.getSimLineCount();
+            int postVis = aprsSystem.getVisionLineCount();
+            long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
 
-        List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
-        synchronized (this) {
-            List<String> newItemsFullNames = physicalItemsLocal
-                    .stream()
-                    .map(PhysicalItem::getFullName)
-                    .collect(Collectors.toList());
+            takeSnapshots("plan", "checkKits-", null, "");
 
-            List<String> partsFullNames
-                    = parts
-                            .stream()
-                            .map(PhysicalItem::getFullName)
-                            .collect(Collectors.toList());
-            List<String> partsInPartsTrayFullNames
-                    = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
+            List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
+            synchronized (this) {
+                List<String> newItemsFullNames = physicalItemsLocal
+                        .stream()
+                        .map(PhysicalItem::getFullName)
+                        .collect(Collectors.toList());
 
-            logDebug("checkKits: parts = " + parts);
+                List<String> partsFullNames
+                        = parts
+                                .stream()
+                                .map(PhysicalItem::getFullName)
+                                .collect(Collectors.toList());
+                List<String> partsInPartsTrayFullNames
+                        = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
-            try {
+                logDebug("checkKits: parts = " + parts);
+
                 Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
                 Set<String> matchedKitInstanceNames = new HashSet<>();
-                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts,physicalItemsLocal);
+                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts, physicalItemsLocal, gparams);
 
                 if (optoThread == null) {
                     optoThread = Thread.currentThread();
@@ -2964,7 +3068,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                             correctiveActions,
                                             0, // starting index
                                             physicalItemsLocal);
-                            lastIndex.compareAndSet(origIndex, origIndex - 1);
+                            lastIndex.compareAndSet(origIndex, lastLookForIndex);
                             boolean placedPart = false;
                             CORRECT_ACTIONS_LOOP:
                             for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
@@ -2989,61 +3093,37 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     case PLACE_PART:
                                         placedPart = true;
                                         String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                        placePartBySlotName(slotName, cmds, correctiveAction, action, origIndex - 1);  //ByName(slotName, null, cmds);
+                                        placePartBySlotName(slotName, cmds, correctiveAction, action, lastLookForIndex);  //ByName(slotName, null, cmds);
                                         break;
                                 }
                             }
                             if (placedPart) {
-                                takeSimViewSnapshot("correctivedItems", correctivedItems);
-                                takeSimViewSnapshot("correctivedItems.physicalItemsLocal", physicalItemsLocal);
-                                addMarkerCommand(cmds, "checkKitsCorrectionEnd", (CrclCommandWrapper wrapper) -> {
-                                    try {
-                                        List<MiddleCommandType> l = wrapper.getCurProgram().getMiddleCommand();
-                                        takeSimViewSnapshot("checkKitsBeforeCorrectiveLookForParts", null);
-                                        lookForParts(action, l, false, false);
-                                        addMarkerCommand(l, "checkKitsCorrectionEndAfterLookForParts", (CrclCommandWrapper wrapper2) -> {
-                                            try {
-                                                List<MiddleCommandType> l2 = wrapper2.getCurProgram().getMiddleCommand();
-                                                takeSimViewSnapshot("corrective recursive checkKits", null);
-                                                checkKits(action, l2, origIndex);
-                                            } catch (Exception ex) {
-                                                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
-                                                if (ex instanceof RuntimeException) {
-                                                    throw (RuntimeException) ex;
-                                                } else {
-                                                    throw new RuntimeException(ex);
-                                                }
-                                            }
-                                        });
-                                    } catch (Exception ex2) {
-                                        Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex2);
-                                        if (ex2 instanceof RuntimeException) {
-                                            throw (RuntimeException) ex2;
-                                        } else {
-                                            throw new RuntimeException(ex2);
-                                        }
-                                    }
-                                });
+                                takeSimViewSnapshot("checkKits:correctivedItems", correctivedItems);
+                                takeSimViewSnapshot("checkKits:correctivedItems.physicalItemsLocal", physicalItemsLocal);
                                 return true;
                             } else {
-                                logError("correctiveActions.isEmpty(): kitsToFix = " + kitsToFix);
-                                lastIndex.set(origIndex);
+                                System.err.println("correctiveActions = " + correctiveActions);
+                                System.err.println("optimizedCorrectiveActions = " + optimizedCorrectiveActions);
+                                logError("checkKits : !placedPart  kitsToFix = " + kitsToFix);
+                                lastIndex.set(lastLookForIndex);
                                 String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
                                 throw new IllegalStateException(errMsg);
                             }
                         }
                     }
                 }
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, "", ex);
-                throw new RuntimeException(ex);
+
             }
+            try {
+                takeSimViewSnapshot("checkKitsReturningFalse" + origIndex, physicalItemsLocal);
+            } catch (Exception ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
-        try {
-            takeSimViewSnapshot("checkKitsReturningFalse" + origIndex, physicalItemsLocal);
-        } catch (IOException ex) {
-            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
-        }
+
         return false;
     }
 
@@ -3086,7 +3166,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     if (null != failedClosestItem) {
                         takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedClosestItem, failedClosestItem.getFullName());
                     }
-                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.failedItemSkuName + " in " + failedItemInfo.failedAbsSlotPrpName;
+                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.itemHaveName + " in " + failedItemInfo.failedAbsSlotPrpName;
                     errMsgSb.append(fiString);
                     if (i < info.failedItems.size() - 1) {
                         errMsgSb.append(", \n");
@@ -3135,15 +3215,36 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Map<String, List<Slot>> kitInstanceAbsSlotMap,
             Set<String> matchedKitInstanceNames,
             List<PhysicalItem> parts,
-            List<PhysicalItem> physicalItemsLocal) throws IOException {
+            List<PhysicalItem> physicalItemsLocal,
+            GenerateParams gparams) throws IOException {
+
+        final Thread curThread = Thread.currentThread();
+        if (null != genThread
+                && genThread != curThread) {
+            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+        }
+        if (!aprsSystem.isDoingActions()) {
+            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+            throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+        }
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
         checkKitsToCheckInstanceCounts(physicalItemsLocal);
         if (kitsToFix.isEmpty()) {
             if (!newCheck && null != lastKitsToCheckCopy && !lastKitsToCheckCopy.isEmpty()) {
                 kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
             } else {
-                takeSimViewSnapshot("kitsToCheck is empty:physicalItemsLocal", physicalItemsLocal);
-                throw new IllegalStateException("kitsToCheck is empty");
+                Thread.dumpStack();
+                System.err.println("getPrivateStartActionsTraceString() = " + aprsSystem.getPrivateStartActionsTraceString());
+                System.err.println("getPrivateStartActionsCommentString() = " + aprsSystem.getPrivateStartActionsCommentString());
+                System.err.println("getPrivateContinueActionsTraceString() = " + aprsSystem.getPrivateContinueActionsTraceString());
+                System.err.println("getPrivateContinueActionsCommentString() = " + aprsSystem.getPrivateContinueActionsCommentString());
+                System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
+                System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
+                System.err.println("clearKitsToCheckExternalGparams = " + clearKitsToCheckExternalGparams);
+                System.err.println("clearKitsToCheckExternalTrace = " + Utils.traceToString(clearKitsToCheckExternalTrace));
+                takeSimViewSnapshot("kitsToFix is empty:physicalItemsLocal", physicalItemsLocal);
+                throw new IllegalStateException("kitsToCheck is empty : gparams=" + gparams);
             }
         }
         List<KitToCheck> kitsToCheckCopy;
@@ -3156,11 +3257,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             takeSimViewSnapshot("no lastKitsToCheckCopy to reuse:physicalItemsLocal", physicalItemsLocal);
             throw new IllegalStateException("no lastKitsToCheckCopy to reuse");
         }
-        for (KitToCheck kit : kitsToCheckCopy) {
+
+        List<PhysicalItem> allItemsToFix = new ArrayList<>();
+        for (int kitsToCheckIndex = 0; kitsToCheckIndex < kitsToCheckCopy.size(); kitsToCheckIndex++) {
+            KitToCheck kit = kitsToCheckCopy.get(kitsToCheckIndex);
             kit.kitInstanceNames = getKitInstanceNames(kit.name);
             Map<String, KitToCheckInstanceInfo> kitInstanceInfoMap = new HashMap<>();
+            List<PhysicalItem> kitItemsToFix = new ArrayList<>();
             for (String kitInstanceName : kit.kitInstanceNames) {
-                PoseType pose = getPose(kitInstanceName);
+                PoseType pose = getPose(kitInstanceName, physicalItemsLocal);
                 if (pose == null) {
                     continue;
                 }
@@ -3175,9 +3280,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     continue;
                 }
                 if (snapshotsEnabled()) {
-                    takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
+                    takeSimViewSnapshot("absSlots_" + kitInstanceName, absSlots);
                 }
                 boolean allSlotsCorrect = true;
+                List<PhysicalItem> itemsToFix = new ArrayList<>();
                 for (Slot absSlot : absSlots) {
                     String absSlotPrpName = absSlot.getPrpName();
                     PhysicalItem closestItem = parts.stream()
@@ -3189,22 +3295,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     }
                     info.closestItemMap.put(absSlotPrpName, closestItem);
                     info.closestItemNameMap.put(absSlotPrpName, closestItem.getFullName());
-                    String itemSkuName = "empty";
+                    String itemHaveName = "empty";
                     double closestItemDist = closestItem.distFromXY(absSlot);
                     if (closestItemDist < absSlot.getDiameter() / 2.0) {
-                        itemSkuName = closestItem.origName;
+                        itemHaveName = closestItem.origName;
                     }
-                    info.itemSkuMap.put(absSlotPrpName, itemSkuName);
-                    if (!Objects.equals(kit.slotMap.get(absSlotPrpName), itemSkuName)) {
+                    info.itemSkuMap.put(absSlotPrpName, itemHaveName);
+                    final String itemNeededName = kit.slotMap.get(absSlotPrpName);
+
+                    if (!Objects.equals(itemNeededName, itemHaveName)) {
                         KitToCheckFailedItemInfo failedItemInfo
                                 = new KitToCheckFailedItemInfo(
                                         absSlotPrpName,
-                                        itemSkuName,
+                                        itemHaveName,
+                                        itemNeededName,
                                         closestItem,
                                         absSlot,
                                         closestItemDist);
                         info.failedItems.add(failedItemInfo);
                         info.failedSlots++;
+                        if (itemNeededName.equals("empty")) {
+                            itemsToFix.add(closestItem);
+                        }
+                        itemsToFix.add(absSlot);
                         allSlotsCorrect = false;
                     }
                 }
@@ -3212,10 +3325,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     kitsToFix.remove(kit);
                     matchedKitInstanceNames.add(kitInstanceName);
                     break;
+                } else {
+                    kitItemsToFix.addAll(itemsToFix);
+                    takeSimViewSnapshot("itemsToFix:" + kitsToCheckIndex + ":" + kitInstanceName, itemsToFix);
                 }
             }
             if (!kitInstanceInfoMap.isEmpty()) {
                 kit.instanceInfoMap = kitInstanceInfoMap;
+                allItemsToFix.addAll(kitItemsToFix);
             } else {
                 kitsToFix.remove(kit);
             }
@@ -3223,6 +3340,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
                 logDebug("kitsToFix = " + kitsToFix);
             }
+        }
+        if (!allItemsToFix.isEmpty()) {
+            takeSimViewSnapshot("scanKitsToCheck.allItemsToFix", allItemsToFix);
+            takeSimViewSnapshot("scanKitsToCheck.physicalItemsLocal", physicalItemsLocal);
+            takeSimViewSnapshot("scanKitsToCheck.itemCache", getItemCache().values());
         }
         return kitsToFix;
     }
@@ -3233,7 +3355,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         ConcurrentHashMap<String, List<PhysicalItem>> kitNameItemListMap = new ConcurrentHashMap<>();
         for (KitToCheck kit : kitsToCheck) {
             kitNameCountMap.compute(kit.name, (String name, Integer v) -> ((v != null) ? v + 1 : 1));
-            kitNameItemListMap.compute(kit.name, (String name, List<PhysicalItem> v) -> ((v != null) ? v : getKitInstanceItems(physicalItemsLocal,name)));
+            kitNameItemListMap.compute(kit.name, (String name, List<PhysicalItem> v) -> ((v != null) ? v : getKitInstanceItems(physicalItemsLocal, name)));
         }
         for (Entry<String, Integer> entry : kitNameCountMap.entrySet()) {
             List<PhysicalItem> items = kitNameItemListMap.get(entry.getKey());
@@ -3241,7 +3363,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ";
                 try {
-                    takeSimViewSnapshot(errmsg+"physicalItemsLocal", physicalItemsLocal);
+                    takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
                 } catch (IOException ex) {
                     Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -3253,7 +3375,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.out.println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + items.size();
                 try {
-                    takeSimViewSnapshot(errmsg+"physicalItemsLocal", physicalItemsLocal);
+                    takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
                 } catch (IOException ex) {
                     Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -4879,9 +5001,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (af.isObjectViewSimulated()) {
                 double distToPart = af.getClosestRobotPartDistance();
                 if (distToPart < dropOffMin) {
+                    PhysicalItem closestPart = af.getClosestRobotPart();
                     af.takeSnapshots(imgLabel);
                     String errString
-                            = "Can't take part when distance to another part of " + distToPart + "  less than  " + dropOffMin;
+                            = "Can't drop off part " + lastTakenPart + " when distance to another part (" + (closestPart != null ? closestPart.getFullName() : null) + ") of " + distToPart + "  less than  " + dropOffMin;
                     double recheckDistance = af.getClosestRobotPartDistance();
                     logDebug("recheckDistance = " + recheckDistance);
                     setTitleErrorString(errString);
@@ -5964,6 +6087,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         clearPoseCacheTrace = clearPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
             poseCache.clear();
+            itemCache.clear();
         }
     }
 
@@ -5975,13 +6099,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         putPoseCacheThread = Thread.currentThread();
         putPoseCacheTrace = putPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
-            poseCache.put(name, CRCLPosemath.copy(pose));
+            PoseType poseCopy = CRCLPosemath.copy(pose);
+            poseCache.put(name, poseCopy);
+            PhysicalItem itemCopy = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, poseCopy, 0);
+            itemCache.put(name, itemCopy);
         }
     }
 
     public Map<String, PoseType> getPoseCache() {
         synchronized (poseCache) {
             return Collections.unmodifiableMap(poseCache);
+        }
+    }
+
+    public Map<String, PhysicalItem> getItemCache() {
+        synchronized (itemCache) {
+            return Collections.unmodifiableMap(new HashMap<>(itemCache));
         }
     }
 
@@ -6059,7 +6192,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void lookForParts(Action action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction) throws IllegalStateException {
+    private void lookForParts(Action action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction, int startAbortCount) throws IllegalStateException {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         lastTestApproachPose = null;
@@ -6118,8 +6251,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == externalPoseProvider) {
             addMarkerCommand(out, "lookForParts.waitForCompleteVisionUpdates", x -> {
                 try {
-                    waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT);
-                } catch (InterruptedException | ExecutionException ex) {
+                    waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT, startAbortCount);
+                } catch (Exception ex) {
                     logger.log(Level.SEVERE, "", ex);
                     throw new RuntimeException(ex);
                 }
@@ -6499,97 +6632,153 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile List<PhysicalItem> physicalItems = null;
 
     @SuppressWarnings("SameParameterValue")
-    private void waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis)
-            throws InterruptedException, ExecutionException {
+    private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis, int startAbortCount) {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
-        String runName = getRunName();
-        visionUpdateCount.incrementAndGet();
+        final Thread curThread = Thread.currentThread();
+        if (null != genThread
+                && genThread != curThread) {
+            logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+            throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+        }
+        if (!aprsSystem.isDoingActions()) {
+            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+            throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+        }
+        try {
+            if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
+                takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
+                aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
+                setLastProgramAborted(true);
+                return null;
+            }
+            String runName = getRunName();
+            visionUpdateCount.incrementAndGet();
 
-        XFuture<List<PhysicalItem>> xfl = aprsSystem.getNewSingleVisionToDbUpdate();
-        int startSimViewRefreshCount = aprsSystem.getSimViewRefreshCount();
-        int startSimViewPublishCount = aprsSystem.getSimViewPublishCount();
-        int startVisLineCount = aprsSystem.getVisionLineCount();
-        aprsSystem.refreshSimView();
-        long t0 = System.currentTimeMillis();
-        int waitCycle = 0;
-        long last_t1 = t0;
+            XFuture<List<PhysicalItem>> xfl = aprsSystem.getNewSingleVisionToDbUpdate();
+            int startSimViewRefreshCount = aprsSystem.getSimViewRefreshCount();
+            int startSimViewPublishCount = aprsSystem.getSimViewPublishCount();
+            int startVisLineCount = aprsSystem.getVisionLineCount();
+            aprsSystem.refreshSimView();
+            long t0 = System.currentTimeMillis();
+            int waitCycle = 0;
+            long last_t1 = t0;
 
-        int startVisClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
-        int startVisClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
-        int startVisClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
-        int startVisClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
-        int startVisClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
-        int startVisClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
+            int startVisClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
+            int startVisClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
+            int startVisClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
+            int startVisClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+            int startVisClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
+            int startVisClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
 
-        while (!xfl.isDone()) {
-            waitCycle++;
-            long t1 = System.currentTimeMillis();
-            if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
-                System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
-                System.err.println("runName=" + getRunName());
-                long updateTime = aprsSystem.getLastSingleVisionToDbUpdateTime();
-                long timeSinceUpdate = t1 - updateTime;
-                System.err.println("timeSinceUpdate = " + timeSinceUpdate);
-                long notifyTime = aprsSystem.getSingleVisionToDbNotifySingleUpdateListenersTime();
-                long timeSinceNotify = t1 - notifyTime;
-                System.err.println("timeSinceNotify = " + timeSinceNotify);
-                System.err.println("xfl = " + xfl);
-                System.err.println("waitCycle = " + waitCycle);
-                long lastCycleTime = (t1 - last_t1);
-                System.err.println("lastCycleTime = " + lastCycleTime);
-                long simViewRefreshTime = aprsSystem.getLastSimViewRefreshTime();
-                long simViewPublishTime = aprsSystem.getLastSimViewPublishTime();
-                long timeSinceRefresh = simViewRefreshTime - t1;
-                System.err.println("timeSinceRefresh = " + timeSinceRefresh);
-                long timeSincePublish = simViewPublishTime - t1;
-                System.err.println("timeSincePublish = " + timeSincePublish);
-                int simViewRefreshCount = aprsSystem.getSimViewRefreshCount();
-                int simViewPublishCount = aprsSystem.getSimViewPublishCount();
-                int simViewRefreshCountDiff = simViewRefreshCount - startSimViewRefreshCount;
-                System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
-                int simViewPublishCountDiff = simViewPublishCount - startSimViewPublishCount;
-                System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
-                int visLineCount = aprsSystem.getVisionLineCount();
-                int visLineCountDiff = visLineCount - startVisLineCount;
-                System.err.println("visLineCountDiff = " + visLineCountDiff);
-                boolean completedExceptionally = xfl.isCompletedExceptionally();
-
-                System.err.println("startVisClientUpdateCount = " + startVisClientUpdateCount);
-                System.err.println("startVisClientUpdateAquireOffCount = " + startVisClientUpdateAquireOffCount);
-                System.err.println("startVisClientUpdateNoCheckRequiredPartsCount = " + startVisClientUpdateNoCheckRequiredPartsCount);
-                System.err.println("startVisClientUpdateSingleUpdateListenersEmptyCount = " + startVisClientUpdateSingleUpdateListenersEmptyCount);
-                System.err.println("startVisClientIgnoreCount = " + startVisClientIgnoreCount);
-                System.err.println("startVisClientSkippedCount = " + startVisClientSkippedCount);
-
-                int visClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
-                System.err.println("visClientUpdateCount = " + visClientUpdateCount);
-                int visClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
-                System.err.println("visClientUpdateAquireOffCount = " + visClientUpdateAquireOffCount);
-                int visClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
-                System.err.println("visClientUpdateNoCheckRequiredPartsCount = " + visClientUpdateNoCheckRequiredPartsCount);
-                int visClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
-                System.err.println("visClientUpdateSingleUpdateListenersEmptyCount = " + visClientUpdateSingleUpdateListenersEmptyCount);
-                int visClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
-                System.out.println("visClientIgnoreCount = " + visClientIgnoreCount);
-                int visClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
-                System.out.println("visClientSkippedCount = " + visClientSkippedCount);
-
-                System.err.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
-                String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
-                System.err.println(errMsg);
-                String visionToDbPerformanceLine = aprsSystem.getVisionToDbPerformanceLine();
-                if (null != visionToDbPerformanceLine) {
-                    System.err.println(visionToDbPerformanceLine);
+            while (!xfl.isDone()) {
+                waitCycle++;
+                long t1 = System.currentTimeMillis();
+                if (!aprsSystem.isDoingActions()) {
+                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+                    throw new IllegalStateException("!aprsSystem.isDoingActions() ");
                 }
-                if (completedExceptionally) {
+                if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
+                    takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
+                    aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
+                    setLastProgramAborted(true);
+                    return null;
+                }
+                if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
+                    System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
+                    System.err.println("runName=" + getRunName());
+                    long updateTime = aprsSystem.getLastSingleVisionToDbUpdateTime();
+                    long timeSinceUpdate = t1 - updateTime;
+                    System.err.println("timeSinceUpdate = " + timeSinceUpdate);
+                    long notifyTime = aprsSystem.getSingleVisionToDbNotifySingleUpdateListenersTime();
+                    long timeSinceNotify = t1 - notifyTime;
+                    System.err.println("timeSinceNotify = " + timeSinceNotify);
+                    System.err.println("xfl = " + xfl);
+                    System.err.println("waitCycle = " + waitCycle);
+                    long lastCycleTime = (t1 - last_t1);
+                    System.err.println("lastCycleTime = " + lastCycleTime);
+                    long simViewRefreshTime = aprsSystem.getLastSimViewRefreshTime();
+                    long simViewPublishTime = aprsSystem.getLastSimViewPublishTime();
+                    long timeSinceRefresh = simViewRefreshTime - t1;
+                    System.err.println("timeSinceRefresh = " + timeSinceRefresh);
+                    long timeSincePublish = simViewPublishTime - t1;
+                    System.err.println("timeSincePublish = " + timeSincePublish);
+                    int simViewRefreshCount = aprsSystem.getSimViewRefreshCount();
+                    int simViewPublishCount = aprsSystem.getSimViewPublishCount();
+                    int simViewRefreshCountDiff = simViewRefreshCount - startSimViewRefreshCount;
+                    System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
+                    int simViewPublishCountDiff = simViewPublishCount - startSimViewPublishCount;
+                    System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
+                    int visLineCount = aprsSystem.getVisionLineCount();
+                    int visLineCountDiff = visLineCount - startVisLineCount;
+                    System.err.println("visLineCountDiff = " + visLineCountDiff);
+                    boolean completedExceptionally = xfl.isCompletedExceptionally();
+
+                    System.err.println("startVisClientUpdateCount = " + startVisClientUpdateCount);
+                    System.err.println("startVisClientUpdateAquireOffCount = " + startVisClientUpdateAquireOffCount);
+                    System.err.println("startVisClientUpdateNoCheckRequiredPartsCount = " + startVisClientUpdateNoCheckRequiredPartsCount);
+                    System.err.println("startVisClientUpdateSingleUpdateListenersEmptyCount = " + startVisClientUpdateSingleUpdateListenersEmptyCount);
+                    System.err.println("startVisClientIgnoreCount = " + startVisClientIgnoreCount);
+                    System.err.println("startVisClientSkippedCount = " + startVisClientSkippedCount);
+
+                    int visClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
+                    System.err.println("visClientUpdateCount = " + visClientUpdateCount);
+                    int visClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
+                    System.err.println("visClientUpdateAquireOffCount = " + visClientUpdateAquireOffCount);
+                    int visClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
+                    System.err.println("visClientUpdateNoCheckRequiredPartsCount = " + visClientUpdateNoCheckRequiredPartsCount);
+                    int visClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+                    System.err.println("visClientUpdateSingleUpdateListenersEmptyCount = " + visClientUpdateSingleUpdateListenersEmptyCount);
+                    int visClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
+                    System.out.println("visClientIgnoreCount = " + visClientIgnoreCount);
+                    int visClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
+                    System.out.println("visClientSkippedCount = " + visClientSkippedCount);
+
+                    System.err.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
+                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                    System.err.println(errMsg);
+                    String visionToDbPerformanceLine = aprsSystem.getVisionToDbPerformanceLine();
+                    if (null != visionToDbPerformanceLine) {
+                        System.err.println(visionToDbPerformanceLine);
+                    }
+                    if (completedExceptionally) {
+                        Throwable[] ta = new Throwable[1];
+                        xfl.exceptionally((Throwable t) -> {
+                            ta[0] = t;
+                            throw (RuntimeException) t;
+                        });
+                        if (null != ta[0]) {
+                            throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                        }
+                    }
+                    String titleErrorString = aprsSystem.getTitleErrorString();
+                    if (null != titleErrorString && titleErrorString.length() > 1) {
+                        throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+                    }
+                    throw new RuntimeException(errMsg);
+                }
+                last_t1 = t1;
+                if (xfl.isDone()) {
+                    break;
+                }
+                if (enableDatabaseUpdates && !aprsSystem.isEnableVisionToDatabaseUpdates()) {
+                    if (xfl.isDone()) {
+                        break;
+                    }
+                    System.err.println("VisionToDatabaseUpdates not enabled as expected.");
+                    setEnableVisionToDatabaseUpdates(
+                            enableDatabaseUpdates,
+                            requiredPartsMap);
+                }
+                if (xfl.isCompletedExceptionally()) {
                     Throwable[] ta = new Throwable[1];
                     xfl.exceptionally((Throwable t) -> {
                         ta[0] = t;
                         throw (RuntimeException) t;
                     });
                     if (null != ta[0]) {
+                        String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
                         throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
                     }
                 }
@@ -6597,101 +6786,82 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (null != titleErrorString && titleErrorString.length() > 1) {
                     throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
                 }
-                throw new RuntimeException(errMsg);
-            }
-            last_t1 = t1;
-            if (xfl.isDone()) {
-                break;
-            }
-            if (enableDatabaseUpdates && !aprsSystem.isEnableVisionToDatabaseUpdates()) {
                 if (xfl.isDone()) {
                     break;
                 }
-                System.err.println("VisionToDatabaseUpdates not enabled as expected.");
-                setEnableVisionToDatabaseUpdates(
-                        enableDatabaseUpdates,
-                        requiredPartsMap);
-            }
-            if (xfl.isCompletedExceptionally()) {
-                Throwable[] ta = new Throwable[1];
-                xfl.exceptionally((Throwable t) -> {
-                    ta[0] = t;
-                    throw (RuntimeException) t;
-                });
-                if (null != ta[0]) {
-                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
-                    throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                Thread.sleep(50);
+                if (xfl.isCompletedExceptionally()) {
+                    Throwable[] ta = new Throwable[1];
+                    xfl.exceptionally((Throwable t) -> {
+                        ta[0] = t;
+                        throw (RuntimeException) t;
+                    });
+                    if (null != ta[0]) {
+                        String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                        throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                    }
+                }
+                titleErrorString = aprsSystem.getTitleErrorString();
+                if (null != titleErrorString && titleErrorString.length() > 1) {
+                    throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+                }
+                if (xfl.isDone()) {
+                    break;
+                }
+                aprsSystem.refreshSimView();
+                if (aprsSystem.isClosing()) {
+                    return null;
                 }
             }
-            String titleErrorString = aprsSystem.getTitleErrorString();
-            if (null != titleErrorString && titleErrorString.length() > 1) {
-                throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
-            }
-            if (xfl.isDone()) {
-                break;
-            }
-            Thread.sleep(50);
-            if (xfl.isCompletedExceptionally()) {
-                Throwable[] ta = new Throwable[1];
-                xfl.exceptionally((Throwable t) -> {
-                    ta[0] = t;
-                    throw (RuntimeException) t;
-                });
-                if (null != ta[0]) {
-                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
-                    throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
-                }
-            }
-            titleErrorString = aprsSystem.getTitleErrorString();
-            if (null != titleErrorString && titleErrorString.length() > 1) {
-                throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
-            }
-            if (xfl.isDone()) {
-                break;
-            }
-            aprsSystem.refreshSimView();
             if (aprsSystem.isClosing()) {
-                return;
+                return null;
             }
-        }
-        if (aprsSystem.isClosing()) {
-            return;
-        }
-        if (xfl.isCompletedExceptionally()) {
-            Throwable[] ta = new Throwable[1];
-            xfl.exceptionally((Throwable t) -> {
-                ta[0] = t;
-                throw (RuntimeException) t;
-            });
-            if (null != ta[0]) {
-                String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
-                throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+            if (xfl.isCompletedExceptionally()) {
+                Throwable[] ta = new Throwable[1];
+                xfl.exceptionally((Throwable t) -> {
+                    ta[0] = t;
+                    throw (RuntimeException) t;
+                });
+                if (null != ta[0]) {
+                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                    throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+                }
             }
-        }
-        List<PhysicalItem> l = xfl.get();
-        if (l.isEmpty()) {
-            logger.warning(getRunName() + ": waitForCompleteVisionUpdates returing empty list");
-        }
-        try {
-            if (snapshotsEnabled()) {
-                aprsSystem.takeSimViewSnapshot(createImageTempFile(prefix + "_waitForCompleteVisionUpdates"), l);
-                takeDatabaseViewSnapshot(createImageTempFile(prefix + "_waitForCompleteVisionUpdates_new_database"));
+            List<PhysicalItem> l = xfl.get();
+            if (l.isEmpty()) {
+                logger.warning(getRunName() + ": waitForCompleteVisionUpdates returing empty list");
             }
-        } catch (IOException ioException) {
-            logger.log(Level.SEVERE, "", ioException);
-        }
-        List<PhysicalItem> filteredList
-                = l.stream().filter(aprsSystem::isItemWithinLimits).collect(Collectors.toList());
-        synchronized (this) {
-            clearPoseCache();
             try {
-                takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
-                takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
-            } catch (IOException ex) {
-                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                if (snapshotsEnabled()) {
+                    aprsSystem.takeSimViewSnapshot(createImageTempFile(prefix + "_waitForCompleteVisionUpdates"), l);
+                    takeDatabaseViewSnapshot(createImageTempFile(prefix + "_waitForCompleteVisionUpdates_new_database"));
+                }
+            } catch (IOException ioException) {
+                logger.log(Level.SEVERE, "", ioException);
             }
-            physicalItems = filteredList;
-            loadNewItemsIntoPoseCache(filteredList);
+            List<PhysicalItem> filteredList
+                    = l.stream().filter(aprsSystem::isItemWithinLimits).collect(Collectors.toList());
+            synchronized (this) {
+                clearPoseCache();
+                try {
+                    if (!aprsSystem.isDoingActions()) {
+                        aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+                        takeSimViewSnapshot("!aprsSystem.isDoingActions()" + prefix, l);
+                        throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+                    }
+                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+                    takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
+                    takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
+                } catch (IOException ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                physicalItems = filteredList;
+                loadNewItemsIntoPoseCache(filteredList);
+                return filteredList;
+            }
+        } catch (Exception exception) {
+            LOGGER.log(Level.SEVERE, "", exception);
+            throw new RuntimeException(exception);
         }
     }
 
@@ -6704,99 +6874,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             limit = pt.getZ();
         }
         addMoveUpFromCurrent(out, approachZOffset, limit);
-    }
-
-//    private void addOpenGripper(List<MiddleCommandType> out, PoseType pose) {
-//        SetEndEffectorType openGripperCmd = new SetEndEffectorType();
-//        openGripperCmd.setCommandID(BigInteger.valueOf(out.size() + 2));
-//        openGripperCmd.setSetting(double.ONE);
-//    }
-//    private void addLookDwell(List<MiddleCommandType> out) {
-//        DwellType dwellCmd = new DwellType();
-//        setCommandId(dwellCmd);
-//        dwellCmd.setDwellTime(lookDwellTime);
-//        out.add(dwellCmd);
-//    }
-    /**
-     * Holds information associated with a place part action
-     */
-    public class PlacePartInfo {
-
-        @Nullable
-        private final Action parentAction;
-        private final int parentActionIndex;
-
-        private final Action action;
-        private final int pddlActionIndex;
-        private final int outIndex;
-        @Nullable
-        private CrclCommandWrapper wrapper = null;
-        private final int startSafeAbortRequestCount;
-        private final String partName;
-        private final String slotName;
-
-        public String getPartName() {
-            return partName;
-        }
-
-        public String getSlotName() {
-            return slotName;
-        }
-
-        PlacePartInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, @Nullable Action parentAction, int parentActionIndex, String partName, String slotName) {
-            this.action = action;
-            this.pddlActionIndex = pddlActionIndex;
-            this.outIndex = outIndex;
-            this.startSafeAbortRequestCount = startSafeAbortRequestCount;
-            this.parentAction = parentAction;
-            this.parentActionIndex = parentActionIndex;
-            if (null == partName) {
-                System.err.println("setLastTakenPartTrace = " + Arrays.toString(setLastTakenPartTrace));
-                throw new NullPointerException("partName");
-            }
-            this.partName = partName;
-            this.slotName = slotName;
-        }
-
-        @Nullable
-        public CrclCommandWrapper getWrapper() {
-            return wrapper;
-        }
-
-        void setWrapper(CrclCommandWrapper wrapper) {
-            this.wrapper = wrapper;
-        }
-
-        public Action getAction() {
-            return action;
-        }
-
-        public int getPddlActionIndex() {
-            return pddlActionIndex;
-        }
-
-        public int getOutIndex() {
-            return outIndex;
-        }
-
-        public int getStartSafeAbortRequestCount() {
-            return startSafeAbortRequestCount;
-        }
-
-        @Nullable
-        public Action getParentAction() {
-            return parentAction;
-        }
-
-        public int getParentActionIndex() {
-            return parentActionIndex;
-        }
-
-        @Override
-        public String toString() {
-            return "PlacePartInfo{" + "parentAction=" + parentAction + ", parentActionIndex=" + parentActionIndex + ", action=" + action + ", pddlActionIndex=" + pddlActionIndex + ", outIndex=" + outIndex + ", startSafeAbortRequestCount=" + startSafeAbortRequestCount + '}';
-        }
-
     }
 
     private final ConcurrentLinkedQueue<Consumer<PlacePartInfo>> placePartConsumers = new ConcurrentLinkedQueue<>();
@@ -6826,6 +6903,35 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     private void notifyPlacePartConsumers(PlacePartInfo ppi) {
         placePartConsumers.forEach(consumer -> consumer.accept(ppi));
+    }
+
+    private final ConcurrentLinkedQueue<Consumer<WrappedActionInfo>> wrappedActionConsumers = new ConcurrentLinkedQueue<>();
+
+    /**
+     * Register a consumer to be notified when parts are placed.
+     *
+     * @param consumer consumer to be notified
+     */
+    public void addWrappedActionConsumer(Consumer<WrappedActionInfo> consumer) {
+        wrappedActionConsumers.add(consumer);
+    }
+
+    /**
+     * Remove a previously registered consumer.
+     *
+     * @param consumer consumer to be removed
+     */
+    public void removeWrappedActionConsumer(Consumer<WrappedActionInfo> consumer) {
+        wrappedActionConsumers.remove(consumer);
+    }
+
+    /**
+     * Notify all consumers that a place-part action has been executed.
+     *
+     * @param wai info to be passed to consumers
+     */
+    private void notifyWrappedActionConsumers(WrappedActionInfo wai) {
+        wrappedActionConsumers.forEach(consumer -> consumer.accept(wai));
     }
 
     private int placePartSlotArgIndex;
@@ -7081,11 +7187,36 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         cmds.add(dwellCmd);
     }
 
+    private class CRCLCommandWrapperConsumerChecker implements CRCLCommandWrapperConsumer {
+
+        private final CRCLCommandWrapperConsumer consumer;
+
+        public CRCLCommandWrapperConsumerChecker(CRCLCommandWrapperConsumer consumer) {
+            this.consumer = consumer;
+        }
+
+        @Override
+        public void accept(CrclCommandWrapper wrapper) {
+
+            final Thread curThread = Thread.currentThread();
+            if (null != genThread
+                    && genThread != curThread) {
+                logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
+                throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
+            }
+            if (!aprsSystem.isDoingActions()) {
+                aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+                throw new IllegalStateException("!aprsSystem.isDoingActions()");
+            }
+            consumer.accept(wrapper);
+        }
+    }
+
     private void addMarkerCommand(List<MiddleCommandType> cmds, String message, CRCLCommandWrapperConsumer cb) {
         MessageType messageCmd = new MessageType();
         messageCmd.setMessage(message + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(messageCmd);
-        CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, cb);
+        CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, new CRCLCommandWrapperConsumerChecker(cb));
         cmds.add(wrapper);
     }
 
@@ -7107,7 +7238,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @Override
     public void accept(DbSetup setup) {
         this.setDbSetup(setup);
-
     }
 
     final private ConcurrentLinkedDeque<Consumer<ActionCallbackInfo>> actionCompletedListeners = new ConcurrentLinkedDeque<>();
@@ -7132,8 +7262,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final AtomicReference<@Nullable ActionCallbackInfo> lastAcbi = new AtomicReference<>();
 
-    private void notifyActionCompletedListeners(int actionIndex, Action action, CrclCommandWrapper wrapper, List<Action> actions, @Nullable List<Action> origActions) {
-        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, action, wrapper, actions, origActions);
+    private void notifyActionCompletedListeners(int actionIndex, String comment, Action action, CrclCommandWrapper wrapper, List<Action> actions, @Nullable List<Action> origActions) {
+        ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, comment, action, wrapper, actions, origActions);
         lastAcbi.set(acbi);
         action.setExecTime();
         for (Consumer<ActionCallbackInfo> listener : actionCompletedListeners) {

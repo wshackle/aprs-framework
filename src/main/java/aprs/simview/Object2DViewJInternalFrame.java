@@ -72,6 +72,15 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return this.object2DOuterJPanel1.getClosestRobotPartDistance();
     }
 
+    /**
+     * Get the closest part between the robot TCP and any part.
+     *
+     * @return closest part
+     */
+    public PhysicalItem getClosestRobotPart() {
+        return this.object2DOuterJPanel1.getClosestRobotPart();
+    }
+    
     public void setReverseFlag(boolean reverseFlag) {
         this.object2DOuterJPanel1.setReverseFlag(reverseFlag);
     }

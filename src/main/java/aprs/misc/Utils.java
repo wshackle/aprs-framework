@@ -115,34 +115,10 @@ public class Utils {
 //        }
         return dir;
     }
-
+    
+    
     public static String traceToString(StackTraceElement trace @Nullable []) {
-        if (null == trace) {
-            return "null";
-        }
-        if (trace.length == 0) {
-            return "[]";
-        }
-        try (StringWriter stringWriter = new StringWriter()) {
-            try (PrintWriter printWriter = new PrintWriter(stringWriter)) {
-                boolean first = true;
-                for (StackTraceElement traceElement : trace) {
-                    String traceString = traceElement.toString();
-                    if (first && traceString.contains("Thread.getStackTrace(")) {
-                        first = false;
-                        printWriter.println();
-                        continue;
-                    }
-                    first = false;
-                    printWriter.println("\tat " + traceElement);
-                }
-            }
-            stringWriter.flush();
-            return stringWriter.toString();
-        } catch (IOException ex) {
-            Logger.getLogger(XFuture.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
-            throw new RuntimeException(ex);
-        }
+        return XFuture.traceToString(trace);
     }
 
     @UIEffect

@@ -441,11 +441,24 @@ public class AprsSystem implements SlotOffsetProvider {
         if (origCrclRobotPort1 < 1) {
             throw new IllegalStateException("origCrclRobotPort1=" + origCrclRobotPort1);
         }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         XFutureVoid immediateAbortFuture
                 = this.immediateAbort();
         return immediateAbortFuture
                 .thenRunAsync("disconnectRobot(" + getRobotName() + ")",
-                        this::disconnectRobotPrivate,
+                        () -> {
+                            try {
+                                disconnectRobotPrivate();
+                            } catch (Exception ex) {
+                                System.err.println("trace = " + Utils.traceToString(trace));
+                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                if (ex instanceof RuntimeException) {
+                                    throw (RuntimeException) ex;
+                                } else {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                        },
                         connectService)
                 .thenRun(
                         "restoreOrigRobotInfo" + getTaskName(),
@@ -574,7 +587,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
         }
-        long startTime = logEvent("start getSingleVisionToDbUpdate", null);
+        long startTime = logEvent("start getSingleVisionToDbUpdate");
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getNewSingleUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
@@ -598,7 +611,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
         }
-        long startTime = logEvent("start getSingleVisionToDbUpdate", null);
+        long startTime = logEvent("start getSingleVisionToDbUpdate");
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getSingleUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
@@ -636,7 +649,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("[Object SP] Vision To Database View must be open to use this function.");
         }
-        long startTime = logEvent("start getSingleVisionToDbUpdate", null);
+        long startTime = logEvent("start getSingleVisionToDbUpdate");
         XFuture<List<PhysicalItem>> ret = visionToDbJInternalFrame.getRawUpdate();
         return ret.thenApply(x -> {
             logEvent("end getSingleVisionToDbUpdate",
@@ -960,6 +973,13 @@ public class AprsSystem implements SlotOffsetProvider {
             return crclClientJInternalFrame.isRunningProgram();
         }
         return false;
+    }
+
+    public String getLastRunningProgramTrueInfo() {
+        if (null == crclClientJInternalFrame) {
+            throw new NullPointerException("crclClientJInternalFrame");
+        }
+        return crclClientJInternalFrame.getLastRunningProgramTrueInfo();
     }
 
     /**
@@ -1362,6 +1382,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile StackTraceElement startSafeAbortStackTrace@Nullable []  = null;
     private volatile String startSafeAbortAndDisconnectComment = null;
+    private final AtomicInteger startSafeAbortAndDisconnectCount = new AtomicInteger();
 
     /**
      * Safely abort the current CRCL program and then disconnect from the
@@ -1385,6 +1406,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException(errMsg);
         }
         XFutureVoid ret;
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         try {
 
             Thread curThread = Thread.currentThread();
@@ -1392,12 +1414,28 @@ public class AprsSystem implements SlotOffsetProvider {
             startSafeAbortAndDisconnectThread = curThread;
             startSafeAbortAndDisconnectTime = System.currentTimeMillis();
             startSafeAbortAndDisconnectStackTrace = curThread.getStackTrace();
-            if (isConnected()) {
-                logEvent("startSafeAbortAndDisconnect", comment);
+            final boolean connected = isConnected();
+            final boolean doingActons = isDoingActions();
+            final String doingActionsInfo = getIsDoingActionsInfo();
+            int count = startSafeAbortAndDisconnectCount.incrementAndGet();
+            logEvent("START startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+            logToSuper("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count + ",doingActionsInfo=" + doingActionsInfo);
+            takeSnapshots("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+            if (connected) {
                 if (null == pddlExecutorJInternalFrame1) {
                     throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
                 }
 
+                if (!doingActons) {
+                    return disconnectRobot()
+                            .alwaysAsync(() -> {
+                                synchronized (this) {
+                                    logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                                    logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+                                    takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+                                }
+                            }, connectService);
+                }
                 XFutureVoid localSafeAbortFuture
                         = this.pddlExecutorJInternalFrame1.startSafeAbort(comment);
                 safeAbortFuture
@@ -1415,15 +1453,31 @@ public class AprsSystem implements SlotOffsetProvider {
                 XFutureVoid localsafeAbortAndDisconnectFutureDisconnect2
                         = localsafeAbortAndDisconnectFutureWaitAll1
                                 .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName,
-                                        this::disconnectRobotPrivate,
+                                        () -> {
+                                            try {
+                                                disconnectRobotPrivate();
+                                            } catch (Exception ex) {
+                                                System.err.println("trace = " + Utils.traceToString(trace));
+                                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                                if (ex instanceof RuntimeException) {
+                                                    throw (RuntimeException) ex;
+                                                } else {
+                                                    throw new RuntimeException(ex);
+                                                }
+                                            }
+                                        },
                                         runProgramService);
                 this.safeAbortAndDisconnectFutureDisconnect2 = localsafeAbortAndDisconnectFutureDisconnect2;
                 XFutureVoid localsafeAbortAndDisconnectFutureWaitAll2
                         = localsafeAbortAndDisconnectFutureDisconnect2
                                 .thenComposeToVoid(x -> waitAllLastFutures())
-                                .always(() -> {
-                                    logEvent("finished startSafeAbortAndDisconnect", comment);
-                                });
+                                .alwaysAsync(() -> {
+                                    synchronized (this) {
+                                        logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                                        logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+                                        takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+                                    }
+                                }, connectService);
                 this.safeAbortAndDisconnectFutureWaitAll2 = localsafeAbortAndDisconnectFutureWaitAll2;
                 ret = localsafeAbortAndDisconnectFutureWaitAll2;
             } else {
@@ -1432,6 +1486,9 @@ public class AprsSystem implements SlotOffsetProvider {
                         = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortFuture = localSafeAbortFuture;
                 ret = localSafeAbortFuture;
+                logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
+                takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
             }
             safeAbortAndDisconnectFuture = ret;
             return ret;
@@ -1541,7 +1598,7 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @return future providing info on when complete
      */
-    public XFutureVoid disconnectRobot() {
+    public synchronized XFutureVoid disconnectRobot() {
         if (null == robotName
                 && !isConnected()) {
             return XFutureVoid.completedFutureWithName("alreadyDisconnected");
@@ -1554,9 +1611,22 @@ public class AprsSystem implements SlotOffsetProvider {
         if (connectService == null || connectService.isShutdown()) {
             return waitForPausFuture;
         }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         XFutureVoid ret = waitForPausFuture
                 .thenRunAsync("disconnectRobot(" + getRobotName() + ")",
-                        this::disconnectRobotPrivate,
+                        () -> {
+                            try {
+                                disconnectRobotPrivate();
+                            } catch (Exception ex) {
+                                System.err.println("trace = " + Utils.traceToString(trace));
+                                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                if (ex instanceof RuntimeException) {
+                                    throw (RuntimeException) ex;
+                                } else {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                        },
                         connectService);
         this.disconnectRobotFuture = ret;
         if (debug) {
@@ -1572,7 +1642,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return closing;
     }
 
-    private void disconnectRobotPrivate() {
+    private synchronized void disconnectRobotPrivate() {
         boolean startingIsConnected = isConnected();
         String startingRobotName = this.getRobotName();
         String startingCrclHost = this.getRobotCrclHost();
@@ -1765,6 +1835,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile StackTraceElement continueActionListTrace @Nullable []  = null;
     private volatile StackTraceElement privateContinueActionListTrace @Nullable []  = null;
     private volatile String continueActionsComment = null;
+    private final AtomicInteger continueActionsListCount = new AtomicInteger();
 
     /**
      * Continue or start executing the currently loaded set of PDDL actions.
@@ -1783,24 +1854,61 @@ public class AprsSystem implements SlotOffsetProvider {
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continueActionListTrace = trace;
         XFuture<Boolean> ret;
-        if (!this.isReverseFlag()) {
+        final boolean revFlag = this.isReverseFlag();
+        int caCount = continueActionsListCount.incrementAndGet();
+        int saCount = this.startActionsCount.get();
+        int startAbortCount = getSafeAbortRequestCount();
+        lastContinueStartAbortCount = startAbortCount;
+        logEvent("START continueActionList", comment, revFlag, caCount, saCount, startAbortCount);
+        logToSuper("START continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
+        takeSnapshots("START continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
+        endLogged = false;
+        if (!revFlag) {
             if (alternativeForwardContinueActions != null) {
                 ret = alternativeForwardContinueActions.doActions();
             } else {
-                ret = privateContinueActionList(comment);
+                ret = privateContinueActionList(comment, startAbortCount);
             }
         } else {
             if (alternativeReverseContinueActions != null) {
                 ret = alternativeReverseContinueActions.doActions();
             } else {
-                ret = privateContinueActionList(comment);
+                ret = privateContinueActionList(comment, startAbortCount);
             }
         }
+        ret = ret.alwaysAsync(() -> {
+            synchronized (this) {
+                setEndLogged(trace, comment);
+                logEvent("END continueActionList", comment, revFlag, caCount, saCount);
+                boolean isAborting = isAborting() || startAbortCount != this.getSafeAbortRequestCount();
+                logToSuper("END continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
+                takeSnapshots("END continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
+                if (isAborting && !isDoingActions()) {
+                    pddlExecutorJInternalFrame1.completeSafeAbort();
+                }
+            }
+        }, runProgramService);
         lastContinueActionListFuture = ret;
         return ret;
     }
 
-    private XFuture<Boolean> privateContinueActionList(String comment) throws IllegalStateException {
+    private volatile StackTraceElement setEndLogCallerTrace[] = null;
+    private volatile String setEndLogCallerComment = null;
+    private volatile StackTraceElement setEndLogTrace[] = null;
+    private volatile Thread setEndLogThread = null;
+
+    private void setEndLogged(StackTraceElement callerTrace[], String comment) {
+        setEndLogTrace = Thread.currentThread().getStackTrace();
+        setEndLogCallerComment = comment;
+        setEndLogCallerTrace = callerTrace;
+        setEndLogThread = Thread.currentThread();
+        endLogged = true;
+    }
+
+    private final AtomicInteger privateContinueActionListCount = new AtomicInteger();
+    private volatile boolean runningPrivateContinueActionList = false;
+
+    private synchronized XFuture<Boolean> privateContinueActionList(String comment, int startAbortCount) throws IllegalStateException {
         setStartRunTime();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         privateContinueActionListTrace = trace;
@@ -1808,37 +1916,71 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        int startAbortCount = getSafeAbortRequestCount();
-        lastContinueStartAbortCount = startAbortCount;
-        logEvent("continueActionList", comment);
+        if (endLogged) {
+            throw new IllegalStateException("endLogged");
+        }
+        runningPrivateContinueActionList = true;
+        int count = privateContinueActionListCount.incrementAndGet();
+        logEvent("START privateContinueActionList", comment, startAbortCount, count);
+        takeSnapshots("START privateContinueActionList" + comment + "," + startAbortCount + "," + count);
+        logToSuper("START privateContinueActionList" + comment + "," + startAbortCount + "," + count);
+
         XFuture<Boolean> ret
                 = waitForPause()
                         .thenApplyAsync("AprsSystem.continueActionList" + comment,
                                 x -> {
-                                    setThreadName();
-                                    takeSnapshots("continueActionList" + ((comment != null) ? comment : ""));
-                                    updateRobotLimits();
-                                    if (null == pddlExecutorJInternalFrame1) {
-                                        throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                    try {
+                                        if (endLogged) {
+                                            throw new IllegalStateException("endLogged");
+                                        }
+                                        setThreadName();
+                                        takeSnapshots("continueActionList" + ((comment != null) ? comment : "") + " " + startAbortCount);
+                                        updateRobotLimits();
+                                        if (null == pddlExecutorJInternalFrame1) {
+                                            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+                                        }
+                                        if (getSafeAbortRequestCount() == startAbortCount) {
+                                            boolean completActionListRet
+                                            = pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace);
+                                            logEvent("completeActionListRet", completActionListRet);
+                                            takeSnapshots("after continueActionList" + ((comment != null) ? comment : "") + " " + startAbortCount);
+                                            return completActionListRet && (getSafeAbortRequestCount() == startAbortCount);
+                                        }
+                                        return false;
+                                    } catch (Exception ex) {
+                                        System.err.println("count = " + count);
+                                        System.err.println("trace = " + Utils.traceToString(trace));
+                                        System.err.println("comment = " + comment);
+                                        System.err.println("setEndLogCallerTrace = " + Utils.traceToString(setEndLogCallerTrace));
+                                        System.err.println("setEndLogTrace = " + Utils.traceToString(setEndLogTrace));
+                                        System.err.println("setEndLogCallerComment = " + setEndLogCallerComment);
+                                        System.err.println("setEndLogThread = " + setEndLogThread);
+                                        System.out.println("lastPrivateContinueActionListFuture = " + lastPrivateContinueActionListFuture);
+                                        if (null != lastPrivateContinueActionListFuture) {
+                                            lastPrivateContinueActionListFuture.printStatus(System.err);
+                                            lastPrivateContinueActionListFuture.printProfile(System.err);
+                                        }
+                                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                        setTitleErrorString(ex.getMessage());
+                                        showException(ex);
+                                        if (ex instanceof RuntimeException) {
+                                            throw (RuntimeException) ex;
+                                        } else {
+                                            throw new RuntimeException(ex);
+                                        }
                                     }
-                                    if (getSafeAbortRequestCount() == startAbortCount) {
-                                        return pddlExecutorJInternalFrame1.completeActionList("continueActionList" + comment, startAbortCount, trace)
-                                        && (getSafeAbortRequestCount() == startAbortCount);
-                                    }
-                                    return false;
                                 }, runProgramService);
-//                .thenCompose(x -> {
-//                   return Utils.supplyOnDispatchThread(() -> {
-////                       if(JOptionPane.YES_OPTION != 
-////                               JOptionPane.showConfirmDialog(aprsSystemDisplayJFrame,
-////                                       "continueActionList "+comment+" Complete. Continue?")) {
-////                           throw new RuntimeException("canceled by user");
-////                       }
-//                       return x;
-//                   });
-//                });
         XFuture<Boolean> ret2
-                = ret.always(() -> logEvent("finished continueActionList", comment));
+                = ret
+                        .alwaysAsync(() -> {
+                            synchronized (this) {
+                                logEvent("END privateContinueActionList", comment, startAbortCount, count, ret);
+                                takeSnapshots("END privateContinueActionList" + comment + "," + startAbortCount + "," + count + "," + ret);
+                                logToSuper("END privateContinueActionList" + comment + "," + startAbortCount + "," + count + "," + ret);
+                                setEndLogged(trace, comment + ",count=" + count);
+                                runningPrivateContinueActionList = false;
+                            }
+                        }, runProgramService);
         lastPrivateContinueActionListFuture = ret2;
         return ret2;
     }
@@ -1853,6 +1995,18 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
         return this.object2DViewJInternalFrame.getClosestRobotPartDistance();
+    }
+
+    /**
+     * Get the closest distance between the robot TCP and any part.
+     *
+     * @return closest distance
+     */
+    public PhysicalItem getClosestRobotPart() {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
+        return this.object2DViewJInternalFrame.getClosestRobotPart();
     }
 
     /**
@@ -1987,17 +2141,21 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void checkReadyToDisconnect() throws IllegalStateException {
-        if (closing) {
+        if (closing || !isConnected()) {
             return;
         }
         if (isRunningCrclProgram()) {
             String msg = "setRobotName(null)/disconnect() called when running crcl program";
+            System.err.println("sys.getLastRunningProgramTrueInfo=" + this.getLastRunningProgramTrueInfo());
             setTitleErrorString(msg);
             boolean chk = isRunningCrclProgram();
             throw new IllegalStateException(msg);
         }
         if (isDoingActions()) {
             String msg = "setRobotName(null)/disconnect() called when running doing actions";
+            String info = getIsDoingActionsInfo();
+            logEvent("checkReadyToDisconnect:isDoingActionsInfo", info);
+            logToSuper("checkReadyToDisconnect:isDoingActionsInfo" + info);
             setTitleErrorString(msg);
             boolean chk = isDoingActions();
             throw new IllegalStateException(msg);
@@ -2227,13 +2385,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void processWrapperCommands(CRCLProgramType program) {
         List<MiddleCommandType> cmds = program.getMiddleCommand();
-        processWrapperCommands(cmds);
-    }
-
-    public void processWrapperCommands(List<MiddleCommandType> cmds) {
         for (MiddleCommandType cmd : cmds) {
             if (cmd instanceof CrclCommandWrapper) {
                 CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
+                wrapper.setCurProgram(program);
                 wrapper.notifyOnStartListeners();
                 wrapper.notifyOnDoneListeners();
             }
@@ -2641,46 +2796,47 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void setTitleErrorString(@Nullable String newTitleErrorString) {
 
-        if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
-            if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
-                System.err.println("details=" + getDetailsString());
-                logEvent("setTitleErrorString", newTitleErrorString);
-                titleErrorStringCommandStatus = getCommandStatus();
-                if (null != this.titleErrorString
-                        && null != newTitleErrorString
-                        && this.titleErrorString.length() > 0
-                        && newTitleErrorString.length() > 0) {
-                    if (this.titleErrorString.length() > 200) {
-                        this.titleErrorString = this.titleErrorString.substring(0, 200) + " ...\n" + newTitleErrorString;
-                    } else {
-                        this.titleErrorString = this.titleErrorString + " ...\n" + newTitleErrorString;
-                    }
-                } else {
-                    this.titleErrorString = newTitleErrorString;
-                }
-                updateTitle();
-                if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
-                    setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
-                    boolean snapshotsEnabled = this.isSnapshotsSelected();
-                    if (!closing) {
-                        System.err.println("RunName=" + getRunName());
-                        System.err.println(newTitleErrorString);
-                        Thread.dumpStack();
-                        Utils.runOnDispatchThread(Utils::PlayAlert2);;
-                        if (!snapshotsEnabled) {
-                            snapshotsCheckBox.setSelected(true);
+        try {
+            if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
+                if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
+                    System.err.println("details=" + getDetailsString());
+                    logEvent("setTitleErrorString", newTitleErrorString);
+                    titleErrorStringCommandStatus = getCommandStatus();
+                    if (null != this.titleErrorString
+                            && null != newTitleErrorString
+                            && this.titleErrorString.length() > 0
+                            && newTitleErrorString.length() > 0) {
+                        if (this.titleErrorString.length() > 200) {
+                            this.titleErrorString = this.titleErrorString.substring(0, 200) + " ...\n" + newTitleErrorString;
+                        } else {
+                            this.titleErrorString = this.titleErrorString + " ...\n" + newTitleErrorString;
                         }
-                        takeSnapshots("setTitleError_" + newTitleErrorString + "_");
+                    } else {
+                        this.titleErrorString = newTitleErrorString;
                     }
-                    pause();
-//                    if (!snapshotsEnabled) {
-//                        snapshotsCheckBox.setSelected(false);
-//                    }
+                    updateTitle();
+                    if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
+                        setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
+                        boolean snapshotsEnabled = this.isSnapshotsSelected();
+                        if (!closing) {
+                            System.err.println("RunName=" + getRunName());
+                            System.err.println(newTitleErrorString);
+                            Thread.dumpStack();
+                            Utils.runOnDispatchThread(Utils::PlayAlert2);;
+                            if (!snapshotsEnabled) {
+                                snapshotsCheckBox.setSelected(true);
+                            }
+                            takeSnapshots("setTitleError_" + newTitleErrorString + "_");
+                        }
+                        pause();
+                    }
                 }
+                lastNewTitleErrorString = newTitleErrorString;
             }
-            lastNewTitleErrorString = newTitleErrorString;
+            this.asString = getTitle();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
-        this.asString = getTitle();
     }
 
     public XFutureVoid startMotomanCrclServer() {
@@ -2755,6 +2911,10 @@ public class AprsSystem implements SlotOffsetProvider {
     @Nullable
     private volatile String lastLogEvent = null;
 
+    public long logEvent(String s, Object... args) {
+        return logEvent(s, Arrays.toString(args));
+    }
+
     public long logEvent(String s, @Nullable Object arg) {
         try {
             System.out.println("logEvent(" + s + "," + arg + ")");
@@ -2779,10 +2939,11 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             String argStringSplit[] = argString.split("\n");
             synchronized (printer) {
+                final int thisLogNumber = logNumber.incrementAndGet();
                 if (argStringSplit.length < 2) {
-                    printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argString.trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diff, s, argString.trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
                 } else {
-                    printer.printRecord(logNumber.incrementAndGet(), curTime, diff, s, argStringSplit[0].trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diff, s, argStringSplit[0].trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
                     for (int i = 1; i < argStringSplit.length; i++) {
                         printer.printRecord("", "", "", "", argStringSplit[i].trim(), "", "", "", "");
                     }
@@ -4046,6 +4207,7 @@ public class AprsSystem implements SlotOffsetProvider {
             lastStartActionsFuture.printProfile(System.err);
         }
         if (isRunningCrclProgram()) {
+            ps.println("sys.getLastRunningProgramTrueInfo=" + this.getLastRunningProgramTrueInfo());
             if (null != startCrclProgramTrace) {
                 ps.println("startCrclProgramTrace = " + Utils.traceToString(startCrclProgramTrace));
             }
@@ -4062,37 +4224,41 @@ public class AprsSystem implements SlotOffsetProvider {
     private long lastRunAllUpdateRunnableTime = System.currentTimeMillis();
 
     private void updateTitle(String stateString, String stateDescription) {
-        String oldTitle = getTitle();
-        String crclClientError = getCrclClientErrorString();
-        if (null != crclClientError && crclClientError.length() > 0
-                && (null == titleErrorString || titleErrorString.length() < 1)) {
-            this.titleErrorString = crclClientError;
-            pauseOnDisplay();
-        }
-        if (isPaused()) {
-            stateString = "PAUSED";
-        }
-        String newTitle = "APRS : " + ((robotName != null) ? robotName + (isConnected() ? "" : "(Disconnected)") : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
-                + stateDescription
-                + ((titleErrorString != null) ? ": " + titleErrorString : "")
-                + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
-                + (isAborting() ? " : Aborting" : "")
-                + (isReverseFlag() ? " : Reverse" : "")
-                + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
-                + pddlActionString();
-        if (newTitle.length() > 100) {
-            newTitle = newTitle.substring(0, 100) + " ... ";
-        }
-        if (!oldTitle.equals(newTitle)) {
-            setTitle(newTitle);
-            this.asString = newTitle;
-            setupWindowsMenu();
-            runAllUpdateRunnables();
-        } else {
-            long time = System.currentTimeMillis();
-            if (time - lastRunAllUpdateRunnableTime > 100) {
-                runAllUpdateRunnables();
+        try {
+            String oldTitle = getTitle();
+            String crclClientError = getCrclClientErrorString();
+            if (null != crclClientError && crclClientError.length() > 0
+                    && (null == titleErrorString || titleErrorString.length() < 1)) {
+                this.titleErrorString = crclClientError;
+                pauseOnDisplay();
             }
+            if (isPaused()) {
+                stateString = "PAUSED";
+            }
+            String newTitle = "APRS : " + ((robotName != null) ? robotName + (isConnected() ? "" : "(Disconnected)") : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
+                    + stateDescription
+                    + ((titleErrorString != null) ? ": " + titleErrorString : "")
+                    + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
+                    + (isAborting() ? " : Aborting" : "")
+                    + (isReverseFlag() ? " : Reverse" : "")
+                    + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
+                    + pddlActionString();
+            if (newTitle.length() > 100) {
+                newTitle = newTitle.substring(0, 100) + " ... ";
+            }
+            if (!oldTitle.equals(newTitle)) {
+                setTitle(newTitle);
+                this.asString = newTitle;
+                setupWindowsMenu();
+                runAllUpdateRunnables();
+            } else {
+                long time = System.currentTimeMillis();
+                if (time - lastRunAllUpdateRunnableTime > 100) {
+                    runAllUpdateRunnables();
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -4143,26 +4309,30 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void updateTitle() {
-        if (null != crclClientJInternalFrame) {
-            CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
-                    .map(CRCLStatusType::getCommandStatus)
-                    .orElse(null);
-            if (null == cs || null == cs.getCommandState()) {
-                updateTitle("", "");
-            } else {
-                if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
-                    CommandStatusType errCmdStatus = titleErrorStringCommandStatus;
-                    if (null != errCmdStatus
-                            && (errCmdStatus.getCommandID() != cs.getCommandID()
-                            || (errCmdStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR))) {
-                        titleErrorString = null;
+        try {
+            if (null != crclClientJInternalFrame) {
+                CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
+                        .map(CRCLStatusType::getCommandStatus)
+                        .orElse(null);
+                if (null == cs || null == cs.getCommandState()) {
+                    updateTitle("", "");
+                } else {
+                    if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
+                        CommandStatusType errCmdStatus = titleErrorStringCommandStatus;
+                        if (null != errCmdStatus
+                                && (errCmdStatus.getCommandID() != cs.getCommandID()
+                                || (errCmdStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR))) {
+                            titleErrorString = null;
+                        }
                     }
+                    String description = Objects.toString(cs.getStateDescription(), "");
+                    updateTitle(cs.getCommandState().toString(), description);
                 }
-                String description = Objects.toString(cs.getStateDescription(), "");
-                updateTitle(cs.getCommandState().toString(), description);
+            } else {
+                updateTitle("", "");
             }
-        } else {
-            updateTitle("", "");
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -4670,6 +4840,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile XFuture<Boolean> startLookForPartsFuture = null;
     private volatile StackTraceElement startLookForPartsTrace[] = null;
+    private volatile boolean doingLookForParts = false;
+    private final AtomicInteger lookForPartsCount = new AtomicInteger();
 
     /**
      * Start a sequence of actions to move the robot out of the way so the
@@ -4680,19 +4852,47 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return future allowing the caller to determine when the actions are
      * complete.
      */
-    public XFuture<Boolean> startLookForParts() {
-        checkFutures();
-        long t0 = logEvent("startLookForParts", null);
-        startLookForPartsTrace = Thread.currentThread().getStackTrace();
-        XFuture<Boolean> ret
-                = waitForPause()
-                        .thenCompose("startLookForParts.checkDbConnected", x -> checkDBConnected())
-                        .thenApplyAsync("startLookForParts.lookForPartsInternal",
-                                x -> lookForPartsOnDisplay(),
-                                runProgramService)
-                        .always(() -> logEvent("finished startLookForParts", (System.currentTimeMillis() - t0)));
-        startLookForPartsFuture = ret;
-        return ret;
+    public synchronized XFuture<Boolean> startLookForParts() {
+        try {
+            checkFutures();
+            doingLookForParts = true;
+            int count = lookForPartsCount.incrementAndGet();
+            long t0 = logEvent("START startLookForParts " + count);
+            logToSuper("START startLookForParts " + count);
+            takeSnapshots("START startLookForParts " + count);
+            endLogged = false;
+            StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+            startLookForPartsTrace = trace;
+            XFuture<Boolean> ret
+                    = waitForPause()
+                            .thenCompose("startLookForParts.checkDbConnected", x -> checkDBConnected())
+                            .thenApplyAsync("startLookForParts.lookForPartsInternal",
+                                    x -> lookForPartsOnDisplay(),
+                                    runProgramService)
+                            .alwaysAsync(() -> {
+                                synchronized (this) {
+                                    setEndLogged(trace, "lookForParts");
+                                    logEvent("END startLookForParts", (System.currentTimeMillis() - t0));
+                                    logToSuper("END startLookForParts " + count);
+                                    takeSnapshots("END startLookForParts " + count);
+                                    if (isAborting() && !isDoingActions()) {
+                                        pddlExecutorJInternalFrame1.completeSafeAbort();
+                                    }
+                                }
+                                doingLookForParts = false;
+                            }, runProgramService);
+            startLookForPartsFuture = ret;
+            return ret;
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            setTitleErrorString(ex.getMessage());
+            doingLookForParts = false;
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     private XFuture<Boolean> checkDBConnected() {
@@ -5015,15 +5215,18 @@ public class AprsSystem implements SlotOffsetProvider {
 
     }
 
+    private final AtomicInteger fillKitTraysInternalCount = new AtomicInteger();
+
     private XFuture<Boolean> fillKitTraysInternal(List<PhysicalItem> filledkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false,true);
+            File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false, true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
             noWarnClearActionsList(false);
-            clearKitsToCheck();
+            int startAbortCount = getSafeAbortRequestCount();
+            clearKitsToCheck(startAbortCount);
             List<Action> loadedActions
                     = loadActionsFile(
                             actionFile, // File f, 
@@ -5031,7 +5234,19 @@ public class AprsSystem implements SlotOffsetProvider {
                             false, // newReverseFlag
                             true // boolean forceNameChange
                     );
-            return privateStartActions("fillKitTrays", false, null);
+            int fktic = fillKitTraysInternalCount.incrementAndGet();
+            XFuture<Boolean> psaFuture
+                    = privateStartActions("fillKitTrays" + fktic, false, null);
+            XFuture<Boolean> psaClearFuture
+                    = psaFuture
+                            .always(() -> {
+                                logEvent("Finished fillKitTrays" + fktic + " psaFuture= " + psaFuture);
+                                logToSuper("Finished fillKitTrays" + fktic + " psaFuture= " + psaFuture);
+                                noWarnClearActionsList(false);
+                                clearKitsToCheck(startAbortCount);
+
+                            });
+            return psaClearFuture;
 //                    .exceptionally((Throwable throwable) -> {
 //                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, 
 //                                "handling ex returned from privateStartActions(fillKitTrayse)", 
@@ -5227,15 +5442,18 @@ public class AprsSystem implements SlotOffsetProvider {
 
     }
 
+    private final AtomicInteger emptyKitTraysInternalCount = new AtomicInteger();
+
     private XFuture<Boolean> emptyKitTraysInternal(List<PhysicalItem> emptiedkitTraysList, boolean overrideRotationOffset, double newRotationOffset) throws RuntimeException {
         try {
-            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true,true);
+            File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true, true);
             if (null == actionFile) {
                 return XFuture.completedFuture(false);
             }
             StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
             noWarnClearActionsList(true);
-            clearKitsToCheck();
+            int startAbortCount = getSafeAbortRequestCount();
+            clearKitsToCheck(startAbortCount);
             List<Action> loadedActions
                     = loadActionsFile(
                             actionFile, // File f, 
@@ -5244,7 +5462,18 @@ public class AprsSystem implements SlotOffsetProvider {
                             true // boolean forceNameChange
                     );
 //            loadActionsFile(actionFile, true);
-            return privateStartActions("emptyKitTrays", true, null);
+            int ektic = emptyKitTraysInternalCount.incrementAndGet();
+            XFuture<Boolean> psaFuture
+                    = privateStartActions("emptyKitTrays" + ektic, true, null);
+            XFuture<Boolean> psaClearFuture
+                    = psaFuture
+                            .always(() -> {
+                                logEvent("Finished emptyKitTrays" + ektic + " psaFuture=" + psaFuture);
+                                logToSuper("Finished emptyKitTrays" + ektic + " psaFuture=" + psaFuture);
+                                noWarnClearActionsList(true);
+                                clearKitsToCheck(startAbortCount);
+                            });
+            return psaClearFuture;
 //                    .exceptionally((Throwable throwable) -> {
 //                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, 
 //                                "handling ex returned from privateStartActions(emptyKitTrays)", 
@@ -5345,7 +5574,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> teachItems = requiredItems;
             updateScanImage(requiredItems, false);
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
-            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true,true);
+            return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true, true);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
@@ -5549,7 +5778,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 this.goalLearner = goalLearnerLocal;
             }
 
-            if(checkLimits) {
+            if (checkLimits) {
                 goalLearnerLocal.setItemPredicate(this::isWithinLimits);
             } else {
                 goalLearnerLocal.setItemPredicate(null);
@@ -5705,7 +5934,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void resume() {
 
-        logEvent("resume", null);
+        logEvent("resume");
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
         }
@@ -5883,11 +6112,11 @@ public class AprsSystem implements SlotOffsetProvider {
         System.out.println("setRobotNameNullThreadTime = " + (curTime - setRobotNameNullThreadTime));
 
         System.out.println("setRobotNameNonNullThread = " + setRobotNameNonNullThread);
-        System.out.println("setRobotNameNonNullStackTrace = " +Utils.traceToString(setRobotNameNonNullStackTrace));
+        System.out.println("setRobotNameNonNullStackTrace = " + Utils.traceToString(setRobotNameNonNullStackTrace));
         System.out.println("setRobotNameNonNullThreadTime = " + (curTime - setRobotNameNonNullThreadTime));
 
         System.out.println("startSafeAbortAndDisconnectThread = " + startSafeAbortAndDisconnectThread);
-        System.out.println("startSafeAbortAndDisconnectStackTrace = " +Utils.traceToString(startSafeAbortAndDisconnectStackTrace));
+        System.out.println("startSafeAbortAndDisconnectStackTrace = " + Utils.traceToString(startSafeAbortAndDisconnectStackTrace));
         System.out.println("startSafeAbortAndDisconnectTime = " + (curTime - startSafeAbortAndDisconnectTime));
     }
 
@@ -5912,19 +6141,21 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        logEvent("startContinuousDemo", null);
+        logEvent("startContinuousDemo");
         int startAbortCount = getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet());
-        return continuousDemoFuture.always(() -> logEvent("finished startContinuousDemo", null));
+        return continuousDemoFuture.always(() -> logEvent("finished startContinuousDemo"));
     }
 
     private XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+        String executorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
         if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
-            System.err.println("starting Continuous demo with comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
+            logEvent(executorReadyString, executorReadyString);
+            throw new IllegalStateException("!pddlExecutorJInternalFrame1.readyForNewActionsList() with comment=\"" + comment + "\" reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
         }
         if (startAbortCount != getSafeAbortRequestCount()) {
             return XFuture.completedFuture(false);
@@ -6029,10 +6260,10 @@ public class AprsSystem implements SlotOffsetProvider {
         this.supervisorEventLogger = supervisorEventLogger;
     }
 
-    private void logToSuper(String s) {
+    public void logToSuper(String s) {
         Consumer<String> c = this.supervisorEventLogger;
         if (null != c) {
-            c.accept(s);
+            c.accept(getTaskName() + ":" + getMyThreadId() + ":" + s);
         }
     }
 
@@ -6052,11 +6283,11 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !isAborting()
                 && getSafeAbortRequestCount() == startAbortCount
                 && startDisconnectCount == disconnectRobotCount.get()) {
-            logToSuper(getTaskName() + ": doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
+            logToSuper("doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
             long doActions1TimeStart = System.currentTimeMillis();
             boolean actionsOk = pddlExecutorJInternalFrame1.doActions(comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount, trace);
             long doActions1TimeEnd = System.currentTimeMillis();
-            logToSuper(getTaskName() + ": actionsOk=" + actionsOk + " time to complete = " + (doActions1TimeEnd - doActions1TimeStart) + " ms");
+            logToSuper("actionsOk=" + actionsOk + " time to complete = " + (doActions1TimeEnd - doActions1TimeStart) + " ms");
             if (isReverseFlag() != reverseFirst) {
                 System.err.println("Reverse flag changed as starting continuous demo.");
                 setTitleErrorString("Reverse flag changed as starting continuous demo.");
@@ -6067,11 +6298,11 @@ public class AprsSystem implements SlotOffsetProvider {
                     && getSafeAbortRequestCount() == startAbortCount
                     && startDisconnectCount == disconnectRobotCount.get()) {
                 setReverseFlag(!reverseFirst, true, true);
-                logToSuper(getTaskName() + ": reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
+                logToSuper("reverseFlag=" + isReverseFlag() + " step 2 doActionsWithReverse-" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount);
                 long doActions2TimeStart = System.currentTimeMillis();
                 boolean actionsOk2 = pddlExecutorJInternalFrame1.doActions("2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount, trace);
                 long doActions2TimeEnd = System.currentTimeMillis();
-                logToSuper(getTaskName() + ": actionsOk2=" + actionsOk2 + " time to complete = " + (doActions2TimeEnd - doActions2TimeStart) + " ms");
+                logToSuper("actionsOk2=" + actionsOk2 + " time to complete = " + (doActions2TimeEnd - doActions2TimeStart) + " ms");
                 return actionsOk2;
             } else {
                 return false;
@@ -6107,6 +6338,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+        String executorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            logEvent(executorReadyString, executorReadyString);
+            throw new IllegalStateException("!pddlExecutorJInternalFrame1.readyForNewActionsList() comment=\"" + comment + "\" when executor not ready for new actions. : reverseFirst=" + reverseFirst + ", startAbortCount=" + startAbortCount + ", startDisconnectCount=" + startDisconnectCount + ",cdStart=" + cdStart + ",cdCur=" + 1);
+        }
         int safeAbortRequestCount = getSafeAbortRequestCount();
         if (startAbortCount != safeAbortRequestCount || isAborting()) {
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").safeAbortRequestCount=" + safeAbortRequestCount, false);
@@ -6116,9 +6352,6 @@ public class AprsSystem implements SlotOffsetProvider {
         if (!enableCheckedAlready) {
             continuousDemoFuture = XFuture.completedFutureWithName("startPreCheckedContinuousDemo(" + reverseFirst + "," + startAbortCount + ").!enableCheckedAlready", false);
             return continuousDemoFuture;
-        }
-        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
-            System.err.println("Call to startPreCheckedContinuousDemo when not ready");
         }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continuousDemoFuture = XFuture.supplyAsync("startPreCheckedContinuousDemo(task=" + getTaskName() + ")",
@@ -6300,7 +6533,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile StackTraceElement pauseTrace@Nullable []  = null;
 
     private void pauseOnDisplay() {
-        logEvent("pause", null);
+        logEvent("pause");
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
         pausing = true;
@@ -6390,9 +6623,9 @@ public class AprsSystem implements SlotOffsetProvider {
         clearErrors();
     }
 
-    public void clearKitsToCheck() {
+    public void clearKitsToCheck(int startAbortCount) {
         if (null != pddlExecutorJInternalFrame1) {
-            pddlExecutorJInternalFrame1.clearKitsToCheck();
+            pddlExecutorJInternalFrame1.clearKitsToCheck(startAbortCount);
         }
     }
 
@@ -6499,10 +6732,10 @@ public class AprsSystem implements SlotOffsetProvider {
         startingCheckEnabled = true;
         startingCheckEnabledTrace = Thread.currentThread().getStackTrace();
         String logString = "startCheckEnabled robotName=" + checkedRobotName + ",task=" + checkedTaskName;
-        long t0 = logEvent(logString, null);
+        long t0 = logEvent(logString);
         setStartRunTime();
         if (enableCheckedAlready) {
-            logEvent("startCheckEnabled enableCheckedAlready", null);
+            logEvent("startCheckEnabled enableCheckedAlready");
             startingCheckEnabled = false;
             return XFuture.completedFutureWithName("startCheckEnabled.enableCheckedAlready", true);
         }
@@ -6753,6 +6986,13 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile StackTraceElement startActionsTrace  @Nullable []  = null;
     private volatile String startActionsComment = null;
+    private AtomicInteger startActionsCount = new AtomicInteger();
+
+    private volatile boolean endLogged = false;
+
+    public boolean isEndLogged() {
+        return endLogged;
+    }
 
     /**
      * Start the PDDL actions currently loaded in the executor from the
@@ -6771,6 +7011,13 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public XFuture<Boolean> startActions(String comment, boolean reverseFlag) {
         checkFutures();
+        String executorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            logEvent("executorReadyString", executorReadyString);
+            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList() with comment=\"" + comment + "\" ";
+            logToSuper(this.toString() + " throwing " + errmsg);
+            throw new IllegalStateException(errmsg);
+        }
         XFuture<Boolean> ret;
         startActionsComment = comment;
         StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
@@ -6778,6 +7025,12 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
         startActionsTrace = trace1;
+        int saCount = startActionsCount.incrementAndGet();
+
+        logEvent("START startActions", comment, reverseFlag, saCount);
+        takeSnapshots("START startActions" + saCount + " " + comment);
+        logToSuper("START startActions\"" + toString() + "\" " + saCount + " " + comment);
+        endLogged = false;
         if (!reverseFlag) {
             if (alternativeForwardStartActions != null) {
                 ret = alternativeForwardStartActions.doActions();
@@ -6791,11 +7044,54 @@ public class AprsSystem implements SlotOffsetProvider {
                 ret = privateStartActions(comment, reverseFlag, null);
             }
         }
+        ret = ret.alwaysAsync(() -> {
+            synchronized (this) {
+                setEndLogged(trace1, comment);
+                logEvent("END startActions", comment, reverseFlag, saCount);
+                takeSnapshots("END startActions" + saCount + " " + comment);
+                logToSuper("END startActions\"" + toString() + "\" " + saCount + " " + comment);
+                if (isAborting() && !isDoingActions()) {
+                    pddlExecutorJInternalFrame1.completeSafeAbort();
+                }
+            }
+        }, runProgramService);
         lastStartActionsFuture = ret;
         return ret;
     }
 
     public synchronized void checkFutures() throws IllegalStateException {
+        if (doingLookForParts) {
+            Thread.dumpStack();
+            System.err.println("startLookForPartsTrace=" + Utils.traceToString(startLookForPartsTrace));
+            if (null != startLookForPartsFuture) {
+                startLookForPartsFuture.printStatus(System.err);
+            }
+            throw new IllegalStateException("doingLookForParts");
+        }
+        if (runningPrivateContinueActionList) {
+            Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
+            System.err.println("lastContinueActionListFutureComment=" + lastContinueActionListFutureComment);
+            System.err.println("privateContinueActionListTrace=" + Utils.traceToString(privateContinueActionListTrace));
+            if (null != lastPrivateContinueActionListFuture) {
+                lastPrivateContinueActionListFuture.printStatus(System.err);
+            }
+            throw new IllegalStateException("runningPrivateContinueActionList");
+        }
+        if (runningPrivateStartActions) {
+            Thread.dumpStack();
+            System.err.println("isDoingActions() = " + isDoingActions());
+            System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
+            System.err.println("isAborting()() = " + isAborting());
+            System.err.println("lastContinueActionListFutureComment=" + lastContinueActionListFutureComment);
+            System.err.println("privateContinueActionListTrace=" + Utils.traceToString(privateContinueActionListTrace));
+            if (null != lastPrivateContinueActionListFuture) {
+                lastPrivateContinueActionListFuture.printStatus(System.err);
+            }
+            throw new IllegalStateException("runningPrivateContinueActionList");
+        }
         if (null != lastPrivateStartActionsFuture
                 && !lastPrivateStartActionsFuture.isDone()
                 && !lastPrivateStartActionsFuture.isCompletedExceptionally()
@@ -6935,12 +7231,37 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile StackTraceElement privateStartActionsTrace  @Nullable []  = null;
     private volatile String privateStartActionsComment = null;
+    private final AtomicInteger privateStartActionsCount = new AtomicInteger();
 
-    private XFuture<Boolean> privateStartActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
+    public String getPrivateStartActionsTraceString() {
+        return Utils.traceToString(privateStartActionsTrace);
+    }
+
+    public String getPrivateStartActionsCommentString() {
+        return privateStartActionsComment;
+    }
+
+    public String getPrivateContinueActionsTraceString() {
+        return Utils.traceToString(privateContinueActionListTrace);
+    }
+
+    public String getPrivateContinueActionsCommentString() {
+        return lastContinueActionListFutureComment;
+    }
+
+    private volatile boolean runningPrivateStartActions = false;
+
+    private synchronized XFuture<Boolean> privateStartActions(String comment, boolean reverseFlag, @Nullable List<Action> actionsToLoad) {
         StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
         if (null == pddlExecutorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+        String executorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            logEvent("executorReadyString", executorReadyString);
+            throw new IllegalStateException("!pddlExecutorJInternalFrame1.readyForNewActionsList() with comment=\"" + comment + "\" ");
+        }
+        runningPrivateStartActions = true;
         privateStartActionsTrace = trace1;
         privateStartActionsComment = comment;
         setStartRunTime();
@@ -6954,6 +7275,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.refresh(reloadSimFiles);
         }
+        int psc = privateStartActionsCount.incrementAndGet();
+        logEvent("START privateStartActions", comment, reverseFlag, actionsToLoad, psc);
+        takeSnapshots("START privateStartActions " + psc + " " + comment);
+        logToSuper("START privateStartActions \"" + getTaskName() + "\" " + psc + ",startAbortCount=" + startAbortCount + "\"" + toString() + "\" " + comment);
+        endLogged = false;
         XFuture<Boolean> ret = XFuture.runAsync("AprsSystem.startActions",
                 () -> {
                     setThreadName();
@@ -6976,7 +7302,21 @@ public class AprsSystem implements SlotOffsetProvider {
                         }
                     }
                 }, runProgramService
-                );
+                )
+                .alwaysAsync(() -> {
+                    synchronized (this) {
+                        setEndLogged(trace1, comment);
+                        boolean ready = pddlExecutorJInternalFrame1.readyForNewActionsList();
+                        logEvent("END privateStartActions", comment, reverseFlag, actionsToLoad, ready, psc);
+                        takeSnapshots("END privateStartActions " + psc + " " + comment);
+                        String newExecutorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
+                        logToSuper("END privateStartActions \"" + getTaskName() + "\" " + psc + ",startAbortCount=" + startAbortCount + ",currentAbortCount=" + getSafeAbortRequestCount() + ", readyForNewActionsList=" + ready + "\"" + toString() + "\" " + comment);
+                        if (!ready) {
+                            logEvent("newExecutorReadyString", newExecutorReadyString);
+                        }
+                        runningPrivateStartActions = false;
+                    }
+                }, runProgramService);
         lastPrivateStartActionsFuture = ret;
         return ret;
     }
@@ -7079,7 +7419,28 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @return current state
      */
-    public boolean isDoingActions() {
+    public synchronized boolean isDoingActions() {
+        if (doingLookForParts || runningPrivateContinueActionList || runningPrivateStartActions) {
+            return true;
+        }
+        if (null != lastPrivateStartActionsFuture
+                && !lastPrivateStartActionsFuture.isDone()
+                && !lastPrivateStartActionsFuture.isCompletedExceptionally()
+                && !lastPrivateStartActionsFuture.isCancelled()) {
+            return true;
+        }
+        if (null != startLookForPartsFuture
+                && !startLookForPartsFuture.isDone()
+                && !startLookForPartsFuture.isCompletedExceptionally()
+                && !startLookForPartsFuture.isCancelled()) {
+            return true;
+        }
+        if (null != lastPrivateContinueActionListFuture
+                && !lastPrivateContinueActionListFuture.isDone()
+                && !lastPrivateContinueActionListFuture.isCompletedExceptionally()
+                && !lastPrivateContinueActionListFuture.isCancelled()) {
+            return true;
+        }
         if (null == pddlExecutorJInternalFrame1) {
             return false;
         }
@@ -7091,7 +7452,36 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == pddlExecutorJInternalFrame1) {
             throw new NullPointerException("pddlExecutorJInternalFrame1");
         }
-        return pddlExecutorJInternalFrame1.getIsDoingActionsInfo();
+        String lastPrivateStartActionsFutureInfoString;
+        if (lastPrivateStartActionsFuture != null) {
+            lastPrivateStartActionsFutureInfoString
+                    = "lastPrivateStartActionsFuture=" + lastPrivateStartActionsFuture + ",\n";
+        } else {
+            lastPrivateStartActionsFutureInfoString = "";
+        }
+
+        String startLookForPartsFutureInfoString;
+        if (startLookForPartsFuture != null) {
+            startLookForPartsFutureInfoString
+                    = "startLookForPartsFuture=" + startLookForPartsFuture + ",\n";
+        } else {
+            startLookForPartsFutureInfoString = "";
+        }
+        String lastPrivateContinueActionListFutureInfoString;
+        if (lastPrivateContinueActionListFuture != null) {
+            lastPrivateContinueActionListFutureInfoString
+                    = "lastPrivateContinueActionListFuture=" + lastPrivateContinueActionListFuture + ",\n";
+        } else {
+            lastPrivateContinueActionListFutureInfoString = "";
+        }
+
+        return lastPrivateStartActionsFutureInfoString
+                + startLookForPartsFutureInfoString
+                + lastPrivateContinueActionListFutureInfoString
+                + "doingLookForParts=" + doingLookForParts + ",\n"
+                + "runningPrivateContinueActionList=" + runningPrivateContinueActionList + ",\n"
+                + "runningPrivateStartActions=" + runningPrivateStartActions + ",\n"
+                + pddlExecutorJInternalFrame1.getIsDoingActionsInfo();
     }
 
     public XFutureVoid startExploreGraphDb() {
