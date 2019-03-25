@@ -236,7 +236,7 @@
               <Properties>
                 <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="31">
+                  <Table columnCount="2" rowCount="32">
                     <Column editable="false" title="Name" type="java.lang.String">
                       <Data value="rpy"/>
                       <Data value="lookForXYZ"/>
@@ -268,6 +268,7 @@
                       <Data value="pauseInsteadOfRecover"/>
                       <Data value="skipMissingParts"/>
                       <Data value="useJointMovesForToolHolderApproach"/>
+                      <Data value="saveProgramRunData"/>
                       <Data value="joint0DiffTolerance"/>
                     </Column>
                     <Column editable="true" title="Value" type="java.lang.String">
@@ -301,6 +302,7 @@
                       <Data value="false"/>
                       <Data value="false"/>
                       <Data value="true"/>
+                      <Data value="false"/>
                       <Data value="20.0"/>
                     </Column>
                   </Table>

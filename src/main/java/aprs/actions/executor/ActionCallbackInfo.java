@@ -12,6 +12,7 @@ import java.util.List;
 class ActionCallbackInfo {
 
     private final int actionIndex;
+    private final String comment;
     private final Action action;
     private final CrclCommandWrapper wrapper;
     private final List<Action> actions;
@@ -19,8 +20,14 @@ class ActionCallbackInfo {
     private final List<Action> origActions;
     private final int actionsSize;
 
-    ActionCallbackInfo(int actionIndex, Action action, CrclCommandWrapper wrapper, List<Action> actions, @Nullable List<Action> origActions) {
+    ActionCallbackInfo(
+            int actionIndex, 
+            String comment, Action action, 
+            CrclCommandWrapper wrapper, 
+            List<Action> actions, 
+            @Nullable List<Action> origActions) {
         this.actionIndex = actionIndex;
+        this.comment = comment;
         this.action = action;
         this.wrapper = wrapper;
         this.actions = actions;
@@ -58,7 +65,7 @@ class ActionCallbackInfo {
     @SuppressWarnings("unused")
     @Override
     public String toString() {
-        return "ActionCallbackInfo{" + "actionIndex=" + actionIndex + ", action=" + action + ", wrapper=" + wrapper + ", actions=" + actions + '}';
+        return "ActionCallbackInfo{" + "actionIndex=" + actionIndex  + "comment=" + comment+ ", action=" + action + ", wrapper=" + wrapper + ", actions=" + actions + '}';
     }
 
 }

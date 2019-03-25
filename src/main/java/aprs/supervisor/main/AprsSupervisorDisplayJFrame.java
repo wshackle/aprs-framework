@@ -753,6 +753,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 break;
 
             case "Last":
+                futureToDisplaySupplier = () -> sup2.getLFR(this);
+                break;
+
+            case "Gui.Last":
                 futureToDisplaySupplier = () -> lastFutureReturned;
                 break;
 
@@ -1217,6 +1221,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     volatile javax.swing.@Nullable Timer runTimeTimer = null;
 
     volatile int maxEventStringLen = 0;
+    volatile int maxThreadNameStringLen = 0;
 
     private long getFirstEventTime() {
         if (null == supervisor) {
@@ -1246,7 +1251,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setAbortEventTime(abortEventTime);
     }
 
-    private void logEventPrivate(long time, String s, int blockerSize, String threadname) {
+    private void logEventPrivate(long time, String s, int blockerSize, int ecc, int cdc, int errs, String threadname) {
 
         if (getFirstEventTime() > 0) {
             updateRunningTime();
@@ -1269,21 +1274,36 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             logPrintStream.println(fullLogString);
         }
         System.out.println(fullLogString);
-        addEventToTable(time, blockerSize, s, threadname);
+        addEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
     }
 
-    public void addEventToTable(long time, int blockerSize, String s, String threadname) {
+    public void addEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname) {
         DefaultTableModel tm = (DefaultTableModel) jTableEvents.getModel();
         if (tm.getRowCount() > eventsDisplayMax) {
+             if (!jCheckBoxScrollEvents.isSelected()) {
+                 return;
+             }
             tm.removeRow(0);
             maxEventStringLen = 0;
         }
-        tm.addRow(new Object[]{getTimeString(time), blockerSize, s, threadname});
-        if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen) {
-            Utils.autoResizeTableColWidths(jTableEvents);
-            maxEventStringLen = s.length();
+        tm.addRow(new Object[]{getTimeString(time), blockerSize, ecc, cdc,errs, s, threadname});
+        if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen || threadname.length() > maxThreadNameStringLen) {
+             if (jCheckBoxScrollEvents.isSelected()) {
+                 Utils.autoResizeTableColWidths(jTableEvents);
+             }
+            if (s.length() > maxEventStringLen) {
+                maxEventStringLen = s.length();
+                if(s.length() > 200) {
+                    System.err.println("Very long string = "+s);
+                }
+            }
+            if (threadname.length() > maxThreadNameStringLen) {
+                maxThreadNameStringLen = threadname.length();
+            }
         } else {
-            scrollToEnd(jTableEvents);
+            if (jCheckBoxScrollEvents.isSelected()) {
+                scrollToEnd(jTableEvents);
+            }
         }
     }
 
@@ -1421,6 +1441,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jTextFieldEventsMax = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldRunningTime = new javax.swing.JTextField();
+        jCheckBoxScrollEvents = new javax.swing.JCheckBox();
         jPanelTeachTable = new javax.swing.JPanel();
         object2DOuterJPanel1 = new aprs.simview.Object2DOuterJPanel();
         jComboBoxTeachSystemView = new javax.swing.JComboBox<>();
@@ -1538,7 +1559,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 295, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -1655,7 +1676,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setVerticalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1748,7 +1769,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -1869,7 +1890,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1887,14 +1908,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Time", "Locks", "Event", "Thread"
+                "Time", "Locks", "ECC", "Cycles", "Errs", "Event", "Thread"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false, true, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1918,6 +1939,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         jLabel5.setText("Running Time : ");
 
+        jCheckBoxScrollEvents.setSelected(true);
+        jCheckBoxScrollEvents.setText("Scroll");
+
         javax.swing.GroupLayout jPanelEventsLayout = new javax.swing.GroupLayout(jPanelEvents);
         jPanelEvents.setLayout(jPanelEventsLayout);
         jPanelEventsLayout.setHorizontalGroup(
@@ -1930,6 +1954,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxScrollEvents)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1944,9 +1970,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5)
-                    .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxScrollEvents))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE)
+                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1978,7 +2005,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE))
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Teach", jPanelTeachTable);
@@ -2054,7 +2081,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSyncToolsFromRobots)
                     .addComponent(jButtonSyncToolsToRobots))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
+                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2752,7 +2779,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.performSafeAbortAllAction();
+        supervisor.performSafeAbortAllAction(null);
     }
 
     public XFutureVoid showSafeAbortComplete() {
@@ -3219,7 +3246,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         boolean origIgnoreTitleErrs2 = ignoreTitleErrors.getAndSet(true);
                         try {
                             cancelAll(true);
-                            cancelAllStealUnsteal(true);
                             jCheckBoxMenuItemPause.setSelected(false);
                             jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(false);
                             jCheckBoxMenuItemContinuousDemo.setSelected(false);
@@ -3242,7 +3268,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                             } catch (Exception e) {
                                                 logEvent("Exception occurred: " + e);
                                                 Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                MultiLineStringJPanel.showText( "Exception occurred: " + e);
+                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
                                                 throw e;
                                             } finally {
                                                 if (!origIgnoreTitleErrs) {
@@ -3254,7 +3280,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         } catch (Exception e) {
                             logEvent("Exception occurred: " + e);
                             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                            MultiLineStringJPanel.showText( "Exception occurred: " + e);
+                            MultiLineStringJPanel.showText("Exception occurred: " + e);
                             throw e;
                         }
                     });
@@ -4619,8 +4645,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.incrementAndGetContinuousDemoCycle();
     }
 
-    public XFutureVoid incrementContinuousDemoCycle() {
-        final int c = incrementAndGetContinuousDemoCycle();
+    public XFutureVoid setContinuousDemoCycle(int c) {
         System.out.println("incrementContinuousDemoCycle : " + c);
         if (jCheckBoxMenuItemContinuousDemoRevFirst.isSelected()) {
             return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinuousDemoRevFirst.setText("Continuous Demo (Reverse First) (" + c + ") "));
@@ -4654,7 +4679,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startReverseActions();
+        return supervisor.startReverseActions(null);
     }
 
     private void savePosFile(File f) throws IOException {
@@ -4722,7 +4747,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private void completeEnableAllRobots() {
-        cancelAllStealUnsteal(false);
         try {
             initColorTextSocket();
         } catch (IOException ex) {
@@ -4831,13 +4855,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == supervisor");
         }
         supervisor.cancelAll(mayInterrupt);
-    }
-
-    private void cancelAllStealUnsteal(boolean mayInterrupt) {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.cancelAllStealUnsteal(mayInterrupt);
     }
 
     private XFutureVoid restoreOrigRobotInfo() {
@@ -5078,6 +5095,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         DefaultListModel<String> listModel = new DefaultListModel<>();
         listModel.addElement("Main");
         listModel.addElement("Last");
+        listModel.addElement("Gui.Last");
         listModel.addElement("Resume");
         listModel.addElement("prepReset");
         listModel.addElement("prepStart");
@@ -5644,6 +5662,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowSplashMessages;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseCorrectionModeByDefault;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachCamera;
+    private javax.swing.JCheckBox jCheckBoxScrollEvents;
     private javax.swing.JCheckBox jCheckBoxShowDoneFutures;
     private javax.swing.JCheckBox jCheckBoxShowUnnamedFutures;
     private javax.swing.JCheckBox jCheckBoxUpdateFutureAutomatically;

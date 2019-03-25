@@ -23,15 +23,15 @@
 package aprs.supervisor.main;
 
 import aprs.system.AprsSystem;
-import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class NamedCallable<T> implements Callable<T> {
+public class NamedFunction<T,R> implements Function<T,R> {
 
-    private final Callable<T> callable;
+    private final Function<T,R> function;
     private final String name;
     private final AprsSystem[] systems;
 
@@ -43,20 +43,20 @@ public class NamedCallable<T> implements Callable<T> {
         return systems;
     }
 
-    public NamedCallable(Callable<T> r, String name, AprsSystem... systems) {
-        this.callable = r;
+    public NamedFunction(Function<T,R> f, String name, AprsSystem... systems) {
+        this.function = f;
         this.name = name;
         this.systems = systems;
-        assert (r != null) : "NamedRunnable: Runnable r == null";
+        assert (f != null) : "NamedRunnable: Runnable r == null";
     }
 
     @Override
     public String toString() {
-        return "NamedRunnable{" + "r=" + callable + ", name=" + name + '}';
+        return "NamedRunnable{" + "r=" + function + ", name=" + name + '}';
     }
 
     @Override
-    public T call() throws Exception {
-        return callable.call();
+    public R apply(T arg) {
+        return function.apply(arg);
     }
 }

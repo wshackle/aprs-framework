@@ -90,8 +90,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getForceFakeTakeFlag();
     }
 
-    public void clearKitsToCheck() {
-        executorJPanel1.clearKitsToCheck();
+    public void clearKitsToCheck(int startAbortCount) {
+        executorJPanel1.clearKitsToCheck(startAbortCount);
     }
     
     
@@ -178,6 +178,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return this.executorJPanel1.startSafeAbort(name);
     }
 
+    public void completeSafeAbort() {
+        this.executorJPanel1.completeSafeAbort();
+    }
+    
     public int getCurrentActionIndex() {
         return this.executorJPanel1.getCurrentActionIndex();
     }
@@ -422,6 +426,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.readyForNewActionsList();
     }
 
+    public String readyForNewActionsListInfoString() {
+        return executorJPanel1.readyForNewActionsListInfoString();
+    }
+    
     public void warnIfNewActionsNotReady() {
         executorJPanel1.warnIfNewActionsNotReady();
     }
