@@ -1280,21 +1280,21 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public void addEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname) {
         DefaultTableModel tm = (DefaultTableModel) jTableEvents.getModel();
         if (tm.getRowCount() > eventsDisplayMax) {
-             if (!jCheckBoxScrollEvents.isSelected()) {
-                 return;
-             }
+            if (!jCheckBoxScrollEvents.isSelected()) {
+                return;
+            }
             tm.removeRow(0);
             maxEventStringLen = 0;
         }
-        tm.addRow(new Object[]{getTimeString(time), blockerSize, ecc, cdc,errs, s, threadname});
+        tm.addRow(new Object[]{getTimeString(time), blockerSize, ecc, cdc, errs, s, threadname});
         if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen || threadname.length() > maxThreadNameStringLen) {
-             if (jCheckBoxScrollEvents.isSelected()) {
-                 Utils.autoResizeTableColWidths(jTableEvents);
-             }
+            if (jCheckBoxScrollEvents.isSelected()) {
+                Utils.autoResizeTableColWidths(jTableEvents);
+            }
             if (s.length() > maxEventStringLen) {
                 maxEventStringLen = s.length();
-                if(s.length() > 200) {
-                    System.err.println("Very long string = "+s);
+                if (s.length() > 200) {
+                    System.err.println("Very long string = " + s);
                 }
             }
             if (threadname.length() > maxThreadNameStringLen) {
@@ -3136,12 +3136,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemContinuousDemoActionPerformed2OnDisplay() {
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
-            XFutureVoid ContinuousDemoFuture = startContinuousDemo();
-            setMainFuture(ContinuousDemoFuture);
-        }
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
+                        XFutureVoid ContinuousDemoFuture = startContinuousDemo();
+                        setMainFuture(ContinuousDemoFuture);
+                    }
+                });
     }
 
     @UIEffect
@@ -3189,13 +3191,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         privateClearEventLog();
         clearAllErrors();
         connectAll();
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        clearRandomTestCount();
-        if (jCheckBoxMenuItemRandomTest.isSelected()) {
-            lastFutureReturned = startRandomTest();
-            setMainFuture(lastFutureReturned);
-        }
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    clearRandomTestCount();
+                    if (jCheckBoxMenuItemRandomTest.isSelected()) {
+                        lastFutureReturned = startRandomTest();
+                        setMainFuture(lastFutureReturned);
+                    }
+                });
     }
 
     @SuppressWarnings({"rawtypes", "nullness"})
@@ -3219,9 +3223,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartAllReverseActionPerformed2OnDisplay() {
-        enableAllRobots();
-        lastFutureReturned = startReverseActions();
-        setMainFuture(lastFutureReturned);
+        enableAllRobots()
+                .thenRun(() -> {
+                    lastFutureReturned = startReverseActions();
+                    setMainFuture(lastFutureReturned);
+                });
     }
 
     @UIEffect
@@ -3260,23 +3266,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             resetAll(false);
                             return restoreOrigRobotInfo()
                                     .thenComposeToVoid(() -> {
-                                        return Utils.runOnDispatchThread(() -> {
-                                            try {
-                                                connectAll();
-                                                enableAllRobots();
-                                                resetting = false;
-                                            } catch (Exception e) {
-                                                logEvent("Exception occurred: " + e);
-                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
-                                                throw e;
-                                            } finally {
-                                                if (!origIgnoreTitleErrs) {
-                                                    ignoreTitleErrors.set(false);
-                                                }
-                                            }
-                                        });
+                                        connectAll();
+                                        return enableAllRobots();
+                                    })
+                                    .always(() -> {
+                                        resetting = false;
+                                        if (!origIgnoreTitleErrs) {
+                                            ignoreTitleErrors.set(false);
+                                        }
                                     });
+
                         } catch (Exception e) {
                             logEvent("Exception occurred: " + e);
                             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3355,23 +3354,23 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed2OnDisplay() {
-        XFutureVoid ContinuousDemoFuture;
-        XFutureVoid randomTestFuture;
-        XFutureVoid pauseTestFuture;
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        clearRandomTestCount();
-        jCheckBoxMenuItemContinuousDemo.setSelected(false);
-        jCheckBoxMenuItemContinuousDemoRevFirst.setSelected(false);
-        jCheckBoxMenuItemRandomTest.setSelected(false);
-        if (jCheckBoxMenuItemPauseResumeTest.isSelected()) {
-            jCheckBoxMenuItemContinuousDemo.setSelected(true);
-            jCheckBoxMenuItemRandomTest.setSelected(true);
-            ContinuousDemoFuture = startContinuousDemo();
-            randomTestFuture = continueRandomTest();
-            pauseTestFuture = continuePauseTest();
-            resetMainPauseTestFuture();
-        }
+
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    clearRandomTestCount();
+                    jCheckBoxMenuItemContinuousDemo.setSelected(false);
+                    jCheckBoxMenuItemContinuousDemoRevFirst.setSelected(false);
+                    jCheckBoxMenuItemRandomTest.setSelected(false);
+                    if (jCheckBoxMenuItemPauseResumeTest.isSelected()) {
+                        jCheckBoxMenuItemContinuousDemo.setSelected(true);
+                        jCheckBoxMenuItemRandomTest.setSelected(true);
+                        startContinuousDemo();
+                        continueRandomTest();
+                        continuePauseTest();
+                        resetMainPauseTestFuture();
+                    }
+                });
     }
 
     private void resetMainPauseTestFuture() {
@@ -3536,15 +3535,17 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid startRandomTestFirstActionReversed2OnDisplay() {
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        clearRandomTestCount();
-        jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
-        jCheckBoxMenuItemRandomTest.setSelected(true);
-        lastFutureReturned = null;
-        XFutureVoid ret = startRandomTest();
-        setMainFuture(ret);
-        return ret;
+        return enableAllRobots()
+                .thenComposeToVoid(() -> {
+                    clearContinuousDemoCycle();
+                    clearRandomTestCount();
+                    jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
+                    jCheckBoxMenuItemRandomTest.setSelected(true);
+                    lastFutureReturned = null;
+                    XFutureVoid ret = startRandomTest();
+                    setMainFuture(ret);
+                    return ret;
+                });
     }
 
     @UIEffect
@@ -3599,20 +3600,22 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemIndContinuousDemoActionPerformed2OnDisplay() {
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        if (jCheckBoxMenuItemIndContinuousDemo.isSelected()) {
-            resetAll(false)
-                    .thenCompose(x -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            jCheckBoxMenuItemIndContinuousDemo.setSelected(true);
-                            XFutureVoid future = startIndependentContinuousDemo();
-                            setMainFuture(future);
-                            setContinuousDemoFuture(future);
-                        });
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    if (jCheckBoxMenuItemIndContinuousDemo.isSelected()) {
+                        resetAll(false)
+                                .thenCompose(x -> {
+                                    return Utils.runOnDispatchThread(() -> {
+                                        jCheckBoxMenuItemIndContinuousDemo.setSelected(true);
+                                        XFutureVoid future = startIndependentContinuousDemo();
+                                        setMainFuture(future);
+                                        setContinuousDemoFuture(future);
+                                    });
 
-                    });
-        }
+                                });
+                    }
+                });
     }
 
     private Random getRandom() {
@@ -3649,27 +3652,29 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemIndRandomToggleTestActionPerformed2OnDisplay() {
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        if (jCheckBoxMenuItemFixedRandomTestSeed.isSelected()) {
-            Random newRandom = new Random(getRandomTestSeed());
-            setRandom(newRandom);
-        } else {
-            Random newRandom = new Random(System.currentTimeMillis());
-            setRandom(newRandom);
-        }
-        if (jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
-            resetAll(false)
-                    .thenCompose(x -> {
-                        return Utils.runOnDispatchThread(() -> {
-                            jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
-                            XFutureVoid future = startRandomEnableToggleIndependentContinuousDemo();
-                            setContinuousDemoFuture(future);
-                            setMainFuture(future);
-                        });
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    if (jCheckBoxMenuItemFixedRandomTestSeed.isSelected()) {
+                        Random newRandom = new Random(getRandomTestSeed());
+                        setRandom(newRandom);
+                    } else {
+                        Random newRandom = new Random(System.currentTimeMillis());
+                        setRandom(newRandom);
+                    }
+                    if (jCheckBoxMenuItemIndRandomToggleTest.isSelected()) {
+                        resetAll(false)
+                                .thenCompose(x -> {
+                                    return Utils.runOnDispatchThread(() -> {
+                                        jCheckBoxMenuItemIndRandomToggleTest.setSelected(true);
+                                        XFutureVoid future = startRandomEnableToggleIndependentContinuousDemo();
+                                        setContinuousDemoFuture(future);
+                                        setMainFuture(future);
+                                    });
 
-                    });
-        }
+                                });
+                    }
+                });
     }
 
     private int getRandomTestSeed() {
@@ -3819,13 +3824,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartContinuousScanAndRunActionPerformed2OnDisplay() {
-        enableAllRobots();
-        clearContinuousDemoCycle();
-        jCheckBoxMenuItemShowSplashMessages.setSelected(false);
-        jCheckBoxMenuItemContinuousDemo.setSelected(true);
-        XFutureVoid future = startContinuousScanAndRun();
-        setMainFuture(future);
-        setContinuousDemoFuture(future);
+        enableAllRobots()
+                .thenRun(() -> {
+                    clearContinuousDemoCycle();
+                    jCheckBoxMenuItemShowSplashMessages.setSelected(false);
+                    jCheckBoxMenuItemContinuousDemo.setSelected(true);
+                    XFutureVoid future = startContinuousScanAndRun();
+                    setMainFuture(future);
+                    setContinuousDemoFuture(future);
+                });
     }
 
     private volatile XFutureVoid internalInteractiveResetAllFuture = null;
@@ -4734,25 +4741,26 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * estop and no change to its estop state is made, only the checkboxes in
      * the robots table are potentially changed.)
      */
-    private void enableAllRobots() {
+    private XFutureVoid enableAllRobots() {
         if (null == robotEnableMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
         if (null != supervisor) {
-            supervisor.enableAllRobots()
-                    .thenRun(this::completeEnableAllRobots);
-            return;
+            return supervisor.enableAllRobotsOnSupervisor()
+                    .thenComposeToVoid(this::completeEnableAllRobots);
         }
-        completeEnableAllRobots();
+        return completeEnableAllRobots();
     }
 
-    private void completeEnableAllRobots() {
-        try {
-            initColorTextSocket();
-        } catch (IOException ex) {
-            log(Level.SEVERE, "", ex);
-        }
-        Utils.autoResizeTableColWidths(jTableRobots);
+    private XFutureVoid completeEnableAllRobots() {
+        return Utils.runOnDispatchThread(() -> {
+            try {
+                initColorTextSocket();
+            } catch (IOException ex) {
+                log(Level.SEVERE, "", ex);
+            }
+            Utils.autoResizeTableColWidths(jTableRobots);
+        });
     }
 
     private void pause() {
