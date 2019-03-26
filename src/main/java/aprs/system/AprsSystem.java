@@ -130,6 +130,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
+import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CrclCommandWrapper;
 
 import java.awt.GraphicsEnvironment;
@@ -459,7 +460,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                 }
                             }
                         },
-                        connectService)
+                        runProgramService)
                 .thenRun(
                         "restoreOrigRobotInfo" + getTaskName(),
                         () -> {
@@ -485,7 +486,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 .thenRunAsync(
                         "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
                         () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1),
-                        connectService);
+                        runProgramService);
     }
 
     private void setStopRunTime() {
@@ -1434,7 +1435,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                     logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                     takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                 }
-                            }, connectService);
+                            }, runProgramService);
                 }
                 XFutureVoid localSafeAbortFuture
                         = this.pddlExecutorJInternalFrame1.startSafeAbort(comment);
@@ -1477,7 +1478,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                         logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                         takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                     }
-                                }, connectService);
+                                }, runProgramService);
                 this.safeAbortAndDisconnectFutureWaitAll2 = localsafeAbortAndDisconnectFutureWaitAll2;
                 ret = localsafeAbortAndDisconnectFutureWaitAll2;
             } else {
@@ -1608,7 +1609,7 @@ public class AprsSystem implements SlotOffsetProvider {
         checkReadyToDisconnect();
         enableCheckedAlready = false;
         XFutureVoid waitForPausFuture = waitForPause();
-        if (connectService == null || connectService.isShutdown()) {
+        if (runProgramService == null || runProgramService.isShutdown()) {
             return waitForPausFuture;
         }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
@@ -1627,11 +1628,11 @@ public class AprsSystem implements SlotOffsetProvider {
                                 }
                             }
                         },
-                        connectService);
+                        runProgramService);
         this.disconnectRobotFuture = ret;
         if (debug) {
             System.out.println("disconnectRobotFuture = " + disconnectRobotFuture);
-            System.out.println("connectService = " + connectService);
+            System.out.println("runProgramService = " + runProgramService);
         }
         return ret;
     }
@@ -1733,7 +1734,7 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("connectRobot", robotName + " -> " + host + ":" + port);
         enableCheckedAlready = false;
         return waitForPause().
-                thenRunAsync(() -> connectRobotPrivate(robotName, host, port), connectService)
+                thenRunAsync(() -> connectRobotPrivate(robotName, host, port), runProgramService)
                 .always(() -> logEvent("finished connectRobot", robotName + " -> " + host + ":" + port));
     }
 
@@ -2546,12 +2547,19 @@ public class AprsSystem implements SlotOffsetProvider {
                 });
     }
 
+    private volatile String detailsString = "";
+
     /**
      * Create a string with current details for display and/or logging.
      *
      * @return details string
      */
     public String getDetailsString() {
+        return detailsString;
+
+    }
+
+    private String updateDetailsString() {
         try {
             StringBuilder sb = new StringBuilder();
             sb.append(this.toString()).append("\r\n");
@@ -2643,13 +2651,16 @@ public class AprsSystem implements SlotOffsetProvider {
             }
 //        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
 //        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
-            return sb.toString().trim();
+            String ret = sb.toString().trim();
+            detailsString = ret;
+            return ret;
         } catch (Exception e) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
             String ret = e.getMessage();
             if (null == ret) {
                 throw e;
             }
+            detailsString = ret;
             return ret;
         }
     }
@@ -2787,6 +2798,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return setTitleErrorStringTrace;
     }
 
+    private final AtomicInteger setTitleErrorStringCount = new AtomicInteger();
+
     /**
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
@@ -2799,8 +2812,19 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
                 if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
-                    System.err.println("details=" + getDetailsString());
-                    logEvent("setTitleErrorString", newTitleErrorString);
+                    int count = setTitleErrorStringCount.incrementAndGet();
+                    System.err.println("setTitleErrorStringCount=" + count);
+                    String details;
+                    if (Thread.currentThread() == runProgramServiceThread) {
+                        details = updateDetailsString();
+                    } else {
+                        details = getDetailsString();
+                    }
+                    System.err.println("details=" + details);
+                    logEvent("setTitleErrorString", newTitleErrorString, count);
+                    if (count < 10) {
+                        MultiLineStringJPanel.forceShowText(newTitleErrorString + "\n\n" + "count=" + count + "\n\ndetails=" + details);
+                    }
                     titleErrorStringCommandStatus = getCommandStatus();
                     if (null != this.titleErrorString
                             && null != newTitleErrorString
@@ -2991,19 +3015,19 @@ public class AprsSystem implements SlotOffsetProvider {
             Thread.currentThread().setName(getThreadName());
         }
     }
+    private volatile Thread runProgramServiceThread = null;
 
-    private final ExecutorService defaultRunProgramService
+    private final ExecutorService runProgramService
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
                 public Thread newThread(Runnable r) {
                     Thread thread = new Thread(r, getThreadName());
+                    runProgramServiceThread = thread;
                     thread.setDaemon(true);
                     return thread;
                 }
             });
 
-    private final ExecutorService runProgramService = defaultRunProgramService;
-    private final ExecutorService connectService = defaultRunProgramService;
     @Nullable
     private XFutureVoid connectDatabaseFuture = null;
 
@@ -3031,7 +3055,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
         }
         connectDatabaseFuture = connectDatabase();
-        //connectService.submit(this::connectDatabase);
+        //runProgramService.submit(this::connectDatabase);
         return f;
     }
 
@@ -4247,6 +4271,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 newTitle = newTitle.substring(0, 100) + " ... ";
             }
             if (!oldTitle.equals(newTitle)) {
+                updateDetailsString();
                 setTitle(newTitle);
                 this.asString = newTitle;
                 setupWindowsMenu();
@@ -6054,7 +6079,13 @@ public class AprsSystem implements SlotOffsetProvider {
         ps.println();
         int count = debugActionCount.incrementAndGet();
         ps.println("Begin AprsSystem.debugAction()" + count);
-        String details = getDetailsString();
+        String details;
+        if (Thread.currentThread() == runProgramServiceThread) {
+            ps.println("detailsString = " + detailsString);
+            details = updateDetailsString();
+        } else {
+            details = getDetailsString();
+        }
         ps.println("details = " + details);
         ps.println("lastContinueCrclProgramResult = " + lastContinueCrclProgramResult);
         ps.println("lastStartActionsFuture = " + lastStartActionsFuture);
@@ -8776,7 +8807,7 @@ public class AprsSystem implements SlotOffsetProvider {
             connectDatabaseFuture = null;
         }
         XFuture<?> ret = XFuture.runAsync("disconnectDatabase",
-                this::disconnectDatabase, connectService);
+                this::disconnectDatabase, runProgramService);
         disconnectDatabaseFuture = ret;
         return ret;
     }
@@ -8869,7 +8900,7 @@ public class AprsSystem implements SlotOffsetProvider {
             System.out.println("AprsSystem.close() : task=" + task);
         }
         closeAllWindows();
-        connectService.shutdownNow();
+        runProgramService.shutdownNow();
         if (null != aprsSystemDisplayJFrame) {
             Utils.runOnDispatchThread(this::closeAprsSystemDisplayJFrame);
         }
