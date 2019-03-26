@@ -7800,7 +7800,7 @@ public class Supervisor {
         }
         XFutureVoid f
                 = waitTogglesAllowed()
-                        .thenComposeToVoid(x -> safeAbortAll());
+                        .thenComposeAsyncToVoid(x -> safeAbortAll(),supervisorExecutorService);
         setLastSafeAbortAllFuture(f);
         XFutureVoid f2 = f.alwaysCompose(() -> {
             if (null != safeAbortReturnRobot) {
