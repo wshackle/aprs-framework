@@ -2948,7 +2948,7 @@ public class Supervisor {
         sys.setSupervisor(this);
         aprsSystems.add(sys);
         sys.getTitleUpdateRunnables().add(() -> {
-            updateTasksTable();
+            updateTasksTableOnSupervisorService();
         });
         updateTasksTable();
     }
@@ -3806,7 +3806,7 @@ public class Supervisor {
 
     public XFutureVoid startContinuousDemoRevFirst() {
         setContinuousDemoSelected(false);
-        return prepAndFinishToXFutureVoidOnDispatch(this::startContinuousDemoRevFirstFinish);
+        return prepActions().thenComposeAsyncToVoid(this::startContinuousDemoRevFirstFinish, supervisorExecutorService);
     }
 
     private XFutureVoid startContinuousDemoRevFirstFinish() {
@@ -3815,7 +3815,7 @@ public class Supervisor {
         clearAllErrors();
         connectAll();
         return enableAllRobots()
-                .thenComposeToVoid(this::completeStartContinousDemoRevFirstFinish);
+                .thenComposeAsyncToVoid(this::completeStartContinousDemoRevFirstFinish, supervisorExecutorService);
     }
 
     private XFutureVoid completeStartContinousDemoRevFirstFinish() {
@@ -4419,11 +4419,11 @@ public class Supervisor {
                     skips++;
                     consecututiveSkips++;
                     origStartingStringsMap.put(aprsSys.getTaskName(), startingKitStrings);
-                    if(consecututiveSkips < 10) {
+                    if (consecututiveSkips < 10) {
                         logEvent("completeScanTillNewInternal:endingKitStrings.size() =" + endingKitStrings.size() + ", startingKitStrings.size()=" + startingKitStrings.size() + " skips = " + skips);
                     } else {
-                        logEventErr("endingKitStrings="+endingKitStrings);
-                        logEventErr("startingKitStrings="+startingKitStrings);
+                        logEventErr("endingKitStrings=" + endingKitStrings);
+                        logEventErr("startingKitStrings=" + startingKitStrings);
                         logEventErr("completeScanTillNewInternal:endingKitStrings.size() =" + endingKitStrings.size() + ", startingKitStrings.size()=" + startingKitStrings.size() + " skips = " + skips);
                     }
                     return;
@@ -4437,7 +4437,7 @@ public class Supervisor {
                         logEvent("completeScanTillNewInternal causing" + aprsSys.getTaskName() + " to load actionFile = " + actionListFile);
                     }
                     anyChanged = true;
-                    consecututiveSkips= 0;
+                    consecututiveSkips = 0;
                 }
             }
             long now = System.currentTimeMillis();
@@ -4519,7 +4519,15 @@ public class Supervisor {
 
     private volatile XFuture<?> lastStartScanAllFutures @Nullable []  = null;
 
-    XFuture<?> startScanAllThenContinuousDemoRevFirst() {
+    public XFutureVoid startScanAllThenContinuousDemoRevFirstOnSupervisorService() {
+        return XFuture.supplyAsync(
+                "startScanAllThenContinuousDemoRevFirstOnSupervisorService",
+                this::startScanAllThenContinuousDemoRevFirst,
+                supervisorExecutorService)
+                .thenComposeToVoid(x -> x);
+    }
+
+    private XFutureVoid startScanAllThenContinuousDemoRevFirst() {
         logEvent("startScanAllThenContinuousDemoRevFirst starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
         XFutureVoid xf2 = xf1
@@ -4527,8 +4535,8 @@ public class Supervisor {
                     logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf1=" + xf1);
                     return startScanAll();
                 });
-        XFuture<?> xf3 = xf2
-                .thenCompose("startScanAllThenContinuousDemoRevFirst.step3", x -> {
+        XFutureVoid xf3 = xf2
+                .thenComposeToVoid("startScanAllThenContinuousDemoRevFirst.step3", x -> {
                     logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf2=" + xf2);
                     return startContinuousDemoRevFirst();
                 });
@@ -5628,19 +5636,15 @@ public class Supervisor {
                         }
                     }
                     setIconImage(IconImages.ERROR_IMAGE);
-                    if (pauseOnError) {
-                        System.err.println("pauseOnError = " + pauseOnError);
-                        pause();
-                    }
                 });
             } else {
                 if (count < 5) {
                     System.err.println("displayJFrame = " + displayJFrame);
                 }
-                if (pauseOnError) {
-                    System.err.println("pauseOnError = " + pauseOnError);
-                    pause();
-                }
+            }
+            if (pauseOnError) {
+                System.err.println("pauseOnError = " + pauseOnError);
+                pause();
             }
         }
     }
@@ -6432,9 +6436,9 @@ public class Supervisor {
     @Nullable
     private final JPopupMenu posTablePopupMenu = null;
 
-    public XFutureVoid enableAllRobotsOnSupervisor() {
+    public XFutureVoid enableAllRobotsOnSupervisorService() {
         return XFuture.supplyAsync(
-                "enableAllRobotsOnSupervisor",
+                "enableAllRobotsOnSupervisorService",
                 this::enableAllRobots,
                 supervisorExecutorService)
                 .thenComposeToVoid(x -> x);
@@ -7800,7 +7804,7 @@ public class Supervisor {
         }
         XFutureVoid f
                 = waitTogglesAllowed()
-                        .thenComposeAsyncToVoid(x -> safeAbortAll(),supervisorExecutorService);
+                        .thenComposeAsyncToVoid(x -> safeAbortAll(), supervisorExecutorService);
         setLastSafeAbortAllFuture(f);
         XFutureVoid f2 = f.alwaysCompose(() -> {
             if (null != safeAbortReturnRobot) {
@@ -8189,7 +8193,7 @@ public class Supervisor {
         aprsSys.setTaskName(taskName);
         aprsSys.setRobotName(robotName);
         aprsSys.getTitleUpdateRunnables().add(() -> {
-            updateTasksTable();
+            updateTasksTableOnSupervisorService();
         });
         aprsSys.setSupervisorEventLogger(this::logEvent);
         aprsSys.setSupervisor(this);
@@ -8383,13 +8387,21 @@ public class Supervisor {
         this.resetting = resetting;
     }
 
+    private XFutureVoid updateTasksTableOnSupervisorService() {
+        if (closing || resetting) {
+            return XFutureVoid.completedFuture();
+        }
+        return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
+    }
+
+    private volatile Object lastTasksTableData[][] = null;
+
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
         if (closing || resetting) {
             return;
         }
         boolean needSetJListFuturesModel = false;
-        tasksCachedTable.setRowCount(0);
         if (lastUpdateTaskTableTaskNames == null
                 || lastUpdateTaskTableTaskNames.length != aprsSystems.size()) {
             lastUpdateTaskTableTaskNames = new String[aprsSystems.size()];
@@ -8398,6 +8410,7 @@ public class Supervisor {
         BufferedImage liveImages[] = new BufferedImage[aprsSystems.size()];
         boolean newImage = false;
         Object newTasksTableData[][] = new Object[aprsSystems.size()][];
+        boolean needResize = (null == lastTasksTableData || newTasksTableData.length != lastTasksTableData.length);
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystemInterface = aprsSystems.get(i);
             String taskName = aprsSystemInterface.getTaskName();
@@ -8424,19 +8437,30 @@ public class Supervisor {
             if (null != liveImage) {
                 liveImages[i] = liveImage;
                 newImage = true;
+                if(!needResize && lastTasksTableData[i][4] == null) {
+                    needResize = true;
+                }
             }
             String robotName = aprsSystemInterface.getRobotName();
             Image scanImage = aprsSystemInterface.getScanImage();
             String detailsString = aprsSystemInterface.getDetailsString();
+            if (!needResize) {
+                if (detailsString.length() > ((String) lastTasksTableData[i][5]).length()) {
+                    needResize = true;
+                } else if (detailsString.length() < ((String) lastTasksTableData[i][5]).length() - 100) {
+                    needResize = true;
+                }
+            }
             File propertiesFile = aprsSystemInterface.getPropertiesFile();
             int priority = aprsSystemInterface.getPriority();
             newTasksTableData[i] = new Object[]{priority, taskName, robotName, scanImage, liveImage, detailsString, propertiesFile};
         }
         tasksCachedTable.setData(newTasksTableData);
+        lastTasksTableData = newTasksTableData;
         if (isRecordLiveImageMovieSelected()) {
             combineAndEncodeLiveImages(newImage, liveImages);
         }
-        completeUpdateTasksTable(needSetJListFuturesModel);
+        completeUpdateTasksTable(needSetJListFuturesModel, needResize);
     }
 
     @SuppressWarnings("guieffect")
@@ -8460,9 +8484,9 @@ public class Supervisor {
         return resumeFuture.get();
     }
 
-    private void completeUpdateTasksTable(boolean needSetJListFuturesModel) {
+    private void completeUpdateTasksTable(boolean needSetJListFuturesModel, boolean needResize) {
         if (null != displayJFrame) {
-            displayJFrame.completeUpdateTasksTable(needSetJListFuturesModel);
+            displayJFrame.completeUpdateTasksTable(needSetJListFuturesModel, needResize);
         }
     }
 

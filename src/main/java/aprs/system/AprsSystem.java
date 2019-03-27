@@ -45,6 +45,7 @@ import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
+import aprs.database.Part;
 import aprs.database.TrayFillInfo;
 import aprs.database.TraySlotListItem;
 import aprs.pddl_planner.PddlPlannerJInternalFrame;
@@ -2044,7 +2045,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public void setTaskName(String taskName) {
         this.taskName = taskName;
         clearLogDirCache();
-        updateTitle("", "");
+        submitUpdateTitle();
     }
 
     private void clearLogDirCache() {
@@ -2116,7 +2117,15 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         this.robotName = robotName;
         clearLogDirCache();
-        Utils.runOnDispatchThread(() -> updateTitle("", ""));
+        submitUpdateTitle();
+    }
+
+    private void submitUpdateTitle() {
+        if (null == runProgramServiceThread || runProgramServiceThread == Thread.currentThread()) {
+            updateTitle();
+        } else {
+            runProgramService.submit(() -> updateTitle());
+        }
     }
 
     private void maybeSetOrigRobotName(@Nullable String robotName1) {
@@ -2543,7 +2552,22 @@ public class AprsSystem implements SlotOffsetProvider {
                         lastStartCheckEnabledFuture2.cancelAll(true);
                         lastStartCheckEnabledFuture2 = null;
                     }
+                    if (null != lastPrivateStartActionsFuture) {
+                        lastPrivateStartActionsFuture.cancelAll(false);
+                        lastPrivateStartActionsFuture = null;
+                    }
+                    if (null != startLookForPartsFuture) {
+                        startLookForPartsFuture.cancelAll(false);
+                        startLookForPartsFuture = null;
+                    }
+                    if (null != lastPrivateContinueActionListFuture) {
+                        lastPrivateContinueActionListFuture.cancelAll(false);
+                        lastPrivateContinueActionListFuture = null;
+                    }
                     continousDemoCheckBox.setSelected(false);
+                    doingLookForParts = false;
+                    runningPrivateContinueActionList = false;
+                    runningPrivateStartActions = false;
                 });
     }
 
@@ -2561,6 +2585,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private String updateDetailsString() {
         try {
+            if (runProgramServiceThread != null && runProgramServiceThread != Thread.currentThread()) {
+                throw new RuntimeException("updateDetailsString called from wrong thread " + Thread.currentThread() + " instead of " + runProgramServiceThread);
+            }
             StringBuilder sb = new StringBuilder();
             sb.append(this.toString()).append("\r\n");
             if (null != crclClientJInternalFrame) {
@@ -2799,6 +2826,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private final AtomicInteger setTitleErrorStringCount = new AtomicInteger();
+    private static volatile long lastForceShowErrorTime = -1;
 
     /**
      * Set the title error string, which should be a short string identifying
@@ -2822,8 +2850,13 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                     System.err.println("details=" + details);
                     logEvent("setTitleErrorString", newTitleErrorString, count);
-                    if (count < 10) {
+                    if (count < 2 || System.currentTimeMillis() - lastForceShowErrorTime > 5000) {
+                        if(System.currentTimeMillis() - lastForceShowErrorTime > 5000) {
+                            MultiLineStringJPanel.closeAllPanels();
+                        }
+                        lastForceShowErrorTime = System.currentTimeMillis();
                         MultiLineStringJPanel.forceShowText(newTitleErrorString + "\n\n" + "count=" + count + "\n\ndetails=" + details);
+                        lastForceShowErrorTime = System.currentTimeMillis();
                     }
                     titleErrorStringCommandStatus = getCommandStatus();
                     if (null != this.titleErrorString
@@ -2838,7 +2871,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     } else {
                         this.titleErrorString = newTitleErrorString;
                     }
-                    updateTitle();
+                    submitUpdateTitle();
                     if (null != newTitleErrorString && newTitleErrorString.length() > 0) {
                         setTitleErrorStringTrace = Thread.currentThread().getStackTrace();
                         boolean snapshotsEnabled = this.isSnapshotsSelected();
@@ -3206,10 +3239,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile String title = "";
 
-    private void setTitle(String newTitle) {
+    private XFutureVoid setTitle(String newTitle) {
         this.title = newTitle;
         if (null != aprsSystemDisplayJFrame) {
-            Utils.runOnDispatchThread(() -> setTitleOnDisplay(newTitle));
+            return Utils.runOnDispatchThread(() -> setTitleOnDisplay(newTitle));
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
@@ -3217,6 +3252,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void setTitleOnDisplay(String newTitle) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setTitle(newTitle);
+            setupWindowsMenuOnDisplay();
         }
     }
 
@@ -3447,7 +3483,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != aprsSystemDisplayJFrame) {
             Utils.runOnDispatchThread(this::completeCommonInitOnDisplay);
         }
-        updateTitle("", "");
+        submitUpdateTitle();
         this.asString = getTitle();
     }
 
@@ -4247,14 +4283,22 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private long lastRunAllUpdateRunnableTime = System.currentTimeMillis();
 
-    private void updateTitle(String stateString, String stateDescription) {
+    private volatile String lastTitleStateString = "";
+    private volatile String lastTitleStateDescription = "";
+
+    private void updateTitleStateDescription(String stateString, String stateDescription) {
         try {
+            if (runProgramServiceThread != null && runProgramServiceThread != Thread.currentThread()) {
+                throw new RuntimeException("updateTitleStateDescription called from wrong thread " + Thread.currentThread() + " instead of " + runProgramServiceThread);
+            }
+            lastTitleStateString = stateString;
+            lastTitleStateDescription = stateDescription;
             String oldTitle = getTitle();
             String crclClientError = getCrclClientErrorString();
             if (null != crclClientError && crclClientError.length() > 0
                     && (null == titleErrorString || titleErrorString.length() < 1)) {
                 this.titleErrorString = crclClientError;
-                pauseOnDisplay();
+                privatInternalPause();
             }
             if (isPaused()) {
                 stateString = "PAUSED";
@@ -4265,20 +4309,20 @@ public class AprsSystem implements SlotOffsetProvider {
                     + ((pddlExecutorJInternalFrame1 != null) ? (" : " + pddlExecutorJInternalFrame1.getActionSetsCompleted()) : "")
                     + (isAborting() ? " : Aborting" : "")
                     + (isReverseFlag() ? " : Reverse" : "")
-                    + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "")
-                    + pddlActionString();
+                    + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "");
             if (newTitle.length() > 100) {
                 newTitle = newTitle.substring(0, 100) + " ... ";
             }
             if (!oldTitle.equals(newTitle)) {
+                logEvent("newTitle", newTitle);
                 updateDetailsString();
                 setTitle(newTitle);
                 this.asString = newTitle;
-                setupWindowsMenu();
                 runAllUpdateRunnables();
             } else {
                 long time = System.currentTimeMillis();
-                if (time - lastRunAllUpdateRunnableTime > 100) {
+                if (time - lastRunAllUpdateRunnableTime > 500) {
+                    updateDetailsString();
                     runAllUpdateRunnables();
                 }
             }
@@ -4340,7 +4384,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         .map(CRCLStatusType::getCommandStatus)
                         .orElse(null);
                 if (null == cs || null == cs.getCommandState()) {
-                    updateTitle("", "");
+                    updateTitleStateDescription("", "");
                 } else {
                     if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
                         CommandStatusType errCmdStatus = titleErrorStringCommandStatus;
@@ -4351,10 +4395,10 @@ public class AprsSystem implements SlotOffsetProvider {
                         }
                     }
                     String description = Objects.toString(cs.getStateDescription(), "");
-                    updateTitle(cs.getCommandState().toString(), description);
+                    updateTitleStateDescription(cs.getCommandState().toString(), description);
                 }
             } else {
-                updateTitle("", "");
+                updateTitleStateDescription("", "");
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
@@ -4384,7 +4428,17 @@ public class AprsSystem implements SlotOffsetProvider {
             newCrclClientJInternalFrame.addUpdateTitleListener(new UpdateTitleListener() {
 
                 public void titleChanged(CommandStatusType ccst, @Nullable Container container, String stateString, String stateDescription) {
-                    updateTitle(stateString, stateDescription);
+                    if (!Objects.equals(stateString, lastTitleStateString) || !Objects.equals(stateDescription, lastTitleStateDescription)) {
+                        if (null == runProgramServiceThread || runProgramServiceThread == Thread.currentThread()) {
+                            updateTitleStateDescription(stateString, stateDescription);
+                        } else {
+                            runProgramService.submit(() -> {
+                                if (!Objects.equals(stateString, lastTitleStateString) || !Objects.equals(stateDescription, lastTitleStateDescription)) {
+                                    updateTitleStateDescription(stateString, stateDescription);
+                                }
+                            });
+                        }
+                    }
                 }
             });
             if (null != unaddedPoseListeners) {
@@ -5021,7 +5075,17 @@ public class AprsSystem implements SlotOffsetProvider {
             return true;
         }
         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
-            final String errmsg = "Position is not within limits : cart =" + cart;
+            PmCartesianMinMaxLimit badLimit = null;
+            for (int i = 0; i < limits.size(); i++) {
+                PmCartesianMinMaxLimit lim = limits.get(i);
+                if (!isWithinMaxLimits(cart, lim)) {
+                    System.err.println(cart + " cver maxlimit " + lim.getMax());
+                }
+                if (!isWithinMinLimits(cart, lim)) {
+                    System.err.println(cart + "under maxlimit " + lim.getMin());
+                }
+            }
+            final String errmsg = "Position is not within limits : cart =" + cart + ", b";
             try {
                 takeSimViewSnapshot(errmsg, cart, "bad point");
             } catch (IOException ex) {
@@ -5111,10 +5175,36 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
         if (!limits.isEmpty() && isAlertLimitsCheckBoxSelected()) {
+            List<PhysicalItem> limitItems = new ArrayList<>();
+            for (int i = 0; i < limits.size(); i++) {
+                PmCartesianMinMaxLimit lim = limits.get(i);
+                if (!isWithinMaxLimits(item, lim)) {
+                    System.err.println(item + " cver maxlimit " + lim.getMax());
+                    limitItems.add(new Part("max" + i, 0, lim.getMax().x, lim.getMax().y));
+                }
+                if (!isWithinMinLimits(item, lim)) {
+                    System.err.println(item + "under minlimit " + lim.getMin());
+                    limitItems.add(new Part("min" + i, 0, lim.getMin().x, lim.getMin().y));
+                }
+            }
+            if (item instanceof Tray) {
+                Tray tray = (Tray) item;
+                List<Slot> slots = tray.getAbsSlotList();
+                for (int i = 0; i < slots.size(); i++) {
+                    Slot sloti = slots.get(i);
+                    System.err.println("slot " + i + " = " + sloti);
+                    limitItems.add(sloti);
+                }
+            } else if (null != item.getTray()) {
+                if (!isWithinLimits(item.getTray())) {
+                    limitItems.add(item.getTray());
+                }
+            }
             final String errmsg = "Position is not within limits : item =" + item;
             try {
                 takeSimViewSnapshot(errmsg, item, item.getFullName());
-            } catch (IOException ex) {
+                takeSimViewSnapshot("limitItems" + errmsg, limitItems);
+            } catch (Exception ex) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
             setTitleErrorString(errmsg);
@@ -5997,7 +6087,7 @@ public class AprsSystem implements SlotOffsetProvider {
             crclClientJInternalFrame.unpauseCrclProgram();
             setPauseCheckBoxSelected(false);
             badState = badState || pausing;
-            updateTitle("", "");
+            submitUpdateTitle();
             badState = badState || pausing;
             boolean currentPaused = isPaused();
             if (null != pddlExecutorJInternalFrame1) {
@@ -6549,9 +6639,9 @@ public class AprsSystem implements SlotOffsetProvider {
         boolean badState = checkResuming();
         Utils.runOnDispatchThread(Utils::PlayAlert2);
         badState = badState || checkResuming();
-        pauseOnDisplay();
+        privatInternalPause();
         badState = badState || checkResuming();
-        updateTitle("", "");
+        submitUpdateTitle();
         badState = badState || checkResuming();
         if (badState) {
             throw new IllegalStateException("Attempt to pause while resuming:");
@@ -6563,7 +6653,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile Thread pauseThread = null;
     private volatile StackTraceElement pauseTrace@Nullable []  = null;
 
-    private void pauseOnDisplay() {
+    private void privatInternalPause() {
         logEvent("pause");
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
@@ -6701,7 +6791,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public void clearErrors() {
         this.titleErrorString = null;
         clearCrclClientErrorMessage();
-        updateTitle();
+        submitUpdateTitle();
         if (null != pddlExecutorJInternalFrame1) {
             pddlExecutorJInternalFrame1.setErrorString(null);
         }
@@ -8686,7 +8776,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
         }
-        updateTitle("", "");
+        updateTitle();
     }
 
     private String propertiesFileBaseString = "";

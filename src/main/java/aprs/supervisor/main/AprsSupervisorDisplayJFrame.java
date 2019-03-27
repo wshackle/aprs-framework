@@ -4475,18 +4475,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 SplashScreen.getBlueWhiteGreenColorList(), gd);
     }
 
-    private XFuture<?> startScanAllThenContinuousConveyorDemoRevFirst() {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.startScanAllThenContinuousDemoRevFirst();
-    }
-
     private XFuture<?> startScanAllThenContinuousDemoRevFirst() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startScanAllThenContinuousDemoRevFirst();
+        return supervisor.startScanAllThenContinuousDemoRevFirstOnSupervisorService();
     }
 
     /**
@@ -4746,7 +4739,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == robotEnableMap");
         }
         if (null != supervisor) {
-            return supervisor.enableAllRobotsOnSupervisor()
+            return supervisor.enableAllRobotsOnSupervisorService()
                     .thenComposeToVoid(this::completeEnableAllRobots);
         }
         return completeEnableAllRobots();
@@ -5084,13 +5077,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private final ConcurrentHashMap<Integer, String> titleErrorMap = new ConcurrentHashMap<>();
 
-    public void completeUpdateTasksTable(boolean needSetJListFuturesModel) {
+    public void completeUpdateTasksTable(boolean needSetJListFuturesModel, boolean needResize) {
         if (needSetJListFuturesModel) {
             setJListFuturesModel();
             jListFutures.setSelectedIndex(0);
         }
-        Utils.autoResizeTableColWidths(jTableTasks);
-        Utils.autoResizeTableRowHeights(jTableTasks);
+        if (needResize) {
+            Utils.autoResizeTableColWidths(jTableTasks);
+            Utils.autoResizeTableRowHeights(jTableTasks);
+        }
         DefaultTreeModel model = (DefaultTreeModel) jTreeSelectedFuture.getModel();
         DefaultMutableTreeNode rootTreeNode = new DefaultMutableTreeNode();
         model.setRoot(rootTreeNode);
