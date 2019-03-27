@@ -730,15 +730,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != parentAction && parentAction.getType() == CHECK_KITS) {
                 hppcIndex = ppi.getParentActionIndex();
                 setReplanFromIndex(hppcIndex, true);
-                appendGenerateAbortLog(logMsg + ".handlePlacePartCompleted.checkKits.abort", actionsList.size(), isReverseFlag(), ppi.getParentActionIndex(), sarc, -1);
+                appendGenerateAbortLog(logMsg + ".handlePlacePartCompleted.checkKits.abort", actionsListSize, isReverseFlag(), ppi.getParentActionIndex(), sarc, -1);
             } else {
                 hppcIndex = ppi.getPddlActionIndex() + 1;
                 setReplanFromIndex(hppcIndex, true);
                 hppcIndexSet = true;
-                appendGenerateAbortLog(logMsg + "handlePlacePartCompleted.abort", actionsList.size(), isReverseFlag(), ppi.getPddlActionIndex() + 1, sarc, -1);
+                appendGenerateAbortLog(logMsg + "handlePlacePartCompleted.abort", actionsListSize, isReverseFlag(), ppi.getPddlActionIndex() + 1, sarc, -1);
             }
         } else {
-            appendGenerateAbortLog(logMsg + "handlePlacePartCompleted.continue", actionsList.size(), isReverseFlag(), ppi.getPddlActionIndex() + 1, sarc, -1);
+            appendGenerateAbortLog(logMsg + "handlePlacePartCompleted.continue", actionsListSize, isReverseFlag(), ppi.getPddlActionIndex() + 1, sarc, -1);
         }
     }
 
@@ -2331,7 +2331,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             checkReverse();
             boolean rev = isReverseFlag();
-            appendGenerateAbortLog("doActionsStarting" + comment, actionsList.size(), rev, 0, startAbortCount, -1);
+            appendGenerateAbortLog("doActionsStarting" + comment, actionsListSize, rev, 0, startAbortCount, -1);
             final int start = doingActionsStarted.incrementAndGet();
             dasIncrementTrace = Thread.currentThread().getStackTrace();
             dasIncrementCallerTrace = callerTrace;
@@ -2355,7 +2355,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnIfNewActionsNotReady();
                 crclGenerator.clearKitsToCheckExternal(true, crclGenerator.newGenerateParams());
             }
-            appendGenerateAbortLog("doActionsReturning comment=" + comment + ",ret=" + ret, actionsList.size(), rev, crclGenerator.getLastIndex(), safeAbortRequestCount.get(), -1);
+            appendGenerateAbortLog("doActionsReturning comment=" + comment + ",ret=" + ret, actionsListSize, rev, crclGenerator.getLastIndex(), safeAbortRequestCount.get(), -1);
             return ret;
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ") : " + aprsSystem.getRunName(), ex);
@@ -2421,7 +2421,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             throw new IllegalStateException("revFlag != resetReadOnlyActionsListReverseFlag");
         }
         synchronized (actionsList) {
-            for (int i = 0; i < actionsList.size(); i++) {
+            for (int i = 0; i < actionsListSize; i++) {
                 Action action = actionsList.get(i);
                 switch (action.getType()) {
                     case TAKE_PART:
@@ -2448,6 +2448,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         break;
                 }
             }
+            actionsListSize = actionsList.size();
         }
     }
 
@@ -2505,12 +2506,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void noWarnClearActionsList(boolean revFlag) {
         this.reverseFlag = revFlag;
         synchronized (actionsList) {
-            if (actionsList.size() > 0) {
+            actionsListSize = actionsList.size();
+            if (actionsListSize > 0) {
                 actionsList.clear();
                 crclGenerator.partialReset();
                 this.reverseFlag = aprsSystem.isReverseFlag();
                 resetReadOnlyActionsList(revFlag);
             }
+            actionsListSize = actionsList.size();
         }
         pddlOutputCachedTableModel.setRowCount(0);
         crclGenerator.partialReset();
@@ -2801,6 +2804,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 addAction(action);
             }
             ret = resetReadOnlyActionsList(newReverseFlag);
+            actionsListSize = actionsList.size();
         }
         finishLoadActionsList(pddlOutputActionsCachedText.getText(), forceNameChange);
         return ret;
@@ -2840,6 +2844,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 addAction(Action.parse(line));
             }
             ret = resetReadOnlyActionsList(newReverseFlag);
+            actionsListSize = actionsList.size();
         }
         try {
             if (showInOptaPlanner && crclGenerator.isConnected()) {
@@ -2886,7 +2891,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             List<OpAction> opActions;
             int startIndex = 0;
-            for (int i = 0; i < actionsList.size(); i++) {
+            for (int i = 0; i < actionsListSize; i++) {
                 if (actionsList.get(i).getType() == LOOK_FOR_PARTS) {
                     startIndex = i + 1;
                     break;
@@ -2895,6 +2900,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             synchronized (actionsList) {
                 opActions = crclGenerator.pddlActionsToOpActions(actionsList, 0);
                 resetReadOnlyActionsList(newReverseFlag);
+                actionsListSize = actionsList.size();
             }
             if (null == opActions || opActions.size() < 2) {
                 return;
@@ -3519,7 +3525,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndexLastThread = Thread.currentThread();
             prevSetReplanFromIndexLastTrace = setReplanFromIndexLastTrace;
             setReplanFromIndexLastTrace = Thread.currentThread().getStackTrace();
-            appendGenerateAbortLog("setReplanFromIndex(" + replanFromIndex + "," + aborting + ") oldRpi=" + oldRpi, actionsList.size(), reverseFlag, replanFromIndex, safeAbortRequestCount.get(), -1);
+            appendGenerateAbortLog("setReplanFromIndex(" + replanFromIndex + "," + aborting + ") oldRpi=" + oldRpi, actionsListSize, reverseFlag, replanFromIndex, safeAbortRequestCount.get(), -1);
             if (!aborting && oldRpi > replanFromIndex) {
                 String executorReadyString = readyForNewActionsListInfoString();
                 if (replanFromIndex != 0 || !readyForNewActionsList()) {
@@ -3601,7 +3607,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public XFutureVoid abortProgram() {
         abortProgramThread = Thread.currentThread();
         abortProgramTrace = Thread.currentThread().getStackTrace();
-        appendGenerateAbortLog("start_abortProgram", actionsList.size(), isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
+        appendGenerateAbortLog("start_abortProgram", actionsListSize, isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
         boolean rps = replanStarted.getAndSet(true);
         if (null != customRunnables) {
             customRunnables.clear();
@@ -3659,7 +3665,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         runningProgram = false;
         abortProgramTime = System.currentTimeMillis();
         abortProgramCount.incrementAndGet();
-        appendGenerateAbortLog("complete_abortProgram", actionsList.size(), isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
+        appendGenerateAbortLog("complete_abortProgram", actionsListSize, isReverseFlag(), replanFromIndex.get(), safeAbortRequestCount.get(), -1);
     }
 
     private void stopReplanActionTimer() {
@@ -3793,6 +3799,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         break;
                 }
             }
+             actionsListSize = actionsList.size();
         }
     }
 
@@ -3824,6 +3831,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         break;
                 }
             }
+             actionsListSize = actionsList.size();
         }
     }
 
@@ -4290,7 +4298,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        appendGenerateAbortLog(label + ".incSafeAbortCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
+        appendGenerateAbortLog(label + ".incSafeAbortCount", actionsListSize, isReverseFlag(), replanFromIndex.get(), count, -1);
     }
 
     private void incSafeAbortRequestCount() {
@@ -4302,7 +4310,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        appendGenerateAbortLog("incSafeAbortRequestCount", actionsList.size(), isReverseFlag(), replanFromIndex.get(), count, -1);
+        appendGenerateAbortLog("incSafeAbortRequestCount", actionsListSize, isReverseFlag(), replanFromIndex.get(), count, -1);
 //        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortRequestCount.setText(Integer.toString(count)));
     }
 
@@ -4457,7 +4465,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             checkReverse();
             boolean rev = isReverseFlag();
-            appendGenerateAbortLog("completeActionListStarting" + comment, actionsList.size(), rev, getReplanFromIndex(), startSafeAbortRequestCount, -1);
+            appendGenerateAbortLog("completeActionListStarting" + comment, actionsListSize, rev, getReplanFromIndex(), startSafeAbortRequestCount, -1);
 
             doingActionsStarted.incrementAndGet();
             dasIncrementTrace = Thread.currentThread().getStackTrace();
@@ -4471,7 +4479,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (ret) {
                 crclGenerator.clearKitsToCheckExternal(true, crclGenerator.newGenerateParams());
             }
-            appendGenerateAbortLog("completeActionListReturning." + ret, actionsList.size(), rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
+            appendGenerateAbortLog("completeActionListReturning." + ret, actionsListSize, rev, getReplanFromIndex(), safeAbortRequestCount.get(), -1);
             return ret;
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -4510,7 +4518,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         continueActionsListTime = System.currentTimeMillis();
         autoStart = true;
         final int rpi = getReplanFromIndex();
-        if (rpi < 0 || rpi >= actionsList.size()) {
+        if (rpi < 0 || rpi >= actionsListSize) {
             setReplanFromIndex(0);
         }
         replanCachedCheckBox.setSelected(true);
@@ -6102,7 +6110,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             logDebug("lastIndex decreased: li0=" + li0 + ",li1=" + li1);
         }
         final int rpi1 = getReplanFromIndex();
-        if (rpi1 <= li1 && rpi1 != actionsList.size() - 1) {
+        if (rpi1 <= li1 && rpi1 != actionsListSize - 1) {
             logDebug("replanFromIndex <= lastIndex: replanFromIndex=" + rpi1 + ",li1=" + li1);
         }
         if (!autoStart) {
@@ -6129,7 +6137,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             boolean emptyProgram = program.getMiddleCommand().isEmpty();
             boolean nextReplanAfterCrclBlock
-                    = crclGenerator.getLastIndex() < actionsList.size() - 1
+                    = crclGenerator.getLastIndex() < actionsListSize - 1
                     && replanCachedCheckBox.isSelected();
             if (emptyProgram) {
                 if (!nextReplanAfterCrclBlock) {
@@ -6169,7 +6177,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 logDebug("lastIndex decreased: li3=" + li3 + ",li4=" + li4);
             }
             final int rpi3 = getReplanFromIndex();
-            if (rpi3 <= li4 && rpi3 != actionsList.size() - 1) {
+            if (rpi3 <= li4 && rpi3 != actionsListSize - 1) {
                 logDebug("replanFromIndex <= lastIndex: replanFromIndex=" + rpi3 + ",li4=" + li4);
             }
             replanAfterCrclBlock
@@ -6219,7 +6227,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         boolean ret = crclGenerator.atLastIndex();
 //        if (ret) {
 //            logDebug("crclGenerator.getLastIndex() = " + crclGenerator.getLastIndex());
-//            logDebug("actionsList.size() = " + actionsList.size());
+//            logDebug("actionsListSize = " + actionsListSize);
 //        }
         return ret;
     }
@@ -6235,7 +6243,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             this.generateCrclService = service;
         }
         ExecutorService genCrclService = service;
-        String taskName = "generateCrcl(" + aprsSystem.getTaskName() + ").doPddlActionsSection(" + crclGenerator.getLastIndex() + " out of " + actionsList.size() + ")";
+        String taskName = "generateCrcl(" + aprsSystem.getTaskName() + ").doPddlActionsSection(" + crclGenerator.getLastIndex() + " out of " + actionsListSize + ")";
 
         return checkSafeAbortAsync(() -> {
             try {
@@ -6261,14 +6269,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @SuppressWarnings({"nullness", "guieffect"})
     private void appendGenerateAbortLog(String type, int actionsSize, boolean reverse, int startingIndex, int startSafeAbortRequestCount, int sectionNumber) {
         try {
-            if(null == aprsSystem || aprsSystem.isClosing()) {
+            if (null == aprsSystem || aprsSystem.isClosing()) {
                 return;
             }
             initGenerateAbortLogFile();
             File logFile = generateAbortLogFile;
             if (logFile == null) {
                 return;
-            } 
+            }
             String actionsFileName = getActionsFileString(reverse);
             boolean runningProgram = isRunningProgram();
             Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), runningProgram, aprsSystem.getRobotName(), actionsFileName};
@@ -6303,10 +6311,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount);
     }
 
+    private volatile int actionsListSize = -1;
+
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
         Map<String, String> options = getTableOptions();
         final int rpi = getReplanFromIndex();
-        if (rpi < 0 || rpi > actionsList.size()) {
+        if (rpi < 0 || rpi > actionsListSize) {
             setReplanFromIndex(0);
         }
         if (!stepping) {
@@ -6342,6 +6352,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber);
             }
             resetReadOnlyActionsList(reverseFlag);
+            actionsListSize = actionsList.size();
         }
         int indexes[] = crclGenerator.getActionToCrclIndexes();
         int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
@@ -6376,10 +6387,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (lastIndex < startReplanFromIndex - 1) {
             throw new IllegalStateException("lastIndex=" + lastIndex + ",startReplanFromIndex=" + startReplanFromIndex);
         }
-        if (lastIndex < actionsList.size() - 1) {
+        if (lastIndex < actionsListSize - 1) {
             setReplanFromIndex(lastIndex + 1);
         } else {
-            setReplanFromIndex(actionsList.size() - 1);
+            setReplanFromIndex(actionsListSize - 1);
         }
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         program.getMiddleCommand().clear();
@@ -6467,12 +6478,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             if (autoStart) {
                 boolean replanAfterCrclBlock
-                        = crclGenerator.getLastIndex() < actionsList.size() - 1
+                        = crclGenerator.getLastIndex() < actionsListSize - 1
                         && isReplanCheckBoxSelected();
                 lastReplanAfterCrclBlock = replanAfterCrclBlock;
                 if (replanAfterCrclBlock) {
                     return startCrclProgram(program)
-                            .thenCompose("doPddlActionsSection.recursiveApplyGenerateCrcl(" + crclGenerator.getLastIndex() + " out of " + actionsList.size() + ")",
+                            .thenCompose("doPddlActionsSection.recursiveApplyGenerateCrcl(" + crclGenerator.getLastIndex() + " out of " + actionsListSize + ")",
                                     this::recursiveApplyGenerateCrcl);
                 } else {
                     return startCrclProgram(program)
