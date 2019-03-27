@@ -78,4 +78,10 @@ public class PmCartesianMinMaxLimit {
         return new Object[]{min.x, max.x, min.y, max.y, min.z, max.z};
     }
 
+    @Override
+    public String toString() {
+        return "PmCartesianMinMaxLimit{" + "min=" + min + ", max=" + max + '}';
+    }
+
+    
 }

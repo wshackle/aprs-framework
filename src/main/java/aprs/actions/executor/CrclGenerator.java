@@ -2852,276 +2852,289 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null == physicalItemsLocal) {
                 throw new NullPointerException("physicalItemsLocal");
             }
-            long postCheckKitsTime = System.currentTimeMillis();
-            long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
-            int postPubs = aprsSystem.getSimLineCount();
-            int postVis = aprsSystem.getVisionLineCount();
-            long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
+            try {
 
-            takeSnapshots("plan", "checkKits-", null, "");
+                long postCheckKitsTime = System.currentTimeMillis();
+                long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
+                int postPubs = aprsSystem.getSimLineCount();
+                int postVis = aprsSystem.getVisionLineCount();
+                long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
 
-            List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
-            synchronized (this) {
-                List<String> newItemsFullNames = physicalItemsLocal
-                        .stream()
-                        .map(PhysicalItem::getFullName)
-                        .collect(Collectors.toList());
+                takeSnapshots("plan", "checkKits-", null, "");
 
-                List<String> partsFullNames
-                        = parts
-                                .stream()
-                                .map(PhysicalItem::getFullName)
-                                .collect(Collectors.toList());
-                List<String> partsInPartsTrayFullNames
-                        = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
+                List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
+                synchronized (this) {
+                    List<String> newItemsFullNames = physicalItemsLocal
+                            .stream()
+                            .map(PhysicalItem::getFullName)
+                            .collect(Collectors.toList());
 
-                logDebug("checkKits: parts = " + parts);
+                    List<String> partsFullNames
+                            = parts
+                                    .stream()
+                                    .map(PhysicalItem::getFullName)
+                                    .collect(Collectors.toList());
+                    List<String> partsInPartsTrayFullNames
+                            = listFilter(partsFullNames, name2 -> !name2.contains("_in_kt_"));
 
-                Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
+                    logDebug("checkKits: parts = " + parts);
 
-                Set<String> matchedKitInstanceNames = new HashSet<>();
-                List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts, physicalItemsLocal, gparams);
+                    Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
-                if (optoThread == null) {
-                    optoThread = Thread.currentThread();
-                }
-                if (Thread.currentThread() != optoThread) {
-                    throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
-                }
-                if (!kitsToFix.isEmpty()) {
-                    logDebug("kitsToFix = " + kitsToFix);
-                    printLastOptoInfo();
-                    if (pauseInsteadOfRecover && !correctionMode) {
-                        String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
-                        throw new IllegalStateException(errMsg);
-                    } else {
-                        Map<String, Integer> prefixCountMap = new HashMap<>();
-                        Map<String, List<String>> itemsNameMap = new HashMap<>();
-                        Map<String, List<String>> removedItemsNameMap = new HashMap<>();
-                        kitsToFix.sort(Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
-                        List<Action> correctiveActions = new ArrayList<>();
-                        List<PhysicalItem> correctivedItems = new ArrayList<>();
-                        List<String> fixLogList = new ArrayList<>();
-                        for (KitToCheck kit : kitsToFix) {
-                            List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
-                            infoList.sort(Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
-                            for (KitToCheckInstanceInfo info : infoList) {
-                                String kitInstanceName = info.instanceName;
-                                if (matchedKitInstanceNames.contains(kitInstanceName)) {
-                                    continue;
-                                }
-                                if (null == info.pose) {
-                                    continue;
-                                }
-                                PoseType pose = info.pose;
+                    Set<String> matchedKitInstanceNames = new HashSet<>();
+                    List<KitToCheck> kitsToFix = scanKitsToCheck(true, kitInstanceAbsSlotMap, matchedKitInstanceNames, parts, physicalItemsLocal, gparams);
 
-                                List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
-                                        (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
-
-                                if (snapshotsEnabled()) {
-                                    takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
-                                }
-                                for (Slot absSlot : absSlots) {
-                                    String absSlotPrpName = absSlot.getPrpName();
-                                    PhysicalItem closestItem = parts.stream()
-                                            .min(Comparator.comparing(absSlot::distFromXY))
-                                            .orElse(null);
-                                    if (null == closestItem) {
-                                        logger.log(Level.SEVERE, "closetItem == null in checkKits");
-                                        break;
+                    if (optoThread == null) {
+                        optoThread = Thread.currentThread();
+                    }
+                    if (Thread.currentThread() != optoThread) {
+                        throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
+                    }
+                    if (!kitsToFix.isEmpty()) {
+                        logDebug("kitsToFix = " + kitsToFix);
+                        printLastOptoInfo();
+                        if (pauseInsteadOfRecover && !correctionMode) {
+                            String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
+                            throw new IllegalStateException(errMsg);
+                        } else {
+                            Map<String, Integer> prefixCountMap = new HashMap<>();
+                            Map<String, List<String>> itemsNameMap = new HashMap<>();
+                            Map<String, List<String>> removedItemsNameMap = new HashMap<>();
+                            kitsToFix.sort(Comparators.byIntFunction(KitToCheck::getMaxDiffFailedSlots));
+                            List<Action> correctiveActions = new ArrayList<>();
+                            List<PhysicalItem> correctivedItems = new ArrayList<>();
+                            List<String> fixLogList = new ArrayList<>();
+                            for (KitToCheck kit : kitsToFix) {
+                                List<KitToCheckInstanceInfo> infoList = new ArrayList<>(kit.instanceInfoMap.values());
+                                infoList.sort(Comparators.byIntFunction(KitToCheckInstanceInfo::getFailedSlots));
+                                for (KitToCheckInstanceInfo info : infoList) {
+                                    String kitInstanceName = info.instanceName;
+                                    if (matchedKitInstanceNames.contains(kitInstanceName)) {
+                                        continue;
                                     }
-                                    String itemSkuName = "empty";
-                                    if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
-                                        itemSkuName = closestItem.origName;
+                                    if (null == info.pose) {
+                                        continue;
                                     }
-                                    String slotItemSkuName = kit.slotMap.get(absSlotPrpName);
-                                    fixLogList.add("kitInstanceName=" + kitInstanceName + ",absSlotPrpName=" + absSlotPrpName + ",itemsNameMap=" + itemsNameMap + "\r\n");
-                                    if (null != slotItemSkuName && !slotItemSkuName.equals(itemSkuName)) {
+                                    PoseType pose = info.pose;
 
-                                        if (!itemSkuName.equals("empty")) {
-////                                        takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
-                                            String shortSkuName = itemSkuName;
-                                            if (shortSkuName.startsWith("sku_")) {
-                                                shortSkuName = shortSkuName.substring(4);
-                                            }
-                                            if (shortSkuName.startsWith("part_")) {
-                                                shortSkuName = shortSkuName.substring(5);
-                                            }
-                                            String slotPrefix = "empty_slot_for_" + shortSkuName + "_in_" + shortSkuName + "_vessel";
-                                            int count = prefixCountMap.compute(slotPrefix,
-                                                    (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                                            lastTakenPart = closestItem.getName();
-////                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
-                                            correctivedItems.add(closestItem);
-                                            correctiveActions.add(new Action(TAKE_PART, closestItem.getFullName()));
-                                            correctivedItems.add(absSlot);
-                                            correctiveActions.add(new Action(PLACE_PART, slotPrefix + "_" + count));
+                                    List<Slot> absSlots = kitInstanceAbsSlotMap.computeIfAbsent(kitInstanceName,
+                                            (String n) -> getAbsSlotListForKitInstance(kit.name, n, pose));
+
+                                    if (snapshotsEnabled()) {
+                                        takeSimViewSnapshot(createImageTempFile("absSlots_" + kitInstanceName), absSlots);
+                                    }
+                                    for (Slot absSlot : absSlots) {
+                                        String absSlotPrpName = absSlot.getPrpName();
+                                        PhysicalItem closestItem = parts.stream()
+                                                .min(Comparator.comparing(absSlot::distFromXY))
+                                                .orElse(null);
+                                        if (null == closestItem) {
+                                            logger.log(Level.SEVERE, "closetItem == null in checkKits");
+                                            break;
                                         }
-                                        if (!slotItemSkuName.equals("empty")) {
-                                            String shortSkuName = slotItemSkuName;
-                                            if (shortSkuName.startsWith("sku_")) {
-                                                shortSkuName = shortSkuName.substring(4);
+                                        String itemSkuName = "empty";
+                                        if (closestItem.distFromXY(absSlot) < absSlot.getDiameter() / 2.0) {
+                                            itemSkuName = closestItem.origName;
+                                        }
+                                        String slotItemSkuName = kit.slotMap.get(absSlotPrpName);
+                                        fixLogList.add("kitInstanceName=" + kitInstanceName + ",absSlotPrpName=" + absSlotPrpName + ",itemsNameMap=" + itemsNameMap + "\r\n");
+                                        if (null != slotItemSkuName && !slotItemSkuName.equals(itemSkuName)) {
+
+                                            if (!itemSkuName.equals("empty")) {
+////                                        takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
+                                                String shortSkuName = itemSkuName;
+                                                if (shortSkuName.startsWith("sku_")) {
+                                                    shortSkuName = shortSkuName.substring(4);
+                                                }
+                                                if (shortSkuName.startsWith("part_")) {
+                                                    shortSkuName = shortSkuName.substring(5);
+                                                }
+                                                String slotPrefix = "empty_slot_for_" + shortSkuName + "_in_" + shortSkuName + "_vessel";
+                                                int count = prefixCountMap.compute(slotPrefix,
+                                                        (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
+                                                lastTakenPart = closestItem.getName();
+////                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
+                                                correctivedItems.add(closestItem);
+                                                correctiveActions.add(new Action(TAKE_PART, closestItem.getFullName()));
+                                                correctivedItems.add(absSlot);
+                                                correctiveActions.add(new Action(PLACE_PART, slotPrefix + "_" + count));
                                             }
-                                            final String finalShortSkuName = shortSkuName;
-                                            List<String> partNames
-                                                    = itemsNameMap.computeIfAbsent(finalShortSkuName,
-                                                            k -> listFilter(
+                                            if (!slotItemSkuName.equals("empty")) {
+                                                String shortSkuName = slotItemSkuName;
+                                                if (shortSkuName.startsWith("sku_")) {
+                                                    shortSkuName = shortSkuName.substring(4);
+                                                }
+                                                final String finalShortSkuName = shortSkuName;
+                                                List<String> partNames
+                                                        = itemsNameMap.computeIfAbsent(finalShortSkuName,
+                                                                k -> listFilter(
+                                                                        partsInPartsTrayFullNames,
+                                                                        name2 -> name2.contains(k)));
+                                                logDebug("checkKits: partNames = " + partNames);
+                                                if (partNames.isEmpty()) {
+                                                    logError("No partnames for finalShortSkuName=" + finalShortSkuName);
+                                                    logError("fixLogList=" + fixLogList);
+                                                    logError("kit.slotMap = " + kit.slotMap);
+                                                    logError("newItems = " + physicalItemsLocal);
+                                                    logError("newItemsFullNames = " + newItemsFullNames);
+                                                    logError("itemsNameMap = " + itemsNameMap);
+                                                    logError("removedItemsMap=" + removedItemsNameMap);
+                                                    logError("slotItemSkuName = " + slotItemSkuName);
+                                                    logError("itemSkuName = " + itemSkuName);
+                                                    logError("partsInPartsTrayFullNames = " + partsInPartsTrayFullNames);
+                                                    List<String> recalcPartNames
+                                                            = listFilter(
                                                                     partsInPartsTrayFullNames,
-                                                                    name2 -> name2.contains(k)));
-                                            logDebug("checkKits: partNames = " + partNames);
-                                            if (partNames.isEmpty()) {
-                                                logError("No partnames for finalShortSkuName=" + finalShortSkuName);
-                                                logError("fixLogList=" + fixLogList);
-                                                logError("kit.slotMap = " + kit.slotMap);
-                                                logError("newItems = " + physicalItemsLocal);
-                                                logError("newItemsFullNames = " + newItemsFullNames);
-                                                logError("itemsNameMap = " + itemsNameMap);
-                                                logError("removedItemsMap=" + removedItemsNameMap);
-                                                logError("slotItemSkuName = " + slotItemSkuName);
-                                                logError("itemSkuName = " + itemSkuName);
-                                                logError("partsInPartsTrayFullNames = " + partsInPartsTrayFullNames);
-                                                List<String> recalcPartNames
-                                                        = listFilter(
-                                                                partsInPartsTrayFullNames,
-                                                                name2 -> name2.contains(finalShortSkuName));
-                                                logError("recalcPartNames = " + recalcPartNames);
-                                                aprsSystem.setSnapshotsSelected(true);
-                                                takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
-                                                throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
-                                                        + ", absSlotPrpName=" + absSlotPrpName
-                                                        + ", slotItemSkuName=" + slotItemSkuName
-                                                        + ", itemSkuName=" + itemSkuName);
-                                            }
-                                            String partName = partNames.remove(0);
-                                            removedItemsNameMap.compute(finalShortSkuName, (k, v) -> {
-                                                if (v == null) {
-                                                    v = new ArrayList<>();
+                                                                    name2 -> name2.contains(finalShortSkuName));
+                                                    logError("recalcPartNames = " + recalcPartNames);
+                                                    aprsSystem.setSnapshotsSelected(true);
+                                                    takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
+                                                    throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
+                                                            + ", absSlotPrpName=" + absSlotPrpName
+                                                            + ", slotItemSkuName=" + slotItemSkuName
+                                                            + ", itemSkuName=" + itemSkuName);
                                                 }
-                                                v.add(partName);
-                                                return v;
-                                            });
-                                            correctiveActions.add(new Action(TAKE_PART, partName));
-                                            for (int i = 0; i < parts.size(); i++) {
-                                                PhysicalItem partI = parts.get(i);
-                                                if (partI.getFullName().equals(partName)) {
-                                                    correctivedItems.add(partI);
-                                                    break;
-                                                }
-                                            }
-                                            String slotName = absSlot.getFullName();
-                                            logDebug("checkKits: slotName = " + slotName);
-                                            PoseType absSlotPose = absSlot.getPose();
-                                            PoseType slotPose = visionToRobotPose(absSlotPose);
-                                            double min_dist = Double.POSITIVE_INFINITY;
-                                            String closestKey = null;
-                                            for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-                                                double dist = CRCLPosemath.diffPosesTran(absSlotPose, entry.getValue());
-                                                if (dist < min_dist) {
-                                                    closestKey = entry.getKey();
-                                                    min_dist = dist;
-                                                }
-                                            }
-                                            if (closestKey == null || min_dist > 15.0) {
-                                                logError("checkKits: slotName = " + slotName);
-                                                logError("checkKits: absSlot.getPose() = " + CRCLPosemath.poseToString(absSlotPose));
-                                                logError("checkKits: slotPose = " + CRCLPosemath.poseToString(slotPose));
-                                                logError("checkKits: postitionMaps = " + getPositionMaps());
-                                                logError("closestKey = " + closestKey);
-                                                logError("min_dist = " + min_dist);
-                                                for (Entry<String, PoseType> entry : poseCache.entrySet()) {
-                                                    PoseType entryValue = entry.getValue();
-                                                    double dist = CRCLPosemath.diffPosesTran(slotPose, entryValue);
-                                                    double absSlotDiff = CRCLPosemath.diffPosesTran(absSlotPose, entryValue);
-                                                    PointType entryPoint = entryValue.getPoint();
-                                                    if (null != entryPoint) {
-                                                        logError("entry.getKey = " + entry.getKey() + ",x=" + entryPoint.getX() + ",y=" + entryPoint.getY() + ", dist=" + dist + ", absSlotPoseDiff=" + absSlotDiff);
+                                                String partName = partNames.remove(0);
+                                                removedItemsNameMap.compute(finalShortSkuName, (k, v) -> {
+                                                    if (v == null) {
+                                                        v = new ArrayList<>();
+                                                    }
+                                                    v.add(partName);
+                                                    return v;
+                                                });
+                                                correctiveActions.add(new Action(TAKE_PART, partName));
+                                                for (int i = 0; i < parts.size(); i++) {
+                                                    PhysicalItem partI = parts.get(i);
+                                                    if (partI.getFullName().equals(partName)) {
+                                                        correctivedItems.add(partI);
+                                                        break;
                                                     }
                                                 }
-                                                takeSimViewSnapshot("checkKits : physicalItemsLocal", physicalItemsLocal);
-                                                takeSimViewSnapshot("checkKits : absSlots", absSlots);
-                                                List<PhysicalItem> itemsPlusSlots = new ArrayList<>();
-                                                itemsPlusSlots.addAll(physicalItemsLocal);
-                                                itemsPlusSlots.addAll(absSlots);
-                                                takeSimViewSnapshot("checkKits : itemsPlusSlots", itemsPlusSlots);
-                                                takeSimViewSnapshot("checkKits : absSlotPose", absSlotPose, slotName);
-                                                takeSimViewSnapshot("checkKits : slotPose", slotPose, slotName);
-                                                takeSimViewSnapshot("checkKits : kitPose", pose, kitInstanceName);
-                                                throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
-                                            }
-                                            correctivedItems.add(absSlot);
-                                            correctiveActions.add(new Action(PLACE_PART, closestKey));
+                                                String slotName = absSlot.getFullName();
+                                                logDebug("checkKits: slotName = " + slotName);
+                                                PoseType absSlotPose = absSlot.getPose();
+                                                PoseType slotPose = visionToRobotPose(absSlotPose);
+                                                double min_dist = Double.POSITIVE_INFINITY;
+                                                String closestKey = null;
+                                                for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                                                    double dist = CRCLPosemath.diffPosesTran(absSlotPose, entry.getValue());
+                                                    if (dist < min_dist) {
+                                                        closestKey = entry.getKey();
+                                                        min_dist = dist;
+                                                    }
+                                                }
+                                                if (closestKey == null || min_dist > 15.0) {
+                                                    logError("checkKits: slotName = " + slotName);
+                                                    logError("checkKits: absSlot.getPose() = " + CRCLPosemath.poseToString(absSlotPose));
+                                                    logError("checkKits: slotPose = " + CRCLPosemath.poseToString(slotPose));
+                                                    logError("checkKits: postitionMaps = " + getPositionMaps());
+                                                    logError("closestKey = " + closestKey);
+                                                    logError("min_dist = " + min_dist);
+                                                    for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+                                                        PoseType entryValue = entry.getValue();
+                                                        double dist = CRCLPosemath.diffPosesTran(slotPose, entryValue);
+                                                        double absSlotDiff = CRCLPosemath.diffPosesTran(absSlotPose, entryValue);
+                                                        PointType entryPoint = entryValue.getPoint();
+                                                        if (null != entryPoint) {
+                                                            logError("entry.getKey = " + entry.getKey() + ",x=" + entryPoint.getX() + ",y=" + entryPoint.getY() + ", dist=" + dist + ", absSlotPoseDiff=" + absSlotDiff);
+                                                        }
+                                                    }
+                                                    takeSimViewSnapshot("checkKits : physicalItemsLocal", physicalItemsLocal);
+                                                    takeSimViewSnapshot("checkKits : absSlots", absSlots);
+                                                    List<PhysicalItem> itemsPlusSlots = new ArrayList<>();
+                                                    itemsPlusSlots.addAll(physicalItemsLocal);
+                                                    itemsPlusSlots.addAll(absSlots);
+                                                    takeSimViewSnapshot("checkKits : itemsPlusSlots", itemsPlusSlots);
+                                                    takeSimViewSnapshot("checkKits : absSlotPose", absSlotPose, slotName);
+                                                    takeSimViewSnapshot("checkKits : slotPose", slotPose, slotName);
+                                                    takeSimViewSnapshot("checkKits : kitPose", pose, kitInstanceName);
+                                                    throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
+                                                }
+                                                correctivedItems.add(absSlot);
+                                                correctiveActions.add(new Action(PLACE_PART, closestKey));
 
 //                                        takePartByName(partName, null, cmds);
 //                                        placePartByPose(cmds, visionToRobotPose(absSlot.getPose()));
-                                        }
-                                    }
-                                }
-                                matchedKitInstanceNames.add(kitInstanceName);
-                                break;
-                            }
-                            logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
-                            logDebug("kitsToFix = " + kitsToFix);
-                        }
-                        if (!correctiveActions.isEmpty()) {
-                            List<Action> optimizedCorrectiveActions
-                                    = optimizePddlActionsWithOptaPlanner(
-                                            correctiveActions,
-                                            0, // starting index
-                                            physicalItemsLocal);
-                            lastIndex.compareAndSet(origIndex, lastLookForIndex);
-                            boolean placedPart = false;
-                            CORRECT_ACTIONS_LOOP:
-                            for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
-                                Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
-                                switch (correctiveAction.getType()) {
-                                    case TAKE_PART:
-                                        String partName = correctiveAction.getArgs()[takePartArgIndex];
-                                        if (partName.contains("in_pt")) {
-                                            if (caIndex < optimizedCorrectiveActions.size() - 1) {
-                                                Action nextAction = optimizedCorrectiveActions.get(caIndex + 1);
-                                                String nextSlotName = nextAction.getArgs()[placePartSlotArgIndex];
-                                                if (!nextSlotName.contains("kit")) {
-                                                    logDebug("nextSlotName = " + nextSlotName);
-                                                    caIndex++;
-                                                    continue CORRECT_ACTIONS_LOOP;
-                                                }
                                             }
                                         }
-                                        takePartByName(partName, null, cmds);
-                                        break;
-
-                                    case PLACE_PART:
-                                        placedPart = true;
-                                        String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
-                                        placePartBySlotName(slotName, cmds, correctiveAction, action, lastLookForIndex);  //ByName(slotName, null, cmds);
-                                        break;
+                                    }
+                                    matchedKitInstanceNames.add(kitInstanceName);
+                                    break;
                                 }
+                                logDebug("matchedKitInstanceNames = " + matchedKitInstanceNames);
+                                logDebug("kitsToFix = " + kitsToFix);
                             }
-                            if (placedPart) {
-                                takeSimViewSnapshot("checkKits:correctivedItems", correctivedItems);
-                                takeSimViewSnapshot("checkKits:correctivedItems.physicalItemsLocal", physicalItemsLocal);
-                                return true;
-                            } else {
-                                System.err.println("correctiveActions = " + correctiveActions);
-                                System.err.println("optimizedCorrectiveActions = " + optimizedCorrectiveActions);
-                                logError("checkKits : !placedPart  kitsToFix = " + kitsToFix);
-                                lastIndex.set(lastLookForIndex);
-                                String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
-                                throw new IllegalStateException(errMsg);
+                            if (!correctiveActions.isEmpty()) {
+                                List<Action> optimizedCorrectiveActions
+                                        = optimizePddlActionsWithOptaPlanner(
+                                                correctiveActions,
+                                                0, // starting index
+                                                physicalItemsLocal);
+                                lastIndex.compareAndSet(origIndex, lastLookForIndex);
+                                boolean placedPart = false;
+                                CORRECT_ACTIONS_LOOP:
+                                for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
+                                    Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
+                                    switch (correctiveAction.getType()) {
+                                        case TAKE_PART:
+                                            String partName = correctiveAction.getArgs()[takePartArgIndex];
+                                            if (partName.contains("in_pt")) {
+                                                if (caIndex < optimizedCorrectiveActions.size() - 1) {
+                                                    Action nextAction = optimizedCorrectiveActions.get(caIndex + 1);
+                                                    String nextSlotName = nextAction.getArgs()[placePartSlotArgIndex];
+                                                    if (!nextSlotName.contains("kit")) {
+                                                        logDebug("nextSlotName = " + nextSlotName);
+                                                        caIndex++;
+                                                        continue CORRECT_ACTIONS_LOOP;
+                                                    }
+                                                }
+                                            }
+                                            takePartByName(partName, null, cmds);
+                                            break;
+
+                                        case PLACE_PART:
+                                            placedPart = true;
+                                            String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
+                                            placePartBySlotName(slotName, cmds, correctiveAction, action, lastLookForIndex);  //ByName(slotName, null, cmds);
+                                            break;
+                                    }
+                                }
+                                if (placedPart) {
+                                    takeSimViewSnapshot("checkKits:correctivedItems", correctivedItems);
+                                    takeSimViewSnapshot("checkKits:correctivedItems.physicalItemsLocal", physicalItemsLocal);
+                                    return true;
+                                } else {
+                                    System.err.println("correctiveActions = " + correctiveActions);
+                                    System.err.println("optimizedCorrectiveActions = " + optimizedCorrectiveActions);
+                                    logError("checkKits : !placedPart  kitsToFix = " + kitsToFix);
+                                    lastIndex.set(lastLookForIndex);
+                                    String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
+                                    throw new IllegalStateException(errMsg);
+                                }
                             }
                         }
                     }
-                }
 
-            }
-            try {
-                takeSimViewSnapshot("checkKitsReturningFalse" + origIndex, physicalItemsLocal);
+                }
+                try {
+                    takeSimViewSnapshot("checkKitsReturningFalse" + origIndex, physicalItemsLocal);
+                } catch (Exception ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (Exception ex) {
-                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, "", ex);
+                if (null != physicalItemsLocal) {
+                    takeSimViewSnapshot("checkKits:" + ex.getMessage() + ".physicalItemsLocal", physicalItemsLocal);
+                }
+                throw new RuntimeException(ex);
             }
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                logger.log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
         }
 
         return false;
@@ -6231,14 +6244,35 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (atLookForPosition) {
             atLookForPosition = checkAtLookForPosition();
         }
+        final String actionsString = (action.getArgs().length == 1) ? action.getArgs()[0] : "";
         if (!atLookForPosition) {
+             addMarkerCommand(out, "beforeMoveToLookPosition.lookForParts-" + actionsString, x -> {
+                try {
+                    takeSimViewSnapshot("beforeMoveToLookPosition.lookForParts-" + actionsString, null);
+                } catch (IOException ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
             addMoveToLookForPosition(out, firstAction);
+            addMarkerCommand(out, "afterMoveToLookPosition.lookForParts-" + actionsString, x -> {
+                try {
+                    takeSimViewSnapshot("afterMoveToLookPosition.lookForParts-" + actionsString, null);
+                } catch (IOException ex) {
+                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
             addAfterMoveToLookForDwell(out, firstAction, lastAction);
+
             if (null == externalPoseProvider) {
                 addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
                     setEnableVisionToDatabaseUpdates(
                             enableDatabaseUpdates,
                             immutableRequiredPartsMap);
+                    try {
+                        takeSimViewSnapshot("afterMoveToLookDwell.lookForParts-" + actionsString, null);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 });
             }
         } else if (null == externalPoseProvider) {
@@ -6258,7 +6292,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             });
         }
-        addTakeSnapshots(out, "lookForParts-" + ((action.getArgs().length == 1) ? action.getArgs()[0] : ""), null, "", this.crclNumber.get());
+        addMarkerCommand(out, "lookForParts-" + actionsString, x -> {
+            try {
+                takeSimViewSnapshot("lookForParts-" + actionsString + ".physicalItems", physicalItems);
+            } catch (IOException ex) {
+                Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
                 addMarkerCommand(out, "Inspecting kit", x -> {

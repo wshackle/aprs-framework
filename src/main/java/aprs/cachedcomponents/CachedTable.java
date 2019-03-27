@@ -15,9 +15,12 @@ import java.util.Vector;
 
 public class CachedTable extends CachedComponentBase {
 
-    @Nullable private final DefaultTableModel model;
-    @Nullable private final JTable jTable;
-    @Nullable private volatile Object data[][];
+    @Nullable
+    private final DefaultTableModel model;
+    @Nullable
+    private final JTable jTable;
+    @Nullable
+    private volatile Object data[][];
     private volatile int columnCount;
     private volatile int selectedRow;
     private volatile Class<?> columnClasses[];
@@ -129,7 +132,8 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
-    @Nullable public Object[][] getData() {
+    @Nullable
+    public Object[][] getData() {
         return data;
     }
 
@@ -250,7 +254,8 @@ public class CachedTable extends CachedComponentBase {
     private @Nullable
     Object[][] checkNewData(@Nullable Object newData[][]) {
         for (int i = 0; i < newData.length; i++) {
-            @Nullable Object[] newRowData = newData[i];
+            @Nullable
+            Object[] newRowData = newData[i];
             if (null == newRowData) {
                 throw new IllegalArgumentException("newData[" + i + "] == null");
             }
@@ -349,11 +354,22 @@ public class CachedTable extends CachedComponentBase {
     synchronized private void loadData(Object[][] newData) {
         assert null != model;
         model.removeTableModelListener(tableModelListener);
-        model.setRowCount(0);
-        for (int i = 0; i < data.length; i++) {
-            model.addRow(newData[i]);
+        if (data.length == model.getRowCount()) {
+            for (int i = 0; i < newData.length; i++) {
+                Object[] objects = newData[i];
+                for (int j = 0; j < objects.length; j++) {
+                    Object object = objects[j];
+                    model.setValueAt(object, i, j);
+                }
+            }
+        } else {
+            model.setRowCount(0);
+            for (int i = 0; i < data.length; i++) {
+                model.addRow(newData[i]);
+            }
         }
         model.addTableModelListener(tableModelListener);
+
         //syncDataUiToCache();
     }
 
