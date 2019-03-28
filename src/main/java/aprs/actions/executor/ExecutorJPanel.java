@@ -2421,7 +2421,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             throw new IllegalStateException("revFlag != resetReadOnlyActionsListReverseFlag");
         }
         synchronized (actionsList) {
-            for (int i = 0; i < actionsListSize; i++) {
+            actionsListSize = actionsList.size();
+            for (int i = 0; i < actionsList.size(); i++) {
                 Action action = actionsList.get(i);
                 switch (action.getType()) {
                     case TAKE_PART:
@@ -2475,7 +2476,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else if (curThread != resetReadOnlyActionsListThread) {
             LOGGER.log(Level.FINE, "resetReadOnlyActionsList from new thread {0}", curThread.getName());
         }
-        List<Action> newReadOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
+        List<Action> newReadOnlyActionsList;
+        synchronized (actionsList) {
+            newReadOnlyActionsList = Collections.unmodifiableList(new ArrayList<>(actionsList));
+            actionsListSize = actionsList.size();
+        }
         if (newReadOnlyActionsList.isEmpty()) {
             warnIfNewActionsNotReady();
         }
@@ -2702,7 +2707,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Override
     public void addAction(Action action) {
         if (null != action) {
-            this.actionsList.add(action);
+            synchronized (actionsList) {
+                this.actionsList.add(action);
+                actionsListSize = actionsList.size();
+            }
             double cost = 0.0;
             try {
                 cost = Double.parseDouble(action.getCost());
@@ -2891,13 +2899,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             List<OpAction> opActions;
             int startIndex = 0;
-            for (int i = 0; i < actionsListSize; i++) {
-                if (actionsList.get(i).getType() == LOOK_FOR_PARTS) {
-                    startIndex = i + 1;
-                    break;
-                }
-            }
+
             synchronized (actionsList) {
+                actionsListSize = actionsList.size();
+                for (int i = 0; i < actionsListSize; i++) {
+                    if (actionsList.get(i).getType() == LOOK_FOR_PARTS) {
+                        startIndex = i + 1;
+                        break;
+                    }
+                }
                 opActions = crclGenerator.pddlActionsToOpActions(actionsList, 0);
                 resetReadOnlyActionsList(newReverseFlag);
                 actionsListSize = actionsList.size();
@@ -3799,7 +3809,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         break;
                 }
             }
-             actionsListSize = actionsList.size();
+            actionsListSize = actionsList.size();
         }
     }
 
@@ -3831,7 +3841,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         break;
                 }
             }
-             actionsListSize = actionsList.size();
+            actionsListSize = actionsList.size();
         }
     }
 

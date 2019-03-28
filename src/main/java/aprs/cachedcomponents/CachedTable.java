@@ -354,7 +354,7 @@ public class CachedTable extends CachedComponentBase {
     synchronized private void loadData(Object[][] newData) {
         assert null != model;
         model.removeTableModelListener(tableModelListener);
-        if (data.length == model.getRowCount()) {
+        if (newData.length == model.getRowCount()) {
             for (int i = 0; i < newData.length; i++) {
                 Object[] objects = newData[i];
                 for (int j = 0; j < objects.length; j++) {
@@ -364,7 +364,7 @@ public class CachedTable extends CachedComponentBase {
             }
         } else {
             model.setRowCount(0);
-            for (int i = 0; i < data.length; i++) {
+            for (int i = 0; i < newData.length; i++) {
                 model.addRow(newData[i]);
             }
         }
