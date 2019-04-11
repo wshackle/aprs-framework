@@ -78,7 +78,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         cancelMenuItem.addActionListener(e -> popupMenu.setVisible(false));
         popupMenu.add(cancelMenuItem);
 
-        positionUpdateTimer = new Timer(250, e -> {
+        positionUpdateTimer = new Timer(getUpdateTimerPeriod(), e -> {
             handlePostionUpateTimerEvent();
         });
     }
@@ -142,11 +142,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private volatile long nextPrevTrayFutureStartTime = -1;
 
     public XFutureVoid previousTray() {
-//        computeTrayDiff();
+        System.out.println("previosTray: pos=" + getEstimatedPosition());
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPosition(getEstimatedPosition() - trayDiff);
         setGoalSet(true);
+        System.out.println("previosTray: goal=" + getGoalPosition());
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
         if (null != nextPrevTrayFuture) {
             nextPrevTrayFuture.cancelAll(true);
@@ -156,22 +157,16 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return nextPrevTrayFuture;
     }
 
-//    private void computeTrayDiff() {
-//        List<PhysicalItem> kits = conveyorSpeedJPanel1.getSortedKitTrays();
-//        if (kits.size() > 1) {
-//            double lastPos = conveyorSpeedJPanel1.positionOfItem(kits.get(kits.size() - 1));
-//            double nextPos = conveyorSpeedJPanel1.positionOfItem(kits.get(0));
-//            trayDiff = (lastPos - nextPos) / kits.size();
-//        }
-//    }
     @Nullable
     private volatile XFutureVoid nextPrevTrayFuture = null;
 
     public XFutureVoid nextTray() {
 //        computeTrayDiff();
+        System.out.println("nextTray: pos=" + getEstimatedPosition());
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPosition(getEstimatedPosition() + trayDiff);
+        System.out.println("nextTray: goal=" + getGoalPosition());
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
         if (null != nextPrevTrayFuture) {
@@ -255,6 +250,20 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return Double.parseDouble(txt);
     }
 
+    private static long parseLong(@Nullable String txt, long defaultVal) {
+        if (txt == null || txt.length() < 1) {
+            return defaultVal;
+        }
+        return Long.parseLong(txt);
+    }
+
+    private static int parseInt(@Nullable String txt, int defaultVal) {
+        if (txt == null || txt.length() < 1) {
+            return defaultVal;
+        }
+        return Integer.parseInt(txt);
+    }
+
     public void mapToProperties(Map<String, String> map1) throws NumberFormatException {
         setScale(parseDouble(map1.get(SCALE), getScale()));
         setAxisX(parseDouble(map1.get(AXIS_X), getAxisX()));
@@ -266,6 +275,8 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         double g = parseDouble(map1.get(GOAL_POSITION), getGoalPosition());
         setGoalPosition(Math.min(getMaxPosition(), Math.max(g, getMinPosition())));
         setTrayDiff(parseDouble(map1.get(TRAY_DIFF), getTrayDiff()));
+        setUpdateTimerPeriod(parseInt(map1.get(UPDATE_TIMER_PERIOD), getUpdateTimerPeriod()));
+        setMaxAssumedTimeDiff(parseInt(map1.get(MAX_ASSUMED_TIME_DIFF), getMaxAssumedTimeDiff()));
         String modbusHostName = map1.get(MODBUS_HOST);
         if (null != modbusHostName) {
             setModBusHost(modbusHostName);
@@ -290,14 +301,18 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         map0.put(CURRENT_POSITION, Double.toString(getEstimatedPosition()));
         map0.put(GOAL_POSITION, Double.toString(getGoalPosition()));
         map0.put(TRAY_DIFF, Double.toString(getTrayDiff()));
+        map0.put(MAX_ASSUMED_TIME_DIFF, Integer.toString(getMaxAssumedTimeDiff()));
+        map0.put(UPDATE_TIMER_PERIOD, Integer.toString(getUpdateTimerPeriod()));
         map0.put(MODBUS_HOST, getModBusHost());
         map0.put(NEXT_DELAY_MILLIS, Integer.toString(getNextDelayMillis()));
         map0.put(MAX_SPEED, Integer.toString(getMaxSpeed()));
         return map0;
     }
-    
+
     private static final String MODBUS_HOST = "modbusHost";
     private static final String TRAY_DIFF = "trayDiff";
+    private static final String MAX_ASSUMED_TIME_DIFF = "maxAssumedTimeDiff";
+    private static final String UPDATE_TIMER_PERIOD = "updateTimerPeriod";
     private static final String MIN_POSITION = "MinPosition";
     private static final String MAX_POSITION = "MaxPosition";
     private static final String CURRENT_POSITION = "CurrentPosition";
@@ -710,14 +725,53 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         conveyorSpeedJPanel1.setEstimatedPosition(newEstimatedPosition);
     }
 
+    private int updateTimerPeriod = 250;
+
+    /**
+     * Get the value of updateTimerPeriod
+     *
+     * @return the value of updateTimerPeriod
+     */
+    public int getUpdateTimerPeriod() {
+        return updateTimerPeriod;
+    }
+
+    /**
+     * Set the value of updateTimerPeriod
+     *
+     * @param updateTimerPeriod new value of updateTimerPeriod
+     */
+    public void setUpdateTimerPeriod(int updateTimerPeriod) {
+        this.updateTimerPeriod = updateTimerPeriod;
+    }
+
+    private int maxAssumedTimeDiff = 250;
+
+    /**
+     * Get the value of maxAssumedTimeDiff
+     *
+     * @return the value of maxAssumedTimeDiff
+     */
+    public int getMaxAssumedTimeDiff() {
+        return maxAssumedTimeDiff;
+    }
+
+    /**
+     * Set the value of maxAssumedTimeDiff
+     *
+     * @param maxAssumedTimeDiff new value of maxAssumedTimeDiff
+     */
+    public void setMaxAssumedTimeDiff(int maxAssumedTimeDiff) {
+        this.maxAssumedTimeDiff = maxAssumedTimeDiff;
+    }
+
     private synchronized void updateEstimatedPosition() {
         int speed = conveyorSpeedJPanel1.getCurrentSpeed();
         boolean forward = conveyorSpeedJPanel1.isForwardDirection();
         long time = System.currentTimeMillis();
         long timeDiff = time - lastEstimatedPositionTime;
-        if (lastEstimatedPositionTime < 1 || timeDiff < 1 || timeDiff > 10000) {
-            lastEstimatedPositionTime = time;
-            return;
+        if (lastEstimatedPositionTime < 1 || timeDiff < 1 || timeDiff > maxAssumedTimeDiff) {
+            timeDiff = maxAssumedTimeDiff;
         }
         final double scale = getScale();
         double scaledSpeed = speed * scale;

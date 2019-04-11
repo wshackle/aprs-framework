@@ -41,6 +41,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -180,13 +181,13 @@ public class LaunchFileRunner {
         future.complete();
     }
 
-    @SuppressWarnings({"guieffect","nullness"})
-    XFutureVoid newTimeoutFuture(javax.swing.Timer timerRefArray[]) {
+    @SuppressWarnings({"guieffect", "nullness"})
+    XFutureVoid newTimeoutFuture(javax.swing.Timer timerRefArray[], String line, AtomicBoolean ignoreTimeout) {
         int timeoutMillisLocal = timeoutMillis;
         if (timeoutMillisLocal < 1) {
             throw new IllegalStateException("timeoutMillis=" + timeoutMillisLocal);
         }
-        XFutureVoid future1 = new XFutureVoid("timeoutFuture");
+        XFutureVoid future1 = new XFutureVoid("timeoutFuture:line=" + line);
         long timeoutStartLocal = System.currentTimeMillis();
         this.timeoutStart = timeoutStartLocal;
         if (GraphicsEnvironment.isHeadless()) {
@@ -210,11 +211,13 @@ public class LaunchFileRunner {
         }
         XFutureVoid future2
                 = future1
-                        .thenRun("afterTimeout", () -> {
-                            String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
-                            System.out.println(timeoutMsg);
-                            if (!GraphicsEnvironment.isHeadless()) {
-                                 MultiLineStringJPanel.showText(timeoutMsg);
+                        .thenRun("afterTimeout:line=" + line, () -> {
+                            if (!ignoreTimeout.get()) {
+                                String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
+                                System.out.println(timeoutMsg);
+                                if (!GraphicsEnvironment.isHeadless()) {
+                                    MultiLineStringJPanel.showText(timeoutMsg);
+                                }
                             }
                         });
         lastNewTimeoutFuture = future2;
@@ -501,54 +504,52 @@ public class LaunchFileRunner {
     public void setTabs(String tabs) {
         this.tabs = tabs;
     }
-    
-    static int getIntFromWords(String name, String words[],int defaultValue) {
+
+    static int getIntFromWords(String name, String words[], int defaultValue) {
         for (int i = 0; i < words.length; i++) {
             String wordi = words[i];
-            if(i < words.length -1) {
-                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
-                    return Integer.parseInt(words[i+1]);
+            if (i < words.length - 1) {
+                if (wordi.equals(name) || wordi.equals("-" + name) || wordi.equals("--" + name)) {
+                    return Integer.parseInt(words[i + 1]);
                 }
             }
-            if(wordi.startsWith(name+"=")) {
-                return Integer.parseInt(wordi.substring(name.length()+1));
+            if (wordi.startsWith(name + "=")) {
+                return Integer.parseInt(wordi.substring(name.length() + 1));
             }
         }
         return defaultValue;
     }
 
-    
-    static long getLongFromWords(String name, String words[],long defaultValue) {
+    static long getLongFromWords(String name, String words[], long defaultValue) {
         for (int i = 0; i < words.length; i++) {
             String wordi = words[i];
-            if(i < words.length -1) {
-                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
-                    return Long.parseLong(words[i+1]);
+            if (i < words.length - 1) {
+                if (wordi.equals(name) || wordi.equals("-" + name) || wordi.equals("--" + name)) {
+                    return Long.parseLong(words[i + 1]);
                 }
             }
-            if(wordi.startsWith(name+"=")) {
-                return Long.parseLong(wordi.substring(name.length()+1));
+            if (wordi.startsWith(name + "=")) {
+                return Long.parseLong(wordi.substring(name.length() + 1));
             }
         }
         return defaultValue;
     }
-    
-    static String getStringFromWords(String name, String words[],String defaultValue) {
+
+    static String getStringFromWords(String name, String words[], String defaultValue) {
         for (int i = 0; i < words.length; i++) {
             String wordi = words[i];
-            if(i < words.length -1) {
-                if(wordi.equals(name) || wordi.equals("-"+name) || wordi.equals("--"+name)) {
-                    return words[i+1];
+            if (i < words.length - 1) {
+                if (wordi.equals(name) || wordi.equals("-" + name) || wordi.equals("--" + name)) {
+                    return words[i + 1];
                 }
             }
-            if(wordi.startsWith(name+"=")) {
-                return wordi.substring(name.length()+1);
+            if (wordi.startsWith(name + "=")) {
+                return wordi.substring(name.length() + 1);
             }
         }
         return defaultValue;
     }
-    
-    
+
     @Nullable
     @SuppressWarnings("nullness")
     private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
@@ -734,12 +735,12 @@ public class LaunchFileRunner {
                 String text = afterFirstWord(line, firstWord);
                 int port = getIntFromWords("port", words, -1);
                 String host = getStringFromWords("host", words, null);
-                int timeout = getIntFromWords("timeout", words, 100);
-                int max_tries = getIntFromWords("max_tries", words, 100);
-                long delay =  getLongFromWords("delay", words, 100);
+                int timeout = getIntFromWords("timeout", words, 200);
+                int max_tries = getIntFromWords("max_tries", words, 200);
+                long delay = getLongFromWords("delay", words, 200);
                 ConnectWaitFor cnf = new ConnectWaitFor(host, port, max_tries, timeout, delay);
-                XFutureVoid xf = cnf.getSocketFuture().thenRun(()-> {
-                    System.out.println("Connected to "+host+":"+port);
+                XFutureVoid xf = cnf.getSocketFuture().thenRun(() -> {
+                    System.out.println("Connected to " + host + ":" + port);
                 });
                 futures.add(xf);
                 waitForFuture = xf;
@@ -807,7 +808,7 @@ public class LaunchFileRunner {
     @Nullable
     private volatile XFutureVoid lastRunAllOfFuture = null;
 
-    @SuppressWarnings({"unchecked", "rawtypes","nullness","guieffect"})
+    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "guieffect"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
         List<XFuture<?>> futures = new ArrayList<>();
         this.timeoutMillis = timeoutMillis;
@@ -820,7 +821,7 @@ public class LaunchFileRunner {
             frm.setStopLineSeen(false);
             frm.setProcessLaunchDirectory(parentFile);
         }
-        
+
         StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
         ifStack.push(true);
@@ -841,7 +842,8 @@ public class LaunchFileRunner {
         this.lastRunAllOfFuture = allOfXFuture;
         if (this.timeoutMillis > 0) {
             javax.swing.Timer timerRefArray[] = new javax.swing.Timer[1];
-            XFutureVoid timeoutFuture = newTimeoutFuture(timerRefArray);
+            AtomicBoolean ignoreTimeout = new AtomicBoolean(false);
+            XFutureVoid timeoutFuture = newTimeoutFuture(timerRefArray,"run"+f.getName(),ignoreTimeout);
             XFutureVoid timeoutCancelledFuture
                     = allOfXFuture.thenRun("LaunchFileRunner.timeoutCancel", () -> {
                         if (null != timerRefArray && timerRefArray.length == 1) {
@@ -850,7 +852,7 @@ public class LaunchFileRunner {
                             if (timer != null) {
                                 timer.stop();
                             }
-                            timeoutFuture.cancelAll(false);
+                            ignoreTimeout.set(true);
                         }
                     });
             XFutureVoid handledTimeoutFuture

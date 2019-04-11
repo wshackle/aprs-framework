@@ -812,7 +812,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param tray tray to obtain list of slots
      * @return list of slots
      */
-    public List<Slot> getSlots(Tray tray, boolean ignoreEmpty) {
+    public List<Slot> getAbsSlots(Tray tray, boolean ignoreEmpty) {
         if (null != externalSlotOffsetProvider) {
             List<Slot> offsets = externalSlotOffsetProvider.getSlotOffsets(tray.getName(), ignoreEmpty);
             List<Slot> absSlots = new ArrayList<>();
@@ -1851,47 +1851,84 @@ public class AprsSystem implements SlotOffsetProvider {
      * underlying task.
      */
     public XFuture<Boolean> continueActionList(String comment) {
-        checkFutures();
-        continueActionsComment = comment;
-        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        continueActionListTrace = trace;
-        XFuture<Boolean> ret;
-        final boolean revFlag = this.isReverseFlag();
-        int caCount = continueActionsListCount.incrementAndGet();
-        int saCount = this.startActionsCount.get();
-        int startAbortCount = getSafeAbortRequestCount();
-        lastContinueStartAbortCount = startAbortCount;
-        logEvent("START continueActionList", comment, revFlag, caCount, saCount, startAbortCount);
-        logToSuper("START continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
-        takeSnapshots("START continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
-        endLogged = false;
-        if (!revFlag) {
-            if (alternativeForwardContinueActions != null) {
-                ret = alternativeForwardContinueActions.doActions();
-            } else {
-                ret = privateContinueActionList(comment, startAbortCount);
+        try {
+            checkFutures();
+            continueActionsComment = comment;
+            StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+            continueActionListTrace = trace;
+            XFuture<Boolean> ret;
+            final boolean revFlag = this.isReverseFlag();
+            int caCount = continueActionsListCount.incrementAndGet();
+            int saCount = this.startActionsCount.get();
+            int startAbortCount = getSafeAbortRequestCount();
+            if (revFlag != lastStartActionsReverseFlag) {
+                printSetReverseTraces();
+                throw new IllegalStateException("revFlag=" + revFlag + ",lastStartActionsReverseFlag=" + lastStartActionsReverseFlag);
             }
-        } else {
-            if (alternativeReverseContinueActions != null) {
-                ret = alternativeReverseContinueActions.doActions();
+            lastContinueStartAbortCount = startAbortCount;
+            logEvent("START continueActionList", comment, revFlag, caCount, saCount, startAbortCount);
+            logToSuper("START continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
+            takeSnapshots("START continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + comment);
+            endLogged = false;
+            if (!revFlag) {
+                if (alternativeForwardContinueActions != null) {
+                    ret = alternativeForwardContinueActions.doActions();
+                } else {
+                    ret = privateContinueActionList(comment, startAbortCount);
+                }
             } else {
-                ret = privateContinueActionList(comment, startAbortCount);
-            }
-        }
-        ret = ret.alwaysAsync(() -> {
-            synchronized (this) {
-                setEndLogged(trace, comment);
-                logEvent("END continueActionList", comment, revFlag, caCount, saCount);
-                boolean isAborting = isAborting() || startAbortCount != this.getSafeAbortRequestCount();
-                logToSuper("END continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
-                takeSnapshots("END continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
-                if (isAborting && !isDoingActions()) {
-                    pddlExecutorJInternalFrame1.completeSafeAbort();
+                if (alternativeReverseContinueActions != null) {
+                    ret = alternativeReverseContinueActions.doActions();
+                } else {
+                    ret = privateContinueActionList(comment, startAbortCount);
                 }
             }
-        }, runProgramService);
-        lastContinueActionListFuture = ret;
-        return ret;
+            ret = ret
+                    .peekException(this::logException)
+                    .alwaysAsync(() -> {
+                        synchronized (this) {
+                            setEndLogged(trace, comment);
+                            logEvent("END continueActionList", comment, revFlag, caCount, saCount);
+                            boolean isAborting = isAborting() || startAbortCount != this.getSafeAbortRequestCount();
+                            logToSuper("END continueActionList \"" + toString() + "\" " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
+                            takeSnapshots("END continueActionList " + saCount + " " + caCount + " " + revFlag + " " + startAbortCount + " " + isAborting + " " + comment);
+                            if (isAborting && !isDoingActions()) {
+                                pddlExecutorJInternalFrame1.completeSafeAbort();
+                            }
+                        }
+                    }, runProgramService);
+            lastContinueActionListFuture = ret;
+            return ret;
+        } catch (Exception e) {
+            System.err.println("comment=" + comment);
+            setTitleErrorString(e.getMessage());
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void printSetReverseTraces() {
+        System.out.println("startActionsTrace = " + Utils.traceToString(startActionsTrace));
+        System.err.println("setReverseCheckBoxSelectedTrueTrace = " + Utils.traceToString(setReverseCheckBoxSelectedTrueTrace));
+        System.err.println("setReverseCheckBoxSelectedFalseTrace = " + Utils.traceToString(setReverseCheckBoxSelectedFalseTrace));
+        System.err.println("setReverseFlagTrueTrace = " + Utils.traceToString(setReverseFlagTrueTrace));
+        System.err.println("setReverseFlagFalseTrace = " + Utils.traceToString(setReverseFlagFalseTrace));
+    }
+
+    private void logException(Throwable e) throws RuntimeException {
+        if (!closing) {
+            setTitleErrorString(e.getMessage());
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "logException:"+getTaskName()+":"+e.getMessage(), e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private volatile StackTraceElement setEndLogCallerTrace[] = null;
@@ -2121,7 +2158,13 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void submitUpdateTitle() {
-        if (null == runProgramServiceThread || runProgramServiceThread == Thread.currentThread()) {
+        if (closing) {
+            return;
+        }
+        if (null == runProgramServiceThread
+                || runProgramServiceThread == Thread.currentThread()
+                || runProgramService.isShutdown()
+                || runProgramService.isTerminated()) {
             updateTitle();
         } else {
             runProgramService.submit(() -> updateTitle());
@@ -2529,6 +2572,10 @@ public class AprsSystem implements SlotOffsetProvider {
                         lastStartActionsFuture = null;
                     }
                     if (null != lastContinueActionListFuture) {
+                        if (!lastContinueActionListFuture.isDone()) {
+                            System.err.println("immediateAbort : cancelling lastContinueActionListFuture="+lastContinueActionListFuture);
+                            System.err.println("continueActionListTrace = " + Utils.traceToString(continueActionListTrace));
+                        }
                         lastContinueActionListFuture.cancelAll(true);
                         lastContinueActionListFuture = null;
                     }
@@ -2776,7 +2823,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     .thenRun(() -> {
                         this.fanucCRCLMain = newFanucCrclMain;
                     });
-        } catch (CRCLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
@@ -2851,7 +2898,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     System.err.println("details=" + details);
                     logEvent("setTitleErrorString", newTitleErrorString, count);
                     if (count < 2 || System.currentTimeMillis() - lastForceShowErrorTime > 5000) {
-                        if(System.currentTimeMillis() - lastForceShowErrorTime > 5000) {
+                        if (System.currentTimeMillis() - lastForceShowErrorTime > 5000) {
                             MultiLineStringJPanel.closeAllPanels();
                         }
                         lastForceShowErrorTime = System.currentTimeMillis();
@@ -2969,20 +3016,21 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile String lastLogEvent = null;
 
     public long logEvent(String s, Object... args) {
+        if (closing) {
+            return -1;
+        }
         return logEvent(s, Arrays.toString(args));
     }
 
     public long logEvent(String s, @Nullable Object arg) {
         try {
-            System.out.println("logEvent(" + s + "," + arg + ")");
             if (closing) {
                 return -1;
             }
+            System.out.println("logEvent(" + s + "," + arg + ")");
             lastLogEvent = s;
             CSVPrinter printer = eventLogPrinter;
-
             if (null == printer) {
-
                 printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName(), ".csv")),
                         CSVFormat.DEFAULT.withHeader("number", "time", "timediff", "event", "arg", "runDuration", "stopDuration", "thread", "runName"));
                 eventLogPrinter = printer;
@@ -5150,6 +5198,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (item instanceof Tray) {
             Tray tray = (Tray) item;
             List<Slot> slots = tray.getAbsSlotList();
+            if (null == slots || slots.isEmpty()) {
+                slots = getAbsSlots(tray, false);
+            }
             for (int i = 0; i < slots.size(); i++) {
                 Slot sloti = slots.get(i);
                 if (!isWithinLimits(sloti, sloti.getDiameter() / 2.0, minMax)) {
@@ -5162,6 +5213,35 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
         return ret;
+    }
+
+    public void filterTest(String filename) {
+        try {
+            final File file = new File(filename);
+            List<PhysicalItem> list = csvFileToItemsList(file);
+            takeSimViewSnapshot("filterTest input " + filename, list);
+            List<PhysicalItem> filteredList = filterListItemWithinLimits(list);
+            takeSimViewSnapshot("filterTest output " + filename, filteredList);
+            saveCsvItemsFile(createTempFile("filterTest", ".csv"));
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void saveCsvItemsFile(File f) throws IOException {
+        object2DViewJInternalFrame.saveCsvItemsFile(f);
+    }
+
+    public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
+        object2DViewJInternalFrame.saveCsvItemsFile(f);
+    }
+
+    public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
+        return object2DViewJInternalFrame.csvFileToItemsList(f);
+    }
+
+    public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+        return object2DViewJInternalFrame.csvFileToItemsList(f, convertRotToRad, zeroRotations);
     }
 
     public boolean isItemWithinLimits(PhysicalItem item) {
@@ -5271,9 +5351,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) {
         if (l.isEmpty()) {
+            logToSuper("fillKitTraysWithItemList : l.isEmpty()");
             return XFuture.completedFuture(true);
         }
-        List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
+        List<PhysicalItem> filteredItems = filterListItemWithinLimits(l);
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
@@ -5284,6 +5365,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> fillKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showFilledListOnly, boolean useUnassignedParts) throws RuntimeException {
         if (items.isEmpty()) {
+            logToSuper("fillKitTraysWithItemList : l.isEmpty()");
             return XFuture.completedFuture(true);
         }
         try {
@@ -5293,14 +5375,17 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
         if (fillInfo.getKitTrays().isEmpty()) {
+            logToSuper("fillKitTraysWithItemList : fillInfo.getKitTrays().isEmpty()");
             return XFuture.completedFuture(true);
         }
         if (fillInfo.getEmptyKitSlots().isEmpty()) {
+            logToSuper("fillKitTraysWithItemList : fillInfo.getEmptyKitSlots().isEmpty()");
             return XFuture.completedFuture(true);
         }
         List<PhysicalItem> filledkitTraysList = createFilledKitsListFromFillInfo(fillInfo, useUnassignedParts);
 
         if (filledkitTraysList == null || filledkitTraysList.isEmpty()) {
+            logToSuper("fillKitTraysWithItemList : filledkitTraysList == null || filledkitTraysList.isEmpty()");
             return XFuture.completedFuture(true);
         }
 
@@ -5336,7 +5421,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             File actionFile = createActionListFromVision(filledkitTraysList, filledkitTraysList, overrideRotationOffset, newRotationOffset, false, true, false, true);
             if (null == actionFile) {
-                return XFuture.completedFuture(false);
+                logToSuper("fillKitTraysInternal : null == actionFile");
+                return XFuture.completedFuture(true);
             }
             StackTraceElement fillKitTraysTrace[] = Thread.currentThread().getStackTrace();
             noWarnClearActionsList(false);
@@ -5407,6 +5493,11 @@ public class AprsSystem implements SlotOffsetProvider {
         List<PhysicalItem> availableParts = new ArrayList<>();
         if (useUnassignedParts) {
             List<PhysicalItem> unassignedParts = new ArrayList<>(fillInfo.getUnassignedParts());
+            try {
+                takeSimViewSnapshot("createFilledKitsList_unassignedParts", unassignedParts);
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
             availableParts.addAll(unassignedParts);
         }
         availableParts.addAll(partsInPartsTrays);
@@ -5472,11 +5563,31 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
-        outputList.addAll(partsInPartsTrays);
+        outputList.addAll(availableParts);
         try {
             takeSimViewSnapshot("createFilledKitsList_outputList", outputList);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        final int outputListSize = outputList.size();
+        final int fillOrigItemsSize = fillInfo.getOrigItems().size();
+        final boolean outputSizeIncorrect;
+        if (useUnassignedParts) {
+            outputSizeIncorrect = outputListSize != fillOrigItemsSize;
+        } else {
+            outputSizeIncorrect = outputListSize != (fillOrigItemsSize - fillInfo.getUnassignedParts().size());
+        }
+        if (outputSizeIncorrect) {
+            try {
+                takeSimViewSnapshot("createFilledKitsList_fillInfo.partsInPartsTrays", partsInPartsTrays);
+                takeSimViewSnapshot("createFilledKitsList_fillInfo.getUnassignedParts()", fillInfo.getUnassignedParts());
+                takeSimViewSnapshot("createFilledKitsList_fillInfo.getOrigItems()", fillInfo.getOrigItems());
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            final String errMsg = outputListSize + " != " + fillOrigItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
+            setTitleErrorString(errMsg);
+            throw new IllegalStateException(errMsg);
         }
         return outputList;
     }
@@ -5504,9 +5615,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private XFuture<Boolean> emptyKitTraysWithItemList(List<PhysicalItem> l, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) {
         if (l.isEmpty()) {
+            logToSuper("emptyKitTraysWithItemList : l.isEmpty() ");
             return XFuture.completedFuture(true);
         }
-        List<PhysicalItem> filteredItems = l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
+        List<PhysicalItem> filteredItems = filterListItemWithinLimits(l);
         try {
             takeSimViewSnapshot("emptyKitTraysWithItemList.filteredItems", filteredItems);
         } catch (IOException ex) {
@@ -5515,8 +5627,13 @@ public class AprsSystem implements SlotOffsetProvider {
         return emptyKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showEmptiedListOnly);
     }
 
+    public List<PhysicalItem> filterListItemWithinLimits(List<PhysicalItem> l) {
+        return l.stream().filter(this::isItemWithinLimits).collect(Collectors.toList());
+    }
+
     private XFuture<Boolean> emptyKitTrays(List<PhysicalItem> items, boolean overrideRotationOffset, double newRotationOffset, boolean showEmptiedListOnly) throws RuntimeException {
         if (items.isEmpty()) {
+            logToSuper("emptyKitTrays : l.isEmpty() ");
             return XFuture.completedFuture(true);
         }
         try {
@@ -5526,11 +5643,13 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         TrayFillInfo emptyInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
         if (emptyInfo.getKitTrays().isEmpty()) {
+            logToSuper("emptyKitTrays : emptyInfo.getKitTrays().isEmpty() ");
             return XFuture.completedFuture(true);
         }
         List<PhysicalItem> emptiedkitTraysList = createEmptiedKitsListFromFillInfo(emptyInfo);
 
         if (emptiedkitTraysList.isEmpty()) {
+            logToSuper("emptyKitTrays : emptiedkitTraysList.isEmpty()");
             return XFuture.completedFuture(true);
         }
 
@@ -5563,7 +5682,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             File actionFile = createActionListFromVision(emptiedkitTraysList, emptiedkitTraysList, overrideRotationOffset, newRotationOffset, true, true, true, true);
             if (null == actionFile) {
-                return XFuture.completedFuture(false);
+                logToSuper("emptyKitTraysInternal: null == actionFile");
+                return XFuture.completedFuture(true);
             }
             StackTraceElement emptyKitTraysTrace[] = Thread.currentThread().getStackTrace();
             noWarnClearActionsList(true);
@@ -5589,21 +5709,6 @@ public class AprsSystem implements SlotOffsetProvider {
                                 clearKitsToCheck(startAbortCount);
                             });
             return psaClearFuture;
-//                    .exceptionally((Throwable throwable) -> {
-//                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, 
-//                                "handling ex returned from privateStartActions(emptyKitTrays)", 
-//                                throwable);
-//                        System.err.println("emptyKitTraysTrace = " + Utils.traceToString(emptyKitTraysTrace));
-//                        System.err.println("actionFile = " + actionFile);
-//                        System.err.println("emptiedkitTraysList.size() = " + emptiedkitTraysList.size());
-//                        System.err.println("emptiedkitTraysList = " + emptiedkitTraysList);
-//                        showException(throwable);
-//                        if (throwable instanceof RuntimeException) {
-//                            throw (RuntimeException) throwable;
-//                        } else {
-//                            throw new RuntimeException(throwable);
-//                        }
-//                    });
         } catch (Exception ex) {
 
             String errMsg = ex.getMessage() + "\n"
@@ -5669,11 +5774,30 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         outputList.addAll(movedPartsList);
         outputList.addAll(partsInKit);
+        final int outputListSize = outputList.size();
+        final int origItemsSize = trayFillInfo.getOrigItems().size();
+        final boolean outputSizeIncorrect = outputListSize != (origItemsSize - trayFillInfo.getUnassignedParts().size());
+
         try {
             takeSimViewSnapshot("createEmptiedKitsList_outputList", outputList);
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
+        if (outputSizeIncorrect) {
+            try {
+                takeSimViewSnapshot("createEmptiedKitsList_movedPartsList", movedPartsList);
+                takeSimViewSnapshot("createEmptiedKitsList_partsInKit", partsInKit);
+                takeSimViewSnapshot("createEmptiedKitsList_trayFillInfo.getPartsInKit()", trayFillInfo.getPartsInKit());
+                takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getUnassignedParts()", trayFillInfo.getUnassignedParts());
+                takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getOrigItems()", trayFillInfo.getOrigItems());
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            final String errMsg = outputListSize + " != " + origItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
+            setTitleErrorString(errMsg);
+            throw new IllegalStateException(errMsg);
+        }
+
         return outputList;
     }
 
@@ -5742,7 +5866,45 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.disableShowCurrent = true;
         opts.disableRobotsReachLimitsRect = true;
         opts.disableSensorLimitsRect = true;
-        scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
+        Image img = createSnapshotImage(opts, requiredItems);
+        this.scanImage = img;
+    }
+
+    public void saveScanStyleImage(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
+        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        opts.h = -1;
+        opts.w = -1;
+        opts.disableLabels = true;
+        opts.enableAutoscale = true;
+        opts.disableLimitsLine = true;
+        opts.disableShowCurrent = true;
+        opts.disableRobotsReachLimitsRect = true;
+        opts.disableSensorLimitsRect = true;
+        BufferedImage img = createSnapshotImage(opts, itemsToPaint);
+        String type = "JPEG";
+        int pindex = f.getName().lastIndexOf('.');
+        if (pindex > 0) {
+            type = f.getName().substring(pindex + 1);
+        }
+        try {
+            if (ImageIO.write(img, type, f)) {
+//                System.out.println("Saved snapshot to " + f.getCanonicalPath());
+            } else {
+                System.out.println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        if (null == object2DViewJInternalFrame) {
+            throw new IllegalStateException("Object 2D View must be open to use this function");
+        }
+        return object2DViewJInternalFrame.createSnapshotImage(opts, itemsToPaint);
     }
 
     private void updateScanImageWithRotationOffsetOnDisplay(List<PhysicalItem> requiredItems, boolean autoScale, double rotationOffset) {
@@ -6517,12 +6679,21 @@ public class AprsSystem implements SlotOffsetProvider {
         return pddlExecutorJInternalFrame1.isPauseInsteadOfRecover();
     }
 
+    private volatile StackTraceElement setReverseCheckBoxSelectedTrueTrace[] = null;
+    private volatile StackTraceElement setReverseCheckBoxSelectedFalseTrace[] = null;
+
     @SuppressWarnings("guieffect")
     private void setReverseCheckBoxSelected(boolean val) {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.updateForceFakeTakeState(val);
         }
         reverseCheckBox.setSelected(val);
+        logToSuper("setReverseCheckBoxSelected(" + val + ")");
+        if (val) {
+            setReverseCheckBoxSelectedTrueTrace = Thread.currentThread().getStackTrace();
+        } else {
+            setReverseCheckBoxSelectedFalseTrace = Thread.currentThread().getStackTrace();
+        }
     }
 
     @SuppressWarnings("guieffect")
@@ -6591,7 +6762,15 @@ public class AprsSystem implements SlotOffsetProvider {
         reloadSimFilesOnReverseCheckBox.setSelected(val);
     }
 
+    private volatile StackTraceElement setReverseFlagTrueTrace[] = null;
+    private volatile StackTraceElement setReverseFlagFalseTrace[] = null;
+
     private void setReverseFlag(boolean reverseFlag, boolean reloadSimFiles, boolean reloadActionsFile) {
+        if (reverseFlag) {
+            setReverseFlagTrueTrace = Thread.currentThread().getStackTrace();
+        } else {
+            setReverseFlagFalseTrace = Thread.currentThread().getStackTrace();
+        }
         clearLogDirCache();
         if (isReverseCheckBoxSelected() != reverseFlag) {
             setExecutorForceFakeTakeFlag(false);
@@ -7115,6 +7294,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return endLogged;
     }
 
+    private volatile boolean lastStartActionsReverseFlag = false;
+
     /**
      * Start the PDDL actions currently loaded in the executor from the
      * beginning.
@@ -7151,6 +7332,8 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("START startActions", comment, reverseFlag, saCount);
         takeSnapshots("START startActions" + saCount + " " + comment);
         logToSuper("START startActions\"" + toString() + "\" " + saCount + " " + comment);
+        lastStartActionsReverseFlag = reverseFlag;
+        setReverseCheckBoxSelected(reverseFlag);
         endLogged = false;
         if (!reverseFlag) {
             if (alternativeForwardStartActions != null) {
@@ -7382,9 +7565,13 @@ public class AprsSystem implements SlotOffsetProvider {
             logEvent("executorReadyString", executorReadyString);
             throw new IllegalStateException("!pddlExecutorJInternalFrame1.readyForNewActionsList() with comment=\"" + comment + "\" ");
         }
+        if (!isConnected()) {
+            throw new IllegalStateException("!isConnected() : robotName=" + this.robotName + ",host=" + crclClientJInternalFrame.getHost() + ", port=" + crclClientJInternalFrame.getPort());
+        }
         runningPrivateStartActions = true;
         privateStartActionsTrace = trace1;
         privateStartActionsComment = comment;
+
         setStartRunTime();
 
         long startRunNumber = runNumber.incrementAndGet();

@@ -78,6 +78,10 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
         return object2DOuterJPanel1.isSimulated() && outerConveyorSpeedControlJPanel1.isSimulated();
     }
     
+    public double getEstimatedPosition() {
+        return outerConveyorSpeedControlJPanel1.getEstimatedPosition();
+    }
+    
     public XFutureVoid nextTray() {
         return outerConveyorSpeedControlJPanel1.nextTray();
     }

@@ -253,7 +253,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
-            saveFile(csvFile);
+            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             Utils.runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
@@ -330,7 +330,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
-            saveFile(csvFile);
+            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             Utils.runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
@@ -3269,8 +3269,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (f.isDirectory()) {
             throw new RuntimeException("Can not load file \"" + f + "\" : It is a directory when a text/csv file is expected.");
         }
-        String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
-        XFutureVoid setItemsFuture = this.setItems(VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations));
+        List<PhysicalItem> newItemsList = csvFileToItemsList(f, convertRotToRad, zeroRotations);
+        XFutureVoid setItemsFuture = this.setItems(newItemsList);
         futuresList.add(setItemsFuture);
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
@@ -3289,11 +3289,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 });
     }
 
-    public void saveFile(File f) throws IOException {
-        saveFile(f, getItems());
+    public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
+        Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
+        return csvFileToItemsList(f,selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
+    }
+    
+    public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+        String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
+        final List<PhysicalItem> newItemsList = VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations);
+        return newItemsList;
     }
 
-    private void saveFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
+    public void saveCsvItemsFile(File f) throws IOException {
+        saveCsvItemsFile(f, getItems());
+    }
+
+    public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
 
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("name,rotation,x,y,score,type");
@@ -3354,7 +3365,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 File newFile = chooser.getSelectedFile();
-                saveFile(newFile);
+                saveCsvItemsFile(newFile);
                 filenameCachedTextField.setText(newFile.getCanonicalPath());
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -4923,7 +4934,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
-            saveFile(csvFile, itemsToPaint);
+            saveCsvItemsFile(csvFile, itemsToPaint);
             return csvFile;
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);

@@ -115,25 +115,46 @@ public class Utils {
 //        }
         return dir;
     }
-    
-    
+
     public static String traceToString(StackTraceElement trace @Nullable []) {
         return XFuture.traceToString(trace);
     }
 
     @UIEffect
     static public void PlayAlert(String resourceName) {
+        PlayAlert(resourceName, false, Utils.class);
+    }
+
+    @UIEffect
+    static public void PlayAlert(String resourceName, boolean debug, Class<?> aClass) {
         try {
             Toolkit.getDefaultToolkit().beep();
-            System.out.println("PlayAlert " + resourceName);
+            if (debug) {
+                System.out.println("PlayAlert : resourceName= " + resourceName);
+            }
             Thread.sleep(100);
-            URL url = LauncherAprsJFrame.class.getResource(resourceName);
+            if (debug) {
+                System.out.println("aClass = " + aClass);
+            }
+            URL url = aClass.getResource(resourceName);
+            if (debug) {
+                System.out.println("PlayAlert: url = " + url);
+            }
             if (null != url) {
                 Clip clip = AudioSystem.getClip();
+                if (debug) {
+                    System.out.println("PlayAlert: clip = " + clip);
+                }
                 InputStream inputStream
-                        = LauncherAprsJFrame.class.getResourceAsStream(resourceName);
+                        = aClass.getResourceAsStream(resourceName);
+                if (debug) {
+                    System.out.println("PlayAlert: inputStream = " + inputStream);
+                }
                 if (null != inputStream) {
                     AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
+                    if (debug) {
+                        System.out.println("PlayAlert: audioInputStream = " + audioInputStream);
+                    }
                     clip.open(audioInputStream);
                     clip.start();
                 }
@@ -1081,11 +1102,11 @@ public class Utils {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
         if (isEventDispatchThread()) {
-             MultiLineStringJPanel.showText(msgCopy);
+            MultiLineStringJPanel.showText(msgCopy);
         } else {
             try {
                 final String msgCopyFinal = msgCopy;
-                javax.swing.SwingUtilities.invokeLater(() ->  MultiLineStringJPanel.showText( msgCopyFinal));
+                javax.swing.SwingUtilities.invokeLater(() -> MultiLineStringJPanel.showText(msgCopyFinal));
             } catch (Exception ex) {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
             }

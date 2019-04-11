@@ -2713,7 +2713,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Tray tray = new Tray(kitSkuName, pose, 0);
             tray.setType("KT");
             if (null != aprsSystem) {
-                List<Slot> allSlots = aprsSystem.getSlots(tray, false);
+                List<Slot> allSlots = aprsSystem.getAbsSlots(tray, false);
                 if (allSlots.isEmpty()) {
                     logError("tray=" + tray + " has no slots");
                     return allSlots;
@@ -6880,7 +6880,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logger.log(Level.SEVERE, "", ioException);
             }
             List<PhysicalItem> filteredList
-                    = l.stream().filter(aprsSystem::isItemWithinLimits).collect(Collectors.toList());
+                    = aprsSystem.filterListItemWithinLimits(l);
             synchronized (this) {
                 clearPoseCache();
                 try {
