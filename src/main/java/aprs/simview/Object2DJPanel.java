@@ -729,8 +729,8 @@ public class Object2DJPanel extends JPanel {
     BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
 
         Dimension dim = this.getSize();
-        int w = (opts != null) ? opts.w : dim.width;
-        int h = (opts != null) ? opts.h : dim.height;
+        int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
+        int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = img.createGraphics();
         g2d.setColor(this.getBackground());
@@ -769,8 +769,8 @@ public class Object2DJPanel extends JPanel {
                 return;
             }
             Dimension dim = getSize();
-            int w = (null != opts) ? opts.w : dim.width;
-            int h = (null != opts) ? opts.h : dim.height;
+            int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
+            int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
 
             double minX = Double.POSITIVE_INFINITY;
             double maxX = Double.NEGATIVE_INFINITY;
@@ -1779,11 +1779,7 @@ public class Object2DJPanel extends JPanel {
             @Nullable PhysicalItem selectedItem,
             Point2DMinMax minmaxParam,
             @Nullable ViewOptions opts) {
-        if (null != opts) {
-            if (opts.w < 10 || opts.h < 10) {
-                return;
-            }
-        }
+        
         final double minX = minmaxParam.min.x;
         final double minY = minmaxParam.min.y;
         final double maxX = minmaxParam.max.x;
@@ -1807,8 +1803,8 @@ public class Object2DJPanel extends JPanel {
             }
 
             Dimension dim = getSize();
-            int width = (null != opts) ? opts.w : dim.width;
-            int height = (null != opts) ? opts.h : dim.height;
+            int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
+            int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
             boolean useSeperateNamesThisTime = useSeparateNames;
             if (null != opts) {
                 if (opts.disableLabels) {
@@ -1829,34 +1825,34 @@ public class Object2DJPanel extends JPanel {
 
             switch (displayAxis) {
                 case POS_X_POS_Y:
-                    displayMaxX = (width - TO_SCREEN_X_OFFSET) / new_scale + minX;
+                    displayMaxX = (w - TO_SCREEN_X_OFFSET) / new_scale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / new_scale + minX;
 
-                    displayMinY = maxY - (height - TO_SCREEN_Y_OFFSET) / new_scale;
+                    displayMinY = maxY - (h - TO_SCREEN_Y_OFFSET) / new_scale;
                     displayMaxY = maxY - (0 - TO_SCREEN_Y_OFFSET) / new_scale;
                     break;
 
                 case POS_Y_NEG_X:
-                    displayMaxX = (height - TO_SCREEN_Y_OFFSET) / new_scale + minX;
+                    displayMaxX = (h - TO_SCREEN_Y_OFFSET) / new_scale + minX;
                     displayMinX = (0 - TO_SCREEN_X_OFFSET) / new_scale + minX;
 
-                    displayMinY = (width - TO_SCREEN_X_OFFSET) / new_scale + minY;
+                    displayMinY = (w - TO_SCREEN_X_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
 
                 case NEG_X_NEG_Y:
-                    displayMaxX = maxX - (width - TO_SCREEN_X_OFFSET) / new_scale;
+                    displayMaxX = maxX - (w - TO_SCREEN_X_OFFSET) / new_scale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / new_scale;
 
-                    displayMinY = (height - TO_SCREEN_Y_OFFSET) / new_scale + minY;
+                    displayMinY = (h - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
 
                 case NEG_Y_POS_X:
-                    displayMaxX = maxX - (height - TO_SCREEN_Y_OFFSET) / new_scale;
+                    displayMaxX = maxX - (h - TO_SCREEN_Y_OFFSET) / new_scale;
                     displayMinX = maxX - (0 - TO_SCREEN_X_OFFSET) / new_scale;
 
-                    displayMinY = (width - TO_SCREEN_X_OFFSET) / new_scale + minY;
+                    displayMinY = (w - TO_SCREEN_X_OFFSET) / new_scale + minY;
                     displayMaxY = (0 - TO_SCREEN_Y_OFFSET) / new_scale + minY;
                     break;
             }
@@ -1871,34 +1867,34 @@ public class Object2DJPanel extends JPanel {
                                         "vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
                                         worldMousePoint.x, worldMousePoint.y, robotCart.x, robotCart.y, new_scale
                                 ),
-                                10, height - 10);
+                                10, h - 10);
                     } else {
                         g2d.drawString(
                                 String.format(
                                         "vis(%.2f,%.2f), scale=%.2f",
                                         worldMousePoint.x, worldMousePoint.y, new_scale
                                 ),
-                                10, height - 10);
+                                10, h - 10);
                     }
                 } else {
                     if (null != aprsSystem) {
-                    PmCartesian robotMinCart
-                            = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
-                    PmCartesian robotMaxCart
-                            = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
-                    g2d.drawString(
-                            String.format(
-                                    "MinX,MinY = vis(%.2f,%.2f):robot((%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
-                                    minX, minY, robotMinCart.x, robotMinCart.y, maxX, maxY, robotMaxCart.x, robotMaxCart.y, new_scale
-                            ),
-                             10, height - 10);
+                        PmCartesian robotMinCart
+                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
+                        PmCartesian robotMaxCart
+                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minX, minY, 0));
+                        g2d.drawString(
+                                String.format(
+                                        "MinX,MinY = vis(%.2f,%.2f):robot((%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
+                                        minX, minY, robotMinCart.x, robotMinCart.y, maxX, maxY, robotMaxCart.x, robotMaxCart.y, new_scale
+                                ),
+                                10, h - 10);
                     } else {
                         g2d.drawString(
-                            String.format(
-                                    "MinX,MinY = vis(%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f), scale=%.2f",
-                                    minX, minY,  maxX, maxY, new_scale
-                            ),
-                             10, height - 10);
+                                String.format(
+                                        "MinX,MinY = vis(%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f), scale=%.2f",
+                                        minX, minY, maxX, maxY, new_scale
+                                ),
+                                10, h - 10);
                     }
                 }
             }
@@ -2001,7 +1997,7 @@ public class Object2DJPanel extends JPanel {
                             namey = minY - (maxY - minY) / 5.0;
                             break;
                     }
-                    this.translate(g2d, namex, namey, minmaxParam, width, height, new_scale);
+                    this.translate(g2d, namex, namey, minmaxParam, w, h, new_scale);
                     if (item == selectedItem) {
                         g2d.setColor(Color.WHITE);
                         Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * item.getName().length(), TO_SCREEN_Y_OFFSET);
@@ -2264,6 +2260,13 @@ public class Object2DJPanel extends JPanel {
             min = new Point2D.Double(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
             max = new Point2D.Double(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
         }
+
+        @Override
+        public String toString() {
+            return "Point2DMinMax{" + "min=" + min.toString() + ", max=" + max.toString() + '}';
+        }
+        
+        
     }
 
     @SuppressWarnings("guieffect")
@@ -2283,8 +2286,8 @@ public class Object2DJPanel extends JPanel {
         if (null != opts && opts.scale_set && opts.scale > 0) {
             return opts.scale;
         }
-        int width = (null != opts) ? opts.w : dim.width;
-        int height = (null != opts) ? opts.h : dim.height;
+        int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
+        int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
         boolean useSeperateNamesThisTime = useSeparateNames;
         int borderWidth = 30;
         int borderHeight = 60;
@@ -2298,11 +2301,11 @@ public class Object2DJPanel extends JPanel {
         double new_scale;
         double scale_x = 1;
         double scale_y = 1;
-        int displayWidth = (useSeperateNamesThisTime ? (width / 2) : width);
+        int displayWidth = (useSeperateNamesThisTime ? (w / 2) : w);
         double diffx = (max.x - min.x);
         double diffy = (max.y - min.y);
         int diffwidth = (displayWidth - borderWidth - TO_SCREEN_X_OFFSET);
-        int diffheight = (height - borderHeight - TO_SCREEN_Y_OFFSET);
+        int diffheight = (h - borderHeight - TO_SCREEN_Y_OFFSET);
         switch (displayAxis) {
             case POS_X_POS_Y:
             case NEG_X_NEG_Y:
@@ -2315,59 +2318,18 @@ public class Object2DJPanel extends JPanel {
                 scale_y = diffheight / diffx;
                 break;
         }
-        assert (Double.isFinite(scale_x)) :
-                ("scale_x = " + scale_x);
-        assert (Double.isFinite(scale_y)) :
-                ("scale_y = " + scale_y);
+        if (!Double.isFinite(scale_x) || scale_x <= 0) {
+                throw new RuntimeException("scale_x = " + scale_x+",minmax="+minmax+",w="+w+",h="+h+",displayAxis="+displayAxis);
+        }
+        if (!Double.isFinite(scale_y) || scale_y <= 0) {
+                throw new RuntimeException("scale_y = " + scale_y+",minmax="+minmax+",w="+w+",h="+h+",displayAxis="+displayAxis);
+        }
         new_scale = Math.min(scale_x, scale_y);
-//        if (Math.abs(new_scale - this.scale) > 0.1) {
-//            System.out.println("jump in scale");
-//        }
-//        last_scale_x = scale_x;
-//        last_scale_y = scale_y;
-//        last_useSeperateNamesThisTime = useSeperateNamesThisTime;
-//        last_width = width;
-//        last_borderWidth = borderWidth;
-//        last_maxX1 = max.x;
-//        last_minX1 = minX1;
-//        last_height = height;
-//        last_borderHeight = borderHeight;
-//        last_maxY1 = maxY1;
-//        last_minY1 = minY1;
+
         if (null != opts && new_scale > 0) {
             opts.scale_set = true;
             opts.scale = new_scale;
         }
-//        if (opts.debug) {
-//            Point2D.Double minXMinYTranslated = toScreenPoint(displayAxis, min.x, min.y, minmax, new_scale);
-//            System.out.println("dim = " + dim);
-//            System.out.println("minXMinYTranslated = " + minXMinYTranslated.x + "," + minXMinYTranslated.y);
-//            assert (minXMinYTranslated.x >= 0) : "minXMinYTranslated.x >= 0";
-//            assert (minXMinYTranslated.x <= width) : "minXMinYTranslated.x <= dim.width";
-//            assert (minXMinYTranslated.y >= 0) : "minXMinYTranslated.y >= 0";
-//            assert (minXMinYTranslated.y <= height) : "minXMinYTranslated.y <= dim.width";
-//
-//            Point2D.Double minXMaxYTranslated = toScreenPoint(displayAxis, min.x, max.y, minmax, new_scale);
-//            System.out.println("minXMaxYTranslated = " + minXMaxYTranslated.x + "," + minXMaxYTranslated.y);
-//            assert (minXMaxYTranslated.x >= 0) : "minXMaxYTranslated.x >= 0";
-//            assert (minXMaxYTranslated.x <= width) : "minXMaxYTranslated.x <= dim.width";
-//            assert (minXMaxYTranslated.y >= 0) : "minXMaxYTranslated.y >= 0";
-//            assert (minXMaxYTranslated.y <= height) : "minXMaxYTranslated.y <= dim.width";
-//
-//            Point2D.Double maxXMinYTranslated = toScreenPoint(displayAxis, max.x, min.y, minmax, new_scale);
-//            System.out.println("maxXMinYTranslated = " + maxXMinYTranslated.x + "," + maxXMinYTranslated.y);
-//            assert (maxXMinYTranslated.x >= 0) : "maxXMinYTranslated.x >= 0";
-//            assert (maxXMinYTranslated.x <= width) : "maxXMinYTranslated.x <= dim.width";
-//            assert (maxXMinYTranslated.y >= 0) : "maxXMinYTranslated.y >= 0";
-//            assert (maxXMinYTranslated.y <= height) : "maxXMinYTranslated.y <= dim.width";
-//
-//            Point2D.Double maxXMaxYTranslated = toScreenPoint(displayAxis, max.x, max.y, minmax, new_scale);
-//            System.out.println("maxXMinYTranslated = " + maxXMaxYTranslated.x + "," + maxXMaxYTranslated.y);
-//            assert (maxXMaxYTranslated.x >= 0) : "maxXMinYTranslated.x >= 0";
-//            assert (maxXMaxYTranslated.x <= width) : "maxXMinYTranslated.x <= dim.width";
-//            assert (maxXMaxYTranslated.y >= 0) : "maxXMinYTranslated.y >= 0";
-//            assert (maxXMaxYTranslated.y <= height) : "maxXMinYTranslated.y <= dim.width";
-//        }
         return new_scale;
     }
 

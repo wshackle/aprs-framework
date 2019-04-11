@@ -2,11 +2,10 @@
 LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
+alertLimits=true
 aprs.robotName=Sim_Motoman
 aprs.taskName=Shared Table
 crclWebApp.httpPort=8081
-maxLimit= { x=+830.000, y=+450.000, z=+1000.000 } 
-minLimit= { x=+0.000, y=-400.000, z=-1000.000 } 
 reloadSimFilesOnReverse=false
 snapShotEnable=true
 snapShotHeight=700

@@ -174,10 +174,13 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         this.reader = readerTmp;
     }
 
+    
+    private volatile boolean stopReading = false;
     /**
      * Stop thread and close socket created with startReader.
      */
     public void stopReader() {
+        stopReading = true;
         if (null != reader) {
             reader.close();
             reader = null;
@@ -185,17 +188,32 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     }
 
     private void parseSocketLine(String line, PrintStream ps) {
-        String colorStrings[] = line.split("[ \t,]+");
-        ps.println(Arrays.toString(colorStrings));
-        if (colorStrings.length != 2) {
-            ps.println("2 colors expected : line " + line);
-            System.err.println("2 colors expected : line=" + line);
+        if(stopReading) {
             return;
         }
-        Color color1 = Color.decode(colorStrings[1]);
-        ps.println("color1 = " + color1);
-        Color color2 = Color.decode(colorStrings[0]);
-        ps.println("color2 = " + color2);
+        String colorStrings[] = line.split("[ \t,]+");
+        Color color1;
+        Color color2;
+        try {
+            ps.println(Arrays.toString(colorStrings));
+            if (colorStrings.length != 2) {
+                ps.println("2 colors expected : line " + line);
+                System.err.println("2 colors expected : line=" + line);
+                System.err.println("colorStrings="+Arrays.toString(colorStrings));
+                stopReader();
+                return;
+            }
+            color1 = Color.decode(colorStrings[1]);
+            ps.println("color1 = " + color1);
+            color2 = Color.decode(colorStrings[0]);
+            ps.println("color2 = " + color2);
+        } catch (NumberFormatException numberFormatException) {
+            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE,
+                    "line="+line+"\ncolorStrings="+Arrays.toString(colorStrings),
+                    numberFormatException);
+            stopReader();
+            throw new RuntimeException(numberFormatException);
+        }
         Utils.runOnDispatchThread(() -> {
             jPanelRight.setBackground(color1);
             jPanelLeft.setBackground(color2);

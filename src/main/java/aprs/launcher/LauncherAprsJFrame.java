@@ -750,6 +750,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+                PlayAlert();
                 if (null != args && args.length > 0) {
                     File launchFile = null;
                     try {

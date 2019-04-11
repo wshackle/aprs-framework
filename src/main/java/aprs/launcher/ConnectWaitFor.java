@@ -75,7 +75,7 @@ public class ConnectWaitFor {
             while (!socketFuture.isDone()) {
                 Thread.sleep(delay);
                 if(max_tries > 0 && tries >= max_tries) {
-                    throw new IllegalStateException("max_tries exceeded");
+                    throw new IllegalStateException("max_tries exceeded host="+host+",port="+port+",tries="+tries+", max_tries="+max_tries);
                 }
                 if(Thread.currentThread().isInterrupted()) {
                     throw new IllegalStateException("interrupted");

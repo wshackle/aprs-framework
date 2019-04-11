@@ -25,6 +25,7 @@ package aprs.simview;
 import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
+import aprs.database.vision.VisionSocketClient;
 import aprs.misc.Utils;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -33,10 +34,12 @@ import crcl.ui.XFutureVoid;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
@@ -80,7 +83,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     public PhysicalItem getClosestRobotPart() {
         return this.object2DOuterJPanel1.getClosestRobotPart();
     }
-    
+
     public void setReverseFlag(boolean reverseFlag) {
         this.object2DOuterJPanel1.setReverseFlag(reverseFlag);
     }
@@ -123,6 +126,22 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public void clearPrevVisionListSize() {
         object2DOuterJPanel1.clearPrevVisionListSize();
+    }
+
+    public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
+        return object2DOuterJPanel1.csvFileToItemsList(f);
+    }
+
+    public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
+         return object2DOuterJPanel1.csvFileToItemsList(f,convertRotToRad,zeroRotations);
+    }
+    
+    public void saveCsvItemsFile(File f) throws IOException {
+        object2DOuterJPanel1.saveCsvItemsFile(f);
+    }
+
+    public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
+        object2DOuterJPanel1.saveCsvItemsFile(f);
     }
 
     /**

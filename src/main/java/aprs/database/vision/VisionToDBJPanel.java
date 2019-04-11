@@ -1600,11 +1600,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private boolean checkRequiredParts(List<PhysicalItem> list) {
-        return checkRequiredParts(list, false);
+    private boolean checkRequiredParts(String listName, List<PhysicalItem> list) {
+        return checkRequiredParts(listName, list, false);
     }
 
-    private boolean checkRequiredParts(List<PhysicalItem> list, boolean rechecking) {
+    private boolean checkRequiredParts(String listName, List<PhysicalItem> list, boolean rechecking) {
+        List<PhysicalItem> foundRequiredParts = new ArrayList<>();
+        List<PhysicalItem> partsNotRequired = new ArrayList<>(list);
         if (null != requiredParts && !requiredParts.isEmpty()) {
             for (Entry<String, Integer> entry : requiredParts.entrySet()) {
                 String name = entry.getKey();
@@ -1613,7 +1615,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 }
                 String matchName = name;
                 int required = entry.getValue();
-                long found = list.stream().filter(item -> item.getName().startsWith(matchName) || item.getName().startsWith("sku_" + matchName)).count();
+                List<PhysicalItem> matchList
+                        = list
+                                .stream()
+                                .filter(item -> item.getName().startsWith(matchName) || item.getName().startsWith("sku_" + matchName))
+                                .collect(Collectors.toList());
+                for (int i = 0; i < matchList.size() && i < required; i++) {
+                    PhysicalItem matchedItem = matchList.get(i);
+                    foundRequiredParts.add(matchedItem);
+                    partsNotRequired.remove(matchedItem);
+                }
+                long found = matchList.size();
                 if (required > found) {
 
                     List<String> namesList = list.stream().map(PhysicalItem::getName).collect(Collectors.toList());
@@ -1633,15 +1645,40 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     if (failures > maxRequiredPartFailures) {
                         System.err.println("setRequiredPartsTrace = " + traceToString(setRequiredPartsTrace));
                         System.err.println("requiredParts = " + requiredParts);
+                        if (!rechecking) {
+                            try {
+                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+                            } catch (IOException iOException) {
+                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
+                            }
+                        }
                         IllegalStateException ex = new IllegalStateException(msg);
+
                         notifySingleUpdateListenersExceptionally(ex);
                         setTitleErrorString(msg);
                         throw ex;
                     } else {
+                        if (!rechecking) {
+                            try {
+                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+                            } catch (IOException iOException) {
+                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
+                            }
+                        }
                         System.err.println(msg);
                         return false;
                     }
                 }
+            }
+        }
+        if (!rechecking) {
+            try {
+                aprsSystemInterface.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                aprsSystemInterface.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+            } catch (IOException iOException) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
             }
         }
         checkRequiredPartFailures.set(0);
@@ -1804,6 +1841,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (l.isEmpty()) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.WARNING, getRunName() + ": notifySingleUpdateListeners passed empty list");
         }
+        for (int i = 0; i < l.size(); i++) {
+            PhysicalItem item = l.get(i);
+            if(item instanceof Tray) {
+                Tray tray = (Tray) item;
+                if(tray.getAbsSlotList().isEmpty()) {
+                    throw new IllegalStateException("tray.getAbsSlotList().isEmpty()");
+                }
+            }
+        }
         List<PhysicalItem> unmodifiableList = Collections.unmodifiableList(new ArrayList<>(l));
         this.lastVisItemsData = unmodifiableList;
         notifySingleListenersUpdateBeginCount.incrementAndGet();
@@ -1851,6 +1897,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private volatile List<PhysicalItem> lastVisItemsData;
 
+    private volatile List<PhysicalItem> lastRawVisItemsData;
+
+    public List<PhysicalItem> getLastRawVisItemsData() {
+        return lastRawVisItemsData;
+    }
+    
     private void cancelListenersAndDisableUpdates() {
         synchronized (singleUpdateListeners) {
             for (XFuture<List<PhysicalItem>> xf : singleUpdateListeners) {
@@ -1943,21 +1995,33 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null != dpu && null != dpu.getSqlConnection()) {
                 boolean addRepeatCounts = addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected();
                 boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
-                if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
-                    if (!checkRequiredParts(visionList)) {
-                        boolean chkAgain = checkRequiredParts(visionList, true);
-                        chkAgain = checkRequiredParts(transformedVisionList, true);
+                updating = true;
+                PoseType transform = getTransformPose();
+                List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
+                if (!rawUpdateListeners.isEmpty()) {
+                    List<PhysicalItem> transformedRawList;
+                    if (null != transform) {
+                        transformedRawList = transformList(visionList, transform);
+                    } else {
+                        transformedRawList = new ArrayList<>(visionList);
+                    }
+                    notifyRawListeners(transformedRawList);
+                    lastRawVisItemsData = Collections.unmodifiableList(new ArrayList<>(transformedRawList));
+                }
+                final boolean doRequiredPartsCheck = !singleUpdateListeners.isEmpty() || (origEnableDbUpdates && dpu.isEnableDatabaseUpdates());
+                
+                if (doRequiredPartsCheck) {
+                    if (!checkRequiredParts("visionList", visionList)) {
+                        boolean chkAgain = checkRequiredParts("visionList", visionList, true);
+                        chkAgain = checkRequiredParts("visionList", visionList, true);
                         System.err.println("checkRequiredPart(" + visionList + ") false");
                         visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                         return XFutureVoid.completedFuture();
                     }
                 }
-                updating = true;
-                PoseType transform = getTransformPose();
                 dpu.setDisplayInterface(this);
-                List<PhysicalItem> visionListWithEmptySlots = dpu.addEmptyTraySlots(visionList);
-                if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
-                    if (!checkRequiredParts(visionListWithEmptySlots)) {
+                if (doRequiredPartsCheck) {
+                    if (!checkRequiredParts("visionListWithEmptySlots", visionListWithEmptySlots)) {
                         System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                         System.err.println("checkRequiredPart(" + visionListWithEmptySlots + ") false but checkRequiredParts(" + visionList + ") true");
                         visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
@@ -1966,30 +2030,28 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 }
                 if (null != transform) {
                     transformedVisionList = transformList(visionListWithEmptySlots, transform);
-                    if (origEnableDbUpdates && dpu.isEnableDatabaseUpdates()) {
-                        if (!checkRequiredParts(transformedVisionList)) {
+                    if (doRequiredPartsCheck) {
+                        if (!checkRequiredParts("transformedVisionList", transformedVisionList)) {
                             System.err.println("dpu.getUpdateResultsMap()=" + dpu.getUpdateResultsMap());
                             System.err.println("checkRequiredPart(" + transformedVisionList + ") false but checkRequiredParts(" + visionList + ") true");
                             visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                             return XFutureVoid.completedFuture();
                         }
                     }
-                    notifyRawListeners(transformList(visionList, transform));
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
                     if (!singleUpdateListeners.isEmpty()) {
                         notifySingleUpdateListeners(l);
                     } else {
                         visionClientUpdateSingleUpdateListenersEmptyCount.incrementAndGet();
-                        lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
                     }
+                    lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
                     runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
-                    notifyRawListeners(visionList);
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
                     notifySingleUpdateListeners(l);
+                    lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
                     runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 }
-                updating = false;
             }
         } catch (Exception exception) {
             System.out.println("line = " + line);
@@ -2006,6 +2068,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         } finally {
             lastUpdateTime = System.currentTimeMillis();
+            updating = false;
         }
         return XFutureVoid.completedFuture();
     }

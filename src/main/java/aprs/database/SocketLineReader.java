@@ -199,7 +199,9 @@ public class SocketLineReader {
                                         }
                                     } catch (SocketException exception) {
                                         if (null != c && (null != c.socket || null != c.thread)) {
-                                            System.err.println("Closing client socket " + c);
+                                            if (!closing) {
+                                                System.err.println("Closing client socket " + c);
+                                            }
                                         }
                                         try {
                                             if (null != socket) {

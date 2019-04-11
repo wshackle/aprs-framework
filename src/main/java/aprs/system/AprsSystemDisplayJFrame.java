@@ -452,6 +452,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jCheckBoxMenuItemReverse = new javax.swing.JCheckBoxMenuItem();
         jMenuItemExit = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupExecutor = new javax.swing.JCheckBoxMenuItem();
@@ -567,6 +568,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu1.add(jMenuItemExit);
+
+        jMenuItem1.setText("FilterTest");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem1);
 
         jMenuBar1.add(jMenu1);
 
@@ -1432,9 +1441,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void startActions(String label, boolean reverseFlag) {
+    private XFuture<Boolean> startActions(String label, boolean reverseFlag) {
         if (null != aprsSystem) {
-            aprsSystem.startActions(label, reverseFlag);
+            return aprsSystem.startActions(label, reverseFlag);
         } else {
             throw new IllegalStateException("this=" + this + ", aprsSystem==null");
         }
@@ -1445,7 +1454,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         setTitleErrorString(null);
         jCheckBoxMenuItemPause.setSelected(false);
         notifyPauseFutures();
-        this.startActions("user", jCheckBoxMenuItemReverse.isSelected());
+        boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
+        if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+            jCheckBoxMenuItemConnectedRobot.setSelected(true);
+            queryConnect()
+                    .thenCompose(x -> this.startActions("user", jCheckBoxMenuItemReverse.isSelected()));
+        } else {
+            this.startActions("user", jCheckBoxMenuItemReverse.isSelected());
+            aprsSystem.fillKitTrays(true);
+        }
     }//GEN-LAST:event_jMenuItemStartActionListActionPerformed
 
     private void connectVision() {
@@ -1520,8 +1537,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     public void updateForceFakeTakeState(boolean reverseFlag1) {
         boolean forceFakeTakeOk = !reverseFlag1 && null != aprsSystem
                 && (aprsSystem.isCorrectionMode() || !aprsSystem.isPauseInsteadOfRecover());
-        if(jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
-            forceFakeTakeOk=true;
+        if (jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
+            forceFakeTakeOk = true;
         }
         if (!forceFakeTakeOk) {
             setForceFakeTakeSelected(false);
@@ -1717,7 +1734,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItemSetPoseMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinMaxLimitsActionPerformed
         try {
-            if(null == aprsSystem) {
+            if (null == aprsSystem) {
                 throw new NullPointerException("aprsSystem");
             }
             File csvFile = aprsSystem.getCartLimitsCsvFile();
@@ -1776,7 +1793,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private void startLookForParts() {
         if (null != aprsSystem) {
-            aprsSystem.startLookForParts();
+            boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
+            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+                jCheckBoxMenuItemConnectedRobot.setSelected(true);
+                queryConnect()
+                        .thenCompose(x -> aprsSystem.startLookForParts());
+            } else {
+                aprsSystem.startLookForParts();
+            }
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
@@ -1841,41 +1865,45 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private void jCheckBoxMenuItemConnectedRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
         boolean selected = jCheckBoxMenuItemConnectedRobot.isSelected();
         if (selected && null != aprsSystem) {
-            String name = aprsSystem.getRobotName();
-            if (name == null || name.length() < 1) {
-                String origRobotName = aprsSystem.getOrigRobotName();
-                name = JOptionPane.showInputDialog("Robot name?", origRobotName);
-            }
-            String host = aprsSystem.getRobotCrclHost();
-            if (host == null || host.length() < 1) {
-                String origCrclRobotHost = aprsSystem.getOrigCrclRobotHost();
-                host = JOptionPane.showInputDialog("Robot host?", origCrclRobotHost);
-            }
-            int port = aprsSystem.getRobotCrclPort();
-            if (port < 1) {
-                int origCrclRobotPort = aprsSystem.getOrigCrclRobotPort();
-                String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
-                port = Integer.parseInt(portString);
-            }
-            clearErrors();
-            resume();
-            jCheckBoxMenuItemPause.setSelected(false);
-            aprsSystem.connectRobot(name, host, port)
-                    .thenCompose(x -> startCheckEnabled())
-                    .thenApply((Boolean success) -> {
-                        if (!success) {
-                            clearRobotConnectedCheckBox();
-                        }
-                        return success;
-                    })
-                    .exceptionally(x -> {
-                        clearRobotConnectedCheckBox();
-                        return false;
-                    });
+            queryConnect();
         } else {
             this.disconnectRobot();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
+
+    public XFuture<Boolean> queryConnect() throws NumberFormatException {
+        String name = aprsSystem.getRobotName();
+        if (name == null || name.length() < 1) {
+            String origRobotName = aprsSystem.getOrigRobotName();
+            name = JOptionPane.showInputDialog("Robot name?", origRobotName);
+        }
+        String host = aprsSystem.getRobotCrclHost();
+        if (host == null || host.length() < 1) {
+            String origCrclRobotHost = aprsSystem.getOrigCrclRobotHost();
+            host = JOptionPane.showInputDialog("Robot host?", origCrclRobotHost);
+        }
+        int port = aprsSystem.getRobotCrclPort();
+        if (port < 1) {
+            int origCrclRobotPort = aprsSystem.getOrigCrclRobotPort();
+            String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
+            port = Integer.parseInt(portString);
+        }
+        clearErrors();
+        resume();
+        jCheckBoxMenuItemPause.setSelected(false);
+        return aprsSystem.connectRobot(name, host, port)
+                .thenCompose(x -> startCheckEnabled())
+                .thenApply((Boolean success) -> {
+                    if (!success) {
+                        clearRobotConnectedCheckBox();
+                    }
+                    return success;
+                })
+                .exceptionally(x -> {
+                    clearRobotConnectedCheckBox();
+                    return false;
+                });
+    }
 
     @SafeEffect
     private void clearRobotConnectedCheckBox() {
@@ -1918,15 +1946,18 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemUseTeachTableActionPerformed
 
-    
     void setCheckBoxMenuItemCorrectionModeSelected(boolean selected) {
         Utils.runOnDispatchThread(() -> {
             jCheckBoxMenuItemCorrectionMode.setSelected(selected);
         });
     }
-    
+
     @UIEffect
     private void jMenuItemFillKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFillKitTraysActionPerformed
+        if (null == aprsSystem) {
+            System.err.println("aprsSystem==null");
+            return;
+        }
         try {
             jCheckBoxMenuItemPause.setSelected(false);
             jCheckBoxMenuItemCorrectionMode.setSelected(true);
@@ -1935,7 +1966,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemReverse.setSelected(false);
             reverseFlag = false;
             reloadForReverse(false);
-            if (null != aprsSystem) {
+            boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
+            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+                jCheckBoxMenuItemConnectedRobot.setSelected(true);
+                queryConnect()
+                        .thenCompose(x -> aprsSystem.fillKitTrays(true));
+            } else {
                 aprsSystem.fillKitTrays(true);
             }
         } catch (Exception ex) {
@@ -1970,7 +2006,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemReverse.setSelected(true);
             reverseFlag = true;
             reloadForReverse(true);
-            if (null != aprsSystem) {
+            boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
+            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+                jCheckBoxMenuItemConnectedRobot.setSelected(true);
+                queryConnect()
+                        .thenCompose(x -> aprsSystem.emptyKitTrays());
+            } else {
                 aprsSystem.emptyKitTrays();
             }
         } catch (Exception ex) {
@@ -2013,26 +2054,32 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
-        if(jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
+        if (jCheckBoxMenuItemAllowForceFakeTakeAnyTime.isSelected()) {
             setForceFakeTakeEnabled(true);
         }
     }//GEN-LAST:event_jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed
 
     @UIEffect
     private void jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
-        if(null == aprsSystem) {
+        if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
         aprsSystem.setEnforceMinMaxLimits(jCheckBoxMenuItemEnforceMinMaxLimits.isSelected());
         aprsSystem.updateRobotLimits();
     }//GEN-LAST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
 
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        String filename = JOptionPane.showInputDialog("csv items file to filter");
+        aprsSystem.filterTest(filename);
+
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(selected);
         });
     }
-    
+
     CachedCheckBox connectDatabaseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemConnectDatabase);
     }
@@ -2057,7 +2104,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     CachedCheckBox reloadSimFilesOnReverseCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemReloadSimFilesOnReverse);
     }
-
 
     private void logEvent(String string, Object o) {
         if (null != aprsSystem) {
@@ -2128,6 +2174,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItemClearErrors;
     private javax.swing.JMenuItem jMenuItemContinueActionList;
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
