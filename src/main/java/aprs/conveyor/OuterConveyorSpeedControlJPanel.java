@@ -150,7 +150,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         System.out.println("previosTray: goal=" + getGoalPosition());
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
         if (null != nextPrevTrayFuture) {
-            nextPrevTrayFuture.cancelAll(true);
+            if (!nextPrevTrayFuture.isDone()) {
+                Thread.dumpStack();
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
+                nextPrevTrayFuture.cancelAll(true);
+            }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
         nextPrevTrayFuture = new XFutureVoid("nextTray");
@@ -170,7 +174,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
         if (null != nextPrevTrayFuture) {
-            nextPrevTrayFuture.cancelAll(true);
+           if (!nextPrevTrayFuture.isDone()) {
+                Thread.dumpStack();
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
+                nextPrevTrayFuture.cancelAll(true);
+            }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
         nextPrevTrayFuture = new XFutureVoid("nextTray");
@@ -185,7 +193,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
         if (null != nextPrevTrayFuture) {
-            nextPrevTrayFuture.cancelAll(true);
+            if (!nextPrevTrayFuture.isDone()) {
+                Thread.dumpStack();
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
+                nextPrevTrayFuture.cancelAll(true);
+            }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
         nextPrevTrayFuture = new XFutureVoid("prevTray");

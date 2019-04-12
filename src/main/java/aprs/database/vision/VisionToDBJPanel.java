@@ -1843,9 +1843,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         for (int i = 0; i < l.size(); i++) {
             PhysicalItem item = l.get(i);
-            if(item instanceof Tray) {
+            if (item instanceof Tray) {
                 Tray tray = (Tray) item;
-                if(tray.getAbsSlotList().isEmpty()) {
+                if (tray.getAbsSlotList().isEmpty()) {
                     throw new IllegalStateException("tray.getAbsSlotList().isEmpty()");
                 }
             }
@@ -1902,18 +1902,26 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public List<PhysicalItem> getLastRawVisItemsData() {
         return lastRawVisItemsData;
     }
-    
+
     private void cancelListenersAndDisableUpdates() {
         synchronized (singleUpdateListeners) {
             for (XFuture<List<PhysicalItem>> xf : singleUpdateListeners) {
-                xf.cancelAll(true);
+                if (!xf.isDone()) {
+                    Thread.dumpStack();
+                    System.err.println("VisionToDBJPanel.cancelListenersAndDisableUpdates : cancelling from singleUpdateListeners xf=" + xf);
+                    xf.cancelAll(true);
+                }
             }
             singleUpdateListeners.clear();
             setEnableDatabaseUpdates(false);
         }
         synchronized (rawUpdateListeners) {
             for (XFuture<List<PhysicalItem>> xf : rawUpdateListeners) {
-                xf.cancelAll(true);
+                if (!xf.isDone()) {
+                    Thread.dumpStack();
+                    System.err.println("VisionToDBJPanel.cancelListenersAndDisableUpdates : cancelling from  rawUpdateListeners xf=" + xf);
+                    xf.cancelAll(true);
+                }
             }
             rawUpdateListeners.clear();
         }
@@ -2009,7 +2017,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     lastRawVisItemsData = Collections.unmodifiableList(new ArrayList<>(transformedRawList));
                 }
                 final boolean doRequiredPartsCheck = !singleUpdateListeners.isEmpty() || (origEnableDbUpdates && dpu.isEnableDatabaseUpdates());
-                
+
                 if (doRequiredPartsCheck) {
                     if (!checkRequiredParts("visionList", visionList)) {
                         boolean chkAgain = checkRequiredParts("visionList", visionList, true);
