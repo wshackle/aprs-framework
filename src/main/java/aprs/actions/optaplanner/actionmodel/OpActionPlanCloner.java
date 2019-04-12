@@ -6,6 +6,7 @@
 package aprs.actions.optaplanner.actionmodel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +66,21 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
                 if (null != origNextAction) {
                     OpAction newAction = (OpAction) origToNewMap.get(origAction);
                     if (null == newAction) {
-                        throw new IllegalStateException("actionMap.get(" + origAction + ") returned null");
+                        throw new IllegalStateException("origToNewMap.get(" + origAction + ") returned null");
                     }
                     OpActionInterface nxtAction = origToNewMap.get(origNextAction);
                     if (null == nxtAction) {
-                        throw new IllegalStateException("actionMap.get(" + origNextAction + ") returned null");
+                        System.err.println("origToNewMap="+origToNewMap);
+                        System.err.println("origToNewMap.values()="+origToNewMap.values());
+                        throw new IllegalStateException("origToNewMap.get(" + origNextAction + ") returned null");
                     }
                     newAction.setNext(nxtAction);
                 }
             }
-            newPlan.setActions(newActions);
+            if(newActions.size() != origActions.size()) {
+                throw new IllegalStateException("newActions.size() != origActions.size() : "+newActions.size()+" != "+origActions.size());
+            }
+            newPlan.setActions(Collections.unmodifiableList(new ArrayList<>(newActions)));
         }
         newPlan.checkActionList();
 //        System.out.println("original = " + original);

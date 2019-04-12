@@ -31,6 +31,7 @@ import org.optaplanner.core.api.domain.solution.drools.ProblemFactCollectionProp
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.solution.drools.ProblemFactProperty;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
  *
@@ -40,6 +41,11 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 @PlanningSolution(solutionCloner = OpActionPlanCloner.class)
 public class OpActionPlan {
 
+    static public SolverFactory<OpActionPlan> createSolverFactory() {
+        return SolverFactory.createFromXmlResource(
+                "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
+    }
+    
     @ProblemFactProperty
     OpEndAction endAction = new OpEndAction();
 
@@ -266,7 +272,7 @@ public class OpActionPlan {
                                 .collect(Collectors.joining(",")));
             }
         }
-        actions = newActions;
+        actions = Collections.unmodifiableList(new ArrayList<>(newActions));
         if (debug && unusedActions.size() > 0) {
             System.out.println("unusedActions = " + unusedActions);
             System.out.println("actions = " + actions);
