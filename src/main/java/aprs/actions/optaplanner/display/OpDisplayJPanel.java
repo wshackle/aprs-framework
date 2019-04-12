@@ -175,8 +175,7 @@ public class OpDisplayJPanel extends JPanel {
                 newOpActionPlan.initNextActions();
                 if (null == solver) {
                     if (null == solverFactory) {
-                        solverFactory = SolverFactory.createFromXmlResource(
-                                "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
+                        solverFactory = OpActionPlan.createSolverFactory();
                     }
                     solver = solverFactory.buildSolver();
                 }

@@ -114,14 +114,16 @@ public class OptaplannerTest {
         // Show a window with the initial plan.
         showPlan(ap, "Input : " + score.getSoftScore(),JFrame.EXIT_ON_CLOSE);
         System.out.println("score = " + score);
-        SolverFactory<OpActionPlan> solverFactory = SolverFactory.createFromXmlResource(
-                "aprs/framework/optaplanner/actionmodel/actionModelSolverConfig.xml");
+        SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
         
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
 
         // Setup callback to have the solver print some status as it runs.
         solver.addEventListener(e -> System.out.println("After " + e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
 
+        List<OpAction> apActionsCopy = new ArrayList<>(ap.getActions());
+        System.out.println("apActionsCopy = " + apActionsCopy);
+        
         // Run the solver.
         long t0 = System.currentTimeMillis();
         OpActionPlan solvedActionPlan = solver.solve(ap);
@@ -132,6 +134,7 @@ public class OptaplannerTest {
         for (int i = 0; i < 20; i++) {
             Collections.shuffle(shuffledList);
             ap.setActions(shuffledList);
+            ap.initNextActions();
             solvedActionPlan = solver.solve(ap);
             score = calculator.calculateScore(solvedActionPlan);
             System.out.println("score = " + score);

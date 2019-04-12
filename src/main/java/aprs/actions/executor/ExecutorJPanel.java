@@ -2743,12 +2743,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private static final SolverFactory<OpActionPlan> solverFactory = createSolverFactory();
+    private static final SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
 
-    static private SolverFactory<OpActionPlan> createSolverFactory() {
-        return SolverFactory.createFromXmlResource(
-                "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
-    }
+    
 
     @MonotonicNonNull
     private Solver<OpActionPlan> solver = null;
