@@ -1364,7 +1364,10 @@ public class AprsSystem implements SlotOffsetProvider {
         safeAbortFuture = this.pddlExecutorJInternalFrame1.startSafeAbort(comment)
                 .thenRun(() -> {
                     if (null != continuousDemoFuture) {
-                        continuousDemoFuture.cancelAll(true);
+                        if (!continuousDemoFuture.isDone()) {
+                            System.err.println("AprsSystem.startSafeAbort : cancelling continuousDemoFuture=" + continuousDemoFuture);
+                            continuousDemoFuture.cancelAll(true);
+                        }
                         continuousDemoFuture = null;
                     }
                     setStopRunTime();
@@ -1922,7 +1925,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void logException(Throwable e) throws RuntimeException {
         if (!closing) {
             setTitleErrorString(e.getMessage());
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "logException:"+getTaskName()+":"+e.getMessage(), e);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "logException:" + getTaskName() + ":" + e.getMessage(), e);
             if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
             } else {
@@ -2573,7 +2576,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                     if (null != lastContinueActionListFuture) {
                         if (!lastContinueActionListFuture.isDone()) {
-                            System.err.println("immediateAbort : cancelling lastContinueActionListFuture="+lastContinueActionListFuture);
+                            System.err.println("immediateAbort : cancelling lastContinueActionListFuture=" + lastContinueActionListFuture);
                             System.err.println("continueActionListTrace = " + Utils.traceToString(continueActionListTrace));
                         }
                         lastContinueActionListFuture.cancelAll(true);

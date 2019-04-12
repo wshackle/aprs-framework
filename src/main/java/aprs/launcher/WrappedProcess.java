@@ -277,7 +277,11 @@ public class WrappedProcess {
 
     public void close() {
         this.closed = true;
-        processStartXFuture.cancelAll(true);
+        if(null != processStartXFuture && !processStartXFuture.isDone()) {
+            Thread.dumpStack();
+            System.err.println("WrappedProcess.close : cancelling processStartXFuture="+processStartXFuture);
+            processStartXFuture.cancelAll(true);
+        }
         if (null != process) {
             try {
                 if (!process.waitFor(50, TimeUnit.MILLISECONDS)) {

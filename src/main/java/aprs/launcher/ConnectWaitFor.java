@@ -88,8 +88,10 @@ public class ConnectWaitFor {
         } catch (Exception exception) {
             Logger.getLogger(LaunchFileRunner.class.getName()).log(Level.SEVERE, "exception", exception);
             Logger.getLogger(LaunchFileRunner.class.getName()).log(Level.SEVERE, "lastException", lastException);
-            System.err.println("time diff = "+(System.currentTimeMillis()-startTime));
-            System.err.println("expected full timeout = "+(max_tries*(delay+timeout)));
+            System.err.println("ConnectWaitFor.run : time diff = "+(System.currentTimeMillis()-startTime));
+            System.err.println("ConnectWaitFor.run : expected full timeout = "+(max_tries*(delay+timeout)));
+            Thread.dumpStack();
+            System.err.println("ConnectWaitFor.run : cancelling socketFuture="+socketFuture);
             socketFuture.cancelAll(false);
             // interrupted so quit
         }
@@ -114,7 +116,11 @@ public class ConnectWaitFor {
     }
     
     public void cancel() {
+        if(!socketFuture.isDone()) {
+            Thread.dumpStack();
+            System.err.println("ConnectWaitFor.cancel : cancelling socketFuture="+socketFuture);
         socketFuture.cancelAll(false);
+        }
         thread.interrupt();
     }
 

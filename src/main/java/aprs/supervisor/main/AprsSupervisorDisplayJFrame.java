@@ -948,7 +948,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (supervisor.isResetting()) {
             return;
         }
-        supervisor.setRobotEnabled(robotName, enabled,null);
+        supervisor.setRobotEnabled(robotName, enabled, null);
     }
 
     public void setPauseSelected(boolean selected) {
@@ -3208,7 +3208,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private void jMenuItemStartAllReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllReverseActionPerformed
         interactivStart(() -> {
             if (null != lastFutureReturned) {
-                lastFutureReturned.cancelAll(true);
+                if (!lastFutureReturned.isDone()) {
+                    lastFutureReturned.cancelAll(true);
+                }
+                lastFutureReturned = null;
             }
             prepAndFinishOnDispatch(() -> {
                 immediateAbortAll("jMenuItemStartAllReverseActionPerformed");
@@ -4218,8 +4221,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public double conveyorPos() {
         return conveyorVisJPanel1.getEstimatedPosition();
     }
-    
-    
+
     public XFutureVoid conveyorVisNextTray() {
         try {
             return conveyorVisJPanel1.nextTray();
@@ -4639,7 +4641,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         return supervisor.startRandomEnableToggleIndependentContinuousDemo();
     }
-
 
     public XFutureVoid setContinuousDemoCycle(int c) {
         System.out.println("incrementContinuousDemoCycle : " + c);

@@ -2387,7 +2387,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     throw new IllegalStateException("calling startActions when runningProgramFuture=" + runningProgramFuture);
                 }
             }
-            runningProgramFuture = null;
+            setRunProgramFuture(null);
             XFuture<Boolean> ret = generateCrclAsync()
                     .thenApply(x -> {
                         if (x && atLastAction()) {
@@ -2395,7 +2395,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         }
                         return x;
                     });
-            runningProgramFuture = ret;
+            setRunProgramFuture(ret);
             return ret;
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -2730,7 +2730,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
             }
-            runningProgramFuture = generateCrclAsync();
+            setRunProgramFuture(generateCrclAsync());
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -3487,7 +3487,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             autoStart = false;
             setReplanFromIndex(0);
             cancelRunProgramFuture();
-            runningProgramFuture = generateCrclAsync();
+            setRunProgramFuture(generateCrclAsync());
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -3496,6 +3496,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void cancelRunProgramFuture() {
         if (null != runningProgramFuture) {
+            Thread.dumpStack();
+            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(true);
         }
     }
@@ -3628,8 +3631,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != runningProgramFuture) {
+            Thread.dumpStack();
+            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
-            runningProgramFuture = null;
+            setRunProgramFuture(null);
         }
         if (null != aprsSystem) {
             XFutureVoid abortCrclFuture = aprsSystem.abortCrclProgram();
@@ -3731,7 +3737,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != generateCrclService) {
                 generateCrclService.submit(() -> {
                     try {
-                        runningProgramFuture = this.takePart(part);
+                        XFuture<Boolean> takePartFuture = this.takePart(part);
+                        setRunProgramFuture(takePartFuture);
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         abortProgram();
@@ -3739,7 +3746,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                runningProgramFuture = this.takePart(part);
+                setRunProgramFuture(this.takePart(part));
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -3747,6 +3754,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonTakeActionPerformed
+
+    private volatile StackTraceElement setRunProgramFutureTrace[] = null;
+    private void setRunProgramFuture(XFuture<Boolean> takePartFuture) {
+        runningProgramFuture = takePartFuture;
+        setRunProgramFutureTrace = Thread.currentThread().getStackTrace();
+    }
 
     private final CachedComboBox<String> manualObjectCachedComboBox;
 
@@ -3889,7 +3902,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             if (null != generateCrclService) {
                                 generateCrclService.submit(() -> {
                                     try {
-                                        runningProgramFuture = this.lookForParts();
+                                        setRunProgramFuture(this.lookForParts());
                                     } catch (Exception ex) {
                                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                                         abortProgram();
@@ -3899,7 +3912,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                     }
                                 });
                             } else {
-                                runningProgramFuture = this.lookForParts();
+                                setRunProgramFuture(this.lookForParts());
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -3939,7 +3952,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != generateCrclService) {
                 generateCrclService.submit(() -> {
                     try {
-                        runningProgramFuture = this.returnPart(part);
+                        setRunProgramFuture(this.returnPart(part));
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         abortProgram();
@@ -3947,7 +3960,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                runningProgramFuture = this.returnPart(part);
+                setRunProgramFuture(this.returnPart(part));
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -3965,7 +3978,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != runningProgramFuture) {
             runningProgramFuture.cancel(true);
         }
-        runningProgramFuture = this.randomDropOff();
+        setRunProgramFuture(this.randomDropOff());
         logDebug("randomDropOffCount = " + randomDropOffCount);
     }//GEN-LAST:event_jButtonRandDropOffActionPerformed
 
@@ -4266,8 +4279,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setReplanFromIndex(0);
         abortProgram();
         if (null != runningProgramFuture) {
+            Thread.dumpStack();
+            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
-            runningProgramFuture = null;
+            setRunProgramFuture(null);
         }
     }//GEN-LAST:event_jButtonAbortActionPerformed
 
@@ -4279,7 +4295,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             autoStart = true;
             replanCachedCheckBox.setSelected(true);
             cancelRunProgramFuture();
-            runningProgramFuture = generateCrclAsync();
+            setRunProgramFuture(generateCrclAsync());
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -4533,15 +4549,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         replanCachedCheckBox.setSelected(true);
         if (null != unstartedProgram) {
-            runningProgramFuture = startCrclProgram(unstartedProgram);
+            setRunProgramFuture(startCrclProgram(unstartedProgram));
         } else if (null != runningProgramFuture
                 && !runningProgramFuture.isDone()
                 && !runningProgramFuture.isCancelled()) {
-            runningProgramFuture
-                    = continueCurrentCrclProgram();
+            setRunProgramFuture(continueCurrentCrclProgram());
         } else {
             try {
-                runningProgramFuture = generateCrclAsync();
+                setRunProgramFuture(generateCrclAsync());
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -4573,7 +4588,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != generateCrclService) {
                 generateCrclService.submit(() -> {
                     try {
-                        runningProgramFuture = this.placePartSlot(part, slot);
+                        setRunProgramFuture(this.placePartSlot(part, slot));
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         abortProgram();
@@ -4581,7 +4596,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                runningProgramFuture = this.placePartSlot(part, slot);
+                setRunProgramFuture(this.placePartSlot(part, slot));
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -4607,7 +4622,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != generateCrclService) {
                 generateCrclService.submit(() -> {
                     try {
-                        runningProgramFuture = this.testPartPosition(part);
+                        setRunProgramFuture(this.testPartPosition(part));
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         abortProgram();
@@ -4615,7 +4630,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                runningProgramFuture = this.testPartPosition(part);
+                setRunProgramFuture(this.testPartPosition(part));
             }
 
         } catch (Exception ex) {
@@ -5298,7 +5313,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
 //            toolChangerPose = pose;
-            runningProgramFuture = this.gotoToolChangerApproach(name, pose);
+            setRunProgramFuture(this.gotoToolChangerApproach(name, pose));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
@@ -5328,7 +5343,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
 //            toolChangerPose = pose;
-            runningProgramFuture = this.gotoToolChangerPose(name, pose);
+            setRunProgramFuture(this.gotoToolChangerPose(name, pose));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
@@ -5358,7 +5373,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
 
-            runningProgramFuture = this.dropToolByHolder(toolHolderPoseName);
+            setRunProgramFuture(this.dropToolByHolder(toolHolderPoseName));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
@@ -5426,7 +5441,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("no pose for " + holderPosName + " in " + toolHolderPoseMap);
                 return;
             }
-            runningProgramFuture = this.pickupToolByHolder(holderPosName);
+            setRunProgramFuture(this.pickupToolByHolder(holderPosName));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
@@ -5890,7 +5905,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != runningProgramFuture) {
                 runningProgramFuture.cancel(true);
             }
-            runningProgramFuture = generateCrclAsync();
+            setRunProgramFuture(generateCrclAsync());
         } catch (Exception ex) {
             replanStarted.set(false);
             if (null != replanActionTimer) {
