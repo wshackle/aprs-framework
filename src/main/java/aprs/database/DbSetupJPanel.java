@@ -980,6 +980,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     public XFutureVoid disconnect() {
         boolean was_disconnecting = disconnecting;
         disconnecting = true;
+        if(!this.connected) {
+            return XFutureVoid.completedFuture();
+        }
         return setDbSetup(new DbSetupBuilder().setup(this.getDbSetup()).connected(false).build())
                 .thenRun(() -> disconnecting = was_disconnecting);
     }

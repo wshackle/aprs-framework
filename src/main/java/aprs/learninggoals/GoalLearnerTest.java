@@ -353,7 +353,8 @@ public class GoalLearnerTest {
                     aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
                     aprsSystem.setVisible(true);
                     return aprsSystem.setLookForXYZ(-80, -80, 0);
-                });
+                })
+                .thenComposeToVoid(() -> aprsSystem.connectRobot());
     }
 
 }
