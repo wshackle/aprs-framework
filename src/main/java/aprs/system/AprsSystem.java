@@ -1713,6 +1713,10 @@ public class AprsSystem implements SlotOffsetProvider {
         return origCrclRobotPort;
     }
 
+    public XFutureVoid connectRobot() {
+        return connectRobot(getRobotName(),getRobotCrclHost(),getRobotCrclPort());
+    }
+    
     /**
      * Connect to a given robot with a CRCL server running on the given host and
      * TCP port.
@@ -1766,8 +1770,8 @@ public class AprsSystem implements SlotOffsetProvider {
             setRobotName(robotName);
             frm.connect(host, port);
         }
-        maybeSetOrigCrclRobotHost(getRobotCrclHost());
-        maybeSetOrigCrclRobotPort(getRobotCrclPort());
+        maybeSetOrigCrclRobotHost(host);
+        maybeSetOrigCrclRobotPort(port);
         updateConnectedRobotDisplay(isConnected(), robotName, host, port);
     }
 
