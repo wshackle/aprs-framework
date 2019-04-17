@@ -35,6 +35,8 @@ import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapJPanel;
 import aprs.cachedcomponents.CachedTable;
 import aprs.launcher.ProcessLauncherJFrame;
+import aprs.misc.AprsCommonLogger;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.MultiFileDialogJPanel;
@@ -141,6 +143,9 @@ import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
 import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
+import java.util.IdentityHashMap;
+import java.util.Map.Entry;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -150,6 +155,8 @@ public class Supervisor {
 
     @MonotonicNonNull
     private final AprsSupervisorDisplayJFrame displayJFrame;
+
+    private final long startSupervisorTime;
 
     private Supervisor() {
         this(null);
@@ -161,14 +168,14 @@ public class Supervisor {
         File f = new File(Utils.getAprsUserHomeDir(),
                 "aprs_test_logs.csv");
         int disableCount = this.getTotalDisableCount();
-        System.out.println("disableCount = " + disableCount);
+        println("disableCount = " + disableCount);
         long disableTime = this.getTotalDisableTime();
-        System.out.println("disableTime = " + disableTime);
+        println("disableTime = " + disableTime);
         boolean alreadyExists = f.exists();
         long totalRandomDelays = this.getTotalRandomDelays();
-        System.out.println("totalRandomDelays = " + totalRandomDelays);
+        println("totalRandomDelays = " + totalRandomDelays);
         int ignoredToggles = this.getIgnoredToggles();
-        System.out.println("ignoredToggles = " + ignoredToggles);
+        println("ignoredToggles = " + ignoredToggles);
         Utils.saveTestLogEntry(f, alreadyExists, cycle_count, timeDiff, timeDiffPerCycle, disableCount, disableTime, totalRandomDelays, ignoredToggles);
     }
 
@@ -184,19 +191,36 @@ public class Supervisor {
     }
 
     @SuppressWarnings("guieffect")
-    public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles) {
+    public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
         this.setShowFullScreenMessages(false);
         this.setMax_cycles(maxCycles);
-        XFutureVoid startScanAllFuture
-                = completePrevMultiFuture
-                        .thenComposeToVoid(this::startScanAll);
+        XFutureVoid startScanAllFuture;
+        if (useConveyor) {
+            startScanAllFuture
+                    = completePrevMultiFuture
+                            .thenComposeToVoid(x -> {
+                                String convTaskName = getConveyorClonedViewSystemTaskName();
+                                AprsSystem sys = getSysByTask(convTaskName);
+                                sys.setAlertLimitsCheckBoxSelected(false);
+                                setupSystemForConveyorTest(sys);
+                                setEnableTestRandomDelayMillis(60000);
+                                setEnableTestMinRandomDelayMillis(15000);
+                                return displayJFrame.conveyorTestPrep(sys);
+                            })
+                            .thenComposeToVoid(this::startScanAll);
+        } else {
+            startScanAllFuture
+                    = completePrevMultiFuture
+                            .thenComposeToVoid(this::startScanAll);
+        }
         XFuture<?> xf2 = startScanAllFuture
                 .thenRun(() -> {
                     if (!startScanAllFuture.isDone()) {
                         System.err.println("wtf");
                     }
+//                    this.displayUpdatesDisabled = true;
                 });
         XFuture<?> xf3 = xf2
                 .thenCompose(x -> {
@@ -221,21 +245,22 @@ public class Supervisor {
                     if (!xf3.isDone()) {
                         System.err.println("wtf");
                     }
+                    this.displayUpdatesDisabled = false;
                     Utils.printOnlyOnDispatchCallers();
-                    Utils.runOnDispatchThread(() -> {
+                    runOnDispatchThread(() -> {
 
-                        System.out.println("timeDiff = " + timeDiff);
+                        println("timeDiff = " + timeDiff);
                         PlayAlert();
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
+                        println();
+                        println("===============================================================");
+                        println();
                         String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
                                 (timeDiff / 1000.0),
                                 (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
-                        System.out.println(msg);
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
+                        println(msg);
+                        println();
+                        println("===============================================================");
+                        println();
                         this.close();
                         System.exit(0);
                     });
@@ -244,7 +269,7 @@ public class Supervisor {
     }
 
     @SuppressWarnings("guieffect")
-    public XFuture<?> completeMultiCycleTestWithPrevMulti(long startTime, int numCycles, boolean useConveyor) {
+    public XFuture<?> multiCycleTest(long startTime, int numCycles, boolean useConveyor) {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
 
@@ -326,8 +351,8 @@ public class Supervisor {
                         });
         XFuture<?> xf4 = randomTestFirstActionReversedFuture
                 .alwaysCompose(() -> {
-                    System.out.println("supervisorScanAllFuture = " + supervisorScanAllFuture);
-                    System.out.println("randomTestFirstActionReversedFuture = " + randomTestFirstActionReversedFuture);
+                    println("supervisorScanAllFuture = " + supervisorScanAllFuture);
+                    println("randomTestFirstActionReversedFuture = " + randomTestFirstActionReversedFuture);
                     int cycle_count = this.getContiousDemoCycleCount();
                     long endTime = System.currentTimeMillis();
                     long timeDiff = endTime - startTime;
@@ -339,19 +364,19 @@ public class Supervisor {
                         System.err.println("wtf");
                     }
                     Utils.printOnlyOnDispatchCallers();
-                    return Utils.runOnDispatchThread(() -> {
+                    return runOnDispatchThread(() -> {
 
-                        System.out.println("timeDiff = " + timeDiff);
+                        println("timeDiff = " + timeDiff);
                         PlayAlert();
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
+                        println();
+                        println("===============================================================");
+                        println();
                         String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
                                 (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60, cycle_count);
-                        System.out.println(msg);
-                        System.out.println();
-                        System.out.println("===============================================================");
-                        System.out.println();
+                        println(msg);
+                        println();
+                        println("===============================================================");
+                        println();
                         this.close();
                         System.exit(0);
                     });
@@ -412,7 +437,7 @@ public class Supervisor {
     }
 
     private void updateSharedToolsTable(String sysName, String holder, String tool) {
-        Utils.runOnDispatchThread(() -> updateSharedToolsTableInternal(sysName, holder, tool));
+        runOnDispatchThread(() -> updateSharedToolsTableInternal(sysName, holder, tool));
     }
 
     private void enableSharedToolTableModelListener() {
@@ -481,6 +506,7 @@ public class Supervisor {
      */
     @SuppressWarnings("initialization")
     private Supervisor(@Nullable AprsSupervisorDisplayJFrame displayJFrame) {
+        this.startSupervisorTime = System.currentTimeMillis();
         this.displayJFrame = displayJFrame;
 
         this.sharedToolCachedTable = (displayJFrame != null)
@@ -792,8 +818,8 @@ public class Supervisor {
 //                return new File(firstLine);
 //            }
 //        }
-//        System.out.println("LAST_SETUP_FILE_FILE = " + LAST_SETUP_FILE_FILE);
-//        System.out.println("firstLine = " + firstLine);
+//        println("LAST_SETUP_FILE_FILE = " + LAST_SETUP_FILE_FILE);
+//        println("firstLine = " + firstLine);
 //        return null;
     }
 
@@ -1235,9 +1261,9 @@ public class Supervisor {
                     futureToComplete.complete();
                 }
                 if (!stealingRobots) {
-                    System.out.println("clearStealingRobotsFlagTrace = " + Utils.traceToString(clearStealingRobotsFlagTrace));
+                    println("clearStealingRobotsFlagTrace = " + Utils.traceToString(clearStealingRobotsFlagTrace));
                 } else {
-                    System.out.println("setStealingRobotsFlagTrace = " + Utils.traceToString(setStealingRobotsFlagTrace));
+                    println("setStealingRobotsFlagTrace = " + Utils.traceToString(setStealingRobotsFlagTrace));
                 }
                 System.exit(1);
                 return;
@@ -1455,15 +1481,31 @@ public class Supervisor {
         return nextLFR;
     }
 
+    private static class RefreshRobotsInfo {
+
+        private final Map<String, Boolean> robotEnableMapCopy;
+        private final Map<String, Integer> robotDisableCountMapCopy;
+        private final Map<String, Long> robotDisableTotalTimeMapCopy;
+        final AprsSupervisorDisplayJFrame checkedDisplayJFrame;
+
+        public RefreshRobotsInfo(Map<String, Boolean> robotEnableMap, Map<String, Integer> robotDisableCountMap, Map<String, Long> robotDisableTotalTimeMap, AprsSupervisorDisplayJFrame checkedDisplayJFrame) {
+            this.robotEnableMapCopy = Collections.unmodifiableMap(new HashMap<>(robotEnableMap));
+            this.robotDisableCountMapCopy = Collections.unmodifiableMap(new HashMap<>(robotDisableCountMap));
+            this.robotDisableTotalTimeMapCopy = Collections.unmodifiableMap(new HashMap<>(robotDisableTotalTimeMap));
+            this.checkedDisplayJFrame = checkedDisplayJFrame;
+        }
+
+        public void update() {
+            checkedDisplayJFrame.refreshRobotsTable(robotEnableMapCopy, robotDisableCountMapCopy, robotDisableTotalTimeMapCopy);
+        }
+    }
+
+    private static final Consumer<RefreshRobotsInfo> refreshRobotsConsumer = RefreshRobotsInfo::update;
+
     private XFutureVoid refreshRobotsTable() {
         if (null != displayJFrame) {
-            Map<String, Boolean> robotEnableMapCopy = new HashMap<>(robotEnableMap);
-            Map<String, Integer> robotDisableCountMapCopy = new HashMap<>(robotEnableCountMap);
-            Map<String, Long> robotDisableTotalTimeMapCopy = new HashMap<>(robotDisableTotalTimeMap);
-            final AprsSupervisorDisplayJFrame checkedDisplayJFrame = displayJFrame;
-            return Utils.runOnDispatchThread(
-                    "refreshRobotsTable",
-                    () -> checkedDisplayJFrame.refreshRobotsTable(robotEnableMapCopy, robotDisableCountMapCopy, robotDisableTotalTimeMapCopy));
+            RefreshRobotsInfo refreshRobotsInfo = new RefreshRobotsInfo(robotEnableMap, robotDisableCountMap, robotDisableTotalTimeMap, displayJFrame);
+            return submitDisplayConsumer(refreshRobotsConsumer, refreshRobotsInfo);
         } else {
             return XFutureVoid.completedFuture();
         }
@@ -1533,7 +1575,7 @@ public class Supervisor {
             }
         }
         String errMsg = "Robot " + robotName + " not found in " + names;
-        System.out.println("aprsSystems = " + aprsSystems);
+        println("aprsSystems = " + aprsSystems);
         logEventErr(errMsg);
         showErrorSplash(errMsg);
         throw new IllegalStateException(errMsg);
@@ -1622,10 +1664,13 @@ public class Supervisor {
     private volatile long returnRobotsTime = -1;
 
     void printReturnRobotTraceInfo() {
-        System.out.println("returnRobotsThread = " + returnRobotsThread);
-        System.out.println("returnRobotsStackTrace = " + Arrays.toString(returnRobotsStackTrace));
-        System.out.println("returnRobotsTime = " + (returnRobotsTime - System.currentTimeMillis()));
+        println("returnRobotsThread = " + returnRobotsThread);
+        println("returnRobotsStackTrace = " + Arrays.toString(returnRobotsStackTrace));
+        println("returnRobotsTime = " + (returnRobotsTime - System.currentTimeMillis()));
     }
+
+    private AtomicInteger returnRobotsCount = new AtomicInteger();
+    private AtomicLong returnRobotsTotalTime = new AtomicLong();
 
     private XFutureVoid returnRobots(String comment, @Nullable AprsSystem stealFrom, @Nullable AprsSystem stealFor, int srn, int ecc) {
         try {
@@ -1637,6 +1682,7 @@ public class Supervisor {
                     return cancelledSrn(ecc);
                 }
             }
+            long startTime = System.currentTimeMillis();
             AprsSystem systems[] = (null != stealFor && null != stealFrom)
                     ? new AprsSystem[]{stealFor, stealFrom}
                     : aprsSystems.toArray(new AprsSystem[0]);
@@ -1669,6 +1715,10 @@ public class Supervisor {
                     .alwaysComposeAsync(() -> {
                         XFutureVoid ret = allowToggles(blockername, new AprsSystem[0]);
                         clearBlockConveryorMoves();
+                        long timeDiff = System.currentTimeMillis() - startTime;
+                        long totalTime = returnRobotsTotalTime.addAndGet(timeDiff);
+                        int count = returnRobotsCount.incrementAndGet();
+                        logEvent("returnRobots:comment=" + comment + ",srn=" + srn + ",timeDiff=" + timeDiff + ",totalTime=" + totalTime + ",count=" + count);
                         return ret;
                     }, supervisorExecutorService);
         } catch (Exception exception) {
@@ -2007,7 +2057,7 @@ public class Supervisor {
     private XFutureVoid showCheckEnabledErrorSplash() {
         return showErrorSplash("Not all robots\n could be enabled.")
                 .thenComposeToVoid(() -> {
-                    return Utils.runOnDispatchThread(() -> {
+                    return runOnDispatchThread(() -> {
                         setContinuousDemoSelected(false);
                         setContinuousDemoRevFirstSelected(false);
                         if (null != ContinuousDemoFuture) {
@@ -2125,7 +2175,7 @@ public class Supervisor {
         }
         XFutureVoid origStealRobotFuture = stealRobotFuture.get();
         if (origStealRobotFuture != null) {
-            System.out.println("calling stealrRobot when already stealingRobots");
+            println("calling stealrRobot when already stealingRobots");
             return origStealRobotFuture;
         }
         final int srn = stealRobotNumber.incrementAndGet();
@@ -2566,15 +2616,15 @@ public class Supervisor {
             printSysDoingError(sys, msg);
             logEventErr(msg);
             String doingActionsInfo = sys.getIsDoingActionsInfo();
-            System.out.println("");
-            System.out.println("doingActionsInfo = " + doingActionsInfo);
-            System.out.println("disallowTogglesCount = " + disallowTogglesCount);
-            System.out.println("toggleBlockerMap.keySet() = " + toggleBlockerMap.keySet());
-            System.out.println("allowTogglesCount = " + allowTogglesCount);
-            System.out.println("togglesAllowed = " + togglesAllowed);
-            System.out.println("lastDisallowTogglesFuture = " + lastDisallowTogglesFuture);
-            System.out.println("lastDisallowTogglesTrace = " + lastDisallowTogglesTrace);
-            System.out.println("");
+            println("");
+            println("doingActionsInfo = " + doingActionsInfo);
+            println("disallowTogglesCount = " + disallowTogglesCount);
+            println("toggleBlockerMap.keySet() = " + toggleBlockerMap.keySet());
+            println("allowTogglesCount = " + allowTogglesCount);
+            println("togglesAllowed = " + togglesAllowed);
+            println("lastDisallowTogglesFuture = " + lastDisallowTogglesFuture);
+            println("lastDisallowTogglesTrace = " + lastDisallowTogglesTrace);
+            println("");
 
             System.err.println("");
             System.err.println("doingActionsInfo = " + doingActionsInfo);
@@ -2591,11 +2641,11 @@ public class Supervisor {
     }
 
     private void printSysDoingError(AprsSystem sys, String msg) {
-        System.out.println("");
+        println("");
         System.err.println("");
         System.err.println("printSysDoingError: msg=" + msg);
         Thread.dumpStack();
-        System.out.println("");
+        println("");
         System.err.println("sys = " + sys);
         XFuture<Boolean> continueFuture = sys.getContinueActionListFuture();
         XFuture<Boolean> startFuture = sys.getLastStartActionsFuture();
@@ -2637,10 +2687,10 @@ public class Supervisor {
             System.err.println("continueFuture.forExceptionString() = " + continueFuture.forExceptionString());
         }
 
-        System.out.println("");
+        println("");
         System.err.println("");
         debugAction();
-        System.out.println("");
+        println("");
         System.err.println("");
     }
 
@@ -2913,7 +2963,7 @@ public class Supervisor {
                 File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
                 supervisorDir.mkdirs();
                 File logFile = Utils.createTempFile("events_log_", ".txt", supervisorDir);
-                System.out.println("Supervisor event log file =" + logFile.getCanonicalPath());
+                println("Supervisor event log file =" + logFile.getCanonicalPath());
                 logPrintStream = new PrintStream(new FileOutputStream(logFile));
                 logPrintStream.println("timeString \t blockers \t ecc \t cdc \t errs \t s \t threadname");
             } catch (IOException ex) {
@@ -2926,9 +2976,9 @@ public class Supervisor {
         if (null != logPrintStream) {
             logPrintStream.println(fullLogString);
         }
-        System.out.println(fullLogString);
+        AprsCommonLogger.instance().getOrigSystemOut().println(fullLogString);
         if (null != displayJFrame) {
-            displayJFrame.addEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
+            displayJFrame.addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
         }
     }
 
@@ -2937,7 +2987,7 @@ public class Supervisor {
             return;
         }
         if (runTimeTimer == null) {
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 if (runTimeTimer == null) {
                     Timer newRunTimeTimer = new Timer(2000, x -> updateRunningTime());
                     newRunTimeTimer.start();
@@ -2964,6 +3014,44 @@ public class Supervisor {
     private volatile long firstEventTime = -1;
     private volatile long abortEventTime = -1;
 
+    private static class LogEventInfo {
+
+        private final long t;
+        private final int blockersSize;
+        private final int ecc;
+        private final int cdc;
+        private final int errs;
+        private final String threadname;
+        private final String text;
+        private final Supervisor supervisor;
+
+        public LogEventInfo(long t, int blockersSize, int ecc, int cdc, int errs, String threadname, String text, Supervisor supervisor) {
+            this.t = t;
+            this.blockersSize = blockersSize;
+            this.ecc = ecc;
+            this.cdc = cdc;
+            this.errs = errs;
+            this.threadname = threadname;
+            this.text = text;
+            this.supervisor = supervisor;
+        }
+
+        public void update() {
+            supervisor.logEventPrivate(t, text, blockersSize, ecc, cdc, errs, threadname);
+        }
+    }
+
+    private final ConcurrentLinkedDeque<LogEventInfo> logEvents = new ConcurrentLinkedDeque<>();
+
+    private static final Consumer<ConcurrentLinkedDeque<LogEventInfo>> logEventsConsumer
+            = (ConcurrentLinkedDeque<LogEventInfo> logEvents) -> {
+                LogEventInfo eventInfo = logEvents.pollFirst();
+                while (null != eventInfo) {
+                    eventInfo.update();
+                    eventInfo = logEvents.pollFirst();
+                }
+            };
+
     /**
      * Log an event string to be displayed with timestamp in event table.
      *
@@ -2982,7 +3070,13 @@ public class Supervisor {
         int cdc = ContinuousDemoCycle.get();
         int errs = logEventErrCount.get();
         String threadname = Thread.currentThread().getName();
-        return Utils.runOnDispatchThread("logEvent(" + s + ")", () -> logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname));
+        LogEventInfo eventInfo = new LogEventInfo(t, blockersSize, ecc, cdc, errs, threadname, s, this);
+        if (displayUpdatesDisabled) {
+            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname);
+            return XFutureVoid.completedFuture();
+        }
+        logEvents.add(eventInfo);
+        return submitDisplayConsumer(logEventsConsumer, logEvents);
     }
 
     private int getToggleBlockerMapSize() {
@@ -3277,6 +3371,109 @@ public class Supervisor {
     @Nullable
     private volatile XFuture<?> lastFutureReturned = null;
 
+    private AtomicInteger dispatchCount = new AtomicInteger();
+    private AtomicInteger dispatchPending = new AtomicInteger();
+    private AtomicLong dispatchTime = new AtomicLong();
+    private volatile long maxStartPending = 0;
+    private volatile boolean displayUpdatesDisabled = false;
+
+    public class DisplayUpdater<T> {
+
+        private final Consumer<T> consumer;
+        private final AtomicReference<T> ref = new AtomicReference<>();
+        private volatile XFutureVoid lastFuture = null;
+
+        public DisplayUpdater(Consumer<T> consumer) {
+            this.consumer = consumer;
+        }
+
+        public synchronized XFutureVoid submit(T val) {
+            if (lastFuture == null || lastFuture.isDone()) {
+                ref.set(val);
+                lastFuture = runOnDispatchThread(() -> {
+                    T latestVal = ref.getAndSet(null);
+                    if (latestVal != null) {
+                        consumer.accept(latestVal);
+                    }
+                });
+                return lastFuture;
+            }
+            if (null == ref.compareAndExchange(null, val)) {
+                lastFuture = runOnDispatchThread(() -> {
+                    T latestVal = ref.getAndSet(null);
+                    if (latestVal != null) {
+                        consumer.accept(latestVal);
+                    }
+                });
+            }
+            return lastFuture;
+        }
+    }
+
+    private final IdentityHashMap<Consumer<?>, DisplayUpdater<?>> displayUpdatersMap = new IdentityHashMap<>();
+
+    public <T> XFutureVoid submitDisplayConsumer(Consumer<T> consumer, T value) {
+        synchronized (displayUpdatersMap) {
+            DisplayUpdater<T> displayUpdater
+                    = (DisplayUpdater<T>) displayUpdatersMap.computeIfAbsent(consumer, (Consumer<?> key) -> new DisplayUpdater<>(key));
+            return displayUpdater.submit(value);
+        }
+    }
+
+    private static String getRunOnDispatchThreadCaller() {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        for (int i = 0; i < trace.length; i++) {
+            StackTraceElement stackTraceElement = trace[i];
+            if (stackTraceElement.getClassName().startsWith("java.lang")) {
+                continue;
+            }
+            final String elementString = stackTraceElement.toString();
+            if (elementString.contains("unOnDispatch")) {
+                continue;
+            }
+            if (elementString.contains("submitDisplayConsumer")) {
+                continue;
+            }
+            if (elementString.contains("DisplayUpdater")) {
+                continue;
+            }
+            return elementString;
+        }
+        return "";
+    }
+
+    private final ConcurrentHashMap<String, Integer> callerMap = new ConcurrentHashMap<>();
+
+    public XFutureVoid runOnDispatchThread(final @UI Runnable r) {
+        return runOnDispatchThread("runOnDispatchThread", r);
+    }
+
+    public XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
+        if (closing || displayUpdatesDisabled) {
+            return XFutureVoid.completedFuture();
+        }
+        callerMap.compute(getRunOnDispatchThreadCaller(), (String key, Integer value) -> {
+            if (null == value) {
+                return 1;
+            } else {
+                return value + 1;
+            }
+        });
+        long startTime = System.currentTimeMillis();
+        int startPending = dispatchPending.incrementAndGet();
+        if (startPending > maxStartPending) {
+            maxStartPending = startPending;
+        }
+        return aprs.misc.Utils.runOnDispatchThread(name, r)
+                .thenRun(() -> {
+                    long t = System.currentTimeMillis();
+                    int endPending = dispatchPending.decrementAndGet();
+                    long timeDiff = t - startTime;
+                    int count = dispatchCount.incrementAndGet();
+                    long totalTimeDiff = dispatchTime.addAndGet(timeDiff);
+                });
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     private XFutureVoid prepAndFinishOnDispatch(Runnable r) {
 
@@ -3284,7 +3481,7 @@ public class Supervisor {
                 .thenComposeToVoid(
                         "prepAndFinishOnDispatch",
                         () -> {
-                            return Utils.runOnDispatchThread(() -> {
+                            return runOnDispatchThread(() -> {
                                 try {
                                     r.run();
                                 } catch (Exception e) {
@@ -3538,66 +3735,66 @@ public class Supervisor {
     public void debugAction() {
         logEvent("debugAction");
         int count = debugActionCount.incrementAndGet();
-        System.out.println("Begin AprsSupervisorJFrame.debugAction()" + count);
-        System.out.println("waitForTogglesFutures = " + waitForTogglesFutures);
-        System.out.println("togglesAllowed = " + togglesAllowed);
-        System.out.println("disallowTogglesCount = " + disallowTogglesCount);
-        System.out.println("allowTogglesCount = " + allowTogglesCount);
-        System.out.println("waitForTogglesFutureCount = " + waitForTogglesFutureCount);
+        println("Begin AprsSupervisorJFrame.debugAction()" + count);
+        println("waitForTogglesFutures = " + waitForTogglesFutures);
+        println("togglesAllowed = " + togglesAllowed);
+        println("disallowTogglesCount = " + disallowTogglesCount);
+        println("allowTogglesCount = " + allowTogglesCount);
+        println("waitForTogglesFutureCount = " + waitForTogglesFutureCount);
 
-        System.out.println("stealingRobots = " + stealingRobots);
-        System.out.println("returnRobotRunnable = " + returnRobotFunction);
+        println("stealingRobots = " + stealingRobots);
+        println("returnRobotRunnable = " + returnRobotFunction);
 
-        System.out.println("lastFutureReturned = " + lastFutureReturned);
+        println("lastFutureReturned = " + lastFutureReturned);
         printStatus(lastFutureReturned, System.out);
-        System.out.println("ContinuousDemoFuture = " + ContinuousDemoFuture);
+        println("ContinuousDemoFuture = " + ContinuousDemoFuture);
         printStatus(ContinuousDemoFuture, System.out);
 
-        System.out.println("randomTest = " + randomTestFuture);
+        println("randomTest = " + randomTestFuture);
         printStatus(randomTestFuture, System.out);
 
-        System.out.println("lastStealRobotsInternalBeforeAllowToggles = " + lastStealRobotsInternalBeforeAllowToggles);
+        println("lastStealRobotsInternalBeforeAllowToggles = " + lastStealRobotsInternalBeforeAllowToggles);
         printStatus(lastStealRobotsInternalBeforeAllowToggles, System.out);
 
-        System.out.println("lastStartReverseActionsFuture = " + lastStartReverseActionsFuture);
+        println("lastStartReverseActionsFuture = " + lastStartReverseActionsFuture);
         printStatus(lastStartReverseActionsFuture, System.out);
 
-        System.out.println("togglesAllowedXfuture = " + togglesAllowedXfuture);
+        println("togglesAllowedXfuture = " + togglesAllowedXfuture);
         printStatus(togglesAllowedXfuture, System.out);
 
-        System.out.println("stealRobotFuture = " + stealRobotFuture);
+        println("stealRobotFuture = " + stealRobotFuture);
         printStatus(stealRobotFuture, System.out);
 
-        System.out.println("unStealRobotFuture = " + unStealRobotFuture);
+        println("unStealRobotFuture = " + unStealRobotFuture);
         printStatus(unStealRobotFuture, System.out);
-        System.out.println("cancelStealRobotFuture = " + cancelStealRobotFuture);
+        println("cancelStealRobotFuture = " + cancelStealRobotFuture);
         printStatus(cancelStealRobotFuture, System.out);
 
-        System.out.println("cancelUnStealRobotFuture = " + cancelUnStealRobotFuture);
+        println("cancelUnStealRobotFuture = " + cancelUnStealRobotFuture);
         printStatus(cancelUnStealRobotFuture, System.out);
 
-        System.out.println("stealAbortFuture = " + stealAbortFuture);
+        println("stealAbortFuture = " + stealAbortFuture);
         printStatus(stealAbortFuture, System.out);
 
-        System.out.println("unstealAbortFuture = " + unstealAbortFuture);
+        println("unstealAbortFuture = " + unstealAbortFuture);
         printStatus(unstealAbortFuture, System.out);
 
-        System.out.println("oldLfrs = " + oldLfrs);
+        println("oldLfrs = " + oldLfrs);
         for (int i = 0; i < oldLfrs.size(); i++) {
             XFuture<?> xf = oldLfrs.get(i);
             if (!xf.isDone() || xf.isCancelled() || xf.isCompletedExceptionally()) {
-                System.out.println("oldLfrs.get(" + i + ") = " + xf);
+                println("oldLfrs.get(" + i + ") = " + xf);
                 printStatus(xf, System.out);
             }
         }
 
         XFuture<?> xfa[] = lastStartAllActionsArray;
         if (null != xfa) {
-            System.out.println("lastStartAllActionsArray = " + Arrays.toString(xfa));
+            println("lastStartAllActionsArray = " + Arrays.toString(xfa));
             for (int i = 0; i < xfa.length; i++) {
                 XFuture<?> xf = xfa[i];
                 if (!xf.isDone() || xf.isCancelled() || xf.isCompletedExceptionally()) {
-                    System.out.println("oldLfrs.get(" + i + ") = " + xf);
+                    println("oldLfrs.get(" + i + ") = " + xf);
                     printStatus(xf, System.out);
                 }
             }
@@ -3609,8 +3806,8 @@ public class Supervisor {
 
         printReturnRobotTraceInfo();
 
-        System.out.println("End AprsSupervisorJFrame.debugAction()" + count);
-        System.out.println();
+        println("End AprsSupervisorJFrame.debugAction()" + count);
+        println();
         logEventErr("");
 
     }
@@ -3619,7 +3816,7 @@ public class Supervisor {
 
     public void setVisible(boolean visible) {
         if (null != displayJFrame) {
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 if (null != displayJFrame) {
                     displayJFrame.setVisible(visible);
                 }
@@ -3629,6 +3826,32 @@ public class Supervisor {
 
     public void close() {
         if (null != logPrintStream) {
+            Set<Entry<String, Integer>> callerEntries = callerMap.entrySet();
+            List<Entry<String, Integer>> callerList = new ArrayList<>(callerEntries);
+            Collections.sort(callerList, Comparator.comparing(Entry::getValue));
+
+            long t = System.currentTimeMillis();
+            int blockersSize = getToggleBlockerMapSize();
+            int ecc = enableChangeCount.get();
+            int cdc = ContinuousDemoCycle.get();
+            int errs = logEventErrCount.get();
+            int runDispatchCount = this.dispatchCount.get();
+            long totalRunDispatchTime = this.dispatchTime.get();
+            String threadname = Thread.currentThread().getName();
+            for (Entry<String, Integer> entry : callerList) {
+                logEventPrivate(t, entry.getKey() + " \t= \t" + entry.getValue(), blockersSize, ecc, cdc, errs, threadname);
+            }
+            long totalSupervisorRunTime = t - startSupervisorTime;
+            String s = "closing ... totalSupervisorRunTime=" + totalSupervisorRunTime;
+            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname);
+            double totalRunDispatchTimePercent = 100.0 * ((double) totalRunDispatchTime / (double) totalSupervisorRunTime);
+            s = "closing ... runOnDispatchThread: runDispatchCount=" + runDispatchCount + ",totalRunDispatchTime=" + totalRunDispatchTime + ",totalRunDispatchTimePercent=" + totalRunDispatchTimePercent + ",maxStartPending=" + maxStartPending;
+            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname);
+            long totalConveyorMoveTime = conveyorMoveTime.get();
+            double totalConveyorMoveTimePercent = 100.0 * ((double) totalConveyorMoveTime / (double) totalSupervisorRunTime);
+            int totalConveyorMoveCount = conveyorMoveCount.incrementAndGet();
+            s = "closing ...  totalConveyorMoveTime=" + totalConveyorMoveTime + ",totalConveyorMoveTimePercent=" + totalConveyorMoveTimePercent + ",totalConveyorMoveCount=" + totalConveyorMoveCount;
+            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname);
             logEvent("close called.")
                     .thenRun(() -> {
                         if (null != logPrintStream) {
@@ -3770,7 +3993,7 @@ public class Supervisor {
 
     private void myExit() {
         if (null != displayJFrame) {
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 if (null != displayJFrame) {
                     displayJFrame.setVisible(false);
                     displayJFrame.removeAll();
@@ -4066,7 +4289,7 @@ public class Supervisor {
             + "public class Custom\n\timplements Consumer<AprsSupervisorJFrame> {\n"
             + "\tpublic void accept(AprsSupervisorJFrame sup) {\n"
             + "\t\t// PUT YOUR CODE HERE:\n"
-            + "\t\tSystem.out.println(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
+            + "\t\tprintln(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
             + "\t}\n"
             + "}\n";
 
@@ -4088,7 +4311,7 @@ public class Supervisor {
             customDir.delete();
             customDir.mkdirs();
             File tmpFile = new File(customDir, "Custom.java");
-            System.out.println("tmpFile = " + tmpFile.getCanonicalPath());
+            println("tmpFile = " + tmpFile.getCanonicalPath());
             File[] files1 = {tmpFile};
 
             Files.write(tmpFile.toPath(), customCode.getBytes());
@@ -4106,7 +4329,7 @@ public class Supervisor {
                         .map(Objects::toString)
                         .map(s -> s.startsWith("file:") ? s.substring(4) : s)
                         .collect(Collectors.joining(File.pathSeparator));
-                System.out.println("classPath = " + classPath);
+                println("classPath = " + classPath);
                 DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
                 compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits1).call();
                 StringBuilder errBuilder = new StringBuilder();
@@ -4141,7 +4364,7 @@ public class Supervisor {
                 }
                 urls[urls.length - 1] = grandParentFile.toURI().toURL();
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
-                System.out.println("urls = " + Arrays.toString(urls));
+                println("urls = " + Arrays.toString(urls));
                 ClassLoader loader = new URLClassLoader(urls);
                 Class<?> clss = loader.loadClass("custom.Custom");
                 @SuppressWarnings("deprecation")
@@ -4155,7 +4378,7 @@ public class Supervisor {
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
                     System.setOut(origOut);
-                    System.out.println("content = " + content);
+                    println("content = " + content);
                     if (content.length() > 0) {
                         crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
                         MultiLineStringJPanel.showText(content).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
@@ -4375,12 +4598,12 @@ public class Supervisor {
 
         public void stop() {
             long now = System.currentTimeMillis();
-            System.out.println("submitTeachItemsCount = " + submitTeachItemsCount);
-            System.out.println("handleTeachItemsCount = " + handleTeachItemsCount);
-            System.out.println("maxHandleTime = " + maxHandleTime);
-            System.out.println("totalHandleTime = " + totalHandleTime);
+            println("submitTeachItemsCount = " + submitTeachItemsCount);
+            println("handleTeachItemsCount = " + handleTeachItemsCount);
+            println("maxHandleTime = " + maxHandleTime);
+            println("totalHandleTime = " + totalHandleTime);
             long avgHandleTime = totalHandleTime / handleTeachItemsCount;
-            System.out.println("avgHandleTime = " + avgHandleTime);
+            println("avgHandleTime = " + avgHandleTime);
             logEvent("TeachScanMonitor.stop after cycles=" + cycles + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",skips=" + skips + ",submitTeachItemsCount = " + submitTeachItemsCount + ",handleTeachItemsCount = " + handleTeachItemsCount + ",maxHandleTime = " + maxHandleTime + ",avgHandleTime = " + avgHandleTime);
             stopFlag = true;
             object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
@@ -4512,7 +4735,7 @@ public class Supervisor {
                         StackTraceElement trace[] = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTrace();
                         long time = gl.getSetLastCreateActionListFromVisionKitToCheckStringsTime();
                         long diffTime = System.currentTimeMillis() - time;
-                        System.out.println("");
+                        println("");
                         System.err.println("");
                         System.out.flush();
                         System.err.flush();
@@ -4569,12 +4792,12 @@ public class Supervisor {
             last_time = now;
             if (anyChanged) {
                 futureCompleted = true;
-                System.out.println("submitTeachItemsCount = " + submitTeachItemsCount);
-                System.out.println("handleTeachItemsCount = " + handleTeachItemsCount);
-                System.out.println("maxHandleTime = " + maxHandleTime);
-                System.out.println("totalHandleTime = " + totalHandleTime);
+                println("submitTeachItemsCount = " + submitTeachItemsCount);
+                println("handleTeachItemsCount = " + handleTeachItemsCount);
+                println("maxHandleTime = " + maxHandleTime);
+                println("totalHandleTime = " + totalHandleTime);
                 long avgHandleTime = totalHandleTime / handleTeachItemsCount;
-                System.out.println("avgHandleTime = " + avgHandleTime);
+                println("avgHandleTime = " + avgHandleTime);
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips + ",avgHandleTime = " + avgHandleTime + ",maxHandleTime = " + maxHandleTime);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 try {
@@ -5360,10 +5583,17 @@ public class Supervisor {
         return displayJFrame.conveyorPos();
     }
 
+    private volatile long conveyorVisNextStartTime = -1;
+    private volatile long conveyorVisNextEndTime = -1;
+    private volatile double conveyorVisNextStartPos = -1;
+    private volatile double conveyorVisNextEndPos = -1;
+
     private XFutureVoid conveyorVisNext() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
+        conveyorVisNextStartTime = System.currentTimeMillis();
+        conveyorVisNextStartPos = conveyorPos();
         int count = conveyorVisNextCount.incrementAndGet();
         logEvent("Conveyor Next Starting " + count);
         XFutureVoid ret
@@ -5375,15 +5605,32 @@ public class Supervisor {
     }
 
     private void conveyorVisNextFinish(int count) {
-        logEvent("Conveyor Next finished. " + count);
+        long now = System.currentTimeMillis();
+        long timeDiff = now - conveyorVisNextStartTime;
+        conveyorVisNextEndTime = now;
+        long totalConveyorMoveTime = conveyorMoveTime.addAndGet(timeDiff);
+        double pos = conveyorPos();
+        double posDiff = pos - conveyorVisNextStartPos;
+        conveyorVisNextEndPos = now;
+        int moveCount = conveyorMoveCount.incrementAndGet();
+        logEvent("Conveyor Next finished. count=" + count + ", timeDiff=" + timeDiff + ",pos=" + pos + ",posDiff=" + posDiff + ",totalConveyorMoveTime=" + totalConveyorMoveTime + ",moveCount=" + moveCount);
     }
 
     private final AtomicInteger conveyorVisPrevCount = new AtomicInteger();
+    private final AtomicInteger conveyorMoveCount = new AtomicInteger();
+    private final AtomicLong conveyorMoveTime = new AtomicLong();
+    private volatile long conveyorVisPrevStartTime = -1;
+    private volatile long conveyorVisPrevEndTime = -1;
+    private volatile double conveyorVisPrevStartPos = -1;
+    private volatile double conveyorVisPrevEndPos = -1;
 
     private XFutureVoid conveyorVisPrev() {
         if (null == displayJFrame) {
             throw new NullPointerException("displayJFrame");
         }
+
+        conveyorVisPrevStartTime = System.currentTimeMillis();
+        conveyorVisPrevStartPos = conveyorPos();
         int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
         XFutureVoid ret
@@ -5395,7 +5642,15 @@ public class Supervisor {
     }
 
     private void conveyorVisPrevFinish(int count) {
-        logEvent("Conveyor Prev finished. " + count);
+        long now = System.currentTimeMillis();
+        long timeDiff = now - conveyorVisPrevStartTime;
+        conveyorVisPrevEndTime = now;
+        long totalConveyorMove = conveyorMoveTime.addAndGet(timeDiff);
+        double pos = conveyorPos();
+        double posDiff = pos - conveyorVisPrevStartPos;
+        conveyorVisPrevEndPos = now;
+        int moveCount = conveyorMoveCount.incrementAndGet();
+        logEvent("Conveyor Prev finished. count=" + count + ", timeDiff=" + timeDiff + ",pos=" + pos + ",posDiff=" + posDiff + ",totalConveyorMove=" + totalConveyorMove + ",moveCount=" + moveCount);
     }
 
     private final AtomicInteger srts2Count = new AtomicInteger();
@@ -5514,7 +5769,6 @@ public class Supervisor {
             return XFutureVoid.completedFutureWithName("completedWaitTogglesAllowed");
         }
     }
-    
 
     private volatile String roboteEnableToggleBlockerText = "";
 
@@ -5537,7 +5791,7 @@ public class Supervisor {
         toggleBlockerMap.clear();
         togglesAllowed = true;
         String blockerList = toggleBlockerMap.toString();
-        Utils.runOnDispatchThread(() -> {
+        runOnDispatchThread(() -> {
             showTogglesEnabled(true);
             setRobotEnableToggleBlockerText(blockerList);
         });
@@ -5574,6 +5828,15 @@ public class Supervisor {
         }
         return XFutureVoid.completedFutureWithName("allowTogglesNoCheck");
     }
+
+    private final Consumer<String> blockerListConsumer
+            = (String blockerList) -> {
+                if (closing) {
+                    return;
+                }
+                showTogglesEnabled(togglesAllowed);
+                setRobotEnableToggleBlockerText(blockerList);
+            };
 
     private synchronized XFutureVoid allowTogglesInternal(String blockerName, boolean withChecks, AprsSystem... systems) {
 
@@ -5632,15 +5895,7 @@ public class Supervisor {
                     logEvent("allowToggles(" + blockerName + ") lockInfo == null,blockers=" + blockerList);
                 }
                 final boolean showTogglesEnabledArg = togglesAllowed;
-                return Utils.runOnDispatchThread(
-                        "showAllowTogglesOnDispatch" + blockerName,
-                        () -> {
-                            if (closing) {
-                                return;
-                            }
-                            showTogglesEnabled(showTogglesEnabledArg);
-                            setRobotEnableToggleBlockerText(blockerList);
-                        })
+                return submitDisplayConsumer(blockerListConsumer, blockerList)
                         .thenRunAsync(
                                 "finishAllowToggle." + blockerName,
                                 () -> finishAllowToggles(lockInfo),
@@ -5696,12 +5951,7 @@ public class Supervisor {
             return XFuture.completedFuture(lockInfo);
         }
         XFutureVoid showTogglesFuture
-                = Utils.runOnDispatchThread(
-                        "showDisallowToggles" + blockerName,
-                        () -> {
-                            showTogglesEnabled(false);
-                            setRobotEnableToggleBlockerText(blockerList);
-                        });
+                = submitDisplayConsumer(blockerListConsumer, blockerList);
         XFuture<LockInfo> ret = showTogglesFuture.thenApply(x -> lockInfo);
         lastDisallowTogglesFuture = ret;
         return ret;
@@ -5878,7 +6128,7 @@ public class Supervisor {
             System.err.println(err);
             logEvent("ERROR(" + count + "): " + err);
             if (null != displayJFrame) {
-                Utils.runOnDispatchThread(() -> {
+                runOnDispatchThread(() -> {
                     if (count < 5 && null != displayJFrame) {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
@@ -5910,7 +6160,7 @@ public class Supervisor {
             System.err.println(err);
             logEvent("ERROR(" + count + "): " + err);
             if (null != displayJFrame) {
-                Utils.runOnDispatchThread(() -> {
+                runOnDispatchThread(() -> {
                     if (count < 5 && null != displayJFrame) {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
@@ -5988,16 +6238,16 @@ public class Supervisor {
                 || ContinuousDemoFuture.isCancelled()
                 || ContinuousDemoFuture.isDone()
                 || ContinuousDemoFuture.isCompletedExceptionally()) {
-            System.out.println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
+            println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
             printStatus(ContinuousDemoFuture, System.out);
             return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
         }
         XFutureVoid ret = startRandomDelay("pauseTest", 30000, 20000)
                 .thenComposeToVoid("pauseTest.pause" + pauseCount.get(),
-                        () -> Utils.runOnDispatchThread(this::pause))
+                        () -> runOnDispatchThread(this::pause))
                 .thenComposeToVoid(x -> startRandomDelay("pauseTest", 1000, 1000))
                 .thenComposeToVoid("pauseTest.resume" + pauseCount.get(),
-                        () -> Utils.runOnDispatchThread(this::resume));
+                        () -> runOnDispatchThread(this::resume));
         pauseTestFuture = ret;
         resetMainPauseTestFuture();
         ret
@@ -6083,7 +6333,7 @@ public class Supervisor {
                     || currentContinuousDemoFuture.isCancelled()
                     || currentContinuousDemoFuture.isDone()
                     || currentContinuousDemoFuture.isCompletedExceptionally()) {
-                System.out.println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
+                println("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
                 printStatus(currentContinuousDemoFuture, System.out);
                 return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
             }
@@ -6134,7 +6384,7 @@ public class Supervisor {
         logEvent("quitRandomTest : " + cause);
         XFutureVoid xf = new XFutureVoid("quitRandomTest : " + cause);
         xf.cancel(false);
-        System.out.println("continueRandomTest quit");
+        println("continueRandomTest quit");
         setContinuousDemoSelected(false);
         setContinuousDemoRevFirstSelected(false);
         setRandomTestSelected(false);
@@ -6172,7 +6422,7 @@ public class Supervisor {
         for (AprsSystem aprsSystem : aprsSystems) {
             aprsSystem.setConnected(false);
         }
-        Utils.runOnDispatchThread(() -> {
+        runOnDispatchThread(() -> {
             if (logEventErrCount.get() == 0) {
                 setIconImage(IconImages.DISCONNECTED_IMAGE);
             }
@@ -6664,8 +6914,8 @@ public class Supervisor {
             }
             return disallowTogglesFuture
                     .thenComposeAsyncToVoid("contiousDemoSetup", (LockInfo lockInfo) -> {
-//                    System.out.println("stealingRobots = " + stealingRobots);
-//                    System.out.println("returnRobotRunnable = " + returnRobotRunnable);
+//                    println("stealingRobots = " + stealingRobots);
+//                    println("returnRobotRunnable = " + returnRobotRunnable);
                         if (this.stealingRobots || null != returnRobotFunction.get()) {
                             System.err.println("trace = " + Utils.traceToString(trace));
                             logEventErr("stealingRobots flag set when starting continousDemoSetup : returnRobotRunnable.get()=" + returnRobotFunction.get());
@@ -6845,7 +7095,7 @@ public class Supervisor {
 
     private void hidePosTablePopupMenu() {
         if (null != posTablePopupMenu) {
-            Utils.runOnDispatchThread(this::hidePosTablePopupMenuOnDisplay);
+            runOnDispatchThread(this::hidePosTablePopupMenuOnDisplay);
         }
     }
 
@@ -6965,16 +7215,16 @@ public class Supervisor {
                 Map<String, Integer> robotDisableCountMapCopy = new HashMap<>(robotEnableCountMap);
                 Map<String, Long> robotDisableTotalTimeMapCopy = new HashMap<>(robotDisableTotalTimeMap);
                 final AprsSupervisorDisplayJFrame checkedDisplayJFrame = displayJFrame;
-                XFutureVoid step1Future = Utils.runOnDispatchThread(() -> {
+                XFutureVoid step1Future = runOnDispatchThread(() -> {
                     checkedDisplayJFrame.updateRobotsTableFromMapsAndEnableAll(robotDisableCountMapCopy, robotDisableTotalTimeMapCopy);
-//                System.out.println("sleeping in updateRobotsTableFromMapsAndEnableAll");
+//                println("sleeping in updateRobotsTableFromMapsAndEnableAll");
 //                try {
 //                    Thread.sleep(20000);
 //                } catch (InterruptedException ex) {
 //                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
 //                    throw new RuntimeException(ex);
 //                }
-//                System.out.println("sleep in updateRobotsTableFromMapsAndEnableAll");
+//                println("sleep in updateRobotsTableFromMapsAndEnableAll");
 
                 });
                 return step1Future;
@@ -7066,7 +7316,7 @@ public class Supervisor {
         resumeFuture.set(new XFutureVoid("resume"));
         setTitleMessage("Paused");
         if (logEventErrCount.get() == 0) {
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 setIconImage(IconImages.DISCONNECTED_IMAGE);
             });
         }
@@ -7074,7 +7324,7 @@ public class Supervisor {
 
     private void stopRunTimTimer() {
         if (null != runTimeTimer) {
-            Utils.runOnDispatchThread(this::stopRunTimTimerOnDisplay);
+            runOnDispatchThread(this::stopRunTimTimerOnDisplay);
         }
     }
 
@@ -7634,7 +7884,7 @@ public class Supervisor {
         logEvent("Starting restoreOrigRobotInfo");
         Function<Integer, XFutureVoid> function = unStealRobotsFunction.getAndSet(null);
         if (null != function) {
-            System.out.println("unStealRobotsSupplier contained" + function);
+            println("unStealRobotsSupplier contained" + function);
         }
         clearStealingRobotsFlag();
         enableChangeCount.incrementAndGet();
@@ -7677,7 +7927,7 @@ public class Supervisor {
             }
         }
         checkRobotsUniquePorts();
-        Utils.runOnDispatchThread(() -> {
+        runOnDispatchThread(() -> {
             if (logEventErrCount.get() == 0) {
                 setIconImage(IconImages.BASE_IMAGE);
             }
@@ -7963,7 +8213,7 @@ public class Supervisor {
      * @throws IOException file could not be read
      */
     final void loadPositionMaps(File f) throws IOException {
-        System.out.println("Loading position maps  file :" + f.getCanonicalPath());
+        println("Loading position maps  file :" + f.getCanonicalPath());
         positionMappingsCachedTable.setRowColumnCount(0, 0);;
         positionMappingsCachedTable.addColumn("System");
         try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
@@ -8040,9 +8290,9 @@ public class Supervisor {
             }
             if (!Objects.equals(oldPath, newFilePath)) {
                 try {
-                    System.out.println("oldPath = " + oldPath);
-                    System.out.println("newFilePath = " + newFilePath);
-                    System.out.println("lastFileFile = " + lastFileFile);
+                    println("oldPath = " + oldPath);
+                    println("newFilePath = " + newFilePath);
+                    println("lastFileFile = " + lastFileFile);
                     try (
                             FileWriter fileWriter = new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);
                             PrintWriter pw = new PrintWriter(fileWriter, true)) {
@@ -8090,9 +8340,9 @@ public class Supervisor {
             }
             if (!Objects.equals(oldPath, newFilePath)) {
                 try {
-                    System.out.println("oldPath = " + oldPath);
-                    System.out.println("newFilePath = " + newFilePath);
-                    System.out.println("lastFileFile = " + lastFileFile);
+                    println("oldPath = " + oldPath);
+                    println("newFilePath = " + newFilePath);
+                    println("lastFileFile = " + lastFileFile);
                     try (PrintWriter pw = new PrintWriter(new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
                         pw.println("date=" + new Date()
                                 + ", oldPath = " + oldPath
@@ -8126,7 +8376,7 @@ public class Supervisor {
      */
     public void setProcessLauncher(ProcessLauncherJFrame processLauncher) {
         this.processLauncher = processLauncher;
-        Utils.runOnDispatchThread(() -> processLauncher.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE));
+        runOnDispatchThread(() -> processLauncher.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE));
         processLauncher.addOnCloseRunnable(this::close);
     }
 
@@ -8424,7 +8674,7 @@ public class Supervisor {
             return XFutureVoid.completedFuture();
         }
         if (!propsParent.exists()) {
-            System.out.println("Directory " + propsParent + " does not exist. (Creating it now.)");
+            println("Directory " + propsParent + " does not exist. (Creating it now.)");
             propsParent.mkdirs();
         }
         Map<String, String> propsMap = new HashMap<>();
@@ -8440,7 +8690,7 @@ public class Supervisor {
         }
         Properties props = new Properties();
         props.putAll(propsMap);
-        System.out.println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
+        println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
         Utils.saveProperties(propertiesFile, props);
         return XFutureVoid.allOf(futures);
     }
@@ -8498,7 +8748,7 @@ public class Supervisor {
         try {
             List<XFuture<?>> futures = new ArrayList<>();
             Properties props = new Properties();
-            System.out.println("Supervisot loading properties from " + propertiesFile.getCanonicalPath());
+            println("Supervisot loading properties from " + propertiesFile.getCanonicalPath());
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
@@ -8547,7 +8797,7 @@ public class Supervisor {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public final XFutureVoid loadSetupFile(File f) throws IOException {
         closeAllAprsSystems();
-        System.out.println("Loading setup file :" + f.getCanonicalPath());
+        println("Loading setup file :" + f.getCanonicalPath());
         List<XFuture<?>> sysFutures = new ArrayList<>();
         try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
             tasksCachedTable.setRowCount(0);
@@ -8557,7 +8807,7 @@ public class Supervisor {
                     logEventErr("Bad CSVRecord :" + linecount + " in " + f + "  --> " + csvRecord);
                     logEventErr("csvRecord.size()=" + csvRecord.size());
                     logEventErr("csvRecord.size() must equal 4");
-                    System.out.println();
+                    println();
                     break;
                 }
                 final int priority = Integer.parseInt(csvRecord.get(0));
@@ -8572,7 +8822,7 @@ public class Supervisor {
                     }
                 }
 
-                System.out.println("propertiesFile = " + propertiesFile);
+                println("propertiesFile = " + propertiesFile);
 
                 final String taskName = csvRecord.get(1);
                 final String robotName = csvRecord.get(2);
@@ -8620,7 +8870,7 @@ public class Supervisor {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
                             throw new RuntimeException(exception);
                         }
-                        return Utils.runOnDispatchThread(this::syncToolsFromRobots);
+                        return runOnDispatchThread(this::syncToolsFromRobots);
                     });
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
@@ -8715,7 +8965,7 @@ public class Supervisor {
                 throw new IllegalStateException("null == liveImageMovieFile");
             }
             liveImageMovieFile = movieFile;
-            System.out.println("startEncodingLiveImageMovie: liveImageMovieFile = " + movieFile);
+            println("startEncodingLiveImageMovie: liveImageMovieFile = " + movieFile);
             SeekableByteChannel byteChannel = NIOUtils.writableChannel(movieFile);
             this.liveImageMovieByteChannel = byteChannel;
             liveImageMovieEncoder = new AWTSequenceEncoder(byteChannel, Rational.R(25, 1));
@@ -8796,15 +9046,15 @@ public class Supervisor {
             lastLiveImageMovieFile = liveImageMovieFile;
 
             if (debug || liveImageFrameCount > 1) {
-                System.out.println("liveImageStartTime = " + liveImageStartTime);
-                System.out.println("liveImageLastTime = " + liveImageStartTime);
+                println("liveImageStartTime = " + liveImageStartTime);
+                println("liveImageLastTime = " + liveImageStartTime);
                 int secs = (int) (500 + liveImageLastTime - liveImageStartTime) / 1000;
-                System.out.println("secs = " + secs);
-                System.out.println("liveImageFrameCount = " + liveImageFrameCount);
+                println("secs = " + secs);
+                println("liveImageFrameCount = " + liveImageFrameCount);
                 if (secs > 0) {
-                    System.out.println("(liveImageFrameCount/secs) = " + (liveImageFrameCount / secs));
+                    println("(liveImageFrameCount/secs) = " + (liveImageFrameCount / secs));
                 }
-                System.out.println("finishEncodingLiveImageMovie: lastLiveImageMovieFile = " + lastLiveImageMovieFile);
+                println("finishEncodingLiveImageMovie: lastLiveImageMovieFile = " + lastLiveImageMovieFile);
             }
             liveImageMovieFile = null;
             lastLiveImageFrameCount = liveImageFrameCount;
@@ -9117,7 +9367,7 @@ public class Supervisor {
     private XFutureVoid loadRobotsTableFromSystemsList(List<AprsSystem> aprsSystems) {
         if (null != displayJFrame) {
             final AprsSupervisorDisplayJFrame checkedDisplayJFrame = displayJFrame;
-            return Utils.runOnDispatchThread(() -> checkedDisplayJFrame.loadRobotsTableFromSystemsList(aprsSystems));
+            return runOnDispatchThread(() -> checkedDisplayJFrame.loadRobotsTableFromSystemsList(aprsSystems));
         } else {
             return XFutureVoid.completedFutureWithName("loadRobotsTableFromSystemsList.displayJFrame==null");
         }

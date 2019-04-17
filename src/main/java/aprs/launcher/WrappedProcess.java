@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.ui.XFuture;
 import java.awt.Component;
 import java.io.File;
@@ -69,11 +70,11 @@ public class WrappedProcess {
         ps.println("errorDebugString = " + errorDebugString);
         String outputDebugString = getOutputDebugString();
         ps.println("outputDebugString = " + outputDebugString);
-        System.out.println("displayComponent = " + displayComponent);
+        println("displayComponent = " + displayComponent);
         if(outputStream instanceof LogDisplayPanelOutputStream) {
             LogDisplayPanelOutputStream ljpos = (LogDisplayPanelOutputStream)
                     outputStream;
-            System.out.println("ljpos = " + ljpos);
+            println("ljpos = " + ljpos);
         }
     }
  
@@ -266,10 +267,10 @@ public class WrappedProcess {
 
     public boolean waitFor(long timeout,
             TimeUnit unit) throws InterruptedException {
-        System.out.println("waiting For cmdLine=" + cmdLine + ", process=" + process + " ...");
+        println("waiting For cmdLine=" + cmdLine + ", process=" + process + " ...");
         if (null != process) {
             boolean ret = process.waitFor(timeout, unit);
-            System.out.println("waitFor cmdLine=" + cmdLine + " returning " + ret);
+            println("waitFor cmdLine=" + cmdLine + " returning " + ret);
             return ret;
         }
         return true;

@@ -27,8 +27,8 @@ import aprs.cachedcomponents.CachedComboBox;
 import aprs.cachedcomponents.CachedTextField;
 import aprs.system.AprsSystem;
 import aprs.database.vision.VisionToDBJPanel;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.io.BufferedReader;
@@ -75,8 +75,6 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 
 /**
@@ -538,7 +536,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             DbSetupBuilder.connect(setup)
                     .handle(
                             "jButtonConnectDBActionPerformed.handleDbConnect",
-                            (Connection c, Throwable e) -> Utils.runOnDispatchThread(() -> {
+                            (Connection c, Throwable e) -> checkedParentFrame.runOnDispatchThread(() -> {
                                 if (null != e) {
                                     connected = false;
                                     Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
@@ -570,9 +568,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         connected = false;
         setDbSetup(getDbSetup())
                 .thenRun(() -> {
-                    Utils.runOnDispatchThread(() -> {
+                    aprsSystem.runOnDispatchThread(() -> {
                         notifyAllDbSetupListeners(null);
-                        System.out.println("Disconnected from database.");
+                        println("Disconnected from database.");
                         jTextAreaConnectErrors.setText("Disconnected from database.");
                     });
                 });
@@ -812,7 +810,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @SafeEffect
     private XFutureVoid setInternalQueriesDir(boolean internal) {
         resourceDirSelected = internal;
-        return Utils.runOnDispatchThread(() -> setInternalQueriesDirOnDisplay(internal));
+        return aprsSystem.runOnDispatchThread(() -> setInternalQueriesDirOnDisplay(internal));
     }
 
     @UIEffect
@@ -827,7 +825,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @SafeEffect
     private XFutureVoid setDbConnectedState(boolean newConnectedState) {
-        return Utils.runOnDispatchThread(() -> setDbConnectedStateOnDisplay(newConnectedState));
+        return aprsSystem.runOnDispatchThread(() -> setDbConnectedStateOnDisplay(newConnectedState));
     }
 
     @UIEffect
@@ -844,7 +842,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @SafeEffect
     private XFutureVoid setDbPassword(char[] newpasswd) {
         passwd = newpasswd;
-        return Utils.runOnDispatchThread(() -> setDbPasswordOnDisplay(newpasswd));
+        return aprsSystem.runOnDispatchThread(() -> setDbPasswordOnDisplay(newpasswd));
     }
 
     @UIEffect
@@ -857,7 +855,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @SafeEffect
     private XFutureVoid setLoginTimeout(int loginTimeout) {
-        return Utils.runOnDispatchThread(() -> setLoginTimeoutOnDisplay(loginTimeout));
+        return aprsSystem.runOnDispatchThread(() -> setLoginTimeoutOnDisplay(loginTimeout));
     }
 
     @UIEffect
@@ -889,7 +887,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     private XFutureVoid loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, boolean externDir, String filename) {
-        return Utils.runOnDispatchThread(() -> loadQueriesMapOnDisplay(queriesMap, externDir, filename));
+        return aprsSystem.runOnDispatchThread(() -> loadQueriesMapOnDisplay(queriesMap, externDir, filename));
     }
 
     @UIEffect
@@ -1027,7 +1025,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //        return ret;
 //    }
     private XFutureVoid updateQueriesMap() {
-        return Utils.runOnDispatchThread(this::updateQueriesMapInternal);
+        return aprsSystem.runOnDispatchThread(this::updateQueriesMapInternal);
     }
 
     @UIEffect
@@ -1071,7 +1069,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @SafeEffect
     private XFutureVoid updateQueriesDir() {
-        return Utils.runOnDispatchThread(this::updateQueriesDirInternal);
+        return aprsSystem.runOnDispatchThread(this::updateQueriesDirInternal);
     }
 
     @UIEffect
@@ -1181,8 +1179,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
         if (notifyService != null) {
 
-//            System.out.println("thisDbSetup = " + thisDbSetup);
-//            System.out.println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
+//            println("thisDbSetup = " + thisDbSetup);
+//            println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
             XFutureVoid future
                     = XFutureVoid.runAsync("broadcastDbSetup",
                             () -> {
@@ -1207,7 +1205,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @SafeEffect
     private XFutureVoid addComboItemUnique(String item) {
-        return Utils.runOnDispatchThread(() -> addComboItemUniqueOnDisplay(item));
+        return aprsSystem.runOnDispatchThread(() -> addComboItemUniqueOnDisplay(item));
     }
 
     @UIEffect

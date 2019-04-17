@@ -23,6 +23,7 @@
 package aprs.conveyor;
 
 import aprs.database.PhysicalItem;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
@@ -142,12 +143,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     private volatile long nextPrevTrayFutureStartTime = -1;
 
     public XFutureVoid previousTray() {
-        System.out.println("previosTray: pos=" + getEstimatedPosition());
+        println("previosTray: pos=" + getEstimatedPosition());
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPosition(getEstimatedPosition() - trayDiff);
         setGoalSet(true);
-        System.out.println("previosTray: goal=" + getGoalPosition());
+        println("previosTray: goal=" + getGoalPosition());
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
         if (null != nextPrevTrayFuture) {
             if (!nextPrevTrayFuture.isDone()) {
@@ -166,11 +167,11 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     public XFutureVoid nextTray() {
 //        computeTrayDiff();
-        System.out.println("nextTray: pos=" + getEstimatedPosition());
+        println("nextTray: pos=" + getEstimatedPosition());
         setGoalSet(false);
         updateEstimatedPosition();
         setGoalPosition(getEstimatedPosition() + trayDiff);
-        System.out.println("nextTray: goal=" + getGoalPosition());
+        println("nextTray: goal=" + getGoalPosition());
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
         if (null != nextPrevTrayFuture) {
@@ -502,7 +503,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 }
                 master = new ModbusTCPMaster(modBusHost);
                 master.connect();
-                System.out.println("master.connect() succeeded : master=" + master);
+                println("master.connect() succeeded : master=" + master);
             }
         } catch (Exception ex) {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -660,9 +661,9 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
                 long tm = System.currentTimeMillis();
                 nextPrevTrayFutureCompletTime = tm;
                 long diff = tm - nextPrevTrayFutureStartTime;
-                System.out.println("next tray took " + diff + " ms");
+                println("next tray took " + diff + " ms");
                 long diff2 = tm - stopConveyorTime;
-                System.out.println("time since conveyor stop is " + diff2 + " ms");
+                println("time since conveyor stop is " + diff2 + " ms");
                 future.complete();
 
             });

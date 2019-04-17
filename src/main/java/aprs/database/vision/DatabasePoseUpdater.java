@@ -36,6 +36,7 @@ import aprs.database.PoseQueryElem;
 import aprs.database.PartsTray;
 import aprs.database.Slot;
 import aprs.database.Tray;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.system.AprsSystem;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
@@ -455,7 +456,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
         return DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT)
                 .thenAccept(c -> con = c)
-                .thenRun(() -> System.out.println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port));
+                .thenRun(() -> println("DatabasePoseUpdater connected to database of type " + dbtype + " on host " + host + " with port " + port));
     }
 
     final private Map<DbQueryEnum, DbQueryInfo> queriesMap;
@@ -751,7 +752,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 System.err.println("queryAllNewString=\n" + queryAllNewString);
                 System.err.println("logMsg=" + logMsg);
                 System.err.println();
-                System.out.println();
+                println();
             }
         }
         return l;
@@ -784,7 +785,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     public void close() {
 
         if (!closed) {
-            System.out.println("Closing " + this);
+            println("Closing " + this);
         }
         try {
             if (null != update_statement) {
@@ -1445,7 +1446,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     public void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
         this.enableDatabaseUpdates = enableDatabaseUpdates;
         if (enableDatabaseUpdates) {
-            System.out.println("enableDatabaseUpdates = " + enableDatabaseUpdates);
+            println("enableDatabaseUpdates = " + enableDatabaseUpdates);
         }
         updateResultsMap.clear();
         try {

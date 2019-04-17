@@ -23,7 +23,7 @@
 package aprs.actions.executor;
 
 import aprs.cachedcomponents.CachedTable;
-import aprs.misc.Utils;
+import aprs.system.AprsSystem;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -36,11 +36,9 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableModel;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -71,6 +69,17 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     private final Color defaultBackgroundColor;
     private final Color defaultForegroundColor;
+    private AprsSystem aprsSystem;
+
+    public AprsSystem getAprsSystem() {
+        return aprsSystem;
+    }
+
+    public void setAprsSystem(AprsSystem aprsSystem) {
+        this.aprsSystem = aprsSystem;
+    }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -236,7 +245,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                 loadPositionMapToTable(positionMap);
             }
         }
-        Utils.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
+        aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
     }
 
     @UIEffect
@@ -257,14 +266,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             int spinVal = spinnerIndexValue;
             if (spinVal >= positionMaps.size()) {
                 spinnerIndexValue = Math.max(0, positionMaps.size() - 1);
-                Utils.runOnDispatchThread(() -> jSpinnerIndex.setValue(spinnerIndexValue));
+                aprsSystem.runOnDispatchThread(() -> jSpinnerIndex.setValue(spinnerIndexValue));
             }
         }
         this.positionMaps.add(positionMap);
         if (positionMaps.size() == 1) {
             loadPositionMapToTable(positionMap);
         }
-        Utils.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
+        aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
     }
 
     public void removePositionMap(PositionMap positionMap) {
@@ -291,7 +300,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         if (null != spinValPositionMap) {
             loadPositionMapToTable(spinValPositionMap);
         }
-        Utils.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
+        aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
     }
 
     private boolean selected;
@@ -312,7 +321,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
      */
     public void setSelected(boolean selected) {
         this.selected = selected;
-        Utils.runOnDispatchThread(() -> setSelectedOnDisplay(selected));
+        aprsSystem.runOnDispatchThread(() -> setSelectedOnDisplay(selected));
     }
 
     @UIEffect
@@ -471,7 +480,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             reversePositionMaps.clear();
         }
         clearCurrentMap();
-        Utils.runOnDispatchThread(this::clearAllMapsOnDisplay);
+        aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
     }
 
     @UIEffect

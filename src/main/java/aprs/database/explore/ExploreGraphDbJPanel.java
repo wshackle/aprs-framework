@@ -24,12 +24,12 @@ package aprs.database.explore;
 
 import aprs.system.AprsSystem;
 import aprs.misc.Utils;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
 import aprs.database.DbSetupJPanel;
 import aprs.database.DbSetupListener;
 import aprs.database.DbType;
+import static aprs.misc.AprsCommonLogger.println;
 //import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.*;
 import java.io.BufferedReader;
@@ -68,8 +68,6 @@ import javax.swing.table.DefaultTableModel;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 
 /**
@@ -154,12 +152,12 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                     + "WHERE ID(n) = " + id + "\n"
                     + "SET " + propName + " = '" + value + "'\n"
                     + "RETURN n";
-            System.out.println("setDatabaseItemPropertyStatementString = \n" + setDatabaseItemPropertyStatementString);
+            println("setDatabaseItemPropertyStatementString = \n" + setDatabaseItemPropertyStatementString);
             if (JOptionPane.showConfirmDialog(this, "Set database property with : \n" + setDatabaseItemPropertyStatementString) == JOptionPane.YES_OPTION) {
                 PreparedStatement setDatabaseItemPropertyStatement
                         = connection.prepareStatement(setDatabaseItemPropertyStatementString);
                 setDatabaseItemPropertyStatement.execute();
-                System.out.println("done");
+                println("done");
             }
         } catch (SQLException ex) {
             Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -201,14 +199,14 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             if (col0Head.endsWith(".name")) {
                 String getRelationShipsOutQuery
                         = "MATCH (n {name:{1} }) - [relationship] -> (to) RETURN type(relationship),relationship,id(to),labels(to),to";
-                System.out.println("getRelationShipsOutQuery = " + getRelationShipsOutQuery);
+                println("getRelationShipsOutQuery = " + getRelationShipsOutQuery);
                 outStatement
                         = connection.prepareStatement(getRelationShipsOutQuery);
                 outStatement.setString(1, s);
             } else {
                 String getRelationShipsOutQuery
                         = "MATCH (n) - [relationship] -> (to) WHERE ID(n) = " + s + " RETURN type(relationship),relationship,id(to),labels(to),to";
-                System.out.println("getRelationShipsOutQuery = " + getRelationShipsOutQuery);
+                println("getRelationShipsOutQuery = " + getRelationShipsOutQuery);
                 outStatement
                         = connection.prepareStatement(getRelationShipsOutQuery);
                 if (jTableNodes.getColumnCount() > 1) {
@@ -290,11 +288,11 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 colCount = meta.getColumnCount();
                 for (int i = 1; i <= meta.getColumnCount() - 1; i++) {
                     String colName = meta.getColumnName(i);
-//                    System.out.println("colName = " + colName);
+//                    println("colName = " + colName);
 //                    String columnClassName = meta.getColumnClassName(i);
-//                    System.out.println("columnClassName = " + columnClassName);
+//                    println("columnClassName = " + columnClassName);
 //                    String columnType = meta.getColumnTypeName(i);
-//                    System.out.println("columnType = " + columnType);
+//                    println("columnType = " + columnType);
                     model.addColumn(colName);
                 }
                 int row = 0;
@@ -804,7 +802,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         if (null == connection) {
             throw new IllegalStateException("connection is null");
         }
-        System.out.println("Saving to " + f + " ...");
+        println("Saving to " + f + " ...");
         try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             try (PreparedStatement stmtn
                     = connection.prepareStatement("MATCH(n) return n,labels(n),id(n)");
@@ -864,7 +862,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 }
             }
         }
-        System.out.println("Finished saving to " + f);
+        println("Finished saving to " + f);
     }
 
     private void appendNodeLabelsString(List<String> labels, StringBuilder sb) {
@@ -934,19 +932,19 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 while (!line.trim().endsWith(")") && (null != (nextline = br.readLine()))) {
                     line += nextline;
                 }
-                System.out.println("Executing line:" + line);
+                println("Executing line:" + line);
                 boolean returnedResultSet = stmtn.execute();
                 if (!returnedResultSet) {
                     int update_count = stmtn.getUpdateCount();
-                    System.out.println("update_count = " + update_count);
+                    println("update_count = " + update_count);
                 } else {
                     ResultSet rs = stmtn.getResultSet();
                     int row = 0;
                     while (rs.next()) {
                         row++;
-                        System.out.println("row = " + row);
+                        println("row = " + row);
                         for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-                            System.out.println(rs.getMetaData().getColumnName(i + 1) + "=" + rs.getObject(i + 1, Object.class));
+                            println(rs.getMetaData().getColumnName(i + 1) + "=" + rs.getObject(i + 1, Object.class));
                         }
                     }
                 }
@@ -1075,13 +1073,13 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                     for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
                         try {
                             String colName = rs.getMetaData().getColumnName(rsIndex);
-                            System.out.println("colName = " + colName);
+                            println("colName = " + colName);
                         } catch (Exception exception) {
                             exception.printStackTrace();
                         }
                         try {
                             String colLabel = rs.getMetaData().getColumnLabel(rsIndex);
-                            System.out.println("colLabel = " + colLabel);
+                            println("colLabel = " + colLabel);
                         } catch (Exception exception) {
                             exception.printStackTrace();
                         }
@@ -1093,7 +1091,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                     for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
                         try {
                             String str = rs.getString(rsIndex);
-                            System.out.println("row = " + row + ",rsIndex=" + rsIndex + ",str = " + str);
+                            println("row = " + row + ",rsIndex=" + rsIndex + ",str = " + str);
                         } catch (Exception excepion) {
                             excepion.printStackTrace();
                         }
@@ -1102,7 +1100,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 for (int rsIndex = 1; rsIndex <= metaColCount; rsIndex++) {
                     String str = rs.getString(rsIndex);
                     if (this.jCheckBoxDebug.isSelected()) {
-                        System.out.println("str = " + str);
+                        println("str = " + str);
                     }
 //                    Object rsObject = rs.getObject(rsIndex, Object.class);
                     Map<String, Object> map = getMapFromResultSet(rs, rsIndex);
@@ -1245,7 +1243,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                                     });
 
                     //.thenAccept(conn -> Utils.runOnDispatchThread(() -> setConnection(conn)));
-                    System.out.println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());
+                    println("ExploreGraph connected to database of on host " + setup.getHost() + " with port " + setup.getPort());
                 } else {
                     closeConnection();
                     String msg = "The ExploreGraphDb frame only works with " + DbType.NEO4J + " but " + setup.getDbType() + " was selected.";

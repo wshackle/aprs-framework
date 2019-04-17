@@ -33,10 +33,12 @@ import aprs.supervisor.colortextdisplay.ColorTextJPanel;
 import aprs.database.PhysicalItem;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapEntry;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.Utils.UiSupplier;
 import static aprs.misc.Utils.getAprsIconUrl;
+import static aprs.misc.Utils.getDateTimeString;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
@@ -61,6 +63,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -74,6 +77,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,6 +144,9 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
@@ -230,10 +237,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             String rname = (String) jTableRobots.getValueAt(0, 0);
             boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
             if (enabled0 != wasEnabled0) {
-                System.out.println("wasEnabled = " + wasEnabled0);
-                System.out.println("enabled = " + enabled0);
+                println("wasEnabled = " + wasEnabled0);
+                println("enabled = " + enabled0);
             }
-            System.out.println("handleRobotTableChange: ignoring event of type = " + type);
+            println("handleRobotTableChange: ignoring event of type = " + type);
             return;
         }
         if (col != 1) {
@@ -241,10 +248,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             boolean enabled0 = getEnableFromRobotsTable(0);
             boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
             if (enabled0 != wasEnabled0) {
-                System.out.println("wasEnabled = " + wasEnabled0);
-                System.out.println("enabled = " + enabled0);
+                println("wasEnabled = " + wasEnabled0);
+                println("enabled = " + enabled0);
             }
-            System.out.println("handleRobotTableChange: ignoring event for col=  " + col);
+            println("handleRobotTableChange: ignoring event for col=  " + col);
             return;
         }
         if (ignoreRobotTableChanges) {
@@ -254,11 +261,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             boolean enabled0 = getEnableFromRobotsTable(0);
             boolean wasEnabled0 = robotEnableMap.getOrDefault(rname, enabled0);
             if (enabled0 != wasEnabled0) {
-                System.out.println("handleRobotTableChange: ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
-                System.out.println("handleRobotTableChange: wasEnabled = " + wasEnabled0);
-                System.out.println("handleRobotTableChange: enabled = " + enabled0);
+                println("handleRobotTableChange: ignoreRobotTableChangesCount = " + ignoreRobotTableChangesCount);
+                println("handleRobotTableChange: wasEnabled = " + wasEnabled0);
+                println("handleRobotTableChange: enabled = " + enabled0);
                 if (null != disableRobotTableModelListenerTrace) {
-                    System.out.println("disableRobotTableModelListenerTrace = " + Arrays.toString(disableRobotTableModelListenerTrace));
+                    println("disableRobotTableModelListenerTrace = " + Arrays.toString(disableRobotTableModelListenerTrace));
                 }
                 jTableRobotsSetValueAt(wasEnabled0, 0, 1);
             }
@@ -275,7 +282,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             boolean enabled = getEnableFromRobotsTable(i);
             boolean wasEnabled = robotEnableMap.getOrDefault(robotName, enabled);
             final String checkedRobotName = robotName;
-            System.out.println("handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
+            println("handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
             if (enabled != wasEnabled) {
                 final int fi = i;
                 boolean togglesAllowed = isTogglesAllowed();
@@ -295,7 +302,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             javax.swing.SwingUtilities.invokeLater(() -> {
                                 logEvent("Attempt to toggle robot enabled ignored.");
                                 disableRobotTableModelListener();
-                                System.out.println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
+                                println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
                                 jTableRobotsSetValueAt(wasEnabled, fi, 1);
                                 enableRobotTableModelListener();
                             });
@@ -304,13 +311,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 } else {
                     logEvent("Attempt to toggle robot enabled ignored.");
                     disableRobotTableModelListener();
-                    System.out.println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
+                    println("handleRobotTableChange calling jTableRobotsSetValueAt(" + wasEnabled + "," + fi + ", 1)");
                     jTableRobotsSetValueAt(wasEnabled, fi, 1);
                     enableRobotTableModelListener();
                 }
                 break;
             } else if (i == 0) {
-                System.out.println("no enable change :handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
+                println("no enable change :handleRobotTableChange: i=" + i + ",robotName=" + robotName + ",enabled=" + enabled + ",wasEnabled=" + wasEnabled);
             }
         }
         enableRobotTableModelListener();
@@ -1047,7 +1054,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 boolean enabledInMap = robotEnableMap.getOrDefault(robotName, true);
                 boolean enabledInTable = getEnableFromRobotsTable(i);
                 if (enabledInMap != enabledInTable) {
-                    System.out.println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
+                    println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
                     disableRobotTableModelListener();
                     jTableRobotsSetValueAt(enabledInMap, i, 1);
                     enableRobotTableModelListener();
@@ -1055,7 +1062,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 int mapDisableCount = robotDisableCountMap.getOrDefault(robotName, 0);
                 int tableDisableCount = getDisableCountFromRobotsTable(i);
                 if (mapDisableCount != tableDisableCount) {
-                    System.out.println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
+                    println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
                     disableRobotTableModelListener();
                     jTableRobotsSetValueAt(mapDisableCount, i, 4);
                     enableRobotTableModelListener();
@@ -1183,6 +1190,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private static final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
 
+    public static long parseTimeString(String timeString) throws ParseException {
+//        String dateString = getDateTimeString(date.getTime());
+//        System.out.println("dateString = " + dateString);
+//        String dateOnlyString = dateString.substring(0,dateString.length()-timeString.length());
+//        System.out.println("dateOnlyString = " + dateOnlyString);
+//        String fullString = dateOnlyString+timeString;
+        return DEFAULT_DATE_FORMAT.parse(timeString).getTime();
+    }
+
     /**
      * Convert a timestamp in milliseconds since 1970 to the default time string
      * format.
@@ -1261,7 +1277,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == logPrintStream) {
             try {
                 File logFile = Utils.createTempFile("events_log_", ".txt");
-                System.out.println("logFile = " + logFile.getCanonicalPath());
+                println("logFile = " + logFile.getCanonicalPath());
                 logPrintStream = new PrintStream(new FileOutputStream(logFile));
 
             } catch (IOException ex) {
@@ -1273,20 +1289,26 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null != logPrintStream) {
             logPrintStream.println(fullLogString);
         }
-        System.out.println(fullLogString);
-        addEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
+        println(fullLogString);
+        addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
     }
 
-    public void addEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname) {
+    private int addOldEventToTableCount = 0;
+    private long addOldEventToTableTime = 0;
+
+    public void addOldEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname) {
         DefaultTableModel tm = (DefaultTableModel) jTableEvents.getModel();
-        if (tm.getRowCount() > eventsDisplayMax) {
+        if (tm.getRowCount() > eventsDisplayMax && eventsDisplayMax > 0) {
             if (!jCheckBoxScrollEvents.isSelected()) {
                 return;
             }
             tm.removeRow(0);
             maxEventStringLen = 0;
         }
-        tm.addRow(new Object[]{getTimeString(time), blockerSize, ecc, cdc, errs, s, threadname});
+        addOldEventToTableCount++;
+        long timediff = time - addOldEventToTableTime;
+        addOldEventToTableTime = time;
+        tm.addRow(new Object[]{addOldEventToTableCount, getTimeString(time), timediff, blockerSize, ecc, cdc, errs, s, "", threadname});
         if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen || threadname.length() > maxThreadNameStringLen) {
             if (jCheckBoxScrollEvents.isSelected()) {
                 Utils.autoResizeTableColWidths(jTableEvents);
@@ -1389,7 +1411,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPane2 = new javax.swing.JTabbedPane();
+        jTabbedPaneMain = new javax.swing.JTabbedPane();
         jPanelTasksAndRobots = new javax.swing.JPanel();
         jPanelTasks = new javax.swing.JPanel();
         jScrollPaneTasks = new javax.swing.JScrollPane();
@@ -1439,6 +1461,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         jTextFieldRunningTime = new javax.swing.JTextField();
         jCheckBoxScrollEvents = new javax.swing.JCheckBox();
+        jLabel7 = new javax.swing.JLabel();
+        jTextFieldEventsLogFile = new javax.swing.JTextField();
         jPanelTeachTable = new javax.swing.JPanel();
         object2DOuterJPanel1 = new aprs.simview.Object2DOuterJPanel();
         jComboBoxTeachSystemView = new javax.swing.JComboBox<>();
@@ -1460,6 +1484,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemRemoveSelectedSystem = new javax.swing.JMenuItem();
         jMenuItemSavePosMaps = new javax.swing.JMenuItem();
         jMenuItemLoadPosMaps = new javax.swing.JMenuItem();
+        jMenuItemLoadEventsLog = new javax.swing.JMenuItem();
         jMenuItemSaveAll = new javax.swing.JMenuItem();
         jMenuItemOpenAll = new javax.swing.JMenuItem();
         jMenuActions = new javax.swing.JMenu();
@@ -1642,7 +1667,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jTabbedPane2.addTab("Tasks and Robots", jPanelTasksAndRobots);
+        jTabbedPaneMain.addTab("Tasks and Robots", jPanelTasksAndRobots);
 
         jPanelPositionMappings.setLayout(new java.awt.GridLayout(2, 1));
 
@@ -1773,7 +1798,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
         jPanelPositionMappings.add(jPanelPosMapSelectedFile);
 
-        jTabbedPane2.addTab("Position Mapping", jPanelPositionMappings);
+        jTabbedPaneMain.addTab("Position Mapping", jPanelPositionMappings);
 
         jLabel1.setText("Futures");
 
@@ -1897,7 +1922,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jTabbedPane2.addTab("Futures", jPanelFuture);
+        jTabbedPaneMain.addTab("Futures", jPanelFuture);
 
         jTableEvents.setAutoCreateRowSorter(true);
         jTableEvents.setModel(new javax.swing.table.DefaultTableModel(
@@ -1905,14 +1930,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Time", "Locks", "ECC", "Cycles", "Errs", "Event", "Thread"
+                "Index", "Time", "TimeDiff", "Locks", "Enable Changes", "Cycles", "Errs", "Event", "Source", "Thread"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Long.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, true, false
+                false, false, false, false, false, false, false, true, true, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1939,6 +1964,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxScrollEvents.setSelected(true);
         jCheckBoxScrollEvents.setText("Scroll");
 
+        jLabel7.setText("File:");
+
         javax.swing.GroupLayout jPanelEventsLayout = new javax.swing.GroupLayout(jPanelEvents);
         jPanelEvents.setLayout(jPanelEventsLayout);
         jPanelEventsLayout.setHorizontalGroup(
@@ -1946,7 +1973,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelEventsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelEventsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneEventsTable)
                     .addGroup(jPanelEventsLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1956,7 +1983,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRunningTime)))
+                        .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelEventsLayout.setVerticalGroup(
@@ -1968,13 +1999,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jTextFieldEventsMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5)
                     .addComponent(jTextFieldRunningTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jCheckBoxScrollEvents))
+                    .addComponent(jCheckBoxScrollEvents)
+                    .addComponent(jLabel7)
+                    .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
-        jTabbedPane2.addTab("Events", jPanelEvents);
+        jTabbedPaneMain.addTab("Events", jPanelEvents);
 
         object2DOuterJPanel1.setMinimumSize(new java.awt.Dimension(0, 0));
 
@@ -2005,7 +2038,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE))
         );
 
-        jTabbedPane2.addTab("Teach", jPanelTeachTable);
+        jTabbedPaneMain.addTab("Teach", jPanelTeachTable);
 
         jButtonAddSharedToolsRow.setText("Add Row");
         jButtonAddSharedToolsRow.addActionListener(new java.awt.event.ActionListener() {
@@ -2082,10 +2115,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
-        jTabbedPane2.addTab("Shared Tools", jPanelTools);
-        jTabbedPane2.addTab("Conveyor", conveyorVisJPanel1);
+        jTabbedPaneMain.addTab("Shared Tools", jPanelTools);
+        jTabbedPaneMain.addTab("Conveyor", conveyorVisJPanel1);
 
-        getContentPane().add(jTabbedPane2);
+        getContentPane().add(jTabbedPaneMain);
 
         jMenuFile.setText("File");
 
@@ -2153,6 +2186,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuFile.add(jMenuItemLoadPosMaps);
+
+        jMenuItemLoadEventsLog.setText("Load Events Log ...");
+        jMenuItemLoadEventsLog.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadEventsLogActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemLoadEventsLog);
 
         jMenuItemSaveAll.setText("Save All ... ");
         jMenuItemSaveAll.addActionListener(new java.awt.event.ActionListener() {
@@ -3789,7 +3830,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             + "public class Custom\n\timplements Consumer<AprsSupervisorJFrame> {\n"
             + "\tpublic void accept(AprsSupervisorJFrame sup) {\n"
             + "\t\t// PUT YOUR CODE HERE:\n"
-            + "\t\tSystem.out.println(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
+            + "\t\tprintln(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
             + "\t}\n"
             + "}\n";
 
@@ -4104,6 +4145,66 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst.getText());
     }//GEN-LAST:event_jMenuItemStartScanAllThenContinuousConveyorDemoRevFirstActionPerformed
 
+    private void jMenuItemLoadEventsLogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadEventsLogActionPerformed
+        try {
+            JFileChooser chooser = new JFileChooser(Utils.getlogFileDir());
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File eventsFile = chooser.getSelectedFile();
+                jTabbedPaneMain.setSelectedComponent(jPanelEvents);
+                loadEventsFile(eventsFile);
+            }
+        } catch (IOException | ParseException ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jMenuItemLoadEventsLogActionPerformed
+
+    private String getRecordString(CSVRecord record, Map<String, Integer> headerMap, String header) {
+        Integer index = headerMap.get(header);
+        if (index == null || index < 0 || index > record.size()) {
+            return null;
+        }
+        return record.get(index);
+    }
+
+    private void loadEventsFile(File eventsFile) throws IOException, ParseException {
+        jTextFieldEventsLogFile.setText(eventsFile.getCanonicalPath());
+        jTextFieldEventsMax.setText("-1");
+        boolean scrollEventsOrig = jCheckBoxScrollEvents.isSelected();
+        jCheckBoxScrollEvents.setSelected(false);
+        setEventsDisplayMax(-1);
+        long minTime = Long.MAX_VALUE;
+        long maxTime = Long.MIN_VALUE;
+        try (CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            for (CSVRecord record : parser) {
+                String timeString = getRecordString(record, headerMap, "timeString");
+                String blockersString = getRecordString(record, headerMap, "blockers");
+                String eccString = getRecordString(record, headerMap, "ecc");
+                String cdcString = getRecordString(record, headerMap, "cdc");
+                String errsString = getRecordString(record, headerMap, "errs");
+                String s = getRecordString(record, headerMap, "s");
+                String threadname = getRecordString(record, headerMap, "threadname");
+                long time = parseTimeString(timeString);
+                if (time < minTime) {
+                    minTime = time;
+                }
+                if (time > maxTime) {
+                    maxTime = time;
+                }
+                int blockerSize = Integer.parseInt(blockersString);
+                int ecc = Integer.parseInt(eccString);
+                int cdc = Integer.parseInt(cdcString);
+                int errs = Integer.parseInt(errsString);
+                addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
+            }
+        }
+        long runTimeMillis = maxTime - minTime;
+        String s = runTimeToString(runTimeMillis);
+        jTextFieldRunningTime.setText(s);
+        jCheckBoxScrollEvents.setSelected(scrollEventsOrig);
+        Utils.autoResizeTableColWidths(jTableEvents);
+    }
+
     XFutureVoid setCheckBoxMenuItemUseCorrectionModeByDefaultSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             if (jCheckBoxMenuItemUseCorrectionModeByDefault.isSelected() != selected) {
@@ -4327,7 +4428,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             customDir.delete();
             customDir.mkdirs();
             File tmpFile = new File(customDir, "Custom.java");
-            System.out.println("tmpFile = " + tmpFile.getCanonicalPath());
+            println("tmpFile = " + tmpFile.getCanonicalPath());
             File[] files1 = {tmpFile};
 
             Files.write(tmpFile.toPath(), customCode.getBytes());
@@ -4345,7 +4446,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .map(Objects::toString)
                         .map(s -> s.startsWith("file:") ? s.substring(4) : s)
                         .collect(Collectors.joining(File.pathSeparator));
-                System.out.println("classPath = " + classPath);
+                println("classPath = " + classPath);
                 DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
                 compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits1).call();
                 StringBuilder errBuilder = new StringBuilder();
@@ -4380,7 +4481,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 urls[urls.length - 1] = grandParentFile.toURI().toURL();
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
-                System.out.println("urls = " + Arrays.toString(urls));
+                println("urls = " + Arrays.toString(urls));
                 ClassLoader loader = new URLClassLoader(urls);
                 Class<?> clss = loader.loadClass("custom.Custom");
                 @SuppressWarnings("deprecation")
@@ -4394,7 +4495,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
                     System.setOut(origOut);
-                    System.out.println("content = " + content);
+                    println("content = " + content);
                     if (content.length() > 0) {
                         crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
                         MultiLineStringJPanel.showText(content).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
@@ -4643,7 +4744,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public XFutureVoid setContinuousDemoCycle(int c) {
-        System.out.println("incrementContinuousDemoCycle : " + c);
+        println("incrementContinuousDemoCycle : " + c);
         if (jCheckBoxMenuItemContinuousDemoRevFirst.isSelected()) {
             return Utils.runOnDispatchThread(() -> jCheckBoxMenuItemContinuousDemoRevFirst.setText("Continuous Demo (Reverse First) (" + c + ") "));
         } else {
@@ -5191,18 +5292,18 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 jTableRobots.setValueAt(val, row, col);
                 Object chkVal = jTableRobots.getValueAt(row, col);
                 if (val != chkVal) {
-                    System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
-                    System.out.println("chkVal = " + chkVal);
+                    println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+                    println("chkVal = " + chkVal);
                 }
                 if (col == 1) {
                     String robotName = (String) jTableRobots.getValueAt(row, 0);
                     boolean enabledInMap = robotEnableMap.getOrDefault(robotName, true);
                     if (enabledInMap != ((boolean) val)) {
-                        System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+                        println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
                         System.err.println("robotEnableMap=" + robotEnableMap);
                         throw new IllegalStateException("setting robots table value not to match map ");
                     }
-//                    System.out.println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
+//                    println("jTableRobotsSetValueAt: val  = " + val + ", row=" + row + ",col=" + col);
                 }
             } finally {
                 injTableRobotsSetValueAtCall = false;
@@ -5222,7 +5323,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             String robotName = (String) jTableRobots.getValueAt(i, 0);
             boolean enableFromTable = getEnableFromRobotsTable(i);
             if (!enableFromTable) {
-//                System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(true," + i + ", 1)");
+//                println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(true," + i + ", 1)");
                 jTableRobotsSetValueAt(true, i, 1);
                 valchanged = true;
                 enableSets[i] = true;
@@ -5231,7 +5332,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 int countFromTable = getDisableCountFromRobotsTable(i);
                 int countFromMap = robotDisableCountMap.getOrDefault(robotName, 0);
                 if (countFromTable != countFromMap) {
-                    System.out.println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(" + countFromMap + "," + i + ", 4)");
+                    println("updateRobotsTableFromMapsAndEnableAll jTableRobotsSetValueAt(" + countFromMap + "," + i + ", 4)");
                     jTableRobotsSetValueAt(countFromMap, i, 4);
                     valchanged = true;
                 }
@@ -5245,7 +5346,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         for (int i = 0; i < jTableRobots.getRowCount(); i++) {
             if (!((boolean) jTableRobots.getValueAt(i, 1))) {
-                System.out.println("enableSets = " + Arrays.toString(enableSets));
+                println("enableSets = " + Arrays.toString(enableSets));
                 System.err.println("bad value in row i=" + i + " jTableRobots.getValueAt(i, 1)=" + jTableRobots.getValueAt(i, 1));
             }
         }
@@ -5446,7 +5547,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return Utils.runOnDispatchThread("updateRandomTest.runOnDispatchThread" + count,
                 () -> {
 //                    int count = randomTestCount.incrementAndGet();
-//                    System.out.println("updateRandomTestCount count = " + count);
+//                    println("updateRandomTestCount count = " + count);
                     jCheckBoxMenuItemRandomTest.setText("Randomized Enable Toggle Continuous Demo " + count);
                 });
     }
@@ -5494,7 +5595,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //                        boolean enableFromTable = (Boolean) jTableRobots.getValueAt(i, 1);
 //                        if (enableFromTable != enable) {
 //                            disableRobotTableModelListener();
-//                            System.out.println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobotsSetValueAt(" + enable + "," + i + ", 1)");
+//                            println("setTableRobotEnabled(" + robotName + "," + enable + ") calling jTableRobotsSetValueAt(" + enable + "," + i + ", 1)");
 //                            jTableRobotsSetValueAt(enable, i, 1);
 //                            enableRobotTableModelListener();
 //                        }
@@ -5673,6 +5774,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JList<String> jListFutures;
     private javax.swing.JList<String> jListFuturesKey;
     private javax.swing.JMenu jMenuActions;
@@ -5685,6 +5787,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemConveyorTest;
     private javax.swing.JMenuItem jMenuItemDbgAction;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
+    private javax.swing.JMenuItem jMenuItemLoadEventsLog;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
     private javax.swing.JMenuItem jMenuItemLoadSetup;
     private javax.swing.JMenuItem jMenuItemLookForPartsAll;
@@ -5735,7 +5838,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPaneTreeSelectedFuture;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
-    private javax.swing.JTabbedPane jTabbedPane2;
+    private javax.swing.JTabbedPane jTabbedPaneMain;
     private javax.swing.JTable jTableEvents;
     private javax.swing.JTable jTablePositionMappings;
     private javax.swing.JTable jTableRobots;
@@ -5743,6 +5846,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JTable jTableSharedTools;
     private javax.swing.JTable jTableTasks;
     private javax.swing.JTextArea jTextAreaFutureDetails;
+    private javax.swing.JTextField jTextFieldEventsLogFile;
     private javax.swing.JTextField jTextFieldEventsMax;
     private javax.swing.JTextField jTextFieldRobotEnableToggleBlockers;
     private javax.swing.JTextField jTextFieldRunningTime;

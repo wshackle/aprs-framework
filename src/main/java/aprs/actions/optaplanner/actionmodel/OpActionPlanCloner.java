@@ -83,8 +83,8 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
             newPlan.setActions(Collections.unmodifiableList(new ArrayList<>(newActions)));
         }
         newPlan.checkActionList();
-//        System.out.println("original = " + original);
-//        System.out.println("newPlan = " + newPlan);
+//        println("original = " + original);
+//        println("newPlan = " + newPlan);
         return newPlan;
     }
 

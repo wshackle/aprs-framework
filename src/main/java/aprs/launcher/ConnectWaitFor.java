@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.ui.XFuture;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -104,7 +105,7 @@ public class ConnectWaitFor {
                 Socket socket = new Socket();
                 socket.connect(endpoint, timeout);
                 socketFuture.complete(socket);
-                System.out.println("Connected to  "+host+":"+port+" after "+(System.currentTimeMillis()-startTime)+" ms");
+                println("Connected to  "+host+":"+port+" after "+(System.currentTimeMillis()-startTime)+" ms");
             }
         } catch (Exception exception) {
             lastException = exception;

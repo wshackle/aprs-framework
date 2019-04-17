@@ -25,6 +25,7 @@ package aprs.pddl_planner;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.system.AprsSystem;
 import aprs.actions.executor.Action;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -610,13 +611,13 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
 
         @Override
         public boolean promptYesNo(String string) {
-            System.out.println(string);
+            println(string);
             return JOptionPane.showConfirmDialog(PddlPlannerJPanel.this, string) == JOptionPane.YES_OPTION;
         }
 
         @Override
         public void showMessage(String string) {
-            System.out.println(string);
+            println(string);
             MultiLineStringJPanel.showText(string);
         }
     };
@@ -715,7 +716,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
     private void printMessage(String msg) {
         boolean msgIsBlank = msg.trim().length() < 1;
         if (!msgIsBlank || !lastMessageBlank) {
-            System.out.println(msg);
+            println(msg);
             appendText(msg);
         }
         lastMessageBlank = msgIsBlank;
@@ -894,7 +895,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
                             String line = null;
                             while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                                 final String lineToAppend = line;
-                                System.out.println("Line from remote error source:" + line);
+                                println("Line from remote error source:" + line);
                                 javax.swing.SwingUtilities.invokeLater(new Runnable() {
                                     @Override
                                     public void run() {
@@ -924,7 +925,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
             boolean planFoundFound = false;
             while (null != (line = br.readLine()) && !closing && !Thread.currentThread().isInterrupted()) {
                 final String lineToAppend = line;
-                System.out.println("Line from remote out source:" + line);
+                println("Line from remote out source:" + line);
                 javax.swing.SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {

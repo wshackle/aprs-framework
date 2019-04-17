@@ -23,6 +23,7 @@
 package aprs.launcher;
 
 import aprs.logdisplay.LogDisplayJPanel;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -55,8 +56,8 @@ public class LogDisplayPanelOutputStream extends OutputStream {
     }
 
     private void notifiyLineConsumers(String line) {
-//            System.out.println("line = " + line);
-//            System.out.println("lineConsumers = " + lineConsumers);
+//            println("line = " + line);
+//            println("lineConsumers = " + lineConsumers);
         for (int i = 0; i < lineConsumers.size(); i++) {
             LineConsumer consumer = lineConsumers.get(i);
             if (consumer.isFinished()) {
@@ -82,17 +83,17 @@ public class LogDisplayPanelOutputStream extends OutputStream {
             sb.append(s);
             if (s.contains("\n") || s.contains("\r")) {
                 String fullString = sb.toString();
-//                System.out.println("fullString = " + fullString.replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
+//                println("fullString = " + fullString.replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
                 notifiyLineConsumers(fullString);
                 Utils.runOnDispatchThread(() -> {
                     logDisplayJPanel.appendText(fullString);
                 });
                 sb = new StringBuffer();
             } else {
-//                System.out.println("sb = " + sb.toString().replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
+//                println("sb = " + sb.toString().replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
             }
         } else {
-             System.out.println("logDisplayJPanel="+logDisplayJPanel+",s="+s);
+             println("logDisplayJPanel="+logDisplayJPanel+",s="+s);
         }
     }
 

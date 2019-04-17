@@ -23,14 +23,12 @@
 package aprs.database.vision;
 
 import aprs.database.PhysicalItem;
+import static aprs.misc.AprsCommonLogger.println;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
@@ -130,7 +128,7 @@ public class VisionSocketServer implements AutoCloseable {
                     while (!closing && !Thread.currentThread().isInterrupted()) {
                         Socket clientSocket = serverSocket.accept();
                         if (debug) {
-                            System.out.println("clientSocket = " + clientSocket);
+                            println("clientSocket = " + clientSocket);
                         }
                         clients.add(clientSocket);
                     }
@@ -218,7 +216,7 @@ public class VisionSocketServer implements AutoCloseable {
                     if (debug) {
                         InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
                         if (null != remoteAddress) {
-                            System.out.println(String.format("Sending %d bytes to %s:%d : %s",
+                            println(String.format("Sending %d bytes to %s:%d : %s",
                                     ba.length,
                                     remoteAddress.getHostString(),
                                     remoteAddress.getPort(),
@@ -243,7 +241,7 @@ public class VisionSocketServer implements AutoCloseable {
         }
         lastPublishListTime = System.currentTimeMillis();
         if (clients.size() != 1) {
-            System.out.println("VisionSocketServer publishList : clients.size() = " + clients.size());
+            println("VisionSocketServer publishList : clients.size() = " + clients.size());
         }
         if (!clients.isEmpty() && !closing) {
             incrementPublishCount();

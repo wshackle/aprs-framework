@@ -265,7 +265,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     }
     
     @UIEffect
-    private void appendTextOnDisplay(String text) {
+    public void appendTextOnDisplay(String text) {
         String txt2 = text.replace("\r\n", "\n");
         String lines[] = txt2.split("\n");
         if (lines.length <= 1 || (lines.length == 2) && lines[1].length() < 1) {

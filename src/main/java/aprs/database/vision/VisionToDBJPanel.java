@@ -27,7 +27,6 @@ import aprs.cachedcomponents.CachedTable;
 import aprs.cachedcomponents.CachedTextField;
 import aprs.system.AprsSystem;
 import aprs.misc.Utils;
-import static aprs.misc.Utils.autoResizeTableColWidths;
 import aprs.database.AcquireEnum;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
@@ -79,38 +78,23 @@ import javax.swing.JTable;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
-import static aprs.misc.Utils.runOnDispatchThread;
 import aprs.database.Slot;
 import aprs.database.Tray;
+import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.traceToString;
 import crcl.ui.XFutureVoid;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.runOnDispatchThread;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.runOnDispatchThread;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.runOnDispatchThread;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -997,15 +981,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }//GEN-LAST:event_jButtonDisconnectVisionActionPerformed
 
     private void setTitleErrorString(String errString) {
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.setTitleErrorString(errString);
+        if (null != aprsSystem) {
+            aprsSystem.setTitleErrorString(errString);
         }
     }
 
     void disconnectVision() {
         stopVisionStartThread();
         closeVision();
-        if (null != aprsSystemInterface && !aprsSystemInterface.isClosing()) {
+        if (null != aprsSystem && !aprsSystem.isClosing()) {
             Exception ex = new IllegalStateException("visionDisconnected");
             notifySingleUpdateListenersExceptionally(ex);
             setTitleErrorString("vision disconnected");
@@ -1023,7 +1007,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             }
         }
         visionClient = null;
-        runOnDispatchThread(() -> setVisionConnectedOnDisplay(false));
+        aprsSystem.runOnDispatchThread(() -> setVisionConnectedOnDisplay(false));
     }
 
     private void stopVisionStartThread() {
@@ -1161,7 +1145,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private List<String> logLines = new LinkedList<>();
 
     private void appendLogDisplay(String txt) {
-        Utils.runOnDispatchThread(() -> appendLogDisplayOnDisplay(txt));
+        aprsSystem.runOnDispatchThread(() -> appendLogDisplayOnDisplay(txt));
     }
 
     @UIEffect
@@ -1235,7 +1219,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public void setVisionConnected(boolean _val) {
-        Utils.runOnDispatchThread(() -> setVisionConnectedOnDisplay(_val));
+        aprsSystem.runOnDispatchThread(() -> setVisionConnectedOnDisplay(_val));
     }
 
     @UIEffect
@@ -1244,8 +1228,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jButtonDisconnectVision.setEnabled(_val);
         this.jLabelVisionStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
         this.jLabelVisionStatus.setBackground(_val ? Color.GREEN : Color.RED);
-        if (null != aprsSystemInterface) {
-            aprsSystemInterface.setShowVisionConnected(_val);
+        if (null != aprsSystem) {
+            aprsSystem.setShowVisionConnected(_val);
         }
     }
 
@@ -1287,7 +1271,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @Override
     public void addLogMessage(String stmnt) {
-        System.out.println(stmnt);
+        println(stmnt);
         appendLogDisplay(stmnt + "\r\n");
     }
 
@@ -1357,16 +1341,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         boolean newConnectedVal = null != dbSetup && dbSetup.isConnected() && checkConnected();
                         if (null == dbSetupPublisher.getDbSetup() || dbSetupPublisher.getDbSetup().isConnected() != newConnectedVal) {
                             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(newConnectedVal).build())
-                                    .thenRun(() -> Utils.runOnDispatchThread(() -> setDBConnectedOnDisplay(newConnectedVal)));
+                                    .thenRun(() -> aprsSystem.runOnDispatchThread(() -> setDBConnectedOnDisplay(newConnectedVal)));
                         } else {
-                            Utils.runOnDispatchThread(() -> setDBConnectedOnDisplay(newConnectedVal));
+                            aprsSystem.runOnDispatchThread(() -> setDBConnectedOnDisplay(newConnectedVal));
                         }
                     });
             if (null != dpu) {
                 dpu.setRotationOffset(ro);
             }
             if (null == dbSetup || !dbSetup.isConnected()) {
-                Utils.runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
+                aprsSystem.runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
             }
         } catch (Exception exception) {
 
@@ -1507,8 +1491,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
 
         if (!ret && isDebug()) {
-            System.out.println("lastIsEnableDatabaseUpdateListenersUpdateEndCount = " + lastIsEnableDatabaseUpdateListenersUpdateEndCount);
-            System.out.println("lastIsEnableDatabaseUpdateListenersUpdateBeginCount = " + lastIsEnableDatabaseUpdateListenersUpdateBeginCount);
+            println("lastIsEnableDatabaseUpdateListenersUpdateEndCount = " + lastIsEnableDatabaseUpdateListenersUpdateEndCount);
+            println("lastIsEnableDatabaseUpdateListenersUpdateBeginCount = " + lastIsEnableDatabaseUpdateListenersUpdateBeginCount);
         }
         return ret;
     }
@@ -1547,11 +1531,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null == requiredParts || requiredParts.isEmpty()) {
             this.requiredParts = Collections.emptyMap();
             String requiredPartsString = "";
-            Utils.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(requiredPartsString));
+            aprsSystem.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(requiredPartsString));
         } else {
             this.requiredParts = new TreeMap<>(requiredParts);
             String requiredPartsString = requiredParts.toString();
-            Utils.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(requiredPartsString));
+            aprsSystem.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(requiredPartsString));
         }
     }
 
@@ -1578,7 +1562,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix) throws IOException {
-        AprsSystem af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystem;
         if (null != af) {
             return af.createTempFile(prefix, suffix);
         }
@@ -1586,7 +1570,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private File createTempFile(String prefix, String suffix, File dir) throws IOException {
-        AprsSystem af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystem;
         if (null != af) {
             return af.createTempFile(prefix, suffix, dir);
         }
@@ -1594,7 +1578,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     private void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        AprsSystem af = this.aprsSystemInterface;
+        AprsSystem af = this.aprsSystem;
         if (null != af) {
             af.takeSimViewSnapshot(f, itemsToPaint);
         }
@@ -1635,7 +1619,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     int failures = checkRequiredPartFailures.incrementAndGet();
                     String msg = "Found only " + found + " of " + name + " when " + required + " needed."
                             + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_ : list.siz()=" + list.size() + ", namesList=" + namesList;
-                    if (null != aprsSystemInterface && aprsSystemInterface.snapshotsEnabled()) {
+                    if (null != aprsSystem && aprsSystem.snapshotsEnabled()) {
                         try {
                             takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
                         } catch (IOException ex) {
@@ -1647,8 +1631,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         System.err.println("requiredParts = " + requiredParts);
                         if (!rechecking) {
                             try {
-                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
-                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+                                aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                                aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
                             } catch (IOException iOException) {
                                 Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
                             }
@@ -1661,8 +1645,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     } else {
                         if (!rechecking) {
                             try {
-                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
-                                aprsSystemInterface.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+                                aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                                aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
                             } catch (IOException iOException) {
                                 Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
                             }
@@ -1675,8 +1659,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         if (!rechecking) {
             try {
-                aprsSystemInterface.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
-                aprsSystemInterface.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
+                aprsSystem.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
+                aprsSystem.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
             } catch (IOException iOException) {
                 Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
             }
@@ -1711,7 +1695,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         } else if (enableDatabaseUpdates) {
             throw new IllegalStateException("Database not connected (dpu == null) ");
         }
-        Utils.runOnDispatchThread(() -> {
+        aprsSystem.runOnDispatchThread(() -> {
             if (enableDatabaseUpdates != jCheckBoxDbUpdateEnabled.isSelected()) {
                 jCheckBoxDbUpdateEnabled.setSelected(enableDatabaseUpdates);
             }
@@ -1770,7 +1754,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public void clearVisionRequiredParts() {
         requiredParts = Collections.emptyMap();
-        Utils.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(""));
+        aprsSystem.runOnDispatchThread(() -> setRequiredPartsStringOnDisplay(""));
     }
 
     /**
@@ -1831,8 +1815,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private final AtomicInteger notifySingleListenersUpdateEndCount = new AtomicInteger();
 
     private String getRunName() {
-        if (null != aprsSystemInterface) {
-            return aprsSystemInterface.getRunName();
+        if (null != aprsSystem) {
+            return aprsSystem.getRunName();
         }
         return "";
     }
@@ -2053,21 +2037,21 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         visionClientUpdateSingleUpdateListenersEmptyCount.incrementAndGet();
                     }
                     lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
-                    runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
+                    aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
                     notifySingleUpdateListeners(l);
                     lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
-                    runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
+                    aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 }
             }
         } catch (Exception exception) {
-            System.out.println("line = " + line);
+            println("line = " + line);
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", exception);
             notifySingleUpdateListenersExceptionally(exception);
             setTitleErrorString(exception.toString());
-            if (null != aprsSystemInterface) {
-                aprsSystemInterface.showException(exception);
+            if (null != aprsSystem) {
+                aprsSystem.showException(exception);
             }
             if (exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;
@@ -2096,7 +2080,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             visionClientLocal.addCountListener(l);
         }
         return visionClientLocal.start(argsMap)
-                .thenComposeToVoid(() -> Utils.runOnDispatchThread(this::finishConnectVision));
+                .thenComposeToVoid(() -> aprsSystem.runOnDispatchThread(this::finishConnectVision));
     }
 
     private boolean ignoreLosingItemsLists = false;
@@ -2129,7 +2113,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     public XFutureVoid connectVision() {
         String visionPortString = visionPortCachedTextField.getText();
-        System.out.println("Starting connectVision ... (port = " + visionPortString + ") ");
+        println("Starting connectVision ... (port = " + visionPortString + ") ");
         XFutureVoid ret = new XFutureVoid("connectVision" + visionPortString);
         Thread connectThread = Thread.currentThread();
         StackTraceElement connectTrace[] = connectThread.getStackTrace();
@@ -2147,7 +2131,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     System.err.println("connectThread = " + connectThread);
                     System.err.println("connectTrace = " + Arrays.toString(connectTrace));
                     System.err.println("argsMap = " + argsMap);
-                    System.out.println("aprsSystemInterface = " + aprsSystemInterface);
+                    println("aprsSystemInterface = " + aprsSystem);
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", e);
                     ret.completeExceptionally(e);
                     throw new RuntimeException(e);
@@ -2163,7 +2147,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @MonotonicNonNull
-    private AprsSystem aprsSystemInterface = null;
+    private AprsSystem aprsSystem = null;
 
     /**
      * Get the value of aprsSystemInterface
@@ -2172,7 +2156,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     @Nullable
     public AprsSystem getAprsSystem() {
-        return aprsSystemInterface;
+        return aprsSystem;
     }
 
     /**
@@ -2181,7 +2165,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      * @param aprsSystemInterface new value of aprsSystemInterface
      */
     public void setAprsSystem(AprsSystem aprsSystemInterface) {
-        this.aprsSystemInterface = aprsSystemInterface;
+        this.aprsSystem = aprsSystemInterface;
     }
 
     private void finishConnectVision() {
@@ -2191,8 +2175,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             setVisionConnected(visionClient.isConnected());
         }
         updateTransformFromTable();
-        if (null != aprsSystemInterface && null != visionClient) {
-            aprsSystemInterface.setShowVisionConnected(visionClient.isConnected());
+        if (null != aprsSystem && null != visionClient) {
+            aprsSystem.setShowVisionConnected(visionClient.isConnected());
         }
     }
 
@@ -2205,9 +2189,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         try {
             if (null != dpu) {
                 dpu.close();
-                runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
+                aprsSystem.runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
             } else if (lastSetDbConnectedVal) {
-                runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
+                aprsSystem.runOnDispatchThread(() -> setDBConnectedOnDisplay(false));
             }
         } catch (Exception ex) {
             addLogMessage(ex);
@@ -2226,7 +2210,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != commandSlr) {
             commandSlr.close();
         }
-        runOnDispatchThread(() -> setCommandConnectedOnDisplay(false));
+        aprsSystem.runOnDispatchThread(() -> setCommandConnectedOnDisplay(false));
     }
 
     void startCommand(Map<String, String> argsMap) {
@@ -2241,7 +2225,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     port,
                     "commandReader",
                     this::handleCommand);
-            runOnDispatchThread(() -> setCommandConnectedOnDisplay(true));
+            aprsSystem.runOnDispatchThread(() -> setCommandConnectedOnDisplay(true));
         } catch (Exception exception) {
             System.err.println(exception.getLocalizedMessage());
             System.err.println("Starting server for command port failed.");
@@ -2262,7 +2246,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private volatile PrintStream commandReplyPrintStream = null;
 
     private void handleCommand(String line, PrintStream os) {
-        runOnDispatchThread(() -> setLastCommand(line));
+        aprsSystem.runOnDispatchThread(() -> setLastCommand(line));
         if (null == dpu) {
             os.println("Database not connected.");
             return;
@@ -2278,16 +2262,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         if (fa[0].trim().toUpperCase().compareTo("ON") == 0) {
             setAcquire(AcquireEnum.ON);
-            runOnDispatchThread(() -> setAquiring(AcquireEnum.ON.toString()));
+            aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.ON.toString()));
 
             os.println("Acquire Status: " + getAcquire());
         } else if (fa[0].trim().toUpperCase().compareTo("ONCE") == 0) {
             setAcquire(AcquireEnum.ONCE);
-            runOnDispatchThread(() -> setAquiring(AcquireEnum.ONCE.toString()));
+            aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.ONCE.toString()));
             os.println("Acquire Status: " + AcquireEnum.ONCE);
         } else if (fa[0].trim().toUpperCase().compareTo("OFF") == 0) {
             setAcquire(AcquireEnum.OFF);
-            runOnDispatchThread(() -> setAquiring(AcquireEnum.OFF.toString()));
+            aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.OFF.toString()));
             os.println("Acquire Status: " + AcquireEnum.OFF);
             commandReplyPrintStream = os;
             if (null != visionClient) {
@@ -2342,7 +2326,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != dpu) {
             return dpu.queryDatabase()
                     .thenComposeToVoid("VisionToDB.queryDatabase.updataPoseQueryInfo",
-                            l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+                            l -> aprsSystem.runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFutureVoid.completedFutureWithName("queryDatabase.null==dpu");
     }
@@ -2351,7 +2335,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != dpu) {
             return dpu.queryDatabaseNew()
                     .thenComposeToVoid("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
-                            l -> runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+                            l -> aprsSystem.runOnDispatchThread(() -> updataPoseQueryInfo(l)));
         }
         return XFutureVoid.completedFutureWithName("startQueryDatabaseNew.null==dpu");
     }
@@ -2379,7 +2363,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             PoseType pose = getTransformPose();
             if (null != pose) {
                 List<PhysicalItem> transformedList = transformList(singletonList, pose);
-                System.out.println("transformedList = " + transformedList);
+                println("transformedList = " + transformedList);
                 dpu.updateVisionList(transformedList, addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected(), true);
             } else {
                 dpu.updateVisionList(singletonList, addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected(), true);
@@ -2704,7 +2688,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public XFutureVoid startTakeSnapshot(File f) {
-        return Utils.runOnDispatchThread(() -> takeSnapshot(f));
+        return aprsSystem.runOnDispatchThread(() -> takeSnapshot(f));
     }
 
     @UIEffect
@@ -2719,14 +2703,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     @UIEffect
     private void jButtonShowImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowImageActionPerformed
-        if (null != aprsSystemInterface) {
-            boolean snapShotsEnabled = aprsSystemInterface.isSnapshotsSelected();
+        if (null != aprsSystem) {
+            boolean snapShotsEnabled = aprsSystem.isSnapshotsSelected();
             if (!snapShotsEnabled) {
-                aprsSystemInterface.setSnapshotsSelected(true);
+                aprsSystem.setSnapshotsSelected(true);
             }
             showDatabaseTableImage();
             if (!snapShotsEnabled) {
-                aprsSystemInterface.setSnapshotsSelected(false);
+                aprsSystem.setSnapshotsSelected(false);
             }
         }
     }//GEN-LAST:event_jButtonShowImageActionPerformed
@@ -3155,7 +3139,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public void updateResultsMap(Map<String, UpdateResults> _map) {
         Map<String, UpdateResults> mapCopy = new HashMap<>(_map);
-        runOnDispatchThread(() -> this.updateResultsMapInternal(Collections.unmodifiableMap(mapCopy)));
+        aprsSystem.runOnDispatchThread(() -> this.updateResultsMapInternal(Collections.unmodifiableMap(mapCopy)));
     }
 
 }

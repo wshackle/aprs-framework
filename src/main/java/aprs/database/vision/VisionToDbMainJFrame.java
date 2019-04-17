@@ -179,7 +179,7 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
     }//GEN-LAST:event_jMenuItemFileExitActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-//        System.out.println("formWindowClosing called.");
+//        println("formWindowClosing called.");
 //        DbMain.closeAll();
     }//GEN-LAST:event_formWindowClosing
 

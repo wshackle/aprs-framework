@@ -46,8 +46,45 @@ public class AprsCommonLogger {
         return AprsCommonLoggerInstanceHolder.INSTANCE;
     }
 
+    public static PrintStream out() {
+        return instance().outStream;
+    }
+    
+    public static PrintStream err() {
+        return instance().errStream;
+    }
+    
+    public static class System {
+        public static final PrintStream out =out();
+        public static final PrintStream err =err();
+    }
+    
+    public static void println(String string) {
+        instance().outStream.println(string);
+    }
+    
+    public static void println() {
+        instance().outStream.println();
+    }
+    
+    public static void printErrln(String string) {
+        instance().outStream.println(string);
+    }
+    
     private final AprsCommonPrintStream outStream;
     private final AprsCommonPrintStream errStream;
+
+    public PrintStream getOrigSystemOut() {
+        return origSystemOut;
+    }
+
+    public PrintStream getOrigSystemErr() {
+        return origSystemErr;
+    }
+    
+    private final PrintStream origSystemOut;
+    private final PrintStream origSystemErr;
+    
     private final ConcurrentLinkedDeque<Consumer<String>> stringConsumers
             = new ConcurrentLinkedDeque<>();
     
@@ -68,10 +105,12 @@ public class AprsCommonLogger {
     }
 
     private AprsCommonLogger() {
-        outStream = new AprsCommonPrintStream(System.out, stringConsumers);
-        errStream = new AprsCommonPrintStream(System.err, stringConsumers);
-        System.setOut(outStream);
-        System.setErr(errStream);
+        origSystemOut = java.lang.System.out;
+        origSystemErr = java.lang.System.err;
+        outStream = new AprsCommonPrintStream(origSystemOut, stringConsumers);
+        errStream = new AprsCommonPrintStream(origSystemErr, stringConsumers);
+        java.lang.System.setOut(outStream);
+        java.lang.System.setErr(errStream);
         try {
             logFile = Utils.createTempFile("aprsPrintLogs_", ".txt");
             auxPrintStream = new PrintStream(logFile);

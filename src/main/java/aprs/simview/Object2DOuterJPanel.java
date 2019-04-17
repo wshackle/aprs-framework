@@ -77,6 +77,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
@@ -187,9 +188,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             long diff = endTime - startTime;
             long total = notifyItemsTableTime.addAndGet(diff);
             long max = notifyItemsTableMaxTime.getAndAccumulate(diff, Math::max);
-            System.out.println("notifyItemsTable count = " + c);
-            System.out.println("notifyItemsTable max = " + max);
-            System.out.println("notifyItemsTable avg = " + total / c);
+            println("notifyItemsTable count = " + c);
+            println("notifyItemsTable max = " + max);
+            println("notifyItemsTable avg = " + total / c);
         }
     }
 
@@ -254,7 +255,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
             Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
             AprsSystem aprsSystemLocal = aprsSystem;
@@ -331,7 +332,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             csvDir.mkdirs();
             File csvFile = new File(csvDir, f.getName() + ".csv");
             Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
-            Utils.runOnDispatchThread(() -> {
+            runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFile);
             });
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
@@ -490,6 +491,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile long lastSetItemsInternalTime = 0;
     private volatile XFutureVoid lastSetItemsInternalFuture = null;
 
+    public <T> XFutureVoid submitDisplayConsumer(Consumer<T> consumer, T value) {
+        if (null != aprsSystem) {
+            return aprsSystem.submitDisplayConsumer(consumer, value);
+        }
+        return runOnDispatchThread(() -> {
+           consumer.accept(value);
+        });
+    }
+    
+     private final Consumer<List<PhysicalItem>> itemsListConsumer =
+            (List<PhysicalItem> items) -> {
+                setItemsInternal(items);
+                settingItems = false;
+            };
+     
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
         notifySetItemsListeners(items);
         long now = System.currentTimeMillis();
@@ -499,10 +515,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 || (now - lastSetItemsInternalTime) > 500) {
             settingItems = true;
             lastSetItemsInternalTime = now;
-            future = Utils.runOnDispatchThread(() -> {
-                setItemsInternal(items);
-                settingItems = false;
-            });
+            future = submitDisplayConsumer(itemsListConsumer, items);
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0) {
@@ -534,17 +547,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile long lastSetOutputItemsInternalTime = 0;
     private volatile XFutureVoid lastSetOutputItemsInternalFuture = null;
 
+    
+    private final Consumer<List<PhysicalItem>> outputItemsListConsumer =
+            (List<PhysicalItem> items) -> {
+               lastSetOutputItemsInternalTime = System.currentTimeMillis();
+                setOutputItemsInternal(items);
+                settingItems = false;
+            };
+    
+    
+    
     public XFutureVoid setOutputItems(List<PhysicalItem> items) {
         settingItems = true;
         long now = System.currentTimeMillis();
         if (null == lastSetOutputItemsInternalFuture
                 || lastSetOutputItemsInternalFuture.isDone()
                 || (now - lastSetOutputItemsInternalTime) > 500) {
-            XFutureVoid ret = Utils.runOnDispatchThread(() -> {
-                lastSetOutputItemsInternalTime = now;
-                setOutputItemsInternal(items);
-                settingItems = false;
-            });
+            lastSetOutputItemsInternalTime=now;
+            XFutureVoid ret = submitDisplayConsumer(outputItemsListConsumer, items);
             lastSetOutputItemsInternalFuture = ret;
             return ret;
         } else {
@@ -597,7 +617,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         settingItems = true;
         long startTime = System.currentTimeMillis();
         int c = updateItemsTableCount.incrementAndGet();
-        Utils.runOnDispatchThread(() -> {
+        runOnDispatchThread(() -> {
             updateItemsTableOnDisplay(items);
             settingItems = false;
             if (debugTimes) {
@@ -605,9 +625,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 long diff = endTime - startTime;
                 long total = updateItemsTableTime.addAndGet(diff);
                 long max = updateItemsTableMaxTime.getAndAccumulate(diff, Math::max);
-                System.out.println("updateItemsTable count = " + c);
-                System.out.println("updateItemsTable max = " + max);
-                System.out.println("updateItemsTable avg = " + total / c);
+                println("updateItemsTable count = " + c);
+                println("updateItemsTable max = " + max);
+                println("updateItemsTable avg = " + total / c);
             }
         });
     }
@@ -632,10 +652,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             long diff = end - start;
             updateItemsTableOnDisplayCountTotalTime += diff;
             updateItemsTableOnDisplayCountMaxTime = Math.max(updateItemsTableOnDisplayCountMaxTime, diff);
-            System.out.println("updateItemsTableOnDisplayCount = " + updateItemsTableOnDisplayCount);
-            System.out.println("updateItemsTableOnDisplayCountMaxTime = " + updateItemsTableOnDisplayCountMaxTime);
+            println("updateItemsTableOnDisplayCount = " + updateItemsTableOnDisplayCount);
+            println("updateItemsTableOnDisplayCountMaxTime = " + updateItemsTableOnDisplayCountMaxTime);
             long averageUpdateItemsTableOnDisplay = updateItemsTableOnDisplayCountTotalTime / updateItemsTableOnDisplayCount;
-            System.out.println("averageUpdateItemsTableOnDisplay = " + averageUpdateItemsTableOnDisplay);
+            println("averageUpdateItemsTableOnDisplay = " + averageUpdateItemsTableOnDisplay);
         }
     }
 
@@ -1201,14 +1221,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 }
                 if (newItemsList.size() != origItems.size()) {
-                    Utils.runOnDispatchThread(() -> {
+                    runOnDispatchThread(() -> {
                         setItemsInternal(newItemsList);
                         notifySetItemsListeners(newItemsList);
                     });
                 } else {
                     System.err.println("List size " + newItemsList.size() + " not changed on jTableTraySlots event " + e);
-                    System.out.println("newItemsList = " + newItemsList);
-                    System.out.println("origItems = " + origItems);
+                    println("newItemsList = " + newItemsList);
+                    println("origItems = " + origItems);
                 }
             }
         }
@@ -2435,8 +2455,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.rotNoise = rotNoise;
     }
 
+    private XFutureVoid runOnDispatchThread(Runnable r) {
+        if(null != aprsSystem) {
+            return aprsSystem.runOnDispatchThread(r);
+        } else {
+            return Utils.runOnDispatchThread(r);
+        }
+    }
+    
     private void setSimulatedInternal(boolean simulated) {
-        Utils.runOnDispatchThread(() -> setSimulatedInternalOnDisplay(simulated));
+        runOnDispatchThread(() -> setSimulatedInternalOnDisplay(simulated));
     }
 
     @UIEffect
@@ -2851,10 +2879,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Collections.shuffle(newOutputList);
             }
 //            if (newOutputList.size() != origList.size()) {
-//                System.out.println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
-//                System.out.println("dropCount = " + dropCount);
-//                System.out.println("l.size() = " + newOutputList.size());
-//                System.out.println("origList.size() = " + origList.size());
+//                println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
+//                println("dropCount = " + dropCount);
+//                println("l.size() = " + newOutputList.size());
+//                println("origList.size() = " + origList.size());
 //            }
         }
         return newOutputList;
@@ -2940,7 +2968,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             double xdiff = itemToDrag.x - orig_x;
             double ydiff = itemToDrag.y - orig_y;
 //            if (Math.abs(xdiff) > 100 || Math.abs(ydiff) > 100) {
-//                System.out.println("big drag jump");
+//                println("big drag jump");
 //                this.draggedItem = null;
 //                return;
 //            }
@@ -2989,7 +3017,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 return false;
             }
             Point2D newPoint = relTransform.inverseTransform(new Point2D.Double(x, y), new Point2D.Double());
-//            System.out.println("newPoint = " + newPoint.getX() + ", " + newPoint.getY());
+//            println("newPoint = " + newPoint.getX() + ", " + newPoint.getY());
             inside = itemDisplayRect.contains(newPoint);
         } catch (NoninvertibleTransformException ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -3010,7 +3038,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         minIndex = closestItemInfo.getMinIndex();
         if (!includeTrays && null != closestItem && !"P".equals(closestItem.getType())) {
             draggedItem = null;
-            System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
+            println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
             return;
         }
         if (minIndex >= 0) {
@@ -3027,7 +3055,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 List<PhysicalItem> newDragItems = findIncludedItems(closestItem);
                 this.draggedItemsList = newDragItems;
             } else if (!"P".equals(closestItem.getType())) {
-                System.out.println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
+                println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
                 draggedItem = null;
                 this.draggedItemsList = null;
                 return;
@@ -3107,7 +3135,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jTextFieldMaxXMaxYActionPerformed
 
     public void setViewLimits(double minX, double minY, double maxX, double maxY) {
-        Utils.runOnDispatchThread(() -> setViewLimitsOnDisplay(minX, minY, maxX, maxY));
+        runOnDispatchThread(() -> setViewLimitsOnDisplay(minX, minY, maxX, maxY));
     }
 
     @UIEffect
@@ -3282,7 +3310,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         return XFutureVoid.allOf(futuresList)
                 .thenComposeToVoid(() -> {
-                    return Utils.runOnDispatchThread(() -> {
+                    return runOnDispatchThread(() -> {
                         this.repaint();
                         object2DJPanel1.repaint();
                     });
@@ -3533,7 +3561,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jCheckBoxViewOutputActionPerformed
 
     public XFutureVoid setShowOutputItems(boolean showOutputItems) {
-        return Utils.runOnDispatchThread(() -> setShowOutputItemsOnDisplay(showOutputItems));
+        return runOnDispatchThread(() -> setShowOutputItemsOnDisplay(showOutputItems));
     }
 
     @UIEffect
@@ -3867,7 +3895,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public void stopSimUpdateTimer() {
         if (null != simUpdateTimer) {
-            Utils.runOnDispatchThread(this::stopSimUpdateTimerOnDisplay);
+            runOnDispatchThread(this::stopSimUpdateTimerOnDisplay);
         }
     }
 
@@ -3887,7 +3915,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (simulationUpdateAsNeededCachedCheckBox.isSelected() || pauseCachedCheckBox.isSelected()) {
             return;
         }
-        Utils.runOnDispatchThread(this::setupSimUpdateTimerOnDisplay);
+        runOnDispatchThread(this::setupSimUpdateTimerOnDisplay);
     }
 
     @UIEffect
@@ -4101,7 +4129,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final CachedCheckBox autoscaleCachedCheckBox;
 
     public XFutureVoid saveProperties() {
-        return Utils.runOnDispatchThread(this::savePropertiesOnDisplay);
+        return runOnDispatchThread(this::savePropertiesOnDisplay);
     }
 
     @UIEffect
@@ -4247,7 +4275,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile XFutureVoid loadPropertiesFuture2 = null;
 
     public XFutureVoid loadProperties(Properties props) {
-        XFutureVoid ret = Utils.runOnDispatchThread(() -> {
+        XFutureVoid ret = runOnDispatchThread(() -> {
             loadPropertiesOnDisplay(props);
         });
         loadPropertiesFuture2 = ret;
@@ -4836,7 +4864,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 int lc = lineCount.incrementAndGet();
                 if (null == lineCsvWriter || lc < 2) {
                     File f = Utils.createTempFile("vision_lines_" + getTaskName() + "_" + getHost() + "_" + getPort(), ".csv");
-                    System.out.println("Recording vision lines to  " + f.getCanonicalPath());
+                    println("Recording vision lines to  " + f.getCanonicalPath());
                     String headingLine = VisionSocketClient.lineToHeading("count,time,currentX,currentY,ignored,", line);
 
                     String headersArray[] = headingLine.split(",[ ]*");
@@ -4876,7 +4904,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
             setItems(l);
-            return Utils.runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
+            return runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
             showException(ex);
@@ -4910,21 +4938,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
 
+    private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
+    
+    private final Consumer<ConcurrentLinkedDeque<File[]>> fileArrayDequeConsumer = 
+            (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> {
+                File fa[] = this.fileArrayDeque.pollFirst();
+                while(null != fa) {
+                    updateSnapshotsTable(fa[0], fa[1]);
+                    fa = this.fileArrayDeque.pollFirst();
+                }
+            };
+    
     public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
 
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = saveSnapshotCsv(f, itemsToPaint);
-            Utils.runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFile);
-            });
+            fileArrayDeque.add(new File[]{f,csvFile});
+            aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
         } else {
             List<PhysicalItem> items = getItems();
             this.object2DJPanel1.takeSnapshot(f, items, w, h);
             File csvFile = saveSnapshotCsv(f, items);
-            Utils.runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFile);
-            });
+            fileArrayDeque.add(new File[]{f,csvFile});
+            aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
         }
     }
 
@@ -4949,7 +4986,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
-        Utils.runOnDispatchThread(() -> {
+        runOnDispatchThread(() -> {
             updateSnapshotsTable(f, csvFile);
         });
     }
@@ -5359,9 +5396,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         && lastIsHoldingObjectExpected && !isHoldingObjectExpected
                         && min_dist_index != captured_item_index) {
                     PhysicalItem captured_item = (captured_item_index >= 0 && captured_item_index < l.size()) ? l.get(captured_item_index) : null;
-                    System.out.println("captured_item = " + captured_item);
-                    System.out.println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
-                    System.out.println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
+                    println("captured_item = " + captured_item);
+                    println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
+                    println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
                     String errString
                             = "Dropping item on to another item min_dist=" + min_dist
                             + ", min_dist_index=" + min_dist_index
@@ -5381,7 +5418,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         captured_item_index = min_dist_index;
                         if (null == objectPanelToClone) {
                             try {
-                                System.out.println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                                println(aprsSystem.getRunName() + " : Captured item with index " + captured_item_index + " at " + currentX + "," + currentY);
                                 boolean takeSnapshots = isSnapshotsEnabled();
                                 if (takeSnapshots) {
                                     takeSnapshot(createTempFile("capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
@@ -5392,12 +5429,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         }
                     } else {
                         try {
-                            System.out.println("di = " + di);
+                            println("di = " + di);
                             if (null != di && di.index >= 0 && di.index < l.size()) {
                                 PhysicalItem closestItem = l.get(di.index);
-                                System.out.println("closestItem = " + closestItem);
-                                System.out.println("closestItem.getFullName() = " + closestItem.getFullName());
-                                System.out.println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
+                                println("closestItem = " + closestItem);
+                                println("closestItem.getFullName() = " + closestItem.getFullName());
+                                println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
                             }
                             String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
                             printHandlePoseErrorInfo(err, stat, pose, cmd);
@@ -5414,7 +5451,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     }
                 } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                     if (null == objectPanelToClone) {
-                        System.out.println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
+                        println(aprsSystem.getRunName() + " : Dropping item with index " + captured_item_index + " at " + currentX + "," + currentY);
                         boolean takeSnapshots = isSnapshotsEnabled();
                         if (takeSnapshots) {
                             try {
@@ -5431,7 +5468,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
-                        System.out.println("lastDropUpdate = " + lastDropUpdate);
+                        println("lastDropUpdate = " + lastDropUpdate);
                         this.aprsSystem.setTitleErrorString(err);
                     }
                 }
@@ -5469,15 +5506,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void printHandlePoseErrorInfo(String err, CRCLStatusType stat, PoseType pose, @Nullable CRCLCommandType cmd) throws IOException {
-        System.out.println("poseUpdateHistory = " + printPoseUpdateHistory(err));
+        println("poseUpdateHistory = " + printPoseUpdateHistory(err));
         if (null == aprsSystem) {
-            System.out.println("aprsSystem = null");
+            println("aprsSystem = null");
         } else {
-            System.out.println("statFile = " + aprsSystem.logCrclStatus(err, stat));
-            System.out.println("pose = " + CRCLPosemath.toString(pose));
+            println("statFile = " + aprsSystem.logCrclStatus(err, stat));
+            println("pose = " + CRCLPosemath.toString(pose));
             if (null != cmd) {
-                System.out.println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
-                System.out.println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
+                println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
+                println("cmdFile = " + aprsSystem.logCrclCommand(err, cmd));
             }
         }
     }

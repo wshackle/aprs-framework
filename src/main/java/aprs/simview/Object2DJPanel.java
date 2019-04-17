@@ -50,6 +50,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.PmCartesianMinMaxLimit;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -608,7 +609,7 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             writeImageFile(img, type, f);
-//            System.out.println("Saved snapshot to " + f.getCanonicalPath());
+//            println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -682,9 +683,9 @@ public class Object2DJPanel extends JPanel {
     private static void writeImageFileOnService(BufferedImage img, String type, File f) {
         try {
             if (ImageIO.write(img, type, f)) {
-//                System.out.println("Saved snapshot to " + f.getCanonicalPath());
+//                println("Saved snapshot to " + f.getCanonicalPath());
             } else {
-                System.out.println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
+                println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
             }
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -2364,7 +2365,7 @@ public class Object2DJPanel extends JPanel {
             double yo = infoYOffset;
             if (info.ignoreRotations) {
 //                if(item.origName.startsWith("fanuc")) {
-//                    System.out.println("debug me");
+//                    println("debug me");
 //                }
 
                 double cs = Math.cos(alternativeRotation);
