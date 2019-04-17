@@ -24,6 +24,7 @@ package aprs.system;
 
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.misc.ActiveWinEnum;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.CsvTableJPanel;
 import aprs.misc.IconImages;
 import aprs.misc.PmCartesianMinMaxLimit;
@@ -1618,11 +1619,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         if (null == aprsSystem) {
             throw new IllegalStateException("null == aprsSystem");
         }
-        System.out.println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
+        println("jCheckBoxMenuItemPause.isSelected() = " + jCheckBoxMenuItemPause.isSelected());
         XFuture<Boolean> cdf = getContinuousDemoFuture();
         if (null != cdf) {
-            System.out.println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
+            println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
+            println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
         }
         if (jCheckBoxMenuItemPause.isSelected()) {
             pause();
@@ -1632,8 +1633,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
         cdf = getContinuousDemoFuture();
         if (null != cdf) {
-            System.out.println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
-            System.out.println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
+            println("ContinuousDemoFuture.isDone() = " + cdf.isDone());
+            println("ContinuousDemoFuture.isCancelled() = " + cdf.isCancelled());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemPauseActionPerformed
 

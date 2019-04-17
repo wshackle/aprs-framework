@@ -24,6 +24,7 @@ package aprs.misc;
 
 import aprs.cachedcomponents.CachedTable;
 import aprs.launcher.LauncherAprsJFrame;
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
@@ -42,12 +43,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +71,6 @@ import java.util.regex.Matcher;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableColumnModel;
@@ -107,9 +107,9 @@ public class Utils {
             dir = System.getProperty("linux.aprs.user.home", System.getProperty("aprs.user.home", System.getProperty("user.home")));
         }
 //        if(!dir.endsWith("netbeans_run_user_home")) {
-//            System.out.println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
-//            System.out.println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
-//            System.out.println("dir = " + dir);
+//            println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
+//            println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
+//            println("dir = " + dir);
 //            Properties props = System.getProperties();
 //            props.list(System.out);
 //        }
@@ -130,30 +130,30 @@ public class Utils {
         try {
             Toolkit.getDefaultToolkit().beep();
             if (debug) {
-                System.out.println("PlayAlert : resourceName= " + resourceName);
+                println("PlayAlert : resourceName= " + resourceName);
             }
             Thread.sleep(100);
             if (debug) {
-                System.out.println("aClass = " + aClass);
+                println("aClass = " + aClass);
             }
             URL url = aClass.getResource(resourceName);
             if (debug) {
-                System.out.println("PlayAlert: url = " + url);
+                println("PlayAlert: url = " + url);
             }
             if (null != url) {
                 Clip clip = AudioSystem.getClip();
                 if (debug) {
-                    System.out.println("PlayAlert: clip = " + clip);
+                    println("PlayAlert: clip = " + clip);
                 }
                 InputStream inputStream
                         = aClass.getResourceAsStream(resourceName);
                 if (debug) {
-                    System.out.println("PlayAlert: inputStream = " + inputStream);
+                    println("PlayAlert: inputStream = " + inputStream);
                 }
                 if (null != inputStream) {
                     AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
                     if (debug) {
-                        System.out.println("PlayAlert: audioInputStream = " + audioInputStream);
+                        println("PlayAlert: audioInputStream = " + audioInputStream);
                     }
                     clip.open(audioInputStream);
                     clip.start();
@@ -394,6 +394,8 @@ public class Utils {
         Date date = new Date(time);
         return timeFormat.format(date);
     }
+    
+    
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
     @SuppressWarnings("guieffect")
@@ -467,15 +469,15 @@ public class Utils {
             Set<String> onlyOnDispatchCallers = new HashSet<>(onDispatchCallers);
             onlyOnDispatchCallers.removeAll(offDispatchCallers);
             System.err.println("");
-            System.out.println("");
-            System.out.println("BEGIN printOnlyOnDispatchCallers");
-            System.out.println("");
+            println("");
+            println("BEGIN printOnlyOnDispatchCallers");
+            println("");
             for (String caller : onlyOnDispatchCallers) {
-                System.out.println("\tat " + caller);
+                println("\tat " + caller);
             }
-            System.out.println("");
-            System.out.println("END printOnlyOnDispatchCallers");
-            System.out.println("");
+            println("");
+            println("END printOnlyOnDispatchCallers");
+            println("");
             System.err.println("");
         }
     }
@@ -1033,7 +1035,7 @@ public class Utils {
                 runningTimeHours,
                 runningTimeMinutes,
                 runningTimeSeconds)
-                + " (" + runningTimeSecondsTotal + " Total Seconds)";
+                + " (" + runningTimeSecondsTotal + " s)";
     }
 
     /**

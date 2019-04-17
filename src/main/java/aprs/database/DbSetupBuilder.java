@@ -24,6 +24,7 @@ package aprs.database;
 
 import aprs.misc.Utils;
 import aprs.database.vision.VisionToDBJPanel;
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.ui.XFuture;
 import java.io.BufferedReader;
 import java.io.File;
@@ -669,7 +670,7 @@ public class DbSetupBuilder {
             throw new IllegalArgumentException("setup == null");
         }
         try {
-            System.out.println("Saving " + propertiesFile.getCanonicalPath());
+            println("Saving " + propertiesFile.getCanonicalPath());
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -763,10 +764,10 @@ public class DbSetupBuilder {
             switch (dbtype) {
                 case MYSQL:
                     Class<?> mysqlDriverClass = Class.forName("com.mysql.jdbc.Driver");
-                    System.out.println("driverClass = " + mysqlDriverClass);
+                    println("driverClass = " + mysqlDriverClass);
                     String mysql_url = "jdbc:mysql://" + host + ":" + port + "/" + db;
                     if (debug) {
-                        System.out.println("Connection url = " + mysql_url);
+                        println("Connection url = " + mysql_url);
                     }
                     if (loginTimeout > 0) {
                         DriverManager.setLoginTimeout(loginTimeout);
@@ -777,7 +778,7 @@ public class DbSetupBuilder {
                     @SuppressWarnings("unused") Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
                     try {
                         neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                        //System.out.println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
+                        //println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
                     } catch (ClassNotFoundException ex) {
                         LOGGER.log(Level.SEVERE, "", ex);
                     }

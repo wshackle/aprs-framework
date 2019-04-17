@@ -23,7 +23,7 @@
 package aprs.database;
 
 import aprs.system.AprsSystem;
-import aprs.database.vision.UpdateResults;
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
@@ -409,7 +409,7 @@ public class QuerySet implements QuerySetInterface {
         setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
 
         try (ResultSet rs = getAllPartsInKtStatement.executeQuery()) {
@@ -417,7 +417,7 @@ public class QuerySet implements QuerySetInterface {
             while (rs.next()) {
                 //c++;
                 String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
-                //System.out.println("nameCheckString = " + nameCheckString);
+                //println("nameCheckString = " + nameCheckString);
                 if (null != nameCheckString) {
                     partsInKtList.add(nameCheckString);
                 }
@@ -437,7 +437,7 @@ public class QuerySet implements QuerySetInterface {
         String simQuery = createExpectedQueryString(getAllPartsInPtQueryInfo, map);
 
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
 
         try (ResultSet rs = getAllPartsInPtStatement.executeQuery()) {
@@ -445,7 +445,7 @@ public class QuerySet implements QuerySetInterface {
             while (rs.next()) {
                 //c++;
                 String nameCheckString = getAllPartsInPtQueryResultString(rs, DbParamTypeEnum.NAME);
-                //System.out.println("nameCheckString = " + nameCheckString);
+                //println("nameCheckString = " + nameCheckString);
                 if (null != nameCheckString) {
                     partsInPtList.add(nameCheckString);
                 }
@@ -464,7 +464,7 @@ public class QuerySet implements QuerySetInterface {
         setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getCountQueryInfo, map);
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
 
         try (ResultSet rs = getPartDesignPartCountStatement.executeQuery()) {
@@ -490,7 +490,7 @@ public class QuerySet implements QuerySetInterface {
         String simQuery = createExpectedQueryString(getPartsTraysQueryInfo, map);
 
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
 
         try (ResultSet rs = getPartsTraysStatement.executeQuery()) {
@@ -498,25 +498,25 @@ public class QuerySet implements QuerySetInterface {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                     if (debug) {
-                        System.out.println("j = " + j);
+                        println("j = " + j);
                     }
                     String cname = meta.getColumnName(j);
                     if (debug) {
-                        System.out.println("cname = " + cname);
+                        println("cname = " + cname);
                     }
                     String type = meta.getColumnTypeName(j);
                     if (debug) {
-                        System.out.println("type = " + type);
+                        println("type = " + type);
                     }
                     Object o = rs.getObject(j);
                     if (debug) {
-                        System.out.println("o = " + o);
+                        println("o = " + o);
                     }
                 }
 
                 String partsTrayName = getPartsTraysQueryResultString(rs, DbParamTypeEnum.NAME);
                 if (debug) {
-                    System.out.println("partsTrayName = " + partsTrayName);
+                    println("partsTrayName = " + partsTrayName);
                 }
                 if (null == partsTrayName) {
                     throw new IllegalStateException("result is missing name for query :" + simQuery);
@@ -526,7 +526,7 @@ public class QuerySet implements QuerySetInterface {
                 int id = getQueryResultInt(rs, getPartsTraysQueryInfo, DbParamTypeEnum.NODE_ID);
                 partstray.setNodeID(id);
                 if (debug) {
-                    System.out.println("id = " + id);
+                    println("id = " + id);
                 }
                 //-- getting design
                 String design = getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_DESIGN_NAME);
@@ -535,7 +535,7 @@ public class QuerySet implements QuerySetInterface {
                 }
                 partstray.setPartsTrayDesign(design);
                 if (debug) {
-                    System.out.println("design = " + design);
+                    println("design = " + design);
                 }
 
                 String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
@@ -544,7 +544,7 @@ public class QuerySet implements QuerySetInterface {
                 }
                 partstray.setPartsTraySku(sku);
                 if (debug) {
-                    System.out.println("sku = " + sku);
+                    println("sku = " + sku);
                 }
                 //-- gettig complete
                 String complete = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_COMPLETE));
@@ -554,9 +554,9 @@ public class QuerySet implements QuerySetInterface {
                 partstray.setPartsTrayComplete(Boolean.valueOf(complete));
 //                if (debug) {
 //                    if (partstray.getPartsTrayComplete()) {
-//                        System.out.println("complete = true");
+//                        println("complete = true");
 //                    } else {
-//                        System.out.println("complete = false");
+//                        println("complete = false");
 //                    }
 //                }
                 //-- get a list of slots for this parts tray
@@ -582,7 +582,7 @@ public class QuerySet implements QuerySetInterface {
         String simQuery = createExpectedQueryString(getSlotsQueryInfo, map);
 
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
 
         try (ResultSet rs = getSlotsStatement.executeQuery()) {
@@ -590,26 +590,26 @@ public class QuerySet implements QuerySetInterface {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                     if (debug) {
-                        System.out.println("j = " + j);
+                        println("j = " + j);
                     }
                     String cname = meta.getColumnName(j);
                     if (debug) {
-                        System.out.println("cname = " + cname);
+                        println("cname = " + cname);
                     }
                     String type = meta.getColumnTypeName(j);
                     if (debug) {
-                        System.out.println("type = " + type);
+                        println("type = " + type);
                     }
                     Object o = rs.getObject(j);
                     if (debug) {
-                        System.out.println("o = " + o);
+                        println("o = " + o);
                     }
                 }
 
                 //-- slot name
                 String SlotName = getSlotsQueryResultString(rs, DbParamTypeEnum.NAME);
                 if (debug) {
-                    System.out.println("SlotName = " + SlotName);
+                    println("SlotName = " + SlotName);
                 }
                 if (null == SlotName) {
                     throw new IllegalStateException("result is missing slotName for query :" + simQuery);
@@ -621,7 +621,7 @@ public class QuerySet implements QuerySetInterface {
                 int slotInt = Integer.parseInt(slot_id);
                 slot.setID(slotInt);
                 if (debug) {
-                    System.out.println("slot_id = " + slot_id);
+                    println("slot_id = " + slot_id);
                 }
 
                 //-- is slot occupied?
@@ -629,15 +629,15 @@ public class QuerySet implements QuerySetInterface {
                 slot.setSlotOccupied(Boolean.valueOf(occupied));
                 if (debug) {
                     if (slot.getSlotOccupied()) {
-                        System.out.println("occupied = true");
+                        println("occupied = true");
                     } else {
-                        System.out.println("occupied = false");
+                        println("occupied = false");
                     }
                 }
                 //-- part sku that goes in this slot
                 String partSku = getSlotsQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
                 if (debug) {
-                    System.out.println("partSku = " + partSku);
+                    println("partSku = " + partSku);
                 }
                 if (null == partSku) {
                     Logger.getLogger(QuerySet.class.getName()).log(Level.WARNING, "no partSKU in results for SlotName={0}", SlotName);
@@ -649,7 +649,7 @@ public class QuerySet implements QuerySetInterface {
                 String xString = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.X));
                 double xDouble = Double.parseDouble(xString);
                 if (debug) {
-                    System.out.println("xString = " + xDouble);
+                    println("xString = " + xDouble);
                 }
                 slot.setX_OFFSET(xDouble);
 
@@ -657,7 +657,7 @@ public class QuerySet implements QuerySetInterface {
                 String yString = trimQuotes(getSlotsQueryResultString(rs, DbParamTypeEnum.Y));
                 double yDouble = Double.parseDouble(yString);
                 if (debug) {
-                    System.out.println("yString = " + yDouble);
+                    println("yString = " + yDouble);
                 }
                 slot.setY_OFFSET(yDouble);
 
@@ -693,35 +693,35 @@ public class QuerySet implements QuerySetInterface {
 
         String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
         if (debug) {
-            System.out.println("Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-            System.out.println("simQuery = \"\n" + simQuery + "\n\"\n");
+            println("Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+            println("simQuery = \"\n" + simQuery + "\n\"\n");
             String connectionUrl = dbConnection.getMetaData().getURL();
-            System.out.println("connectionUrl = " + connectionUrl);
-            System.out.println("");
+            println("connectionUrl = " + connectionUrl);
+            println("");
         }
         try (ResultSet rs = getPoseStatement.executeQuery()) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                     if (debug) {
-                        System.out.println("j = " + j);
+                        println("j = " + j);
                     }
                     String cname = meta.getColumnName(j);
                     if (debug) {
-                        System.out.println("cname = " + cname);
+                        println("cname = " + cname);
                     }
                     String type = meta.getColumnTypeName(j);
                     if (debug) {
-                        System.out.println("type = " + type);
+                        println("type = " + type);
                     }
                     Object o = rs.getObject(j);
                     if (debug) {
-                        System.out.println("o = " + o);
+                        println("o = " + o);
                     }
                 }
                 String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
                 if (debug) {
-                    System.out.println("nameCheckString = " + nameCheckString);
+                    println("nameCheckString = " + nameCheckString);
                 }
                 assert (null != nameCheckString) : "nameCheckString == null : @AssumeAssertion(nullness)";
                 assert (nameCheckString.equals(name)) :
@@ -729,20 +729,20 @@ public class QuerySet implements QuerySetInterface {
 
                 String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
                 if (debug) {
-                    System.out.println("xString = " + xString);
+                    println("xString = " + xString);
                 }
                 PointType point = new PointType();
                 double x = Double.parseDouble(xString);
                 point.setX(x);
                 String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
                 if (debug) {
-                    System.out.println("yString = " + yString);
+                    println("yString = " + yString);
                 }
                 double y = Double.parseDouble(yString);
                 point.setY(y);
                 String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
                 if (debug) {
-                    System.out.println("zString = " + zString);
+                    println("zString = " + zString);
                 }
                 if (null != zString) {
                     double z = Double.parseDouble(zString);
@@ -754,19 +754,19 @@ public class QuerySet implements QuerySetInterface {
                 VectorType xAxis = new VectorType();
                 String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
                 if (debug) {
-                    System.out.println("vxiString = " + vxiString);
+                    println("vxiString = " + vxiString);
                 }
                 double vxi = Double.parseDouble(vxiString);
                 xAxis.setI(vxi);
                 String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
                 if (debug) {
-                    System.out.println("vxjString = " + vxjString);
+                    println("vxjString = " + vxjString);
                 }
                 double vxj = Double.parseDouble(vxjString);
                 xAxis.setJ(vxj);
                 String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
                 if (debug) {
-                    System.out.println("vxkString = " + vxkString);
+                    println("vxkString = " + vxkString);
                 }
                 double vxk = Double.parseDouble(vxkString);
                 xAxis.setK(vxk);
@@ -774,19 +774,19 @@ public class QuerySet implements QuerySetInterface {
                 VectorType zAxis = new VectorType();
                 String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
                 if (debug) {
-                    System.out.println("vziString = " + vziString);
+                    println("vziString = " + vziString);
                 }
                 double vzi = Double.parseDouble(vziString);
                 zAxis.setI(vzi);
                 String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
                 if (debug) {
-                    System.out.println("vziString = " + vzjString);
+                    println("vziString = " + vzjString);
                 }
                 double vzj = Double.parseDouble(vzjString);
                 zAxis.setJ(vzj);
                 String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
                 if (debug) {
-                    System.out.println("vzkString = " + vzkString);
+                    println("vzkString = " + vzkString);
                 }
                 double vzk = Double.parseDouble(vzkString);
                 zAxis.setK(vzk);
@@ -797,7 +797,7 @@ public class QuerySet implements QuerySetInterface {
                     visionCycle = Integer.parseInt(visionCycleString);
                 }
                 if (debug) {
-                    System.out.println("visionCycleString = " + visionCycleString);
+                    println("visionCycleString = " + visionCycleString);
                 }
                 String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
                 int maxVisionCycle = -1;
@@ -805,15 +805,15 @@ public class QuerySet implements QuerySetInterface {
                     maxVisionCycle = Integer.parseInt(maxVisionCycleString);
                 }
                 if (debug) {
-                    System.out.println("maxVisionCycleString = " + maxVisionCycleString);
+                    println("maxVisionCycleString = " + maxVisionCycleString);
                 }
 
                 if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
 //                    printDebugUpdateResultsMap(name);
                     if (debug) {
-                        System.out.println("returning null from getPose because (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold)  where maxVisionCycle=" + maxVisionCycle + ",visionCycle=" + visionCycle + ",visionCycleNewDiffThreshold=" + visionCycleNewDiffThreshold);
-                        System.out.println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-                        System.out.println("");
+                        println("returning null from getPose because (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold)  where maxVisionCycle=" + maxVisionCycle + ",visionCycle=" + visionCycle + ",visionCycleNewDiffThreshold=" + visionCycleNewDiffThreshold);
+                        println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+                        println("");
                         Thread.dumpStack();
                     }
                     return null;
@@ -822,17 +822,17 @@ public class QuerySet implements QuerySetInterface {
                 throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
             }
             if (debug) {
-                System.out.println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-                System.out.println("");
+                println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+                println("");
             }
 //            if (rs.next()) {
 //                String nameCheckString = rs.getString(1);
-//                System.out.println("nameCheckString = " + nameCheckString);
+//                println("nameCheckString = " + nameCheckString);
 //                int count =1;
 //                while(rs.next()) {
-//                    System.out.println("rs.getString(1) = " + rs.getString(1));
+//                    println("rs.getString(1) = " + rs.getString(1));
 //                    count++;
-//                    System.out.println("count = " + count);
+//                    println("count = " + count);
 //                }
 //                throw new IllegalStateException("More than one result for name=" + name);
 //            }
@@ -844,14 +844,14 @@ public class QuerySet implements QuerySetInterface {
 //        if (null != aprsSystemInterface) {
 //            Map<String, UpdateResults> updateMap = aprsSystemInterface.getDbUpdatesResultMap();
 //            UpdateResults ur = updateMap.get(name);
-//            System.out.println("ur = " + ur);
-//            System.out.println("updateMap = " + updateMap);
+//            println("ur = " + ur);
+//            println("updateMap = " + updateMap);
 //            for (Map.Entry<String, UpdateResults> entry : updateMap.entrySet()) {
 //                PhysicalItem item = entry.getValue().getLastDetectedItem();
 //                if (null != item) {
-//                    System.out.println(entry.getKey() + "\t" + item.getVisioncycle());
+//                    println(entry.getKey() + "\t" + item.getVisioncycle());
 //                } else {
-//                    System.out.println(entry.getKey() + "\tnull");
+//                    println(entry.getKey() + "\tnull");
 //                }
 //            }
 //        }
@@ -866,51 +866,51 @@ public class QuerySet implements QuerySetInterface {
         List<PhysicalItem> ret = new ArrayList<>();
         String simQuery = createExpectedQueryString(getAllNewPoseQueryInfo, map);
         if (debug) {
-            System.out.println("simQuery = " + simQuery);
+            println("simQuery = " + simQuery);
         }
         try (ResultSet rs = getPoseStatement.executeQuery()) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
                     if (debug) {
-                        System.out.println("j = " + j);
+                        println("j = " + j);
                     }
                     String cname = meta.getColumnName(j);
                     if (debug) {
-                        System.out.println("cname = " + cname);
+                        println("cname = " + cname);
                     }
                     String type = meta.getColumnTypeName(j);
                     if (debug) {
-                        System.out.println("type = " + type);
+                        println("type = " + type);
                     }
                     Object o = rs.getObject(j);
                     if (debug) {
-                        System.out.println("o = " + o);
+                        println("o = " + o);
                     }
                 }
                 String name = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
                 if (debug) {
-                    System.out.println("nameCheckString = " + name);
+                    println("nameCheckString = " + name);
                 }
                 if (name == null) {
                     throw new IllegalStateException("Query result has null name");
                 }
                 String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
                 if (debug) {
-                    System.out.println("xString = " + xString);
+                    println("xString = " + xString);
                 }
                 PointType point = new PointType();
                 double x = Double.parseDouble(xString);
                 point.setX(x);
                 String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
                 if (debug) {
-                    System.out.println("yString = " + yString);
+                    println("yString = " + yString);
                 }
                 double y = Double.parseDouble(yString);
                 point.setY(y);
                 String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
                 if (debug) {
-                    System.out.println("zString = " + zString);
+                    println("zString = " + zString);
                 }
                 if (null != zString) {
                     double z = Double.parseDouble(zString);
@@ -922,19 +922,19 @@ public class QuerySet implements QuerySetInterface {
                 VectorType xAxis = new VectorType();
                 String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
                 if (debug) {
-                    System.out.println("vxiString = " + vxiString);
+                    println("vxiString = " + vxiString);
                 }
                 double vxi = Double.parseDouble(vxiString);
                 xAxis.setI(vxi);
                 String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
                 if (debug) {
-                    System.out.println("vxjString = " + vxjString);
+                    println("vxjString = " + vxjString);
                 }
                 double vxj = Double.parseDouble(vxjString);
                 xAxis.setJ(vxj);
                 String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
                 if (debug) {
-                    System.out.println("vxkString = " + vxkString);
+                    println("vxkString = " + vxkString);
                 }
                 double vxk = Double.parseDouble(vxkString);
                 xAxis.setK(vxk);
@@ -942,19 +942,19 @@ public class QuerySet implements QuerySetInterface {
                 VectorType zAxis = new VectorType();
                 String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
                 if (debug) {
-                    System.out.println("vziString = " + vziString);
+                    println("vziString = " + vziString);
                 }
                 double vzi = Double.parseDouble(vziString);
                 zAxis.setI(vzi);
                 String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
                 if (debug) {
-                    System.out.println("vziString = " + vzjString);
+                    println("vziString = " + vzjString);
                 }
                 double vzj = Double.parseDouble(vzjString);
                 zAxis.setJ(vzj);
                 String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
                 if (debug) {
-                    System.out.println("vzkString = " + vzkString);
+                    println("vzkString = " + vzkString);
                 }
                 double vzk = Double.parseDouble(vzkString);
                 zAxis.setK(vzk);
@@ -965,7 +965,7 @@ public class QuerySet implements QuerySetInterface {
                     visionCycle = Integer.parseInt(visionCycleString);
                 }
                 if (debug) {
-                    System.out.println("visionCycleString = " + visionCycleString);
+                    println("visionCycleString = " + visionCycleString);
                 }
                 String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
                 int maxVisionCycle = -1;
@@ -973,7 +973,7 @@ public class QuerySet implements QuerySetInterface {
                     maxVisionCycle = Integer.parseInt(maxVisionCycleString);
                 }
                 if (debug) {
-                    System.out.println("maxVisionCycleString = " + maxVisionCycleString);
+                    println("maxVisionCycleString = " + maxVisionCycleString);
                 }
                 if (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
                     return Collections.emptyList();
@@ -985,12 +985,12 @@ public class QuerySet implements QuerySetInterface {
             }
 //            if (rs.next()) {
 //                String nameCheckString = rs.getString(1);
-//                System.out.println("nameCheckString = " + nameCheckString);
+//                println("nameCheckString = " + nameCheckString);
 //                int count =1;
 //                while(rs.next()) {
-//                    System.out.println("rs.getString(1) = " + rs.getString(1));
+//                    println("rs.getString(1) = " + rs.getString(1));
 //                    count++;
-//                    System.out.println("count = " + count);
+//                    println("count = " + count);
 //                }
 //                throw new IllegalStateException("More than one result for name=" + name);
 //            }
@@ -1084,12 +1084,12 @@ public class QuerySet implements QuerySetInterface {
         setPoseQueryDoubleParam(DbParamTypeEnum.VZK, zAxis.getK(), map);
         String simQuery = createExpectedQueryString(setQueryInfo, map);
         if (debug) {
-            System.out.println("setPose(" + name + "," + pose + "): simQuery = " + simQuery);
+            println("setPose(" + name + "," + pose + "): simQuery = " + simQuery);
         }
 
         int update_count = setPoseStatement.executeUpdate();
         if (debug) {
-            System.out.println("update_count = " + update_count);
+            println("update_count = " + update_count);
         }
     }
 }

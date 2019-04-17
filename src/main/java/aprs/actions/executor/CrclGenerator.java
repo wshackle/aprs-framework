@@ -49,6 +49,7 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.ActuateJointType;
 import crcl.base.ActuateJointsType;
 import crcl.base.AngleUnitEnumType;
@@ -1423,8 +1424,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (null != gParamsActions
                         && !gParamsActions.isEmpty()
                         && startingIndex < gparamsActionsSize) {
-                    System.out.println("startingIndex = " + startingIndex);
-                    System.out.println("gparamsActionsSize = " + gparamsActionsSize);
+                    println("startingIndex = " + startingIndex);
+                    println("gparamsActionsSize = " + gparamsActionsSize);
                     final List<Action> subList = gParamsActions.subList(startingIndex, gparamsActionsSize);
                     sublistString = "gparams.actions.subList(gparams.startingIndex, gparams.actions.size())=" + subList;
                 } else {
@@ -2423,10 +2424,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         int solveCount = solverRunCount.incrementAndGet();
         int gfzc = generateFromZeroCount.get();
         if (lastgfzc == gfzc) {
-            System.out.println("solveCount = " + solveCount);
-            System.out.println("generateFromZeroCount.get() = " + gfzc);
-            System.out.println("lastgfzc = " + lastgfzc);
-            System.out.println("generateSinceZeroCount.get() = " + generateSinceZeroCount.get());
+            println("solveCount = " + solveCount);
+            println("generateFromZeroCount.get() = " + gfzc);
+            println("lastgfzc = " + lastgfzc);
+            println("generateSinceZeroCount.get() = " + generateSinceZeroCount.get());
         }
         lastgfzc = gfzc;
         try {
@@ -2445,10 +2446,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     outputRequiredActions.add(opActI);
                 }
             }
-            System.out.println("inputRequiredCount = " + inputRequiredCount);
-            System.out.println("inputRequiredActions = " + inputRequiredActions);
-            System.out.println("outputRequiredCount = " + outputRequiredCount);
-            System.out.println("outputRequiredActions = " + outputRequiredActions);
+            println("inputRequiredCount = " + inputRequiredCount);
+            println("inputRequiredActions = " + inputRequiredActions);
+            println("outputRequiredCount = " + outputRequiredCount);
+            println("outputRequiredActions = " + outputRequiredActions);
             HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
             assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
             double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
@@ -3385,7 +3386,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
                 System.err.println("items = " + items);
                 System.err.println("kitNameItemListMap = " + kitNameItemListMap);
-                System.out.println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
+                println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + items.size();
                 try {
                     takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
@@ -3919,7 +3920,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             String kitImage = kitInspectionJInternalFrame.getKitImage();
             String kitStatusImage = kitinspectionImageKitPath + "/" + kitImage + ".png";
             logDebug("kitStatusImage " + kitStatusImage);
-            Utils.runOnDispatchThread(() -> setKitStatusIcon(kitStatusImage));
+            aprsSystem.runOnDispatchThread(() -> setKitStatusIcon(kitStatusImage));
         }
     }
 
@@ -3938,7 +3939,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != kitInspectionJInternalFrame) {
             final KitInspectionJInternalFrame kitFrame = kitInspectionJInternalFrame;
             if (null != kitFrame) {
-                Utils.runOnDispatchThread(() -> {
+                aprsSystem.runOnDispatchThread(() -> {
                     try {
                         kitInspectionJInternalFrame.getKitTitleLabel().setText(text);
                     } catch (Exception ex) {
@@ -3952,7 +3953,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @SuppressWarnings("nullness")
     private void addToInspectionResultJTextPane(String text) {
         if (null != kitInspectionJInternalFrame) {
-            Utils.runOnDispatchThread(() -> {
+            aprsSystem.runOnDispatchThread(() -> {
                 try {
                     kitInspectionJInternalFrame.addToInspectionResultJTextPane(text);
                 } catch (BadLocationException ex) {
@@ -4582,7 +4583,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String partName = action.getArgs()[takePartArgIndex];
 
         if (null != kitInspectionJInternalFrame) {
-            Utils.runOnDispatchThread(() -> updateKitImageLabel("init", "Building kit"));
+            aprsSystem.runOnDispatchThread(() -> updateKitImageLabel("init", "Building kit"));
         }
 
         takePartByName(partName, nextPlacePartAction, out);
@@ -5695,9 +5696,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             System.err.println("message=" + message);
             boolean recheckPose = checkPose(pose);
-            System.out.println("recheckPose = " + recheckPose);
+            println("recheckPose = " + recheckPose);
             boolean recheckPose2 = checkPose(pose);
-            System.out.println("recheckPose2 = " + recheckPose2);
+            println("recheckPose2 = " + recheckPose2);
             throw new RuntimeException("invalid pose passed to addMoveTo :" + CRCLPosemath.poseToString(pose));
         }
         moveCmd.setEndPosition(pose);
@@ -6497,13 +6498,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         for (Entry<String, String> contentsEntry : getExpectedToolHolderContentsMap().entrySet()) {
             String toolInHolder = contentsEntry.getValue();
             if (!isEmptyTool(toolInHolder)) {
-                System.out.println("toolInHolder = " + toolInHolder + " is not empty");
+                println("toolInHolder = " + toolInHolder + " is not empty");
                 continue;
             }
             String toolHolderNameToCheck = contentsEntry.getKey();
             Set<String> possibleTools = getPossibleToolHolderContents(toolHolderNameToCheck);
             if (!possibleTools.contains(toolInRobot)) {
-                System.out.println("toolInRobot = " + toolInRobot + " can not be added to holder " + toolHolderNameToCheck + ", possibleTools=" + possibleTools);
+                println("toolInRobot = " + toolInRobot + " can not be added to holder " + toolHolderNameToCheck + ", possibleTools=" + possibleTools);
                 continue;
             }
             toolHolderName = toolHolderNameToCheck;
@@ -6549,12 +6550,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             String toolInHolder = contentsEntry.getValue();
             String toolHolderNameToCheck = contentsEntry.getKey();
             if (isEmptyTool(toolInHolder)) {
-                System.out.println("toolInHolder = " + toolInHolder + "for " + toolHolderNameToCheck + " is empty");
+                println("toolInHolder = " + toolInHolder + "for " + toolHolderNameToCheck + " is empty");
                 continue;
             }
 
             if (!Objects.equals(toolInHolder, desiredToolName)) {
-                System.out.println("toolInHolder = " + toolInHolder + " for " + toolHolderNameToCheck + " does not equal desiredToolName=" + desiredToolName);
+                println("toolInHolder = " + toolInHolder + " for " + toolHolderNameToCheck + " does not equal desiredToolName=" + desiredToolName);
                 continue;
             }
             toolHolderName = toolHolderNameToCheck;
@@ -6771,9 +6772,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     int visClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
                     System.err.println("visClientUpdateSingleUpdateListenersEmptyCount = " + visClientUpdateSingleUpdateListenersEmptyCount);
                     int visClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
-                    System.out.println("visClientIgnoreCount = " + visClientIgnoreCount);
+                    println("visClientIgnoreCount = " + visClientIgnoreCount);
                     int visClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
-                    System.out.println("visClientSkippedCount = " + visClientSkippedCount);
+                    println("visClientSkippedCount = " + visClientSkippedCount);
 
                     System.err.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
                     String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
@@ -7182,10 +7183,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     + "toolOffsetPose=" + CRCLPosemath.poseToXyzRpyString(toolOffsetPose) + "\n"
                     + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n"
             );
-            System.out.println("pose=" + CRCLPosemath.poseToXyzRpyString(pose) + "\n"
+            println("pose=" + CRCLPosemath.poseToXyzRpyString(pose) + "\n"
                     + "toolOffsetPose=" + CRCLPosemath.poseToXyzRpyString(toolOffsetPose) + "\n"
                     + "poseWithToolOffset=" + CRCLPosemath.poseToXyzRpyString(poseWithToolOffset) + "\n");
-            System.out.println("pose=" + CRCLPosemath.poseToString(pose) + "\n"
+            println("pose=" + CRCLPosemath.poseToString(pose) + "\n"
                     + "toolOffsetPose=" + CRCLPosemath.poseToString(toolOffsetPose) + "\n"
                     + "poseWithToolOffset=" + CRCLPosemath.poseToString(poseWithToolOffset) + "\n");
         }

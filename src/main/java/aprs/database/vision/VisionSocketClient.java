@@ -24,6 +24,7 @@ package aprs.database.vision;
 
 import aprs.database.PhysicalItem;
 import aprs.database.SocketLineReader;
+import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PoseType;
 import crcl.ui.XFutureVoid;
 import java.io.IOException;
@@ -298,7 +299,7 @@ public class VisionSocketClient implements AutoCloseable {
                         return;
                     }
                     incrementLineCount();
-//                    System.out.println("line = " + line+", parsing_line="+parsing_line);
+//                    println("line = " + line+", parsing_line="+parsing_line);
                     if (null == parsing_line) {
                         parsing_line = line;
                         if (execSrv == null) {
@@ -310,7 +311,7 @@ public class VisionSocketClient implements AutoCloseable {
                             public void run() {
                                 String origName = Thread.currentThread().getName();
                                 Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
-                                //System.out.println("visioncycle="+visioncycle);
+                                //println("visioncycle="+visioncycle);
                                 parseVisionLine(line);
                                 if (null != lastSkippedLine) {
                                     String skippedLine = lastSkippedLine;
@@ -465,7 +466,7 @@ public class VisionSocketClient implements AutoCloseable {
                 String type = fa[i + 5].trim();
                 PhysicalItem ci = PhysicalItem.newPhysicalItemNameRotXYScoreType(name, rot, x, y, score, type);
                 ci.setVisioncycle(cur_visioncycle);
-                //System.out.println("VisionSocketClient visioncycle-----> "+visioncycle);
+                //println("VisionSocketClient visioncycle-----> "+visioncycle);
                 if (fa[i + 4].length() > 0) {
                     ci.setScore(Double.parseDouble(fa[i + 4]));
                 }
@@ -634,9 +635,9 @@ public class VisionSocketClient implements AutoCloseable {
             if (debug) {
                 long t1 = System.nanoTime();
                 long time_diff = t1 - t0;
-                System.out.println("line = " + line);
-                System.out.println("visionList = " + visionList);
-                System.out.println("lineCount =" + lineCount);
+                println("line = " + line);
+                println("visionList = " + visionList);
+                println("lineCount =" + lineCount);
                 System.out.printf("parseVisionLine time_diff = %.3f\n", (time_diff * 1e-9));
             }
         } catch (Exception ex) {

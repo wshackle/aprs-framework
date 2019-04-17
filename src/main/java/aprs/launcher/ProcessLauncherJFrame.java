@@ -24,6 +24,7 @@ package aprs.launcher;
 
 import aprs.misc.Utils;
 import aprs.misc.AprsCommonLogger;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
 import crcl.ui.XFutureVoid;
 import java.io.File;
@@ -156,27 +157,27 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         Neo4JKiller.setDebug(jCheckBoxMenuItemDebug.isSelected());
         int timeoutMillis = launchFileRunner.getTimeoutMillis();
         long timeoutStart = launchFileRunner.getTimeoutStart();
-        System.out.println("timeoutMillis = " + timeoutMillis);
+        println("timeoutMillis = " + timeoutMillis);
         if (timeoutMillis > 0) {
-            System.out.println("timeoutStart = " + timeoutStart);
+            println("timeoutStart = " + timeoutStart);
             long t = System.currentTimeMillis();
             long timeleft = timeoutMillis - (t - timeoutStart);
-            System.out.println("timeleft = " + timeleft);
+            println("timeleft = " + timeleft);
         }
         List<WrappedProcess> processes = getProcesses();
-        System.out.println("processes.size() = " + processes.size());
+        println("processes.size() = " + processes.size());
         for (WrappedProcess proc : processes) {
-            System.out.println("");
+            println("");
             proc.printInfo(System.out);
-            System.out.println("");
+            println("");
         }
         List<LineConsumer> lineConsumers = getLineConsumers();
-        System.out.println("lineConsumers.size() = " + lineConsumers.size());
+        println("lineConsumers.size() = " + lineConsumers.size());
         for (LineConsumer lc : lineConsumers) {
-            System.out.println("lc.isFinished() = " + lc.isFinished());
+            println("lc.isFinished() = " + lc.isFinished());
         }
-        System.out.println("lastRunFuture = " + lastRunFuture);
-        System.out.println("lastRunFile = " + lastRunFile);
+        println("lastRunFuture = " + lastRunFuture);
+        println("lastRunFile = " + lastRunFile);
         if(null != lastRunFuture) {
             lastRunFuture.printStatus();
         }
@@ -264,8 +265,8 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 //        private final List<LineConsumer> lineConsumers;
 //
 //        private void notifiyLineConsumers(String line) {
-////            System.out.println("line = " + line);
-////            System.out.println("lineConsumers = " + lineConsumers);
+////            println("line = " + line);
+////            println("lineConsumers = " + lineConsumers);
 //            for (int i = 0; i < lineConsumers.size(); i++) {
 //                LineConsumer consumer = lineConsumers.get(i);
 //                if (consumer.isFinished()) {

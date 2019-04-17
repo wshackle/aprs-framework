@@ -23,6 +23,7 @@
 package aprs.launcher;
 
 import aprs.logdisplay.LogDisplayJPanel;
+import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
@@ -177,7 +178,7 @@ public class LaunchFileRunner {
     private void completeTimeoutFuture(XFutureVoid future, long timeOutStart) {
         long curTime = System.currentTimeMillis();
         long diff = curTime - timeOutStart;
-        System.out.println("LaunchFileRunner: Completing  " + future + " after " + diff + " ms");
+        println("LaunchFileRunner: Completing  " + future + " after " + diff + " ms");
         future.complete();
     }
 
@@ -214,7 +215,7 @@ public class LaunchFileRunner {
                         .thenRun("afterTimeout:line=" + line, () -> {
                             if (!ignoreTimeout.get()) {
                                 String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
-                                System.out.println(timeoutMsg);
+                                println(timeoutMsg);
                                 if (!GraphicsEnvironment.isHeadless()) {
                                     MultiLineStringJPanel.showText(timeoutMsg);
                                 }
@@ -561,8 +562,8 @@ public class LaunchFileRunner {
         }
 
         if (debug) {
-            System.out.println("line = " + line);
-            System.out.println("ifStack.size() = " + ifStack.size());
+            println("line = " + line);
+            println("ifStack.size() = " + ifStack.size());
         }
         String currentOnFailLine = onFailLine;
         XFutureVoid currentWaitForFuture = waitForFuture;
@@ -740,7 +741,7 @@ public class LaunchFileRunner {
                 long delay = getLongFromWords("delay", words, 200);
                 ConnectWaitFor cnf = new ConnectWaitFor(host, port, max_tries, timeout, delay);
                 XFutureVoid xf = cnf.getSocketFuture().thenRun(() -> {
-                    System.out.println("Connected to " + host + ":" + port);
+                    println("Connected to " + host + ":" + port);
                 });
                 futures.add(xf);
                 waitForFuture = xf;
@@ -866,7 +867,7 @@ public class LaunchFileRunner {
             return XFutureVoid.anyOfWithName("LaunchFileRunner.timeoutOrNot", timeoutCancelledFuture, handledTimeoutFuture)
                     .thenRun("LaunchFileRunner.printComplete", () -> {
                         try {
-                            System.out.println(f.getCanonicalPath() + " complete.");
+                            println(f.getCanonicalPath() + " complete.");
                         } catch (IOException ex) {
                             Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }

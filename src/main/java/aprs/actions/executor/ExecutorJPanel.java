@@ -32,8 +32,6 @@ import aprs.cachedcomponents.CachedTextField;
 import aprs.misc.Utils;
 import aprs.misc.Utils.RunnableWithThrow;
 
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableRowHeights;
 
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
@@ -144,9 +142,6 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmException;
 import rcs.posemath.PmRpy;
 
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
 
 import java.util.Map.Entry;
 import javax.swing.JMenu;
@@ -157,17 +152,15 @@ import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
 import static aprs.actions.executor.ActionType.SWITCH_TOOL;
 
 import aprs.database.Tool;
+import static aprs.misc.AprsCommonLogger.println;
 
 import javax.swing.JRadioButtonMenuItem;
 
-import static aprs.misc.Utils.readCsvFileToTable;
-import static aprs.misc.Utils.readCsvFileToTableAndMap;
 
 import crcl.base.JointStatusesType;
 
 import java.util.HashSet;
 
-import static java.util.Objects.requireNonNull;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
@@ -177,23 +170,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.autoResizeTableRowHeights;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static aprs.misc.Utils.readCsvFileToTable;
-import static aprs.misc.Utils.readCsvFileToTableAndMap;
-import static java.util.Objects.requireNonNull;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableRowHeights;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static aprs.misc.Utils.readCsvFileToTable;
-import static aprs.misc.Utils.readCsvFileToTableAndMap;
-import static java.util.Objects.requireNonNull;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableRowHeights;
-import static aprs.misc.Utils.autoResizeTableRowHeightsOnDisplay;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -299,6 +275,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public ExecutorJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
         initComponents();
+        positionMapJPanel1.setAprsSystem(aprsSystem1);
         jCheckBoxDebug.setSelected(debug);
         progColor = jTableCrclProgram.getBackground();
         this.crclGenerator = new CrclGenerator(this);
@@ -473,7 +450,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
-            Utils.runOnDispatchThread(() -> setCurrentToolNamOnDisplay(newToolName, offsetText));
+            aprsSystem.runOnDispatchThread(() -> setCurrentToolNamOnDisplay(newToolName, offsetText));
             for (Consumer<String> listener : selectedToolNameListeners) {
                 listener.accept(newToolName);
             }
@@ -504,7 +481,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public XFutureVoid setLookForXYZ(double x, double y, double z) {
         try {
             String valueString = String.format("%.3f,%.3f,%.3f", x, y, z);
-            return Utils.runOnDispatchThread("setLookForXYZ",
+            return aprsSystem.runOnDispatchThread("setLookForXYZ",
                     () -> setOptionsTableEntry("lookForXYZ", valueString));
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -516,7 +493,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void setToolOffsetTableModelListener() {
         toolOffsetTablemModelListenerEnabled = true;
-        Utils.runOnDispatchThread(this::setToolOffsetTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::setToolOffsetTableModelListenerOnDisplay);
     }
 
     @UIEffect
@@ -531,7 +508,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void clearToolOffsetTableModelListener() {
         toolOffsetTablemModelListenerEnabled = false;
-        Utils.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
     }
 
     @UIEffect
@@ -543,12 +520,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void setTrayAttachOffsetTableModelListener() {
         trayAttachOffsetTablemModelListenerEnabled = true;
-        Utils.runOnDispatchThread(this::setTrayAttachOffsetTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::setTrayAttachOffsetTableModelListenerOnDisplay);
     }
 
     private void clearTrayAttachOffsetTableModelListener() {
         trayAttachOffsetTablemModelListenerEnabled = false;
-        Utils.runOnDispatchThread(this::clearTrayAttachOffsetTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::clearTrayAttachOffsetTableModelListenerOnDisplay);
     }
 
     @UIEffect
@@ -575,7 +552,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
                     int tc = setReverseTrueCount.incrementAndGet();
 //                    if (tc > 1) {
-//                        System.out.println("tc = " + tc);
+//                        println("tc = " + tc);
 //
 //                    }
                     setReverseFlagTrueTrace = Thread.currentThread().getStackTrace();
@@ -634,12 +611,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void setToolHolderContentsTableModelListener() {
         toolHolderContentsModelListenerEnabled = true;
-        Utils.runOnDispatchThread(this::setToolHolderContentsTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::setToolHolderContentsTableModelListenerOnDisplay);
     }
 
     private void clearToolHolderContentsTableModelListener() {
         toolHolderContentsModelListenerEnabled = false;
-        Utils.runOnDispatchThread(this::clearToolHolderContentsTableModelListenerOnDisplay);
+        aprsSystem.runOnDispatchThread(this::clearToolHolderContentsTableModelListenerOnDisplay);
     }
 
     @UIEffect
@@ -790,14 +767,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 long diff = nowMillis - lastActionMillis;
                 final double cost = diff * 1e-3;
                 final int index = actionInfo.getActionIndex();
-                Utils.runOnDispatchThread(() -> this.setCost(index, cost));
+                aprsSystem.runOnDispatchThread(() -> this.setCost(index, cost));
             }
             lastActionMillis = nowMillis;
         }
     }
 
     private void updateSelectionInterval() {
-        Utils.runOnDispatchThread(this::updateSelectionIntervalOnDisplay);
+        aprsSystem.runOnDispatchThread(this::updateSelectionIntervalOnDisplay);
     }
 
     @UIEffect
@@ -2683,17 +2660,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != filename && filename.length() > 0) {
             File f = new File(filename);
             if (!f.exists()) {
-                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                println("f.getCanonicalPath() = " + f.getCanonicalPath());
                 Utils.showMessageDialog(this, filename + " does not exist");
                 throw new IllegalStateException(filename + " does not exist");
             }
             if (!f.canRead()) {
-                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                println("f.getCanonicalPath() = " + f.getCanonicalPath());
                 Utils.showMessageDialog(this, filename + " can not be read");
                 throw new IllegalStateException(filename + " can not be read");
             }
             if (f.isDirectory()) {
-                System.out.println("f.getCanonicalPath() = " + f.getCanonicalPath());
+                println("f.getCanonicalPath() = " + f.getCanonicalPath());
                 Utils.showMessageDialog(this, filename + " is a directory");
                 throw new IllegalStateException(filename + " is a directory");
             }
@@ -2961,7 +2938,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 double worstScoreFinal = worstScore;
                 OpActionPlan bestPlanFinal = bestPlan;
                 double bestScoreFinal = bestScore;
-                Utils.runOnDispatchThread(() -> showLoadedPlanOptaPlannerOnDisplay(worstPlanFinal, worstScoreFinal, bestPlanFinal, bestScoreFinal));
+                aprsSystem.runOnDispatchThread(() -> showLoadedPlanOptaPlannerOnDisplay(worstPlanFinal, worstScoreFinal, bestPlanFinal, bestScoreFinal));
             }
         }
     }
@@ -3161,7 +3138,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return XFutureVoid.completedFuture();
         } else {
             CRCLProgramType crclProgramCopy = CRCLPosemath.copy(crclProgram);
-            return Utils.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
+            return aprsSystem.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
         }
     }
 
@@ -3452,7 +3429,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     public void setSaveProgramRunData(boolean saveProgramRunData) {
         this.saveProgramRunData = saveProgramRunData;
-        Utils.runOnDispatchThread("saveProgramRunData",
+        aprsSystem.runOnDispatchThread("saveProgramRunData",
                 () -> setOptionsTableEntry("saveProgramRunData", Boolean.toString(saveProgramRunData)));
     }
 
@@ -3495,7 +3472,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != runningProgramFuture) {
             Thread.dumpStack();
             System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
-            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
+            println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(true);
         }
     }
@@ -3552,7 +3529,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             } else {
                 currentPart = null;
             }
-            Utils.runOnDispatchThread(() -> {
+            aprsSystem.runOnDispatchThread(() -> {
                 updateSelectionIntervalOnDisplay();
                 jTablePddlOutput.scrollRectToVisible(new Rectangle(jTablePddlOutput.getCellRect(replanFromIndex, 0, true)));
                 if (replanFromIndex == 0) {
@@ -3624,13 +3601,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         customRunnablesIndex = -1;
         if (null != replanActionTimer) {
-            Utils.runOnDispatchThread(this::stopReplanActionTimer);
+            aprsSystem.runOnDispatchThread(this::stopReplanActionTimer);
         }
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != runningProgramFuture) {
             Thread.dumpStack();
             System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
-            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
+            println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
             setRunProgramFuture(null);
         }
@@ -3683,7 +3660,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void stopReplanActionTimer() {
         if (null != replanActionTimer) {
-            Utils.runOnDispatchThread(this::stopReplanActionTimerOnDisplay);
+            aprsSystem.runOnDispatchThread(this::stopReplanActionTimerOnDisplay);
         }
     }
 
@@ -3880,7 +3857,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             if (isDoingActions()) {
-                System.out.println("isDoingActionsInfo=" + isDoingActionsInfo);
+                println("isDoingActionsInfo=" + isDoingActionsInfo);
                 int confirm = JOptionPane.showConfirmDialog(this, "isDoingActionsInfo=" + isDoingActionsInfo);
                 if (confirm != JOptionPane.YES_OPTION) {
                     return;
@@ -4278,7 +4255,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != runningProgramFuture) {
             Thread.dumpStack();
             System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
-            System.out.println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
+            println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
             setRunProgramFuture(null);
         }
@@ -4334,7 +4311,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
         appendGenerateAbortLog("incSafeAbortRequestCount", actionsListSize, isReverseFlag(), replanFromIndex.get(), count, -1);
-//        Utils.runOnDispatchThread(() -> jTextFieldSafeAbortRequestCount.setText(Integer.toString(count)));
+//        aprsSystem.runOnDispatchThread(() -> jTextFieldSafeAbortRequestCount.setText(Integer.toString(count)));
     }
 
     public void debugAction() {
@@ -4687,7 +4664,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void showPaused(boolean paused) {
-        Utils.runOnDispatchThread(() -> showPausedOnDisplay(paused));
+        aprsSystem.runOnDispatchThread(() -> showPausedOnDisplay(paused));
     }
 
     @UIEffect
@@ -5378,7 +5355,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonDropToolActionPerformed
 
 //    private void syncPanelToGeneratorToolData() {
-//        Utils.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
+//        aprsSystem.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
 //    }
     @UIEffect
     private void syncPanelToGeneratorToolDataOnDisplay() {
@@ -5946,7 +5923,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFutureVoid showExceptionInProgram(final java.lang.Exception ex) {
         LOGGER.log(Level.SEVERE, "", ex);
-        return Utils.runOnDispatchThread(() -> showExceptionInProgramInternalOnDisplay(ex));
+        return aprsSystem.runOnDispatchThread(() -> showExceptionInProgramInternalOnDisplay(ex));
     }
 
     @UIEffect
@@ -6116,7 +6093,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         checkDbSupplierPublisher();
         int abortReplanFromIndex = getReplanFromIndex();
         if (abortReplanFromIndex == 0) {
-            Utils.runOnDispatchThread(this::clearOpDisplay);
+            aprsSystem.runOnDispatchThread(this::clearOpDisplay);
         }
         List<Integer> lil = new ArrayList<>();
         final int li0 = crclGenerator.getLastIndex();
@@ -6308,7 +6285,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
-            Utils.runOnDispatchThread(() -> {
+            aprsSystem.runOnDispatchThread(() -> {
                 try {
                     ((DefaultTableModel) jTableLog.getModel()).addRow(rowValues);
                     if ((jTableLog.getRowCount() % 20) < 2) {
@@ -6319,8 +6296,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             });
 
-//            System.out.println("rowValues = " + Arrays.toString(rowValues));
-//            System.out.println("generateAbortLogFile = " + generateAbortLogFile);
+//            println("rowValues = " + Arrays.toString(rowValues));
+//            println("generateAbortLogFile = " + generateAbortLogFile);
             aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));
         } catch (IOException ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -6460,7 +6437,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void updatePositionCacheTable() {
         Map<String, PoseType> map = crclGenerator.getPoseCache();
-        Utils.runOnDispatchThread(() -> updatePositionCacheTableOnDisplay(map));
+        aprsSystem.runOnDispatchThread(() -> updatePositionCacheTableOnDisplay(map));
     }
 
     private final CachedTable positionCacheCachedTable;
@@ -6595,14 +6572,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         for (PositionMap positionMap : getPositionMaps()) {
             if (null != positionMap) {
                 PointType offset = positionMap.getLastOffset();
-                System.out.println("offset = " + offset);
+                println("offset = " + offset);
                 if (null != offset) {
                     jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
                 } else {
                     jTextFieldOffset.setText("null");
                 }
                 PointType testPoint = positionMap.getLastPointOut();
-                System.out.println("testPoint = " + testPoint);
+                println("testPoint = " + testPoint);
                 if (null != testPoint) {
                     String testPoseString
                             = String.format("%.1f, %.1f, %.1f",
@@ -6614,7 +6591,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     jTextFieldAdjPose.setText("null");
                 }
                 PointType origPoint = positionMap.getLastPointIn();
-                System.out.println("origPoint = " + origPoint);
+                println("origPoint = " + origPoint);
                 if (null != origPoint) {
                     String origPoseString
                             = String.format("%.1f, %.1f, %.1f",
@@ -7035,7 +7012,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     void updateCurrentToolHolderContentsMap(String toolChangerPosName, String toolName) {
-        Utils.runOnDispatchThread(() -> updateCurrentToolHolderJTable(toolChangerPosName, toolName));
+        aprsSystem.runOnDispatchThread(() -> updateCurrentToolHolderJTable(toolChangerPosName, toolName));
     }
 
     private final ConcurrentLinkedQueue<BiConsumer<String, String>> updateToolHolderContentsListeners = new ConcurrentLinkedQueue<>();
@@ -7617,7 +7594,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             initGenerateAbortLogFile();
 
-            Utils.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
+            aprsSystem.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
         }
     }
 
@@ -7630,7 +7607,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
                 csvp.getOut(); // use it for nothing to avoid warning
             }
-            System.out.println("generateAbortLogFile = " + generateAbortLogFile);
+            println("generateAbortLogFile = " + generateAbortLogFile);
         }
     }
 
@@ -7927,7 +7904,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     && customRunnablesIndex >= 0
                     && customRunnables.size() > 0
                     && customRunnablesIndex < customRunnables.size()) {
-                Utils.runOnDispatchThread(ExecutorJPanel.this::runAllCustomRunnables);
+                aprsSystem.runOnDispatchThread(ExecutorJPanel.this::runAllCustomRunnables);
             }
         }
     };

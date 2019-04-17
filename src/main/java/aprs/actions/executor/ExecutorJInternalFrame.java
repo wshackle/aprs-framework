@@ -410,7 +410,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     public void close() {
-        Utils.runOnDispatchThread(() -> this.setVisible(false));
+        aprsSystem.runOnDispatchThread(() -> this.setVisible(false));
     }
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {

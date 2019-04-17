@@ -44,6 +44,11 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
         logDisplayJPanel1.appendText(s);
     }
 
+    @UIEffect
+    public void appendTextOnDisplay(String text) {
+        logDisplayJPanel1.appendTextOnDisplay(text);
+    }
+
     private void clearText() {
         logDisplayJPanel1.clearText();
     }

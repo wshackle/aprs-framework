@@ -11,6 +11,7 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
+import static aprs.misc.AprsCommonLogger.println;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +19,6 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
@@ -171,7 +171,7 @@ public class OpActionPlan {
         List<OpAction> origActions = new ArrayList<>(actions);
 
         if (debug) {
-            System.out.println("origActions = " + origActions);
+            println("origActions = " + origActions);
         }
         for (OpAction act : tmpActions) {
             if (act.getOpActionType() == FAKE_PICKUP || act.getOpActionType() == FAKE_DROPOFF) {
@@ -187,10 +187,10 @@ public class OpActionPlan {
             long pickupCount = theseActions.count(a -> a.getOpActionType() == PICKUP);
             long dropoffCount = theseActions.count(a -> a.getOpActionType() == DROPOFF);
             if (debug) {
-                System.out.println("partType = " + partType);
-                System.out.println("dropoffCount = " + dropoffCount);
-                System.out.println("pickupCount = " + pickupCount);
-                System.out.println("theseActions = " + theseActions);
+                println("partType = " + partType);
+                println("dropoffCount = " + dropoffCount);
+                println("pickupCount = " + pickupCount);
+                println("theseActions = " + theseActions);
             }
             if (dropoffCount < pickupCount) {
                 for (long j = dropoffCount; j < pickupCount; j++) {
@@ -244,8 +244,8 @@ public class OpActionPlan {
                         newActions.add((OpAction) nxtAction);
                         startAction = (OpAction) nxtAction;
                     } else if (debug) {
-                        System.out.println("Ending with action =" + action);
-                        System.out.println("nxtAction = " + nxtAction);
+                        println("Ending with action =" + action);
+                        println("nxtAction = " + nxtAction);
                     }
                     break;
                 }
@@ -255,8 +255,8 @@ public class OpActionPlan {
             }
         }
         if (debug) {
-            System.out.println("origActions = " + origActions);
-            System.out.println("newActions.size() = " + newActions.size());
+            println("origActions = " + origActions);
+            println("newActions.size() = " + newActions.size());
             for (int i = 0; i < newActions.size(); i++) {
                 OpAction act = newActions.get(i);
                 if (act.getNext() == null) {
@@ -265,7 +265,7 @@ public class OpActionPlan {
                 if (act.getPossibleNextActions() == null || act.getPossibleNextActions().isEmpty()) {
                     throw new IllegalStateException("action has no possibleNextAction :" + act);
                 }
-                System.out.println("i="+i+", "+act + ".getPossibleNextActions() = "
+                println("i="+i+", "+act + ".getPossibleNextActions() = "
                         + act.getPossibleNextActions()
                                 .stream()
                                 .map(OpActionInterface::getName)
@@ -274,13 +274,13 @@ public class OpActionPlan {
         }
         actions = Collections.unmodifiableList(new ArrayList<>(newActions));
         if (debug && unusedActions.size() > 0) {
-            System.out.println("unusedActions = " + unusedActions);
-            System.out.println("actions = " + actions);
+            println("unusedActions = " + unusedActions);
+            println("actions = " + actions);
         }
 
         if (debug) {
             List<OpAction> effectiveOrderedList = getEffectiveOrderedList(true);
-            System.out.println("effectiveOrderedList = " + effectiveOrderedList);
+            println("effectiveOrderedList = " + effectiveOrderedList);
         }
     }
 
