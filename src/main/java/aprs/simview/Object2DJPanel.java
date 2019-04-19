@@ -111,6 +111,46 @@ public class Object2DJPanel extends JPanel {
     private double senseMinY = Double.NaN;
     private double senseMaxY = Double.NaN;
 
+    private boolean showOnlyOverlapping = false;
+
+    /**
+     * Get the value of showOnlyOverlapping
+     *
+     * @return the value of showOnlyOverlapping
+     */
+    public boolean isShowOnlyOverlapping() {
+        return showOnlyOverlapping;
+    }
+
+    /**
+     * Set the value of showOnlyOverlapping
+     *
+     * @param showOnlyOverlapping new value of showOnlyOverlapping
+     */
+    public void setShowOnlyOverlapping(boolean showOnlyOverlapping) {
+        this.showOnlyOverlapping = showOnlyOverlapping;
+    }
+
+    private boolean showOverlapping = true;
+
+    /**
+     * Get the value of showOverlapping
+     *
+     * @return the value of showOverlapping
+     */
+    public boolean isShowOverlapping() {
+        return showOverlapping;
+    }
+
+    /**
+     * Set the value of showOverlapping
+     *
+     * @param showOverlapping new value of showOverlapping
+     */
+    public void setShowOverlapping(boolean showOverlapping) {
+        this.showOverlapping = showOverlapping;
+    }
+
     public double getSenseMinX() {
         return senseMinX;
     }
@@ -1780,7 +1820,7 @@ public class Object2DJPanel extends JPanel {
             @Nullable PhysicalItem selectedItem,
             Point2DMinMax minmaxParam,
             @Nullable ViewOptions opts) {
-        
+
         final double minX = minmaxParam.min.x;
         final double minY = minmaxParam.min.y;
         final double maxX = minmaxParam.max.x;
@@ -1788,6 +1828,12 @@ public class Object2DJPanel extends JPanel {
         try {
             if (null == itemsToPaint || itemsToPaint.isEmpty()) {
                 return;
+            }
+            Collection<? extends PhysicalItem> origItemsToPaint = itemsToPaint;
+            if(!showOverlapping) {
+                itemsToPaint = aprsSystem.filterOverLapping(itemsToPaint);
+            } else if(showOnlyOverlapping) {
+                itemsToPaint = aprsSystem.filterNonOverLapping(itemsToPaint);
             }
             AffineTransform origTransform = g2d.getTransform();
             double currentRotationOffset = this.rotationOffset;
@@ -2266,8 +2312,7 @@ public class Object2DJPanel extends JPanel {
         public String toString() {
             return "Point2DMinMax{" + "min=" + min.toString() + ", max=" + max.toString() + '}';
         }
-        
-        
+
     }
 
     @SuppressWarnings("guieffect")
@@ -2320,10 +2365,10 @@ public class Object2DJPanel extends JPanel {
                 break;
         }
         if (!Double.isFinite(scale_x) || scale_x <= 0) {
-                throw new RuntimeException("scale_x = " + scale_x+",minmax="+minmax+",w="+w+",h="+h+",displayAxis="+displayAxis);
+            throw new RuntimeException("scale_x = " + scale_x + ",minmax=" + minmax + ",w=" + w + ",h=" + h + ",displayAxis=" + displayAxis);
         }
         if (!Double.isFinite(scale_y) || scale_y <= 0) {
-                throw new RuntimeException("scale_y = " + scale_y+",minmax="+minmax+",w="+w+",h="+h+",displayAxis="+displayAxis);
+            throw new RuntimeException("scale_y = " + scale_y + ",minmax=" + minmax + ",w=" + w + ",h=" + h + ",displayAxis=" + displayAxis);
         }
         new_scale = Math.min(scale_x, scale_y);
 

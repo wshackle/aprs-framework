@@ -2031,6 +2031,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         }
                     }
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
+                    List<PhysicalItem> trays = 
+                            l.stream()
+                            .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT") )
+                            .collect(Collectors.toList());
+                    List<PhysicalItem> overlappingTrays =
+                            aprsSystem.filterNonOverLapping(trays);
+                    if(!overlappingTrays.isEmpty()) {
+                        aprsSystem.takeSimViewSnapshot("overlappingTrays", overlappingTrays);
+                        return XFutureVoid.completedFuture();
+                    }
                     if (!singleUpdateListeners.isEmpty()) {
                         notifySingleUpdateListeners(l);
                     } else {
@@ -2040,6 +2050,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
+                    List<PhysicalItem> trays = 
+                            l.stream()
+                            .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT") )
+                            .collect(Collectors.toList());
+                    List<PhysicalItem> overlappingTrays =
+                            aprsSystem.filterNonOverLapping(trays);
+                    if(!overlappingTrays.isEmpty()) {
+                        aprsSystem.takeSimViewSnapshot("overlappingTrays", overlappingTrays);
+                        return XFutureVoid.completedFuture();
+                    }
                     notifySingleUpdateListeners(l);
                     lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
                     aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
