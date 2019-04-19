@@ -496,16 +496,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return aprsSystem.submitDisplayConsumer(consumer, value);
         }
         return runOnDispatchThread(() -> {
-           consumer.accept(value);
+            consumer.accept(value);
         });
     }
-    
-     private final Consumer<List<PhysicalItem>> itemsListConsumer =
-            (List<PhysicalItem> items) -> {
+
+    private final Consumer<List<PhysicalItem>> itemsListConsumer
+            = (List<PhysicalItem> items) -> {
                 setItemsInternal(items);
                 settingItems = false;
             };
-     
+
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
         notifySetItemsListeners(items);
         long now = System.currentTimeMillis();
@@ -547,23 +547,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile long lastSetOutputItemsInternalTime = 0;
     private volatile XFutureVoid lastSetOutputItemsInternalFuture = null;
 
-    
-    private final Consumer<List<PhysicalItem>> outputItemsListConsumer =
-            (List<PhysicalItem> items) -> {
-               lastSetOutputItemsInternalTime = System.currentTimeMillis();
+    private final Consumer<List<PhysicalItem>> outputItemsListConsumer
+            = (List<PhysicalItem> items) -> {
+                lastSetOutputItemsInternalTime = System.currentTimeMillis();
                 setOutputItemsInternal(items);
                 settingItems = false;
             };
-    
-    
-    
+
     public XFutureVoid setOutputItems(List<PhysicalItem> items) {
         settingItems = true;
         long now = System.currentTimeMillis();
         if (null == lastSetOutputItemsInternalFuture
                 || lastSetOutputItemsInternalFuture.isDone()
                 || (now - lastSetOutputItemsInternalTime) > 500) {
-            lastSetOutputItemsInternalTime=now;
+            lastSetOutputItemsInternalTime = now;
             XFutureVoid ret = submitDisplayConsumer(outputItemsListConsumer, items);
             lastSetOutputItemsInternalFuture = ret;
             return ret;
@@ -1332,6 +1329,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxDetails = new javax.swing.JCheckBox();
         jCheckBoxTools = new javax.swing.JCheckBox();
         jLabel4 = new javax.swing.JLabel();
+        jCheckBoxShowOverlapping = new javax.swing.JCheckBox();
+        jCheckBoxShowOnlyOverlapping = new javax.swing.JCheckBox();
         jPanelProperties = new javax.swing.JPanel();
         jScrollPaneProperties = new javax.swing.JScrollPane();
         jTableProperties = new javax.swing.JTable();
@@ -2035,6 +2034,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jLabel4.setText("Axis: ");
 
+        jCheckBoxShowOverlapping.setSelected(true);
+        jCheckBoxShowOverlapping.setText("Show Overlapping");
+        jCheckBoxShowOverlapping.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowOverlappingActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxShowOnlyOverlapping.setText("Show Only Overlapping");
+        jCheckBoxShowOnlyOverlapping.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxShowOnlyOverlappingActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
         jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
         jPanelOptionsTabLayout.setHorizontalGroup(
@@ -2049,11 +2063,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxAddSlots)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxSeparateNames))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxShowRotations)
+                        .addComponent(jCheckBoxSeparateNames)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxAutoscale))
+                        .addComponent(jCheckBoxShowOverlapping))
                     .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addGap(12, 12, 12)
@@ -2073,8 +2085,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
                         .addComponent(jButtonOffsetAll)
                         .addGap(6, 6, 6)
-                        .addComponent(jButtonReset)))
-                .addGap(21, 21, 21))
+                        .addComponent(jButtonReset))
+                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxShowRotations)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxAutoscale)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxShowOnlyOverlapping)))
+                .addContainerGap(43, Short.MAX_VALUE))
         );
         jPanelOptionsTabLayout.setVerticalGroup(
             jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2085,11 +2103,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jCheckBoxTools)
                         .addComponent(jCheckBoxAddSlots)
-                        .addComponent(jCheckBoxSeparateNames)))
+                        .addComponent(jCheckBoxSeparateNames)
+                        .addComponent(jCheckBoxShowOverlapping)))
                 .addGap(6, 6, 6)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxShowRotations)
-                    .addComponent(jCheckBoxAutoscale))
+                    .addComponent(jCheckBoxAutoscale)
+                    .addComponent(jCheckBoxShowOnlyOverlapping))
                 .addGap(6, 6, 6)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
@@ -2456,13 +2476,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private XFutureVoid runOnDispatchThread(Runnable r) {
-        if(null != aprsSystem) {
+        if (null != aprsSystem) {
             return aprsSystem.runOnDispatchThread(r);
         } else {
             return Utils.runOnDispatchThread(r);
         }
     }
-    
+
     private void setSimulatedInternal(boolean simulated) {
         runOnDispatchThread(() -> setSimulatedInternalOnDisplay(simulated));
     }
@@ -3121,6 +3141,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!setItemsListeners.isEmpty()) {
                 notifySetItemsListeners(itemsList);
             }
+            if(jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
+               object2DJPanel1.setItems(itemsList);
+            }
         }
         draggedItem = null;
         draggedItemsList = null;
@@ -3319,9 +3342,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
         Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
-        return csvFileToItemsList(f,selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
+        return csvFileToItemsList(f, selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
     }
-    
+
     public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
         final List<PhysicalItem> newItemsList = VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations);
@@ -3847,6 +3870,32 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonLineLogNextActionPerformed
 
+    private void jCheckBoxShowOnlyOverlappingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowOnlyOverlappingActionPerformed
+        if (jCheckBoxShowOnlyOverlapping.isSelected()) {
+            jCheckBoxShowOverlapping.setSelected(true);
+            jCheckBoxShowOverlapping.setEnabled(false);
+            object2DJPanel1.setShowOnlyOverlapping(true);
+            object2DJPanel1.setShowOverlapping(true);
+        } else {
+            jCheckBoxShowOverlapping.setEnabled(true);
+            object2DJPanel1.setShowOnlyOverlapping(false);
+        }
+        object2DJPanel1.repaint();
+    }//GEN-LAST:event_jCheckBoxShowOnlyOverlappingActionPerformed
+
+    private void jCheckBoxShowOverlappingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowOverlappingActionPerformed
+        if (jCheckBoxShowOverlapping.isSelected()) {
+            jCheckBoxShowOnlyOverlapping.setEnabled(true);
+            object2DJPanel1.setShowOverlapping(true);
+        } else {
+            object2DJPanel1.setShowOnlyOverlapping(false);
+            object2DJPanel1.setShowOverlapping(false);
+            jCheckBoxShowOnlyOverlapping.setSelected(false);
+            jCheckBoxShowOnlyOverlapping.setEnabled(false);
+        }
+        object2DJPanel1.repaint();
+    }//GEN-LAST:event_jCheckBoxShowOverlappingActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -4014,6 +4063,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
     private javax.swing.JCheckBox jCheckBoxShowCurrent;
+    private javax.swing.JCheckBox jCheckBoxShowOnlyOverlapping;
+    private javax.swing.JCheckBox jCheckBoxShowOverlapping;
     private javax.swing.JCheckBox jCheckBoxShowRotations;
     private javax.swing.JCheckBox jCheckBoxShuffleSimulatedUpdates;
     private javax.swing.JCheckBox jCheckBoxSimulated;
@@ -4939,28 +4990,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile int captured_item_index = -1;
 
     private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
-    
-    private final Consumer<ConcurrentLinkedDeque<File[]>> fileArrayDequeConsumer = 
-            (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> {
+
+    private final Consumer<ConcurrentLinkedDeque<File[]>> fileArrayDequeConsumer
+            = (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> {
                 File fa[] = this.fileArrayDeque.pollFirst();
-                while(null != fa) {
+                while (null != fa) {
                     updateSnapshotsTable(fa[0], fa[1]);
                     fa = this.fileArrayDeque.pollFirst();
                 }
             };
-    
+
     public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
 
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = saveSnapshotCsv(f, itemsToPaint);
-            fileArrayDeque.add(new File[]{f,csvFile});
+            fileArrayDeque.add(new File[]{f, csvFile});
             aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
         } else {
             List<PhysicalItem> items = getItems();
             this.object2DJPanel1.takeSnapshot(f, items, w, h);
             File csvFile = saveSnapshotCsv(f, items);
-            fileArrayDeque.add(new File[]{f,csvFile});
+            fileArrayDeque.add(new File[]{f, csvFile});
             aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
         }
     }
@@ -5056,8 +5107,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
 
     }
-    
-    
+
     public PhysicalItem getClosestRobotPart() {
         if (null == aprsSystem) {
             return null;
@@ -5069,16 +5119,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return getClosestUncorrectedPart(currentPoint);
     }
 
-    private PhysicalItem  getClosestUncorrectedPart(PointType ptIn) {
+    private PhysicalItem getClosestUncorrectedPart(PointType ptIn) {
         if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
         PointType uncorrectedPoint = aprsSystem.convertRobotToVisionPoint(ptIn);
         List<PhysicalItem> l = new ArrayList<>(getItems());
-        DistIndex di =  getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l);
+        DistIndex di = getClosestDistanceIndex(uncorrectedPoint.getX(), uncorrectedPoint.getY(), l);
         return l.get(di.index);
     }
-    
+
     public double getClosestRobotPartDistance() {
         if (null == aprsSystem) {
             return Double.POSITIVE_INFINITY;

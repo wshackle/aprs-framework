@@ -179,6 +179,127 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    public boolean overlaps(PhysicalItem itemA, PhysicalItem itemB) {
+
+        if (itemA == itemB) {
+            return false;
+        }
+        if (itemA instanceof Tray) {
+            Tray trayA = (Tray) itemA;
+            double dist = trayA.dist(itemB);
+            if (checkTrayOverlap(trayA, itemB)) {
+                return true;
+            } else {
+                // recheking for debug
+                checkTrayOverlap(trayA, itemB);
+            }
+        }
+
+        return false;
+    }
+
+    private boolean checkTrayOverlap(Tray trayA, PhysicalItem itemB) {
+        List<Slot> slotsA = trayA.getAbsSlotList();
+        if (null == slotsA || slotsA.isEmpty()) {
+            slotsA = getAbsSlots(trayA, false);
+        }
+        double minSlotijDist = Double.MAX_VALUE;
+        double minSlotijRequiredDist = 0;
+        int minSlotijI = -1;
+        int minSlotijJ = -1;
+        Slot minSlotAi = null;
+        Slot minSlotBj = null;
+        for (int i = 0; i < slotsA.size(); i++) {
+            Slot slotAi = slotsA.get(i);
+            double slotiDist = slotAi.dist(itemB);
+            if (slotiDist < slotAi.getDiameter() / 2.0) {
+                return true;
+            }
+            if (itemB instanceof Tray) {
+                Tray trayB = (Tray) itemB;
+                List<Slot> slotsB = trayB.getAbsSlotList();
+                if (null == slotsB || slotsB.isEmpty()) {
+                    slotsB = getAbsSlots(trayB, false);
+                }
+                for (int j = 0; j < slotsB.size(); j++) {
+                    Slot slotBj = slotsB.get(j);
+                    double slotjDist = slotBj.dist(trayA);
+                    if (slotjDist < slotBj.getDiameter() / 2.0) {
+                        return true;
+                    }
+                    double slotijDist = slotBj.dist(slotAi);
+                    final double requiredDist = slotBj.getDiameter() / 2.0 + slotAi.getDiameter() / 2.0;
+                    if(slotijDist < minSlotijDist) {
+                        minSlotijDist = slotijDist;
+                        minSlotijI = i;
+                        minSlotijJ = j;
+                        minSlotAi = slotAi;
+                        minSlotBj = slotBj;
+                        minSlotijRequiredDist = requiredDist;
+                    }
+                    if (slotijDist < requiredDist) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean overlaps(PhysicalItem item, Collection<? extends PhysicalItem> collection) {
+        for (PhysicalItem itemFromCollection : collection) {
+            if (itemFromCollection == item) {
+                continue;
+            }
+            if (itemFromCollection.getType().equals("P")) {
+                continue;
+            }
+            if (itemFromCollection.getType().equals("S")) {
+                continue;
+            }
+            if (overlaps(item, itemFromCollection)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<PhysicalItem> filterNonOverLapping(Collection<? extends PhysicalItem> items) {
+        List<PhysicalItem> ret = new ArrayList<>();
+        for (PhysicalItem itemI : items) {
+            if (itemI.getType().equals("P")) {
+                ret.add(itemI);
+                continue;
+            }
+            if (itemI.getType().equals("S")) {
+                ret.add(itemI);
+                continue;
+            }
+            if (overlaps(itemI, items)) {
+                ret.add(itemI);
+            }
+        }
+        return ret;
+    }
+
+    public List<PhysicalItem> filterOverLapping(Collection<? extends PhysicalItem> items) {
+        List<PhysicalItem> ret = new ArrayList<>();
+        for (PhysicalItem itemI : items) {
+            if (itemI.getType().equals("P")) {
+                ret.add(itemI);
+                continue;
+            }
+            if (itemI.getType().equals("S")) {
+                ret.add(itemI);
+                continue;
+            }
+            if (!overlaps(itemI, items)) {
+                ret.add(itemI);
+            }
+        }
+        return ret;
+    }
+
     public Object2DOuterJPanel getObjectViewPanel() {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
@@ -2485,10 +2606,10 @@ public class AprsSystem implements SlotOffsetProvider {
             return supervisor.submitDisplayConsumer(consumer, value);
         }
         return runOnDispatchThread(() -> {
-           consumer.accept(value);
+            consumer.accept(value);
         });
     }
-    
+
     private volatile StackTraceElement runCRCLProgramTrace[] = null;
 
     private final AtomicInteger runProgramCount = new AtomicInteger();
@@ -2853,16 +2974,15 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private final ConcurrentLinkedDeque<String> logDeque = new ConcurrentLinkedDeque<>();
-    
-    private final Consumer<ConcurrentLinkedDeque<String>> 
-            logDequeConsumer = (ConcurrentLinkedDeque<String> logDeque) -> {
-                String text = logDeque.pollFirst();
-                while(null != text) {
-                    appendLogDisplayOnDisplay(text);
-                    text = logDeque.pollFirst();
-                }
-            };
-    
+
+    private final Consumer<ConcurrentLinkedDeque<String>> logDequeConsumer = (ConcurrentLinkedDeque<String> logDeque) -> {
+        String text = logDeque.pollFirst();
+        while (null != text) {
+            appendLogDisplayOnDisplay(text);
+            text = logDeque.pollFirst();
+        }
+    };
+
     private void appendLogDisplay(String text) {
         if (null != logDisplayJInternalFrame) {
             logDeque.add(text);
@@ -3349,9 +3469,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile String title = "";
 
-    private final Consumer<String> newTitleConsumer =
-            (String newTitle) -> setTitleOnDisplay(newTitle);
-    
+    private final Consumer<String> newTitleConsumer
+            = (String newTitle) -> setTitleOnDisplay(newTitle);
+
     private XFutureVoid setTitle(String newTitle) {
         this.title = newTitle;
         if (null != aprsSystemDisplayJFrame) {

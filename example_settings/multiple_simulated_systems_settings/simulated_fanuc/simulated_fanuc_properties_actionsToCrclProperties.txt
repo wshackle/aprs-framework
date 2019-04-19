@@ -25,6 +25,7 @@ requireNewPoses=true
 reverseFlag=false
 rotSpeed=30.0
 rpy=180.0,0.0,-135
+saveProgramRunData=false
 settleDwellTime=0.05
 skipLookDwellTime=0.1
 skipMissingParts=true

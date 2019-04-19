@@ -51,8 +51,12 @@ public class Tray extends PhysicalItem {
     public Tray(String name, PoseType pose, int visioncycle) {
         super(name, pose, visioncycle);
     }
-    
-    private volatile @Nullable List<Slot> absSlotList = null;
+
+    private volatile @Nullable
+    List<Slot> absSlotList = null;
+    private volatile double setAbsSlotListX = java.lang.Double.NaN;
+    private volatile double setAbsSlotListY = java.lang.Double.NaN;
+    private volatile double setAbsSlotListRotation = java.lang.Double.NaN;
 
     /**
      * Get the value of absSlotList
@@ -61,12 +65,26 @@ public class Tray extends PhysicalItem {
      */
     public List<Slot> getAbsSlotList() {
         List<Slot> ret = this.absSlotList;
-        if(null == ret) {
+        if (null != ret
+                && !ret.isEmpty()) {
+            if (!java.lang.Double.isFinite(setAbsSlotListX)
+                    || !java.lang.Double.isFinite(setAbsSlotListY)
+                    || !java.lang.Double.isFinite(setAbsSlotListY)
+                    || Math.abs(x - setAbsSlotListX) > ABS_SLOT_LIST_CHANGE_TOLERANCE
+                    || Math.abs(y - setAbsSlotListY) > ABS_SLOT_LIST_CHANGE_TOLERANCE
+                    || Math.abs(this.getRotation() - setAbsSlotListRotation) > ABS_SLOT_LIST_CHANGE_TOLERANCE) {
+                ret = Collections.emptyList();
+                this.absSlotList = ret;
+                return ret;
+            }
+        }
+        if (null == ret) {
             ret = Collections.emptyList();
             this.absSlotList = ret;
         }
         return ret;
     }
+    private static final double ABS_SLOT_LIST_CHANGE_TOLERANCE = 2 * java.lang.Double.MIN_NORMAL;
 
     /**
      * Set the value of absSlotList
@@ -75,11 +93,13 @@ public class Tray extends PhysicalItem {
      */
     public void setAbsSlotList(List<Slot> absSlotList) {
         this.absSlotList = absSlotList;
+        setAbsSlotListX = x;
+        setAbsSlotListY = y;
+        setAbsSlotListRotation = getRotation();
     }
-    
-    
+
     public double distFromAbsSlot(PmCartesian cart) {
-        if(null == absSlotList) {
+        if (null == absSlotList) {
             return java.lang.Double.POSITIVE_INFINITY;
         }
         return absSlotList.stream()
@@ -87,29 +107,28 @@ public class Tray extends PhysicalItem {
                 .min()
                 .orElse(java.lang.Double.POSITIVE_INFINITY);
     }
-    
-    public @Nullable Slot closestAbsSlot(PmCartesian cart) {
-        if(null == absSlotList) {
+
+    public @Nullable
+    Slot closestAbsSlot(PmCartesian cart) {
+        if (null == absSlotList) {
             return null;
         }
         return absSlotList.stream()
                 .min(Comparator.comparing(cart::distFromXY))
                 .orElse(null);
     }
-    
-    
 
     public boolean insideAbsSlot(PmCartesian cart, double threshold) {
         Slot slot = closestAbsSlot(cart);
-        if(null != slot) {
-            return slot.distFrom(cart) < (slot.getDiameter()/2.0+ threshold);
+        if (null != slot) {
+            return slot.distFrom(cart) < (slot.getDiameter() / 2.0 + threshold);
         }
         return false;
     }
-    
+
     @Override
     public Tray clone() {
         return (Tray) super.clone();
     }
-    
+
 }
