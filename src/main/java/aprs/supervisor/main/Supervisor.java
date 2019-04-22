@@ -3442,7 +3442,7 @@ public class Supervisor {
         return "";
     }
 
-    private final ConcurrentHashMap<String, Integer> callerMap = new ConcurrentHashMap<>();
+//    private final ConcurrentHashMap<String, Integer> callerMap = new ConcurrentHashMap<>();
 
     public XFutureVoid runOnDispatchThread(final @UI Runnable r) {
         return runOnDispatchThread("runOnDispatchThread", r);
@@ -3452,13 +3452,13 @@ public class Supervisor {
         if (closing || displayUpdatesDisabled) {
             return XFutureVoid.completedFuture();
         }
-        callerMap.compute(getRunOnDispatchThreadCaller(), (String key, Integer value) -> {
-            if (null == value) {
-                return 1;
-            } else {
-                return value + 1;
-            }
-        });
+//        callerMap.compute(getRunOnDispatchThreadCaller(), (String key, Integer value) -> {
+//            if (null == value) {
+//                return 1;
+//            } else {
+//                return value + 1;
+//            }
+//        });
         long startTime = System.currentTimeMillis();
         int startPending = dispatchPending.incrementAndGet();
         if (startPending > maxStartPending) {
@@ -3826,9 +3826,9 @@ public class Supervisor {
 
     public void close() {
         if (null != logPrintStream) {
-            Set<Entry<String, Integer>> callerEntries = callerMap.entrySet();
-            List<Entry<String, Integer>> callerList = new ArrayList<>(callerEntries);
-            Collections.sort(callerList, Comparator.comparing(Entry::getValue));
+//            Set<Entry<String, Integer>> callerEntries = callerMap.entrySet();
+//            List<Entry<String, Integer>> callerList = new ArrayList<>(callerEntries);
+//            Collections.sort(callerList, Comparator.comparing(Entry::getValue));
 
             long t = System.currentTimeMillis();
             int blockersSize = getToggleBlockerMapSize();
@@ -3838,9 +3838,9 @@ public class Supervisor {
             int runDispatchCount = this.dispatchCount.get();
             long totalRunDispatchTime = this.dispatchTime.get();
             String threadname = Thread.currentThread().getName();
-            for (Entry<String, Integer> entry : callerList) {
-                logEventPrivate(t, entry.getKey() + " \t= \t" + entry.getValue(), blockersSize, ecc, cdc, errs, threadname);
-            }
+//            for (Entry<String, Integer> entry : callerList) {
+//                logEventPrivate(t, entry.getKey() + " \t= \t" + entry.getValue(), blockersSize, ecc, cdc, errs, threadname);
+//            }
             long totalSupervisorRunTime = t - startSupervisorTime;
             String s = "closing ... totalSupervisorRunTime=" + totalSupervisorRunTime;
             logEventPrivate(t, s, blockersSize, ecc, cdc, errs, threadname);

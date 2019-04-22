@@ -244,6 +244,15 @@ public class PositionMap {
             lastPointIn = lastPointOut = ptIn;
             return ptIn;
         }
+        if(!Double.isFinite(ptIn.getX())) {
+            throw new IllegalArgumentException("ptIn.getX()="+ptIn.getX()+", ptIn="+ptIn);
+        }
+        if(!Double.isFinite(ptIn.getY())) {
+            throw new IllegalArgumentException("ptIn.getY()="+ptIn.getY()+", ptIn="+ptIn);
+        }
+        if(!Double.isFinite(ptIn.getZ())) {
+            throw new IllegalArgumentException("ptIn.getZ()="+ptIn.getZ()+", ptIn="+ptIn);
+        }
         lastPointIn = ptIn;
         PointType offsetPt = getOffset(
                 ptIn.getX(),
