@@ -1353,6 +1353,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jButtonLineLogNext = new javax.swing.JButton();
         jButtonSeperateLineLogWindow = new javax.swing.JButton();
 
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                formComponentResized(evt);
+            }
+        });
+
         object2DJPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         object2DJPanel1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseDragged(java.awt.event.MouseEvent evt) {
@@ -3895,6 +3901,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         object2DJPanel1.repaint();
     }//GEN-LAST:event_jCheckBoxShowOverlappingActionPerformed
+
+    private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
+        object2DJPanel1.clearSizes();
+        setMaxXMaxYText(jTextFieldMaxXMaxY.getText().trim());
+        setMinXMinYText(jTextFieldMinXMinY.getText().trim());
+    }//GEN-LAST:event_formComponentResized
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 

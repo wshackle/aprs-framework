@@ -6743,6 +6743,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @return point after being corrected by all currently added position maps
      */
     public PointType correctPoint(PointType ptIn) {
+        if(!Double.isFinite(ptIn.getX())) {
+            throw new IllegalArgumentException("ptIn.getX()="+ptIn.getX()+", ptIn="+ptIn);
+        }
+        if(!Double.isFinite(ptIn.getY())) {
+            throw new IllegalArgumentException("ptIn.getY()="+ptIn.getY()+", ptIn="+ptIn);
+        }
+        if(!Double.isFinite(ptIn.getZ())) {
+            throw new IllegalArgumentException("ptIn.getZ()="+ptIn.getZ()+", ptIn="+ptIn);
+        }
         PointType pout = ptIn;
         for (PositionMap pm : getPositionMaps()) {
             if (null != pm) {
