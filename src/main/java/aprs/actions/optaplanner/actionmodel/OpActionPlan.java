@@ -470,6 +470,7 @@ public class OpActionPlan {
                 return l;
             }
             if (tmpAction.getOpActionType() == END) {
+                l.add(tmpAction);
                 return l;
             }
             if (l.contains(tmpAction)) {

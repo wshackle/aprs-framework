@@ -43,6 +43,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.PopupMenu;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
@@ -119,22 +120,25 @@ public class OpDisplayJPanel extends JPanel {
         showPlan(createTestInitPlan(), "testInit", JFrame.EXIT_ON_CLOSE);
     }
 
-    private final MouseMotionListener mml = new MouseMotionListener() {
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            OpDisplayJPanel.this.mouseDragged(e);
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            OpDisplayJPanel.this.mouseMoved(e);
-        }
-    };
-
+//    private final MouseMotionListener mml = new MouseMotionListener() {
+//        @Override
+//        public void mouseDragged(MouseEvent e) {
+//            OpDisplayJPanel.this.mouseDragged(e);
+//        }
+//
+//        @Override
+//        public void mouseMoved(MouseEvent e) {
+//            OpDisplayJPanel.this.mouseMoved(e);
+//        }
+//    };
     private final MouseListener mouseListener = new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-            checkPopup(e);
+            if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
+                setCloseActionsFromMouseEvent(e);
+            } else {
+                checkPopup(e);
+            }
         }
 
         @Override
@@ -146,11 +150,28 @@ public class OpDisplayJPanel extends JPanel {
         public void mouseReleased(MouseEvent e) {
             checkPopup(e);
         }
-
     };
 
     @MonotonicNonNull
     private JPopupMenu popupMenu = null;
+
+    /**
+     * Get the value of showSkippedActions
+     *
+     * @return the value of showSkippedActions
+     */
+    public boolean isShowSkippedActions() {
+        return showSkippedActionsMenuItem.isSelected();
+    }
+
+    /**
+     * Set the value of showSkippedActions
+     *
+     * @param showSkippedActions new value of showSkippedActions
+     */
+    public void setShowSkippedActions(boolean showSkippedActions) {
+        this.showSkippedActionsMenuItem.setSelected(showSkippedActions);
+    }
 
     private void replan() {
         if (null != opActionPlan) {
@@ -187,7 +208,8 @@ public class OpDisplayJPanel extends JPanel {
         }
     }
 
-    @Nullable public SolverFactory<OpActionPlan> getSolverFactory() {
+    @Nullable
+    public SolverFactory<OpActionPlan> getSolverFactory() {
         return solverFactory;
     }
 
@@ -245,7 +267,12 @@ public class OpDisplayJPanel extends JPanel {
             }
             repaint();
         });
+        showSkippedActionsMenuItem.addActionListener((ActionEvent evt) -> {
+            newPopupMenu.setVisible(false);
+            repaint();
+        });
         newPopupMenu.add(showFakeActionsMenuItem);
+        newPopupMenu.add(showSkippedActionsMenuItem);
         JMenuItem neverMindMenuItem = new JMenuItem("Never Mind");
         neverMindMenuItem.addActionListener((ActionEvent evt) -> {
             newPopupMenu.setVisible(false);
@@ -280,9 +307,9 @@ public class OpDisplayJPanel extends JPanel {
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         super.setBackground(Color.white);
-        super.addMouseMotionListener(mml);
+//        super.addMouseMotionListener(mml);
         super.addMouseListener(mouseListener);
-        ToolTipManager.sharedInstance().registerComponent(this);
+//        ToolTipManager.sharedInstance().registerComponent(this);
     }
 
     /**
@@ -403,7 +430,7 @@ public class OpDisplayJPanel extends JPanel {
         }
         OpActionPlan plan = this.opActionPlan;
         if (null != plan) {
-            paintOpActionPlan(plan, dim, actionsList, g2d);
+            paintOpActionPlan(plan, dim, g2d);
         }
 
         if (keyVisible) {
@@ -418,6 +445,9 @@ public class OpDisplayJPanel extends JPanel {
         for (Map.Entry<String, Color> entry : partsColorsMap.entrySet()) {
             Color origColor = g2d.getColor();
             Stroke origStroke = g2d.getStroke();
+            if (null != carryStroke) {
+                g2d.setStroke(carryStroke);
+            }
             g2d.setColor(entry.getValue());
             g2d.drawLine(10, keyY, 30, keyY);
             g2d.setColor(origColor);
@@ -461,11 +491,18 @@ public class OpDisplayJPanel extends JPanel {
                 }
             }
         }
+        if (null != closeActions) {
+            for (OpAction action : closeActions) {
+                keyY += 25;
+                g2d.drawString(action.getName(), 10, keyY);
+            }
+        }
     }
 
     private final JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
     private final JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
     private final JCheckBoxMenuItem showFakeActionsMenuItem = new JCheckBoxMenuItem("Show Fake Actions(s)", false);
+    private final JCheckBoxMenuItem showSkippedActionsMenuItem = new JCheckBoxMenuItem("Show Skipped Actions(s)", false);
     private final ConcurrentHashMap<String, Point2D.Double> fakeLocationsMap = new ConcurrentHashMap<>();
     private final Random locRandom = new Random();
 
@@ -484,9 +521,28 @@ public class OpDisplayJPanel extends JPanel {
         });
     }
 
-    private void paintOpActionPlan(OpActionPlan plan, Dimension dim, List<OpAction> actionsList, Graphics2D g2d) {
+    public boolean isSkippedAction(OpAction action, OpActionInterface prevAction) {
+        if(null != prevAction && prevAction.getNext() != action) {
+            throw new IllegalArgumentException("prevAction.getNext() != action : action="+action+",prevAction="+prevAction);
+        }
+        if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
+            return true;
+        } else if (action.getOpActionType() == PICKUP && action.getNext().getOpActionType() == FAKE_DROPOFF) {
+            return true;
+        } else if (null == prevAction || prevAction.getOpActionType() == FAKE_PICKUP) {
+            if(action.getOpActionType() == START) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private void paintOpActionPlan(OpActionPlan plan, Dimension dim, Graphics2D g2d) {
         OpEndAction endAction = plan.getEndAction();
-        List<OpAction> actions = plan.getActions();
+        List<OpAction> actions = plan.getOrderedList(true);
         if (null != endAction && null != actions) {
             minX = Double.POSITIVE_INFINITY;
             minY = Double.POSITIVE_INFINITY;
@@ -539,13 +595,54 @@ public class OpDisplayJPanel extends JPanel {
             }
 
             Set<OpAction> numLabeledItems = new HashSet<>();
-            for (OpAction actionToPaintBackground : actionsList) {
-                OpActionType actionType = actionToPaintBackground.getOpActionType();
-                Point2D.Double location = getActionLocation(actionToPaintBackground, minX, maxX, minY, maxY);
+            if (null != closeActions) {
+                for (OpAction action : closeActions) {
+                    if (!showFakeActionsMenuItem.isSelected()) {
+                        if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
+                            continue;
+                        }
+                    }
+                    OpActionType actionType = action.getOpActionType();
+                    Point2D.Double location = getActionLocation(action, minX, maxX, minY, maxY);
+                    int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
+                    int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
+                    AffineTransform origTransform = g2d.getTransform();
+                    Color origColor = g2d.getColor();
+                    g2d.translate(x - 3, y - 12);
+                    g2d.setColor(Color.black);
+                    g2d.fill(selectedCircleLetterShape);
+                    g2d.setTransform(origTransform);
+                    g2d.translate(x - 3, y - 12);
+                    g2d.setColor(this.getBackground());
+                    g2d.translate(x - 7, y - 15);
+                    g2d.fill(requiredCircleLetterShape);
+                    g2d.setTransform(origTransform);
+                    g2d.setColor(origColor);
+                }
+            }
+            OpActionInterface prevAction = null;
+            for (OpAction action : actions) {
+                if (!showFakeActionsMenuItem.isSelected()) {
+                    if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
+                        prevAction = action;
+                        continue;
+                    }
+                }
+                boolean skipped = isSkippedAction(action, prevAction);
+                
+                if (!showSkippedActionsMenuItem.isSelected()) {
+                    if(skipped) {
+                        prevAction = action;
+                        continue;
+                    }
+                }
+                prevAction = action;
+                OpActionType actionType = action.getOpActionType();
+                Point2D.Double location = getActionLocation(action, minX, maxX, minY, maxY);
                 int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
                 int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
                 if (showSkippableNextMenuItem.isSelected()) {
-                    OpActionInterface nextAction = actionToPaintBackground.getNext();
+                    OpActionInterface nextAction = action.getNext();
                     if (actionType == PICKUP || actionType == DROPOFF || actionType == START || showFakeActionsMenuItem.isSelected()) {
                         if (null != nextAction) {
                             OpActionType nextActionType = nextAction.getOpActionType();
@@ -572,7 +669,7 @@ public class OpDisplayJPanel extends JPanel {
                         }
                     }
                     if (showPossibleNextMenuItem.isSelected()) {
-                        for (OpActionInterface possibleNextAction : actionToPaintBackground.getPossibleNextActions()) {
+                        for (OpActionInterface possibleNextAction : action.getPossibleNextActions()) {
                             if (null != possibleNextAction) {
                                 OpActionType nextActionType = possibleNextAction.getOpActionType();
                                 if (nextActionType == PICKUP || nextActionType == DROPOFF || nextActionType == END || showFakeActionsMenuItem.isSelected()) {
@@ -599,18 +696,18 @@ public class OpDisplayJPanel extends JPanel {
                         }
                     }
                 }
-                paintBackgroundSymbol(g2d, x, y, actionToPaintBackground);
-                paintActionSymbol(g2d, x, y, actionToPaintBackground.getOpActionType(), actionToPaintBackground.isRequired());
-                if (!numLabeledItems.contains(actionToPaintBackground)) {
+                paintBackgroundSymbol(g2d, x, y, action);
+                paintActionSymbol(g2d, x, y, action.getOpActionType(), action.isRequired());
+                if (!numLabeledItems.contains(action)) {
                     List<OpAction> closeItems = findCloseActions(x, y);
                     if (closeItems.size() > 1) {
-                        numLabeledItems.add(actionToPaintBackground);
+                        numLabeledItems.add(action);
                         numLabeledItems.addAll(closeItems);
                         g2d.drawString("" + closeItems.size(), x + 15, y + 15);
                     }
                 }
             }
-            OpActionInterface prevAction = null;
+            prevAction = null;
             OpActionInterface action = plan.findStartAction();
             int prevx = -1;
             int prevy = -1;
@@ -621,12 +718,13 @@ public class OpDisplayJPanel extends JPanel {
                 }
                 if (action.getOpActionType() == OpActionType.FAKE_PICKUP) {
                     action = action.getNext();
-                    if(null == action) {
-                        throw new IllegalStateException("action of type FAKE_PICKUP has null next: prevAction="+prevAction);
+                    if (null == action) {
+                        throw new IllegalStateException("action of type FAKE_PICKUP has null next: prevAction=" + prevAction);
                     }
                     action = action.getNext();
                     continue;
                 }
+                
                 Point2D.Double location = getActionLocation(action, minX, maxX, minY, maxY);
                 int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
                 int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
@@ -760,6 +858,10 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     private void paintActionSymbol(Graphics2D g2d, int x, int y, String typeLetterString, boolean required) {
+        if (typeLetterString.equals("F")
+                && !showFakeActionsMenuItem.isSelected()) {
+            return;
+        }
         AffineTransform origTransform = g2d.getTransform();
         g2d.translate(x - 7, y - 15);
         g2d.draw(circleLetterShape);
@@ -778,6 +880,9 @@ public class OpDisplayJPanel extends JPanel {
             = new Arc2D.Double(0, 0, 20, 20, 0, 360, Arc2D.OPEN);
     private final Arc2D.Double requiredCircleLetterShape
             = new Arc2D.Double(-2, -2, 24, 24, 0, 360, Arc2D.OPEN);
+
+    private final Arc2D.Double selectedCircleLetterShape
+            = new Arc2D.Double(-8, -8, 30, 30, 0, 360, Arc2D.OPEN);
 
     private boolean actionNamesVisible = false;
 
@@ -927,25 +1032,31 @@ public class OpDisplayJPanel extends JPanel {
         return closeActions;
     }
 
-    private void mouseDragged(MouseEvent e) {
-        setCloseActionsToolTip(e);
+//    private void mouseDragged(MouseEvent e) {
+//        setCloseActionsToolTip(e);
+//    }
+//
+    private List<OpAction> closeActions = null;
+
+    public List<OpAction> getCloseActions() {
+        return closeActions;
     }
 
-    private void setCloseActionsToolTip(MouseEvent e) {
-        List<OpAction> closeActions
+    public void setCloseActions(List<OpAction> closeActions) {
+        this.closeActions = closeActions;
+         System.out.println("closeActions = " + closeActions);
+        this.repaint();
+    }
+
+    public void setCloseActionsFromMouseEvent(MouseEvent e) {
+        closeActions
                 = findCloseActions(e.getX(), e.getY());
-        if (closeActions.isEmpty()) {
-            return;
-        }
-        List<String> closeActionNames
-                = closeActions.stream()
-                        .map(OpAction::getName)
-                        .collect(Collectors.toList());
-        this.setToolTipText(closeActionNames.toString());
+        System.out.println("closeActions = " + closeActions);
+        repaint();
     }
 
-    private void mouseMoved(MouseEvent e) {
-        setCloseActionsToolTip(e);
-    }
-
+//
+//    private void mouseMoved(MouseEvent e) {
+//        setCloseActionsToolTip(e);
+//    }
 }
