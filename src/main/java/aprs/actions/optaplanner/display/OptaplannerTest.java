@@ -112,7 +112,7 @@ public class OptaplannerTest {
         HardSoftLongScore score = calculator.calculateScore(ap);
 
         // Show a window with the initial plan.
-        showPlan(ap, "Input : " + score.getSoftScore(),JFrame.EXIT_ON_CLOSE);
+//        showPlan(ap, "Input : " + score.getSoftScore(),JFrame.EXIT_ON_CLOSE);
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
         
@@ -154,6 +154,6 @@ public class OptaplannerTest {
         System.out.println("bestPlan.getActions() = " + bestPlan.getActions());
 //        score = calculator.calculateScore(bestPlan);
         System.out.println("bestScore = " + bestScore);
-        showPlan(bestPlan, "Solution: " + bestScore.getSoftScore(),JFrame.EXIT_ON_CLOSE);
+        aprs.actions.optaplanner.display.OptiplannerTestJFrame.showPlan(ap,bestPlan, "Solution: " + bestScore.getSoftScore(),JFrame.EXIT_ON_CLOSE);
     }
 }
