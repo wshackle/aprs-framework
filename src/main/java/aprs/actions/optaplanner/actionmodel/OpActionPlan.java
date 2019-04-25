@@ -77,11 +77,17 @@ public class OpActionPlan {
         List<OpAction> actions = inPlan.getActions();
         List<OpAction> newActionsList = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
-            OpAction action = actions.get(i);
-            if(action.getOpActionType() != OpActionType.FAKE_DROPOFF && action.getOpActionType() != OpActionType.FAKE_PICKUP) {
-                action.clearNext();
-                action.getPossibleNextActions().clear();
-                newActionsList.add(action);
+            OpAction origAction = actions.get(i);
+            if(origAction.getOpActionType() != OpActionType.FAKE_DROPOFF && origAction.getOpActionType() != OpActionType.FAKE_PICKUP) {
+                OpAction newAction = new OpAction(
+                        origAction.getName(),
+                        origAction.getLocation().x,
+                        origAction.getLocation().y,
+                        origAction.getOpActionType(),
+                        origAction.getPartType(),
+                        origAction.isRequired()
+                );
+                newActionsList.add(newAction);
             }
         }
         OpActionPlan newPlan = new OpActionPlan();
@@ -136,6 +142,14 @@ public class OpActionPlan {
     }
 
     public void checkActionList() {
+        List<OpAction> notInBaseList = this.notInBaseList();
+        if(!notInBaseList.isEmpty()) {
+            System.out.println("notInBaseList = " + notInBaseList);
+        }
+        List<OpAction> notInOrderedList = this.notInOrderedList();
+        if(!notInOrderedList.isEmpty()) {
+            System.out.println("notInOrderedList = " + notInOrderedList);
+        }
         checkActionsList(getActions());
     }
 
@@ -184,6 +198,46 @@ public class OpActionPlan {
         };
     }
 
+    public List<OpAction> notInOrderedList() {
+        List<OpAction> ret  = new ArrayList<>();
+        List<OpAction> orderedActions = this.getOrderedList(true);
+        for (int i = 0; i < actions.size(); i++) {
+            OpAction actionI = actions.get(i);
+            boolean found = false;
+            for (int j = 0; j < orderedActions.size(); j++) {
+                OpAction actionJ = orderedActions.get(j);
+                if(actionJ == actionI) {
+                    found=true;
+                    break;
+                }
+            }
+            if(!found) {
+                ret.add(actionI);
+            }
+        }
+        return ret;
+    }
+    
+    public List<OpAction> notInBaseList() {
+        List<OpAction> ret  = new ArrayList<>();
+        List<OpAction> orderedActions = this.getOrderedList(true);
+        for (int i = 0; i < orderedActions.size(); i++) {
+            OpAction actionI = orderedActions.get(i);
+            boolean found = false;
+            for (int j = 0; j < actions.size(); j++) {
+                OpAction actionJ = actions.get(j);
+                if(actionJ == actionI) {
+                    found=true;
+                    break;
+                }
+            }
+            if(!found) {
+                ret.add(actionI);
+            }
+        }
+        return ret;
+    }
+    
     public void saveActionList(File f) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), Utils.preferredCsvFormat().withHeader(CSV_HEADERS))) {
             printer.printRecord(propRecord(USE_DIST_FOR_COST_PROPNAME, useDistForCost));

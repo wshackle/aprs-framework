@@ -129,9 +129,16 @@ public class OptaplannerTest {
         long t1 = System.currentTimeMillis();
         HardSoftLongScore bestScore = calculator.calculateScore(solvedActionPlan);
         OpActionPlan bestPlan = solvedActionPlan;
+        ap.checkActionList();
         for (int i = 0; i < 20; i++) {
+            ap.checkActionList();
             OpActionPlan shuffledPlan = OpActionPlan.cloneAndShufflePlan(ap);
+            ap.checkActionList();
+            shuffledPlan.checkActionList();
             solvedActionPlan = solver.solve(shuffledPlan);
+            ap.checkActionList();
+            shuffledPlan.checkActionList();
+            solvedActionPlan.checkActionList();
             score = calculator.calculateScore(solvedActionPlan);
             System.out.println("score = " + score);
             if (score.getHardScore() > bestScore.getHardScore()
