@@ -28,8 +28,8 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
         newPlan.setStartEndMaxSpeed(original.getStartEndMaxSpeed());
         newPlan.setUseDistForCost(original.isUseDistForCost());
         newPlan.setUseStartEndCost(original.isUseStartEndCost());
-        newPlan.setEndAction(original.getEndAction());
-        newPlan.setEndActions(original.getEndActions());
+        newPlan.getEndAction().getLocation().x = original.getEndAction().getLocation().x;
+        newPlan.getEndAction().getLocation().y = original.getEndAction().getLocation().y;
         HardSoftLongScore hardSoftLongScore = original.getScore();
         if (null != hardSoftLongScore) {
             newPlan.setScore(hardSoftLongScore);

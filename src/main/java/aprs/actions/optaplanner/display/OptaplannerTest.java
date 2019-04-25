@@ -57,41 +57,39 @@ public class OptaplannerTest {
      */
     public static void main(String[] args) {
         OpActionPlan ap = new OpActionPlan();
-        
+
         Random rand = new Random();
 
         // Create an initial plan with some set of parts to pickup and drop off.
         List<OpAction> initList = Arrays.asList(
-                new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("pickup A3-alt", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("dropoff A3", 6 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A",true),
-                new OpAction("Start", rand.nextDouble(), rand.nextDouble(), OpActionType.START, "START",true),
-                new OpAction("pickup A1", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("pickup A1-alt", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("dropoff A1", 2 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A",true),
-                new OpAction("pickup A2", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("pickup A2-alt", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A",false),
-                new OpAction("dropoff A2", 4 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A",true),
-                new OpAction("pickup B3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("pickup B3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("dropoff B3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B",true),
-                new OpAction("pickup B1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("pickup B1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("dropoff B1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B",true),
-                new OpAction("pickup B2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("pickup B2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B",false),
-                new OpAction("dropoff B2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B",true),
-                
-                
-                new OpAction("DROPOFF C3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("DROPOFF C3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("PICKUP C3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C",true),
-                new OpAction("DROPOFF C1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("DROPOFF C1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("PICKUP C1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C",true),
-                new OpAction("DROPOFF C2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("DROPOFF C2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C",false),
-                new OpAction("PICKUP C2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C",true)
+                new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("pickup A3-alt", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("dropoff A3", 6 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+                new OpAction("Start", rand.nextDouble(), rand.nextDouble(), OpActionType.START, "START", true),
+                new OpAction("pickup A1", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("pickup A1-alt", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("dropoff A1", 2 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+                new OpAction("pickup A2", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("pickup A2-alt", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+                new OpAction("dropoff A2", 4 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+                new OpAction("pickup B3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("pickup B3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("dropoff B3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+                new OpAction("pickup B1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("pickup B1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("dropoff B1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+                new OpAction("pickup B2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("pickup B2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+                new OpAction("dropoff B2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+                new OpAction("DROPOFF C3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("DROPOFF C3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("PICKUP C3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
+                new OpAction("DROPOFF C1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("DROPOFF C1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("PICKUP C1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
+                new OpAction("DROPOFF C2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("DROPOFF C2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+                new OpAction("PICKUP C2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true)
         );
         List<OpAction> shuffledList = new ArrayList<>(initList);
         ap.setAccelleration(0.1);
@@ -115,7 +113,7 @@ public class OptaplannerTest {
 //        showPlan(ap, "Input : " + score.getSoftScore(),JFrame.EXIT_ON_CLOSE);
         System.out.println("score = " + score);
         SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
-        
+
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
 
         // Setup callback to have the solver print some status as it runs.
@@ -123,22 +121,20 @@ public class OptaplannerTest {
 
         List<OpAction> apActionsCopy = new ArrayList<>(ap.getActions());
         System.out.println("apActionsCopy = " + apActionsCopy);
-        
+
         // Run the solver.
         long t0 = System.currentTimeMillis();
         OpActionPlan solvedActionPlan = solver.solve(ap);
-        
+
         long t1 = System.currentTimeMillis();
         HardSoftLongScore bestScore = calculator.calculateScore(solvedActionPlan);
         OpActionPlan bestPlan = solvedActionPlan;
         for (int i = 0; i < 20; i++) {
-            Collections.shuffle(shuffledList);
-            ap.setActions(shuffledList);
-            ap.initNextActions();
-            solvedActionPlan = solver.solve(ap);
+            OpActionPlan shuffledPlan = OpActionPlan.cloneAndShufflePlan(ap);
+            solvedActionPlan = solver.solve(shuffledPlan);
             score = calculator.calculateScore(solvedActionPlan);
             System.out.println("score = " + score);
-            if(score.getHardScore() > bestScore.getHardScore() 
+            if (score.getHardScore() > bestScore.getHardScore()
                     || (score.getHardScore() == bestScore.getHardScore() && score.getSoftScore() > bestScore.getSoftScore())) {
                 bestScore = score;
                 bestPlan = solvedActionPlan;
@@ -146,14 +142,14 @@ public class OptaplannerTest {
         }
 
         long t2 = System.currentTimeMillis();
-        System.out.println("(t1-t0) = " + (t1-t0));
-        System.out.println("(t2-t0) = " + (t2-t0));
-        
+        System.out.println("(t1-t0) = " + (t1 - t0));
+        System.out.println("(t2-t0) = " + (t2 - t0));
+
         // Print the results
         System.out.println("bestPlan = " + bestPlan.computeString());
         System.out.println("bestPlan.getActions() = " + bestPlan.getActions());
 //        score = calculator.calculateScore(bestPlan);
         System.out.println("bestScore = " + bestScore);
-        aprs.actions.optaplanner.display.OptiplannerTestJFrame.showPlan(ap,bestPlan, "Solution: " + bestScore.getSoftScore(),JFrame.EXIT_ON_CLOSE);
+        aprs.actions.optaplanner.display.OptiplannerDisplayJFrame.showPlan(ap, bestPlan, "Solution: " + bestScore.getSoftScore(), JFrame.EXIT_ON_CLOSE);
     }
 }

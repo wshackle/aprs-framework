@@ -43,7 +43,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.PopupMenu;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
@@ -51,7 +50,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Point2D;
@@ -64,17 +62,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.ToolTipManager;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -521,25 +516,6 @@ public class OpDisplayJPanel extends JPanel {
         });
     }
 
-    public boolean isSkippedAction(OpAction action, OpActionInterface prevAction) {
-        if(null != prevAction && prevAction.getNext() != action) {
-            throw new IllegalArgumentException("prevAction.getNext() != action : action="+action+",prevAction="+prevAction);
-        }
-        if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
-            return true;
-        } else if (action.getOpActionType() == PICKUP && action.getNext().getOpActionType() == FAKE_DROPOFF) {
-            return true;
-        } else if (null == prevAction || prevAction.getOpActionType() == FAKE_PICKUP) {
-            if(action.getOpActionType() == START) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
-    }
-
     private void paintOpActionPlan(OpActionPlan plan, Dimension dim, Graphics2D g2d) {
         OpEndAction endAction = plan.getEndAction();
         List<OpAction> actions = plan.getOrderedList(true);
@@ -628,7 +604,7 @@ public class OpDisplayJPanel extends JPanel {
                         continue;
                     }
                 }
-                boolean skipped = isSkippedAction(action, prevAction);
+                boolean skipped = OpActionPlan.isSkippedAction(action, prevAction);
                 
                 if (!showSkippedActionsMenuItem.isSelected()) {
                     if(skipped) {

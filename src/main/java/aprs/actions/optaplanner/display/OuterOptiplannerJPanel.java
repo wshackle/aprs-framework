@@ -23,11 +23,14 @@
 package aprs.actions.optaplanner.display;
 
 import aprs.actions.optaplanner.actionmodel.OpAction;
+import aprs.actions.optaplanner.actionmodel.OpActionInterface;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
+import aprs.actions.optaplanner.actionmodel.OpEndAction;
 import aprs.misc.Utils;
 import java.awt.Container;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.JTable;
@@ -58,6 +61,10 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
 //                int firstIndex = e.getFirstIndex();
 //                int lastIndex = e.getLastIndex();
                 int selectedIndex = jTable1.getSelectedRow();
+                if(selectedIndex < 0 || selectedIndex > jTable1.getRowCount()) {
+                    opDisplayJPanel1.setCloseActions(Collections.emptyList());
+                    return;
+                }
 //                int viewIndex = jTable1.convertRowIndexToView(selectedIndex);
                 int modelIndex = jTable1.convertRowIndexToModel(selectedIndex);
                 if (modelIndex >= 0 && modelIndex < actions.size()) {
@@ -111,14 +118,14 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Index", "Name", "Type", "PartType", "X", "Y", "Cost", "Required"
+                "Index", "Id", "Name", "Type", "PartType", "X", "Y", "Cost", "Required", "Skipped", "NextId", "ExecType", "Args", "PossibleNexts"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true, false
+                false, false, true, true, true, true, true, true, false, false, false, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -180,9 +187,10 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
             DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
             OpAction closeAction0 = closeActions.get(0);
             for (int i = 0; i < model.getRowCount(); i++) {
-                if (closeAction0.getName().equals(model.getValueAt(i, 1))
-                        && closeAction0.getOpActionType().equals(model.getValueAt(i, 2))
-                        && closeAction0.getPartType().equals(model.getValueAt(i, 3))) {
+                if (closeAction0.getId() == Integer.parseInt(model.getValueAt(i, 1).toString())
+                        && closeAction0.getName().equals(model.getValueAt(i, 2))
+                        && closeAction0.getOpActionType().equals(model.getValueAt(i, 3))
+                        && closeAction0.getPartType().equals(model.getValueAt(i, 4))) {
                     jTable1.getSelectionModel().setSelectionInterval(i, i);
                     scrollToVisible(jTable1, i, 0);
                     return;
@@ -230,10 +238,26 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
         List<OpAction> actions = opActionPlan.getOrderedList(true);
+        OpActionInterface prevAction = null;
         for (int i = 0; i < actions.size(); i++) {
             OpAction action = actions.get(i);
-            model.addRow(new Object[]{i, action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired()});
+            List<OpActionInterface> possibleNexts
+                    = action.getPossibleNextActions();
+            List<Integer> possibleNextIds = new ArrayList<>();
+            for (int j = 0; j < possibleNexts.size(); j++) {
+                OpActionInterface possibleNext
+                        = possibleNexts.get(j);
+                possibleNextIds.add(possibleNext.getId());
+                Collections.sort(possibleNextIds);
+            }
+            final OpActionInterface next = action.getNext();
+            boolean skipped = OpActionPlan.isSkippedAction(action, prevAction);
+            model.addRow(new Object[]{i, action.getId(), action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired(), skipped, (null != next) ? next.getId() : -1, action.getExecutorActionType(),action.getExecutorArgs(),possibleNextIds});
+            prevAction = action;
         }
+        OpEndAction endAction = opActionPlan.getEndAction();
+        model.addRow(new Object[]{actions.size(), endAction.getId(), endAction.getName(), endAction.getOpActionType(), null, endAction.getLocation().x, endAction.getLocation().y, 0, endAction.isRequired(), false, -1, Collections.emptyList()});
+
         Utils.autoResizeTableColWidths(jTable1);
     }
 
