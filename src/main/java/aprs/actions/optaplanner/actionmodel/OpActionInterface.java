@@ -6,6 +6,7 @@
 package aprs.actions.optaplanner.actionmodel;
 
 import java.awt.geom.Point2D;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -24,6 +25,8 @@ public interface OpActionInterface {
 
     public @Nullable OpActionInterface getNext();
     
+    public List<Integer> getPossibleNextIds();
+    
     public Point2D.Double getLocation();
     
     public @Nullable String getTrayType();
@@ -35,4 +38,6 @@ public interface OpActionInterface {
     public int getPriority(boolean prevRequired);
     
     public @Nullable OpActionInterface effectiveNext(boolean quiet);
+    
+    public String shortString();
 }

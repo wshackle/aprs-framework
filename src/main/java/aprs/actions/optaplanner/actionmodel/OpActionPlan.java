@@ -5,6 +5,7 @@
  */
 package aprs.actions.optaplanner.actionmodel;
 
+import aprs.actions.executor.ActionType;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.END;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
@@ -12,14 +13,27 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
 import static aprs.misc.AprsCommonLogger.println;
+import aprs.misc.Utils;
+import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
@@ -41,22 +55,50 @@ import org.optaplanner.core.api.solver.SolverFactory;
 @PlanningSolution(solutionCloner = OpActionPlanCloner.class)
 public class OpActionPlan {
 
+    private final static AtomicInteger idCounter = new AtomicInteger(1);
+    
+    static int newActionPlanId() {
+        return idCounter.incrementAndGet();
+    }
+    
     static public SolverFactory<OpActionPlan> createSolverFactory() {
         return SolverFactory.createFromXmlResource(
                 "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
     }
-    
+
     @ProblemFactProperty
-    OpEndAction endAction = new OpEndAction();
+    private final OpEndAction endAction = new OpEndAction();
 
     public OpEndAction getEndAction() {
         return endAction;
     }
 
-    public void setEndAction(OpEndAction endAction) {
-        this.endAction = endAction;
+    public static OpActionPlan cloneAndShufflePlan(OpActionPlan inPlan) {
+        List<OpAction> actions = inPlan.getActions();
+        List<OpAction> newActionsList = new ArrayList<>();
+        for (int i = 0; i < actions.size(); i++) {
+            OpAction action = actions.get(i);
+            if(action.getOpActionType() != OpActionType.FAKE_DROPOFF && action.getOpActionType() != OpActionType.FAKE_PICKUP) {
+                action.clearNext();
+                action.getPossibleNextActions().clear();
+                newActionsList.add(action);
+            }
+        }
+        OpActionPlan newPlan = new OpActionPlan();
+        newPlan.setAccelleration(inPlan.getAccelleration());
+        newPlan.setDebug(inPlan.isDebug());
+        newPlan.setMaxSpeed(inPlan.getMaxSpeed());
+        newPlan.setStartEndMaxSpeed(inPlan.getStartEndMaxSpeed());
+        newPlan.getEndAction().getLocation().x = inPlan.getEndAction().getLocation().x;
+        newPlan.getEndAction().getLocation().y = inPlan.getEndAction().getLocation().y;
+        newPlan.setUseDistForCost(inPlan.isUseDistForCost());
+        newPlan.setUseStartEndCost(inPlan.isUseStartEndCost());
+        Collections.shuffle(newActionsList);
+        newPlan.setActions(newActionsList);
+        newPlan.initNextActions();
+        return newPlan;
     }
-
+    
     @ProblemFactCollectionProperty
     private List<OpEndAction> endActions = Collections.singletonList(endAction);
 
@@ -78,8 +120,8 @@ public class OpActionPlan {
         return actions;
     }
 
-    public static void checkActionsList(@Nullable  List<OpAction> actionsToCheck) {
-        if(null != actionsToCheck) {
+    public static void checkActionsList(@Nullable List<OpAction> actionsToCheck) {
+        if (null != actionsToCheck) {
             IdentityHashMap<OpActionInterface, OpActionInterface> inverseEntityMap = new IdentityHashMap<>();
             for (OpAction opAction : actionsToCheck) {
                 OpActionInterface nxtAction = opAction.getNext();
@@ -92,11 +134,148 @@ public class OpActionPlan {
             }
         }
     }
-    
+
     public void checkActionList() {
         checkActionsList(getActions());
     }
+
+    private static final String CSV_HEADERS[] = {
+        "Index", "Id", "Name", "Type", "PartType", "ExecutorType","ExecutorArgs","X", "Y", "Cost", "Required", "Skipped", "NextId", "PossibleNexts"
+    };
+
+    private Object[] propRecord(String propName, Object propValue) {
+        return new Object[]{
+            -1, -1, propName + "=" + propValue, SET_PROPERTY_PROPNAME, null, null,null,Double.NaN, Double.NaN, Double.NaN, true, false, Collections.emptyList()
+        };
+    }
+    private static final String SET_PROPERTY_PROPNAME = "SET_PROPERTY";
+
+    public static boolean isSkippedAction(OpAction action, OpActionInterface prevAction) {
+        if (null != prevAction && prevAction.getNext() != action) {
+            throw new IllegalArgumentException("prevAction.getNext() != action : action=" + action + ",prevAction=" + prevAction);
+        }
+        if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
+            return true;
+        } else if (action.getOpActionType() == PICKUP && action.getNext().getOpActionType() == FAKE_DROPOFF) {
+            return true;
+        } else if (null == prevAction || prevAction.getOpActionType() == FAKE_PICKUP) {
+            if (action.getOpActionType() == START) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private Object[] actionRecord(int index, OpActionInterface actionInterface, boolean skipped) {
+        final OpActionInterface next = actionInterface.getNext();
+        int nextId = (next != null) ? next.getId() : -1;
+        ActionType executorType = null;
+        String executorArgs = null;
+        if(actionInterface instanceof OpAction) {
+            OpAction action = (OpAction) actionInterface;
+            executorType = action.getExecutorActionType();
+            executorArgs = Arrays.toString(action.getExecutorArgs());
+        }
+        return new Object[]{
+            index, actionInterface.getId(), actionInterface.getName(), actionInterface.getOpActionType(), actionInterface.getPartType(),executorType,executorArgs, actionInterface.getLocation().x, actionInterface.getLocation().y, Double.NaN, actionInterface.isRequired(), skipped, nextId, actionInterface.getPossibleNextIds()
+        };
+    }
+
+    public void saveActionList(File f) throws IOException {
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), Utils.preferredCsvFormat().withHeader(CSV_HEADERS))) {
+            printer.printRecord(propRecord(USE_DIST_FOR_COST_PROPNAME, useDistForCost));
+            printer.printRecord(propRecord(USE_START_END_COST_PROPNAME, useStartEndCost));
+            printer.printRecord(propRecord(DEBUG_PROPNAME, debug));
+            printer.printRecord(propRecord("score", score));
+            printer.printRecord(propRecord(MAX_SPEED_PROPNAME, maxSpeed));
+            printer.printRecord(propRecord(START_END_MAX_SPEED_PROPNAME, startEndMaxSpeed));
+            printer.printRecord(propRecord(ACCELLERATION_PROPNAME, accelleration));
+            List<OpAction> orderedActions = this.getOrderedList(true);
+            OpActionInterface prevAction = null;
+            for (int i = 0; i < orderedActions.size(); i++) {
+                final OpAction action = orderedActions.get(i);
+                boolean skipped = isSkippedAction(action, prevAction);
+                prevAction = action;
+                printer.printRecord(actionRecord(i, action, skipped));
+            }
+            printer.printRecord(actionRecord(orderedActions.size(), endAction, false));
+        }
+    }
+
+    public static OpActionPlan loadActionList(File f) throws IOException {
+        OpActionPlan plan = new OpActionPlan();
+        plan.privateLoadActionList(f);
+        return plan;
+    }
     
+    private void privateLoadActionList(File f) throws IOException {
+        if(null == actions) {
+            actions = new ArrayList<>();
+        }
+        actions.clear();
+        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat().withFirstRecordAsHeader())) {
+            for (CSVRecord record : parser) {
+                String type = record.get("Type");
+                if (type.equals(SET_PROPERTY_PROPNAME)) {
+                    String name = record.get("Name");
+                    int eindex = name.indexOf('=');
+                    String vname = name.substring(0, eindex);
+                    String vval = name.substring(eindex + 1);
+                    switch (vname) {
+                        case USE_DIST_FOR_COST_PROPNAME:
+                            useDistForCost = Boolean.parseBoolean(vval);
+                            break;
+
+                        case USE_START_END_COST_PROPNAME:
+                            useStartEndCost = Boolean.parseBoolean(vval);
+                            break;
+
+                        case DEBUG_PROPNAME:
+                            debug = Boolean.parseBoolean(vval);
+                            break;
+
+                        case MAX_SPEED_PROPNAME:
+                            maxSpeed = Double.parseDouble(vval);
+                            break;
+
+                        case START_END_MAX_SPEED_PROPNAME:
+                            startEndMaxSpeed = Double.parseDouble(vval);
+                            break;
+                        case ACCELLERATION_PROPNAME:
+                            accelleration = Double.parseDouble(vval);
+                            break;
+                    }
+                    continue;
+                } else if(!type.equals("END") && !type.equals("FAKE_PICKUP") && !type.equals("FAKE_DROPOFF")) {
+                    // String name, double x, double y, OpActionType opActionType, String partType, boolean required
+                    String name = record.get("Name");
+                    double x = Double.parseDouble(record.get("X"));
+                    double y = Double.parseDouble(record.get("Y"));
+                    boolean required =Boolean.parseBoolean(record.get("Required"));
+                    OpAction action = new OpAction(type,x,y, OpActionType.valueOf(type),record.get("PartType"), required);
+                    action.setName(name);
+                    actions.add(action);
+                } else if(type.equals("END")) {
+                    if(null == endAction) {
+                        throw new NullPointerException("endAction");
+                    }
+                    double x = Double.parseDouble(record.get("X"));
+                    double y = Double.parseDouble(record.get("Y"));
+                    endAction.setLocation(new Point2D.Double(x,y));
+                }
+            }
+        }
+        initNextActions();
+    }
+    private static final String ACCELLERATION_PROPNAME = "accelleration";
+    private static final String START_END_MAX_SPEED_PROPNAME = "startEndMaxSpeed";
+    private static final String MAX_SPEED_PROPNAME = "maxSpeed";
+    private static final String DEBUG_PROPNAME = "debug";
+    private static final String USE_START_END_COST_PROPNAME = "useStartEndCost";
+    private static final String USE_DIST_FOR_COST_PROPNAME = "useDistForCost";
     private boolean useDistForCost = true;
 
     /**
@@ -136,7 +315,7 @@ public class OpActionPlan {
     public void setUseStartEndCost(boolean useStartEndCost) {
         this.useStartEndCost = useStartEndCost;
     }
-    
+
     private boolean debug;
 
     /**
@@ -167,7 +346,16 @@ public class OpActionPlan {
         if (null == actions) {
             throw new IllegalStateException("actions not initialized");
         }
-        List<OpAction> tmpActions = new ArrayList<>(actions);
+
+        List<OpAction> tmpActions = new ArrayList<>();
+        for (int i = 0; i < actions.size(); i++) {
+            OpAction actionI = actions.get(i);
+            actionI.getPossibleNextActions().clear();
+            actionI.clearNext();
+            if(actionI.getOpActionType() != FAKE_PICKUP && actionI.getOpActionType() != FAKE_DROPOFF) {
+                tmpActions.add(actionI);
+            }
+        }
         List<OpAction> origActions = new ArrayList<>(actions);
 
         if (debug) {
@@ -265,7 +453,7 @@ public class OpActionPlan {
                 if (act.getPossibleNextActions() == null || act.getPossibleNextActions().isEmpty()) {
                     throw new IllegalStateException("action has no possibleNextAction :" + act);
                 }
-                println("i="+i+", "+act + ".getPossibleNextActions() = "
+                println("i=" + i + ", " + act + ".getPossibleNextActions() = "
                         + act.getPossibleNextActions()
                                 .stream()
                                 .map(OpActionInterface::getName)
@@ -456,6 +644,9 @@ public class OpActionPlan {
         List<OpAction> l = new ArrayList<>();
         OpAction startAction = findStartAction();
         if (null == startAction) {
+            if(quiet) {
+                return l;
+            }
             throw new IllegalStateException("findStartAction returned null");
         }
         l.add(startAction);

@@ -22,23 +22,35 @@
  */
 package aprs.actions.optaplanner.display;
 
+import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
-import java.awt.Dimension;
-import javax.swing.JFrame;
+import aprs.actions.optaplanner.actionmodel.OpActionType;
+import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.solver.Solver;
+import org.optaplanner.core.api.solver.SolverFactory;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class OptiplannerTestJFrame extends javax.swing.JFrame {
+public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form OptiplannerTestJFrame
      */
-    public OptiplannerTestJFrame() {
+    public OptiplannerDisplayJFrame() {
         initComponents();
+        clearPlans();
     }
 
     /**
@@ -59,6 +71,13 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
         outerOptiplannerJPanelOutput = new aprs.actions.optaplanner.display.OuterOptiplannerJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        jMenuItemSaveInputList = new javax.swing.JMenuItem();
+        jMenuItemLoadInputList = new javax.swing.JMenuItem();
+        jMenuItemClear = new javax.swing.JMenuItem();
+        jMenuItemSolve = new javax.swing.JMenuItem();
+        jMenuItemSaveOutputList = new javax.swing.JMenuItem();
+        jMenuItemLoadOutputList = new javax.swing.JMenuItem();
+        jMenuItemShuffleInputList = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -125,6 +144,63 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
         jSplitPane1.setRightComponent(jPanelOutput);
 
         jMenu1.setText("File");
+
+        jMenuItemSaveInputList.setText("Save Input List ...");
+        jMenuItemSaveInputList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveInputListActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemSaveInputList);
+
+        jMenuItemLoadInputList.setText("Load Input List ...");
+        jMenuItemLoadInputList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadInputListActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemLoadInputList);
+
+        jMenuItemClear.setText("Clear");
+        jMenuItemClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemClearActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemClear);
+
+        jMenuItemSolve.setText("Solve");
+        jMenuItemSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSolveActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemSolve);
+
+        jMenuItemSaveOutputList.setText("Save Output List ...");
+        jMenuItemSaveOutputList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSaveOutputListActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemSaveOutputList);
+
+        jMenuItemLoadOutputList.setText("Load Output List ...");
+        jMenuItemLoadOutputList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemLoadOutputListActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemLoadOutputList);
+
+        jMenuItemShuffleInputList.setText("Shuffle Input List");
+        jMenuItemShuffleInputList.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemShuffleInputListActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemShuffleInputList);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
@@ -156,6 +232,79 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
        jSplitPane1.setDividerLocation(0.5);
     }//GEN-LAST:event_formComponentResized
 
+    private void jMenuItemSaveInputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveInputListActionPerformed
+       JFileChooser chooser = new JFileChooser();
+       if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+           try {
+               outerOptiplannerJPanelInput.getOpActionPlan().saveActionList(chooser.getSelectedFile());
+           } catch (IOException ex) {
+               Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+           }
+       }
+    }//GEN-LAST:event_jMenuItemSaveInputListActionPerformed
+
+    private void jMenuItemLoadInputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadInputListActionPerformed
+       JFileChooser chooser = new JFileChooser();
+       if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+           try {
+               setInputOpActionPlan(OpActionPlan.loadActionList(chooser.getSelectedFile()));
+           } catch (IOException ex) {
+               Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+           }
+       }
+    }//GEN-LAST:event_jMenuItemLoadInputListActionPerformed
+
+    private void jMenuItemClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemClearActionPerformed
+        clearPlans();
+    }//GEN-LAST:event_jMenuItemClearActionPerformed
+
+    private void clearPlans() {
+        setOutputOpActionPlan(new OpActionPlan());
+        setInputOpActionPlan(new OpActionPlan());
+    }
+
+    private void jMenuItemSaveOutputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveOutputListActionPerformed
+        JFileChooser chooser = new JFileChooser();
+       if(chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+           try {
+               outerOptiplannerJPanelOutput.getOpActionPlan().saveActionList(chooser.getSelectedFile());
+           } catch (IOException ex) {
+               Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+           }
+       }
+    }//GEN-LAST:event_jMenuItemSaveOutputListActionPerformed
+
+    private void jMenuItemSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSolveActionPerformed
+        long t1 = System.currentTimeMillis();
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+         SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
+        
+        Solver<OpActionPlan> solver = solverFactory.buildSolver();
+        OpActionPlan outPlan = solver.solve(inPlan);
+        setOutputOpActionPlan(outPlan);
+        long t2 = System.currentTimeMillis();
+        System.out.println("time to solve = " + (t2-t1));
+    }//GEN-LAST:event_jMenuItemSolveActionPerformed
+
+    private void jMenuItemLoadOutputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadOutputListActionPerformed
+        JFileChooser chooser = new JFileChooser();
+       if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+           try {
+               setOutputOpActionPlan(OpActionPlan.loadActionList(chooser.getSelectedFile()));
+           } catch (IOException ex) {
+               Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+           }
+       }
+    }//GEN-LAST:event_jMenuItemLoadOutputListActionPerformed
+
+    private void jMenuItemShuffleInputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemShuffleInputListActionPerformed
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+        OpActionPlan newPlan = OpActionPlan.cloneAndShufflePlan(inPlan);
+        setInputOpActionPlan(newPlan);
+    }//GEN-LAST:event_jMenuItemShuffleInputListActionPerformed
+
+    
+
     /**
      * @param args the command line arguments
      */
@@ -173,20 +322,21 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(OptiplannerTestJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(OptiplannerTestJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(OptiplannerTestJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(OptiplannerTestJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new OptiplannerTestJFrame().setVisible(true);
+                new OptiplannerDisplayJFrame().setVisible(true);
             }
         });
     }
@@ -199,7 +349,7 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
      */
     public static void showPlan(OpActionPlan inputPlan, OpActionPlan outputPlan, String title, int defaultCloseOperation) {
         javax.swing.SwingUtilities.invokeLater(() -> {
-            OptiplannerTestJFrame frm = new OptiplannerTestJFrame();
+            OptiplannerDisplayJFrame frm = new OptiplannerDisplayJFrame();
             frm.setDefaultCloseOperation(defaultCloseOperation);
             frm.setInputOpActionPlan(inputPlan);
             frm.setOutputOpActionPlan(outputPlan);
@@ -227,7 +377,13 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setInputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         outerOptiplannerJPanelInput.setOpActionPlan(opActionPlan);
-        jLabelInput.setText("Input : "+opActionPlan.getScore().getSoftScore());
+        HardSoftLongScore score = opActionPlan.getScore();
+        if(null == score) {
+            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+            score = calculator.calculateScore(opActionPlan);
+            opActionPlan.setScore(score);
+        }
+        jLabelInput.setText("Input : "+score.getSoftScore());
     }
     
     /**
@@ -249,7 +405,13 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setOutputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         outerOptiplannerJPanelOutput.setOpActionPlan(opActionPlan);
-        jLabelOutput.setText("Output : "+opActionPlan.getScore().getSoftScore());
+        HardSoftLongScore score = opActionPlan.getScore();
+        if(null == score) {
+            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+            score = calculator.calculateScore(opActionPlan);
+            opActionPlan.setScore(score);
+        }
+        jLabelOutput.setText("Output : "+score.getSoftScore());
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -258,6 +420,13 @@ public class OptiplannerTestJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemClear;
+    private javax.swing.JMenuItem jMenuItemLoadInputList;
+    private javax.swing.JMenuItem jMenuItemLoadOutputList;
+    private javax.swing.JMenuItem jMenuItemSaveInputList;
+    private javax.swing.JMenuItem jMenuItemSaveOutputList;
+    private javax.swing.JMenuItem jMenuItemShuffleInputList;
+    private javax.swing.JMenuItem jMenuItemSolve;
     private javax.swing.JPanel jPanelInput;
     private javax.swing.JPanel jPanelOutput;
     private javax.swing.JSplitPane jSplitPane1;

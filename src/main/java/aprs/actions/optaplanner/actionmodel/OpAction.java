@@ -16,12 +16,12 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
 import aprs.actions.optaplanner.actionmodel.score.DistToTime;
+import crcl.utils.Utils;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,7 +38,7 @@ import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 @PlanningEntity
 public class OpAction implements OpActionInterface {
 
-    private final static AtomicInteger idCounter = new AtomicInteger();
+    
 
     @Nullable
     private final ActionType executorActionType;
@@ -108,7 +108,7 @@ public class OpAction implements OpActionInterface {
         this.location = new Point2D.Double(x, y);
         this.opActionType = opActionType;
         this.partType = partType;
-        this.id = idCounter.incrementAndGet() + 1;
+        this.id = OpActionPlan.newActionPlanId();
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
@@ -120,7 +120,7 @@ public class OpAction implements OpActionInterface {
         this.location = new Point2D.Double(x, y);
         this.opActionType = executorActionToOpAction(executorActionType);
         this.partType = partType;
-        this.id = idCounter.incrementAndGet() + 1;
+        this.id = OpActionPlan.newActionPlanId();
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
@@ -132,7 +132,7 @@ public class OpAction implements OpActionInterface {
             case DROPOFF:
                 if (name.contains("_in_pt_") || name.endsWith("in_pt")) {
                     return "PT";
-                } else if (name.contains("_in_kit_")|| name.contains("_in_kt_")) {
+                } else if (name.contains("_in_kit_") || name.contains("_in_kt_")) {
                     return "KT";
                 }
                 break;
@@ -221,11 +221,18 @@ public class OpAction implements OpActionInterface {
         this.next = next;
     }
 
+    public void clearNext() {
+        this.next = null;
+    }
+
     private boolean actionRequired() {
         return required; // Objects.equals(trayType, "KT");
     }
 
     public boolean checkNextAction(OpActionInterface possibleNextAction) {
+        if (null == possibleNextAction) {
+            throw new IllegalStateException("possibleNextAction");
+        }
         OpActionType possibleNextOpActionType = possibleNextAction.getOpActionType();
         switch (opActionType) {
             case START:
@@ -256,7 +263,7 @@ public class OpAction implements OpActionInterface {
                 }
 
             case FAKE_PICKUP:
-                if(Objects.equals(partType, possibleNextAction.getPartType())) {
+                if (Objects.equals(partType, possibleNextAction.getPartType())) {
                     switch (possibleNextOpActionType) {
                         case DROPOFF:
                             return !possibleNextAction.isRequired();
@@ -276,11 +283,35 @@ public class OpAction implements OpActionInterface {
 
     private int maxNextEffectiveCount = 0;
 
+    private StackTraceElement addPossibleNextActionsTrace[] = null;
+
+    @Override
+    public List<Integer> getPossibleNextIds() {
+        List<OpActionInterface> possibleNexts
+                = getPossibleNextActions();
+        List<Integer> possibleNextIds = new ArrayList<>();
+        for (int j = 0; j < possibleNexts.size(); j++) {
+            OpActionInterface possibleNext
+                    = possibleNexts.get(j);
+            possibleNextIds.add(possibleNext.getId());
+        }
+        return possibleNextIds;
+    }
+
     void addPossibleNextActions(List<? extends OpActionInterface> allActions) {
         maxNextEffectiveCount = allActions.size();
+        List<OpActionInterface> startPossibleNextAction = new ArrayList<>(possibleNextActions);
+        if (!startPossibleNextAction.isEmpty()) {
+            System.out.println("startPossibleNextAction = " + startPossibleNextAction);
+            System.out.println("addPossibleNextActionsTrace = " + Utils.traceToString(addPossibleNextActionsTrace));
+        }
         for (OpActionInterface action : allActions) {
-            if (checkNextAction(action)) {
-                possibleNextActions.add(action);
+            if (!possibleNextActions.contains(action)) {
+                if (checkNextAction(action)) {
+                    possibleNextActions.add(action);
+                }
+            } else {
+                System.out.println("possibleNextActions.contains(" + action + ")");
             }
         }
         if (opActionType == END) {
@@ -288,6 +319,7 @@ public class OpAction implements OpActionInterface {
                 possibleNextActions.add(this);
             }
         }
+        addPossibleNextActionsTrace = Thread.currentThread().getStackTrace();
     }
 
     @Nullable
@@ -344,7 +376,7 @@ public class OpAction implements OpActionInterface {
                 OpActionInterface nextNext = next.getNext();
                 if (null == nextNext) {
                     if (quiet) {
-                        return next;
+                        return null;
                     }
                     throw new IllegalStateException("this=" + name + ", next=" + next + " next.getNext() ==null");
                 }
@@ -354,17 +386,29 @@ public class OpAction implements OpActionInterface {
 //                    nxts.add(nextNext);
                     OpActionInterface nxt2 = nextNext.getNext();
                     if (null == nxt2) {
+                        if (quiet) {
+                            return null;
+                        }
                         throw new IllegalStateException("this=" + name + " nxt2 ==null");
                     }
 //                    nxts.add(nxt2);
                     OpActionInterface nxt2Next = nxt2.getNext();
                     if (null == nxt2Next) {
+                        if (quiet) {
+                            return null;
+                        }
                         throw new IllegalStateException("this=" + name + " nxt2.getNext() ==null");
                     }
                     if (nxt2 == next) {
+                        if (quiet) {
+                            return null;
+                        }
                         throw new IllegalStateException("this=" + name + " nxt2 == next");
                     }
                     if (nxt2 == this) {
+                        if (quiet) {
+                            return null;
+                        }
                         throw new IllegalStateException("this=" + name + " nxt2 == this");
                     }
 //                    nxts.add(nxt2Next);
@@ -372,23 +416,38 @@ public class OpAction implements OpActionInterface {
                     while (nxt2.skipNext()) {
                         count++;
                         if (count > maxNextEffectiveCount) {
-                            throw new IllegalStateException("this=" + name + " count > maxCount");//,nxts=" + nxts);
+                            if (quiet) {
+                                return null;
+                            }
+                            throw new IllegalStateException("this=" + name + " count > maxCount, count=" + count);//,nxts=" + nxts);
                         }
 
                         nxt2 = nxt2Next.getNext();
                         if (null == nxt2) {
-                            throw new IllegalStateException("this=" + name + " nxt2Next.getNext() ==null");
+                            if (quiet) {
+                                return null;
+                            }
+                            throw new IllegalStateException("this=" + name + " nxt2Next=" + nxt2Next.getName() + ", nxt2Next.getNext() ==null, count=" + count);
                         }
 //                        nxts.add(nxt2);
                         nxt2Next = nxt2.getNext();
                         if (null == nxt2Next) {
+                            if (quiet) {
+                                return null;
+                            }
                             throw new IllegalStateException("this=" + name + " nxt2=" + nxt2 + " nxt2.getNext() ==null");
                         }
 //                        nxts.add(nxt2Next);
                         if (nxt2 == next) {
+                            if (quiet) {
+                                return null;
+                            }
                             throw new IllegalStateException("this=" + name + " nxt2 == next");
                         }
                         if (nxt2 == this) {
+                            if (quiet) {
+                                return null;
+                            }
                             throw new IllegalStateException("this=" + name + " nxt2 == this");
                         }
                     }
@@ -422,7 +481,7 @@ public class OpAction implements OpActionInterface {
         if (null == effNext) {
             return Double.POSITIVE_INFINITY;
         }
-        if (effNext.getOpActionType() == END && !plan.isUseStartEndCost() ) {
+        if (effNext.getOpActionType() == END && !plan.isUseStartEndCost()) {
             return 0;
         }
         if (effNext.getOpActionType() == END) {
@@ -460,18 +519,30 @@ public class OpAction implements OpActionInterface {
         return effNext.getLocation().distance(location);
     }
 
+    public String locationString() {
+        if(null != location) {
+            return String.format("{%.1f,%.1f}", location.x,location.y);
+        } else {
+            return "";
+        }
+    }
+    
+    @Override
+    public String shortString() {
+        return name + ":" + getId()+locationString();
+    }
+
+    public String longString() {
+        String effNextString =  makeEffNextString();
+        return makeLongString(effNextString);
+    }
+    
     @Override
     public String toString() {
-        String effNextString = "";
-        OpActionInterface effNext = null;
-        try {
-            effNext = effectiveNext(true);
-        } catch (Exception e) {
-            Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
-        }
-        if (effNext != next && null != effNext) {
-            effNextString = "(effectiveNext=" + effNext.getName() + ")";
-        }
+        return makeLongString("");
+    }
+
+    private String makeLongString(String effNextString) {
         String partTypeString = "";
         if (null != this.partType && this.partType.length() > 0) {
             partTypeString = "(partType=" + this.partType + ")";
@@ -491,14 +562,29 @@ public class OpAction implements OpActionInterface {
                 } catch (Exception e) {
                     Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
                 }
-                return name + infoString + " -> " + ((OpAction) localNext).name + "(cost=" + String.format("%.3f", dist) + ")";
+                return shortString() + infoString + " -> " + localNext.shortString() + "(cost=" + String.format("%.3f", dist) + ")";
             } else {
-                return name + infoString + " -> " + ((OpAction) localNext).name;
+                return shortString() + infoString + " -> " + localNext.shortString();
             }
         } else if (null != localNext) {
-            return name + infoString + " -> " + localNext.getOpActionType();
+            return shortString() + infoString + " -> " + localNext.getOpActionType();
+        } else {
+            return shortString() + "-> null";
         }
-        return name + "-> null";
+    }
+
+    private String makeEffNextString() {
+        try {
+            OpActionInterface effNext = effectiveNext(true);
+            if (effNext != next && null != effNext) {
+                return "(effectiveNext=" + effNext.getName() + ")";
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
+            return e.getMessage();
+        }
     }
 
     private final int id;

@@ -60,8 +60,9 @@
               <Properties>
                 <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="8" rowCount="0">
+                  <Table columnCount="14" rowCount="0">
                     <Column editable="false" title="Index" type="java.lang.Integer"/>
+                    <Column editable="false" title="Id" type="java.lang.Integer"/>
                     <Column editable="true" title="Name" type="java.lang.String"/>
                     <Column editable="true" title="Type" type="java.lang.String"/>
                     <Column editable="true" title="PartType" type="java.lang.String"/>
@@ -69,6 +70,11 @@
                     <Column editable="true" title="Y" type="java.lang.Double"/>
                     <Column editable="true" title="Cost" type="java.lang.Double"/>
                     <Column editable="false" title="Required" type="java.lang.Boolean"/>
+                    <Column editable="false" title="Skipped" type="java.lang.Boolean"/>
+                    <Column editable="false" title="NextId" type="java.lang.Integer"/>
+                    <Column editable="true" title="ExecType" type="java.lang.String"/>
+                    <Column editable="true" title="Args" type="java.lang.String"/>
+                    <Column editable="true" title="PossibleNexts" type="java.lang.String"/>
                   </Table>
                 </Property>
               </Properties>

@@ -7,6 +7,8 @@ package aprs.actions.optaplanner.actionmodel;
 
 import static aprs.actions.optaplanner.actionmodel.OpActionType.END;
 import java.awt.geom.Point2D;
+import java.util.Collections;
+import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -17,9 +19,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class OpEndAction  implements OpActionInterface{
 
     private Point2D.Double location;
+    final int id;
+    public final StackTraceElement []createTrace;
     
     public OpEndAction() {
         location = new Point2D.Double();
+        this.id = OpActionPlan.newActionPlanId();
+        createTrace = Thread.currentThread().getStackTrace();
     }
     
     public void setLocation(Point2D.Double location) {
@@ -46,19 +52,38 @@ public class OpEndAction  implements OpActionInterface{
         return location;
     }
 
+    private static final String END_STRING = "END";
+     public String locationString() {
+        if(null != location) {
+            return String.format("{%.1f,%.1f}", location.x,location.y);
+        } else {
+            return "";
+        }
+    }
+    
     @Override
-    public String toString() {
-        return "END";
+    public String shortString() {
+        return END_STRING + ":" + getId()+locationString();
     }
 
     @Override
+    public String toString() {
+        return shortString();
+    }
+    
+    @Override
+    public List<Integer> getPossibleNextIds() {
+        return Collections.emptyList();
+    }
+    
+    @Override
     public int getId() {
-        return 0;
+        return id;
     }
 
     @Override
     public String getName() {
-       return "END";
+       return END_STRING;
     }
 
     @Override
