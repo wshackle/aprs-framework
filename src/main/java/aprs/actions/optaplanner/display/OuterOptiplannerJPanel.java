@@ -31,6 +31,7 @@ import java.awt.Container;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.JTable;
@@ -252,7 +253,7 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
             }
             final OpActionInterface next = action.getNext();
             boolean skipped = OpActionPlan.isSkippedAction(action, prevAction);
-            model.addRow(new Object[]{i, action.getId(), action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired(), skipped, (null != next) ? next.getId() : -1, action.getExecutorActionType(),action.getExecutorArgs(),possibleNextIds});
+            model.addRow(new Object[]{i, action.getId(), action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired(), skipped, (null != next) ? next.getId() : -1, action.getExecutorActionType(),Arrays.toString(action.getExecutorArgs()),possibleNextIds});
             prevAction = action;
         }
         OpEndAction endAction = opActionPlan.getEndAction();
