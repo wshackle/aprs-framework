@@ -22,10 +22,11 @@
  */
 package aprs.actions.optaplanner.display;
 
-import static aprs.actions.optaplanner.display.OpDisplayJPanel.showPlan;
 import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.OpActionType;
+import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
+import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 
 import java.awt.geom.Point2D;
@@ -91,6 +92,10 @@ public class OptaplannerTest {
                 new OpAction("DROPOFF C2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
                 new OpAction("PICKUP C2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true)
         );
+        String partType = "A";
+        printInfo(initList, "A");
+        printInfo(initList, "B");
+        printInfo(initList, "C");
         List<OpAction> shuffledList = new ArrayList<>(initList);
         ap.setAccelleration(0.1);
         ap.setMaxSpeed(0.25);
@@ -158,5 +163,36 @@ public class OptaplannerTest {
 //        score = calculator.calculateScore(bestPlan);
         System.out.println("bestScore = " + bestScore);
         aprs.actions.optaplanner.display.OptiplannerDisplayJFrame.showPlan(ap, bestPlan, "Solution: " + bestScore.getSoftScore(), JFrame.EXIT_ON_CLOSE);
+    }
+
+    private static void printInfo(List<OpAction> initList, String partType) {
+        int optionalPickups = 0;
+        int requiredPickups = 0;
+        int optionalDropoffs = 0;
+        int requiredDropoffs = 0;
+        for (int i = 0; i < initList.size(); i++) {
+            OpAction a = initList.get(i);
+            if(!a.getPartType().equals(partType)) {
+                continue;
+            }
+            if(a.getOpActionType() == PICKUP) {
+                if(a.isRequired()) {
+                    requiredPickups++;
+                } else {
+                    optionalPickups++;
+                }
+            } else if(a.getOpActionType() == DROPOFF) {
+                if(a.isRequired()) {
+                    requiredDropoffs++;
+                } else {
+                    optionalDropoffs++;
+                }
+            }
+        }
+        System.out.println("partType = " + partType);
+        System.out.println("requiredDropoffs = " + requiredDropoffs);
+        System.out.println("optionalDropoffs = " + optionalDropoffs);
+        System.out.println("requiredPickups = " + requiredPickups);
+        System.out.println("optionalPickups = " + optionalPickups);
     }
 }

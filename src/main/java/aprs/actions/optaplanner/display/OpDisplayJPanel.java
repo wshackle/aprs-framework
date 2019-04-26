@@ -461,19 +461,10 @@ public class OpDisplayJPanel extends JPanel {
                         continue;
                     }
                 }
-                if (!showFakeActionsMenuItem.isSelected()) {
-                    if (type == FAKE_DROPOFF || type == FAKE_PICKUP) {
-                        continue;
-                    }
-                }
                 int x = 10;
                 paintActionSymbol(g2d, x, keyY, type, false);
                 g2d.drawString(type.toString(), 40, keyY);
-                if (showFakeActionsMenuItem.isSelected()) {
-                    g2d.drawString(": " + typeCount, 140, keyY);
-                } else {
-                    g2d.drawString(": " + typeCount, 100, keyY);
-                }
+                g2d.drawString(": " + typeCount, 140, keyY);
                 keyY += 25;
             }
             int x = 10;
@@ -605,9 +596,9 @@ public class OpDisplayJPanel extends JPanel {
                     }
                 }
                 boolean skipped = OpActionPlan.isSkippedAction(action, prevAction);
-                
+
                 if (!showSkippedActionsMenuItem.isSelected()) {
-                    if(skipped) {
+                    if (skipped) {
                         prevAction = action;
                         continue;
                     }
@@ -700,7 +691,7 @@ public class OpDisplayJPanel extends JPanel {
                     action = action.getNext();
                     continue;
                 }
-                
+
                 Point2D.Double location = getActionLocation(action, minX, maxX, minY, maxY);
                 int x = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
                 int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
@@ -1020,7 +1011,7 @@ public class OpDisplayJPanel extends JPanel {
 
     public void setCloseActions(List<OpAction> closeActions) {
         this.closeActions = closeActions;
-         System.out.println("closeActions = " + closeActions);
+        System.out.println("closeActions = " + closeActions);
         this.repaint();
     }
 

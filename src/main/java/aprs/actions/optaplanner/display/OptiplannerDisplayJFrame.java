@@ -22,12 +22,19 @@
  */
 package aprs.actions.optaplanner.display;
 
+import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
+import aprs.actions.optaplanner.actionmodel.OpActionType;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -79,6 +86,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         jMenuItemSolve = new javax.swing.JMenuItem();
         jMenuItemShuffleInputList = new javax.swing.JMenuItem();
         jMenuItemRepeatedShuffleTest = new javax.swing.JMenuItem();
+        jMenuItemGenerate = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -213,6 +221,14 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu2.add(jMenuItemRepeatedShuffleTest);
 
+        jMenuItemGenerate.setText("Generate");
+        jMenuItemGenerate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemGenerateActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemGenerate);
+
         jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
@@ -342,7 +358,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         List<Double> outScoresList = new ArrayList<>();
         for (int i = 0; i < repeatCount; i++) {
             long shuffleTime = doShuffle();
-            if(shuffleTime > worstShuffleTime) {
+            if (shuffleTime > worstShuffleTime) {
                 worstShuffleTime = shuffleTime;
             }
             totalShuffleTime += shuffleTime;
@@ -352,11 +368,11 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 inPlanScore = calculator.calculateScore(inPlan);
             }
-            if(inPlanScore.getSoftScore() > bestScore) {
+            if (inPlanScore.getSoftScore() > bestScore) {
                 bestScore = inPlanScore.getSoftScore();
                 bestPlan = inPlan;
             }
-            if(inPlanScore.getSoftScore() < worstScore) {
+            if (inPlanScore.getSoftScore() < worstScore) {
                 worstScore = inPlanScore.getSoftScore();
                 worstPlan = inPlan;
             }
@@ -369,23 +385,23 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 outPlanScore = calculator.calculateScore(outPlan);
             }
-            if(outPlanScore.getSoftScore() > bestScore) {
+            if (outPlanScore.getSoftScore() > bestScore) {
                 bestScore = outPlanScore.getSoftScore();
                 bestPlan = outPlan;
             }
-            if(outPlanScore.getSoftScore() < worstScore) {
+            if (outPlanScore.getSoftScore() < worstScore) {
                 worstScore = outPlanScore.getSoftScore();
                 worstPlan = outPlan;
             }
             totalOutScore += outPlanScore.getSoftScore();
-            outScoresList.add((double)outPlanScore.getSoftScore());
-            System.out.println("i="+i+",repeatCount="+repeatCount);
-            this.setTitle("i="+i+",repeatCount="+repeatCount);
+            outScoresList.add((double) outPlanScore.getSoftScore());
+            System.out.println("i=" + i + ",repeatCount=" + repeatCount);
+            this.setTitle("i=" + i + ",repeatCount=" + repeatCount);
         }
         Collections.sort(outScoresList);
-        double avgInScore = ((double)totalInScore)/((double)repeatCount);
+        double avgInScore = ((double) totalInScore) / ((double) repeatCount);
         System.out.println("avgInScore = " + avgInScore);
-        double avgOutScore = ((double)totalOutScore)/((double)repeatCount);
+        double avgOutScore = ((double) totalOutScore) / ((double) repeatCount);
         System.out.println("avgOutScore = " + avgOutScore);
         System.out.println("worstScore = " + worstScore);
         System.out.println("bestScore = " + bestScore);
@@ -401,6 +417,157 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jMenuItemRepeatedShuffleTestActionPerformed
+
+    private void jMenuItemGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemGenerateActionPerformed
+        Random rand = new Random();
+        int partsTypeNeeded = Integer.parseInt(JOptionPane.showInputDialog("Number of Part Types?", "1"));
+        Set<String> partTypesSet = new TreeSet<>();
+        for (int i = 0; i < partsTypeNeeded; i++) {
+            byte c = (byte) ('A' + i);
+            partTypesSet.add(new String(new byte[]{c}));
+        }
+
+        double minDist = Double.parseDouble(JOptionPane.showInputDialog("Minimum Distance between objects?", "5.0"));
+        double minX = Double.parseDouble(JOptionPane.showInputDialog("Minimum X?", "10.0"));
+        double maxX = Double.parseDouble(JOptionPane.showInputDialog("Maximum X?", "100.0"));
+        double minY = Double.parseDouble(JOptionPane.showInputDialog("Minimum Y?", "10.0"));
+        double maxY = Double.parseDouble(JOptionPane.showInputDialog("Maximum Y?", "100.0"));
+        List<OpAction> startingList = new ArrayList<>();
+        for (String partType : partTypesSet) {
+            int requiredPickups = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Pickups of " + partType + "?", Integer.toString(rand.nextInt(8))));
+            int requiredDropOffs = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Dropoffs of " + partType + "?", Integer.toString(rand.nextInt(8))));
+            int optionalPickups;
+            int optionalDropOffs;
+            if (requiredPickups >= requiredDropOffs) {
+                optionalPickups = 0;
+                optionalDropOffs = Integer.parseInt(JOptionPane.showInputDialog("Number of Optional Dropoffs of " + partType + "?", Integer.toString(rand.nextInt(8))));
+                if (optionalDropOffs < requiredPickups - requiredDropOffs) {
+                    optionalDropOffs = requiredPickups - requiredDropOffs;
+                }
+            } else {
+                optionalPickups = Integer.parseInt(JOptionPane.showInputDialog("Number of Optional Pickups of " + partType + "?", Integer.toString(rand.nextInt(8))));
+                if (optionalPickups < requiredDropOffs - requiredPickups) {
+                    optionalPickups = requiredDropOffs - requiredPickups;
+                }
+                optionalDropOffs = 0;
+            }
+            addActionsForPartType(requiredPickups, optionalPickups, requiredDropOffs, optionalDropOffs, partType, minX, maxX, minY, maxY, rand, startingList, minDist);
+        }
+
+        startingList.add(new OpAction(OpActionType.START.toString(), 0, 50.0, OpActionType.START, "START", true));
+
+//        // Create an initial plan with some set of parts to pickup and drop off.
+//        List<OpAction> initList = Arrays.asList(
+//                new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("pickup A3-alt", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("dropoff A3", 6 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+//                new OpAction("Start", rand.nextDouble(), rand.nextDouble(), OpActionType.START, "START", true),
+//                new OpAction("pickup A1", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("pickup A1-alt", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("dropoff A1", 2 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+//                new OpAction("pickup A2", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("pickup A2-alt", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
+//                new OpAction("dropoff A2", 4 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
+//                new OpAction("pickup B3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("pickup B3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("dropoff B3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+//                new OpAction("pickup B1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("pickup B1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("dropoff B1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+//                new OpAction("pickup B2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("pickup B2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
+//                new OpAction("dropoff B2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
+//                new OpAction("DROPOFF C3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("DROPOFF C3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("PICKUP C3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
+//                new OpAction("DROPOFF C1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("DROPOFF C1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("PICKUP C1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
+//                new OpAction("DROPOFF C2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("DROPOFF C2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
+//                new OpAction("PICKUP C2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true)
+//        );
+        List<OpAction> shuffledList = new ArrayList<>(startingList);
+        OpActionPlan ap = new OpActionPlan();
+        ap.getEndAction().getLocation().x = 100.0;
+        ap.getEndAction().getLocation().y = 50.0;
+
+        ap.setAccelleration(0.1);
+        ap.setMaxSpeed(0.25);
+        ap.setStartEndMaxSpeed(1.0);
+        Collections.shuffle(shuffledList);
+        ap.setActions(shuffledList);
+
+        // Set the location to return to after the task is complete.
+        ap.getEndAction().setLocation(new Point2D.Double(7, 0));
+        String apStr = ap.computeString();
+        System.out.println("apStr = " + apStr);
+        ap.initNextActions();
+        ap.checkActionList();
+        setInputOpActionPlan(ap);
+        doSolve();
+    }//GEN-LAST:event_jMenuItemGenerateActionPerformed
+
+    private void addActionsForPartType(int requiredPickups, int optionalPickups, int requiredDropOffs, int optionalDropOffs, String partType, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist) {
+        for (int i = 0; i < requiredPickups; i++) {
+            OpActionType actionType = OpActionType.PICKUP;
+            boolean required = true;
+            OpAction newAction = generateNewAction(i, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+            startingList.add(newAction);
+        }
+
+        for (int i = 0; i < optionalPickups; i++) {
+            OpActionType actionType = OpActionType.PICKUP;
+            boolean required = false;
+            OpAction newAction = generateNewAction(i, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+            startingList.add(newAction);
+        }
+
+        for (int i = 0; i < requiredDropOffs; i++) {
+            OpActionType actionType = OpActionType.DROPOFF;
+            boolean required = true;
+            OpAction newAction = generateNewAction(i, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+            startingList.add(newAction);
+        }
+
+        for (int i = 0; i < optionalDropOffs; i++) {
+            OpActionType actionType = OpActionType.DROPOFF;
+            boolean required = false;
+            OpAction newAction = generateNewAction(i, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+            startingList.add(newAction);
+        }
+    }
+
+    private void addActionForEachPartType(Set<String> partTypesSet, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, boolean required) {
+        for (String partType : partTypesSet) {
+            OpAction newAction = generateNewAction(0, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+            startingList.add(newAction);
+        }
+    }
+
+    private OpAction generateNewAction(int index, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, String partType, boolean required) {
+        double x = minX + (maxX - minX) * rand.nextDouble();
+        double y = minY + (maxY - minY) * rand.nextDouble();
+        double dist = findMinDistActionList(startingList, x, y);
+        while (dist < minDist) {
+            x = minX + (maxX - minX) * rand.nextDouble();
+            y = minX + (maxY - minY) * rand.nextDouble();
+            dist = findMinDistActionList(startingList, x, y);
+        }
+        OpAction newAction = new OpAction(actionType + " " + partType + index + (required ? "" : "-alt"), x, y, actionType, partType, required);
+        return newAction;
+    }
+
+    private double findMinDistActionList(List<OpAction> startingList, double x, double y) {
+        double dist;
+        dist = startingList
+                .stream()
+                .map(OpAction::getLocation)
+                .mapToDouble((Point2D.Double loc) -> Math.hypot(x - loc.x, y - loc.y))
+                .min()
+                .orElse(Double.POSITIVE_INFINITY);
+        return dist;
+    }
 
     /**
      * @param args the command line arguments
@@ -518,6 +685,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemClear;
+    private javax.swing.JMenuItem jMenuItemGenerate;
     private javax.swing.JMenuItem jMenuItemLoadInputList;
     private javax.swing.JMenuItem jMenuItemLoadOutputList;
     private javax.swing.JMenuItem jMenuItemRepeatedShuffleTest;
