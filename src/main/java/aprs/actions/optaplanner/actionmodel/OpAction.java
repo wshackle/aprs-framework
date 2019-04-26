@@ -214,11 +214,18 @@ public class OpAction implements OpActionInterface {
         return next;
     }
 
+    private volatile StackTraceElement setNextTrace[] = null;
+    private volatile CheckNextInfoPair setNextInfoPair = null;
+    
     public void setNext(OpActionInterface next) {
-        if (!checkNextAction(next)) {
-            throw new IllegalStateException("this=" + name + " Settting next for " + this + " to " + next + " : possibles=" + getPossibleNextActions());
+        final CheckNextInfoPair checkNextInfoPair = new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(next));
+        if (!checkNextActionInfoPair(checkNextInfoPair)) {
+            System.err.println("setNextTrace = " + Utils.traceToString(setNextTrace));
+            throw new IllegalStateException("this=" + name + " Settting next for to " + next.shortString() + " : possibles=" + getPossibleNextActions());
         }
         this.next = next;
+        setNextTrace = Thread.currentThread().getStackTrace();
+        setNextInfoPair = checkNextInfoPair;
     }
 
     public void clearNext() {
@@ -228,12 +235,62 @@ public class OpAction implements OpActionInterface {
     private boolean actionRequired() {
         return required; // Objects.equals(trayType, "KT");
     }
+    
+    static class CheckNextInfo {
+        final boolean actionRequired;
+        final String partType;
+        final OpActionType opActionType;
 
-    public boolean checkNextAction(OpActionInterface possibleNextAction) {
-        if (null == possibleNextAction) {
-            throw new IllegalStateException("possibleNextAction");
+        public CheckNextInfo(boolean actionRequired, String partType, OpActionType opActionType) {
+            this.actionRequired = actionRequired;
+            this.partType = partType;
+            this.opActionType = opActionType;
         }
-        OpActionType possibleNextOpActionType = possibleNextAction.getOpActionType();
+        
+        public CheckNextInfo(OpActionInterface oai) {
+            this(oai.isRequired(),oai.getPartType(),oai.getOpActionType());
+        }
+
+        public boolean isActionRequired() {
+            return actionRequired;
+        }
+
+        public String getPartType() {
+            return partType;
+        }
+
+        public OpActionType getOpActionType() {
+            return opActionType;
+        }
+        
+        
+    }
+
+    static class CheckNextInfoPair {
+        final CheckNextInfo current;
+        final CheckNextInfo next;
+
+        public CheckNextInfoPair(CheckNextInfo current, CheckNextInfo next) {
+            this.current = current;
+            this.next = next;
+        }
+    }
+    
+    public  boolean checkNextAction(OpActionInterface possibleNextAction) {
+        if (null == possibleNextAction) {
+            throw new NullPointerException("possibleNextAction");
+        }
+        return checkNextActionInfoPair(new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(possibleNextAction)));
+    }
+    
+    private static boolean checkNextActionInfoPair(CheckNextInfoPair infoPair) {
+        
+        OpActionType possibleNextOpActionType = infoPair.next.getOpActionType();
+        final String possibleNextActionPartType = infoPair.next.getPartType();
+        final boolean possibleNextActionRequired = infoPair.next.isActionRequired();
+        final boolean actionRequired = infoPair.current.isActionRequired();
+        final OpActionType opActionType = infoPair.current.getOpActionType();
+        final String partType = infoPair.current.getPartType();
         switch (opActionType) {
             case START:
                 return (possibleNextOpActionType == PICKUP);
@@ -249,12 +306,12 @@ public class OpAction implements OpActionInterface {
                 }
 
             case PICKUP:
-                if (Objects.equals(partType, possibleNextAction.getPartType())) {
+                if (Objects.equals(partType, possibleNextActionPartType)) {
                     switch (possibleNextOpActionType) {
                         case DROPOFF:
                             return true;
                         case FAKE_DROPOFF:
-                            return !this.actionRequired();
+                            return !actionRequired;
                         default:
                             return false;
                     }
@@ -263,10 +320,10 @@ public class OpAction implements OpActionInterface {
                 }
 
             case FAKE_PICKUP:
-                if (Objects.equals(partType, possibleNextAction.getPartType())) {
+                if (Objects.equals(partType, possibleNextActionPartType)) {
                     switch (possibleNextOpActionType) {
                         case DROPOFF:
-                            return !possibleNextAction.isRequired();
+                            return !possibleNextActionRequired;
                         case FAKE_DROPOFF:
                             return true;
                         default:
@@ -312,11 +369,6 @@ public class OpAction implements OpActionInterface {
                 }
             } else {
                 System.out.println("possibleNextActions.contains(" + action + ")");
-            }
-        }
-        if (opActionType == END) {
-            if (possibleNextActions.isEmpty()) {
-                possibleNextActions.add(this);
             }
         }
         addPossibleNextActionsTrace = Thread.currentThread().getStackTrace();
