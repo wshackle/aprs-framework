@@ -50,6 +50,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Point2D;
@@ -115,17 +116,32 @@ public class OpDisplayJPanel extends JPanel {
         showPlan(createTestInitPlan(), "testInit", JFrame.EXIT_ON_CLOSE);
     }
 
-//    private final MouseMotionListener mml = new MouseMotionListener() {
-//        @Override
-//        public void mouseDragged(MouseEvent e) {
-//            OpDisplayJPanel.this.mouseDragged(e);
-//        }
-//
-//        @Override
-//        public void mouseMoved(MouseEvent e) {
-//            OpDisplayJPanel.this.mouseMoved(e);
-//        }
-//    };
+    private volatile Point mouseDownPoint = null;
+
+    private final MouseMotionListener mml = new MouseMotionListener() {
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (null != mouseDownPoint) {
+                Dimension dim = getSize();
+                int h = dim.height;
+                int w = keyVisible ? (dim.width - keyWidth) : dim.width;
+                for (OpAction action : closeActions) {
+//                    int x = keyWidth + (int) ((0.9 * (location.x - minX) / (maxX - minX)) * w + 0.05 * w);
+//                    int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
+                    action.getLocation().x += (maxX - minX)* ((e.getPoint().x - mouseDownPoint.x) / ((double)w));
+                    action.getLocation().y += (maxY - minY)* ((e.getPoint().y - mouseDownPoint.y) / ((double)h));
+                    
+                }
+                mouseDownPoint = e.getPoint();
+            }
+            repaint();
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            mouseDownPoint = null;
+        }
+    };
     private final MouseListener mouseListener = new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -138,7 +154,13 @@ public class OpDisplayJPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            checkPopup(e);
+            if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
+                mouseDownPoint = e.getPoint();
+                setCloseActionsFromMouseEvent(e);
+            } else {
+                checkPopup(e);
+                mouseDownPoint = null;
+            }
         }
 
         @Override
@@ -302,7 +324,7 @@ public class OpDisplayJPanel extends JPanel {
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         super.setBackground(Color.white);
-//        super.addMouseMotionListener(mml);
+        super.addMouseMotionListener(mml);
         super.addMouseListener(mouseListener);
 //        ToolTipManager.sharedInstance().registerComponent(this);
     }
@@ -768,7 +790,7 @@ public class OpDisplayJPanel extends JPanel {
         this.keyVisible = keyVisible;
     }
 
-    private int keyWidth = 110;
+    private int keyWidth = 150;
 
     /**
      * Get the value of keyWidth

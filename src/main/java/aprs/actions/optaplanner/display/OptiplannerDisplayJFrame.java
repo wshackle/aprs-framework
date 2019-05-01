@@ -26,14 +26,16 @@ import aprs.actions.optaplanner.actionmodel.OpAction;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.OpActionType;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.conveyor.EditPropertiesJPanel;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,6 +89,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         jMenuItemShuffleInputList = new javax.swing.JMenuItem();
         jMenuItemRepeatedShuffleTest = new javax.swing.JMenuItem();
         jMenuItemGenerate = new javax.swing.JMenuItem();
+        jMenuItemSlowSolve = new javax.swing.JMenuItem();
+        jMenuItemGreedySolve = new javax.swing.JMenuItem();
+        jMenuItemComboSolve = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -228,6 +233,30 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu2.add(jMenuItemGenerate);
+
+        jMenuItemSlowSolve.setText("Simple Exhaustive Solve");
+        jMenuItemSlowSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSlowSolveActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemSlowSolve);
+
+        jMenuItemGreedySolve.setText("Greedy Solve");
+        jMenuItemGreedySolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemGreedySolveActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemGreedySolve);
+
+        jMenuItemComboSolve.setText("Combo Solve");
+        jMenuItemComboSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemComboSolveActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemComboSolve);
 
         jMenuBar1.add(jMenu2);
 
@@ -419,20 +448,30 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemRepeatedShuffleTestActionPerformed
 
     private void jMenuItemGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemGenerateActionPerformed
+        
+        Map<String, String> map0 = new TreeMap<>();
+        map0.put("Number of Part Types?", "1");
+        map0.put("Minimum Distance between objects?", "5.0");
+        map0.put("Minimum X?", "10.0");
+        map0.put("Maximum X?", "100.0");
+        map0.put("Minimum Y?", "10.0");
+        map0.put("Maximum Y?", "100.0");
+        Map<String, String> map1 = EditPropertiesJPanel.editProperties(this, "Problem Generate Properties", true, map0);
         Random rand = new Random();
-        int partsTypeNeeded = Integer.parseInt(JOptionPane.showInputDialog("Number of Part Types?", "1"));
+        int partsTypeNeeded = Integer.parseInt(map0.getOrDefault("Number of Part Types?", "1"));
+        
+
+        double minDist = Double.parseDouble(map1.getOrDefault("Minimum Distance between objects?", "5.0"));
+        double minX = Double.parseDouble(map1.getOrDefault("Minimum X?", "10.0"));
+        double maxX = Double.parseDouble(map1.getOrDefault("Maximum X?", "100.0"));
+        double minY = Double.parseDouble(map1.getOrDefault("Minimum Y?", "10.0"));
+        double maxY = Double.parseDouble(map1.getOrDefault("Maximum Y?", "100.0"));
+        List<OpAction> startingList = new ArrayList<>();
         Set<String> partTypesSet = new TreeSet<>();
         for (int i = 0; i < partsTypeNeeded; i++) {
             byte c = (byte) ('A' + i);
             partTypesSet.add(new String(new byte[]{c}));
         }
-
-        double minDist = Double.parseDouble(JOptionPane.showInputDialog("Minimum Distance between objects?", "5.0"));
-        double minX = Double.parseDouble(JOptionPane.showInputDialog("Minimum X?", "10.0"));
-        double maxX = Double.parseDouble(JOptionPane.showInputDialog("Maximum X?", "100.0"));
-        double minY = Double.parseDouble(JOptionPane.showInputDialog("Minimum Y?", "10.0"));
-        double maxY = Double.parseDouble(JOptionPane.showInputDialog("Maximum Y?", "100.0"));
-        List<OpAction> startingList = new ArrayList<>();
         for (String partType : partTypesSet) {
             int requiredPickups = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Pickups of " + partType + "?", Integer.toString(rand.nextInt(8))));
             int requiredDropOffs = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Dropoffs of " + partType + "?", Integer.toString(rand.nextInt(8))));
@@ -508,6 +547,70 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         doSolve();
     }//GEN-LAST:event_jMenuItemGenerateActionPerformed
 
+    private void jMenuItemSlowSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSlowSolveActionPerformed
+        long timeDiff = doExhaustiveSolve();
+        System.out.println("time to slow solve = " + timeDiff);                                  
+    }//GEN-LAST:event_jMenuItemSlowSolveActionPerformed
+
+    private void jMenuItemGreedySolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemGreedySolveActionPerformed
+         long timeDiff = doGreedySolve();
+        System.out.println("time to greedy solve = " + timeDiff);     
+    }//GEN-LAST:event_jMenuItemGreedySolveActionPerformed
+
+    private void jMenuItemComboSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemComboSolveActionPerformed
+          long timeDiff = doComboSolve();
+        System.out.println("time to combo solve = " + timeDiff);     
+    }//GEN-LAST:event_jMenuItemComboSolveActionPerformed
+
+    
+    private long doExhaustiveSolve() {
+        long t1 = System.currentTimeMillis();
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+        inPlan.checkActionList();
+//        SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
+//        Solver<OpActionPlan> solver = solverFactory.buildSolver();
+//        OpActionPlan outPlan = solver.solve(inPlan);
+        OpActionPlan outPlan = inPlan.simpleExhaustiveSearch();
+        inPlan.checkActionList();
+        outPlan.checkActionList();
+        setOutputOpActionPlan(outPlan);
+        long t2 = System.currentTimeMillis();
+        long timeDiff = (t2 - t1);
+        return timeDiff;
+    }
+    
+    private long doGreedySolve() {
+        long t1 = System.currentTimeMillis();
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+        inPlan.checkActionList();
+//        SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
+//        Solver<OpActionPlan> solver = solverFactory.buildSolver();
+//        OpActionPlan outPlan = solver.solve(inPlan);
+        OpActionPlan outPlan = inPlan.greedySearch();
+        inPlan.checkActionList();
+        outPlan.checkActionList();
+        setOutputOpActionPlan(outPlan);
+        long t2 = System.currentTimeMillis();
+        long timeDiff = (t2 - t1);
+        return timeDiff;
+    }
+    
+    private long doComboSolve() {
+        long t1 = System.currentTimeMillis();
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+        inPlan.checkActionList();
+//        SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
+//        Solver<OpActionPlan> solver = solverFactory.buildSolver();
+//        OpActionPlan outPlan = solver.solve(inPlan);
+        OpActionPlan outPlan = inPlan.comboSearch();
+        inPlan.checkActionList();
+        outPlan.checkActionList();
+        setOutputOpActionPlan(outPlan);
+        long t2 = System.currentTimeMillis();
+        long timeDiff = (t2 - t1);
+        return timeDiff;
+    }
+    
     private void addActionsForPartType(int requiredPickups, int optionalPickups, int requiredDropOffs, int optionalDropOffs, String partType, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist) {
         for (int i = 0; i < requiredPickups; i++) {
             OpActionType actionType = OpActionType.PICKUP;
@@ -647,6 +750,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             score = calculator.calculateScore(opActionPlan);
             opActionPlan.setScore(score);
         }
+        System.out.println("Input : score = " + score);
         jLabelInput.setText("Input : " + score.getSoftScore());
     }
 
@@ -675,6 +779,8 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             score = calculator.calculateScore(opActionPlan);
             opActionPlan.setScore(score);
         }
+        System.out.println("Output : score = " + score);
+        
         jLabelOutput.setText("Output : " + score.getSoftScore());
     }
 
@@ -685,13 +791,16 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemClear;
+    private javax.swing.JMenuItem jMenuItemComboSolve;
     private javax.swing.JMenuItem jMenuItemGenerate;
+    private javax.swing.JMenuItem jMenuItemGreedySolve;
     private javax.swing.JMenuItem jMenuItemLoadInputList;
     private javax.swing.JMenuItem jMenuItemLoadOutputList;
     private javax.swing.JMenuItem jMenuItemRepeatedShuffleTest;
     private javax.swing.JMenuItem jMenuItemSaveInputList;
     private javax.swing.JMenuItem jMenuItemSaveOutputList;
     private javax.swing.JMenuItem jMenuItemShuffleInputList;
+    private javax.swing.JMenuItem jMenuItemSlowSolve;
     private javax.swing.JMenuItem jMenuItemSolve;
     private javax.swing.JPanel jPanelInput;
     private javax.swing.JPanel jPanelOutput;
