@@ -100,6 +100,20 @@ public class OpAction implements OpActionInterface {
         }
         return new String[]{};
     }
+    
+     public OpAction(int origId, String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
+        this.executorActionType = opActionToExecutorAction(opActionType);
+        this.executorArgs = argsFromName(name);
+        this.name = name;
+        this.location = new Point2D.Double(x, y);
+        this.opActionType = opActionType;
+        this.partType = partType;
+        this.id = OpActionPlan.newActionPlanId();
+        this.origId = origId;
+        this.required = required;
+        this.trayType = getTrayType(opActionType, name);
+    }
+
 
     public OpAction(String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
         this.executorActionType = opActionToExecutorAction(opActionType);
@@ -109,10 +123,24 @@ public class OpAction implements OpActionInterface {
         this.opActionType = opActionType;
         this.partType = partType;
         this.id = OpActionPlan.newActionPlanId();
+        this.origId = id;
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
 
+    public OpAction(int origId, ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
+        this.executorActionType = executorActionType;
+        this.executorArgs = executorArgs;
+        this.name = executorActionType + "-" + Arrays.toString(executorArgs);
+        this.location = new Point2D.Double(x, y);
+        this.opActionType = executorActionToOpAction(executorActionType);
+        this.partType = partType;
+        this.id = OpActionPlan.newActionPlanId();
+        this.origId = origId;
+        this.required = required;
+        this.trayType = getTrayType(opActionType, name);
+    }
+    
     public OpAction(ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
@@ -121,6 +149,7 @@ public class OpAction implements OpActionInterface {
         this.opActionType = executorActionToOpAction(executorActionType);
         this.partType = partType;
         this.id = OpActionPlan.newActionPlanId();
+        this.origId = id;
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
@@ -520,9 +549,6 @@ public class OpAction implements OpActionInterface {
         if (this.skipNext()) {
             return 0;
         }
-        if (plan.isUseDistForCost()) {
-            return distance(false);
-        }
         if (this.opActionType == START && !plan.isUseStartEndCost()) {
             return 0;
         }
@@ -530,6 +556,13 @@ public class OpAction implements OpActionInterface {
             return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());
         }
         OpActionInterface effNext = effectiveNext(false);
+        return costOfNext(effNext, plan);
+    }
+
+    public double costOfNext(OpActionInterface effNext, OpActionPlan plan) {
+        if (plan.isUseDistForCost()) {
+            return distanceToNext(false,effNext);
+        }
         if (null == effNext) {
             return Double.POSITIVE_INFINITY;
         }
@@ -537,9 +570,9 @@ public class OpAction implements OpActionInterface {
             return 0;
         }
         if (effNext.getOpActionType() == END) {
-            return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+            return DistToTime.distToTime(this.distanceToNext(false,effNext), plan.getAccelleration(), plan.getStartEndMaxSpeed());
         }
-        return DistToTime.distToTime(this.distance(false), plan.getAccelleration(), plan.getMaxSpeed());
+        return DistToTime.distToTime(this.distanceToNext(false,effNext), plan.getAccelleration(), plan.getMaxSpeed());
     }
 
     public double distance(boolean quiet) {
@@ -555,13 +588,19 @@ public class OpAction implements OpActionInterface {
             }
             throw new IllegalStateException("this=" + name + " next.getLocation()==null");
         }
+        OpActionInterface effNext = effectiveNext(quiet);
+        return distanceToNext(quiet, effNext);
+    }
+
+    private double distanceToNext(boolean quiet, OpActionInterface effNext) throws IllegalStateException {
+        
         if (null == location) {
             if (quiet) {
                 return Double.POSITIVE_INFINITY;
             }
             throw new IllegalStateException("this=" + name + " location ==null");
         }
-        OpActionInterface effNext = effectiveNext(quiet);
+        
         if (null == effNext) {
             if (quiet) {
                 return Double.POSITIVE_INFINITY;
@@ -639,6 +678,12 @@ public class OpAction implements OpActionInterface {
         }
     }
 
+    private final int origId;
+
+    public int getOrigId() {
+        return origId;
+    }
+    
     private final int id;
 
     @Override

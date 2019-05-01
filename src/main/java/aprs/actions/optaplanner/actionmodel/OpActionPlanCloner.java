@@ -43,6 +43,7 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
             List<OpAction> newActions = new ArrayList<>();
             for (OpAction origAction : origActions) {
                 OpAction newAction = new OpAction(
+                        origAction.getOrigId(),
                         origAction.getName(),
                         origAction.getLocation().x,
                         origAction.getLocation().y,
