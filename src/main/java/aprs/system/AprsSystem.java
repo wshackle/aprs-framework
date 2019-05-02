@@ -229,7 +229,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                     double slotijDist = slotBj.dist(slotAi);
                     final double requiredDist = slotBj.getDiameter() / 2.0 + slotAi.getDiameter() / 2.0;
-                    if(slotijDist < minSlotijDist) {
+                    if (slotijDist < minSlotijDist) {
                         minSlotijDist = slotijDist;
                         minSlotijI = i;
                         minSlotijJ = j;
@@ -7907,6 +7907,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    private volatile StackTraceElement lastIsDoingActionsTrueTrace[] = null;
+
     /**
      * Get the state of whether the PDDL executor is currently doing actions.
      *
@@ -7914,30 +7916,36 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public synchronized boolean isDoingActions() {
         if (doingLookForParts || runningPrivateContinueActionList || runningPrivateStartActions) {
+            lastIsDoingActionsTrueTrace = Thread.currentThread().getStackTrace();
             return true;
-        }
-        if (null != lastPrivateStartActionsFuture
+        } else if (null != lastPrivateStartActionsFuture
                 && !lastPrivateStartActionsFuture.isDone()
                 && !lastPrivateStartActionsFuture.isCompletedExceptionally()
                 && !lastPrivateStartActionsFuture.isCancelled()) {
+            lastIsDoingActionsTrueTrace = Thread.currentThread().getStackTrace();
             return true;
-        }
-        if (null != startLookForPartsFuture
+        } else if (null != startLookForPartsFuture
                 && !startLookForPartsFuture.isDone()
                 && !startLookForPartsFuture.isCompletedExceptionally()
                 && !startLookForPartsFuture.isCancelled()) {
+            lastIsDoingActionsTrueTrace = Thread.currentThread().getStackTrace();
             return true;
-        }
-        if (null != lastPrivateContinueActionListFuture
+        } else if (null != lastPrivateContinueActionListFuture
                 && !lastPrivateContinueActionListFuture.isDone()
                 && !lastPrivateContinueActionListFuture.isCompletedExceptionally()
                 && !lastPrivateContinueActionListFuture.isCancelled()) {
+            lastIsDoingActionsTrueTrace = Thread.currentThread().getStackTrace();
             return true;
-        }
-        if (null == pddlExecutorJInternalFrame1) {
+        } else if (null == pddlExecutorJInternalFrame1) {
+            lastIsDoingActionsTrueTrace = null;
+            return false;
+        } else if (pddlExecutorJInternalFrame1.isDoingActions()) {
+            lastIsDoingActionsTrueTrace = Thread.currentThread().getStackTrace();
+            return true;
+        } else {
+            lastIsDoingActionsTrueTrace = null;
             return false;
         }
-        return pddlExecutorJInternalFrame1.isDoingActions();
     }
 
     @Nullable
@@ -7974,7 +7982,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 + "doingLookForParts=" + doingLookForParts + ",\n"
                 + "runningPrivateContinueActionList=" + runningPrivateContinueActionList + ",\n"
                 + "runningPrivateStartActions=" + runningPrivateStartActions + ",\n"
-                + pddlExecutorJInternalFrame1.getIsDoingActionsInfo();
+                + "lastIsDoingActionsTrueTrace=" + Utils.traceToString(lastIsDoingActionsTrueTrace) + "\n"
+                + "pddlExecutorJInternalFrame1.getIsDoingActionsInfo()=" + pddlExecutorJInternalFrame1.getIsDoingActionsInfo();
     }
 
     public XFutureVoid startExploreGraphDb() {
