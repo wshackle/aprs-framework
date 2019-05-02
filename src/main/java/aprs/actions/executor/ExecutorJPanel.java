@@ -32,7 +32,6 @@ import aprs.cachedcomponents.CachedTextField;
 import aprs.misc.Utils;
 import aprs.misc.Utils.RunnableWithThrow;
 
-
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
 import aprs.database.DbSetupListener;
@@ -142,7 +141,6 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmException;
 import rcs.posemath.PmRpy;
 
-
 import java.util.Map.Entry;
 import javax.swing.JMenu;
 
@@ -156,11 +154,9 @@ import static aprs.misc.AprsCommonLogger.println;
 
 import javax.swing.JRadioButtonMenuItem;
 
-
 import crcl.base.JointStatusesType;
 
 import java.util.HashSet;
-
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiConsumer;
@@ -176,6 +172,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import static java.util.Objects.requireNonNull;
+import java.util.function.Function;
 import javax.swing.SwingUtilities;
 
 /**
@@ -2722,8 +2719,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private static final SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
 
-    
-
     @MonotonicNonNull
     private Solver<OpActionPlan> solver = null;
 
@@ -3471,7 +3466,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void cancelRunProgramFuture() {
         if (null != runningProgramFuture) {
             Thread.dumpStack();
-            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.err.println("Cancelling runningProgramFuture=" + runningProgramFuture);
             println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(true);
         }
@@ -3606,7 +3601,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.replanRunnable = this.defaultReplanRunnable;
         if (null != runningProgramFuture) {
             Thread.dumpStack();
-            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.err.println("Cancelling runningProgramFuture=" + runningProgramFuture);
             println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
             setRunProgramFuture(null);
@@ -3730,6 +3725,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonTakeActionPerformed
 
     private volatile StackTraceElement setRunProgramFutureTrace[] = null;
+
     private void setRunProgramFuture(XFuture<Boolean> takePartFuture) {
         runningProgramFuture = takePartFuture;
         setRunProgramFutureTrace = Thread.currentThread().getStackTrace();
@@ -4254,7 +4250,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         abortProgram();
         if (null != runningProgramFuture) {
             Thread.dumpStack();
-            System.err.println("Cancelling runningProgramFuture="+runningProgramFuture);
+            System.err.println("Cancelling runningProgramFuture=" + runningProgramFuture);
             println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
             runningProgramFuture.cancelAll(false);
             setRunProgramFuture(null);
@@ -5673,41 +5669,65 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void jButtonUpdatePoseCacheActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpdatePoseCacheActionPerformed
-        updatePoseCacheOnDisplay(aprsSystem.getSafeAbortRequestCount());
+        try {
+            updatePoseCacheOnDisplay(aprsSystem.getSafeAbortRequestCount());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "", e);
+        }
     }//GEN-LAST:event_jButtonUpdatePoseCacheActionPerformed
 
     @UIEffect
-    private void updatePoseCacheOnDisplay(int startAbortCount) {
+    private XFutureVoid updatePoseCacheOnDisplay(int startAbortCount) {
         try {
-            crclGenerator.clearPoseCache();
-            crclGenerator.checkNewItems("userRequestedPoseUpdate", startAbortCount);
-            manualObjectCachedComboBox.removeAllElements();
-            manualSlotCachedComboBox.removeAllElements();
-            List<PhysicalItem> newItems = crclGenerator.getPhysicalItems();
-            if (newItems != null) {
-                newItems = new ArrayList<>(newItems);
-                newItems.sort(Comparator.comparing(PhysicalItem::getFullName));
-                for (PhysicalItem item : newItems) {
-                    String fullName = item.getFullName();
-                    if (null != fullName) {
-                        switch (item.getType()) {
-                            case "P":
-                            case "KT":
-                            case "PT":
-                                manualObjectCachedComboBox.addElement(fullName);
-                                break;
-
-                            case "ES":
-                            case "SLOT":
-                                manualSlotCachedComboBox.addElement(fullName);
-                                break;
-                        }
-                    }
-                }
-                updatePositionCacheTable();
+            ExecutorService service = this.generateCrclService;
+            if (null == service) {
+                service = aprsSystem.getRunProgramService();
+                this.generateCrclService = service;
             }
+            XFuture<List<PhysicalItem>> newItemsFuture
+                    = XFuture.supplyAsync("userRequestedPoseUpdate",
+                            () -> {
+                                try {
+                                    crclGenerator.clearPoseCache();
+                                    return crclGenerator.checkNewItems("userRequestedPoseUpdate", startAbortCount);
+                                } catch (Exception ex) {
+                                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    throw new RuntimeException(ex);
+                                }
+                            }, generateCrclService);
+            return newItemsFuture.thenComposeToVoid((List<PhysicalItem> newItems) -> {
+                final List<PhysicalItem> newItemsCopy = new ArrayList<>(newItems);
+                return Utils.runOnDispatchThread(() -> {
+                    manualObjectCachedComboBox.removeAllElements();
+                    manualSlotCachedComboBox.removeAllElements();
+                    if (newItemsCopy != null) {
+                        Function<PhysicalItem, String> keyExtractor = PhysicalItem::getFullName;
+                        final Comparator<PhysicalItem> itemsComparator = Comparator.comparing(keyExtractor);
+                        newItemsCopy.sort(itemsComparator);
+                        for (PhysicalItem item : newItemsCopy) {
+                            String fullName = item.getFullName();
+                            if (null != fullName) {
+                                switch (item.getType()) {
+                                    case "P":
+                                    case "KT":
+                                    case "PT":
+                                        manualObjectCachedComboBox.addElement(fullName);
+                                        break;
+
+                                    case "ES":
+                                    case "SLOT":
+                                        manualSlotCachedComboBox.addElement(fullName);
+                                        break;
+                                }
+                            }
+                        }
+                        updatePositionCacheTable();
+                    }
+                });
+            });
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -6743,14 +6763,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @return point after being corrected by all currently added position maps
      */
     public PointType correctPoint(PointType ptIn) {
-        if(!Double.isFinite(ptIn.getX())) {
-            throw new IllegalArgumentException("ptIn.getX()="+ptIn.getX()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getX())) {
+            throw new IllegalArgumentException("ptIn.getX()=" + ptIn.getX() + ", ptIn=" + ptIn);
         }
-        if(!Double.isFinite(ptIn.getY())) {
-            throw new IllegalArgumentException("ptIn.getY()="+ptIn.getY()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getY())) {
+            throw new IllegalArgumentException("ptIn.getY()=" + ptIn.getY() + ", ptIn=" + ptIn);
         }
-        if(!Double.isFinite(ptIn.getZ())) {
-            throw new IllegalArgumentException("ptIn.getZ()="+ptIn.getZ()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getZ())) {
+            throw new IllegalArgumentException("ptIn.getZ()=" + ptIn.getZ() + ", ptIn=" + ptIn);
         }
         PointType pout = ptIn;
         for (PositionMap pm : getPositionMaps()) {

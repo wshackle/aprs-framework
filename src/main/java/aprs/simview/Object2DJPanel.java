@@ -1376,13 +1376,13 @@ public class Object2DJPanel extends JPanel {
 //    private AffineTransform origTransform = null;
     private volatile boolean scale_set;
 
-    @SuppressWarnings("WeakerAccess")
     @Override
     @UIEffect
     public void paintComponent(Graphics g) {
         try {
             this.lastRepaintPaintTime = System.currentTimeMillis();
             super.paintComponent(g);
+
             Graphics2D g2d = (Graphics2D) g;
 
             List<PhysicalItem> itemsToPaint = getItemsToPaint();
@@ -1399,11 +1399,15 @@ public class Object2DJPanel extends JPanel {
             ViewOptions opts = new ViewOptions();
             opts.w = w;
             opts.h = h;
-            opts.scale = this.scale;
-            opts.scale_set = this.scale_set && !this.autoscale;
+            if (this.scale == 0) {
+                opts.enableAutoscale = true;
+            } else {
+                opts.scale = this.scale;
+                opts.scale_set = this.scale_set && !this.autoscale;
+            }
             opts.paintingComponent = true;
             if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
-                if (this.autoscale || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.max.y)) {
+                if (this.autoscale || scale == 0 || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.max.y)) {
                     paintWithAutoScale(itemsToPaint, selectedItem, g2d, opts);
                 } else {
                     paintItems(g2d, itemsToPaint, selectedItem, this.minmax, opts);
@@ -1413,6 +1417,9 @@ public class Object2DJPanel extends JPanel {
                 this.scale = opts.scale;
                 this.scale_set = !this.autoscale;
             }
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            g.drawString(ex.getMessage(), 10, 10);
         } finally {
             this.lastRepaintPaintTime = System.currentTimeMillis();
         }
@@ -2197,12 +2204,11 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-
     private void paintItemLabel(PhysicalItem item, int i, Graphics2D g2d, DisplayAxis displayAxis, Point2DMinMax minmaxParam, double itemOffsetRatio, Dimension dim, double new_scale, final boolean itemIsSelected, AffineTransform origTransform) {
 
         item.setLabelColor(labelColors[i % labelColors.length]);
         g2d.setColor(item.getLabelColor());
-        Point2D.Double namePoint2D = new Point2D.Double(dim.width/2.0, itemOffsetRatio*dim.height);
+        Point2D.Double namePoint2D = new Point2D.Double(dim.width / 2.0, itemOffsetRatio * dim.height);
 
         try {
             g2d.translate(namePoint2D.x, namePoint2D.y);

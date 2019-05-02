@@ -1222,10 +1222,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else {
             generateSinceZeroCount.incrementAndGet();
         }
-        if (!aprsSystem.isDoingActions()) {
-            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-            throw new IllegalStateException("!aprsSystem.isDoingActions()");
-        }
+//        if (!aprsSystem.isDoingActions()) {
+//            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//            throw new IllegalStateException("!aprsSystem.isDoingActions()");
+//        }
         final Thread curThread = Thread.currentThread();
         if (null == genThread) {
             genThread = curThread;
@@ -1502,9 +1502,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (isNewRetArray[0]) {
                 gparams.newItemsReceived = true;
             }
-            if (aprsSystem.isEndLogged()) {
-                throw new IllegalStateException("aprsSystem.isEndLogged()");
-            }
+//            if (aprsSystem.isEndLogged()) {
+//                throw new IllegalStateException("aprsSystem.isEndLogged()");
+//            }
             takeSnapshots("plan", "generate(start=" + startingIndex + ",crclNumber=" + currentCrclNumber + ")", null, null);
             final List<Action> fixedActionsCopy = Collections.unmodifiableList(new ArrayList<>(gParamsActions));
             final List<Action> fixedOrigActionsCopy = (gparams.origActions == null) ? null : Collections.unmodifiableList(new ArrayList<>(gParamsActions));
@@ -6683,10 +6683,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        if (!aprsSystem.isDoingActions()) {
-            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-            throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-        }
+//        if (!aprsSystem.isDoingActions()) {
+//            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//            throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+//        }
         try {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
@@ -6716,10 +6716,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             while (!xfl.isDone()) {
                 waitCycle++;
                 long t1 = System.currentTimeMillis();
-                if (!aprsSystem.isDoingActions()) {
-                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-                    throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-                }
+//                if (!aprsSystem.isDoingActions()) {
+//                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//                    throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+//                }
                 if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                     takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                     aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -6885,12 +6885,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             synchronized (this) {
                 clearPoseCache();
                 try {
-                    if (!aprsSystem.isDoingActions()) {
-                        aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-                        takeSimViewSnapshot("!aprsSystem.isDoingActions()" + prefix, l);
-                        throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-                    }
-                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//                    if (!aprsSystem.isDoingActions()) {
+//                        aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//                        takeSimViewSnapshot("!aprsSystem.isDoingActions()" + prefix, l);
+//                        throw new IllegalStateException("!aprsSystem.isDoingActions() ");
+//                    }
+//                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
                     takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
                     takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
                 } catch (IOException ex) {
