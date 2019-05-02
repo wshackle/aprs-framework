@@ -37,6 +37,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
+import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
@@ -79,12 +80,19 @@ public class OpActionPlan {
     private List<OpAction> findPossiblesNotInSet(OpAction action, Set<Integer> set) {
         List<OpActionInterface> possibles = action.getPossibleNextActions();
         List<OpAction> possiblesNotInSet = new ArrayList<>();
+        boolean fake_found = false;
         for (int i = 0; i < possibles.size(); i++) {
             OpActionInterface possible = possibles.get(i);
             if (possible instanceof OpAction) {
                 OpAction possibleAction = (OpAction) possible;
                 if (!set.contains(possibleAction.getOrigId())) {
-                    possiblesNotInSet.add(possibleAction);
+                    boolean isFake = possibleAction.getOpActionType() == FAKE_DROPOFF || possibleAction.getOpActionType() == FAKE_PICKUP;
+                    if(!isFake || !fake_found) {
+                        possiblesNotInSet.add(possibleAction);
+                    }
+                    if(isFake) {
+                        fake_found = true;
+                    }
                 }
             }
         }
@@ -201,38 +209,85 @@ public class OpActionPlan {
 
     public OpActionPlan greedySearch() {
         OpActionPlan clone = new OpActionPlanCloner().cloneSolution(this);
+        clone.checkActionList();
+        OpActionPlan clone2 = new OpActionPlanCloner().cloneSolution(this);
+        clone2.checkActionList();
         List<OpAction> actions = clone.actions;
         OpAction start = clone.findStartAction();
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(clone);
-        return clone.greedySearch(start, clone, new TreeSet<>(), score, 1);
+        return clone.greedySearch(start, clone2, new TreeSet<>(), score, 1);
     }
 
     private volatile int comboSearchSkipped = 0;
 
-    private OpActionPlan comboSearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, double costSoFar, double minRemainingCost) {
+    private OpActionPlan comboSearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, double costSoFar, double minRemainingCost, int requiredPickups, int availPickups, int requiredDrops, int availDrops) {
 
         set.add(action.getOrigId());
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
 
+//            List<Boolean> reauired = 
+//                    possiblesNotInSet.stream()
+//                    .map((OpAction a)-> a.isRequired())
+//                    .collect(Collectors.toList());
+//            System.out.println("reauired = " + reauired);
+//            List<Double> costs = possiblesNotInSet.stream()
+//                    .map((OpAction a)-> action.costOfNext(a, this))
+//                    .collect(Collectors.toList());
+//            System.out.println("costs = " + costs);
+            Collections.sort(possiblesNotInSet,
+                    Comparators.chain(
+                            Comparators.byBooleanFunction((OpAction a) -> !a.isRequired()),
+                            Comparators.byDoubleFunction((OpAction a) -> action.costOfNext(a, this))));
+//            List<Boolean> reauired2 = 
+//                    possiblesNotInSet.stream()
+//                    .map((OpAction a)-> a.isRequired())
+//                    .collect(Collectors.toList());
+//            System.out.println("reauired2 = " + reauired2);
+//            List<Double> costs2 = possiblesNotInSet.stream()
+//                    .map((OpAction a)-> action.costOfNext(a, this))
+//                    .collect(Collectors.toList());
+//            System.out.println("costs2 = " + costs2);
+//            System.out.println("costs = " + costs);
+            final double expectedCost = -1000.0 * (costSoFar + minRemainingCost);
+            final long expectedCostLong = (long) expectedCost;
             if (!possiblesNotInSet.isEmpty()) {
-                final double expectedCost = 1000.0 * (costSoFar + minRemainingCost);
-                if (score.getSoftScore() * -1 < expectedCost) {
-                    comboSearchSkipped++;
-                    int setSize = 1;
-                    for (OpAction act : actions) {
-                        if (!set.contains(act.getOrigId())) {
-                            List<OpAction> actPossiblesNotInSet = findPossiblesNotInSet(act, set);
-                            setSize *= actPossiblesNotInSet.size();
-                        }
+                if (action.getOpActionType() == PICKUP) {
+                    if (requiredPickups > availDrops) {
+                        return bestPlan;
                     }
-                    System.out.println("expectedCost = " + expectedCost);
-                    System.out.println("costSoFar = " + costSoFar);
-                    System.out.println("minRemainingCost = " + minRemainingCost);
-                    System.out.println("score = " + score);
-                    System.out.println("comboSearchSkipped = " + comboSearchSkipped);
-                    System.out.println("setSize = " + setSize);
+                    availPickups--;
+                    if (action.isRequired()) {
+                        requiredPickups--;
+                    }
+                } else if (action.getOpActionType() == DROPOFF) {
+                    availDrops--;
+                    if (action.isRequired()) {
+                        requiredDrops--;
+                    }
+                    if (requiredDrops > availPickups) {
+                        return bestPlan;
+                    }
+                }
+                long diffScore = score.getSoftScore() - expectedCostLong;
+                double ratio = diffScore / expectedCost;
+//                System.out.println("ratio = " + ratio);
+                if (diffScore > 0 || ratio < 0.05) {
+                    comboSearchSkipped++;
+//                    int setSize = 1;
+//                    for (OpAction act : actions) {
+//                        if (!set.contains(act.getOrigId())) {
+//                            List<OpAction> actPossiblesNotInSet = findPossiblesNotInSet(act, set);
+//                            setSize *= actPossiblesNotInSet.size();
+//                        }
+//                    }
+//                    System.out.println("expectedCost = " + expectedCost);
+//                    System.out.println("costSoFar = " + costSoFar);
+//                    System.out.println("minRemainingCost = " + minRemainingCost);
+//                    System.out.println("score = " + score);
+//                    System.out.println("comboSearchSkipped = " + comboSearchSkipped);
+//                    System.out.println("setSize = " + setSize);
                     return bestPlan;
                 }
                 double minCost = findMinActCost(action, bestPlan);
@@ -240,32 +295,37 @@ public class OpActionPlan {
                     OpAction possibleAction = possiblesNotInSet.get(i);
                     action.setNext(possibleAction);
                     double cost = action.costOfNext(possibleAction, bestPlan);
-                    OpActionPlan planForAct2 = comboSearch((OpAction) possibleAction, bestPlan, set, score, costSoFar + cost, minRemainingCost - minCost);
+                    OpActionPlan planForAct2 = comboSearch((OpAction) possibleAction, bestPlan, set, score, costSoFar + cost, minRemainingCost - minCost, requiredPickups, availPickups, requiredDrops, availDrops);
                     if (planForAct2 != this && planForAct2 != bestPlan) {
                         if (planForAct2.getScore().compareTo(score) > 0) {
                             bestPlan = planForAct2;
+                            bestPlan.checkActionList();
                             score = planForAct2.getScore();
+                            if (score.getSoftScore() > expectedCostLong) {
+                                return bestPlan;
+                            }
                         }
                     }
                 }
             } else {
                 if (!action.checkNextAction(getEndAction())) {
-                    System.out.println("set=" + set);
-                    throw new IllegalStateException("nothing left and can't end action =" + action);
+                    return bestPlan;
                 }
                 action.setNext(getEndAction());
+                this.checkActionList();
 //            List<OpAction> orderedList = this.getOrderedList(true);
 //            System.out.println("orderedList = " + orderedList);
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 HardSoftLongScore newscore = calculator.calculateScore(this);
                 comboSearchScored++;
-                System.out.println("comboSearchScored = " + comboSearchScored);
-                System.out.println("costSoFar = " + costSoFar);
-                System.out.println("minRemainingCost = " + minRemainingCost);
-                System.out.println("score = " + score);
-                System.out.println("newscore = " + newscore);
+//                System.out.println("comboSearchScored = " + comboSearchScored);
+//                System.out.println("costSoFar = " + costSoFar);
+//                System.out.println("minRemainingCost = " + minRemainingCost);
+//                System.out.println("score = " + score);
+//                System.out.println("newscore = " + newscore);
                 if (newscore.compareTo(score) > 0) {
                     OpActionPlan clone = new OpActionPlanCloner().cloneSolution(this);
+                    clone.checkActionList();
                     score = newscore;
                     bestPlan = clone;
                     bestPlan.setScore(score);
@@ -278,13 +338,18 @@ public class OpActionPlan {
     }
 
     public OpActionPlan comboSearch() {
+        this.checkActionList();
         comboSearchScored = 0;
         comboSearchSkipped = 0;
         OpActionPlan startPlan = greedySearch();
+        OpActionPlan clone = new OpActionPlanCloner().cloneSolution(startPlan);
+        clone.checkActionList();
+        startPlan.checkActionList();
         List<OpAction> actions = startPlan.actions;
         OpAction start = startPlan.findStartAction();
         double minRemainingCost = 0;
         double totalCost = 0;
+        int requiredPickups = 0, availPickups = 0, requiredDrops = 0, availDrops = 0;
         for (OpAction act : actions) {
             double minActCost = findMinActCost(act, startPlan);
             double cost = act.cost(startPlan);
@@ -297,6 +362,17 @@ public class OpActionPlan {
                 double cost2 = act.cost(startPlan);
             }
             minRemainingCost += minActCost;
+            if (act.getOpActionType() == PICKUP) {
+                availPickups++;
+                if (act.isRequired()) {
+                    requiredPickups++;
+                }
+            } else if (act.getOpActionType() == DROPOFF) {
+                availDrops++;
+                if (act.isRequired()) {
+                    requiredDrops++;
+                }
+            }
         }
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(startPlan);
@@ -305,7 +381,8 @@ public class OpActionPlan {
             System.out.println("minRemainingCost = " + minRemainingCost);
             System.out.println("totalCost = " + totalCost);
         }
-        return startPlan.comboSearch(start, startPlan, new TreeSet<>(), score, 0, minRemainingCost);
+
+        return startPlan.comboSearch(start, clone, new TreeSet<>(), score, 0, minRemainingCost, requiredPickups, availPickups, requiredDrops, availDrops);
     }
 
     private double findMinActCost(OpAction act, OpActionPlan startPlan) {
@@ -397,16 +474,24 @@ public class OpActionPlan {
         }
     }
 
+    private volatile StackTraceElement lastCheckActionListTrace[] = null;
+
     public void checkActionList() {
-        List<OpAction> notInBaseList = this.notInBaseList();
+        List<OpAction> orderedActions = this.getOrderedList(true);
+        List<OpAction> notInBaseList = this.notInBaseList(orderedActions);
         if (!notInBaseList.isEmpty()) {
-            System.out.println("notInBaseList = " + notInBaseList);
+            System.err.println("orderedActions=" + orderedActions);
+            System.err.println("lastCheckActionListTrace=" + Utils.traceToString(lastCheckActionListTrace));
+            throw new IllegalStateException("notInBaseList = " + notInBaseList);
         }
-        List<OpAction> notInOrderedList = this.notInOrderedList();
+        List<OpAction> notInOrderedList = this.notInOrderedList(orderedActions);
         if (!notInOrderedList.isEmpty()) {
-            System.out.println("notInOrderedList = " + notInOrderedList);
+            System.err.println("orderedActions=" + orderedActions);
+            System.err.println("lastCheckActionListTrace=" + Utils.traceToString(lastCheckActionListTrace));
+            throw new IllegalStateException("notInOrderedList = " + notInOrderedList);
         }
         checkActionsList(getActions());
+        lastCheckActionListTrace = Thread.currentThread().getStackTrace();
     }
 
     private static final String CSV_HEADERS[] = {
@@ -455,8 +540,12 @@ public class OpActionPlan {
     }
 
     public List<OpAction> notInOrderedList() {
-        List<OpAction> ret = new ArrayList<>();
         List<OpAction> orderedActions = this.getOrderedList(true);
+        return notInOrderedList(orderedActions);
+    }
+
+    public List<OpAction> notInOrderedList(List<OpAction> orderedActions) {
+        List<OpAction> ret = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
             OpAction actionI = actions.get(i);
             boolean found = false;
@@ -475,8 +564,12 @@ public class OpActionPlan {
     }
 
     public List<OpAction> notInBaseList() {
-        List<OpAction> ret = new ArrayList<>();
         List<OpAction> orderedActions = this.getOrderedList(true);
+        return notInBaseList(orderedActions);
+    }
+
+    private List<OpAction> notInBaseList(List<OpAction> orderedActions) {
+        List<OpAction> ret = new ArrayList<>();
         for (int i = 0; i < orderedActions.size(); i++) {
             OpAction actionI = orderedActions.get(i);
             boolean found = false;

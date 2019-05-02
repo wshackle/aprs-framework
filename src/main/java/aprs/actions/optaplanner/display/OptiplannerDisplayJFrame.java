@@ -457,10 +457,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         map0.put("Minimum Y?", "10.0");
         map0.put("Maximum Y?", "100.0");
         Map<String, String> map1 = EditPropertiesJPanel.editProperties(this, "Problem Generate Properties", true, map0);
-        Random rand = new Random();
-        int partsTypeNeeded = Integer.parseInt(map0.getOrDefault("Number of Part Types?", "1"));
         
-
+        
+        int partsTypeNeeded = Integer.parseInt(map1.getOrDefault("Number of Part Types?", "1"));
         double minDist = Double.parseDouble(map1.getOrDefault("Minimum Distance between objects?", "5.0"));
         double minX = Double.parseDouble(map1.getOrDefault("Minimum X?", "10.0"));
         double maxX = Double.parseDouble(map1.getOrDefault("Maximum X?", "100.0"));
@@ -472,19 +471,31 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             byte c = (byte) ('A' + i);
             partTypesSet.add(new String(new byte[]{c}));
         }
+        
+        Random rand = new Random();
         for (String partType : partTypesSet) {
-            int requiredPickups = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Pickups of " + partType + "?", Integer.toString(rand.nextInt(8))));
-            int requiredDropOffs = Integer.parseInt(JOptionPane.showInputDialog("Number of Required Dropoffs of " + partType + "?", Integer.toString(rand.nextInt(8))));
+            Map<String, String> map2 = new TreeMap<>();
+            final String pickupsInit = Integer.toString(rand.nextInt(8));
+            final String dropoffsInit = Integer.toString(rand.nextInt(8));
+            final String optionalsInit = Integer.toString(rand.nextInt(8));
+            map2.put("Number of Required Pickups of " + partType + "?", pickupsInit);
+            map2.put("Number of Required Dropoffs of " + partType + "?", dropoffsInit);
+            map2.put("Number of Optionals of " + partType + "?", Integer.toString(rand.nextInt(8)));
+            Map<String, String> map3 = EditPropertiesJPanel.editProperties(this, "Problem Generate Properties for parts of "+partType, true, map2);
+        
+            int requiredPickups = Integer.parseInt(map3.getOrDefault("Number of Required Pickups of " + partType + "?", pickupsInit));
+            int requiredDropOffs = Integer.parseInt(map3.getOrDefault("Number of Required Dropoffs of " + partType + "?", dropoffsInit));
+            int optionals = Integer.parseInt(map3.getOrDefault("Number of Optionals of " + partType + "?", optionalsInit));
             int optionalPickups;
             int optionalDropOffs;
             if (requiredPickups >= requiredDropOffs) {
                 optionalPickups = 0;
-                optionalDropOffs = Integer.parseInt(JOptionPane.showInputDialog("Number of Optional Dropoffs of " + partType + "?", Integer.toString(rand.nextInt(8))));
+                optionalDropOffs = optionals;
                 if (optionalDropOffs < requiredPickups - requiredDropOffs) {
                     optionalDropOffs = requiredPickups - requiredDropOffs;
                 }
             } else {
-                optionalPickups = Integer.parseInt(JOptionPane.showInputDialog("Number of Optional Pickups of " + partType + "?", Integer.toString(rand.nextInt(8))));
+                optionalPickups = optionals;
                 if (optionalPickups < requiredDropOffs - requiredPickups) {
                     optionalPickups = requiredDropOffs - requiredPickups;
                 }
