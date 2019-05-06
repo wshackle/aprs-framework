@@ -447,6 +447,8 @@
                                       <Component id="jButtonGridTest" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButtonUpdatePoseCacheFromManual" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonQuickCalib" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                               <EmptySpace pref="239" max="32767" attributes="0"/>
@@ -523,6 +525,7 @@
                                   <Component id="jTextFieldGridSize" alignment="3" min="-2" pref="28" max="-2" attributes="0"/>
                                   <Component id="jButtonGridTest" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jButtonUpdatePoseCacheFromManual" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonQuickCalib" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace pref="87" max="32767" attributes="0"/>
                           </Group>
@@ -821,6 +824,14 @@
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonUpdatePoseCacheFromManualActionPerformed"/>
+                      </Events>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="jButtonQuickCalib">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Quick Calib"/>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonQuickCalibActionPerformed"/>
                       </Events>
                     </Component>
                   </SubComponents>
