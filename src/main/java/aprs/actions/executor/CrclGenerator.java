@@ -4955,6 +4955,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
+        PoseType approachPose2 = addZToPose(pose, approachZOffset/5.0);
+
         lastTestApproachPose = approachPose;
 
         PoseType takePose = requireNonNull(CRCLPosemath.copy(pose), "CRCLPosemath.copy(pose)");
@@ -4976,7 +4978,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         addSetSlowTestSpeed(cmds);
 
-        addMoveTo(cmds, takePose, true, "testPartPositionByPose.takePose");
+        addMoveTo(cmds, approachPose2, true, "testPartPositionByPose.approachPose2");
 
         addSettleDwell(cmds);
 
@@ -7245,10 +7247,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
                 throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
             }
-            if (!aprsSystem.isDoingActions()) {
-                aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-                throw new IllegalStateException("!aprsSystem.isDoingActions()");
-            }
+//            if (!aprsSystem.isDoingActions()) {
+//                aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+//                throw new IllegalStateException("!aprsSystem.isDoingActions()");
+//            }
             consumer.accept(wrapper);
         }
     }

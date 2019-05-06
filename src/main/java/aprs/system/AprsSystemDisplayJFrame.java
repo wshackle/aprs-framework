@@ -1809,6 +1809,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForActionPerformed
+        immediateAbort();
+        clearErrors();
+        reset();
+        resume();
         startLookForParts();
     }//GEN-LAST:event_jMenuItemLookForActionPerformed
 

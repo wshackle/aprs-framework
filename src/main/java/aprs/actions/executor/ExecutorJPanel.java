@@ -883,6 +883,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jButtonRecord = new javax.swing.JButton();
         jButtonRecordLookForJoints = new javax.swing.JButton();
         jButtonUpdatePoseCacheFromManual = new javax.swing.JButton();
+        jButtonQuickCalib = new javax.swing.JButton();
         jPanelToolChange = new javax.swing.JPanel();
         jButtonGotoToolChangerApproach = new javax.swing.JButton();
         jLabel13 = new javax.swing.JLabel();
@@ -1260,6 +1261,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jButtonQuickCalib.setText("Quick Calib");
+        jButtonQuickCalib.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonQuickCalibActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
@@ -1356,7 +1364,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonGridTest)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonUpdatePoseCacheFromManual)))
+                        .addComponent(jButtonUpdatePoseCacheFromManual)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonQuickCalib)))
                 .addContainerGap(239, Short.MAX_VALUE))
         );
 
@@ -1423,7 +1433,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jLabel12)
                     .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonGridTest)
-                    .addComponent(jButtonUpdatePoseCacheFromManual))
+                    .addComponent(jButtonUpdatePoseCacheFromManual)
+                    .addComponent(jButtonQuickCalib))
                 .addContainerGap(87, Short.MAX_VALUE))
         );
 
@@ -3864,6 +3875,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             abortProgram()
                     .thenRun(() -> {
                         try {
+                            aprsSystem.resume();
                             lookForCount++;
                             clearAll();
                             autoStart = true;
@@ -4439,6 +4451,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonContinueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonContinueActionPerformed
         this.aprsSystem.abortCrclProgram();
+        this.aprsSystem.resume();
         int row = pddlOutputCachedTableModel.getSelectedRow();
         currentActionIndex = row;
         setReplanFromIndex(row);
@@ -5792,6 +5805,70 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         updatePoseCacheOnDisplay(aprsSystem.getSafeAbortRequestCount());
     }//GEN-LAST:event_jButtonUpdatePoseCacheFromManualActionPerformed
 
+    private void jButtonQuickCalibActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonQuickCalibActionPerformed
+        queryLogFileName();
+        String partName = manualObjectCachedComboBox.getSelectedItem();
+        if (null != partName && partName.length() > 0) {
+            try {
+                PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
+                PoseType curPoseCopy = CRCLPosemath.copy(curPose);
+                PointType curPosePoint = requireNonNull(curPoseCopy.getPoint(), "curPose.getPoint()");
+                String curPoseString
+                        = String.format("%.1f, %.1f, %.1f",
+                                curPosePoint.getX(),
+                                curPosePoint.getY(),
+                                curPosePoint.getZ());
+                aprsSystem.logEvent("jButtonQuickCalibActionPerformed: curPoseString", curPoseString);
+                 ExecutorService service = this.generateCrclService;
+            if (null == service) {
+                service = aprsSystem.getRunProgramService();
+                this.generateCrclService = service;
+            }
+            XFuture<?> quickCalibFuture
+                    = XFuture.supplyAsync("userRequestedPoseUpdate",
+                            () -> {
+                                try {
+                                    crclGenerator.clearPoseCache();
+                                    return lookForParts();
+                                } catch (Exception ex) {
+                                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    throw new RuntimeException(ex);
+                                }
+                            }, generateCrclService)
+                        .thenCompose((XFuture<Boolean> x) -> x)
+                        .thenRun(() -> {
+                            try {
+                                PoseType poseFromDb = crclGenerator.getPose(partName);
+                                if (null != poseFromDb) {
+                                    PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+                                    String poseFromDbString
+                                            = poseFromDbPoint.getX()
+                                            + "," + poseFromDbPoint.getY()
+                                            + "," + poseFromDbPoint.getZ();
+                                    logDebug("poseFromDbString = " + poseFromDbString);
+                                    aprsSystem.logEvent("jButtonQuickCalibActionPerformed: poseFromDbString", poseFromDbString);
+                                    String offsetString
+                                            = (poseFromDbPoint.getX() - curPosePoint.getX())
+                                            + "," + (poseFromDbPoint.getY() - curPosePoint.getY())
+                                            + "," + (poseFromDbPoint.getZ() - curPosePoint.getZ());
+                                    logDebug("offsetString = " + offsetString);
+                                    aprsSystem.logEvent("jButtonQuickCalibActionPerformed: offsetString", offsetString);
+                                    final String csvLine = System.currentTimeMillis() + ", " + partName + ", " + poseFromDbString + ", " + curPoseString + ", " + offsetString;
+                                    writeCorrectionCsv(recordCsvName, csvLine);
+                                    JOptionPane.showMessageDialog(null, csvLine);
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "crclGenerator.getPose("+partName+") returned null");
+                                }
+                            } catch (Exception ex) {
+                                LOGGER.log(Level.SEVERE, "", ex);
+                            }
+                        });
+            } catch (Exception ex) {
+                LOGGER.log(Level.SEVERE, "", ex);
+            }
+        }
+    }//GEN-LAST:event_jButtonQuickCalibActionPerformed
+
     private void clearPoseCache() {
         crclGenerator.clearPoseCache();
         updatePositionCacheTable();
@@ -6933,7 +7010,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private XFuture<Boolean> lookForParts() {
         try {
             CRCLProgramType program = createLookForPartsProgram();
-            return startCrclProgram(program);
+            return startCrclProgram(program)
+                    .thenCompose(x -> {
+                        return updatePoseCacheOnDisplay(aprsSystem.getSafeAbortRequestCount())
+                                .thenApply(X -> x);
+                    });
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("lookForPartsException");
@@ -7377,6 +7458,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonPddlOutputViewEdit;
     private javax.swing.JButton jButtonPickupTool;
     private javax.swing.JButton jButtonPlacePart;
+    private javax.swing.JButton jButtonQuickCalib;
     private javax.swing.JButton jButtonRandDropOff;
     private javax.swing.JButton jButtonRecord;
     private javax.swing.JButton jButtonRecordFail;

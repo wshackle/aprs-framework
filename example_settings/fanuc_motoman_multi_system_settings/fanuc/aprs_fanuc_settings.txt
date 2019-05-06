@@ -2,7 +2,7 @@
 LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
-alertLimits=true
+alertLimits=false
 aprs.robotName=Fanuc
 aprs.taskName=Fanuc Cart
 crclWebApp.httpPort=8081
