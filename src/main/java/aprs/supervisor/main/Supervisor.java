@@ -3398,7 +3398,7 @@ public class Supervisor {
                 });
                 return lastFuture;
             }
-            if (null == ref.compareAndExchange(null, val)) {
+            if (ref.compareAndSet(null, val)) {
                 lastFuture = runOnDispatchThread(() -> {
                     T latestVal = ref.getAndSet(null);
                     if (latestVal != null) {
