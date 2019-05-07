@@ -1876,7 +1876,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
 
-    public XFuture<Boolean> queryConnect() throws NumberFormatException {
+    public XFuture<Boolean> queryConnect() {
         String name = aprsSystem.getRobotName();
         if (name == null || name.length() < 1) {
             String origRobotName = aprsSystem.getOrigRobotName();

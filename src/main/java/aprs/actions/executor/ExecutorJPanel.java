@@ -3872,36 +3872,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             setSelectedManualObjectName();
             setReplanFromIndex(0);
-            abortProgram()
+            ExecutorService service = this.generateCrclService;
+            if (null == service) {
+                service = aprsSystem.getRunProgramService();
+                this.generateCrclService = service;
+            }
+            final ExecutorService serviceFinal = service;
+            aprsSystem.immediateAbort()
                     .thenRun(() -> {
-                        try {
-                            aprsSystem.resume();
-                            lookForCount++;
-                            clearAll();
-                            autoStart = true;
-//            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
-                            cancelRunProgramFuture();
-                            if (null != generateCrclService) {
-                                generateCrclService.submit(() -> {
-                                    try {
-                                        setRunProgramFuture(this.lookForParts());
-                                    } catch (Exception ex) {
-                                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                                        abortProgram();
-                                        cancelRunProgramFuture();
-                                        showExceptionInProgram(ex);
-
-                                    }
-                                });
-                            } else {
-                                setRunProgramFuture(this.lookForParts());
-                            }
-                        } catch (Exception ex) {
-                            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                            abortProgram();
-                            cancelRunProgramFuture();
-                            showExceptionInProgram(ex);
-
+                        aprsSystem.clearErrors();
+                        aprsSystem.reset();
+                        aprsSystem.resume();
+                        if (!aprsSystem.isConnected()) {
+                            aprsSystem.queryConnect()
+                                    .thenAccept((Boolean ok) -> {
+                                        if (ok) {
+                                            jButtonLookForActionPerformedPart2(serviceFinal);
+                                        }
+                                    });
+                        } else {
+                            jButtonLookForActionPerformedPart2(serviceFinal);
                         }
                     });
         } catch (Exception ex) {
@@ -3909,9 +3899,39 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             abortProgram();
             cancelRunProgramFuture();
             showExceptionInProgram(ex);
-
         }
     }//GEN-LAST:event_jButtonLookForActionPerformed
+
+    private void jButtonLookForActionPerformedPart2(final ExecutorService serviceFinal) {
+        try {
+            aprsSystem.resume();
+            lookForCount++;
+            clearAll();
+            autoStart = true;
+//            this.jTextFieldLookForCount.setText(Integer.toString(lookForCount));
+            cancelRunProgramFuture();
+            if (null != serviceFinal) {
+                serviceFinal.submit(() -> {
+                    try {
+                        setRunProgramFuture(this.lookForParts());
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        cancelRunProgramFuture();
+                        showExceptionInProgram(ex);
+
+                    }
+                });
+            } else {
+                setRunProgramFuture(this.lookForParts());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            abortProgram();
+            cancelRunProgramFuture();
+            showExceptionInProgram(ex);
+        }
+    }
 
     private int returnCount = 0;
 
@@ -5819,50 +5839,51 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                 curPosePoint.getY(),
                                 curPosePoint.getZ());
                 aprsSystem.logEvent("jButtonQuickCalibActionPerformed: curPoseString", curPoseString);
-                 ExecutorService service = this.generateCrclService;
-            if (null == service) {
-                service = aprsSystem.getRunProgramService();
-                this.generateCrclService = service;
-            }
-            XFuture<?> quickCalibFuture
-                    = XFuture.supplyAsync("userRequestedPoseUpdate",
-                            () -> {
-                                try {
-                                    crclGenerator.clearPoseCache();
-                                    return lookForParts();
-                                } catch (Exception ex) {
-                                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                                    throw new RuntimeException(ex);
-                                }
-                            }, generateCrclService)
-                        .thenCompose((XFuture<Boolean> x) -> x)
-                        .thenRun(() -> {
-                            try {
-                                PoseType poseFromDb = crclGenerator.getPose(partName);
-                                if (null != poseFromDb) {
-                                    PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
-                                    String poseFromDbString
-                                            = poseFromDbPoint.getX()
-                                            + "," + poseFromDbPoint.getY()
-                                            + "," + poseFromDbPoint.getZ();
-                                    logDebug("poseFromDbString = " + poseFromDbString);
-                                    aprsSystem.logEvent("jButtonQuickCalibActionPerformed: poseFromDbString", poseFromDbString);
-                                    String offsetString
-                                            = (poseFromDbPoint.getX() - curPosePoint.getX())
-                                            + "," + (poseFromDbPoint.getY() - curPosePoint.getY())
-                                            + "," + (poseFromDbPoint.getZ() - curPosePoint.getZ());
-                                    logDebug("offsetString = " + offsetString);
-                                    aprsSystem.logEvent("jButtonQuickCalibActionPerformed: offsetString", offsetString);
-                                    final String csvLine = System.currentTimeMillis() + ", " + partName + ", " + poseFromDbString + ", " + curPoseString + ", " + offsetString;
-                                    writeCorrectionCsv(recordCsvName, csvLine);
-                                    JOptionPane.showMessageDialog(null, csvLine);
-                                } else {
-                                    JOptionPane.showMessageDialog(null, "crclGenerator.getPose("+partName+") returned null");
-                                }
-                            } catch (Exception ex) {
-                                LOGGER.log(Level.SEVERE, "", ex);
-                            }
-                        });
+                ExecutorService service = this.generateCrclService;
+                if (null == service) {
+                    service = aprsSystem.getRunProgramService();
+                    this.generateCrclService = service;
+                }
+                XFuture<?> quickCalibFuture
+                        = XFuture.supplyAsync("userRequestedPoseUpdate",
+                                () -> {
+                                    try {
+                                        crclGenerator.clearPoseCache();
+                                        return lookForParts();
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                        throw new RuntimeException(ex);
+                                    }
+                                }, generateCrclService)
+                                .thenCompose((XFuture<Boolean> x) -> x)
+                                .thenRun(() -> {
+                                    try {
+                                        PoseType poseFromDb = crclGenerator.getPose(partName);
+                                        if (null != poseFromDb) {
+                                            PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
+                                            PointType visionPoint = aprsSystem.convertRobotToVisionPoint(poseFromDbPoint);
+                                            String visionPointString
+                                                    = visionPoint.getX()
+                                                    + "," + visionPoint.getY()
+                                                    + "," + curPosePoint.getZ();
+                                            logDebug("visionPointString = " + visionPointString);
+                                            aprsSystem.logEvent("jButtonQuickCalibActionPerformed: visionPointString", visionPointString);
+                                            String offsetString
+                                                    = (curPosePoint.getX() -visionPoint.getX())
+                                                    + "," + (curPosePoint.getY() - visionPoint.getY())
+                                                    + "," + (0);
+                                            logDebug("offsetString = " + offsetString);
+                                            aprsSystem.logEvent("jButtonQuickCalibActionPerformed: offsetString", offsetString);
+                                            final String csvLine = System.currentTimeMillis() + ", " + partName + ", " + visionPointString + ", " + curPoseString + ", " + offsetString;
+                                            writeCorrectionCsv(recordCsvName, csvLine);
+                                            JOptionPane.showMessageDialog(null, csvLine);
+                                        } else {
+                                            JOptionPane.showMessageDialog(null, "crclGenerator.getPose(" + partName + ") returned null");
+                                        }
+                                    } catch (Exception ex) {
+                                        LOGGER.log(Level.SEVERE, "", ex);
+                                    }
+                                });
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -6645,6 +6666,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         replanStarted.set(false);
         return ret;
     }
+    
+     public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
+         crclGenerator.testPartPositionByPose(cmds,pose);
+     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
         Map<String, String> options = getTableOptions();

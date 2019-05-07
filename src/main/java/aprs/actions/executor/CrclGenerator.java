@@ -4936,7 +4936,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param cmds list of commands to append to
      * @param pose pose to test
      */
-    private void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
 
         if (null == pose) {
             throw new IllegalArgumentException("null == pose");
