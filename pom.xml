@@ -213,7 +213,7 @@
             <version>1.2.3</version>
         </dependency>
     </dependencies>
-    <!-- <repositories>
+    <repositories>
         <repository>
             <id>neo4j-public</id>
             <url>http://m2.neo4j.org/content/groups/public</url>
@@ -234,7 +234,7 @@
                 <updatePolicy>daily</updatePolicy>
             </snapshots>
         </repository>
-    </repositories> -->
+    </repositories>
     <build>
         
         <!-- SKIP SETTING UP FILTERING LIKE THIS IF YOU USE THE GENERATE FILE MODE :-) -->

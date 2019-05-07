@@ -6835,7 +6835,7 @@ public class Supervisor {
                                     .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2", x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousDemo.startReverseActions", x -> startContinuousDemoReversActions(part3BlockerName), supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture3", x -> checkLastReturnedFuture(lfr, part4BlockerName), supervisorExecutorService)
-                                    .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle("continueContinuousDemo"))
+                                    .thenComposeAsyncToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle("continueContinuousDemo"),supervisorExecutorService)
                                     .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(), supervisorExecutorService);
                     lastContinueContinuousDemoNoRecurseFuture
                             = continueContinuousDemoNoRecursePart2Future;
