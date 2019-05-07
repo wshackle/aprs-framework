@@ -8,7 +8,7 @@ connected=true
 displayAxis=(Y+,X-)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.0,272.41,162.04,0.91,P,sku_kit_m2l1_vessel,0.97,307.99,142.94,0.63,KT,
+items=sku_part_large_gear,0.0,601.25,-186.69,0.98,P,sku_kit_m2l1_vessel,-2.41,572.54,-156.06,0.66,KT,
 
 pickupDist=5.00
 posNoise=1.00

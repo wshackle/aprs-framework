@@ -155,6 +155,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import rcs.posemath.PmException;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -176,6 +177,41 @@ public class AprsSystem implements SlotOffsetProvider {
         this(null, AprsSystemPropDefaults.getSingle());
         if (immediate) {
             headlessEmptyInit();
+        }
+    }
+
+    public XFuture<Boolean> gotoPose(PoseType pose) {
+        if (null == pddlExecutorJInternalFrame1) {
+            throw new NullPointerException("pddlExecutorJInternalFrame1");
+        }
+        final boolean connected = isConnected();
+        if (!connected) {
+            throw new IllegalStateException("!isConnected()");
+        }
+        final boolean doingActions = isDoingActions();
+        final String doingActionsInfo = getIsDoingActionsInfo();
+        if (doingActions) {
+            throw new IllegalStateException("doingActionsInfo=" + doingActionsInfo);
+        }
+        if (isPaused()) {
+            throw new IllegalStateException("isPaused()");
+        }
+        checkFutures();
+        String executorReadyString = pddlExecutorJInternalFrame1.readyForNewActionsListInfoString();
+        if (!pddlExecutorJInternalFrame1.readyForNewActionsList()) {
+            logEvent("executorReadyString", executorReadyString);
+            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList()";
+            logToSuper(this.toString() + " throwing " + errmsg);
+            throw new IllegalStateException(errmsg);
+        }
+        try {
+            CRCLProgramType program = createEmptyProgram();
+            pddlExecutorJInternalFrame1.testPartPositionByPose(program.getMiddleCommand(), pose);
+            return startCRCLProgram(program);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            setTitleErrorString(ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
@@ -4992,6 +5028,13 @@ public class AprsSystem implements SlotOffsetProvider {
 
     public void setSnapShotHeight(int height) {
         this.snapShotHeight = height;
+    }
+
+    public XFuture<Boolean> queryConnect() {
+        if (null == aprsSystemDisplayJFrame) {
+            throw new NullPointerException("aprsSystemDisplayJFrame");
+        }
+        return Utils.composeOnDispatchThread(() -> aprsSystemDisplayJFrame.queryConnect());
     }
 
     /**

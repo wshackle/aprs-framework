@@ -28,10 +28,12 @@ import aprs.database.PhysicalItem;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.misc.Utils;
 import crcl.base.CRCLProgramType;
+import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.utils.CRCLException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -46,6 +48,7 @@ import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import rcs.posemath.PmException;
 
 /**
  *
@@ -60,6 +63,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         initComponents();
     }
 
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
+         executorJPanel1.testPartPositionByPose(cmds,pose);
+     }
     public boolean recheckKitsOnly() {
         return executorJPanel1.recheckKitsOnly();
     }

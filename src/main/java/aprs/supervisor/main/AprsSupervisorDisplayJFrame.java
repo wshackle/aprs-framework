@@ -38,7 +38,6 @@ import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
 import aprs.misc.Utils.UiSupplier;
 import static aprs.misc.Utils.getAprsIconUrl;
-import static aprs.misc.Utils.getDateTimeString;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
@@ -1431,11 +1430,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jTableSelectedPosMapFile = new javax.swing.JTable();
         jTextFieldSelectedPosMapFilename = new javax.swing.JTextField();
         jPanelSelectedPosMapFileTopButtons = new javax.swing.JPanel();
+        jButtonGoOut = new javax.swing.JButton();
         jButtonSetOutFromCurrent = new javax.swing.JButton();
         jButtonAddLine = new javax.swing.JButton();
         jButtonDeleteLine = new javax.swing.JButton();
         jButtonSaveSelectedPosMap = new javax.swing.JButton();
         jButtonSetInFromCurrent = new javax.swing.JButton();
+        jButtonGoIn = new javax.swing.JButton();
         jPanelFuture = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jScrollPaneListFutures = new javax.swing.JScrollPane();
@@ -1692,7 +1693,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 746, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 829, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
@@ -1730,6 +1731,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jScrollPane2.setViewportView(jTableSelectedPosMapFile);
+
+        jButtonGoOut.setText("Go Out");
+        jButtonGoOut.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonGoOutActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonGoOut);
 
         jButtonSetOutFromCurrent.setText("Set Out From Selected Column System");
         jButtonSetOutFromCurrent.setEnabled(false);
@@ -1773,6 +1782,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jPanelSelectedPosMapFileTopButtons.add(jButtonSetInFromCurrent);
 
+        jButtonGoIn.setText("Go In");
+        jButtonGoIn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonGoInActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonGoIn);
+
         javax.swing.GroupLayout jPanelPosMapSelectedFileLayout = new javax.swing.GroupLayout(jPanelPosMapSelectedFile);
         jPanelPosMapSelectedFile.setLayout(jPanelPosMapSelectedFileLayout);
         jPanelPosMapSelectedFileLayout.setHorizontalGroup(
@@ -1782,7 +1799,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addGroup(jPanelPosMapSelectedFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
                     .addComponent(jTextFieldSelectedPosMapFilename)
-                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, 728, Short.MAX_VALUE))
+                    .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanelPosMapSelectedFileLayout.setVerticalGroup(
@@ -1891,7 +1908,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 151, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
@@ -1987,7 +2004,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelEventsLayout.setVerticalGroup(
@@ -2025,7 +2042,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 827, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2089,7 +2106,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 827, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -4158,6 +4175,63 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemLoadEventsLogActionPerformed
 
+    private void jButtonGoOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGoOutActionPerformed
+        int row = jTableSelectedPosMapFile.getSelectedRow();
+        if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
+            AprsSystem posMapOutSys = getPosMapOutSys();
+            if (null != posMapOutSys) {
+                PoseType pose = posMapOutSys.getCurrentPose();
+                if (null != pose) {
+                    Object otherXObject = jTableSelectedPosMapFile.getValueAt(row, 0);
+                    Object otherYObject = jTableSelectedPosMapFile.getValueAt(row, 1);
+                    Object otherZObject = jTableSelectedPosMapFile.getValueAt(row, 2);
+                    if (otherXObject instanceof Double
+                            && otherYObject instanceof Double
+                            && otherZObject instanceof Double) {
+                        double otherx = (double) otherXObject;
+                        double othery = (double) otherYObject;
+                        double otherz = (double) otherZObject;
+                        double x = (Double) jTableSelectedPosMapFile.getValueAt(row, 3);
+                        double y = (Double) jTableSelectedPosMapFile.getValueAt(row, 4);
+                        double z = (Double) jTableSelectedPosMapFile.getValueAt(row, 5);
+
+                        PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
+                        interactivStart(() -> lookForPartsAll(), null)
+                                .thenRun(() -> posMapOutSys.gotoPose(newPose));
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_jButtonGoOutActionPerformed
+
+    private void jButtonGoInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGoInActionPerformed
+        int row = jTableSelectedPosMapFile.getSelectedRow();
+        if (row >= 0 && row < jTableSelectedPosMapFile.getRowCount()) {
+            AprsSystem posMapInSys = getPosMapInSys();
+            if (null != posMapInSys) {
+                PoseType pose = posMapInSys.getCurrentPose();
+                if (null != pose) {
+                    double x = (Double) jTableSelectedPosMapFile.getValueAt(row, 0);
+                    double y = (Double) jTableSelectedPosMapFile.getValueAt(row, 1);
+                    double z = (Double) jTableSelectedPosMapFile.getValueAt(row, 2);
+                    Object otherXObject = jTableSelectedPosMapFile.getValueAt(row, 3);
+                    Object otherYObject = jTableSelectedPosMapFile.getValueAt(row, 4);
+                    Object otherZObject = jTableSelectedPosMapFile.getValueAt(row, 5);
+                    if (otherXObject instanceof Double
+                            && otherYObject instanceof Double
+                            && otherZObject instanceof Double) {
+                        double otherx = (double) otherXObject;
+                        double othery = (double) otherYObject;
+                        double otherz = (double) otherZObject;
+                        PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
+                        interactivStart(() -> lookForPartsAll(), null)
+                                .thenRun(() -> posMapInSys.gotoPose(newPose));
+                    }
+                }
+            }
+        }
+    }//GEN-LAST:event_jButtonGoInActionPerformed
+
     private String getRecordString(CSVRecord record, Map<String, Integer> headerMap, String header) {
         Integer index = headerMap.get(header);
         if (index == null || index < 0 || index > record.size()) {
@@ -5740,6 +5814,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonDeleteLine;
     private javax.swing.JButton jButtonDeleteSharedToolsRow;
     private javax.swing.JButton jButtonFuturesCancelAll;
+    private javax.swing.JButton jButtonGoIn;
+    private javax.swing.JButton jButtonGoOut;
     private javax.swing.JButton jButtonSaveSelectedPosMap;
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
