@@ -773,6 +773,20 @@ public class Object2DJPanel extends JPanel {
         Dimension dim = this.getSize();
         int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
         int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
+        if(w<100) {
+            w=100;
+            if(null == opts) {
+                opts = new ViewOptions();
+            } 
+            opts.w = w;
+        }
+        if(h<100) {
+            h=100;
+            if(null == opts) {
+                opts = new ViewOptions();
+            } 
+            opts.h = h;
+        }
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = img.createGraphics();
         g2d.setColor(this.getBackground());
