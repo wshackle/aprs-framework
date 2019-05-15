@@ -1593,8 +1593,8 @@ public class AprsSystem implements SlotOffsetProvider {
             final boolean doingActons = isDoingActions();
             final String doingActionsInfo = getIsDoingActionsInfo();
             int count = startSafeAbortAndDisconnectCount.incrementAndGet();
-            logEvent("START startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
-            logToSuper("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count + ",doingActionsInfo=" + doingActionsInfo);
+            logEvent("START startSafeAbortAndDisconnect", comment, connected, doingActons, count);
+            logToSuper("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count );
             takeSnapshots("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
             if (connected) {
                 if (null == pddlExecutorJInternalFrame1) {
@@ -1605,7 +1605,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     return disconnectRobot()
                             .alwaysAsync(() -> {
                                 synchronized (this) {
-                                    logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                                    logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
                                     logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                     takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                 }
@@ -1648,7 +1648,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                 .thenComposeToVoid(x -> waitAllLastFutures())
                                 .alwaysAsync(() -> {
                                     synchronized (this) {
-                                        logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                                        logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
                                         logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                         takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                                     }
@@ -1661,7 +1661,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         = XFutureVoid.completedFutureWithName("startSafeAbortAndDisconnect(" + comment + ").alreadyDisconnected");
                 safeAbortFuture = localSafeAbortFuture;
                 ret = localSafeAbortFuture;
-                logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count, doingActionsInfo);
+                logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
                 logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
                 takeSnapshots("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
             }
