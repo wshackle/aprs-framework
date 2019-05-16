@@ -7952,6 +7952,7 @@ public class Supervisor {
         incrementAndGetAbortCount();
         logEvent("safeAbortAll");
         XFuture<?> prevLastFuture = lastFutureReturned;
+        lastFutureReturned=null;
         XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
         XFutureVoid abortAllFuture
                 = disallowTogglesFuture.thenComposeAsyncToVoid(x -> {
