@@ -2827,6 +2827,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItemSafeAbortAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSafeAbortAllActionPerformed
 
+        jCheckBoxMenuItemContinuousDemo.setSelected(false);
         performSafeAbortAllAction();
     }//GEN-LAST:event_jMenuItemSafeAbortAllActionPerformed
 
@@ -3281,9 +3282,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartAllReverseActionPerformed2OnDisplay() {
+        int startingAbortCount = supervisor.getAbortCount();
         enableAllRobots()
                 .thenRun(() -> {
-                    lastFutureReturned = startReverseActions();
+                    lastFutureReturned = startReverseActions(startingAbortCount);
                     setMainFuture(lastFutureReturned);
                 });
     }
@@ -3413,6 +3415,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed2OnDisplay() {
 
+        int startingAbortCount = supervisor.getAbortCount();
         enableAllRobots()
                 .thenRun(() -> {
                     clearContinuousDemoCycle();
@@ -3424,7 +3427,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         jCheckBoxMenuItemContinuousDemo.setSelected(true);
                         jCheckBoxMenuItemRandomTest.setSelected(true);
                         startContinuousDemo();
-                        continueRandomTest();
+                        continueRandomTest(startingAbortCount);
                         continuePauseTest();
                         resetMainPauseTestFuture();
                     }
@@ -4751,11 +4754,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.continuePauseTest();
     }
 
-    private XFutureVoid continueRandomTest() {
+    private XFutureVoid continueRandomTest(int startingAbortCount) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.continueRandomTest();
+        return supervisor.continueRandomTest(startingAbortCount);
     }
 
     /**
@@ -4847,11 +4850,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * @return future that can be used to attach additional actions after this
      * is complete
      */
-    private XFutureVoid startReverseActions() {
+    private XFutureVoid startReverseActions(int startingAbortCount) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startReverseActions(null);
+        return supervisor.startReverseActions(null,startingAbortCount);
     }
 
     private void savePosFile(File f) throws IOException {
