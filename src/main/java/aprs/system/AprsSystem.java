@@ -19,8 +19,6 @@
  *
  *  See http://www.copyright.gov/title17/92chap1.html#105
  *
-
-
  */
 package aprs.system;
 
