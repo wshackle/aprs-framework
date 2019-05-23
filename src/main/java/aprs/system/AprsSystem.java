@@ -1042,6 +1042,7 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
+            Thread.dumpStack();
             crclClientJInternalFrame.pauseCrclProgram();
             runOnDispatchThread(Utils::PlayAlert2);
         }
@@ -7064,6 +7065,7 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("pause");
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
+        Thread.dumpStack();
         pausing = true;
         boolean badState = checkResuming();
         try {
