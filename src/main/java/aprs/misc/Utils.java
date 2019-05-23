@@ -120,6 +120,39 @@ public class Utils {
         return XFuture.traceToString(trace);
     }
 
+    public static String traceToShortString(StackTraceElement trace @Nullable [], int clipLen) {
+        StringBuilder sb = new StringBuilder();
+        if (null != trace) {
+            for (int i = 0; i < trace.length; i++) {
+                StackTraceElement stackTraceElement = trace[i];
+                if (stackTraceElement.getMethodName().contains("logEvent")) {
+                    continue;
+                }
+                if (stackTraceElement.getClassName().contains("Future")) {
+                    continue;
+                }
+                if (stackTraceElement.getClassName().contains("LogEvent")) {
+                    continue;
+                }
+                if (stackTraceElement.getClassName().startsWith("java.")) {
+                    continue;
+                }
+                sb.append(stackTraceElement.getMethodName()).append('(').append(stackTraceElement.getFileName()).append(':').append(stackTraceElement.getLineNumber()).append(')');
+                sb.append(", ");
+            }
+        }
+        String out = sb.toString();
+        out = clipString(out, clipLen);
+        return out;
+    }
+    
+     public static String clipString(String out, int clipLen) {
+        if(out.length() > clipLen) {
+            out = out.substring(0, clipLen-2)+"...";
+        }
+        return out;
+    }
+     
     @UIEffect
     static public void PlayAlert(String resourceName) {
         PlayAlert(resourceName, false, Utils.class);

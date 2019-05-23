@@ -1259,43 +1259,43 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.getFirstEventTime();
     }
 
-    private void setAbortEventTime(long abortEventTime) {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.setAbortEventTime(abortEventTime);
-    }
-
-    private void logEventPrivate(long time, String s, int blockerSize, int ecc, int cdc, int errs, String threadname) {
-
-        if (getFirstEventTime() > 0) {
-            updateRunningTime();
-            startUpdateRunningTimeTimer();
-        }
-        String timeString = getTimeString(time);
-        if (null == logPrintStream) {
-            try {
-                File logFile = Utils.createTempFile("events_log_", ".txt");
-                println("logFile = " + logFile.getCanonicalPath());
-                logPrintStream = new PrintStream(new FileOutputStream(logFile));
-
-            } catch (IOException ex) {
-                Logger.getLogger(AprsSupervisorDisplayJFrame.class
-                        .getName()).log(Level.SEVERE, "", ex);
-            }
-        }
-        String fullLogString = timeString + " \t" + blockerSize + " \t" + s + " \t:thread= " + threadname;
-        if (null != logPrintStream) {
-            logPrintStream.println(fullLogString);
-        }
-        println(fullLogString);
-        addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
-    }
+//    private void setAbortEventTime(long abortEventTime) {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.setAbortEventTime(abortEventTime);
+//    }
+//
+//    private void logEventPrivate(long time, String s, int blockerSize, int ecc, int cdc, int errs, String threadname,StackTraceElement trace[]) {
+//
+//        if (getFirstEventTime() > 0) {
+//            updateRunningTime();
+//            startUpdateRunningTimeTimer();
+//        }
+//        String timeString = getTimeString(time);
+//        if (null == logPrintStream) {
+//            try {
+//                File logFile = Utils.createTempFile("events_log_", ".txt");
+//                println("logFile = " + logFile.getCanonicalPath());
+//                logPrintStream = new PrintStream(new FileOutputStream(logFile));
+//
+//            } catch (IOException ex) {
+//                Logger.getLogger(AprsSupervisorDisplayJFrame.class
+//                        .getName()).log(Level.SEVERE, "", ex);
+//            }
+//        }
+//        String fullLogString = timeString + " \t" + blockerSize + " \t" + s + " \t:thread= " + threadname;
+//        if (null != logPrintStream) {
+//            logPrintStream.println(fullLogString);
+//        }
+//        println(fullLogString);
+//        addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname,Utils.traceToString(trace));
+//    }
 
     private int addOldEventToTableCount = 0;
     private long addOldEventToTableTime = 0;
 
-    public void addOldEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname) {
+    public void addOldEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname, String traceString) {
         DefaultTableModel tm = (DefaultTableModel) jTableEvents.getModel();
         if (tm.getRowCount() > eventsDisplayMax && eventsDisplayMax > 0) {
             if (!jCheckBoxScrollEvents.isSelected()) {
@@ -1307,7 +1307,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         addOldEventToTableCount++;
         long timediff = time - addOldEventToTableTime;
         addOldEventToTableTime = time;
-        tm.addRow(new Object[]{addOldEventToTableCount, getTimeString(time), timediff, blockerSize, ecc, cdc, errs, s, "", threadname});
+        tm.addRow(new Object[]{addOldEventToTableCount, getTimeString(time), timediff, blockerSize, ecc, cdc, errs, s, threadname, traceString});
         if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen || threadname.length() > maxThreadNameStringLen) {
             if (jCheckBoxScrollEvents.isSelected()) {
                 Utils.autoResizeTableColWidths(jTableEvents);
@@ -1947,14 +1947,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Index", "Time", "TimeDiff", "Locks", "Enable Changes", "Cycles", "Errs", "Event", "Source", "Thread"
+                "Index", "Time", "TimeDiff", "Locks", "Enable Changes", "Cycles", "Errs", "Event", "Thread", "Trace"
             }
         ) {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class, java.lang.Long.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, true, true, false
+                false, false, false, false, false, false, false, true, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -4261,6 +4261,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 String errsString = getRecordString(record, headerMap, "errs");
                 String s = getRecordString(record, headerMap, "s");
                 String threadname = getRecordString(record, headerMap, "threadname");
+                String traceString = getRecordString(record, headerMap, "trace");
                 long time = parseTimeString(timeString);
                 if (time < minTime) {
                     minTime = time;
@@ -4272,7 +4273,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 int ecc = Integer.parseInt(eccString);
                 int cdc = Integer.parseInt(cdcString);
                 int errs = Integer.parseInt(errsString);
-                addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname);
+                addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname,traceString);
             }
         }
         long runTimeMillis = maxTime - minTime;

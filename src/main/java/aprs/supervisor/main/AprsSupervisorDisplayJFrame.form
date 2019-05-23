@@ -1121,8 +1121,8 @@
                         <Column editable="false" title="Cycles" type="java.lang.Integer"/>
                         <Column editable="false" title="Errs" type="java.lang.Integer"/>
                         <Column editable="true" title="Event" type="java.lang.String"/>
-                        <Column editable="true" title="Source" type="java.lang.String"/>
                         <Column editable="false" title="Thread" type="java.lang.String"/>
+                        <Column editable="true" title="Trace" type="java.lang.String"/>
                       </Table>
                     </Property>
                   </Properties>
