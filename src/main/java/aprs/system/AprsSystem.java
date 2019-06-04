@@ -79,7 +79,7 @@ import javax.swing.JInternalFrame;
 
 import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
-import com.github.wshackle.crcl4java.motoman.ui.MotomanCrclServerJInternalFrame;
+import com.github.wshackle.crcl4java.motoman.ui.MotomanCRCLServerJInternalFrame;
 import crcl.base.ActuateJointsType;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
@@ -137,7 +137,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.misc.MultiLineStringJPanel;
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
@@ -485,7 +485,7 @@ public class AprsSystem implements SlotOffsetProvider {
     @MonotonicNonNull
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
     @MonotonicNonNull
-    private MotomanCrclServerJInternalFrame motomanCrclServerJInternalFrame = null;
+    private MotomanCRCLServerJInternalFrame motomanCrclServerJInternalFrame = null;
     @MonotonicNonNull
     private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
@@ -2608,8 +2608,8 @@ public class AprsSystem implements SlotOffsetProvider {
             if (isMove(midCmd)) {
                 return false;
             }
-            if (midCmd instanceof CrclCommandWrapper) {
-                CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
+            if (midCmd instanceof CRCLCommandWrapper) {
+                CRCLCommandWrapper wrapper = (CRCLCommandWrapper) midCmd;
                 if (isMove(wrapper.getWrappedCommand())) {
                     return false;
                 }
@@ -2621,8 +2621,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private void processWrapperCommands(CRCLProgramType program) {
         List<MiddleCommandType> cmds = program.getMiddleCommand();
         for (MiddleCommandType cmd : cmds) {
-            if (cmd instanceof CrclCommandWrapper) {
-                CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
+            if (cmd instanceof CRCLCommandWrapper) {
+                CRCLCommandWrapper wrapper = (CRCLCommandWrapper) cmd;
                 wrapper.setCurProgram(program);
                 wrapper.notifyOnStartListeners();
                 wrapper.notifyOnDoneListeners();
@@ -3174,7 +3174,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void startMotomanCrclServerOnDisplay() {
         try {
             if (null == motomanCrclServerJInternalFrame) {
-                MotomanCrclServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCrclServerJInternalFrame();
+                MotomanCRCLServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCRCLServerJInternalFrame();
                 this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
                 newMotomanCrclServerJInternalFrame.setPropertiesFile(motomanPropertiesFile());
                 newMotomanCrclServerJInternalFrame.loadProperties();
