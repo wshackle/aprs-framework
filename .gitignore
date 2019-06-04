@@ -35,6 +35,7 @@ run*.log
 run*.err
 /nbproject/
 linux_netbeans_run_user_home/.crcl_pendant_client_recent_files
+netbeans_run_user_home/.crcl_pendant_client_recent_files
 
 *.out
 *.o.d

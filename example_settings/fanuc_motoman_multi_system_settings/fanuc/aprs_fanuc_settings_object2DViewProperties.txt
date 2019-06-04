@@ -8,7 +8,7 @@ connected=true
 displayAxis=(Y+,X-)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.0,601.25,-186.69,0.98,P,sku_kit_m2l1_vessel,-2.41,572.54,-156.06,0.66,KT,
+items=sku_part_large_gear,0.0,322.49,81.58,0.97,P,sku_part_large_gear,0.0,403.32,-129.81,0.94,P,sku_part_medium_gear,0.0,625.61,23.15,0.93,P,sku_part_medium_gear,0.0,307.57,-90.92,0.92,P,sku_part_medium_gear,0.0,627.77,98.76,0.9,P,sku_part_medium_gear,0.0,308.3,-168.22,0.89,P,sku_large_gear_vessel,-1.57,380.8,84.45,0.92,PT,sku_medium_gear_vessel,-0.04,587.68,61.48,0.83,PT,sku_kit_m2l1_vessel,-1.61,365.64,-127.89,0.59,KT,sku_kit_m2l1_vessel,-1.57,573.64,-132.27,0.71,KT,
 
 pickupDist=5.00
 posNoise=1.00
