@@ -56,6 +56,26 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         jSpinnerMaxLines.setValue(250);
     }
 
+    private boolean parentVisible;
+
+    /**
+     * Get the value of parentVisible
+     *
+     * @return the value of parentVisible
+     */
+    public boolean isParentVisible() {
+        return parentVisible;
+    }
+
+    /**
+     * Set the value of parentVisible
+     *
+     * @param parentVisible new value of parentVisible
+     */
+    public void setParentVisible(boolean parentVisible) {
+        this.parentVisible = parentVisible;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -212,7 +232,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
         if (logLines.size() < maxLines) {
             addLogLine(l);
-            if (!jCheckBoxPauseOutput.isSelected()) {
+            if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
                 jTextArea1.append(l);
             }
         } else {
@@ -224,11 +244,11 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
             for (String logLine : logLines) {
                 sb.append(logLine);
             }
-            if (!jCheckBoxPauseOutput.isSelected()) {
+            if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
                 jTextArea1.setText(sb.toString());
             }
         }
-        if (!jCheckBoxPauseOutput.isSelected()) {
+        if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
             jTextArea1.setCaretPosition(jTextArea1.getText().length() - 1);
         }
     }
@@ -251,7 +271,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     public void clearText() {
         Utils.runOnDispatchThread(this::clearTextOnDisplay);
     }
-    
+
     @UIEffect
     private void clearTextOnDisplay() {
         logLines.clear();
@@ -263,7 +283,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     public void appendText(String text) {
         Utils.runOnDispatchThread(() -> appendTextOnDisplay(text));
     }
-    
+
     @UIEffect
     public void appendTextOnDisplay(String text) {
         String txt2 = text.replace("\r\n", "\n");
@@ -282,9 +302,6 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }
 
-    
-    
-    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonToExternal;

@@ -56,6 +56,7 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
     @Override
     public void dispose() {
         clearText();
+        logDisplayJPanel1.setParentVisible(false);
         Utils.runOnDispatchThread(() -> super.dispose());
     }
 
@@ -75,6 +76,29 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
         setMaximizable(true);
         setResizable(true);
         setTitle("Error/Info Log");
+        addInternalFrameListener(new javax.swing.event.InternalFrameListener() {
+            public void internalFrameActivated(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameActivated(evt);
+            }
+            public void internalFrameClosed(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameClosed(evt);
+            }
+            public void internalFrameClosing(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameClosing(evt);
+            }
+            public void internalFrameDeactivated(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameDeactivated(evt);
+            }
+            public void internalFrameDeiconified(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameDeiconified(evt);
+            }
+            public void internalFrameIconified(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameIconified(evt);
+            }
+            public void internalFrameOpened(javax.swing.event.InternalFrameEvent evt) {
+                formInternalFrameOpened(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -95,6 +119,34 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formInternalFrameClosed(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosed
+        logDisplayJPanel1.setParentVisible(false);
+    }//GEN-LAST:event_formInternalFrameClosed
+
+    private void formInternalFrameActivated(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameActivated
+        logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
+    }//GEN-LAST:event_formInternalFrameActivated
+
+    private void formInternalFrameClosing(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosing
+       logDisplayJPanel1.setParentVisible(false);
+    }//GEN-LAST:event_formInternalFrameClosing
+
+    private void formInternalFrameDeactivated(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameDeactivated
+       logDisplayJPanel1.setParentVisible(false);
+    }//GEN-LAST:event_formInternalFrameDeactivated
+
+    private void formInternalFrameDeiconified(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameDeiconified
+       logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
+    }//GEN-LAST:event_formInternalFrameDeiconified
+
+    private void formInternalFrameIconified(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameIconified
+        logDisplayJPanel1.setParentVisible(false);
+    }//GEN-LAST:event_formInternalFrameIconified
+
+    private void formInternalFrameOpened(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameOpened
+         logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
+    }//GEN-LAST:event_formInternalFrameOpened
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
