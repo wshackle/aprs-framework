@@ -23,7 +23,7 @@
 package aprs.actions.executor;
 
 import aprs.misc.Utils;
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

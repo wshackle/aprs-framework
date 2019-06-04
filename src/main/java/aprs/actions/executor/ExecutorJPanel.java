@@ -64,7 +64,7 @@ import crcl.base.MessageType;
 import crcl.base.MiddleCommandType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientJPanel;
@@ -686,7 +686,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         aprsSystem.logEvent("handlePlacePartCompleted", "requestCountDiffer=" + requestCountDiffer + ",aboring=" + aborting + ", ppi.getPddlActionIndex()=" + ppi.getPddlActionIndex() + ",action=" + ppi.getAction().asPddlLine());
         if (requestCountDiffer || aborting) {
             crclGenerator.takeSnapshots("exec", "safeAbortRequested" + sarc + ":" + safeAboutCount.get() + ".ppi=" + ppi, null, null);
-            CrclCommandWrapper wrapper = ppi.getWrapper();
+            CRCLCommandWrapper wrapper = ppi.getWrapper();
             if (null == wrapper) {
                 throw new IllegalArgumentException("ppi.getWrapper() == null");
             }
@@ -3248,8 +3248,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         int initialSize = middleCommands.size();
         for (int i = 0; i < middleCommands.size() && initialSize == middleCommands.size(); i++) {
             MiddleCommandType midCmd = middleCommands.get(i);
-            if (midCmd instanceof CrclCommandWrapper) {
-                CrclCommandWrapper wrapper = (CrclCommandWrapper) midCmd;
+            if (midCmd instanceof CRCLCommandWrapper) {
+                CRCLCommandWrapper wrapper = (CRCLCommandWrapper) midCmd;
                 midCmd = wrapper.getWrappedCommand();
             }
             if (null != midCmd) {

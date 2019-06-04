@@ -1,6 +1,6 @@
 package aprs.actions.executor;
 
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -14,7 +14,7 @@ class ActionCallbackInfo {
     private final int actionIndex;
     private final String comment;
     private final Action action;
-    private final CrclCommandWrapper wrapper;
+    private final CRCLCommandWrapper wrapper;
     private final List<Action> actions;
     @Nullable
     private final List<Action> origActions;
@@ -23,7 +23,7 @@ class ActionCallbackInfo {
     ActionCallbackInfo(
             int actionIndex, 
             String comment, Action action, 
-            CrclCommandWrapper wrapper, 
+            CRCLCommandWrapper wrapper, 
             List<Action> actions, 
             @Nullable List<Action> origActions) {
         this.actionIndex = actionIndex;
@@ -48,7 +48,7 @@ class ActionCallbackInfo {
     }
 
     @SuppressWarnings("unused")
-    public CrclCommandWrapper getWrapper() {
+    public CRCLCommandWrapper getWrapper() {
         return wrapper;
     }
 

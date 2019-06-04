@@ -22,7 +22,7 @@
  */
 package aprs.actions.executor;
 
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 import java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -42,7 +42,7 @@ public class WrappedActionInfo {
     private final int pddlActionIndex;
     private final int outIndex;
     @Nullable
-    private CrclCommandWrapper wrapper = null;
+    private CRCLCommandWrapper wrapper = null;
     private final int startSafeAbortRequestCount;
 
     public WrappedActionInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, @Nullable Action parentAction, int parentActionIndex) {
@@ -55,11 +55,11 @@ public class WrappedActionInfo {
     }
 
     @Nullable
-    public CrclCommandWrapper getWrapper() {
+    public CRCLCommandWrapper getWrapper() {
         return wrapper;
     }
 
-    void setWrapper(CrclCommandWrapper wrapper) {
+    void setWrapper(CRCLCommandWrapper wrapper) {
         this.wrapper = wrapper;
     }
 

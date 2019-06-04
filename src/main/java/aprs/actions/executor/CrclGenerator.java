@@ -83,7 +83,7 @@ import crcl.ui.XFutureVoid;
 import crcl.ui.client.PendantClientInner;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLException;
-import crcl.utils.CrclCommandWrapper;
+import crcl.utils.CRCLCommandWrapper;
 import crcl.utils.CRCLPosemath;
 
 import java.sql.SQLException;
@@ -98,7 +98,7 @@ import java.util.Arrays;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
-import crcl.utils.CrclCommandWrapper.CRCLCommandWrapperConsumer;
+import crcl.utils.CRCLCommandWrapper.CRCLCommandWrapperConsumer;
 
 import java.util.Date;
 import java.io.File;
@@ -1267,7 +1267,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (cmd instanceof SetAngleUnitsType) {
                 continue;
             }
-            if (!(cmd instanceof CrclCommandWrapper)) {
+            if (!(cmd instanceof CRCLCommandWrapper)) {
                 return true;
             }
         }
@@ -1286,10 +1286,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (cmd instanceof SetAngleUnitsType) {
                 continue;
             }
-            if (!(cmd instanceof CrclCommandWrapper)) {
+            if (!(cmd instanceof CRCLCommandWrapper)) {
                 throw new IllegalArgumentException("list contains non wrapper commands");
             }
-            CrclCommandWrapper wrapper = (CrclCommandWrapper) cmd;
+            CRCLCommandWrapper wrapper = (CRCLCommandWrapper) cmd;
             wrapper.notifyOnStartListeners();
             wrapper.notifyOnDoneListeners();
         }
@@ -1736,7 +1736,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             System.err.println("startingAction=" + startingAction);
                             throw new RuntimeException("lookForPartsNeeded gparams=" + gparams.toString() + ", acbi=" + acbi);
 //                            lookForParts(action, cmds, false, false, gparams.startSafeAbortRequestCount);
-//                            addMarkerCommand(cmds, "checkKitsAfterAddedLookForParts", (CrclCommandWrapper wrapper2) -> {
+//                            addMarkerCommand(cmds, "checkKitsAfterAddedLookForParts", (CRCLCommandWrapper wrapper2) -> {
 //                                try {
 //                                    if (gparams.startSafeAbortRequestCount != aprsSystem.getSafeAbortRequestCount()) {
 //                                        takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
@@ -1936,7 +1936,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void addNotifyMarker(List<MiddleCommandType> cmds, String end_action_string, final int idx, Action action, final List<Action> fixedActionsCopy, @Nullable List<Action> fixedOrigActionsCopy) {
         addMarkerCommand(cmds, end_action_string,
-                (CrclCommandWrapper wrapper) -> {
+                (CRCLCommandWrapper wrapper) -> {
                     notifyActionCompletedListeners(idx, end_action_string, action, wrapper, fixedActionsCopy, fixedOrigActionsCopy);
                 });
     }
@@ -4649,7 +4649,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pose.setZAxis(zAxis);
         takePartByPose(out, pose, partName);
         String markerMsg = "took part " + partName;
-        addMarkerCommand(out, markerMsg, (CrclCommandWrapper ccw) -> {
+        addMarkerCommand(out, markerMsg, (CRCLCommandWrapper ccw) -> {
             logDebug(markerMsg + " at " + new Date());
             addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
@@ -5010,7 +5010,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else {
             imgLabel = "openGripper" + lastIndex + "partTaken=" + lastPartTaken;
         }
-        addOptionalOpenGripper(cmds, (CrclCommandWrapper ccw) -> {
+        addOptionalOpenGripper(cmds, (CRCLCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
 
@@ -5245,7 +5245,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         addSettleDwell(cmds);
 
-        addOptionalCloseGripper(cmds, (CrclCommandWrapper ccw) -> {
+        addOptionalCloseGripper(cmds, (CRCLCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
             if (af.isObjectViewSimulated()) {
@@ -5635,7 +5635,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         MessageType origMessageCmd = new MessageType();
         origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get() + ",offset=" + offset + ",limit=" + limit);
-        addOptionalCommand(origMessageCmd, cmds, (CrclCommandWrapper wrapper) -> {
+        addOptionalCommand(origMessageCmd, cmds, (CRCLCommandWrapper wrapper) -> {
             MiddleCommandType cmd = wrapper.getWrappedCommand();
             AprsSystem af = requireNonNull(aprsSystem, "aprsSystem");
             PoseType pose = requireNonNull(af.getCurrentPose(), "af.getCurrentPose()");
@@ -6472,7 +6472,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         addMarkerCommand(out,
                 "dropTool " + toolInRobot + " in " + toolHolderName,
-                (CrclCommandWrapper cmd) -> {
+                (CRCLCommandWrapper cmd) -> {
                     String currentToolInRobot = getCurrentToolName();
                     if (isEmptyTool(currentToolInRobot)) {
                         throw new IllegalStateException("dropping tool when robot holding " + currentToolInRobot);
@@ -6592,7 +6592,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         addMarkerCommand(out,
                 "pickupTool " + toolInHolder + " from " + toolHolderName,
-                (CrclCommandWrapper cmd) -> {
+                (CRCLCommandWrapper cmd) -> {
                     String prevRobotTool = getCurrentToolName();
                     if (!isEmptyTool(prevRobotTool)) {
                         throw new IllegalStateException("pickup tool when currentTool = " + prevRobotTool);
@@ -7050,7 +7050,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPartLocal);
                     final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, "returned." + lastTakenPartLocal, "skipped." + slotName);
                     addMarkerCommand(out, msg,
-                            ((CrclCommandWrapper wrapper) -> {
+                            ((CRCLCommandWrapper wrapper) -> {
                                 addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
                                 logDebug(msg + " completed at " + new Date());
                                 ppi.setWrapper(wrapper);
@@ -7075,7 +7075,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 slotName);
         placePartByPose(out, pose);
         addMarkerCommand(out, msg,
-                ((CrclCommandWrapper wrapper) -> {
+                ((CRCLCommandWrapper wrapper) -> {
                     addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
                     logDebug(msg + " completed at " + new Date());
                     ppi.setWrapper(wrapper);
@@ -7112,7 +7112,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        placePartByPose(out, pose);
 //        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,null,-1);
 //        addMarkerCommand(out, msg,
-//                ((CrclCommandWrapper wrapper) -> {
+//                ((CRCLCommandWrapper wrapper) -> {
 //                    logDebug(msg + " completed at " + new Date());
 //                    ppi.setWrapper(wrapper);
 //                    notifyPlacePartConsumers(ppi);
@@ -7239,7 +7239,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
 
         @Override
-        public void accept(CrclCommandWrapper wrapper) {
+        public void accept(CRCLCommandWrapper wrapper) {
 
             final Thread curThread = Thread.currentThread();
             if (null != genThread
@@ -7259,7 +7259,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         MessageType messageCmd = new MessageType();
         messageCmd.setMessage(message + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
         setCommandId(messageCmd);
-        CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnDone(messageCmd, new CRCLCommandWrapperConsumerChecker(cb));
+        CRCLCommandWrapper wrapper = CRCLCommandWrapper.wrapWithOnDone(messageCmd, new CRCLCommandWrapperConsumerChecker(cb));
         cmds.add(wrapper);
     }
 
@@ -7272,7 +7272,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void addOptionalCommand(MiddleCommandType optCmd, List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
         setCommandId(optCmd);
-        CrclCommandWrapper wrapper = CrclCommandWrapper.wrapWithOnStart(optCmd, cb);
+        CRCLCommandWrapper wrapper = CRCLCommandWrapper.wrapWithOnStart(optCmd, cb);
         wrapper.setCommandID(optCmd.getCommandID());
         cmds.add(wrapper);
     }
@@ -7305,7 +7305,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final AtomicReference<@Nullable ActionCallbackInfo> lastAcbi = new AtomicReference<>();
 
-    private void notifyActionCompletedListeners(int actionIndex, String comment, Action action, CrclCommandWrapper wrapper, List<Action> actions, @Nullable List<Action> origActions) {
+    private void notifyActionCompletedListeners(int actionIndex, String comment, Action action, CRCLCommandWrapper wrapper, List<Action> actions, @Nullable List<Action> origActions) {
         ActionCallbackInfo acbi = new ActionCallbackInfo(actionIndex, comment, action, wrapper, actions, origActions);
         lastAcbi.set(acbi);
         action.setExecTime();
