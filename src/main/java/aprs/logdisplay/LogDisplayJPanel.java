@@ -230,9 +230,10 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
             Logger.getLogger(LogDisplayJPanel.class
                     .getName()).log(Level.SEVERE, "", exception);
         }
+        final boolean visibleAndNotPaused = !jCheckBoxPauseOutput.isSelected() && parentVisible;
         if (logLines.size() < maxLines) {
             addLogLine(l);
-            if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
+            if (visibleAndNotPaused) {
                 jTextArea1.append(l);
             }
         } else {
@@ -244,11 +245,11 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
             for (String logLine : logLines) {
                 sb.append(logLine);
             }
-            if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
+            if (visibleAndNotPaused) {
                 jTextArea1.setText(sb.toString());
             }
         }
-        if (!jCheckBoxPauseOutput.isSelected() && parentVisible) {
+        if (visibleAndNotPaused) {
             jTextArea1.setCaretPosition(jTextArea1.getText().length() - 1);
         }
     }
