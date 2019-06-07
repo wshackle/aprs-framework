@@ -61,6 +61,32 @@
         </dependency>
 
         <dependency>
+            <groupId>com.ati-ia</groupId>
+            <artifactId>ATINetFT</artifactId>
+            <version>1.0</version>
+            <optional>true</optional>
+            <scope>runtime</scope>
+            <!-- 
+  Download jar from 
+      
+      https://www.ati-ia.com/Library/software/net_ft/ATINetFT.jar
+      
+      or from the webpage on the device itself.
+
+      Or get the source and compile from
+
+      https://www.ati-ia.com/Library/software/net_ft/src.zip
+      
+      
+      On Windows PC OPTIMUS install with this command(Paths will differ on other computers)
+
+SET  JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk-11.0.2+7
+C:\Users\Public\Documents\Downloaded_Tools\ApacheNetbeans10.0\netbeans\java\maven\bin\mvn.cmd install:install-file -Dfile=C:\Users\Public\Documents\Downloaded_Tools\ATINetFT.jar -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar
+          
+            -->
+           
+        </dependency>
+        <dependency>
             <groupId>com.ghgande</groupId>
             <artifactId>j2mod</artifactId>
             <version>2.5.0</version>
