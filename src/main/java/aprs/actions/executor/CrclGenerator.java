@@ -1538,6 +1538,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     switch (action.getType()) {
                         case TAKE_PART:
                             if (poseCache.isEmpty()) {
+                                System.err.println("physicalItems = " + physicalItems);
+                                System.err.println("clearPoseCacheTrace = " + Utils.traceToString(clearPoseCacheTrace));
                                 throw new IllegalStateException("TAKE_PART when poseCache is empty");
                             }
                             String partName = action.getArgs()[takePartArgIndex];

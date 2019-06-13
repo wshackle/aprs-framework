@@ -104,5 +104,16 @@
                 <activatedProfile>with_checkers</activatedProfile>
             </activatedProfiles>
         </action>
+    <action>
+            <actionName>CUSTOM-purge-local-repository</actionName>
+            <displayName>purge-local-repository</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>dependency:purge-local-repository</goal>
+            </goals>
+            <properties>
+                <snapshotsOnly>true</snapshotsOnly>
+            </properties>
+        </action>
     
 </actions>

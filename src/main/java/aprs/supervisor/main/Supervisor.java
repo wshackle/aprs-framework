@@ -3679,7 +3679,8 @@ public class Supervisor {
                 System.err.println("fullAbortAll: Cancelling lastFutureReturned=" + lastFutureReturned);
                 lastFutureReturned.cancelAll(true);
             }
-            clearLFR();
+            lastFutureReturned=null;
+//            clearLFR();
         }
         if (null != fillTraysAndNextRepeatingFuture) {
             fillTraysAndNextRepeatingFuture.cancelAll(true);
