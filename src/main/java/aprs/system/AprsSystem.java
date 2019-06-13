@@ -144,6 +144,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -159,7 +160,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import rcs.posemath.PmException;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -1281,12 +1281,17 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 if (!crclClientJInternalFrame.isConnected()) {
                     crclClientJInternalFrame.connectCurrent();
+                    crclClientJInternalFrame.requestAndReadStatus();
                 }
             } catch (Exception e) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
             }
             if (!crclClientJInternalFrame.isConnected()) {
                 return null;
+            }
+            Optional<CRCLStatusType> curStatusOptional = crclClientJInternalFrame.getCurrentStatus();
+            if (!curStatusOptional.isPresent() || curStatusOptional.get() == null) {
+                crclClientJInternalFrame.requestAndReadStatus();
             }
             return crclClientJInternalFrame.currentStatusPose();
         }
@@ -1372,6 +1377,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (crclClientJInternalFrame.isConnected() != connected) {
                 if (connected) {
                     crclClientJInternalFrame.connectCurrent();
+                    crclClientJInternalFrame.requestAndReadStatus();
                 } else {
                     crclClientJInternalFrame.disconnect();
                 }
@@ -1599,7 +1605,7 @@ public class AprsSystem implements SlotOffsetProvider {
             final String doingActionsInfo = getIsDoingActionsInfo();
             int count = startSafeAbortAndDisconnectCount.incrementAndGet();
             logEvent("START startSafeAbortAndDisconnect", comment, connected, doingActons, count);
-            logToSuper("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count );
+            logToSuper("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
             takeSnapshots("START startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
             if (connected) {
                 if (null == pddlExecutorJInternalFrame1) {
@@ -7180,8 +7186,15 @@ public class AprsSystem implements SlotOffsetProvider {
         Utils.setCommandID(cmd, incrementAndGetCommandId());
     }
 
+    private final AtomicInteger createEmptyProgramCount = new AtomicInteger();
+
     private CRCLProgramType createEmptyProgram() {
         CRCLProgramType prog = new CRCLProgramType();
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        final int c = createEmptyProgramCount.incrementAndGet();
+        if (trace.length > 3) {
+            prog.setName(c + "_" + trace[2].toString());
+        }
         prog.setInitCanon(new InitCanonType());
         setCommandID(prog.getInitCanon());
         prog.getMiddleCommand().clear();
