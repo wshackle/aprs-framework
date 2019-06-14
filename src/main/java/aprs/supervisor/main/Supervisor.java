@@ -1393,7 +1393,7 @@ public class Supervisor {
                                     if (t == null) {
                                         return "";
                                     } else {
-                                        if (!(t instanceof CancellationException)) {
+                                        if (!(t instanceof CancellationException) && !(t.getCause() instanceof CancellationException)) {
                                             logEvent(t.toString());
                                             log(Level.SEVERE, "", t);
                                             setAbortTimeCurrent();
@@ -1731,7 +1731,7 @@ public class Supervisor {
 
     private void handleXFutureException(Throwable throwable) {
         if (null != throwable) {
-            if (throwable != lastLoggedException && !closing) {
+            if (throwable != lastLoggedException && !closing && !preClosing) {
                 logException(throwable);
                 Logger.getLogger(Supervisor.class
                         .getName()).log(Level.SEVERE, "Supervisor.handleXFutureException:" + throwable.getMessage(), throwable);
@@ -3852,6 +3852,7 @@ public class Supervisor {
     }
 
     public void close() {
+        preCloseAllAprsSystems();
         if (null != logPrintStream) {
 //            Set<Entry<String, Integer>> callerEntries = callerMap.entrySet();
 //            List<Entry<String, Integer>> callerList = new ArrayList<>(callerEntries);
@@ -8786,11 +8787,28 @@ public class Supervisor {
     List<AprsSystem> getAprsSystems() {
         return Collections.unmodifiableList(aprsSystems);
     }
+    
+    private volatile boolean preClosing = false;
+    /**
+     * Close all systems.
+     */
+    private void preCloseAllAprsSystems() {
+        preClosing = true;
+        List<AprsSystem> aprsSystemsCopy = new ArrayList<>(aprsSystems);
+        aprsSystems.clear();
+        for (AprsSystem aprsSystemInterface : aprsSystemsCopy) {
+            try {
+                aprsSystemInterface.setCrclClientPreClosing(true);
+
+            } catch (Exception ex) {
+                log(Level.SEVERE, "", ex);
+            }
+        }
+    }
 
     /**
      * Close all systems.
      */
-    @SuppressWarnings("UnusedReturnValue")
     private XFutureVoid closeAllAprsSystems() {
         if (aprsSystems.isEmpty()) {
             return XFutureVoid.completedFutureWithName("closeAllAprsSystems.aprsSystems=" + aprsSystems);

@@ -1828,6 +1828,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void windowClosed() {
+        if (null != aprsSystem) {
+            aprsSystem.setCrclClientPreClosing(true);
+        }
         if (isVisible()) {
             setVisible(false);
         }
@@ -1840,6 +1843,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void windowClosing() {
         try {
+            if (null != aprsSystem) {
+                aprsSystem.setCrclClientPreClosing(true);
+            }
             if (null != aprsSystem) {
                 aprsSystem.windowClosing();
             }

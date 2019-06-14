@@ -5132,6 +5132,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void windowClosed() {
+        setCrclClientPreClosing(true);
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setVisible(false);
         }
@@ -5142,6 +5143,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void windowClosing() {
+        setCrclClientPreClosing(true);
         closing = true;
         startingCheckEnabled = false;
         try {
@@ -9779,4 +9781,26 @@ public class AprsSystem implements SlotOffsetProvider {
         pddlExecutorJInternalFrame1.removeToolHolderContentsListener(listener);
     }
 
+    /**
+     * Get the value of preClosing
+     *
+     * @return the value of preClosing
+     */
+    public boolean isCrclClientPreClosing() {
+        if (null == crclClientJInternalFrame) {
+            return false;
+        }
+        return crclClientJInternalFrame.isPreClosing();
+    }
+
+    /**
+     * Set the value of preClosing
+     *
+     * @param preClosing new value of preClosing
+     */
+    public void setCrclClientPreClosing(boolean preClosing) {
+        if (null != crclClientJInternalFrame) {
+            crclClientJInternalFrame.setPreClosing(preClosing);
+        }
+    }
 }
