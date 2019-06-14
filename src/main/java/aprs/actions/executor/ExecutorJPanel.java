@@ -6038,9 +6038,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param errorString new value of errorString
      */
     public void setErrorString(@Nullable String errorString) {
-        if (null == errorString) {
-            crclGenerator.reset();
-        }
+//        if (null == errorString) {
+//            crclGenerator.reset();
+//        }
         this.errorString = errorString;
     }
 
