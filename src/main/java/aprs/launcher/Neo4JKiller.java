@@ -22,7 +22,6 @@
  */
 package aprs.launcher;
 
-import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
