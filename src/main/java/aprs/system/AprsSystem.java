@@ -77,9 +77,6 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JInternalFrame;
 
-import com.github.wshackle.fanuccrclservermain.FanucCRCLMain;
-import com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrame;
-import com.github.wshackle.crcl4java.motoman.ui.MotomanCRCLServerJInternalFrame;
 import crcl.base.ActuateJointsType;
 import crcl.base.CRCLCommandType;
 import crcl.base.CRCLProgramType;
@@ -138,13 +135,19 @@ import rcs.posemath.PmCartesian;
 import crcl.ui.client.PendantClientJInternalFrame;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLCommandWrapper;
+import crcl.utils.server.RemoteCrclSensorExtractorFinder;
+import crcl.utils.server.SensorServerFinderInterface;
+import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
+import crcl.utils.server.ServerJInternalFrameProviderInterface;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -479,13 +482,16 @@ public class AprsSystem implements SlotOffsetProvider {
     @MonotonicNonNull
     private volatile LogDisplayJInternalFrame logDisplayJInternalFrame = null;
     @MonotonicNonNull
-    private FanucCRCLMain fanucCRCLMain = null;
+    private ServerJInternalFrameProviderInterface fanucServerProvider = null;
     @MonotonicNonNull
-    private FanucCRCLServerJInternalFrame fanucCRCLServerJInternalFrame = null;
+    private JInternalFrame fanucCRCLServerJInternalFrame = null;
     @MonotonicNonNull
     private ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
+
     @MonotonicNonNull
-    private MotomanCRCLServerJInternalFrame motomanCrclServerJInternalFrame = null;
+    private ServerJInternalFrameProviderInterface motomanServerProvider = null;
+    @MonotonicNonNull
+    private JInternalFrame motomanCrclServerJInternalFrame = null;
     @MonotonicNonNull
     private KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
@@ -3043,32 +3049,100 @@ public class AprsSystem implements SlotOffsetProvider {
     private final boolean fanucPreferRNN = false;
     private String fanucRobotHost = System.getProperty("fanucRobotHost", "192.168.1.34");// "129.6.78.111"; // FIXME hard-coded default
 
+    private final List<ServerJInternalFrameProviderFinderInterface> serverJInternalFrameProviderFinders = new ArrayList<>();
+
+    public void addJInternalFrameFinder(ServerJInternalFrameProviderFinderInterface finder) {
+        serverJInternalFrameProviderFinders.add(finder);
+    }
+
+    public void removeJInternalFrameFinder(ServerJInternalFrameProviderFinderInterface finder) {
+        serverJInternalFrameProviderFinders.remove(finder);
+    }
+
+    public void clearJInternalFrameFinders() {
+        serverJInternalFrameProviderFinders.clear();
+    }
+
+    public final void refreshJInternalFrameFinders() {
+
+        clearJInternalFrameFinders();
+//        try {
+//            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//            System.out.println("cl = " + cl);
+//            Class clzz = cl.loadClass("com.github.wshackle.atinetft_proxy.ATIForceTorqueSensorFinder");
+//            System.out.println("clzz = " + clzz);
+//            ProtectionDomain protDom = clzz.getProtectionDomain();
+//            System.out.println("protDom = " + protDom);
+//        } catch (ClassNotFoundException ex) {
+//            Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try {
+//            Class clzz = Class.forName("com.github.wshackle.atinetft_proxy.ATIForceTorqueSensorFinder");
+//            System.out.println("clzz = " + clzz);
+//            ProtectionDomain protDom = clzz.getProtectionDomain();
+//            System.out.println("protDom = " + protDom);
+//        } catch (ClassNotFoundException ex) {
+//            Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
+        ServiceLoader<ServerJInternalFrameProviderFinderInterface> loader
+                = ServiceLoader
+                        .load(ServerJInternalFrameProviderFinderInterface.class);
+
+        Iterator<ServerJInternalFrameProviderFinderInterface> it = loader.iterator();
+//        System.out.println("it = " + it);
+        while (it.hasNext()) {
+            ServerJInternalFrameProviderFinderInterface finder = it.next();
+//            System.out.println("finder = " + finder);
+            addJInternalFrameFinder(finder);
+        }
+//        System.out.println("this.sensorFinders = " + this.sensorFinders);
+
+    }
+
+    public ServerJInternalFrameProviderInterface getServerProvider(String name, Object... args) {
+        for (ServerJInternalFrameProviderFinderInterface finder : serverJInternalFrameProviderFinders) {
+            ServerJInternalFrameProviderInterface provider = finder.findJInternalFrameProvider(name, args);
+            if (null != provider) {
+                return provider;
+            }
+        }
+        return null;
+    }
+
     public XFutureVoid startFanucCrclServer() {
         try {
-            FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
-            return runOnDispatchThread(() -> newFanuCRCLServerJInternalFrame(newFanucCrclMain))
-                    .thenComposeToVoid(() -> newFanucCrclMain.startDisplayInterface())
-                    .thenComposeToVoid(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
-                    .thenRun(() -> {
-                        this.fanucCRCLMain = newFanucCrclMain;
-                    });
+            return runOnDispatchThread(() -> {
+                fanucServerProvider = getServerProvider("FanucCRCLServer");
+                if (null != fanucServerProvider) {
+                    fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
+                    fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternlFrame();
+                    addInternalFrame(fanucCRCLServerJInternalFrame);
+                }
+            });
+//            FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
+//            return runOnDispatchThread(() -> newFanuCRCLServerJInternalFrame(newFanucCrclMain))
+//                    .thenComposeToVoid(() -> newFanucCrclMain.startDisplayInterface())
+//                    .thenComposeToVoid(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
+//                    .thenRun(() -> {
+//                        this.fanuc = newFanucCrclMain;
+//                    });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
 
-    @UIEffect
-    private void newFanuCRCLServerJInternalFrame(FanucCRCLMain newFanucCrclMain) {
-        FanucCRCLServerJInternalFrame newFanucCRCLServerJInternalFrame = this.fanucCRCLServerJInternalFrame;
-        if (null == newFanucCRCLServerJInternalFrame) {
-            newFanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
-            this.fanucCRCLServerJInternalFrame = newFanucCRCLServerJInternalFrame;
-            addInternalFrame(newFanucCRCLServerJInternalFrame);
-        }
-        newFanucCrclMain.setDisplayInterface(newFanucCRCLServerJInternalFrame);
-    }
-
+//    @UIEffect
+//    private void newFanuCRCLServerJInternalFrame(FanucCRCLMain newFanucCrclMain) {
+//        FanucCRCLServerJInternalFrame newFanucCRCLServerJInternalFrame = this.fanucCRCLServerJInternalFrame;
+//        if (null == newFanucCRCLServerJInternalFrame) {
+//            newFanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
+//            this.fanucCRCLServerJInternalFrame = newFanucCRCLServerJInternalFrame;
+//            addInternalFrame(newFanucCRCLServerJInternalFrame);
+//        }
+//        newFanucCrclMain.setDisplayInterface(newFanucCRCLServerJInternalFrame);
+//    }
     @Nullable
     private String titleErrorString = null;
 
@@ -3178,14 +3252,25 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void startMotomanCrclServerOnDisplay() {
+
+        fanucServerProvider = getServerProvider("FanucCRCLServer");
+        if (null != fanucServerProvider) {
+            fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
+            fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternlFrame();
+            addInternalFrame(fanucCRCLServerJInternalFrame);
+        }
         try {
+
             if (null == motomanCrclServerJInternalFrame) {
-                MotomanCRCLServerJInternalFrame newMotomanCrclServerJInternalFrame = new MotomanCRCLServerJInternalFrame();
-                this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
-                newMotomanCrclServerJInternalFrame.setPropertiesFile(motomanPropertiesFile());
-                newMotomanCrclServerJInternalFrame.loadProperties();
-                newMotomanCrclServerJInternalFrame.connectCrclMotoplus();
-                newMotomanCrclServerJInternalFrame.setVisible(true);
+                motomanServerProvider = getServerProvider("MotomanCRCLServer");
+                if (null != motomanServerProvider) {
+                    JInternalFrame newMotomanCrclServerJInternalFrame = motomanServerProvider.getJInternlFrame();
+                    this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
+                    motomanServerProvider.setPropertiesFile(motomanPropertiesFile());
+                    motomanServerProvider.loadProperties();
+                    motomanServerProvider.start();
+                    newMotomanCrclServerJInternalFrame.setVisible(true);
+                }
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
@@ -8768,16 +8853,16 @@ public class AprsSystem implements SlotOffsetProvider {
                 simServerJInternalFrame.loadProperties();
             }
             if (null != this.motomanCrclServerJInternalFrame) {
-                motomanCrclServerJInternalFrame.loadProperties();
+                motomanServerProvider.loadProperties();
             }
             if (null != this.fanucCRCLServerJInternalFrame) {
-                fanucCRCLServerJInternalFrame.loadProperties();
+                fanucServerProvider.loadProperties();
             }
             String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
             if (null != motomanCrclLocalPortString) {
                 this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
-                if (null != motomanCrclServerJInternalFrame) {
-                    motomanCrclServerJInternalFrame.setCrclPort(motomanCrclPort);
+                if (null != motomanServerProvider) {
+                    motomanServerProvider.setCrclPort(motomanCrclPort);
                 }
             }
             String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
@@ -8989,14 +9074,14 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != taskName) {
             propsMap.put(APRSTASK_PROPERTY_NAME, taskName);
         }
-        if (null != fanucCRCLMain) {
-            this.fanucCrclPort = fanucCRCLMain.getLocalPort();
-            this.fanucRobotHost = fanucCRCLMain.getRemoteRobotHost();
+        if (null != fanucServerProvider) {
+            this.fanucCrclPort = fanucServerProvider.getCrclPort();
+            this.fanucRobotHost = fanucServerProvider.getRemoteRobotHost();
             propsMap.put(FANUC_CRCL_LOCAL_PORT, Integer.toString(fanucCrclPort));
             propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
         }
-        if (null != motomanCrclServerJInternalFrame) {
-            this.motomanCrclPort = motomanCrclServerJInternalFrame.getCrclPort();
+        if (null != motomanServerProvider) {
+            this.motomanCrclPort = motomanServerProvider.getCrclPort();
             propsMap.put(MOTOMAN_CRCL_LOCAL_PORT, Integer.toString(motomanCrclPort));
         }
 
@@ -9029,11 +9114,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != this.simServerJInternalFrame) {
             simServerJInternalFrame.saveProperties();
         }
-        if (null != this.motomanCrclServerJInternalFrame) {
-            motomanCrclServerJInternalFrame.saveProperties();
+        if (null != this.motomanServerProvider) {
+            motomanServerProvider.saveProperties();
         }
-        if (null != this.fanucCRCLServerJInternalFrame) {
-            fanucCRCLServerJInternalFrame.saveProperties();
+        if (null != this.fanucServerProvider) {
+            fanucServerProvider.saveProperties();
         }
         if (null != dbSetup) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
@@ -9101,9 +9186,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void setDefaultRobotName() {
         if (null == robotName) {
-            if (fanucCRCLMain != null) {
+            if (fanucServerProvider != null) {
                 setRobotName("Fanuc");
-            } else if (motomanCrclServerJInternalFrame != null) {
+            } else if (motomanServerProvider != null) {
                 setRobotName("Motoman");
             } else if (simServerJInternalFrame != null) {
                 setRobotName("Simulated");
@@ -9269,15 +9354,15 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != simServerJInternalFrame) {
             simServerJInternalFrame.setPropertiesFile(crclSimServerPropertiesFile(propertiesDirectory, base));
         }
-        if (null != motomanCrclServerJInternalFrame) {
-            motomanCrclServerJInternalFrame.setPropertiesFile(motomanPropertiesFile(propertiesDirectory, base));
+        if (null != motomanServerProvider) {
+            motomanServerProvider.setPropertiesFile(motomanPropertiesFile(propertiesDirectory, base));
         }
         if (null != dbSetupJInternalFrame) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
             dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
         }
-        if (null != fanucCRCLServerJInternalFrame) {
-            fanucCRCLServerJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_fanucCrclServerProperties.txt"));
+        if (null != fanucServerProvider) {
+            fanucServerProvider.setPropertiesFile(new File(propertiesDirectory, base + "_fanucCrclServerProperties.txt"));
         }
     }
 
