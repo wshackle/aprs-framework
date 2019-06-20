@@ -1082,7 +1082,10 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of scale
      */
-    public double getScale() {
+    public double getScale(boolean autoscale) {
+        if (autoscale && autoScaledScale > 0) {
+            return autoScaledScale;
+        }
         return scale;
     }
 
@@ -1098,23 +1101,26 @@ public class Object2DJPanel extends JPanel {
 //    }
     private Point2DMinMax minmax = new Point2DMinMax();
 
-    public Point2DMinMax getMinmax() {
+    public Point2DMinMax getMinmax(boolean autoscale) {
+         if (autoscale && null != autoScaledMinMax) {
+            return autoScaledMinMax;
+        }
         return minmax;
     }
 
-    public Point2DMinMax getAutoScaledMinmax() {
-        if (autoscale && null != autoScaledMinMax) {
-            return autoScaledMinMax;
-        }
-        return getMinmax();
-    }
-
-    public double getAutoScaledScale() {
-        if (autoscale && autoScaledScale > 0) {
-            return autoScaledScale;
-        }
-        return getScale();
-    }
+//    public Point2DMinMax getAutoScaledMinmax() {
+//        if (null != autoScaledMinMax) {
+//            return autoScaledMinMax;
+//        }
+//        return getMinmax();
+//    }
+//
+//    public double getAutoScaledScale() {
+//        if (autoScaledScale > 0) {
+//            return autoScaledScale;
+//        }
+//        return getScale();
+//    }
 
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
@@ -1147,8 +1153,8 @@ public class Object2DJPanel extends JPanel {
         g2d.translate(t.x, t.y);
     }
 
-    public Point2D.Double worldToScreenPoint(double worldx, double worldy) {
-        return toScreenPoint(getDisplayAxis(), worldx, worldy, getAutoScaledMinmax(), getAutoScaledScale());
+    public Point2D.Double worldToScreenPoint(double worldx, double worldy, boolean autoscale) {
+        return toScreenPoint(getDisplayAxis(), worldx, worldy, getMinmax(autoscale), getScale(autoscale));
     }
 
     private static Point2D.Double toScreenPoint(DisplayAxis displayAxis, double worldx, double worldy, Point2DMinMax minmax, double currentScale) {
@@ -1172,8 +1178,8 @@ public class Object2DJPanel extends JPanel {
         throw new IllegalStateException("invalid displayAxis");
     }
 
-    public Point2D.Double screenToWorldPoint(double scrrenx, double screeny) {
-        return toWorldPoint(getDisplayAxis(), scrrenx, screeny, getAutoScaledMinmax(), getAutoScaledScale());
+    public Point2D.Double screenToWorldPoint(double scrrenx, double screeny, boolean autoscale) {
+        return toWorldPoint(getDisplayAxis(), scrrenx, screeny, getMinmax(autoscale), getScale(autoscale));
     }
 
     private static Point2D.Double toWorldPoint(DisplayAxis displayAxis, double screenx, double screeny, Point2DMinMax minmax, double currentScale) {
@@ -1903,7 +1909,8 @@ public class Object2DJPanel extends JPanel {
 
             if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
                 if (mouseInside && null != mousePoint) {
-                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y);
+                    boolean localAutoscale = (null != opts)?opts.enableAutoscale:this.autoscale;
+                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y,localAutoscale);
                     if (null != aprsSystem) {
                         PmCartesian robotCart
                                 = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(worldMousePoint.x, worldMousePoint.y, 0));

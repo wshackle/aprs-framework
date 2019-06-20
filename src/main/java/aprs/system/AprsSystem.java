@@ -434,6 +434,7 @@ public class AprsSystem implements SlotOffsetProvider {
             useTeachTableCheckBox = new CachedCheckBox();
             connectVisionCheckBox = new CachedCheckBox();
         }
+        refreshJInternalFrameFinders();
     }
 
     private final CachedCheckBox connectDatabaseCheckBox;
@@ -3116,7 +3117,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 fanucServerProvider = getServerProvider("FanucCRCLServer");
                 if (null != fanucServerProvider) {
                     fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
-                    fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternlFrame();
+                    fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
                     addInternalFrame(fanucCRCLServerJInternalFrame);
                 }
             });
@@ -3252,19 +3253,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void startMotomanCrclServerOnDisplay() {
-
-        fanucServerProvider = getServerProvider("FanucCRCLServer");
-        if (null != fanucServerProvider) {
-            fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
-            fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternlFrame();
-            addInternalFrame(fanucCRCLServerJInternalFrame);
-        }
         try {
 
             if (null == motomanCrclServerJInternalFrame) {
                 motomanServerProvider = getServerProvider("MotomanCRCLServer");
                 if (null != motomanServerProvider) {
-                    JInternalFrame newMotomanCrclServerJInternalFrame = motomanServerProvider.getJInternlFrame();
+                    JInternalFrame newMotomanCrclServerJInternalFrame = motomanServerProvider.getJInternalFrame();
                     this.motomanCrclServerJInternalFrame = newMotomanCrclServerJInternalFrame;
                     motomanServerProvider.setPropertiesFile(motomanPropertiesFile());
                     motomanServerProvider.loadProperties();
@@ -8852,10 +8846,10 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != this.simServerJInternalFrame) {
                 simServerJInternalFrame.loadProperties();
             }
-            if (null != this.motomanCrclServerJInternalFrame) {
+            if (null != this.motomanServerProvider) {
                 motomanServerProvider.loadProperties();
             }
-            if (null != this.fanucCRCLServerJInternalFrame) {
+            if (null != this.fanucServerProvider) {
                 fanucServerProvider.loadProperties();
             }
             String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);

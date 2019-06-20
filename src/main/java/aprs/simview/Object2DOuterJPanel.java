@@ -2955,7 +2955,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @UIEffect
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
         object2DJPanel1.setMouseDown(true);
-        double scale = object2DJPanel1.getScale();
+        double scale = object2DJPanel1.getScale(object2DJPanel1.isAutoscale());
         double min_x = object2DJPanel1.getMinX();
         double max_x = object2DJPanel1.getMaxX();
         double min_y = object2DJPanel1.getMinY();
@@ -2965,7 +2965,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
             double orig_y = itemToDrag.y;
-            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY());
+            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY(),object2DJPanel1.isAutoscale());
             itemToDrag.x = worldPoint.x;
             itemToDrag.y = worldPoint.y;
 //            switch (object2DJPanel1.getDisplayAxis()) {
@@ -5606,7 +5606,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         continue;
                     }
                 }
-                Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y);
+                Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y,object2DJPanel1.isAutoscale());
                 double diff_x = screenItemPoint.x - x;
                 double diff_y = screenItemPoint.y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
