@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun3">
+    version="2019Jun10">
     <xs:include schemaLocation="DataPrimitives.xsd"/>
 
     <xs:element name="CRCLStatus"
@@ -221,6 +221,9 @@
                     <xs:element name="SensorStatuses"
                                 type="SensorStatusesType"
                                 minOccurs="0"/>
+                    <xs:element name="GuardsStatuses"
+                                type="GuardsStatusesType"
+                                minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -247,6 +250,10 @@
                 <xs:sequence>
                     <xs:element name="GripperName"
                                 type="xs:NMTOKEN"/>
+                    <xs:element name="GripperOption"
+                                type="ParameterSettingType"
+                                minOccurs="0"
+                                maxOccurs="unbounded"/>
                     <xs:element name="HoldingObject"
                                 type="xs:boolean"
                                 minOccurs="0"/>
@@ -704,6 +711,32 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="GuardsStatusesType">
+        <xs:annotation>
+            <xs:documentation>
+                GuardsStatusesType is derived from DataThingType.
+                An instance of GuardsStatusesType has the following elements:
+                Name (inherited, optional)
+                GuardsStatus (multiple).
+ 
+                Each GuardsStatus element gives the status of one sensor. A robot
+                may be associated with any number of internal or external sensors.
+                Any custom named internal variable could also be reported with 
+                the interface.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:element name="Guard"
+                                type="GuardType"
+                                maxOccurs="unbounded"
+                                minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
     <xs:complexType name="SensorStatusType">
         <xs:annotation>
             <xs:documentation>

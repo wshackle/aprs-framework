@@ -9,7 +9,7 @@ datafile=simTeach.csv
 displayAxis=(X+,Y+)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.0,219.8,289.9,0.91,P,sku_part_large_gear,0.0,110.8,288.5,0.91,P,sku_part_large_gear,0.0,374.1,304.3,0.91,P,sku_part_large_gear,0.0,488.5,483.6,0.91,P,sku_part_large_gear,0.0,378.0,489.1,0.91,P,sku_part_large_gear,0.0,473.7,148.9,0.91,P,sku_part_medium_gear,0.0,620.0,102.1,0.91,P,sku_part_medium_gear,0.0,378.7,110.3,0.91,P,sku_part_medium_gear,0.0,624.3,180.3,0.91,P,sku_part_medium_gear,0.0,379.3,189.2,0.91,P,sku_part_small_gear,0.0,699.9,506.6,0.91,P,sku_part_small_gear,0.0,722.0,379.5,0.91,P,sku_part_small_gear,0.0,642.8,384.0,0.91,P,sku_kit_s2l2_vessel,0.0,675.0,328.0,0.91,KT,sku_kit_s2l2_vessel,0.0,428.0,331.0,0.91,KT,sku_large_gear_vessel,0.0,165.0,294.0,0.91,PT,sku_large_gear_vessel,0.0,432.0,489.0,0.91,PT,sku_small_gear_vessel,0.0,669.0,480.0,0.91,PT,sku_kit_m2l1_vessel,0.0,674.0,143.0,0.91,KT,sku_kit_m2l1_vessel,0.0,432.0,150.0,0.91,KT,
+items=sku_part_large_gear,0.0,493.7,137.6,0.91,P,sku_part_large_gear,0.0,738.6,305.6,0.91,P,sku_part_large_gear,0.0,376.3,311.1,0.91,P,sku_part_large_gear,0.0,489.2,521.9,0.91,P,sku_part_large_gear,0.0,380.1,527.8,0.91,P,sku_part_large_gear,0.0,726.1,137.5,0.91,P,sku_part_medium_gear,0.0,588.2,453.3,0.91,P,sku_part_medium_gear,0.0,396.9,101.1,0.91,P,sku_part_medium_gear,0.0,628.5,105.3,0.91,P,sku_part_medium_gear,0.0,400.2,180.0,0.91,P,sku_part_small_gear,0.0,390.1,393.4,0.91,P,sku_part_small_gear,0.0,469.8,393.6,0.91,P,sku_part_small_gear,0.0,721.8,385.2,0.91,P,sku_part_small_gear,0.0,642.6,386.0,0.91,P,sku_kit_s2l2_vessel,0.0,680.0,333.0,0.91,KT,sku_kit_s2l2_vessel,0.0,428.0,339.0,0.91,KT,sku_large_gear_vessel,0.0,171.0,414.0,0.91,PT,sku_large_gear_vessel,0.0,434.0,526.0,0.91,PT,sku_kit_m2l1_vessel,0.0,452.0,138.0,0.91,KT,sku_kit_m2l1_vessel,0.0,682.0,140.0,0.91,KT,
 
 pickupDist=5.00
 posNoise=1.00
@@ -33,5 +33,5 @@ tools=false
 trackcurrentpos=false
 viewDetails=false
 viewOutput=false
-xmaxymax=800.0, 500.0
+xmaxymax=800.0, 600.0
 xminymin=-100.0, -400.0

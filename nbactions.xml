@@ -115,5 +115,17 @@
                 <snapshotsOnly>true</snapshotsOnly>
             </properties>
         </action>
+    <action>
+            <actionName>CUSTOM-install_zip</actionName>
+            <displayName>install_zip</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>install_zip</activatedProfile>
+                <activatedProfile>add_run_deps</activatedProfile>
+            </activatedProfiles>
+        </action>
     
 </actions>

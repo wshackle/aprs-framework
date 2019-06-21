@@ -45,6 +45,7 @@ import crcl.base.PointType;
 
 import crcl.base.PoseType;
 import crcl.ui.XFuture;
+import crcl.ui.XFuture.PrintedException;
 import crcl.ui.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
@@ -61,7 +62,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -4077,7 +4077,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (userObject instanceof XFuture) {
                     XFuture<?> xf = (XFuture) userObject;
                     String xffes = xf.forExceptionString();
-                    System.err.println(xffes);
+                    if(!(xf.getCompletedExceptionallyThrowable() instanceof XFuture.PrintedException)) {
+                        System.err.println(xffes);
+                    }
                     jTextAreaFutureDetails.setText(xffes);
                 }
             }

@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun3">
+    version="2019Jun17">
 
     <xs:annotation>
         <xs:documentation>
@@ -587,6 +587,76 @@
         </xs:annotation>
         <xs:complexContent>
             <xs:extension base="DataThingType"/>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    
+    <xs:simpleType name="GuardLimitEnumType">
+        <xs:annotation>
+            <xs:documentation>
+                GuardLimitEnumType enumerates the kinds of command guard limits.
+
+                OVER_MAX means to value exceeded a fixed limit.
+                UNDER_MIN means the value is less than a fixed minimum.
+                INCREASE_OVER_LIMIT means the value increased from the starting value
+                by more than the limit.
+                DECREASE_BEYOND_LIMIT means the value decrease from the starting value
+                by more than the limit.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="OVER_MAX"/>
+            <xs:enumeration value="UNDER_MIN"/>
+            <xs:enumeration value="INCREASE_OVER_LIMIT"/>
+            <xs:enumeration value="DECREASE_BEYOND_LIMIT"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:complexType name="GuardType">
+        <xs:annotation>
+            <xs:documentation>
+                The GuardType is derived from DataThingType.
+                An instance of GuardType has the following
+                elements:
+                Name (inherited, optional)
+                SensorID
+                SubField (optional)
+                LimitType
+                LimitValue
+                RecheckTimeMicroSeconds (optional).
+
+                A GuardType can be added to any command to indicate the
+                command should be aborted if the value of the sensors subfield
+                increases by at-least the MaxIncrease value if specified OR
+                decreases by at-least the MaxDecrease value if specified OR
+                is greater than or equal to the MaxValue if specified OR
+                is less than or equal to the MinValue if specified.
+                
+                If the RecheckTimeMicroSeconds is specified the gaurd the sensor
+                will be read to determine if the command must be aborted at that
+                frequency and will otherwise check at the default rate for that
+                sensor. Hardware and operating system limitations may require the
+                sensor be checked less frequently.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:element name="SensorID"
+                                type="xs:token"/>
+                    <xs:element name="SubField"
+                                type="xs:token"
+                                minOccurs="0"/>
+                    <xs:element name="LimitType"
+                                type="GuardLimitEnumType"/>
+                    <xs:element name="LimitValue"
+                                type="xs:double"
+                                minOccurs="0" />
+                    <xs:element name="RecheckTimeMicroSeconds"
+                                type="xs:long"
+                                minOccurs="0" />
+                </xs:sequence>
+            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
   

@@ -47,20 +47,22 @@ and any modified versions bear some notice that they have been modified.
             <lineEnding>dos</lineEnding>
         </fileSet>
   
-        <fileSet>
-            <outputDirectory>aprs-framework/bin</outputDirectory>
-            <includes>
-                <include>*.sh</include>
-            </includes>
-        </fileSet>
-        
-        <fileSet>
-            <outputDirectory>aprs-framework/bin</outputDirectory>
-            <includes>
-                <include>*.bat</include>
-            </includes>
-            <lineEnding>dos</lineEnding>
-        </fileSet>
+        <!-- 
+    <fileSet>
+        <outputDirectory>aprs-framework/bin</outputDirectory>
+        <includes>
+            <include>*.sh</include>
+        </includes>
+    </fileSet>
+    
+    <fileSet>
+        <outputDirectory>aprs-framework/bin</outputDirectory>
+        <includes>
+            <include>*.bat</include>
+        </includes>
+        <lineEnding>dos</lineEnding>
+    </fileSet>
+        -->
         <fileSet>
             <directory>target/lib</directory>
             <outputDirectory>aprs-framework/bin/lib</outputDirectory>
