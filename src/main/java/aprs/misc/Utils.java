@@ -27,6 +27,7 @@ import aprs.launcher.LauncherAprsJFrame;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
+import crcl.ui.XFuture.PrintedException;
 import crcl.ui.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLSocket;
@@ -48,7 +49,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,14 +145,14 @@ public class Utils {
         out = clipString(out, clipLen);
         return out;
     }
-    
-     public static String clipString(String out, int clipLen) {
-        if(out.length() > clipLen) {
-            out = out.substring(0, clipLen-2)+"...";
+
+    public static String clipString(String out, int clipLen) {
+        if (out.length() > clipLen) {
+            out = out.substring(0, clipLen - 2) + "...";
         }
         return out;
     }
-     
+
     @UIEffect
     static public void PlayAlert(String resourceName) {
         PlayAlert(resourceName, false, Utils.class);
@@ -427,8 +427,7 @@ public class Utils {
         Date date = new Date(time);
         return timeFormat.format(date);
     }
-    
-    
+
     private static final Logger LOGGER = Logger.getLogger(Utils.class.getName());
 
     @SuppressWarnings("guieffect")
@@ -540,13 +539,14 @@ public class Utils {
                 ret.complete(null);
             } catch (Exception e) {
                 int count = dispathThreadExceptionCount.incrementAndGet();
-                LOGGER.log(Level.SEVERE, name, e);
-                if (count < 2) {
-                    showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                if (!(e instanceof PrintedException)) {
+                    if (count < 2) {
+                        LOGGER.log(Level.SEVERE, name, e);
+                        showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    }
                 }
                 ret.completeExceptionally(e);
             }
-
             return ret;
         } else {
             if (RECORD_DISPATCH_CALLERS) {
@@ -558,9 +558,11 @@ public class Utils {
                     ret.complete(null);
                 } catch (Exception e) {
                     int count = dispathThreadExceptionCount.incrementAndGet();
-                    LOGGER.log(Level.SEVERE, name, e);
-                    if (count < 2) {
-                        showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                    if (!(e instanceof PrintedException)) {
+                        if (count < 2) {
+                            LOGGER.log(Level.SEVERE, name, e);
+                            showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                        }
                     }
                     ret.completeExceptionally(e);
                 }

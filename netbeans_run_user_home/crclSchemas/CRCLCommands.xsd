@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun3">
+    version="2019Jun10">
     <xs:include schemaLocation="DataPrimitives.xsd"/>
 
     <xs:annotation>
@@ -280,6 +280,10 @@
                 <xs:sequence>
                     <xs:element name="CommandID"
                                 type="xs:long"/>
+                    <xs:element name="Guard"
+                                type="GuardType"
+                                maxOccurs="unbounded"
+                                minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -621,6 +625,44 @@
     </xs:complexType>
 
     <xs:complexType name="MoveToType">
+        <xs:annotation>
+            <xs:documentation>
+                MoveToType is derived from MiddleCommandType.
+                An instance of MoveToType has the following elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                MoveStraight
+                EndPosition.
+
+                EndPosition is a Pose to which the robot will move. If the value of
+                MoveStraight is true, the controlled point must be moved in a
+                straight line. If the value of MoveStraight is false, the
+                controlled point may be moved along any convenient trajectory.
+
+                The robot must reach the EndPosition within the tolerance
+                established (1) by the tolerance given for the pose in the
+                EndPosition, if there is a tolerance in the EndPosition, or if not
+                (2) by the most recently executed instance of
+                SetEndPoseToleranceType. The speed and acceleration to use are set
+                either in the EndPosition or by previously executed CRCL commands.
+
+                The type of EndPosition may be either PoseType or
+                PoseAndSetType, which is derived from PoseType.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="MoveStraight"
+                                type="xs:boolean"/>
+                    <xs:element name="EndPosition"
+                                type="PoseType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="GuardedMoveToType">
         <xs:annotation>
             <xs:documentation>
                 MoveToType is derived from MiddleCommandType.
@@ -1178,7 +1220,8 @@
                 ReportPoseStatus
                 ReportGripperStatus
                 ReportSettingsStatus
-                ReportSensorsStatus.
+                ReportSensorsStatus
+                ReportGuardsStatus.
 
                 ConfigureStatusReportType is used to specify how the status of the
                 robot should be reported. 
@@ -1197,17 +1240,19 @@
                                 type="xs:boolean"/>
                     <xs:element name="ReportSensorsStatus"
                                 type="xs:boolean"/>
+                    <xs:element name="ReportGuardsStatus"
+                                type="xs:boolean"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
 
 
-    <xs:complexType name="EnableSensorStatusType">
+    <xs:complexType name="EnableSensorType">
         <xs:annotation>
             <xs:documentation>
-                EnableSensorStatusType is derived from MiddleCommandType.
-                An instance of EnableSensorStatusType has the following elements:
+                EnableSensorType is derived from MiddleCommandType.
+                An instance of EnableSensorType has the following elements:
                 Name (inherited, optional)
                 CommandID (inherited)
                 SensorId
@@ -1231,11 +1276,11 @@
         </xs:complexContent>
     </xs:complexType>
   
-    <xs:complexType name="DisableSensorStatusType">
+    <xs:complexType name="DisableSensorType">
         <xs:annotation>
             <xs:documentation>
-                DisableSensorStatusType is derived from MiddleCommandType.
-                An instance of DisableSensorStatusType has the following elements:
+                DisableSensorType is derived from MiddleCommandType.
+                An instance of DisableSensorType has the following elements:
                 Name (inherited, optional)
                 CommandID (inherited)
                 SensorId.
@@ -1252,6 +1297,57 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+    
+    <xs:complexType name="EnableGripperType">
+        <xs:annotation>
+            <xs:documentation>
+                EnableGripperType is derived from MiddleCommandType.
+                An instance of EnableGripperType has the following elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                GripperId
+                GripperOptions (optional).
+
+                This enables the reporting of a sensor.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="GripperName"
+                                type="xs:NMTOKEN"/>
+                    <xs:element name="GripperOption"
+                                type="ParameterSettingType"
+                                minOccurs="0"
+                                maxOccurs="unbounded"
+                    />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+  
+    <xs:complexType name="DisableGripperType">
+        <xs:annotation>
+            <xs:documentation>
+                DisableGripperType is derived from MiddleCommandType.
+                An instance of DisableGripperType has the following elements:
+                Name (inherited, optional)`
+                CommandID (inherited)
+                GripperId.
+
+                This disables the reporting of a sensor.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="GripperName"
+                                type="xs:NMTOKEN"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
     
     <xs:complexType name="EnableRobotParameterStatusType">
         <xs:annotation>
