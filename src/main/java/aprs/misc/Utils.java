@@ -35,6 +35,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -180,6 +181,9 @@ public class Utils {
                 }
                 InputStream inputStream
                         = aClass.getResourceAsStream(resourceName);
+                if(!(inputStream instanceof BufferedInputStream)) {
+                    inputStream = new BufferedInputStream(inputStream);
+                }
                 if (debug) {
                     println("PlayAlert: inputStream = " + inputStream);
                 }
