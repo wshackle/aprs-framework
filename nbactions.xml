@@ -127,5 +127,18 @@
                 <activatedProfile>add_run_deps</activatedProfile>
             </activatedProfiles>
         </action>
+    <action>
+            <actionName>CUSTOM-jar-with-deps</actionName>
+            <displayName>jar-with-deps</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>add</activatedProfile>
+                <activatedProfile>add_run_deps</activatedProfile>
+                <activatedProfile>jar-with-depends</activatedProfile>
+            </activatedProfiles>
+        </action>
     
 </actions>

@@ -59,6 +59,7 @@ import crcl.ui.misc.MultiLineStringJPanel;
 @SuppressWarnings({"unused", "guieffect"})
 public class LauncherAprsJFrame extends javax.swing.JFrame {
 
+    
     /**
      * Creates new form LauncherJFrame
      */
@@ -568,8 +569,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private static void multiCycleTestNoDisables(@Nullable File launchFile, int numCycles, boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = createAprsSupervisorWithSwingDisplay(true);
-        
-         if (null != launchFile) {
+
+        if (null != launchFile) {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
