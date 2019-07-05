@@ -16,28 +16,31 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface OpActionInterface {
 
     public int getId();
-    
+
     public String getName();
-    
+
     public OpActionType getOpActionType();
 
     public String getPartType();
 
-    public @Nullable OpActionInterface getNext();
-    
+    public @Nullable
+    OpActionInterface getNext();
+
     public List<Integer> getPossibleNextIds();
-    
+
     public Point2D.Double getLocation();
-    
-    public @Nullable String getTrayType();
-    
+
+    public @Nullable
+    String getTrayType();
+
     public boolean skipNext();
-    
+
     public boolean isRequired();
-    
+
     public int getPriority(boolean prevRequired);
-    
-    public @Nullable OpActionInterface effectiveNext(boolean quiet);
-    
+
+    public @Nullable
+    OpActionInterface effectiveNext(boolean quiet);
+
     public String shortString();
 }

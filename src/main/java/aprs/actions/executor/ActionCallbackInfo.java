@@ -16,8 +16,7 @@ class ActionCallbackInfo {
     private final Action action;
     private final CRCLCommandWrapper wrapper;
     private final List<Action> actions;
-    @Nullable
-    private final List<Action> origActions;
+     private  @Nullable  final List<Action> origActions;
     private final int actionsSize;
 
     ActionCallbackInfo(
@@ -57,8 +56,7 @@ class ActionCallbackInfo {
     }
 
     @SuppressWarnings("unused")
-    @Nullable
-    public List<Action> getOrigActions() {
+     public  @Nullable  List<Action> getOrigActions() {
         return origActions;
     }
 

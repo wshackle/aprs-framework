@@ -51,7 +51,8 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
 
     private boolean cancelled = false;
 
-    private @Nullable JDialog dialog = null;
+    private @Nullable
+    JDialog dialog = null;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -179,7 +180,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
 
         if (null != map) {
             String name = (String) map.get("name");
-            if (null  == name ||  name.length() < 1) {
+            if (null == name || name.length() < 1) {
                 throw new IllegalArgumentException("map must have non-null and non-empty entry for name. map=" + map);
             }
             if (itemToReturn == null) {

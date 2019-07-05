@@ -27,107 +27,108 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Information for providing database setup information.
- * 
+ *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface DbSetup {
 
     /**
      * Get the database type eg MySQL, Neo4J etc.
-     * 
+     *
      * @return database type
      */
     public DbType getDbType();
 
     /**
      * Get the host name for connecting to the database.
+     *
      * @return host name
      */
     public String getHost();
 
     /**
      * Get the TCP IP port number for connecting to the database.
-     * 
+     *
      * @return port number
      */
     public int getPort();
 
     /**
-     * Get the optional name for the particular database.
-     * MySQL can have multiple databases with different names on the same port/host.
-     * 
+     * Get the optional name for the particular database. MySQL can have
+     * multiple databases with different names on the same port/host.
+     *
      * @return name of the database.
      */
     public String getDbName();
 
     /**
-     * Get the user/account name that will be used for logging into the database.
-     * 
+     * Get the user/account name that will be used for logging into the
+     * database.
+     *
      * @return user name
      */
     public String getDbUser();
 
     /**
      * Get the password needed to connect to the database.
-     * 
+     *
      * @return password.
      */
     public char[] getDbPassword();
 
     /**
      * Determine if we are currently already connected to this database.
-     * 
+     *
      * @return connected state
      */
     public boolean isConnected();
-    
+
     /**
-     * Get a map from the various database independent  but APRS specific
-     * types of queries to the query information objects needed to make
-     * that type of query on the current database.
-     * 
+     * Get a map from the various database independent but APRS specific types
+     * of queries to the query information objects needed to make that type of
+     * query on the current database.
+     *
      * @return map of query types to query info
      */
-    public Map<DbQueryEnum,DbQueryInfo> getQueriesMap();
-    
+    public Map<DbQueryEnum, DbQueryInfo> getQueriesMap();
+
     /**
-     * Determine if this setup is/should be taken from an internal
-     * queries resource directory.
-     * 
+     * Determine if this setup is/should be taken from an internal queries
+     * resource directory.
+     *
      * @return setup source internal.
      */
     public boolean isInternalQueriesResourceDir();
-    
+
     /**
-     * Get the directory name either in an external file system or 
-     * an internal resource where the static setup information is 
-     * stored.
-     * 
+     * Get the directory name either in an external file system or an internal
+     * resource where the static setup information is stored.
+     *
      * @return queries directory.
      */
     public String getQueriesDir();
-    
+
     /**
      * Has the user requested additional logging to debug database setup.
-     * 
-     * @return  user wants debug info
+     *
+     * @return user wants debug info
      */
     public boolean isDebug();
 
     /**
      * Get the maximum time in seconds that a driver will wait while attempting
-     * to connect to a database once the driver has been identified.
-     * Values less than zero imply no timeout.
-     * (Currently ignored for Neo4J).
-     * 
+     * to connect to a database once the driver has been identified. Values less
+     * than zero imply no timeout. (Currently ignored for Neo4J).
+     *
      * @return login timeout
      */
     public int getLoginTimeout();
-    
+
     /**
      * Optional script that can be executed to start the database server.
-     * 
+     *
      * @return server start script or null
      */
-    @Nullable public String getStartScript();
+    public @Nullable
+    String getStartScript();
 }

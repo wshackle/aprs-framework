@@ -87,10 +87,10 @@ public class OpActionPlan {
                 OpAction possibleAction = (OpAction) possible;
                 if (!set.contains(possibleAction.getOrigId())) {
                     boolean isFake = possibleAction.getOpActionType() == FAKE_DROPOFF || possibleAction.getOpActionType() == FAKE_PICKUP;
-                    if(!isFake || !fake_found) {
+                    if (!isFake || !fake_found) {
                         possiblesNotInSet.add(possibleAction);
                     }
-                    if(isFake) {
+                    if (isFake) {
                         fake_found = true;
                     }
                 }
@@ -109,8 +109,8 @@ public class OpActionPlan {
                 for (int i = 0; i < possiblesNotInSet.size(); i++) {
                     OpAction possibleAction = possiblesNotInSet.get(i);
                     action.setNext(possibleAction);
-                    OpActionPlan planForAct2 = simpleExhaustiveSearch((OpAction) possibleAction, bestPlan, set, score, needed);
-                    if (planForAct2 != this && planForAct2 != bestPlan) {
+                    OpActionPlan planForAct2 = simpleExhaustiveSearch(possibleAction, bestPlan, set, score, needed);
+                    if (planForAct2 != null && planForAct2 != this && planForAct2 != bestPlan) {
                         if (planForAct2.getScore().compareTo(score) > 0) {
                             bestPlan = planForAct2;
                             score = planForAct2.getScore();
@@ -145,6 +145,9 @@ public class OpActionPlan {
         OpActionPlan clone = new OpActionPlanCloner().cloneSolution(this);
         List<OpAction> actions = clone.actions;
         OpAction start = clone.findStartAction();
+        if (null == start) {
+            throw new NullPointerException("clone.findStartAction() returned null : clone=" + clone);
+        }
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(clone);
         return clone.simpleExhaustiveSearch(start, clone, new TreeSet<>(), score, 1);
@@ -175,9 +178,12 @@ public class OpActionPlan {
                         minCostPossible = cost;
                     }
                 }
+                if (null == minPossibleAction) {
+                    throw new NullPointerException("minPosssibleAction == null: possiblesNotInSet=" + possiblesNotInSet);
+                }
                 action.setNext(minPossibleAction);
-                OpActionPlan planForAct2 = greedySearch((OpAction) minPossibleAction, bestPlan, set, score, needed);
-                if (planForAct2 != this && planForAct2 != bestPlan) {
+                OpActionPlan planForAct2 = greedySearch(minPossibleAction, bestPlan, set, score, needed);
+                if (planForAct2 != null && planForAct2 != this && planForAct2 != bestPlan) {
                     if (planForAct2.getScore().compareTo(score) > 0) {
                         bestPlan = planForAct2;
                         score = planForAct2.getScore();
@@ -214,6 +220,9 @@ public class OpActionPlan {
         clone2.checkActionList();
         List<OpAction> actions = clone.actions;
         OpAction start = clone.findStartAction();
+        if (null == start) {
+            throw new NullPointerException("clone.findStartAction() returned null : clone = " + clone);
+        }
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(clone);
         return clone.greedySearch(start, clone2, new TreeSet<>(), score, 1);
@@ -221,35 +230,17 @@ public class OpActionPlan {
 
     private volatile int comboSearchSkipped = 0;
 
+    @SuppressWarnings({"unchecked"})
     private OpActionPlan comboSearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, double costSoFar, double minRemainingCost, int requiredPickups, int availPickups, int requiredDrops, int availDrops) {
 
         set.add(action.getOrigId());
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
 
-//            List<Boolean> reauired = 
-//                    possiblesNotInSet.stream()
-//                    .map((OpAction a)-> a.isRequired())
-//                    .collect(Collectors.toList());
-//            System.out.println("reauired = " + reauired);
-//            List<Double> costs = possiblesNotInSet.stream()
-//                    .map((OpAction a)-> action.costOfNext(a, this))
-//                    .collect(Collectors.toList());
-//            System.out.println("costs = " + costs);
             Collections.sort(possiblesNotInSet,
                     Comparators.chain(
                             Comparators.byBooleanFunction((OpAction a) -> !a.isRequired()),
                             Comparators.byDoubleFunction((OpAction a) -> action.costOfNext(a, this))));
-//            List<Boolean> reauired2 = 
-//                    possiblesNotInSet.stream()
-//                    .map((OpAction a)-> a.isRequired())
-//                    .collect(Collectors.toList());
-//            System.out.println("reauired2 = " + reauired2);
-//            List<Double> costs2 = possiblesNotInSet.stream()
-//                    .map((OpAction a)-> action.costOfNext(a, this))
-//                    .collect(Collectors.toList());
-//            System.out.println("costs2 = " + costs2);
-//            System.out.println("costs = " + costs);
             final double expectedCost = -1000.0 * (costSoFar + minRemainingCost);
             final long expectedCostLong = (long) expectedCost;
             if (!possiblesNotInSet.isEmpty()) {
@@ -272,22 +263,8 @@ public class OpActionPlan {
                 }
                 long diffScore = score.getSoftScore() - expectedCostLong;
                 double ratio = diffScore / expectedCost;
-//                System.out.println("ratio = " + ratio);
                 if (diffScore > 0 || ratio < 0.05) {
                     comboSearchSkipped++;
-//                    int setSize = 1;
-//                    for (OpAction act : actions) {
-//                        if (!set.contains(act.getOrigId())) {
-//                            List<OpAction> actPossiblesNotInSet = findPossiblesNotInSet(act, set);
-//                            setSize *= actPossiblesNotInSet.size();
-//                        }
-//                    }
-//                    System.out.println("expectedCost = " + expectedCost);
-//                    System.out.println("costSoFar = " + costSoFar);
-//                    System.out.println("minRemainingCost = " + minRemainingCost);
-//                    System.out.println("score = " + score);
-//                    System.out.println("comboSearchSkipped = " + comboSearchSkipped);
-//                    System.out.println("setSize = " + setSize);
                     return bestPlan;
                 }
                 double minCost = findMinActCost(action, bestPlan);
@@ -295,7 +272,7 @@ public class OpActionPlan {
                     OpAction possibleAction = possiblesNotInSet.get(i);
                     action.setNext(possibleAction);
                     double cost = action.costOfNext(possibleAction, bestPlan);
-                    OpActionPlan planForAct2 = comboSearch((OpAction) possibleAction, bestPlan, set, score, costSoFar + cost, minRemainingCost - minCost, requiredPickups, availPickups, requiredDrops, availDrops);
+                    OpActionPlan planForAct2 = comboSearch(possibleAction, bestPlan, set, score, costSoFar + cost, minRemainingCost - minCost, requiredPickups, availPickups, requiredDrops, availDrops);
                     if (planForAct2 != this && planForAct2 != bestPlan) {
                         if (planForAct2.getScore().compareTo(score) > 0) {
                             bestPlan = planForAct2;
@@ -346,7 +323,16 @@ public class OpActionPlan {
         clone.checkActionList();
         startPlan.checkActionList();
         List<OpAction> actions = startPlan.actions;
+        if (null == actions) {
+            throw new NullPointerException("startPlan.actions == null : startPlan =" + startPlan);
+        }
+        if (actions.isEmpty()) {
+            throw new RuntimeException("startPlan.actions.isEmpty() : startPlan=" + startPlan);
+        }
         OpAction start = startPlan.findStartAction();
+        if (null == start) {
+            throw new NullPointerException("startPlan.findStartAction() returned null : startPlan =" + startPlan);
+        }
         double minRemainingCost = 0;
         double totalCost = 0;
         int requiredPickups = 0, availPickups = 0, requiredDrops = 0, availDrops = 0;
@@ -408,6 +394,12 @@ public class OpActionPlan {
 
     public static OpActionPlan cloneAndShufflePlan(OpActionPlan inPlan) {
         List<OpAction> actions = inPlan.getActions();
+        if (null == actions) {
+            throw new RuntimeException("inPlan.getActions() returned null : inPlan=" + inPlan);
+        }
+        if (actions.isEmpty()) {
+            throw new RuntimeException("inPlan.getActions().isEmpty() : inPlan=" + inPlan);
+        }
         List<OpAction> newActionsList = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
             OpAction origAction = actions.get(i);
@@ -454,8 +446,8 @@ public class OpActionPlan {
     private @Nullable
     List<OpAction> actions;
 
-    @Nullable
-    public List<OpAction> getActions() {
+    public @Nullable
+    List<OpAction> getActions() {
         return actions;
     }
 
@@ -474,7 +466,7 @@ public class OpActionPlan {
         }
     }
 
-    private volatile StackTraceElement lastCheckActionListTrace[] = null;
+    private volatile StackTraceElement lastCheckActionListTrace @Nullable []  = null;
 
     public void checkActionList() {
         List<OpAction> orderedActions = this.getOrderedList(true);
@@ -498,20 +490,23 @@ public class OpActionPlan {
         "Index", "Id", "Name", "Type", "PartType", "ExecutorType", "ExecutorArgs", "X", "Y", "Cost", "Required", "Skipped", "NextId", "PossibleNexts"
     };
 
-    private Object[] propRecord(String propName, Object propValue) {
+    private static @Nullable
+    Object[] propRecord(String propName, Object propValue) {
         return new Object[]{
             -1, -1, propName + "=" + propValue, SET_PROPERTY_PROPNAME, null, null, null, Double.NaN, Double.NaN, Double.NaN, true, false, Collections.emptyList()
         };
     }
+
     private static final String SET_PROPERTY_PROPNAME = "SET_PROPERTY";
 
-    public static boolean isSkippedAction(OpAction action, OpActionInterface prevAction) {
+    public static boolean isSkippedAction(OpAction action, @Nullable OpActionInterface prevAction) {
         if (null != prevAction && prevAction.getNext() != action) {
             throw new IllegalArgumentException("prevAction.getNext() != action : action=" + action + ",prevAction=" + prevAction);
         }
+        final OpActionInterface actionNext = action.getNext();
         if (action.getOpActionType() == FAKE_DROPOFF || action.getOpActionType() == FAKE_PICKUP) {
             return true;
-        } else if (action.getOpActionType() == PICKUP && action.getNext().getOpActionType() == FAKE_DROPOFF) {
+        } else if (action.getOpActionType() == PICKUP && null != actionNext && actionNext.getOpActionType() == FAKE_DROPOFF) {
             return true;
         } else if (null == prevAction || prevAction.getOpActionType() == FAKE_PICKUP) {
             if (action.getOpActionType() == START) {
@@ -524,7 +519,8 @@ public class OpActionPlan {
         }
     }
 
-    private Object[] actionRecord(int index, OpActionInterface actionInterface, boolean skipped) {
+    static private @Nullable
+    Object[] actionRecord(int index, OpActionInterface actionInterface, boolean skipped) {
         final OpActionInterface next = actionInterface.getNext();
         int nextId = (next != null) ? next.getId() : -1;
         ActionType executorType = null;
@@ -545,9 +541,13 @@ public class OpActionPlan {
     }
 
     public List<OpAction> notInOrderedList(List<OpAction> orderedActions) {
+        final List<OpAction> actionsFinal = actions;
+        if (null == actionsFinal) {
+            throw new NullPointerException("actions");
+        }
         List<OpAction> ret = new ArrayList<>();
-        for (int i = 0; i < actions.size(); i++) {
-            OpAction actionI = actions.get(i);
+        for (int i = 0; i < actionsFinal.size(); i++) {
+            OpAction actionI = actionsFinal.get(i);
             boolean found = false;
             for (int j = 0; j < orderedActions.size(); j++) {
                 OpAction actionJ = orderedActions.get(j);
@@ -569,12 +569,16 @@ public class OpActionPlan {
     }
 
     private List<OpAction> notInBaseList(List<OpAction> orderedActions) {
+        final List<OpAction> actionsFinal = actions;
+        if (null == actionsFinal) {
+            throw new NullPointerException("actions");
+        }
         List<OpAction> ret = new ArrayList<>();
         for (int i = 0; i < orderedActions.size(); i++) {
             OpAction actionI = orderedActions.get(i);
             boolean found = false;
-            for (int j = 0; j < actions.size(); j++) {
-                OpAction actionJ = actions.get(j);
+            for (int j = 0; j < actionsFinal.size(); j++) {
+                OpAction actionJ = actionsFinal.get(j);
                 if (actionJ == actionI) {
                     found = true;
                     break;
@@ -587,24 +591,37 @@ public class OpActionPlan {
         return ret;
     }
 
+    @SuppressWarnings("nullness")
+    static private void printPropRecord(CSVPrinter printer, String propName, @Nullable Object propValue) throws IOException {
+        if (propValue != null) {
+            printer.printRecord(propRecord(propName, propValue));
+        }
+    }
+
+    @SuppressWarnings("nullness")
+    static private void printActionRecord(CSVPrinter printer, int index, OpActionInterface actionInterface, boolean skipped) throws IOException {
+        printer.printRecord(actionRecord(index, actionInterface,skipped));
+    }
+
     public void saveActionList(File f) throws IOException {
         try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), Utils.preferredCsvFormat().withHeader(CSV_HEADERS))) {
-            printer.printRecord(propRecord(USE_DIST_FOR_COST_PROPNAME, useDistForCost));
-            printer.printRecord(propRecord(USE_START_END_COST_PROPNAME, useStartEndCost));
-            printer.printRecord(propRecord(DEBUG_PROPNAME, debug));
-            printer.printRecord(propRecord("score", score));
-            printer.printRecord(propRecord(MAX_SPEED_PROPNAME, maxSpeed));
-            printer.printRecord(propRecord(START_END_MAX_SPEED_PROPNAME, startEndMaxSpeed));
-            printer.printRecord(propRecord(ACCELLERATION_PROPNAME, accelleration));
+
+            printPropRecord(printer, USE_DIST_FOR_COST_PROPNAME, useDistForCost);
+            printPropRecord(printer, USE_START_END_COST_PROPNAME, useStartEndCost);
+            printPropRecord(printer, DEBUG_PROPNAME, debug);
+            printPropRecord(printer, "score", score);
+            printPropRecord(printer, MAX_SPEED_PROPNAME, maxSpeed);
+            printPropRecord(printer, START_END_MAX_SPEED_PROPNAME, startEndMaxSpeed);
+            printPropRecord(printer, ACCELLERATION_PROPNAME, accelleration);
             List<OpAction> orderedActions = this.getOrderedList(true);
             OpActionInterface prevAction = null;
             for (int i = 0; i < orderedActions.size(); i++) {
                 final OpAction action = orderedActions.get(i);
                 boolean skipped = isSkippedAction(action, prevAction);
                 prevAction = action;
-                printer.printRecord(actionRecord(i, action, skipped));
+                printActionRecord(printer,i, action, skipped);
             }
-            printer.printRecord(actionRecord(orderedActions.size(), endAction, false));
+            printActionRecord(printer,orderedActions.size(), endAction, false);
         }
     }
 
@@ -615,10 +632,14 @@ public class OpActionPlan {
     }
 
     private void privateLoadActionList(File f) throws IOException {
+        final List<OpAction> actionsFinal;
         if (null == actions) {
-            actions = new ArrayList<>();
+            actionsFinal = new ArrayList<>();
+            actions = actionsFinal;
+        } else {
+            actionsFinal = actions;
         }
-        actions.clear();
+        actionsFinal.clear();
         try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat().withFirstRecordAsHeader())) {
             for (CSVRecord record : parser) {
                 String type = record.get("Type");
@@ -660,7 +681,7 @@ public class OpActionPlan {
                     boolean required = Boolean.parseBoolean(record.get("Required"));
                     OpAction action = new OpAction(type, x, y, OpActionType.valueOf(type), record.get("PartType"), required);
                     action.setName(name);
-                    actions.add(action);
+                    actionsFinal.add(action);
                 } else if (type.equals("END")) {
                     if (null == endAction) {
                         throw new NullPointerException("endAction");
@@ -745,21 +766,22 @@ public class OpActionPlan {
 
     @SuppressWarnings("unused")
     public void initNextActions() {
+        final List<OpAction> actionsFinal = actions;
 
-        if (null == actions) {
+        if (null == actionsFinal) {
             throw new IllegalStateException("actions not initialized");
         }
 
         List<OpAction> tmpActions = new ArrayList<>();
-        for (int i = 0; i < actions.size(); i++) {
-            OpAction actionI = actions.get(i);
+        for (int i = 0; i < actionsFinal.size(); i++) {
+            OpAction actionI = actionsFinal.get(i);
             actionI.getPossibleNextActions().clear();
             actionI.clearNext();
             if (actionI.getOpActionType() != FAKE_PICKUP && actionI.getOpActionType() != FAKE_DROPOFF) {
                 tmpActions.add(actionI);
             }
         }
-        List<OpAction> origActions = new ArrayList<>(actions);
+        List<OpAction> origActions = new ArrayList<>(actionsFinal);
 
         if (debug) {
             println("origActions = " + origActions);
@@ -866,7 +888,7 @@ public class OpActionPlan {
         actions = Collections.unmodifiableList(new ArrayList<>(newActions));
         if (debug && unusedActions.size() > 0) {
             println("unusedActions = " + unusedActions);
-            println("actions = " + actions);
+            println("actions = " + actionsFinal);
         }
 
         if (debug) {
@@ -878,9 +900,13 @@ public class OpActionPlan {
     private @Nullable
     HardSoftLongScore score;
 
-    @Nullable
     @PlanningScore
     public HardSoftLongScore getScore() {
+        if (null == score) {
+            HardSoftLongScore defaultScore = HardSoftLongScore.of(Long.MIN_VALUE, Long.MIN_VALUE);
+            score = defaultScore;
+            return defaultScore;
+        }
         return score;
     }
 
@@ -1114,8 +1140,8 @@ public class OpActionPlan {
         return l;
     }
 
-    @Nullable
-    public OpAction findStartAction() {
+    public @Nullable
+    OpAction findStartAction() {
         OpAction startAction = null;
         List<OpAction> l = actions;
         if (null != l) {

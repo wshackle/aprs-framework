@@ -83,12 +83,21 @@ import static aprs.misc.Utils.autoResizeTableColWidths;
  */
 public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublisher {
 
+     /**
+     * Creates new form DbSetupJPanel
+     */
+    @SuppressWarnings({"initialization","nullness"})
+    @UIEffect
+    public DbSetupJPanel() {
+        this(null);
+    }
     /**
      * Creates new form DbSetupJPanel
      */
     @SuppressWarnings("initialization")
     @UIEffect
-    public DbSetupJPanel() {
+    public DbSetupJPanel(AprsSystem aprsSystem1) {
+        this.aprsSystem = aprsSystem1;
         initComponents();
         editTableArea = new JTextArea();
 //        viewAreas = new ArrayList<>();
@@ -469,57 +478,25 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         );
     }// </editor-fold>//GEN-END:initComponents
 
-//    private void updateSettingsFileName() {
-//        if(null == propertiesFile) {
-//            return;
-//        }
-//        if (propertiesFile.exists()) {
-//            return;
-//        }
-//        String settingsFileStart = jComboBoxDbType.getSelectedItem().toString();
-//        if (!propertiesFile.getName().startsWith(settingsFileStart)) {
-//            if (Objects.toString(jComboBoxPropertiesFiles.getSelectedItem()).startsWith(settingsFileStart)) {
-//                return;
-//            }
-//            for (int i = 0; i < jComboBoxPropertiesFiles.getItemCount(); i++) {
-//                String fname = Objects.toString(jComboBoxPropertiesFiles.getItemAt(i));
-//                if (fname.startsWith(settingsFileStart)) {
-//                    jComboBoxPropertiesFiles.setSelectedIndex(i);
-//                    return;
-//                }
-//            }
-//        }
-//        setPropertiesFile(new File(propertiesFile.getParentFile(), settingsFileStart + ".dbsettings.txt"));
-//    }
+
     @UIEffect
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
-//        updateSettingsFileName();
         if (!updatingFromDbSetup) {
             notifyAllDbSetupListeners(null);
         }
     }//GEN-LAST:event_jComboBoxDbTypeActionPerformed
 
-    @MonotonicNonNull
-    private AprsSystem aprsSystem = null;
+    private final AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    @Nullable
-    public AprsSystem getAprsSystem() {
+     public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
-    /**
-     * Set the value of aprsSystemInterface
-     *
-     * @param aprsSystem new value of aprsSystemInterface
-     */
-    public void setAprsSystem(AprsSystem aprsSystem) {
-        this.aprsSystem = aprsSystem;
-    }
 
     @UIEffect
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
@@ -564,7 +541,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void jButtonDisconnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDisconnectDBActionPerformed
-//        this.closeDB();
         connected = false;
         setDbSetup(getDbSetup())
                 .thenRun(() -> {
@@ -636,8 +612,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }//GEN-LAST:event_jButtonBrowseActionPerformed
 
-    @MonotonicNonNull
-    private volatile String lastResourceDirSet = null;
+     private volatile @MonotonicNonNull  String lastResourceDirSet = null;
 
     @UIEffect
     private void jComboBoxResourceDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxResourceDirActionPerformed
@@ -1134,8 +1109,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 .build();
     }
 
-    @Nullable
-    volatile private List<XFutureVoid> futures = null;
+    private volatile @Nullable List<XFutureVoid> futures = null;
 
     /**
      * Call the accept method of all registered listeners with the current setup
@@ -1252,8 +1226,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
     }
     private final File recentSettingsFile = new File(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
-    @MonotonicNonNull
-    private File propertiesFile = null;
+    private @MonotonicNonNull File propertiesFile = null;
 
     private final CachedComboBox<String> propertiesFilesCachedComboBox;
 
@@ -1287,8 +1260,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return properties file
      */
-    @Nullable
-    public File getPropertiesFile() {
+     public  @Nullable  File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;

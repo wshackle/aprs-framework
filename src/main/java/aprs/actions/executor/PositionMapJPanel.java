@@ -78,8 +78,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
     }
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -205,7 +203,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public final List<PositionMap> getPositionMaps() {
         return Collections.unmodifiableList(positionMaps);
     }
-    @Nullable private List<PositionMap> reversePositionMaps = new ArrayList<>();
+    
+    private @Nullable
+    List<PositionMap> reversePositionMaps = new ArrayList<>();
 
     public final List<PositionMap> getReversePositionMaps() {
         if (null == reversePositionMaps) {
@@ -225,8 +225,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return Collections.unmodifiableList(reversePositionMaps);
     }
 
-    @Nullable
-    private PositionMap getPositionMap(int index) {
+     private  @Nullable  PositionMap getPositionMap(int index) {
         return positionMaps.get(index);
     }
 
@@ -357,7 +356,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     }
 
     private final CachedTable posMapCachedTable;
-    
+
     private void loadPositionMapToTable(PositionMap positionMap) {
         posMapCachedTable.setRowCount(0);
         String filename = positionMap.getFileName();

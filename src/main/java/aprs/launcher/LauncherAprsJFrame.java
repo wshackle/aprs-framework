@@ -51,6 +51,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
 import crcl.ui.misc.MultiLineStringJPanel;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 /**
  *
@@ -347,8 +349,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
-    @Nullable
-    private static File getLastLaunchFile() throws IOException {
+     private   static  @Nullable  File getLastLaunchFile() throws IOException {
         if (lastLaunchFileFile.exists()) {
             String firstLine = readFirstLine(lastLaunchFileFile);
             if (null != firstLine && firstLine.length() > 0) {
@@ -358,8 +359,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         return null;
     }
 
-    @Nullable
-    private File lastLaunchFile = null;
+     private  @Nullable  File lastLaunchFile = null;
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
@@ -768,6 +768,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+       
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.

@@ -15,12 +15,11 @@ import java.util.Vector;
 
 public class CachedTable extends CachedComponentBase {
 
-    @Nullable
-    private final DefaultTableModel model;
-    @Nullable
-    private final JTable jTable;
-    @Nullable
-    private volatile Object data[][];
+    private @Nullable
+    final DefaultTableModel model;
+    private @Nullable
+    final JTable jTable;
+     private volatile @Nullable  Object data[][];
     private volatile int columnCount;
     private volatile int selectedRow;
     private volatile Class<?> columnClasses[];
@@ -132,8 +131,8 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
-    @Nullable
-    public Object[][] getData() {
+    public @Nullable
+    Object[][] getData() {
         return data;
     }
 
@@ -152,8 +151,8 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
-    @Nullable
-    public Object getValueAt(int row, int col) {
+    public @Nullable
+    Object getValueAt(int row, int col) {
         return data[row][col];
     }
 
@@ -373,8 +372,8 @@ public class CachedTable extends CachedComponentBase {
         //syncDataUiToCache();
     }
 
-    @Nullable
-    public JTable getjTable() {
+    public @Nullable
+    JTable getjTable() {
         return jTable;
     }
 }

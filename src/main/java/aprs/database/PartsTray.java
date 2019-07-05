@@ -35,28 +35,36 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class PartsTray extends Tray {
 
     private int NodeID;
-    private @Nullable String PartsTraySku;
-    private @Nullable String PartsTrayName;
-    private @Nullable String ExternalShapeModelFileName;
-    private @Nullable String ExternalShapeModelFormatName;
-    private @Nullable String PartsTrayDesign;
-    private @Nullable Boolean PartsTrayComplete;
+
+    private @Nullable
+    String PartsTraySku;
+    private @Nullable
+    String PartsTrayName;
+    private @Nullable
+    String ExternalShapeModelFileName;
+    private @Nullable
+    String ExternalShapeModelFormatName;
+    private @Nullable
+    String PartsTrayDesign;
+    private @Nullable
+    Boolean PartsTrayComplete;
 //    private double Rotation;  now in super class PhysicalItem
-    private @Nullable List<Slot> SlotList;
+    private @Nullable
+    List<Slot> SlotList;
 //    private double x; now in super class PhysicalItem
 //    private double y; now in super class PhysicalItem
-    private @Nullable PoseType PartsTrayPose;
+    private @Nullable
+    PoseType PartsTrayPose;
 
-    public static PartsTray newPartsTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {
-        PartsTray pt = new PartsTray(sku,rotation,x,y);
+    public static PartsTray newPartsTrayFromSkuIdRotXY(String sku, int id, double rotation, double x, double y) {
+        PartsTray pt = new PartsTray(sku, rotation, x, y);
         pt.setSku(sku);
         pt.setPartsTraySku(sku);
-        pt.setFullName(sku+"_"+id);
+        pt.setFullName(sku + "_" + id);
         pt.setIndex(id);
         return pt;
     }
-    
-    
+
     public PartsTray(String PartsTrayName) {
         super(PartsTrayName, 0.0, 0.0, 0.0, 1.0, "PT");
         this.PartsTrayName = PartsTrayName;
@@ -98,7 +106,8 @@ public class PartsTray extends Tray {
 //    public void setRotation(double Rotation) {
 //        this.Rotation = Rotation;
 //    }
-    @Nullable public String getPartsTrayName() {
+    public @Nullable
+    String getPartsTrayName() {
         return PartsTrayName;
     }
 
@@ -110,7 +119,8 @@ public class PartsTray extends Tray {
         this.NodeID = NodeID;
     }
 
-    @Nullable public String getPartsTrayDesign() {
+    public @Nullable
+    String getPartsTrayDesign() {
         return PartsTrayDesign;
     }
 
@@ -118,7 +128,8 @@ public class PartsTray extends Tray {
         this.PartsTrayDesign = PartsTrayDesign;
     }
 
-    @Nullable public String getPartsTraySku() {
+    public @Nullable
+    String getPartsTraySku() {
         return PartsTraySku;
     }
 
@@ -143,7 +154,8 @@ public class PartsTray extends Tray {
 //        this.ExternalShapeModelFormatName = ExternalShapeModelFormatName;
 //    }
 
-    @Nullable public Boolean getPartsTrayComplete() {
+    public @Nullable
+    Boolean getPartsTrayComplete() {
         return PartsTrayComplete;
     }
 
@@ -152,7 +164,7 @@ public class PartsTray extends Tray {
     }
 
     public List<Slot> getSlotList() {
-        if(null != SlotList) {
+        if (null != SlotList) {
             return SlotList;
         }
         return Collections.emptyList();
@@ -162,7 +174,8 @@ public class PartsTray extends Tray {
         this.SlotList = SlotList;
     }
 
-    @Nullable public PoseType getPartsTrayPose() {
+    public @Nullable
+    PoseType getPartsTrayPose() {
         return this.PartsTrayPose;
     }
 

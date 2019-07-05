@@ -48,11 +48,18 @@ public class PositionMap {
 
     private final List<PositionMapEntry> errmapList;
     private final List<String[]> errmapStringsList;
-    @Nullable private final String fileName;
+
+    private @Nullable
+    final String fileName;
+    
     private final String[] columnHeaders;
-    @Nullable private PointType lastPointIn;
-    @Nullable private PointType lastPointOut;
-    @Nullable private PointType lastOffset;
+    
+    private @Nullable
+    PointType lastPointIn;
+    private @Nullable
+    PointType lastPointOut;
+    private @Nullable
+    PointType lastOffset;
 
     public Iterable<Object[]> getTableIterable() {
         return new Iterable<Object[]>() {
@@ -244,14 +251,14 @@ public class PositionMap {
             lastPointIn = lastPointOut = ptIn;
             return ptIn;
         }
-        if(!Double.isFinite(ptIn.getX())) {
-            throw new IllegalArgumentException("ptIn.getX()="+ptIn.getX()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getX())) {
+            throw new IllegalArgumentException("ptIn.getX()=" + ptIn.getX() + ", ptIn=" + ptIn);
         }
-        if(!Double.isFinite(ptIn.getY())) {
-            throw new IllegalArgumentException("ptIn.getY()="+ptIn.getY()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getY())) {
+            throw new IllegalArgumentException("ptIn.getY()=" + ptIn.getY() + ", ptIn=" + ptIn);
         }
-        if(!Double.isFinite(ptIn.getZ())) {
-            throw new IllegalArgumentException("ptIn.getZ()="+ptIn.getZ()+", ptIn="+ptIn);
+        if (!Double.isFinite(ptIn.getZ())) {
+            throw new IllegalArgumentException("ptIn.getZ()=" + ptIn.getZ() + ", ptIn=" + ptIn);
         }
         lastPointIn = ptIn;
         PointType offsetPt = getOffset(
@@ -308,8 +315,7 @@ public class PositionMap {
         );
     }
 
-    @Nullable
-    private static PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
+     private   static  @Nullable  PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
                 return e2;
@@ -360,8 +366,7 @@ public class PositionMap {
         );
     }
 
-    @Nullable
-    private static PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
+     private   static  @Nullable  PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotY() - y) < 1e-6) {
                 return e2;
@@ -499,7 +504,8 @@ public class PositionMap {
         return lastOffset;
     }
 
-    @Nullable private PositionMapEntry findXCombo(Predicate<Double> predy, double x, double y, double z) {
+    private @Nullable
+    PositionMapEntry findXCombo(Predicate<Double> predy, double x, double y, double z) {
         List<PositionMapEntry> yFilteredList = errmapList.stream()
                 .filter(e -> predy.test(e.getRobotY()))
                 .collect(Collectors.toList());
@@ -507,7 +513,8 @@ public class PositionMap {
     }
 
     @SuppressWarnings("unused")
-    @Nullable private PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
+    private @Nullable
+    PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
         if (yFilteredList.size() < 2) {
             if (yFilteredList.size() == 1 && Math.abs(yFilteredList.get(0).getRobotX() - x) < 1e-6) {
                 return yFilteredList.get(0);
@@ -538,7 +545,8 @@ public class PositionMap {
         return combineX(e1, e2, x);
     }
 
-    @Nullable private PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
+    private @Nullable
+    PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
         PositionMapEntry e1 = yfilteredList.stream()
                 .filter(e -> predx.test(e.getRobotX()))
                 .min(Comparator.comparingDouble(em -> dist(em, x, y)))
@@ -554,7 +562,8 @@ public class PositionMap {
         return errmapStringsList;
     }
 
-    @Nullable public String getFileName() {
+    public @Nullable
+    String getFileName() {
         return fileName;
     }
 
@@ -562,15 +571,18 @@ public class PositionMap {
         return columnHeaders;
     }
 
-    @Nullable public PointType getLastPointIn() {
+    public @Nullable
+    PointType getLastPointIn() {
         return lastPointIn;
     }
 
-    @Nullable public PointType getLastPointOut() {
+    public @Nullable
+    PointType getLastPointOut() {
         return lastPointOut;
     }
 
-    @Nullable public PointType getLastOffset() {
+    public @Nullable
+    PointType getLastOffset() {
         return lastOffset;
     }
 

@@ -123,8 +123,12 @@ public class OptaplannerTest {
 
         // Setup callback to have the solver print some status as it runs.
         solver.addEventListener(e -> System.out.println("After " + e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
+        final List<OpAction> apActions = ap.getActions();
 
-        List<OpAction> apActionsCopy = new ArrayList<>(ap.getActions());
+        if(null == apActions) {
+            throw new NullPointerException("ap.getActions() returned null");
+        }
+        List<OpAction> apActionsCopy = new ArrayList<>(apActions);
         System.out.println("apActionsCopy = " + apActionsCopy);
 
         // Run the solver.

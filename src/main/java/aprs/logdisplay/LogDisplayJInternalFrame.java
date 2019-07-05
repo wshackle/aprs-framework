@@ -120,30 +120,37 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @UIEffect
     private void formInternalFrameClosed(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosed
         logDisplayJPanel1.setParentVisible(false);
     }//GEN-LAST:event_formInternalFrameClosed
 
+    @UIEffect
     private void formInternalFrameActivated(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameActivated
         logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
     }//GEN-LAST:event_formInternalFrameActivated
 
+    @UIEffect
     private void formInternalFrameClosing(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameClosing
        logDisplayJPanel1.setParentVisible(false);
     }//GEN-LAST:event_formInternalFrameClosing
 
+    @UIEffect
     private void formInternalFrameDeactivated(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameDeactivated
        logDisplayJPanel1.setParentVisible(false);
     }//GEN-LAST:event_formInternalFrameDeactivated
 
+    @UIEffect
     private void formInternalFrameDeiconified(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameDeiconified
        logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
     }//GEN-LAST:event_formInternalFrameDeiconified
 
+    @UIEffect
     private void formInternalFrameIconified(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameIconified
         logDisplayJPanel1.setParentVisible(false);
     }//GEN-LAST:event_formInternalFrameIconified
 
+    @UIEffect
     private void formInternalFrameOpened(javax.swing.event.InternalFrameEvent evt) {//GEN-FIRST:event_formInternalFrameOpened
          logDisplayJPanel1.setParentVisible(this.isVisible() && !this.isIcon && !this.isClosed);
     }//GEN-LAST:event_formInternalFrameOpened

@@ -24,6 +24,7 @@ package aprs.supervisor.main;
 
 import aprs.system.AprsSystem;
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -56,7 +57,8 @@ public class NamedFunction<T,R> implements Function<T,R> {
     }
 
     @Override
-    public R apply(T arg) {
+    @SuppressWarnings("nullness")
+    public R apply(@Nullable T arg) {
         return function.apply(arg);
     }
 }
