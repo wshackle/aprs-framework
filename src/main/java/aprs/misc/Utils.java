@@ -181,7 +181,13 @@ public class Utils {
                 }
                 InputStream inputStream
                         = aClass.getResourceAsStream(resourceName);
-                if(!(inputStream instanceof BufferedInputStream)) {
+                if (null == inputStream) {
+                    if (debug) {
+                        println("PlayAlert: inputStream = " + inputStream);
+                    }
+                    return;
+                }
+                if (!(inputStream instanceof BufferedInputStream)) {
                     inputStream = new BufferedInputStream(inputStream);
                 }
                 if (debug) {
@@ -239,8 +245,8 @@ public class Utils {
         void run() throws Exception;
     }
 
-    @Nullable
-    public static String readFirstLine(File f) throws IOException {
+    static public @Nullable
+    String readFirstLine(File f) throws IOException {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
@@ -310,8 +316,8 @@ public class Utils {
         private static @Nullable
         IOException createLogFileException = null;
 
-        @Nullable
-        private static File createLogFileDir() {
+        private static @Nullable
+        File createLogFileDir() {
             try {
                 File tmpTest = File.createTempFile("temp_test", "txt");
                 File logFileDir = new File(tmpTest.getParentFile(), "aprs_logs_" + getDateTimeString());
@@ -643,8 +649,8 @@ public class Utils {
         }
     }
 
-    @Nullable
-    private static <R> R unwrap(XFuture<R> f) {
+    private static @Nullable
+    <R> R unwrap(XFuture<R> f) {
         try {
             return f.get();
         } catch (InterruptedException | ExecutionException ex) {

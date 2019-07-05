@@ -80,7 +80,6 @@ import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
-import crcl.ui.client.PendantClientInner;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLCommandWrapper;
@@ -257,16 +256,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
-    @Nullable
-    private Solver<OpActionPlan> solver;
+    private @Nullable
+    Solver<OpActionPlan> solver;
 
     /**
      * Get the value of solver
      *
      * @return the value of solver
      */
-    @Nullable
-    public Solver<OpActionPlan> getSolver() {
+    public @Nullable
+    Solver<OpActionPlan> getSolver() {
         return solver;
     }
 
@@ -456,8 +455,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
-    @Nullable
-    private PoseType getPose(List<PhysicalItem> items, String partName) {
+    private @Nullable
+    PoseType getPose(List<PhysicalItem> items, String partName) {
         return (items == null) ? null : items.stream().filter((PhysicalItem item) -> item.getFullName().equals(partName)).map(PhysicalItem::getPose).findFirst().orElse(null);
     }
 
@@ -518,7 +517,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         private final double failedClosestItemDist;
 
-        public KitToCheckFailedItemInfo(String failedAbsSlotPrpName, String itemHaveName, String itemNeededName, PhysicalItem failedClosestItem, Slot failedAbsSlot, double failedClosestItemDist) {
+        public KitToCheckFailedItemInfo(String failedAbsSlotPrpName, String itemHaveName, @Nullable String itemNeededName, PhysicalItem failedClosestItem, Slot failedAbsSlot, double failedClosestItemDist) {
             this.failedAbsSlotPrpName = failedAbsSlotPrpName;
             this.itemHaveName = itemHaveName;
             this.failedClosestItem = failedClosestItem;
@@ -682,8 +681,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final ConcurrentLinkedDeque<KitToCheck> kitsToCheck = new ConcurrentLinkedDeque<>();
 
-    @Nullable
-    private PartsTray correctPartsTray = null;
+    private @Nullable
+    PartsTray correctPartsTray = null;
 
     Boolean part_in_pt_found = false;
     Boolean part_in_kt_found = false;
@@ -992,12 +991,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private Map<String, String> options = Collections.emptyMap();
 
     private final AtomicInteger lastIndex = new AtomicInteger();
-    @Nullable
-    private volatile List<Action> lastActionsList = null;
+    private volatile @Nullable
+    List<Action> lastActionsList = null;
 
     private volatile int lastAtLastIndexIdx = -1;
-    @Nullable
-    private volatile List<Action> lastAtLastIndexList = null;
+    private volatile @Nullable
+    List<Action> lastAtLastIndexList = null;
     private volatile int lastAtLastIndexRepPos = -1;
 
     public boolean atLastIndex() {
@@ -1029,8 +1028,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return lastIndex.get();
     }
 
-    @Nullable
-    private volatile Thread setLastActionsIndexThread = null;
+    private volatile @Nullable
+    Thread setLastActionsIndexThread = null;
 
     @SuppressWarnings({"unused"})
     private volatile StackTraceElement setLastActionsIndexTrace@Nullable []  = null;
@@ -1105,8 +1104,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean doInspectKit = false;
     private boolean requireNewPoses = false;
 
-    @Nullable
-    private Action getNextPlacePartAction(int lastIndex, List<Action> actions) {
+    private @Nullable
+    Action getNextPlacePartAction(int lastIndex, List<Action> actions) {
         for (int i = lastIndex + 1; i < actions.size(); i++) {
             Action action = actions.get(i);
             switch (action.getType()) {
@@ -1138,16 +1137,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         clearPoseCache();
     }
 
-    @MonotonicNonNull
-    private OpDisplayJPanel opDisplayJPanelSolution;
+    private @MonotonicNonNull
+    OpDisplayJPanel opDisplayJPanelSolution;
 
     /**
      * Get the value of opDisplayJPanelSolution
      *
      * @return the value of opDisplayJPanelSolution
      */
-    @Nullable
-    public OpDisplayJPanel getOpDisplayJPanelSolution() {
+    public @Nullable
+    OpDisplayJPanel getOpDisplayJPanelSolution() {
         return opDisplayJPanelSolution;
     }
 
@@ -1160,16 +1159,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.opDisplayJPanelSolution = opDisplayJPanelSolution;
     }
 
-    @MonotonicNonNull
-    private OpDisplayJPanel opDisplayJPanelInput;
+    private @MonotonicNonNull
+    OpDisplayJPanel opDisplayJPanelInput;
 
     /**
      * Get the value of opDisplayJPanelInput
      *
      * @return the value of opDisplayJPanelInput
      */
-    @Nullable
-    public OpDisplayJPanel getOpDisplayJPanelInput() {
+    public @Nullable
+    OpDisplayJPanel getOpDisplayJPanelInput() {
         return opDisplayJPanelInput;
     }
 
@@ -1255,8 +1254,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return false;
     }
 
-    @Nullable
-    private volatile Thread genThread = null;
+    private volatile @Nullable
+    Thread genThread = null;
     private volatile StackTraceElement genThreadSetTrace@Nullable []  = null;
 
     private static boolean cmdsContainNonWrapper(List<MiddleCommandType> cmds) {
@@ -1342,7 +1341,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
-            this.startSafeAbortRequestCount = aprsSystem.getSafeAbortRequestCount();
+            int ssarc0;
+            final AprsSystem aprsSystemFinal = aprsSystem;
+            if (null != aprsSystemFinal) {
+                ssarc0 = aprsSystemFinal.getSafeAbortRequestCount();
+            } else {
+                ssarc0 = 0;
+            }
+            this.startSafeAbortRequestCount = ssarc0;
         }
 
         @Override
@@ -1375,8 +1381,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.manualAction = manualAction;
     }
 
-    @MonotonicNonNull
-    private volatile List<List<Action>> takePlaceActions = null;
+    private volatile @MonotonicNonNull
+    List<List<Action>> takePlaceActions = null;
 
     private final AtomicInteger generateCount = new AtomicInteger();
     private final AtomicInteger generateFromZeroCount = new AtomicInteger();
@@ -1410,15 +1416,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         List<MiddleCommandType> cmds = new ArrayList<>();
         final int startingIndex = gparams.startingIndex;
         Action startingAction = gParamsActions.get(startingIndex);
+        final List<PhysicalItem> physicalItemsFinal = this.physicalItems;
         try {
             aprsSystem.logEvent("CrclGenerator.generate: gparams", gparams);
             final int gparamsActionsSize = gParamsActions.size();
 
-            if (null != solver && gparams.replan) {
+            if (null != solver && gparams.replan && null != physicalItemsFinal) {
                 return runOptaPlanner(gParamsActions, startingIndex,
                         gparams.options,
-                        gparams.startSafeAbortRequestCount,
-                        this.physicalItems);
+                        gparams.startSafeAbortRequestCount, physicalItemsFinal);
             } else {
                 String sublistString;
                 if (null != gParamsActions
@@ -1456,10 +1462,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         List<Action> actions = acbi.getActions();
                         boolean actionsChanged = diffActions(gParamsActions, actions);
                         logDebug("actionsChanged = " + actionsChanged);
-                        Action action = acbi.getAction();
-                        String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + action;
+                        String errString = "generate called with startingIndex=" + startingIndex + ",acbi.getActionsSize()=" + acbi.getActionsSize() + " and acbi.actionIndex=" + actionIndex + ", lastIndex=" + lastIndex + ", acbi.action.=" + acbi.getAction();
                         System.err.println(errString);
-                        System.err.println("acbi = " + acbi);
+                        System.err.println("acbi = " + acbi.getAction());
                         localAprsSystem.setTitleErrorString(errString);
                         throw new IllegalStateException(errString);
                     }
@@ -1522,8 +1527,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             checkSettings();
             Action lastAction = null;
-            if (null != physicalItems) {
-                takeSimViewSnapshot("generate.startingIndex=" + startingIndex, physicalItems);
+            if (null != physicalItemsFinal) {
+                takeSimViewSnapshot("generate.startingIndex=" + startingIndex, physicalItemsFinal);
             }
 
             for (this.setLastActionsIndex(gParamsActions, startingIndex); getLastIndex() < gparamsActionsSize; incLastActionsIndex()) {
@@ -1538,7 +1543,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     switch (action.getType()) {
                         case TAKE_PART:
                             if (poseCache.isEmpty()) {
-                                System.err.println("physicalItems = " + physicalItems);
+                                System.err.println("physicalItems = " + physicalItemsFinal);
                                 System.err.println("clearPoseCacheTrace = " + Utils.traceToString(clearPoseCacheTrace));
                                 throw new IllegalStateException("TAKE_PART when poseCache is empty");
                             }
@@ -1717,6 +1722,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     case CHECK_KITS:
                         boolean lookForPartsNeeded = true;
                         int lastLookForIndex = startingIndex > 0 ? startingIndex - 1 : 0;
+                        if (null == acbi) {
+                            throw new NullPointerException("acbi == null");
+                        }
                         if (acbi.getAction().getType() == LOOK_FOR_PARTS) {
                             lookForPartsNeeded = false;
                         }
@@ -1772,16 +1780,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                                return ret2;
 //                            }
                         } else {
-                            lastCheckKitsLookForIndexAction = gParamsActions.get(finalLookForIndex);
+                            final Action lookForIndexAction = gParamsActions.get(finalLookForIndex);
+                            lastCheckKitsLookForIndexAction = lookForIndexAction;
                             boolean correctionDone = checkKits(action, cmds, idx, finalLookForIndex, gparams);
                             kitsToCheck.clear();
                             if (correctionDone) {
                                 addNotifyMarker(cmds, "checkKitsNeedCorrection", idx, action, fixedActionsCopy, fixedOrigActionsCopy);
-                                lookForParts(lastCheckKitsLookForIndexAction, cmds, false,
+                                lookForParts(lookForIndexAction, cmds, false,
                                         false,
                                         gparams.startSafeAbortRequestCount
                                 );
-                                addNotifyMarker(cmds, "checkKitsNeedCorrection.repeatLookForParts", finalLookForIndex, lastCheckKitsLookForIndexAction, fixedActionsCopy, fixedOrigActionsCopy);
+                                addNotifyMarker(cmds, "checkKitsNeedCorrection.repeatLookForParts", finalLookForIndex, lookForIndexAction, fixedActionsCopy, fixedOrigActionsCopy);
                                 setLastActionsIndex(gParamsActions, finalLookForIndex);
                                 return cmds;
                             }
@@ -1815,7 +1824,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.err.println("startingAction=" + startingAction);
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
-            List<PhysicalItem> physicalItemsLocal = physicalItems;
+            List<PhysicalItem> physicalItemsLocal = physicalItemsFinal;
             if (null != physicalItemsLocal) {
                 System.err.println("physicalItems.size()=" + physicalItemsLocal.size());
                 System.err.println("physicalItems=" + physicalItemsLocal);
@@ -1843,8 +1852,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return cmds;
     }
 
-    @Nullable
-    private List<MiddleCommandType> endSection(Action action,
+    private @Nullable
+    List<MiddleCommandType> endSection(Action action,
             int idx,
             List<MiddleCommandType> cmds,
             List<Action> fixedActionsCopy,
@@ -2006,7 +2015,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private PoseType getPose(String fullName, List<PhysicalItem> localPhysicalItems) {
+    private @Nullable
+    PoseType getPose(String fullName, List<PhysicalItem> localPhysicalItems) {
         synchronized (poseCache) {
             for (PhysicalItem item : localPhysicalItems) {
                 String itemFullName = item.getFullName();
@@ -2018,8 +2028,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return null;
     }
 
-    @Nullable
-    public List<PhysicalItem> getPhysicalItems() {
+    public @Nullable
+    List<PhysicalItem> getPhysicalItems() {
         return physicalItems;
     }
 
@@ -2034,7 +2044,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } catch (IOException ex) {
                 Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex);
             }
-            loadNewItemsIntoPoseCache(physicalItems);
+            loadNewItemsIntoPoseCache(newPhysicalItems);
             return newPhysicalItems;
         }
     }
@@ -2511,7 +2521,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.err.println("solverRunCount.get() = " + solverRunCount.get());
             logger.log(Level.SEVERE, "", ex);
             try {
-                takeSimViewSnapshot(ex.getMessage(), physicalItemsLocal);
+                takeSimViewSnapshot(ex.toString(), physicalItemsLocal);
             } catch (IOException ex1) {
                 Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -2529,8 +2539,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 .collect(Collectors.toList());
     }
 
-    @Nullable
-    private volatile GenerateParams lastClearKitsToCheckGenerateParams = null;
+    private volatile @Nullable
+    GenerateParams lastClearKitsToCheckGenerateParams = null;
     private volatile int lastClearKitsToCheckGenerateParamsIndex = -1;
     private final AtomicInteger clearKitsToCheckCount = new AtomicInteger();
 
@@ -2562,8 +2572,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private volatile GenerateParams clearKitsToCheckExternalGparams = null;
-    private volatile StackTraceElement clearKitsToCheckExternalTrace[] = null;
+    private volatile @Nullable
+    GenerateParams clearKitsToCheckExternalGparams = null;
+    private volatile StackTraceElement clearKitsToCheckExternalTrace @Nullable []  = null;
 
     public void clearKitsToCheckExternal(boolean withRecheck, GenerateParams gparams)
             throws InterruptedException, IOException, ExecutionException {
@@ -2614,8 +2625,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addMarkerCommand(cmds, "clearWayToHolder" + holder, x -> clearWayToHolder(holder));
     }
 
-    @Nullable
-    private volatile GenerateParams lastAddKitToCheckGenerateParams = null;
+    private volatile @Nullable
+    GenerateParams lastAddKitToCheckGenerateParams = null;
     private volatile int lastAddKitToCheckGenerateIndex = -1;
 
     private void addKitToCheck(Action action, List<MiddleCommandType> cmds, GenerateParams gparams) {
@@ -2669,8 +2680,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     @SuppressWarnings("nullness")
-    @Nullable
-    private PhysicalItem getItemByName(List<PhysicalItem> localPhysicalItems, String name) {
+    private @Nullable
+    PhysicalItem getItemByName(List<PhysicalItem> localPhysicalItems, String name) {
         return localPhysicalItems
                 .stream()
                 .filter(Objects::nonNull)
@@ -2809,7 +2820,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
     private volatile int lastCheckKitsLookForIndex = -1;
-    private volatile Action lastCheckKitsLookForIndexAction = null;
+
+    private volatile @Nullable
+    Action lastCheckKitsLookForIndexAction = null;
 
     private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex, int lastLookForIndex, GenerateParams gparams) {
 
@@ -2821,34 +2834,38 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        if (!aprsSystem.isDoingActions()) {
-            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+        final AprsSystem aprsSystemFinal = aprsSystem;
+        if (null == aprsSystemFinal) {
+            throw new NullPointerException("aprsSystem");
+        }
+        if (!aprsSystemFinal.isDoingActions()) {
+            aprsSystemFinal.logEvent("IsDoingActionsInfo", aprsSystemFinal.getIsDoingActionsInfo());
             throw new IllegalStateException("!aprsSystem.isDoingActions()");
         }
         List<PhysicalItem> origPhysicalItemsLocal = physicalItems;
 
         try {
 
-            if (gparams.startSafeAbortRequestCount != aprsSystem.getSafeAbortRequestCount()) {
-                takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystem.getSafeAbortRequestCount(), origPhysicalItemsLocal);
-                aprsSystem.logEvent("checkKits:aborting", action, origIndex, lastLookForIndex, gparams.startSafeAbortRequestCount, aprsSystem.getSafeAbortRequestCount());
+            if (gparams.startSafeAbortRequestCount != aprsSystemFinal.getSafeAbortRequestCount()) {
+                takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystemFinal.getSafeAbortRequestCount(), origPhysicalItemsLocal);
+                aprsSystemFinal.logEvent("checkKits:aborting", action, origIndex, lastLookForIndex, gparams.startSafeAbortRequestCount, aprsSystemFinal.getSafeAbortRequestCount());
                 setLastProgramAborted(true);
                 addMoveToLookForPosition(cmds, false);
                 return true;
             }
             checkSettings();
-            if (null == aprsSystem) {
+            if (null == aprsSystemFinal) {
                 throw new NullPointerException("aprsSystem");
             }
-            boolean correctionMode = aprsSystem.isCorrectionMode();
+            boolean correctionMode = aprsSystemFinal.isCorrectionMode();
             if (IGNORE_KIT_CHECK_FAILURES) {
                 if (!correctionMode && pauseInsteadOfRecover) {
                     return false;
                 }
             }
-            int prePubs = aprsSystem.getSimLineCount();
-            int preVis = aprsSystem.getVisionLineCount();
-            long preTimeDiff = aprsSystem.getSimVisionTimeDiff();
+            int prePubs = aprsSystemFinal.getSimLineCount();
+            int preVis = aprsSystemFinal.getVisionLineCount();
+            long preTimeDiff = aprsSystemFinal.getSimVisionTimeDiff();
             long preCheckKitsTime = System.currentTimeMillis();
             List<PhysicalItem> physicalItemsLocal
                     = checkNewItems("checkKits", gparams.startSafeAbortRequestCount);
@@ -2859,9 +2876,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                 long postCheckKitsTime = System.currentTimeMillis();
                 long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
-                int postPubs = aprsSystem.getSimLineCount();
-                int postVis = aprsSystem.getVisionLineCount();
-                long postTimeDiff = aprsSystem.getSimVisionTimeDiff();
+                int postPubs = aprsSystemFinal.getSimLineCount();
+                int postVis = aprsSystemFinal.getVisionLineCount();
+                long postTimeDiff = aprsSystemFinal.getSimVisionTimeDiff();
 
                 takeSnapshots("plan", "checkKits-", null, "");
 
@@ -2990,7 +3007,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                                     partsInPartsTrayFullNames,
                                                                     name2 -> name2.contains(finalShortSkuName));
                                                     logError("recalcPartNames = " + recalcPartNames);
-                                                    aprsSystem.setSnapshotsSelected(true);
+                                                    aprsSystemFinal.setSnapshotsSelected(true);
                                                     takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
                                                     throw new IllegalStateException("No partnames for finalShortSkuName=" + finalShortSkuName
                                                             + ", absSlotPrpName=" + absSlotPrpName
@@ -3223,8 +3240,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return parts;
     }
 
-    @Nullable
-    private volatile List<KitToCheck> lastKitsToCheckCopy = null;
+    private volatile @Nullable
+    List<KitToCheck> lastKitsToCheckCopy = null;
 
     private List<KitToCheck> scanKitsToCheck(
             boolean newCheck,
@@ -3240,8 +3257,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        if (!aprsSystem.isDoingActions()) {
-            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
+        final AprsSystem aprsSystemFinal = aprsSystem;
+        if (null == aprsSystemFinal) {
+            throw new NullPointerException("aprsSystem");
+        }
+        if (!aprsSystemFinal.isDoingActions()) {
+            aprsSystemFinal.logEvent("IsDoingActionsInfo", aprsSystemFinal.getIsDoingActionsInfo());
             throw new IllegalStateException("!aprsSystem.isDoingActions() ");
         }
         List<KitToCheck> kitsToFix = new ArrayList<>(kitsToCheck);
@@ -3251,10 +3272,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
             } else {
                 Thread.dumpStack();
-                System.err.println("getPrivateStartActionsTraceString() = " + aprsSystem.getPrivateStartActionsTraceString());
-                System.err.println("getPrivateStartActionsCommentString() = " + aprsSystem.getPrivateStartActionsCommentString());
-                System.err.println("getPrivateContinueActionsTraceString() = " + aprsSystem.getPrivateContinueActionsTraceString());
-                System.err.println("getPrivateContinueActionsCommentString() = " + aprsSystem.getPrivateContinueActionsCommentString());
+                System.err.println("getPrivateStartActionsTraceString() = " + aprsSystemFinal.getPrivateStartActionsTraceString());
+                System.err.println("getPrivateStartActionsCommentString() = " + aprsSystemFinal.getPrivateStartActionsCommentString());
+                System.err.println("getPrivateContinueActionsTraceString() = " + aprsSystemFinal.getPrivateContinueActionsTraceString());
+                System.err.println("getPrivateContinueActionsCommentString() = " + aprsSystemFinal.getPrivateContinueActionsCommentString());
                 System.err.println("lastClearKitsToCheckGenerateParams = " + lastClearKitsToCheckGenerateParams);
                 System.err.println("lastClearKitsToCheckGenerateParamsIndex = " + lastClearKitsToCheckGenerateParamsIndex);
                 System.err.println("clearKitsToCheckExternalGparams = " + clearKitsToCheckExternalGparams);
@@ -3318,7 +3339,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     }
                     info.itemSkuMap.put(absSlotPrpName, itemHaveName);
                     final String itemNeededName = kit.slotMap.get(absSlotPrpName);
-
+                    if (null == itemNeededName) {
+                        throw new RuntimeException("kit.slotMap.get(" + absSlotPrpName + ") returned null : absSlot=" + absSlot + ", kit.slotMap=" + kit.slotMap);
+                    }
                     if (!Objects.equals(itemNeededName, itemHaveName)) {
                         KitToCheckFailedItemInfo failedItemInfo
                                 = new KitToCheckFailedItemInfo(
@@ -3437,11 +3460,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    @Nullable
-    private String lastTakenPart = null;
+    private @Nullable
+    String lastTakenPart = null;
 
-    @Nullable
-    private String getLastTakenPart() {
+    private @Nullable
+    String getLastTakenPart() {
         return lastTakenPart;
     }
 
@@ -3682,16 +3705,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return pout;
     }
 
-    @Nullable
-    private final AprsSystem aprsSystem;
+    private @Nullable
+    final AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    @Nullable
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
@@ -3702,8 +3725,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @return the value of parentExecutorJPanel
      */
-    @Nullable
-    public ExecutorJPanel getParentExecutorJPanel() {
+    public @Nullable
+    ExecutorJPanel getParentExecutorJPanel() {
         return parentExecutorJPanel;
     }
 
@@ -3878,8 +3901,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return commandId.incrementAndGet();
     }
 
-    @Nullable
-    public PoseType getPose(String name) {
+    public @Nullable
+    PoseType getPose(String name) {
         return poseCache.get(name);
     }
 
@@ -3917,12 +3940,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void setCorrectKitImage() {
-        if (null != kitInspectionJInternalFrame) {
+        if (null != kitInspectionJInternalFrame && null != aprsSystem) {
             String kitinspectionImageKitPath = kitInspectionJInternalFrame.getKitinspectionImageKitPath();
             String kitImage = kitInspectionJInternalFrame.getKitImage();
             String kitStatusImage = kitinspectionImageKitPath + "/" + kitImage + ".png";
             logDebug("kitStatusImage " + kitStatusImage);
-            aprsSystem.runOnDispatchThread(() -> setKitStatusIcon(kitStatusImage));
+            if (null != aprsSystem) {
+                aprsSystem.runOnDispatchThread(() -> setKitStatusIcon(kitStatusImage));
+            }
         }
     }
 
@@ -4207,8 +4232,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @return tray from database
      * @throws SQLException if query fails
      */
-    @Nullable
-    private PartsTray findCorrectKitTray(String kitSku) throws SQLException {
+    private @Nullable
+    PartsTray findCorrectKitTray(String kitSku) throws SQLException {
 
         assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
         assert (null != this.qs) : "null == this.qs: @AssumeAssertion(nullness)";
@@ -4584,7 +4609,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
 
-        if (null != kitInspectionJInternalFrame) {
+        if (null != kitInspectionJInternalFrame && null != aprsSystem) {
             aprsSystem.runOnDispatchThread(() -> updateKitImageLabel("init", "Building kit"));
         }
 
@@ -4836,8 +4861,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            return pose;
 //        }
 //    }
-    @Nullable
-    private PoseType getNewPoseFromDb(String posename) throws SQLException {
+    private @Nullable
+    PoseType getNewPoseFromDb(String posename) throws SQLException {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         if (null == qs) {
@@ -4849,8 +4874,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return pose;
     }
 
-    @Nullable
-    private PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
+    private @Nullable
+    PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         if (null == qs) {
@@ -4908,8 +4933,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return partsInPtList;
     }
 
-    @Nullable
-    private volatile PoseType lastTestApproachPose = null;
+    private volatile @Nullable
+    PoseType lastTestApproachPose = null;
 
     private final ConcurrentMap<String, String> toolChangerJointValsMap
             = new ConcurrentHashMap<>();
@@ -4918,8 +4943,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         toolChangerJointValsMap.put(key, value);
     }
 
-    @Nullable
-    private String getToolChangerJointVals(String key) {
+    private @Nullable
+    String getToolChangerJointVals(String key) {
         return toolChangerJointValsMap.get(key);
     }
 
@@ -4957,7 +4982,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
-        PoseType approachPose2 = addZToPose(pose, approachZOffset/5.0);
+        PoseType approachPose2 = addZToPose(pose, approachZOffset / 5.0);
 
         lastTestApproachPose = approachPose;
 
@@ -6096,8 +6121,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    @Nullable
-    private volatile Thread clearPoseCacheThread = null;
+    private volatile @Nullable
+    Thread clearPoseCacheThread = null;
     private volatile StackTraceElement clearPoseCacheTrace@Nullable []  = null;
 
     public void clearPoseCache() {
@@ -6109,8 +6134,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    @Nullable
-    private volatile Thread putPoseCacheThread = null;
+    private volatile @Nullable
+    Thread putPoseCacheThread = null;
     private volatile StackTraceElement putPoseCacheTrace@Nullable []  = null;
 
     public void putPoseCache(String name, PoseType pose) {
@@ -6251,7 +6276,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         final String actionsString = (action.getArgs().length == 1) ? action.getArgs()[0] : "";
         if (!atLookForPosition) {
-             addMarkerCommand(out, "beforeMoveToLookPosition.lookForParts-" + actionsString, x -> {
+            addMarkerCommand(out, "beforeMoveToLookPosition.lookForParts-" + actionsString, x -> {
                 try {
                     takeSimViewSnapshot("beforeMoveToLookPosition.lookForParts-" + actionsString, null);
                 } catch (IOException ex) {
@@ -6673,10 +6698,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private final AtomicInteger visionUpdateCount = new AtomicInteger();
 
     private volatile boolean enableDatabaseUpdates = false;
-    @Nullable
-    private volatile List<PhysicalItem> physicalItems = null;
+    private volatile @Nullable
+    List<PhysicalItem> physicalItems = null;
 
-    @SuppressWarnings("SameParameterValue")
     private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis, int startAbortCount) {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
@@ -6687,16 +6711,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-//        if (!aprsSystem.isDoingActions()) {
-//            aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-//            throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-//        }
+
         try {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
                 setLastProgramAborted(true);
-                return null;
+                return Collections.emptyList();
             }
             String runName = getRunName();
             visionUpdateCount.incrementAndGet();
@@ -6728,7 +6749,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                     aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
                     setLastProgramAborted(true);
-                    return null;
+                    return Collections.emptyList();
                 }
                 if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
                     System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
@@ -6855,11 +6876,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
                 aprsSystem.refreshSimView();
                 if (aprsSystem.isClosing()) {
-                    return null;
+                    return Collections.emptyList();
                 }
             }
             if (aprsSystem.isClosing()) {
-                return null;
+                return Collections.emptyList();
             }
             if (xfl.isCompletedExceptionally()) {
                 Throwable[] ta = new Throwable[1];
@@ -7121,8 +7142,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
 //                }));
 //    }
-    @Nullable
-    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+    public static @Nullable
+    <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
             if (Objects.equals(value, entry.getValue())) {
                 return entry.getKey();

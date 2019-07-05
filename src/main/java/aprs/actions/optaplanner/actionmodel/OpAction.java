@@ -38,10 +38,8 @@ import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 @PlanningEntity
 public class OpAction implements OpActionInterface {
 
-    
-
-    @Nullable
-    private final ActionType executorActionType;
+    private @Nullable
+    final ActionType executorActionType;
     private final String[] executorArgs;
     private String name;
 
@@ -59,8 +57,8 @@ public class OpAction implements OpActionInterface {
      *
      * @return the value of executorActionType
      */
-    @Nullable
-    public ActionType getExecutorActionType() {
+    public @Nullable
+    ActionType getExecutorActionType() {
         return executorActionType;
     }
 
@@ -79,8 +77,7 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    @Nullable
-    private static ActionType opActionToExecutorAction(OpActionType opAction) {
+    private  static  @Nullable  ActionType opActionToExecutorAction(OpActionType opAction) {
         switch (opAction) {
             case PICKUP:
                 return TAKE_PART;
@@ -100,8 +97,8 @@ public class OpAction implements OpActionInterface {
         }
         return new String[]{};
     }
-    
-     public OpAction(int origId, String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
+
+    public OpAction(int origId, String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
         this.name = name;
@@ -113,7 +110,6 @@ public class OpAction implements OpActionInterface {
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
-
 
     public OpAction(String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
         this.executorActionType = opActionToExecutorAction(opActionType);
@@ -140,7 +136,7 @@ public class OpAction implements OpActionInterface {
         this.required = required;
         this.trayType = getTrayType(opActionType, name);
     }
-    
+
     public OpAction(ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
@@ -154,8 +150,7 @@ public class OpAction implements OpActionInterface {
         this.trayType = getTrayType(opActionType, name);
     }
 
-    @Nullable
-    private static String getTrayType(OpActionType opActionType, String name) {
+    private  static  @Nullable  String getTrayType(OpActionType opActionType, String name) {
         switch (opActionType) {
             case PICKUP:
             case DROPOFF:
@@ -243,9 +238,9 @@ public class OpAction implements OpActionInterface {
         return next;
     }
 
-    private volatile StackTraceElement setNextTrace[] = null;
-    private volatile CheckNextInfoPair setNextInfoPair = null;
-    
+    private volatile StackTraceElement setNextTrace @Nullable [] = null;
+    private volatile @Nullable CheckNextInfoPair setNextInfoPair = null;
+
     public void setNext(OpActionInterface next) {
         final CheckNextInfoPair checkNextInfoPair = new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(next));
         if (!checkNextActionInfoPair(checkNextInfoPair)) {
@@ -264,8 +259,9 @@ public class OpAction implements OpActionInterface {
     private boolean actionRequired() {
         return required; // Objects.equals(trayType, "KT");
     }
-    
+
     static class CheckNextInfo {
+
         final boolean actionRequired;
         final String partType;
         final OpActionType opActionType;
@@ -275,9 +271,9 @@ public class OpAction implements OpActionInterface {
             this.partType = partType;
             this.opActionType = opActionType;
         }
-        
+
         public CheckNextInfo(OpActionInterface oai) {
-            this(oai.isRequired(),oai.getPartType(),oai.getOpActionType());
+            this(oai.isRequired(), oai.getPartType(), oai.getOpActionType());
         }
 
         public boolean isActionRequired() {
@@ -291,11 +287,11 @@ public class OpAction implements OpActionInterface {
         public OpActionType getOpActionType() {
             return opActionType;
         }
-        
-        
+
     }
 
     static class CheckNextInfoPair {
+
         final CheckNextInfo current;
         final CheckNextInfo next;
 
@@ -304,16 +300,16 @@ public class OpAction implements OpActionInterface {
             this.next = next;
         }
     }
-    
-    public  boolean checkNextAction(OpActionInterface possibleNextAction) {
+
+    public boolean checkNextAction(OpActionInterface possibleNextAction) {
         if (null == possibleNextAction) {
             throw new NullPointerException("possibleNextAction");
         }
         return checkNextActionInfoPair(new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(possibleNextAction)));
     }
-    
+
     private static boolean checkNextActionInfoPair(CheckNextInfoPair infoPair) {
-        
+
         OpActionType possibleNextOpActionType = infoPair.next.getOpActionType();
         final String possibleNextActionPartType = infoPair.next.getPartType();
         final boolean possibleNextActionRequired = infoPair.next.isActionRequired();
@@ -369,7 +365,7 @@ public class OpAction implements OpActionInterface {
 
     private int maxNextEffectiveCount = 0;
 
-    private StackTraceElement addPossibleNextActionsTrace[] = null;
+    private StackTraceElement addPossibleNextActionsTrace @Nullable [] = null;
 
     @Override
     public List<Integer> getPossibleNextIds() {
@@ -403,8 +399,8 @@ public class OpAction implements OpActionInterface {
         addPossibleNextActionsTrace = Thread.currentThread().getStackTrace();
     }
 
-    @Nullable
-    private String trayType;
+    private @Nullable
+    String trayType;
 
     @Nullable
     @Override
@@ -436,8 +432,8 @@ public class OpAction implements OpActionInterface {
     }
 
     @Override
-    @Nullable
-    public OpActionInterface effectiveNext(boolean quiet) {
+    public @Nullable
+    OpActionInterface effectiveNext(boolean quiet) {
         if (getOpActionType() == FAKE_DROPOFF) {
             return next;
         }
@@ -559,9 +555,9 @@ public class OpAction implements OpActionInterface {
         return costOfNext(effNext, plan);
     }
 
-    public double costOfNext(OpActionInterface effNext, OpActionPlan plan) {
+    public double costOfNext(@Nullable OpActionInterface effNext, OpActionPlan plan) {
         if (plan.isUseDistForCost()) {
-            return distanceToNext(false,effNext);
+            return distanceToNext(false, effNext);
         }
         if (null == effNext) {
             return Double.POSITIVE_INFINITY;
@@ -570,9 +566,9 @@ public class OpAction implements OpActionInterface {
             return 0;
         }
         if (effNext.getOpActionType() == END) {
-            return DistToTime.distToTime(this.distanceToNext(false,effNext), plan.getAccelleration(), plan.getStartEndMaxSpeed());
+            return DistToTime.distToTime(this.distanceToNext(false, effNext), plan.getAccelleration(), plan.getStartEndMaxSpeed());
         }
-        return DistToTime.distToTime(this.distanceToNext(false,effNext), plan.getAccelleration(), plan.getMaxSpeed());
+        return DistToTime.distToTime(this.distanceToNext(false, effNext), plan.getAccelleration(), plan.getMaxSpeed());
     }
 
     public double distance(boolean quiet) {
@@ -592,15 +588,15 @@ public class OpAction implements OpActionInterface {
         return distanceToNext(quiet, effNext);
     }
 
-    private double distanceToNext(boolean quiet, OpActionInterface effNext) throws IllegalStateException {
-        
+    private double distanceToNext(boolean quiet, @Nullable OpActionInterface effNext) throws IllegalStateException {
+
         if (null == location) {
             if (quiet) {
                 return Double.POSITIVE_INFINITY;
             }
             throw new IllegalStateException("this=" + name + " location ==null");
         }
-        
+
         if (null == effNext) {
             if (quiet) {
                 return Double.POSITIVE_INFINITY;
@@ -611,23 +607,23 @@ public class OpAction implements OpActionInterface {
     }
 
     public String locationString() {
-        if(null != location) {
-            return String.format("{%.1f,%.1f}", location.x,location.y);
+        if (null != location) {
+            return String.format("{%.1f,%.1f}", location.x, location.y);
         } else {
             return "";
         }
     }
-    
+
     @Override
     public String shortString() {
-        return name + ":" + getId()+locationString();
+        return name + ":" + getId() + locationString();
     }
 
     public String longString() {
-        String effNextString =  makeEffNextString();
+        String effNextString = makeEffNextString();
         return makeLongString(effNextString);
     }
-    
+
     @Override
     public String toString() {
         return makeLongString("");
@@ -674,7 +670,7 @@ public class OpAction implements OpActionInterface {
             }
         } catch (Exception e) {
             Logger.getLogger(OpAction.class.getName()).log(Level.SEVERE, "", e);
-            return e.getMessage();
+            return e.toString();
         }
     }
 
@@ -683,7 +679,7 @@ public class OpAction implements OpActionInterface {
     public int getOrigId() {
         return origId;
     }
-    
+
     private final int id;
 
     @Override

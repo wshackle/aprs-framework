@@ -26,30 +26,26 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
-import org.checkerframework.checker.guieffect.qual.UIType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@UIType
 class ImagePanel extends JPanel {
 
-    @Nullable
-    private BufferedImage image = null;
+    private BufferedImage image;
 
-    @Nullable
-    private String label = null;
+    private String label;
 
+    @UIEffect
+    @SuppressWarnings("initialization")
     public ImagePanel(BufferedImage image) {
-        this.image = image;
-        if (image != null) {
-            super.setSize(image.getWidth(), image.getHeight());
-            super.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
-        }
+        this(image, "");
     }
 
+    @UIEffect
+    @SuppressWarnings("initialization")
     public ImagePanel(BufferedImage image, String label) {
         this.image = image;
         this.label = label;
@@ -79,7 +75,7 @@ class ImagePanel extends JPanel {
         }
     }
 
-    public void setImage(@Nullable BufferedImage image) {
+    public void setImage(BufferedImage image) {
         this.image = image;
         if (image != null) {
             this.setSize(image.getWidth(), image.getHeight());
@@ -88,7 +84,7 @@ class ImagePanel extends JPanel {
         }
     }
 
-    public void setLabel(@Nullable String label) {
+    public void setLabel(String label) {
         this.label = label;
     }
 }

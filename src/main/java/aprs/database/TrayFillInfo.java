@@ -69,8 +69,8 @@ public class TrayFillInfo {
                 .collect(Collectors.toList());
     }
 
-    @Nullable
-    public static PhysicalItem findClosestPart(double sx, double sy, List<PhysicalItem> items) {
+    static public @Nullable
+    PhysicalItem findClosestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -139,7 +139,7 @@ public class TrayFillInfo {
             if (minDist < 20 + slotOffset.getDiameter() / 2.0) {
                 unassignedParts.remove(closestPart);
                 listPairing.addPartTraySlotItem(slotOffset, absSlot, closestPart);
-           } else {
+            } else {
                 listPairing.addEmptyTraySlotItem(slotOffset, absSlot);
             }
         }
@@ -197,7 +197,5 @@ public class TrayFillInfo {
     public List<TraySlotListItem> getEmptyPartTraySlots() {
         return emptyPartTraySlots;
     }
-    
-    
 
 }

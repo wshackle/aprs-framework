@@ -169,8 +169,7 @@ public class CsvTableJPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_jButtonDeleteActionPerformed
 
     private volatile boolean ok = false;
-    @Nullable
-    private volatile JDialog dialog = null;
+      private volatile @Nullable  JDialog dialog = null;
 
     @UIEffect
     private static Object     @Nullable [] [] 

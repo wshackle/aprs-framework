@@ -88,11 +88,9 @@ public class AprsCommonLogger {
     private final ConcurrentLinkedDeque<Consumer<String>> stringConsumers
             = new ConcurrentLinkedDeque<>();
     
-    @Nullable
-    private File logFile = null;
+     private  @Nullable  File logFile = null;
     
-    @Nullable 
-    private volatile PrintStream auxPrintStream= null;
+      private volatile @Nullable  PrintStream auxPrintStream= null;
 
     @SuppressWarnings("initialization")
     private final Consumer<String> auxConsumer

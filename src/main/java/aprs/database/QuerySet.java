@@ -310,7 +310,8 @@ public class QuerySet implements QuerySetInterface {
         return qString;
     }
 
-    @Nullable private String getQueryResultString(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getQueryResultString(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
         Map<DbParamTypeEnum, String> map = queryInfo.getResults();
         String qname = map.get(type);
         if (null == qname) {
@@ -349,27 +350,33 @@ public class QuerySet implements QuerySetInterface {
         return rs.getDouble(qname);
     }
 
-    @Nullable private String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
 
-    @Nullable private String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getAllPartsInKtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
 
-    @Nullable private String getAllPartsInPtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getAllPartsInPtQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
     }
 
-    @Nullable private String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getTraySlotsFromKitSkuQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getTraySlotsFromKitSkuQueryInfo, type);
     }
 
-    @Nullable private String getPartsTraysQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getPartsTraysQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getPartsTraysQueryInfo, type);
     }
 
-    @Nullable private String getSlotsQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
+    private @Nullable
+    String getSlotsQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getSlotsQueryInfo, type);
     }
     private boolean debug;
@@ -668,13 +675,16 @@ public class QuerySet implements QuerySetInterface {
     }
 
     @Override
-    @Nullable public PoseType getPose(String name) throws SQLException {
+    public @Nullable
+    PoseType getPose(String name) throws SQLException {
         return getPose(name, false, 0);
     }
 
-    @Nullable private AprsSystem aprsSystemInterface = null;
+    private @Nullable
+    AprsSystem aprsSystemInterface = null;
 
-    @Nullable public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystemInterface;
     }
 
@@ -682,7 +692,8 @@ public class QuerySet implements QuerySetInterface {
         this.aprsSystemInterface = aprsSystemInterface;
     }
 
-    @Nullable public PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException {
+    public @Nullable
+    PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }

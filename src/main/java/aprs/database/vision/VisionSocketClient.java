@@ -50,38 +50,42 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @SuppressWarnings("WeakerAccess")
 public class VisionSocketClient implements AutoCloseable {
 
-    @Nullable
-    private volatile List<PhysicalItem> visionList = null;
+    private volatile @Nullable
+    List<PhysicalItem> visionList = null;
 
-    @Nullable
-    private volatile List<PhysicalItem> lastIgnoredVisionList = null;
+    private volatile @Nullable
+    List<PhysicalItem> lastIgnoredVisionList = null;
 
-    @Nullable
-    private SocketLineReader visionSlr = null;
-    @Nullable
-    private ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
-    @Nullable
-    private volatile String parsing_line = null;
+    private @Nullable
+    SocketLineReader visionSlr = null;
+    private @Nullable
+    ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
+    private volatile @Nullable
+    String parsing_line = null;
     private static final AtomicInteger visioncycle = new AtomicInteger();
 
-    @Nullable
-    private PrintStream replyPs;
+    private @Nullable
+    PrintStream replyPs;
 
-    @Nullable
-    private PoseType transform = null;
+    private @Nullable
+    PoseType transform = null;
 
-    @Nullable
-    public PoseType getTransform() {
+    public @Nullable
+    PoseType getTransform() {
         return transform;
     }
 
     public XFutureVoid setTransform(PoseType transform) {
         this.transform = transform;
-        return this.updateListeners(visionList,getLine(),false);
+        final String lineFinal = line;
+        if (null == lineFinal) {
+            return XFutureVoid.completedFuture();
+        }
+        return this.updateListeners(visionList, lineFinal, false);
     }
 
-    @Nullable
-    public PrintStream getReplyPs() {
+    public @Nullable
+    PrintStream getReplyPs() {
         return replyPs;
     }
 
@@ -120,7 +124,7 @@ public class VisionSocketClient implements AutoCloseable {
             listListeners.remove(listener);
         }
     }
-    
+
     private final List<VisionSocketClientListener> ignoredLineListListeners = new ArrayList<>();
 
     public void addIgnoredLineListener(VisionSocketClientListener listener) {
@@ -136,10 +140,14 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     public XFutureVoid updateListeners() {
-        return updateListeners(visionList, getLine(), false);
+        final String lineFinal = line;
+        if (null == lineFinal) {
+            return XFutureVoid.completedFuture();
+        }
+        return this.updateListeners(visionList, lineFinal, false);
     }
-    
-    public XFutureVoid updateListeners(List<PhysicalItem> localVisionList, String localLineRecieved, boolean ignored) {
+
+    public XFutureVoid updateListeners(@Nullable List<PhysicalItem> localVisionList, String localLineRecieved, boolean ignored) {
         List<XFutureVoid> futures = new ArrayList<>();
         if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
             List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
@@ -150,7 +158,7 @@ public class VisionSocketClient implements AutoCloseable {
                         try {
                             VisionSocketClientListener listener = listListener;
                             if (null != listener) {
-                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved,ignored));
+                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, ignored));
                             }
                         } catch (Exception e) {
                             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
@@ -173,7 +181,7 @@ public class VisionSocketClient implements AutoCloseable {
                         try {
                             VisionSocketClientListener listener = listListener;
                             if (null != listener) {
-                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved,true));
+                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, true));
                             }
                         } catch (Exception e) {
                             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
@@ -184,17 +192,17 @@ public class VisionSocketClient implements AutoCloseable {
         }
         return XFutureVoid.allOf(futures);
     }
-    
-    @Nullable
-    private VisionToDBJFrameInterface displayInterface;
+
+    private @Nullable
+    VisionToDBJFrameInterface displayInterface;
 
     /**
      * Get the value of displayInterface
      *
      * @return the value of displayInterface
      */
-    @Nullable
-    public VisionToDBJFrameInterface getDisplayInterface() {
+    public @Nullable
+    VisionToDBJFrameInterface getDisplayInterface() {
         return displayInterface;
     }
 
@@ -214,8 +222,8 @@ public class VisionSocketClient implements AutoCloseable {
         return visionSlr.getPort();
     }
 
-    @Nullable
-    public String getHost() {
+    public @Nullable
+    String getHost() {
         if (null == visionSlr) {
             return null;
         }
@@ -273,7 +281,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (ignoreLosingItemsListsString != null && ignoreLosingItemsListsString.length() > 0) {
                 setIgnoreLosingItemsLists(Boolean.parseBoolean(ignoreLosingItemsListsString));
             }
-            
+
             host = argsMapHost;
             String argsMapPort = argsMap.get("--visionport");
             if (argsMapPort == null) {
@@ -290,12 +298,12 @@ public class VisionSocketClient implements AutoCloseable {
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
-                @Nullable
-                private volatile String lastSkippedLine = null;
+                private volatile @Nullable
+                String lastSkippedLine = null;
 
                 @Override
                 public void call(final String line, PrintStream os) {
-                    if(line.length() < 0) {
+                    if (line.length() < 0) {
                         return;
                     }
                     incrementLineCount();
@@ -333,7 +341,11 @@ public class VisionSocketClient implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
-            return updateListeners(visionList,getLine(),false);
+            final String lineFinal = line;
+            if (null == lineFinal) {
+                return XFutureVoid.completedFuture();
+            }
+            return this.updateListeners(visionList, lineFinal, false);
         } catch (IOException exception) {
             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
             System.err.println("Connect to vision on host " + host + " with port " + port + " failed with message " + exception);
@@ -352,11 +364,11 @@ public class VisionSocketClient implements AutoCloseable {
         }
     }
 
-    @Nullable
-    private String line;
+    private @Nullable
+    String line;
 
-    @Nullable
-    public String getLine() {
+    public @Nullable
+    String getLine() {
         return line;
     }
 
@@ -384,7 +396,7 @@ public class VisionSocketClient implements AutoCloseable {
         return lineToList(line, null, convertRotToRadians, zeroRotations);
     }
 
-    public static String lineToHeading(String prefix,String line) {
+    public static String lineToHeading(String prefix, String line) {
         String fa[] = line.split(",[ ]*");
         StringBuilder sb = new StringBuilder();
         sb.append(prefix);
@@ -398,7 +410,7 @@ public class VisionSocketClient implements AutoCloseable {
         }
         return sb.toString();
     }
-            
+
     public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface, boolean convertRotToRadians, boolean zeroRotations) {
         List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
@@ -594,9 +606,9 @@ public class VisionSocketClient implements AutoCloseable {
     public void setIgnoreLosingItemsLists(boolean ignoreLosingItemsLists) {
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
-    
+
     public void clearPrevVisionListSize() {
-        prevVisionListSize=0;
+        prevVisionListSize = 0;
     }
 
     public void parseVisionLine(final String line) {
@@ -618,7 +630,7 @@ public class VisionSocketClient implements AutoCloseable {
                     prevListSizeSetTime = System.currentTimeMillis();
                 }
                 if (updateListenersOnIgnoredLine) {
-                    updateListeners(newVisionList,line,true);
+                    updateListeners(newVisionList, line, true);
                 }
                 updateIgnoredLineListeners(newVisionList, line);
                 return;
@@ -627,8 +639,8 @@ public class VisionSocketClient implements AutoCloseable {
             prevVisionListSize = newVisionList.size();
             poseUpdatesParsed += newVisionList.size();
             this.visionList = newVisionList;
-            updateListeners(newVisionList,line,false);
-            if(consecutiveIgnoreCount > maxConsecutiveIgnoreCount) {
+            updateListeners(newVisionList, line, false);
+            if (consecutiveIgnoreCount > maxConsecutiveIgnoreCount) {
                 maxConsecutiveIgnoreCount = consecutiveIgnoreCount;
             }
             consecutiveIgnoreCount = 0;

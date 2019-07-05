@@ -95,9 +95,14 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.misc.Utils.autoResizeTableColWidths;
+import aprs.simview.Object2DJFrame;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
+import java.awt.Frame;
+import java.awt.event.WindowEvent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 
 /**
  *
@@ -158,10 +163,19 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     /**
      * Creates new form VisionToDBJPanel
+     * This 0 args constructor should only be used for the GUI Builder or testing.
+     * it bypasses the check to make sure the aprsSystem is not null.
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"initialization", "nullness"})
     @UIEffect
     public VisionToDBJPanel() {
+        this(null);
+    }
+
+    @SuppressWarnings("initialization")
+    @UIEffect
+    public VisionToDBJPanel(AprsSystem aprsSystem1) {
+        this.aprsSystem = aprsSystem1;
         initComponents();
         loadProperties();
         oldDbType = null;
@@ -208,16 +222,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return value;
     }
 
-    @Nullable
-    private VisionSocketClient visionClient;
+    private @Nullable
+    VisionSocketClient visionClient;
 
     /**
      * Get the value of visionClient
      *
      * @return the value of visionClient
      */
-    @Nullable
-    public VisionSocketClient getVisionClient() {
+    public @Nullable
+    VisionSocketClient getVisionClient() {
         return visionClient;
     }
 
@@ -230,16 +244,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.visionClient = visionClient;
     }
 
-    @MonotonicNonNull
-    private DatabasePoseUpdater dpu;
+    private @MonotonicNonNull
+    DatabasePoseUpdater dpu;
 
     /**
      * Get the value of dpu
      *
      * @return the value of dpu
      */
-    @Nullable
-    public DatabasePoseUpdater getDpu() {
+    public @Nullable
+    DatabasePoseUpdater getDpu() {
         return dpu;
     }
 
@@ -289,6 +303,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItemSaveProperties = new javax.swing.JMenuItem();
+        jMenuItemReloadProperties = new javax.swing.JMenuItem();
+        jMenuItemSetPropertiesFile = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jPanel1 = new javax.swing.JPanel();
         jButtonDisconnectVision = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
@@ -354,6 +373,34 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         jCheckBoxDbUpdateEnabled = new javax.swing.JCheckBox();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldRequiredParts = new javax.swing.JTextField();
+
+        jMenuFile.setText("File");
+        jMenuFile.add(jSeparator1);
+
+        jMenuItemSaveProperties.setText("Save Properties");
+        jMenuItemSaveProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSavePropertiesActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemSaveProperties);
+
+        jMenuItemReloadProperties.setText("Reload Properties");
+        jMenuItemReloadProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemReloadPropertiesActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemReloadProperties);
+
+        jMenuItemSetPropertiesFile.setText("Set Properites File");
+        jMenuItemSetPropertiesFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSetPropertiesFileActionPerformed(evt);
+            }
+        });
+        jMenuFile.add(jMenuItemSetPropertiesFile);
+        jMenuFile.add(jSeparator2);
 
         jPanel1.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
@@ -1418,8 +1465,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     private static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
-    @Nullable
-    private Thread startVisionThread = null;
+    private @Nullable
+    Thread startVisionThread = null;
     private List<PhysicalItem> transformedVisionList = Collections.emptyList();
 
     @SuppressWarnings("unchecked")
@@ -1464,16 +1511,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu.getSlotOffsets(name, ignoreEmpty);
     }
 
-    @Nullable
-    public List<Slot> getSlots(Tray item) {
+    public @Nullable
+    List<Slot> getSlots(Tray item) {
         if (null == dpu) {
             return null;
         }
         return dpu.getSlots(item);
     }
 
-    @Nullable
-    private volatile List<XFuture<List<PhysicalItem>>> lastIsEnableDatabaseUpdateListeners = null;
+    private volatile @Nullable
+    List<XFuture<List<PhysicalItem>>> lastIsEnableDatabaseUpdateListeners = null;
     private volatile int lastIsEnableDatabaseUpdateListenersUpdateBeginCount = -1;
     private volatile int lastIsEnableDatabaseUpdateListenersUpdateEndCount = -1;
 
@@ -1669,6 +1716,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return true;
     }
 
+    @SuppressWarnings("guieffect")
     public boolean databasesUpdatesEnabled() {
         return jCheckBoxDbUpdateEnabled.isSelected();
     }
@@ -1721,8 +1769,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private final ConcurrentLinkedDeque<XFuture<List<PhysicalItem>>> rawUpdateListeners
             = new ConcurrentLinkedDeque<>();
 
-    @Nullable
-    private String getDpuUrl() {
+    private @Nullable
+    String getDpuUrl() {
         if (null != dpu) {
             return dpu.getURL();
         }
@@ -1856,8 +1904,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    @Nullable
-    private volatile List<XFuture<List<PhysicalItem>>> lastCopyListenersAndDisableUpdatesListeners = null;
+    private volatile @Nullable
+    List<XFuture<List<PhysicalItem>>> lastCopyListenersAndDisableUpdatesListeners = null;
 
     private List<XFuture<List<PhysicalItem>>> copyListenersAndDisableUpdates() {
         List<XFuture<List<PhysicalItem>>> listeners;
@@ -1921,12 +1969,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private volatile boolean updating = false;
 
-    @Nullable
-    private volatile List<PhysicalItem> lastVisionClientUpdateList = null;
-    @Nullable
-    private volatile List<PhysicalItem> lastVisionClientUpdateListCopy = null;
-    @Nullable
-    private volatile String lastVisionClientUpdateLine = null;
+    private volatile @Nullable
+    List<PhysicalItem> lastVisionClientUpdateList = null;
+    private volatile @Nullable
+    List<PhysicalItem> lastVisionClientUpdateListCopy = null;
+    private volatile @Nullable
+    String lastVisionClientUpdateLine = null;
 
     private final AtomicInteger visionClientUpdateCount = new AtomicInteger();
     private final AtomicInteger visionClientUpdateAquireOffCount = new AtomicInteger();
@@ -2031,13 +2079,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         }
                     }
                     List<PhysicalItem> l = dpu.updateVisionList(transformedVisionList, addRepeatCounts, false);
-                    List<PhysicalItem> trays = 
-                            l.stream()
-                            .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT") )
-                            .collect(Collectors.toList());
-                    List<PhysicalItem> overlappingTrays =
-                            aprsSystem.filterNonOverLapping(trays);
-                    if(!overlappingTrays.isEmpty()) {
+                    List<PhysicalItem> trays
+                            = l.stream()
+                                    .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT"))
+                                    .collect(Collectors.toList());
+                    List<PhysicalItem> overlappingTrays
+                            = aprsSystem.filterNonOverLapping(trays);
+                    if (!overlappingTrays.isEmpty()) {
                         aprsSystem.takeSimViewSnapshot("overlappingTrays", overlappingTrays);
                         return XFutureVoid.completedFuture();
                     }
@@ -2050,13 +2098,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
-                    List<PhysicalItem> trays = 
-                            l.stream()
-                            .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT") )
-                            .collect(Collectors.toList());
-                    List<PhysicalItem> overlappingTrays =
-                            aprsSystem.filterNonOverLapping(trays);
-                    if(!overlappingTrays.isEmpty()) {
+                    List<PhysicalItem> trays
+                            = l.stream()
+                                    .filter((PhysicalItem item) -> item.getType().equals("KT") || item.getType().equals("PT"))
+                                    .collect(Collectors.toList());
+                    List<PhysicalItem> overlappingTrays
+                            = aprsSystem.filterNonOverLapping(trays);
+                    if (!overlappingTrays.isEmpty()) {
                         aprsSystem.takeSimViewSnapshot("overlappingTrays", overlappingTrays);
                         return XFutureVoid.completedFuture();
                     }
@@ -2166,26 +2214,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return ret;
     }
 
-    @MonotonicNonNull
-    private AprsSystem aprsSystem = null;
+    private final AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    @Nullable
-    public AprsSystem getAprsSystem() {
+    public
+    AprsSystem getAprsSystem() {
         return aprsSystem;
-    }
-
-    /**
-     * Set the value of aprsSystemInterface
-     *
-     * @param aprsSystemInterface new value of aprsSystemInterface
-     */
-    public void setAprsSystem(AprsSystem aprsSystemInterface) {
-        this.aprsSystem = aprsSystemInterface;
     }
 
     private void finishConnectVision() {
@@ -2223,8 +2261,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldVisionHostActionPerformed
 
-    @MonotonicNonNull
-    private SocketLineReader commandSlr = null;
+    private @MonotonicNonNull
+    SocketLineReader commandSlr = null;
 
     private void closeCommand() {
         if (null != commandSlr) {
@@ -2262,8 +2300,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.acquire = acquire;
     }
 
-    @MonotonicNonNull
-    private volatile PrintStream commandReplyPrintStream = null;
+    private volatile @MonotonicNonNull
+    PrintStream commandReplyPrintStream = null;
 
     private void handleCommand(String line, PrintStream os) {
         aprsSystem.runOnDispatchThread(() -> setLastCommand(line));
@@ -2395,11 +2433,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jButtonAddItemActionPerformed
 
-    @MonotonicNonNull
-    private Callable<DbSetupPublisher> dbSetupSupplier = null;
+    private @MonotonicNonNull
+    Callable<DbSetupPublisher> dbSetupSupplier = null;
 
-    @Nullable
-    public Callable<DbSetupPublisher> getDbSetupSupplier() {
+    public @Nullable
+    Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
 
@@ -2439,8 +2477,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
 
-    @Nullable
-    private volatile JPopupMenu popMenu = null;
+    private volatile @Nullable
+    JPopupMenu popMenu = null;
 
     @UIEffect
     private void copyText() {
@@ -2740,6 +2778,24 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.setEnableDatabaseUpdates(jCheckBoxDbUpdateEnabled.isSelected());
     }//GEN-LAST:event_jCheckBoxDbUpdateEnabledActionPerformed
 
+    @UIEffect
+    private void jMenuItemSavePropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSavePropertiesActionPerformed
+        this.saveProperties();
+    }//GEN-LAST:event_jMenuItemSavePropertiesActionPerformed
+
+    @UIEffect
+    private void jMenuItemReloadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReloadPropertiesActionPerformed
+        this.loadProperties();
+    }//GEN-LAST:event_jMenuItemReloadPropertiesActionPerformed
+
+    @UIEffect
+    private void jMenuItemSetPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPropertiesFileActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            this.setPropertiesFile(chooser.getSelectedFile());
+        }
+    }//GEN-LAST:event_jMenuItemSetPropertiesFileActionPerformed
+
     private final CachedTable fromVisionCachedTable;
 
     private void forceAllUpdates() throws NumberFormatException {
@@ -2823,8 +2879,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         debugCachedCheckBox.setSelected(isDebug);
     }
 
-    @Nullable
-    private DbType oldDbType;
+    private @Nullable
+    DbType oldDbType;
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2867,6 +2923,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JLabel jLabelCommnandStatus;
     private javax.swing.JLabel jLabelDatabaseStatus;
     private javax.swing.JLabel jLabelVisionStatus;
+    final javax.swing.JMenu jMenuFile = new javax.swing.JMenu();
+    private javax.swing.JMenuItem jMenuItemReloadProperties;
+    private javax.swing.JMenuItem jMenuItemSaveProperties;
+    private javax.swing.JMenuItem jMenuItemSetPropertiesFile;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelTableFromDatabase;
@@ -2877,6 +2937,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private javax.swing.JScrollPane jScrollPaneTableFromDatabase;
     private javax.swing.JScrollPane jScrollPaneTableFromVision;
     private javax.swing.JScrollPane jScrollPaneTableUpdateResults;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JSpinner jSpinnerLogLines;
     private javax.swing.JTable jTableFromDatabase;
     private javax.swing.JTable jTableFromVision;
@@ -2899,15 +2961,15 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    @MonotonicNonNull
-    private File propertiesFile = null;
+    private @MonotonicNonNull
+    File propertiesFile = null;
 
     public void setPropertiesFile(File f) {
         propertiesFile = f;
     }
 
-    @Nullable
-    public File getPropertiesFile() {
+    public @Nullable
+    File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;
@@ -3077,8 +3139,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dbSetupPublisher.getDbSetup().getDbType();
     }
 
-    @Nullable
-    private DbSetup lastSetup = null;
+    private @Nullable
+    DbSetup lastSetup = null;
 
     @Override
     @SafeEffect
@@ -3128,11 +3190,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         updatePerformanceLine();
     }
 
-    @MonotonicNonNull
-    private volatile String performanceLine = null;
+    private volatile @MonotonicNonNull
+    String performanceLine = null;
 
-    @Nullable
-    public String getPerformanceLine() {
+    public @Nullable
+    String getPerformanceLine() {
         return performanceLine;
     }
 

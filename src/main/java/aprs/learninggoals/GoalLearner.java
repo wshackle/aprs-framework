@@ -57,7 +57,7 @@ public class GoalLearner {
      *
      * @param itemPredicate new value of itemPredicate
      */
-    public void setItemPredicate(Predicate<PhysicalItem> itemPredicate) {
+    public void setItemPredicate(@Nullable Predicate<PhysicalItem> itemPredicate) {
         this.itemPredicate = itemPredicate;
     }
 
@@ -87,18 +87,18 @@ public class GoalLearner {
         return kitTrayListPredicate.test(kitTrays);
     }
 
-    @Nullable
-    private volatile AprsSystem aprsSystem = null;
+    private volatile @Nullable
+    AprsSystem aprsSystem = null;
 
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
     }
-    
-    
+
     private @Nullable
     SlotOffsetProvider slotOffsetProvider;
 
@@ -111,8 +111,8 @@ public class GoalLearner {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    @Nullable
-    public static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    static public @Nullable
+    PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -140,16 +140,16 @@ public class GoalLearner {
     }
 
     private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable []  = null;
-    @Nullable
-    private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
+    private volatile @Nullable
+    Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
     private volatile long setLastCreateActionListFromVisionKitToCheckStringsTime;
 
     public StackTraceElement @Nullable [] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
         return setLastCreateActionListFromVisionKitToCheckStringsTrace;
     }
 
-    @Nullable
-    public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
+    public @Nullable
+    Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
         return setLastCreateActionListFromVisionKitToCheckStringsThread;
     }
 
@@ -167,8 +167,8 @@ public class GoalLearner {
         this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 
-    @Nullable
-    public static String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
+    public static @Nullable
+    String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
             return "sizes differ : " + kitToCheckStrings1.size() + "!=" + kitToCheckStrings2.size();
         }

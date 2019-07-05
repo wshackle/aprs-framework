@@ -29,10 +29,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class TraySlotListItem {
-    
+
     private final Slot slotOffset;
     private final PhysicalItem absSlot;
-    @Nullable private final PhysicalItem closestPart;
+
+    private @Nullable
+    final PhysicalItem closestPart;
 
     public TraySlotListItem(Slot slotOffset, PhysicalItem absSlot, @Nullable PhysicalItem closestPart) {
         this.slotOffset = slotOffset;
@@ -48,8 +50,9 @@ public class TraySlotListItem {
         return absSlot;
     }
 
-    @Nullable public PhysicalItem getClosestPart() {
+    public @Nullable
+    PhysicalItem getClosestPart() {
         return closestPart;
     }
-    
+
 }
