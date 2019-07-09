@@ -337,7 +337,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      */
     public OpDisplayJPanel() {
-        this(createTestInitPlan());
+        this(createEmptyInitPlan());
     }
 
     static private OpActionPlan createTestInitPlan() {
@@ -363,6 +363,16 @@ public class OpDisplayJPanel extends JPanel {
         return ap;
     }
 
+    static private OpActionPlan createEmptyInitPlan() {
+        List<OpAction> initList = Arrays.asList(
+                new OpAction("Start", 0, 0, START, "START", true)
+        );
+        OpActionPlan ap = new OpActionPlan();
+        ap.setActions(initList);
+        ap.getEndAction().setLocation(new Point2D.Double(7, 0));
+        ap.initNextActions();
+        return ap;
+    }
     /**
      * Clear the map associating parts carried with colors.
      */

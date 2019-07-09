@@ -600,7 +600,7 @@ public class OpActionPlan {
 
     @SuppressWarnings("nullness")
     static private void printActionRecord(CSVPrinter printer, int index, OpActionInterface actionInterface, boolean skipped) throws IOException {
-        printer.printRecord(actionRecord(index, actionInterface,skipped));
+        printer.printRecord(actionRecord(index, actionInterface, skipped));
     }
 
     public void saveActionList(File f) throws IOException {
@@ -619,9 +619,9 @@ public class OpActionPlan {
                 final OpAction action = orderedActions.get(i);
                 boolean skipped = isSkippedAction(action, prevAction);
                 prevAction = action;
-                printActionRecord(printer,i, action, skipped);
+                printActionRecord(printer, i, action, skipped);
             }
-            printActionRecord(printer,orderedActions.size(), endAction, false);
+            printActionRecord(printer, orderedActions.size(), endAction, false);
         }
     }
 
@@ -796,22 +796,28 @@ public class OpActionPlan {
                         .select(a -> a.getOpActionType() == PICKUP || a.getOpActionType() == DROPOFF)
                         .groupBy(OpAction::getPartType);
         for (String partType : multimapWithList.keySet()) {
-            MutableCollection<OpAction> theseActions = multimapWithList.get(partType);
-            long pickupCount = theseActions.count(a -> a.getOpActionType() == PICKUP);
-            long dropoffCount = theseActions.count(a -> a.getOpActionType() == DROPOFF);
-            if (debug) {
+            MutableCollection<OpAction> thisPartActions = multimapWithList.get(partType);
+            MutableCollection<OpAction> pickupThisPartActions = thisPartActions.select(a -> a.getOpActionType() == PICKUP);
+            long pickupCount = pickupThisPartActions.size();
+            MutableCollection<OpAction> dropoffThisPartActions = thisPartActions.select(a -> a.getOpActionType() == DROPOFF);
+            long dropoffCount = dropoffThisPartActions.size();
+            if (true) {
                 println("partType = " + partType);
                 println("dropoffCount = " + dropoffCount);
                 println("pickupCount = " + pickupCount);
-                println("theseActions = " + theseActions);
+                println("thisPartActions = " + thisPartActions);
+                println("pickupThisPartActions = " + pickupThisPartActions);
+                println("dropoffThisPartActions = " + dropoffThisPartActions);
+                println("multimapWithList = " + multimapWithList);
             }
+            OpAction.AddFakeInfo addFakeInfo = new OpAction.AddFakeInfo(pickupThisPartActions, dropoffThisPartActions);
             if (dropoffCount < pickupCount) {
                 for (long j = dropoffCount; j < pickupCount; j++) {
-                    tmpActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, false));
+                    tmpActions.add(new OpAction("fake_dropoff_" + partType + "_" + j, 0, 0, FAKE_DROPOFF, partType, addFakeInfo));
                 }
             } else if (pickupCount < dropoffCount) {
                 for (long j = pickupCount; j < dropoffCount; j++) {
-                    tmpActions.add(new OpAction("fake_pickup_" + partType + "_" + j, 0, 0, FAKE_PICKUP, partType, false));
+                    tmpActions.add(new OpAction("fake_pickup_" + partType + "_" + j, 0, 0, FAKE_PICKUP, partType, addFakeInfo));
                 }
             }
         }
@@ -822,8 +828,13 @@ public class OpActionPlan {
         for (OpAction act : tmpActions) {
             act.addPossibleNextActions(allActions);
             if (act.getPossibleNextActions().isEmpty()) {
+                System.out.println("");
+                System.out.flush();
                 System.err.println("act = " + act);
+                System.err.println("act.getPartType() = " + act.getPartType());
+                System.err.println("act.addFakeInfo = " + act.addFakeInfo);
                 System.err.println("tmpActions = " + tmpActions);
+                println("multimapWithList = " + multimapWithList);
                 throw new IllegalStateException("action has no possible next action=" + act + ", act.getPartType()=" + act.getPartType() + ",\norigActions=" + origActions + ",\nallActions=" + allActions + ",\nmultimapWithList=" + multimapWithList);
             }
         }

@@ -27,6 +27,7 @@ package aprs.actions.executor;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum ActionType {
+    UNINITIALIZED,
     TAKE_PART,
     FAKE_TAKE_PART,
     TEST_PART_POSITION,
@@ -45,5 +46,6 @@ public enum ActionType {
     ADD_KIT_TO_CHECK,
     CHECK_KITS,
     SET_CORRECTION_MODE,
-    END_PROGRAM
+    END_PROGRAM;
+   
 }

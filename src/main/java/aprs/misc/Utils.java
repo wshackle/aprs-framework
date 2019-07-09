@@ -1350,4 +1350,18 @@ public class Utils {
             LOGGER.log(Level.SEVERE, "", ex);
         }
     }
+    
+    public static String shortenItemPartName(String itemName) {
+        if(null == itemName) {
+            throw new NullPointerException("itemName");
+        }
+        String shortItemName = itemName;
+        if (shortItemName.startsWith("sku_")) {
+            shortItemName = shortItemName.substring(4);
+        }
+        if (shortItemName.startsWith("part_")) {
+            shortItemName = shortItemName.substring(5);
+        }
+        return shortItemName;
+    }
 }
