@@ -20,12 +20,14 @@ import crcl.utils.Utils;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.eclipse.collections.api.collection.MutableCollection;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
@@ -77,7 +79,8 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    private  static  @Nullable  ActionType opActionToExecutorAction(OpActionType opAction) {
+    private static @Nullable
+    ActionType opActionToExecutorAction(OpActionType opAction) {
         switch (opAction) {
             case PICKUP:
                 return TAKE_PART;
@@ -99,6 +102,9 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(int origId, String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
+        if(opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType="+partType);
+        }
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
         this.name = name;
@@ -111,7 +117,51 @@ public class OpAction implements OpActionInterface {
         this.trayType = getTrayType(opActionType, name);
     }
 
+    public static class AddFakeInfo {
+
+        final MutableCollection<OpAction> pickupThisPartActions;
+        final MutableCollection<OpAction> dropoffThisPartActions;
+
+        public AddFakeInfo(MutableCollection<OpAction> pickupThisPartActions, MutableCollection<OpAction> dropoffThisPartActions) {
+            this.pickupThisPartActions = pickupThisPartActions;
+            this.dropoffThisPartActions = dropoffThisPartActions;
+        }
+
+        @Override
+        public String toString() {
+            return "AddFakeInfo{" + "pickupThisPartActions=" + pickupThisPartActions + ", dropoffThisPartActions=" + dropoffThisPartActions + '}';
+        }
+        
+    }
+
+    @Nullable AddFakeInfo addFakeInfo = null;
+    
+    public OpAction(String name, double x, double y, OpActionType opActionType, String partType, AddFakeInfo addFakeInfo) {
+        if(opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType="+partType);
+        }
+        this.addFakeInfo=addFakeInfo;
+        this.executorActionType = opActionToExecutorAction(opActionType);
+        this.executorArgs = argsFromName(name);
+        this.name = name;
+        this.location = new Point2D.Double(x, y);
+        this.opActionType = opActionType;
+        this.partType = partType;
+        this.id = OpActionPlan.newActionPlanId();
+        this.origId = id;
+        this.required = false;
+        this.trayType = getTrayType(opActionType, name);
+    }
+    
+    public static final HashSet<String> allowedPartTypes = new HashSet<>(Arrays.asList(
+            "small_gear",
+            "medium_gear",
+            "large_gear"
+    ));
     public OpAction(String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
+        if(opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType="+partType);
+        }
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
         this.name = name;
@@ -125,6 +175,9 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(int origId, ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
+        if(opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType="+partType);
+        }
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
         this.name = executorActionType + "-" + Arrays.toString(executorArgs);
@@ -138,6 +191,9 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
+        if(opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType="+partType);
+        }
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
         this.name = executorActionType + "-" + Arrays.toString(executorArgs);
@@ -150,7 +206,8 @@ public class OpAction implements OpActionInterface {
         this.trayType = getTrayType(opActionType, name);
     }
 
-    private  static  @Nullable  String getTrayType(OpActionType opActionType, String name) {
+    private static @Nullable
+    String getTrayType(OpActionType opActionType, String name) {
         switch (opActionType) {
             case PICKUP:
             case DROPOFF:
@@ -214,15 +271,11 @@ public class OpAction implements OpActionInterface {
         this.opActionType = opActionType;
     }
 
-    private String partType;
+    final private String partType;
 
     @Override
     public String getPartType() {
         return partType;
-    }
-
-    public void setPartType(String partType) {
-        this.partType = partType;
     }
 
     private final List<OpActionInterface> possibleNextActions = new ArrayList<>();
@@ -238,8 +291,9 @@ public class OpAction implements OpActionInterface {
         return next;
     }
 
-    private volatile StackTraceElement setNextTrace @Nullable [] = null;
-    private volatile @Nullable CheckNextInfoPair setNextInfoPair = null;
+    private volatile StackTraceElement setNextTrace @Nullable []  = null;
+    private volatile @Nullable
+    CheckNextInfoPair setNextInfoPair = null;
 
     public void setNext(OpActionInterface next) {
         final CheckNextInfoPair checkNextInfoPair = new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(next));
@@ -318,7 +372,7 @@ public class OpAction implements OpActionInterface {
         final String partType = infoPair.current.getPartType();
         switch (opActionType) {
             case START:
-                return (possibleNextOpActionType == PICKUP);
+                return (possibleNextOpActionType == PICKUP || possibleNextOpActionType == END);
             case FAKE_DROPOFF:
             case DROPOFF:
                 switch (possibleNextOpActionType) {
@@ -365,7 +419,7 @@ public class OpAction implements OpActionInterface {
 
     private int maxNextEffectiveCount = 0;
 
-    private StackTraceElement addPossibleNextActionsTrace @Nullable [] = null;
+    private StackTraceElement addPossibleNextActionsTrace @Nullable []  = null;
 
     @Override
     public List<Integer> getPossibleNextIds() {

@@ -61,6 +61,7 @@ import aprs.misc.AprsCommonLogger;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
 import aprs.misc.PmCartesianMinMaxLimit;
+import static aprs.misc.Utils.shortenItemPartName;
 import aprs.simview.Object2DOuterDialogPanel;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.main.Supervisor;
@@ -5992,26 +5993,20 @@ public class AprsSystem implements SlotOffsetProvider {
             int itemFoundIndex = -1;
             for (int i = 0; i < availableParts.size(); i++) {
                 PhysicalItem item = availableParts.get(i);
-                String itemName = item.getName();
-                if (itemName.startsWith("sku_")) {
-                    itemName = itemName.substring(4);
-                }
-                if (itemName.startsWith("part_")) {
-                    itemName = itemName.substring(5);
-                }
+                String shortItemName = shortenItemPartName(item.getName());
 
                 String slotName = emptySlotItem.getSlotOffset().getSlotName();
-                if (!Objects.equals(itemName, slotName)) {
-                    int in_pt_index = itemName.indexOf("_in_pt");
+                if (!Objects.equals(shortItemName, slotName)) {
+                    int in_pt_index = shortItemName.indexOf("_in_pt");
                     if (in_pt_index > 0) {
                         throw new IllegalStateException("bad itemName for item=" + item);
                     }
-                    int in_kt_index = itemName.indexOf("_in_kt");
+                    int in_kt_index = shortItemName.indexOf("_in_kt");
                     if (in_kt_index > 0) {
                         throw new IllegalStateException("bad itemName for item=" + item);
                     }
                 }
-                if (Objects.equals(itemName, slotName)) {
+                if (Objects.equals(shortItemName, slotName)) {
                     PhysicalItem newItem = PhysicalItem.newPhysicalItemNameRotXYScoreType(item.getName(), item.getRotation(), emptySlotItem.getAbsSlot().x, emptySlotItem.getAbsSlot().y, item.getScore(), item.getType());
                     movedPartsList.add(newItem);
                     itemFoundIndex = i;
@@ -6059,6 +6054,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         return outputList;
     }
+
+    
 
     public XFuture<Boolean> emptyKitTrays() {
         return emptyKitTrays(true, getVisionToDBRotationOffset(), false);
@@ -6210,13 +6207,7 @@ public class AprsSystem implements SlotOffsetProvider {
             int itemFoundIndex = -1;
             for (int i = 0; i < partsInKit.size(); i++) {
                 PhysicalItem item = partsInKit.get(i);
-                String itemName = item.getName();
-                if (itemName.startsWith("sku_")) {
-                    itemName = itemName.substring(4);
-                }
-                if (itemName.startsWith("part_")) {
-                    itemName = itemName.substring(5);
-                }
+                String itemName = shortenItemPartName(item.getName());
 
                 String slotName = emptySlotItem.getSlotOffset().getSlotName();
                 if (!Objects.equals(itemName, slotName)) {

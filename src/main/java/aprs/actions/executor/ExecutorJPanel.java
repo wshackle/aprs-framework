@@ -951,6 +951,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         opDisplayJPanelSolution = new aprs.actions.optaplanner.display.OpDisplayJPanel();
         jScrollPaneLog = new javax.swing.JScrollPane();
         jTableLog = new javax.swing.JTable();
+        jScrollPaneKitCompareTable = new javax.swing.JScrollPane();
+        jTableKitCompare = new javax.swing.JTable();
+        jScrollPaneCorrectiveActionsTable = new javax.swing.JScrollPane();
+        jTableCorrectiveActions = new javax.swing.JTable();
+        jScrollPaneOptimizedCorrectiveActionsTable = new javax.swing.JScrollPane();
+        jTableOptimizedCorrectiveActions = new javax.swing.JTable();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -2048,6 +2054,73 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTabbedPane1.addTab("Log", jScrollPaneLog);
 
+        jTableKitCompare.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "kitToCheckIndex", "Name", "Instance", "Slot", "Have", "Need", "Match"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneKitCompareTable.setViewportView(jTableKitCompare);
+
+        jTabbedPane1.addTab("Kit Compare", jScrollPaneKitCompareTable);
+
+        jTableCorrectiveActions.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Type", "arg0", "arg1", "arg2"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneCorrectiveActionsTable.setViewportView(jTableCorrectiveActions);
+
+        jTabbedPane1.addTab("Corrective Actions", jScrollPaneCorrectiveActionsTable);
+
+        jTableOptimizedCorrectiveActions.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Type", "arg0", "arg1", "arg2"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneOptimizedCorrectiveActionsTable.setViewportView(jTableOptimizedCorrectiveActions);
+
+        jTabbedPane1.addTab("Optimized Corrective Actions", jScrollPaneOptimizedCorrectiveActionsTable);
+
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2717,7 +2790,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             double cost = 0.0;
             try {
-                cost = Double.parseDouble(action.getCost());
+                cost = action.getCost();
             } catch (NumberFormatException ex) {
                 // ignore 
             }
@@ -6434,9 +6507,54 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private synchronized List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, int sectionNumber)
             throws Exception {
         appendGenerateAbortLog("generate", actions.size(), isReverseFlag(), startingIndex, startSafeAbortRequestCount, sectionNumber);
-        return crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount);
+        List<MiddleCommandType> ret = crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount);
+        loadCheckKitListToTable(crclGenerator.getLastScanKitsToCheckInfoList());
+        loadCorrectiveActionListToTable(crclGenerator.getLastCheckKitsCorrectiveActions());
+        loadOptimizedCorrectiveActionListToTable(crclGenerator.getLastCheckKitsOptimizedCorrectiveActions());
+        return ret;
     }
 
+    private void loadCheckKitListToTable(List<CrclGenerator.ScanKitsToCheckInfo> scanKitsList) {
+        List<CrclGenerator.ScanKitsToCheckInfo> scanKitsListCopy = new ArrayList<>(scanKitsList);
+        Utils.runOnDispatchThread(() -> loadCheckKitListToTableOnDisplay(scanKitsListCopy));
+    }
+
+    @UIEffect
+    private void loadCheckKitListToTableOnDisplay(List<CrclGenerator.ScanKitsToCheckInfo> scanKitsList) {
+        DefaultTableModel model = (DefaultTableModel) jTableKitCompare.getModel();
+        model.setRowCount(0);
+        for (CrclGenerator.ScanKitsToCheckInfo scanInfo : scanKitsList) {
+            model.addRow(scanInfo.toTableArray());
+        }
+    }
+
+    private void loadCorrectiveActionListToTable(List<Action> scanKitsList) {
+        List<Action> scanKitsListCopy = new ArrayList<>(scanKitsList);
+        Utils.runOnDispatchThread(() -> loadCorrectiveActionListToTableOnDisplay(scanKitsListCopy));
+    }
+
+    @UIEffect
+    private void loadCorrectiveActionListToTableOnDisplay(List<Action> scanKitsList) {
+        DefaultTableModel model = (DefaultTableModel) jTableCorrectiveActions.getModel();
+        model.setRowCount(0);
+        for (Action actionInfo : scanKitsList) {
+            model.addRow(actionInfo.toTableArray());
+        }
+    }
+
+    private void loadOptimizedCorrectiveActionListToTable(List<Action> scanKitsList) {
+        List<Action> scanKitsListCopy = new ArrayList<>(scanKitsList);
+        Utils.runOnDispatchThread(() -> loadOptimizedCorrectiveActionListToTableOnDisplay(scanKitsListCopy));
+    }
+
+    @UIEffect
+    private void loadOptimizedCorrectiveActionListToTableOnDisplay(List<Action> scanKitsList) {
+        DefaultTableModel model = (DefaultTableModel) jTableOptimizedCorrectiveActions.getModel();
+        model.setRowCount(0);
+        for (Action actionInfo : scanKitsList) {
+            model.addRow(actionInfo.toTableArray());
+        }
+    }
     private volatile int actionsListSize = -1;
 
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
@@ -6657,10 +6775,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setReplanFromIndex(0);
         List<Action> placePartActionsList = new ArrayList<>();
         Action placePartAction
-                = new Action(
-                        PLACE_PART, // type
-                        slot // arg
-                );
+                = Action.newPlacePartAction(slot, null);
         placePartActionsList.add(placePartAction);
         syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
@@ -6684,7 +6799,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> testPartPositionActionList = new ArrayList<>();
-        Action takePartAction = new Action(
+        Action takePartAction = Action.newSingleArgAction(
                 TEST_PART_POSITION,
                 part
         );
@@ -6746,7 +6861,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setReplanFromIndex(0);
         List<Action> takePartActionsList = new ArrayList<>();
         Action takePartAction
-                = new Action(
+                = Action.newSingleArgAction(
                         TAKE_PART, // type
                         part // arg
                 );
@@ -7090,11 +7205,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> lookForActionsList = new ArrayList<>();
-        Action lookForAction = new Action(
-                LOOK_FOR_PARTS,
-                new String[]{},
-                0
-        );
+        Action lookForAction = Action.newNoArgAction(LOOK_FOR_PARTS);
         lookForActionsList.add(lookForAction);
         crclGenerator.clearPoseCache();
         crclGenerator.clearLastRequiredPartsMap();
@@ -7115,7 +7226,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
             Action gototToolChangerApproachAction
-                    = new Action(
+                    = Action.newSingleArgAction(
                             GOTO_TOOL_CHANGER_APPROACH,
                             poseName
                     );
@@ -7139,7 +7250,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
             Action gototToolChangerApproachAction
-                    = new Action(
+                    = Action.newSingleArgAction(
                             GOTO_TOOL_CHANGER_POSE,
                             poseName
                     );
@@ -7213,7 +7324,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action dropToolByHolderAction
-                    = new Action(
+                    = Action.newSingleArgAction(
                             DROP_TOOL_BY_HOLDER,
                             holderName);
             newActionsList.add(dropToolByHolderAction);
@@ -7236,7 +7347,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action dropToolAnyAction
-                    = new Action(DROP_TOOL_ANY);
+                    = Action.newNoArgAction(DROP_TOOL_ANY);
             newActionsList.add(dropToolAnyAction);
             crclGenerator.clearPoseCache();
             crclGenerator.clearLastRequiredPartsMap();
@@ -7297,9 +7408,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action pickupToolByHolderAction
-                    = new Action(
+                    = Action.newSingleArgAction(
                             PICKUP_TOOL_BY_HOLDER,
-                            new String[]{holderName});
+                            holderName
+                    );
             newActionsList.add(pickupToolByHolderAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
@@ -7319,9 +7431,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action pickupToolByToolAction
-                    = new Action(
-                            PICKUP_TOOL_BY_TOOL,
-                            new String[]{toolName});
+                    = Action.newSingleArgAction(PICKUP_TOOL_BY_TOOL,
+                            toolName);
             newActionsList.add(pickupToolByToolAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
@@ -7341,9 +7452,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action switchToolAction
-                    = new Action(
+                    = Action.newSingleArgAction(
                             SWITCH_TOOL,
-                            new String[]{toolName});
+                            toolName
+                    );
             newActionsList.add(switchToolAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
@@ -7548,8 +7660,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPaneCorrectiveActionsTable;
     private javax.swing.JScrollPane jScrollPaneHolderContents;
+    private javax.swing.JScrollPane jScrollPaneKitCompareTable;
     private javax.swing.JScrollPane jScrollPaneLog;
+    private javax.swing.JScrollPane jScrollPaneOptimizedCorrectiveActionsTable;
     private javax.swing.JScrollPane jScrollPaneOptions;
     private javax.swing.JScrollPane jScrollPanePositionTable;
     private javax.swing.JScrollPane jScrollPaneToolHolderPositions;
@@ -7557,9 +7672,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JScrollPane jScrollPaneToolOffsets1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPaneToolChangeInner;
+    private javax.swing.JTable jTableCorrectiveActions;
     private javax.swing.JTable jTableCrclProgram;
     private javax.swing.JTable jTableHolderContents;
+    private javax.swing.JTable jTableKitCompare;
     private javax.swing.JTable jTableLog;
+    private javax.swing.JTable jTableOptimizedCorrectiveActions;
     private javax.swing.JTable jTableOptions;
     private javax.swing.JTable jTablePddlOutput;
     private javax.swing.JTable jTablePositionCache;
