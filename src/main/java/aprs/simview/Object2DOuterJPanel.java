@@ -510,7 +510,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
-        notifySetItemsListeners(items);
+        if (!this.isSimulated() || !object2DJPanel1.isShowOutputItems() || !this.isConnected()) {
+            notifySetItemsListeners(items);
+        }
         long now = System.currentTimeMillis();
         XFutureVoid future = XFutureVoid.completedFuture();
         if (null == lastSetItemsInternalFuture
@@ -761,6 +763,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 loadItemsToTable(object2DJPanel1.getOutputItemsWithAddedExtras(), jTableItems);
             } else {
                 loadItemsToTable(items, jTableItems);
+            }
+            if(isSimulated() && isConnected()) {
+                notifySetItemsListeners(items);
             }
         }
     }
@@ -3149,7 +3154,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             List<PhysicalItem> itemsList = getItems();
             this.updateItemsTable(itemsList);
             if (!setItemsListeners.isEmpty()) {
-                notifySetItemsListeners(itemsList);
+                if(!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()){
+                    notifySetItemsListeners(itemsList);
+                } else {
+                    notifySetItemsListeners(getOutputItems());
+                }
             }
             if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
                 object2DJPanel1.setItems(itemsList);
@@ -3607,7 +3616,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItemsInternal(items);
             notifySetItemsListeners(items);
         } else {
-            setOutputItemsInternal(getOutputItems());
+            final List<PhysicalItem> outputItems = getOutputItems();
+            setOutputItemsInternal(outputItems);
+            if (this.isSimulated()) {
+                notifySetItemsListeners(outputItems);
+            }
         }
         if (showOutputItems != viewOutputCachedCheckBox.isSelected()) {
             viewOutputCachedCheckBox.setSelected(showOutputItems);

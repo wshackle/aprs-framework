@@ -2483,8 +2483,8 @@ public class Supervisor {
             XFutureVoid stealForFuture1
                     = stealFor.startSafeAbortAndDisconnect("stealAbortAllOf.stealFor" + " : srn=" + srn + "toggleBlockerMap.keySet() = " + toggleBlockerMap.keySet())
                             .thenRun(() -> {
-                                if(stealFor.isConnected()) {
-                                    throw new RuntimeException("stealFor.isConnected() : stealFor="+stealFor);
+                                if (stealFor.isConnected()) {
+                                    throw new RuntimeException("stealFor.isConnected() : stealFor=" + stealFor);
                                 }
                                 logEvent("stealForAbortedAndDisconnected");
                             });
@@ -2510,8 +2510,8 @@ public class Supervisor {
                             .thenComposeAsync(
                                     "transfer" + " : srn=" + srn,
                                     (Void ignore) -> {
-                                        if(stealFor.isConnected()) {
-                                            throw new RuntimeException("stealForFuture1="+stealForFuture1+", stealFor="+stealFor);
+                                        if (stealFor.isConnected()) {
+                                            throw new RuntimeException("stealForFuture1=" + stealForFuture1 + ", stealFor=" + stealFor);
                                         }
                                         logEvent("transfer : " + stealFor + " connectRobot(" + stealFromRobotName + "," + stealFromOrigCrclHost + "," + stealFromOrigCrclPort + ")" + " : srn=" + srn);
                                         stealFor.addPositionMap(pm);
@@ -4561,7 +4561,11 @@ public class Supervisor {
         }
         List<PhysicalItem> teachItems = Collections.emptyList();
         if (isUseTeachCameraSelected()) {
-            teachItems = object2DOuterJPanel1.getItems();
+            if (object2DOuterJPanel1.isSimulated()) {
+                teachItems = object2DOuterJPanel1.getOutputItems();
+            } else {
+                teachItems = object2DOuterJPanel1.getItems();
+            }
         }
         for (AprsSystem aprsSys : aprsSystems) {
             File actionListFile = completeScanOneInternal(aprsSys, teachItems);
@@ -9398,7 +9402,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData  @Nullable []  [] = null;
+    private volatile Object lastTasksTableData   @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
