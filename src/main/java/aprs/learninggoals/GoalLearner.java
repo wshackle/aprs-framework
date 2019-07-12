@@ -297,7 +297,11 @@ public class GoalLearner {
                     if (!correctionMode) {
                         l.add(Action.newTakePartAction(partName));
                     }
-                    String shortPartForSlotName = Utils.shortenItemPartName(slotOffset.getSlotForSkuName());
+                    final String fullSlotForSkuName = slotOffset.getSlotForSkuName();
+                    if(null == fullSlotForSkuName) {
+                        throw new NullPointerException("slotOffset.getSlotForSkuName() returned null : slotOffset="+slotOffset);
+                    }
+                    String shortPartForSlotName = Utils.shortenItemPartName(fullSlotForSkuName);
                     if (kitNumber < 0) {
                         kitNumber = kitUsedMap.compute(kit.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     }
@@ -321,16 +325,6 @@ public class GoalLearner {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                 }
             }
-//            if(null != aprsSystem) {
-//                List<PhysicalItem> snapShotList = new ArrayList<>();
-//                snapShotList.addAll(teachItems);
-//                snapShotList.addAll(allAbsSlots);
-//                try {
-//                    aprsSystem.takeSimViewSnapshot("createActionListFromVision:snapShotList", snapShotList);
-//                } catch (IOException ex) {
-//                    Logger.getLogger(GoalLearner.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
                             .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))

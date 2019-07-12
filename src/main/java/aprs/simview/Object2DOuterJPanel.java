@@ -764,7 +764,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             } else {
                 loadItemsToTable(items, jTableItems);
             }
-            if(isSimulated() && isConnected()) {
+            if (isSimulated() && isConnected()) {
                 notifySetItemsListeners(items);
             }
         }
@@ -850,6 +850,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         enforceSensorLimitsCachedCheckBox = new CachedCheckBox(jCheckBoxEnforceSensorLimits);
         shuffleSimulatedUpdatesCachedCheckBox = new CachedCheckBox(jCheckBoxShuffleSimulatedUpdates);
         posNoiseCachedTextField = new CachedTextField(jTextFieldPosNoise);
+        mouseHideDistCachedTextField = new CachedTextField(jTextFieldHideNearMouseDist);
         rotNoiseCachedTextField = new CachedTextField(jTextFieldRotNoise);
         connectedCachedCheckBox = new CachedCheckBox(jCheckBoxConnected);
         simDropRateCachedTextField = new CachedTextField(jTextFieldSimDropRate);
@@ -1305,6 +1306,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldDropOffThreshold = new javax.swing.JTextField();
         jButtonForceUpdate = new javax.swing.JButton();
         jCheckBoxEnforceSensorLimits = new javax.swing.JCheckBox();
+        jCheckBoxHideItemsNearMouse = new javax.swing.JCheckBox();
+        jLabel11 = new javax.swing.JLabel();
+        jTextFieldHideNearMouseDist = new javax.swing.JTextField();
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
@@ -1661,6 +1665,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxEnforceSensorLimits.setText("Enforce Sensor Limits");
         jCheckBoxEnforceSensorLimits.setEnabled(false);
 
+        jCheckBoxHideItemsNearMouse.setText("Hide Items Near Mouse");
+        jCheckBoxHideItemsNearMouse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxHideItemsNearMouseActionPerformed(evt);
+            }
+        });
+
+        jLabel11.setText("Near Mouse Dist: ");
+
+        jTextFieldHideNearMouseDist.setText("25.0 ");
+        jTextFieldHideNearMouseDist.setEnabled(false);
+        jTextFieldHideNearMouseDist.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldHideNearMouseDistActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelSimulationTabLayout = new javax.swing.GroupLayout(jPanelSimulationTab);
         jPanelSimulationTab.setLayout(jPanelSimulationTabLayout);
         jPanelSimulationTabLayout.setHorizontalGroup(
@@ -1698,8 +1719,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCheckBoxEnforceSensorLimits))
-                .addContainerGap(224, Short.MAX_VALUE))
+                    .addComponent(jCheckBoxEnforceSensorLimits)
+                    .addComponent(jCheckBoxHideItemsNearMouse)
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(184, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1738,7 +1764,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxEnforceSensorLimits)
-                .addContainerGap(217, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxHideItemsNearMouse)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -2454,6 +2486,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.posNoise = posNoise;
     }
 
+    private double mouseHideDist = 1.0;
+
+    /**
+     * Get the value of mouseHideDist
+     *
+     * @return the value of mouseHideDist
+     */
+    public double getMouseHideDist() {
+        return mouseHideDist;
+    }
+
+    private final CachedTextField mouseHideDistCachedTextField;
+
+    /**
+     * Set the value of mouseHideDist
+     *
+     * @param mouseHideDist new value of mouseHideDist
+     */
+    private void setMouseHideDist(double mouseHideDist) {
+        updateTextFieldDouble(mouseHideDist, mouseHideDistCachedTextField, 0.01);
+        this.mouseHideDist = mouseHideDist;
+    }
+
     private double rotNoise = 1.0;
 
     /**
@@ -2778,6 +2833,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return ret;
     }
 
+    private boolean mouseDistFilter(PhysicalItem physicalItem) {
+        if (!jCheckBoxHideItemsNearMouse.isSelected()) {
+            return true;
+        } else {
+            Point2D.Double mouseWorldPoint = object2DJPanel1.getMouseWorldMousePoint();
+            if (physicalItem.dist(mouseWorldPoint.x, mouseWorldPoint.y) < mouseHideDist) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
     private boolean limitsFilter(PhysicalItem physicalItem) {
         double itemX = physicalItem.x;
         double minX = object2DJPanel1.getSenseMinX();
@@ -2907,18 +2975,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (needOutputFiltering) {
             newOutputList = newOutputList.stream()
                     .filter(this::dropFilter)
+                    .filter(this::mouseDistFilter)
                     .filter(this::limitsFilter)
                     .map(this::noiseFilter)
                     .collect(Collectors.toList());
             if (shuffleSimulatedUpdates) {
                 Collections.shuffle(newOutputList);
             }
-//            if (newOutputList.size() != origList.size()) {
-//                println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
-//                println("dropCount = " + dropCount);
-//                println("l.size() = " + newOutputList.size());
-//                println("origList.size() = " + origList.size());
-//            }
         }
         return newOutputList;
     }
@@ -3154,7 +3217,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             List<PhysicalItem> itemsList = getItems();
             this.updateItemsTable(itemsList);
             if (!setItemsListeners.isEmpty()) {
-                if(!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()){
+                if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
                     notifySetItemsListeners(itemsList);
                 } else {
                     notifySetItemsListeners(getOutputItems());
@@ -3954,6 +4017,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setMinXMinYText(jTextFieldMinXMinY.getText().trim());
     }//GEN-LAST:event_formComponentResized
 
+    private void jCheckBoxHideItemsNearMouseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxHideItemsNearMouseActionPerformed
+        jTextFieldHideNearMouseDist.setEnabled(jCheckBoxHideItemsNearMouse.isSelected());
+    }//GEN-LAST:event_jCheckBoxHideItemsNearMouseActionPerformed
+
+    private void jTextFieldHideNearMouseDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldHideNearMouseDistActionPerformed
+        setMouseHideDist(parseDouble(jTextFieldHideNearMouseDist.getText().trim()));
+    }//GEN-LAST:event_jTextFieldHideNearMouseDistActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -4117,6 +4188,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxDetails;
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
+    private javax.swing.JCheckBox jCheckBoxHideItemsNearMouse;
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
@@ -4133,6 +4205,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JComboBox<Object2DOuterJPanel.HandleRotationEnum> jComboBoxHandleRotationsEnum;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
@@ -4173,6 +4246,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
+    private javax.swing.JTextField jTextFieldHideNearMouseDist;
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldMaxXMaxY;
     private javax.swing.JTextField jTextFieldMinXMinY;

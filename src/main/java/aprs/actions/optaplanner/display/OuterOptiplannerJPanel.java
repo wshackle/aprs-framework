@@ -75,21 +75,6 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
                     OpAction selectedAction = actions.get(modelIndex);
                     opDisplayJPanel1.setCloseActions(Collections.singletonList(selectedAction));
                 }
-//                DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-////                if (firstIndex >= 0 && firstIndex < actions.size()) {
-////                    OpAction selectedAction = actions.get(firstIndex);
-////                    opDisplayJPanel1.setCloseActions(Collections.singletonList(selectedAction));
-////                }
-//                Object firstIndexData = model.getValueAt(firstIndex, 0);
-//                Object viewIndexData = model.getValueAt(viewIndex, 0);
-//                Object modelIndexData = model.getValueAt(modelIndex, 0);
-//                if (modelIndexData instanceof Integer) {
-//                    int listIndex = (int) modelIndexData;
-//                    if (listIndex >= 0 && listIndex < actions.size()) {
-//                        OpAction selectedAction = actions.get(listIndex);
-//                        opDisplayJPanel1.setCloseActions(Collections.singletonList(selectedAction));
-//                    }
-//                }
             }
         });
     }
