@@ -3011,7 +3011,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 correctiveActions.add(Action.newPlacePartAction(slotPrefix + "_" + count, shortNowInSlotSkuName));
                                             }
                                             if (!itemNeededInSlotSkuName.equals("empty")) {
-
+                                                if (!itemNowInSlotSkuName.equals("empty")) {
+                                                    optimizeCorrectiveActionsOk = false;
+                                                }
+                                                if(!optimizeCorrectiveActionsOk) {
+                                                    break;
+                                                }
                                                 final String shortItemNeededInSlotSkuName = Utils.shortenItemPartName(itemNeededInSlotSkuName);
                                                 List<String> partNames
                                                         = itemsNameMap.computeIfAbsent(shortItemNeededInSlotSkuName,
@@ -3074,8 +3079,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 correctivedItems.add(absSlot);
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
                                                     optimizeCorrectiveActionsOk = false;
+                                                    if(!correctiveActions.isEmpty()) {
+                                                        break;
+                                                    }
                                                     poseCache.put(slotName, absSlotPose);
-                                                    correctiveActions.add(Action.newPlacePartAction(slotName, itemNeededInSlotSkuName));
+                                                    correctiveActions.add(Action.newPlacePartAction(slotName, shortItemNeededInSlotSkuName));
                                                 } else {
 
                                                     PoseType slotPose = visionToRobotPose(absSlotPose);
