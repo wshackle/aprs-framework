@@ -41,8 +41,7 @@ public class CachedCheckBox extends CachedComponentBase {
 
     // NOTE AbstractButton is a convenient superclass of both
     // JCheckBox and JCheckBoxMenuItem with all the methods needed.
-    @Nullable
-    private final AbstractButton abstractButton;
+     private  @Nullable  final AbstractButton abstractButton;
     private volatile boolean selected;
     private volatile boolean enabled;
 

@@ -60,18 +60,15 @@ public class LaunchFileRunner {
 
     private volatile List<String> stopLines = new ArrayList<>();
 
-    @Nullable
-    private volatile File processLaunchDirectory = null;
+     private volatile @Nullable  File processLaunchDirectory = null;
 
-    @Nullable
-    private volatile String onFailLine = null;
-    @Nullable
-    private volatile XFutureVoid waitForFuture = null;
+     private volatile @Nullable  String onFailLine = null;
+     private volatile @Nullable  XFutureVoid waitForFuture = null;
 
     private final Deque<Boolean> ifStack = new ArrayDeque<>();
 
-    @Nullable
-    private final ProcessLauncherJFrame processLauncherJFrame;
+    private @Nullable
+    final ProcessLauncherJFrame processLauncherJFrame;
 
     private volatile boolean debug = false;
 
@@ -81,8 +78,8 @@ public class LaunchFileRunner {
         return ifStack;
     }
 
-    @Nullable
-    public ProcessLauncherJFrame getProcessLauncherJFrame() {
+    public @Nullable
+    ProcessLauncherJFrame getProcessLauncherJFrame() {
         return processLauncherJFrame;
     }
 
@@ -167,11 +164,9 @@ public class LaunchFileRunner {
         this.timeoutStart = timeoutStart;
     }
 
-    @MonotonicNonNull
-    private volatile ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
+     private volatile @MonotonicNonNull  ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
-    @Nullable
-    private volatile XFutureVoid lastNewTimeoutFuture = null;
+     private volatile @Nullable  XFutureVoid lastNewTimeoutFuture = null;
 
     private volatile javax.swing.@Nullable Timer lastTimeoutSwingTimer = null;
 
@@ -447,8 +442,8 @@ public class LaunchFileRunner {
 
     }
 
-    @Nullable
-    public File getProcessLaunchDirectory() {
+    public @Nullable
+    File getProcessLaunchDirectory() {
         return processLaunchDirectory;
     }
 
@@ -456,8 +451,8 @@ public class LaunchFileRunner {
         this.processLaunchDirectory = processLaunchDirectory;
     }
 
-    @Nullable
-    public String getOnFailLine() {
+    public @Nullable
+    String getOnFailLine() {
         return onFailLine;
     }
 
@@ -465,8 +460,8 @@ public class LaunchFileRunner {
         this.onFailLine = onFailLine;
     }
 
-    @Nullable
-    public XFutureVoid getWaitForFuture() {
+    public @Nullable
+    XFutureVoid getWaitForFuture() {
         return waitForFuture;
     }
 
@@ -806,8 +801,7 @@ public class LaunchFileRunner {
         this.timeoutMillis = timeoutMillis;
     }
 
-    @Nullable
-    private volatile XFutureVoid lastRunAllOfFuture = null;
+     private volatile @Nullable  XFutureVoid lastRunAllOfFuture = null;
 
     @SuppressWarnings({"unchecked", "rawtypes", "nullness", "guieffect"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {
@@ -844,7 +838,7 @@ public class LaunchFileRunner {
         if (this.timeoutMillis > 0) {
             javax.swing.Timer timerRefArray[] = new javax.swing.Timer[1];
             AtomicBoolean ignoreTimeout = new AtomicBoolean(false);
-            XFutureVoid timeoutFuture = newTimeoutFuture(timerRefArray,"run"+f.getName(),ignoreTimeout);
+            XFutureVoid timeoutFuture = newTimeoutFuture(timerRefArray, "run" + f.getName(), ignoreTimeout);
             XFutureVoid timeoutCancelledFuture
                     = allOfXFuture.thenRun("LaunchFileRunner.timeoutCancel", () -> {
                         if (null != timerRefArray && timerRefArray.length == 1) {

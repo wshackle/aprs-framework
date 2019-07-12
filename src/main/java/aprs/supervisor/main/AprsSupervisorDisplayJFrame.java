@@ -169,8 +169,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return graphicsDevice;
     }
 
-    @Nullable
-    public Supervisor getSupervisor() {
+     public  @Nullable  Supervisor getSupervisor() {
         return supervisor;
     }
 
@@ -833,8 +832,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         updateCurrentFutureDisplay(showDoneFutures, showUnnamedFutures);
     }
 
-    @Nullable
-    private XFutureVoid getRandomTestFuture() {
+     private  @Nullable  XFutureVoid getRandomTestFuture() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -848,8 +846,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setRandomTestFuture(randomTestFuture);
     }
 
-    @Nullable
-    private XFutureVoid getResumeFuture() {
+     private  @Nullable  XFutureVoid getResumeFuture() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -881,8 +878,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     JPanel blankPanel = new JPanel();
 
-    @Nullable
-    private AprsSystem findSystemWithRobot(String robot) {
+     private  @Nullable  AprsSystem findSystemWithRobot(String robot) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -1210,8 +1206,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return DEFAULT_DATE_FORMAT.format(date);
     }
 
-    @Nullable
-    private volatile PrintStream logPrintStream = null;
+      private volatile @Nullable  PrintStream logPrintStream = null;
 
     private int eventsDisplayMax = 500;
 
@@ -1389,11 +1384,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
     }
-    @MonotonicNonNull
-    private Map<String, Boolean> robotEnableMap;
+    private @MonotonicNonNull Map<String, Boolean> robotEnableMap;
 
-    @Nullable
-    public Map<String, Boolean> getRobotEnableMap() {
+     public  @Nullable  Map<String, Boolean> getRobotEnableMap() {
         return robotEnableMap;
     }
 
@@ -2560,8 +2553,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    public File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
+     public  @Nullable  File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
         JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to create (save as).");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
@@ -2597,8 +2589,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    public File chooseSetupFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
+     public  @Nullable  File chooseSetupFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
         JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to Open.");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
@@ -2631,8 +2622,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemAddExistingSystemActionPerformed
 
-    @Nullable
-    public File chooseSystemPropertiesFileToOpen() throws HeadlessException {
+     public  @Nullable  File chooseSystemPropertiesFileToOpen() throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
         FileFilter filter = new FileNameExtensionFilter("Text properties files.", "txt");
         chooser.addChoosableFileFilter(filter);
@@ -2679,8 +2669,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    private volatile XFuture<?> lastFutureReturned = null;
+      private volatile @Nullable  XFuture<?> lastFutureReturned = null;
 
     private XFutureVoid prepAndFinishOnDispatch(Runnable r) {
         return prepActions()
@@ -2743,8 +2732,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    public File choosePositionMappingsFileForSaveAs(@Nullable File prevChosenFile) throws HeadlessException {
+     public  @Nullable  File choosePositionMappingsFileForSaveAs(@Nullable File prevChosenFile) throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
         FileFilter filter = new FileNameExtensionFilter("Comma-separated values", "csv");
         chooser.addChoosableFileFilter(filter);
@@ -2800,8 +2788,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    public File choosePosMapsFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
+     public  @Nullable  File choosePosMapsFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Choose APRS Position Maps CSV to Open.");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
@@ -2877,8 +2864,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemIndRandomToggleTest.setSelected(false);
     }
 
-    @Nullable
-    private AprsSystem getPosMapInSys() {
+     private  @Nullable  AprsSystem getPosMapInSys() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2892,8 +2878,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setPosMapInSys(posMapInSys);
     }
 
-    @Nullable
-    private AprsSystem getPosMapOutSys() {
+     private  @Nullable  AprsSystem getPosMapOutSys() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -2994,8 +2979,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonSaveSelectedPosMapActionPerformed
 
-    @Nullable
-    private File getLastPosMapParent() {
+     private  @Nullable  File getLastPosMapParent() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -3068,10 +3052,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.debugAction();
     }
 
-    @Nullable
-    private Socket colorTextSocket = null;
-    @Nullable
-    private ColorTextJFrame colorTextJFrame = null;
+     private  @Nullable  Socket colorTextSocket = null;
+     private  @Nullable  ColorTextJFrame colorTextJFrame = null;
 
     @UIEffect
     private void jMenuItemStartColorTextDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartColorTextDisplayActionPerformed
@@ -3366,8 +3348,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .thenRun(() -> resetting = alreadyResetting);
     }
 
-    @Nullable
-    private XFutureVoid getPauseTestFuture() {
+     private  @Nullable  XFutureVoid getPauseTestFuture() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -4394,8 +4375,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private static final String titleStart = "Multi Aprs Supervisor";
 
-    @Nullable
-    public AprsSystem getConveyorVisClonedSystem() {
+     public  @Nullable  AprsSystem getConveyorVisClonedSystem() {
         return conveyorVisJPanel1.getClonedSystem();
     }
 
@@ -4891,8 +4871,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    private JPopupMenu posTablePopupMenu = null;
+     private  @Nullable  JPopupMenu posTablePopupMenu = null;
 
     private void showPosTablePopup(Point pt) {
         JPopupMenu menu = posTablePopupMenu;
@@ -5058,8 +5037,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      *
      * @return the value of setupFile
      */
-    @Nullable
-    private File getSetupFile() throws IOException {
+     private  @Nullable  File getSetupFile() throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -5296,8 +5274,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jListFutures.setModel(listModel);
     }
 
-    @Nullable
-    private volatile Supplier<@Nullable XFuture<?>> futureToDisplaySupplier = null;
+      private volatile @Nullable  Supplier<@Nullable XFuture<?>> futureToDisplaySupplier = null;
 
     private void updateCurrentFutureDisplay(
             @UnknownInitialization AprsSupervisorDisplayJFrame this,
@@ -5468,8 +5445,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @Nullable
-    private static Field getField(Class<?> clss, String name) {
+     private   static  @Nullable  Field getField(Class<?> clss, String name) {
         Field f = null;
         try {
             f = clss.getField(name);

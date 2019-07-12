@@ -386,7 +386,8 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         }
     }
 
-    @MonotonicNonNull private File propertiesFile = null;
+    private @MonotonicNonNull
+    File propertiesFile = null;
 
     /**
      * Set the value of propertiesFile
@@ -551,9 +552,10 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         this.executor = executor;
     }
 
-    @Nullable private ExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
+     private  @Nullable  ExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
 
-    @Nullable public ExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
+    public @Nullable
+    ExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
         return actionsToCrclJInternalFrame1;
     }
 
@@ -579,11 +581,11 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         }
     }
 
-    @Nullable private Process pddlProcess = null;
-    @Nullable private InputStream pddlInputStream = null;
-    @Nullable private InputStream pddlErrorStream = null;
-    @Nullable private Future<?> ppdlInputStreamFuture = null;
-    @Nullable private Future<?> ppdlErrorStreamFuture = null;
+     private  @Nullable  Process pddlProcess = null;
+     private  @Nullable  InputStream pddlInputStream = null;
+     private  @Nullable  InputStream pddlErrorStream = null;
+     private  @Nullable  Future<?> ppdlInputStreamFuture = null;
+     private  @Nullable  Future<?> ppdlErrorStreamFuture = null;
 
     @SuppressWarnings("nullness")
     private final UserInfo sshUserInfo = new UserInfo() {
@@ -819,8 +821,8 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         return b;
     }
 
-    @Nullable private JSch jsch = null;
-    @Nullable private Session session = null;
+     private  @Nullable  JSch jsch = null;
+     private  @Nullable  Session session = null;
 
     private void runPddlPlannerOnceSsh() {
         try {
@@ -1075,7 +1077,8 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         jsch = null;
     }
 
-    @Nullable public File getPropertiesFile() {
+    public @Nullable
+    File getPropertiesFile() {
         return propertiesFile;
     }
 }

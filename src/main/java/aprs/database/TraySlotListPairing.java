@@ -73,10 +73,6 @@ public class TraySlotListPairing {
     public void addPartTraySlotItem(Slot slotOffset, PhysicalItem absSlot, PhysicalItem closestPart) {
         list.add(new TraySlotListItem(slotOffset, absSlot, closestPart));
         parts.add(closestPart);
-        String shortPartName = closestPart.getName();
-        if (shortPartName.startsWith("sku_")) {
-            shortPartName = shortPartName.substring(4);
-        }
         String indexString = slotOffset.getSlotIndexString();
         if (null == indexString) {
             String prpName = slotOffset.getPrpName();

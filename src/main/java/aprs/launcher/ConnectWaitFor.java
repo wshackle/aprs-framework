@@ -42,21 +42,22 @@ public class ConnectWaitFor {
     private final int max_tries;
     private final int timeout;
     private final SocketAddress endpoint;
-    @Nullable private Throwable lastException = null;
+    
+    private @Nullable
+    Throwable lastException = null;
     private final XFuture<Socket> socketFuture;
     private final long delay;
     private final Thread thread;
     private volatile int tries;
     private final long startTime;
-    
-    
+
     @SuppressWarnings("initialization")
     public ConnectWaitFor(String host, int port, int max_tries, int timeout, long delay) {
-        if(host == null) {
+        if (host == null) {
             throw new NullPointerException("host");
         }
-        if(port < 1) {
-            throw new IllegalArgumentException("port ="+port);
+        if (port < 1) {
+            throw new IllegalArgumentException("port =" + port);
         }
         startTime = System.currentTimeMillis();
         this.host = host;
@@ -65,23 +66,23 @@ public class ConnectWaitFor {
         this.timeout = timeout;
         this.endpoint = new InetSocketAddress(host, port);
         this.delay = delay;
-        socketFuture = new XFuture<Socket>("ConnectWaitFor(" + host + "," + port + "," + max_tries + "," + timeout + ","+delay+")");
+        socketFuture = new XFuture<Socket>("ConnectWaitFor(" + host + "," + port + "," + max_tries + "," + timeout + "," + delay + ")");
         thread = new Thread(this::run, socketFuture.getName());
         thread.start();
     }
-    
+
     private void run() {
         try {
             tryConnect();
             while (!socketFuture.isDone()) {
                 Thread.sleep(delay);
-                if(max_tries > 0 && tries >= max_tries) {
-                    throw new IllegalStateException("max_tries exceeded host="+host+",port="+port+",tries="+tries+", max_tries="+max_tries);
+                if (max_tries > 0 && tries >= max_tries) {
+                    throw new IllegalStateException("max_tries exceeded host=" + host + ",port=" + port + ",tries=" + tries + ", max_tries=" + max_tries);
                 }
-                if(Thread.currentThread().isInterrupted()) {
+                if (Thread.currentThread().isInterrupted()) {
                     throw new IllegalStateException("interrupted");
                 }
-                if(socketFuture.isCancelled()) {
+                if (socketFuture.isCancelled()) {
                     throw new IllegalStateException("socketFuture cancelled.");
                 }
                 tryConnect();
@@ -89,15 +90,15 @@ public class ConnectWaitFor {
         } catch (Exception exception) {
             Logger.getLogger(LaunchFileRunner.class.getName()).log(Level.SEVERE, "exception", exception);
             Logger.getLogger(LaunchFileRunner.class.getName()).log(Level.SEVERE, "lastException", lastException);
-            System.err.println("ConnectWaitFor.run : time diff = "+(System.currentTimeMillis()-startTime));
-            System.err.println("ConnectWaitFor.run : expected full timeout = "+(max_tries*(delay+timeout)));
+            System.err.println("ConnectWaitFor.run : time diff = " + (System.currentTimeMillis() - startTime));
+            System.err.println("ConnectWaitFor.run : expected full timeout = " + (max_tries * (delay + timeout)));
             Thread.dumpStack();
-            System.err.println("ConnectWaitFor.run : cancelling socketFuture="+socketFuture);
+            System.err.println("ConnectWaitFor.run : cancelling socketFuture=" + socketFuture);
             socketFuture.cancelAll(false);
             // interrupted so quit
         }
     }
-    
+
     private void tryConnect() {
         try {
             tries++;
@@ -105,7 +106,7 @@ public class ConnectWaitFor {
                 Socket socket = new Socket();
                 socket.connect(endpoint, timeout);
                 socketFuture.complete(socket);
-                println("Connected to  "+host+":"+port+" after "+(System.currentTimeMillis()-startTime)+" ms");
+                println("Connected to  " + host + ":" + port + " after " + (System.currentTimeMillis() - startTime) + " ms");
             }
         } catch (Exception exception) {
             lastException = exception;
@@ -115,12 +116,12 @@ public class ConnectWaitFor {
     public XFuture<Socket> getSocketFuture() {
         return socketFuture;
     }
-    
+
     public void cancel() {
-        if(!socketFuture.isDone()) {
+        if (!socketFuture.isDone()) {
             Thread.dumpStack();
-            System.err.println("ConnectWaitFor.cancel : cancelling socketFuture="+socketFuture);
-        socketFuture.cancelAll(false);
+            System.err.println("ConnectWaitFor.cancel : cancelling socketFuture=" + socketFuture);
+            socketFuture.cancelAll(false);
         }
         thread.interrupt();
     }

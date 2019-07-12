@@ -23,11 +23,15 @@
 package aprs.learninggoals;
 
 import aprs.actions.executor.Action;
+import static aprs.actions.executor.ActionType.CHECK_KITS;
+import static aprs.actions.executor.ActionType.CLEAR_KITS_TO_CHECK;
+import static aprs.actions.executor.ActionType.END_PROGRAM;
+import static aprs.actions.executor.ActionType.SET_CORRECTION_MODE;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
+import aprs.misc.Utils;
 import aprs.system.AprsSystem;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,8 +41,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -57,7 +59,7 @@ public class GoalLearner {
      *
      * @param itemPredicate new value of itemPredicate
      */
-    public void setItemPredicate(Predicate<PhysicalItem> itemPredicate) {
+    public void setItemPredicate(@Nullable Predicate<PhysicalItem> itemPredicate) {
         this.itemPredicate = itemPredicate;
     }
 
@@ -87,18 +89,18 @@ public class GoalLearner {
         return kitTrayListPredicate.test(kitTrays);
     }
 
-    @Nullable
-    private volatile AprsSystem aprsSystem = null;
+    private volatile @Nullable
+    AprsSystem aprsSystem = null;
 
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
     }
-    
-    
+
     private @Nullable
     SlotOffsetProvider slotOffsetProvider;
 
@@ -111,8 +113,8 @@ public class GoalLearner {
         this.slotOffsetProvider = slotOffsetProvider;
     }
 
-    @Nullable
-    public static PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
+    static public @Nullable
+    PhysicalItem closestPart(double sx, double sy, List<PhysicalItem> items) {
         return items.stream()
                 .filter(x -> x.getType() != null && x.getType().equals("P"))
                 .min(Comparator.comparing(pitem -> Math.hypot(sx - pitem.x, sy - pitem.y)))
@@ -140,16 +142,16 @@ public class GoalLearner {
     }
 
     private volatile StackTraceElement setLastCreateActionListFromVisionKitToCheckStringsTrace @Nullable []  = null;
-    @Nullable
-    private volatile Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
+    private volatile @Nullable
+    Thread setLastCreateActionListFromVisionKitToCheckStringsThread = null;
     private volatile long setLastCreateActionListFromVisionKitToCheckStringsTime;
 
     public StackTraceElement @Nullable [] getSetLastCreateActionListFromVisionKitToCheckStringsTrace() {
         return setLastCreateActionListFromVisionKitToCheckStringsTrace;
     }
 
-    @Nullable
-    public Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
+    public @Nullable
+    Thread getSetLastCreateActionListFromVisionKitToCheckStringsThread() {
         return setLastCreateActionListFromVisionKitToCheckStringsThread;
     }
 
@@ -167,8 +169,8 @@ public class GoalLearner {
         this.lastCreateActionListFromVisionKitToCheckStrings = new ArrayList<>(strings);
     }
 
-    @Nullable
-    public static String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
+    public static @Nullable
+    String kitToCheckStringsEqual(List<String> kitToCheckStrings1, List<String> kitToCheckStrings2) {
         if (kitToCheckStrings1.size() != kitToCheckStrings2.size()) {
             return "sizes differ : " + kitToCheckStrings1.size() + "!=" + kitToCheckStrings2.size();
         }
@@ -254,9 +256,9 @@ public class GoalLearner {
 
         List<Action> l = new ArrayList<>();
 
-        l.add(Action.parse("(set-correction-mode " + correctionMode + ")"));
-        l.add(Action.parse("(clear-kits-to-check)"));
-        l.add(Action.parse("(look-for-parts 0 " + requiredItemsString + ")"));
+        l.add(Action.newSingleArgAction(SET_CORRECTION_MODE, correctionMode));
+        l.add(Action.newNoArgAction(CLEAR_KITS_TO_CHECK));
+        l.add(Action.newLookForParts(0, requiredItemsMap));
         boolean allEmpty = true;
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
         ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
@@ -269,10 +271,7 @@ public class GoalLearner {
             if (null == slotOffsetList) {
                 throw new IllegalStateException("getSlotOffsetList(" + kit.getName() + ") returned null");
             }
-            String shortKitName = kit.getName();
-            if (shortKitName.startsWith("sku_")) {
-                shortKitName = shortKitName.substring(4);
-            }
+            String shortKitName = Utils.shortenItemPartName(kit.getName());
             int kitNumber = -1;
             for (Slot slotOffset : slotOffsetList) {
                 Slot absSlot;
@@ -293,24 +292,16 @@ public class GoalLearner {
                 double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
                 if (minDist < 20 + slotOffset.getDiameter() / 2.0) {
                     int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
-                    String shortPartName = closestPart.getName();
-                    if (shortPartName.startsWith("sku_")) {
-                        shortPartName = shortPartName.substring(4);
-                    }
+                    String shortPartName = Utils.shortenItemPartName(closestPart.getName());
                     String partName = shortPartName + "_in_pt_" + pt_used_num;
                     if (!correctionMode) {
-                        l.add(Action.parse("(take-part " + partName + ")"));
+                        l.add(Action.newTakePartAction(partName));
                     }
-                    String shortSkuName = slotOffset.getSlotForSkuName();
-                    if (null == shortSkuName) {
-                        throw new IllegalStateException("slotOffset has no slotForSkuName :" + slotOffset.getName());
+                    final String fullSlotForSkuName = slotOffset.getSlotForSkuName();
+                    if(null == fullSlotForSkuName) {
+                        throw new NullPointerException("slotOffset.getSlotForSkuName() returned null : slotOffset="+slotOffset);
                     }
-                    if (shortSkuName.startsWith("sku_")) {
-                        shortSkuName = shortSkuName.substring(4);
-                    }
-                    if (shortSkuName.startsWith("part_")) {
-                        shortSkuName = shortSkuName.substring(5);
-                    }
+                    String shortPartForSlotName = Utils.shortenItemPartName(fullSlotForSkuName);
                     if (kitNumber < 0) {
                         kitNumber = kitUsedMap.compute(kit.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     }
@@ -324,9 +315,9 @@ public class GoalLearner {
                             throw new IllegalStateException("slotOffset has neither slotIndexString nor prpName :" + slotOffset.getName());
                         }
                     }
-                    String slotName = "empty_slot_" + indexString + "_for_" + shortSkuName + "_in_" + shortKitName + "_" + kitNumber;
+                    String slotName = "empty_slot_" + indexString + "_for_" + shortPartForSlotName + "_in_" + shortKitName + "_" + kitNumber;
                     if (!correctionMode) {
-                        l.add(Action.parse("(place-part " + slotName + ")"));
+                        l.add(Action.newPlacePartAction(slotName, shortPartName));
                     }
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), closestPart.getName());
                     allEmpty = false;
@@ -334,16 +325,6 @@ public class GoalLearner {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                 }
             }
-//            if(null != aprsSystem) {
-//                List<PhysicalItem> snapShotList = new ArrayList<>();
-//                snapShotList.addAll(teachItems);
-//                snapShotList.addAll(allAbsSlots);
-//                try {
-//                    aprsSystem.takeSimViewSnapshot("createActionListFromVision:snapShotList", snapShotList);
-//                } catch (IOException ex) {
-//                    Logger.getLogger(GoalLearner.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//            }
             kitToCheckStrings.add("(add-kit-to-check " + kit.getName() + " "
                     + slotPrpToPartSkuMap.entrySet().stream()
                             .sorted(Comparator.comparing(Map.Entry<String, String>::getKey))
@@ -352,16 +333,16 @@ public class GoalLearner {
                     + ")");
         }
         if (!correctionMode) {
-            l.add(Action.parse("(look-for-parts 2)"));
+            l.add(Action.newLookForParts(2));
         }
-        l.add(Action.parse("(clear-kits-to-check)"));
+        l.add(Action.newNoArgAction(CLEAR_KITS_TO_CHECK));
         for (String kitToCheckString : kitToCheckStrings) {
             l.add(Action.parse(kitToCheckString));
         }
-        l.add(Action.parse("(check-kits)"));
-        l.add(Action.parse("(look-for-parts 2)"));
-        l.add(Action.parse("(clear-kits-to-check)"));
-        l.add(Action.parse("(end-program)"));
+        l.add(Action.newNoArgAction(CHECK_KITS));
+        l.add(Action.newLookForParts(2));
+        l.add(Action.newNoArgAction(CLEAR_KITS_TO_CHECK));
+        l.add(Action.newNoArgAction(END_PROGRAM));
         if (null != allEmptyA && allEmptyA.length > 0) {
             allEmptyA[0] = allEmpty;
         }

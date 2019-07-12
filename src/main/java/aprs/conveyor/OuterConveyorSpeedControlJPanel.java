@@ -150,11 +150,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setGoalSet(true);
         println("previosTray: goal=" + getGoalPosition());
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
-        if (null != nextPrevTrayFuture) {
-            if (!nextPrevTrayFuture.isDone()) {
+        final XFutureVoid nextPrevTrayFutureFinal = nextPrevTrayFuture;
+        if (null != nextPrevTrayFutureFinal) {
+            if (!nextPrevTrayFutureFinal.isDone()) {
                 Thread.dumpStack();
-                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
-                nextPrevTrayFuture.cancelAll(true);
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFutureFinal);
+                nextPrevTrayFutureFinal.cancelAll(true);
             }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
@@ -162,8 +163,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return nextPrevTrayFuture;
     }
 
-    @Nullable
-    private volatile XFutureVoid nextPrevTrayFuture = null;
+      private volatile @Nullable  XFutureVoid nextPrevTrayFuture = null;
 
     public XFutureVoid nextTray() {
 //        computeTrayDiff();
@@ -174,11 +174,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         println("nextTray: goal=" + getGoalPosition());
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, true);
-        if (null != nextPrevTrayFuture) {
-           if (!nextPrevTrayFuture.isDone()) {
+        final XFutureVoid nextPrevTrayFutureFinal = nextPrevTrayFuture;
+        if (null != nextPrevTrayFutureFinal) {
+           if (!nextPrevTrayFutureFinal.isDone()) {
                 Thread.dumpStack();
-                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
-                nextPrevTrayFuture.cancelAll(true);
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFutureFinal);
+                nextPrevTrayFutureFinal.cancelAll(true);
             }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
@@ -193,11 +194,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         setGoalPosition(getEstimatedPosition() - trayDiff);
         setGoalSet(true);
         setSpeedAndDirection(conveyorSpeedJPanel1.getMaxSpeed() / 2, false);
-        if (null != nextPrevTrayFuture) {
-            if (!nextPrevTrayFuture.isDone()) {
+        final XFutureVoid nextPrevTrayFutureFinal = nextPrevTrayFuture;
+        if (null != nextPrevTrayFutureFinal) {
+            if (!nextPrevTrayFutureFinal.isDone()) {
                 Thread.dumpStack();
-                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFuture);
-                nextPrevTrayFuture.cancelAll(true);
+                System.err.println("Cancelling nextPrevTrayFuture="+nextPrevTrayFutureFinal);
+                nextPrevTrayFutureFinal.cancelAll(true);
             }
         }
         nextPrevTrayFutureStartTime = System.currentTimeMillis();
@@ -205,8 +207,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return nextPrevTrayFuture;
     }
 
-    @Nullable
-    private JFrame getOwner() {
+     private  @Nullable  JFrame getOwner() {
         Component c = this;
         while (c != null) {
             c = c.getParent();
@@ -874,8 +875,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         conveyorSpeedJPanel1.setItems(items);
     }
 
-    @Nullable
-    private ModbusTCPMaster master;
+     private  @Nullable  ModbusTCPMaster master;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.conveyor.InnerConveyorSpeedJPanel conveyorSpeedJPanel1;

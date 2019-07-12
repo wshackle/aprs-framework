@@ -39,7 +39,6 @@ import crcl.base.CRCLCommandType;
 import crcl.base.CRCLStatusType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
-import crcl.ui.client.PendantClientJPanel;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import java.awt.event.ActionEvent;
@@ -83,6 +82,8 @@ import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
 import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
+import crcl.ui.client.CrclSwingClientJPanel;
+import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Desktop;
 import java.awt.Rectangle;
@@ -109,12 +110,13 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Objects.requireNonNull;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, PendantClientJPanel.CurrentPoseListener {
+public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, CurrentPoseListener {
 
     @UIEffect
     public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
@@ -489,7 +491,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     Map<String, Integer> origNamesMap = null;
 
     private volatile long lastSetItemsInternalTime = 0;
-    private volatile XFutureVoid lastSetItemsInternalFuture = null;
+    private volatile @Nullable
+    XFutureVoid lastSetItemsInternalFuture = null;
 
     public <T> XFutureVoid submitDisplayConsumer(Consumer<T> consumer, T value) {
         if (null != aprsSystem) {
@@ -500,14 +503,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         });
     }
 
-    private final Consumer<List<PhysicalItem>> itemsListConsumer
-            = (List<PhysicalItem> items) -> {
-                setItemsInternal(items);
-                settingItems = false;
-            };
+    @UIEffect
+    private void consumeItemList(List<PhysicalItem> items) {
+        setItemsInternal(items);
+        settingItems = false;
+    }
 
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
-        notifySetItemsListeners(items);
+        if (!this.isSimulated() || !object2DJPanel1.isShowOutputItems() || !this.isConnected()) {
+            notifySetItemsListeners(items);
+        }
         long now = System.currentTimeMillis();
         XFutureVoid future = XFutureVoid.completedFuture();
         if (null == lastSetItemsInternalFuture
@@ -515,7 +520,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 || (now - lastSetItemsInternalTime) > 500) {
             settingItems = true;
             lastSetItemsInternalTime = now;
-            future = submitDisplayConsumer(itemsListConsumer, items);
+            future = submitDisplayConsumer(this::consumeItemList, items);
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0) {
@@ -545,14 +550,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private volatile long lastSetOutputItemsInternalTime = 0;
-    private volatile XFutureVoid lastSetOutputItemsInternalFuture = null;
+    private volatile @Nullable
+    XFutureVoid lastSetOutputItemsInternalFuture = null;
 
-    private final Consumer<List<PhysicalItem>> outputItemsListConsumer
-            = (List<PhysicalItem> items) -> {
-                lastSetOutputItemsInternalTime = System.currentTimeMillis();
-                setOutputItemsInternal(items);
-                settingItems = false;
-            };
+    @UIEffect
+    private void outputItemsListConsumer(List<PhysicalItem> items) {
+        lastSetOutputItemsInternalTime = System.currentTimeMillis();
+        setOutputItemsInternal(items);
+        settingItems = false;
+    }
 
     public XFutureVoid setOutputItems(List<PhysicalItem> items) {
         settingItems = true;
@@ -561,7 +567,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 || lastSetOutputItemsInternalFuture.isDone()
                 || (now - lastSetOutputItemsInternalTime) > 500) {
             lastSetOutputItemsInternalTime = now;
-            XFutureVoid ret = submitDisplayConsumer(outputItemsListConsumer, items);
+            XFutureVoid ret = submitDisplayConsumer(this::outputItemsListConsumer, items);
             lastSetOutputItemsInternalFuture = ret;
             return ret;
         } else {
@@ -758,6 +764,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             } else {
                 loadItemsToTable(items, jTableItems);
             }
+            if (isSimulated() && isConnected()) {
+                notifySetItemsListeners(items);
+            }
         }
     }
 
@@ -841,6 +850,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         enforceSensorLimitsCachedCheckBox = new CachedCheckBox(jCheckBoxEnforceSensorLimits);
         shuffleSimulatedUpdatesCachedCheckBox = new CachedCheckBox(jCheckBoxShuffleSimulatedUpdates);
         posNoiseCachedTextField = new CachedTextField(jTextFieldPosNoise);
+        mouseHideDistCachedTextField = new CachedTextField(jTextFieldHideNearMouseDist);
         rotNoiseCachedTextField = new CachedTextField(jTextFieldRotNoise);
         connectedCachedCheckBox = new CachedCheckBox(jCheckBoxConnected);
         simDropRateCachedTextField = new CachedTextField(jTextFieldSimDropRate);
@@ -1296,6 +1306,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldDropOffThreshold = new javax.swing.JTextField();
         jButtonForceUpdate = new javax.swing.JButton();
         jCheckBoxEnforceSensorLimits = new javax.swing.JCheckBox();
+        jCheckBoxHideItemsNearMouse = new javax.swing.JCheckBox();
+        jLabel11 = new javax.swing.JLabel();
+        jTextFieldHideNearMouseDist = new javax.swing.JTextField();
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
@@ -1652,6 +1665,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxEnforceSensorLimits.setText("Enforce Sensor Limits");
         jCheckBoxEnforceSensorLimits.setEnabled(false);
 
+        jCheckBoxHideItemsNearMouse.setText("Hide Items Near Mouse");
+        jCheckBoxHideItemsNearMouse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxHideItemsNearMouseActionPerformed(evt);
+            }
+        });
+
+        jLabel11.setText("Near Mouse Dist: ");
+
+        jTextFieldHideNearMouseDist.setText("25.0 ");
+        jTextFieldHideNearMouseDist.setEnabled(false);
+        jTextFieldHideNearMouseDist.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldHideNearMouseDistActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelSimulationTabLayout = new javax.swing.GroupLayout(jPanelSimulationTab);
         jPanelSimulationTab.setLayout(jPanelSimulationTabLayout);
         jPanelSimulationTabLayout.setHorizontalGroup(
@@ -1689,8 +1719,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCheckBoxEnforceSensorLimits))
-                .addContainerGap(224, Short.MAX_VALUE))
+                    .addComponent(jCheckBoxEnforceSensorLimits)
+                    .addComponent(jCheckBoxHideItemsNearMouse)
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jLabel11)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(184, Short.MAX_VALUE))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1729,7 +1764,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxEnforceSensorLimits)
-                .addContainerGap(217, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxHideItemsNearMouse)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel11)
+                    .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -2445,6 +2486,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.posNoise = posNoise;
     }
 
+    private double mouseHideDist = 1.0;
+
+    /**
+     * Get the value of mouseHideDist
+     *
+     * @return the value of mouseHideDist
+     */
+    public double getMouseHideDist() {
+        return mouseHideDist;
+    }
+
+    private final CachedTextField mouseHideDistCachedTextField;
+
+    /**
+     * Set the value of mouseHideDist
+     *
+     * @param mouseHideDist new value of mouseHideDist
+     */
+    private void setMouseHideDist(double mouseHideDist) {
+        updateTextFieldDouble(mouseHideDist, mouseHideDistCachedTextField, 0.01);
+        this.mouseHideDist = mouseHideDist;
+    }
+
     private double rotNoise = 1.0;
 
     /**
@@ -2481,7 +2545,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.rotNoise = rotNoise;
     }
 
-    private XFutureVoid runOnDispatchThread(Runnable r) {
+    private XFutureVoid runOnDispatchThread(@UI Runnable r) {
         if (null != aprsSystem) {
             return aprsSystem.runOnDispatchThread(r);
         } else {
@@ -2551,16 +2615,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         disconnect();
     }
 
-    @Nullable
-    private Object2DOuterJPanel objectPanelToClone = null;
+    private @Nullable
+    Object2DOuterJPanel objectPanelToClone = null;
 
     /**
      * Get the value of objectPanelToClone
      *
      * @return the value of objectPanelToClone
      */
-    @Nullable
-    public Object2DOuterJPanel getObjectPanelToClone() {
+    public @Nullable
+    Object2DOuterJPanel getObjectPanelToClone() {
         return objectPanelToClone;
     }
 
@@ -2598,10 +2662,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    @Nullable
-    private VisionSocketServer visionSocketServer = null;
-    @Nullable
-    private VisionSocketClient visionSocketClient = null;
+    private @Nullable
+    VisionSocketServer visionSocketServer = null;
+    private @Nullable
+    VisionSocketClient visionSocketClient = null;
 
     @UIEffect
     private void jCheckBoxConnectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectedActionPerformed
@@ -2769,6 +2833,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return ret;
     }
 
+    private boolean mouseDistFilter(PhysicalItem physicalItem) {
+        if (!jCheckBoxHideItemsNearMouse.isSelected()) {
+            return true;
+        } else {
+            Point2D.Double mouseWorldPoint = object2DJPanel1.getMouseWorldMousePoint();
+            if (physicalItem.dist(mouseWorldPoint.x, mouseWorldPoint.y) < mouseHideDist) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
     private boolean limitsFilter(PhysicalItem physicalItem) {
         double itemX = physicalItem.x;
         double minX = object2DJPanel1.getSenseMinX();
@@ -2898,18 +2975,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (needOutputFiltering) {
             newOutputList = newOutputList.stream()
                     .filter(this::dropFilter)
+                    .filter(this::mouseDistFilter)
                     .filter(this::limitsFilter)
                     .map(this::noiseFilter)
                     .collect(Collectors.toList());
             if (shuffleSimulatedUpdates) {
                 Collections.shuffle(newOutputList);
             }
-//            if (newOutputList.size() != origList.size()) {
-//                println("Object2DOuterJPanel.publishCurrentItems() simulating vision failing to detect part.");
-//                println("dropCount = " + dropCount);
-//                println("l.size() = " + newOutputList.size());
-//                println("origList.size() = " + origList.size());
-//            }
         }
         return newOutputList;
     }
@@ -2965,7 +3037,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != itemToDrag) {
             double orig_x = itemToDrag.x;
             double orig_y = itemToDrag.y;
-            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY(),object2DJPanel1.isAutoscale());
+            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY(), object2DJPanel1.isAutoscale());
             itemToDrag.x = worldPoint.x;
             itemToDrag.y = worldPoint.y;
 //            switch (object2DJPanel1.getDisplayAxis()) {
@@ -3022,11 +3094,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setMousePoint(evt.getPoint());
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
-    @Nullable
-    private volatile PhysicalItem draggedItem = null;
+    private volatile @Nullable
+    PhysicalItem draggedItem = null;
 
-    @Nullable
-    private volatile List<PhysicalItem> draggedItemsList = null;
+    private volatile @Nullable
+    List<PhysicalItem> draggedItemsList = null;
 
     private boolean insideItem(PhysicalItem item, int x, int y) {
         if (null == item || null == item.getDisplayTransform()) {
@@ -3145,10 +3217,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             List<PhysicalItem> itemsList = getItems();
             this.updateItemsTable(itemsList);
             if (!setItemsListeners.isEmpty()) {
-                notifySetItemsListeners(itemsList);
+                if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
+                    notifySetItemsListeners(itemsList);
+                } else {
+                    notifySetItemsListeners(getOutputItems());
+                }
             }
-            if(jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
-               object2DJPanel1.setItems(itemsList);
+            if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
+                object2DJPanel1.setItems(itemsList);
             }
         }
         draggedItem = null;
@@ -3346,11 +3422,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 });
     }
 
+    @UIEffect
     public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
         Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
         return csvFileToItemsList(f, selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
     }
 
+    @SuppressWarnings("guieffect")
     public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
         final List<PhysicalItem> newItemsList = VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations);
@@ -3438,16 +3516,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private double currentX = 0.0;
     private double currentY = 0.0;
 
-    @MonotonicNonNull
-    private AprsSystem aprsSystem;
+    private @MonotonicNonNull
+    AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    @Nullable
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
@@ -3462,11 +3540,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setSlotOffsetProvider(aprsSystemInterface);
     }
 
-    @MonotonicNonNull
-    private SlotOffsetProvider slotOffsetProvider = null;
+    private @MonotonicNonNull
+    SlotOffsetProvider slotOffsetProvider = null;
 
-    @Nullable
-    public SlotOffsetProvider getSlotOffsetProvider() {
+    public @Nullable
+    SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -3601,7 +3679,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItemsInternal(items);
             notifySetItemsListeners(items);
         } else {
-            setOutputItemsInternal(getOutputItems());
+            final List<PhysicalItem> outputItems = getOutputItems();
+            setOutputItemsInternal(outputItems);
+            if (this.isSimulated()) {
+                notifySetItemsListeners(outputItems);
+            }
         }
         if (showOutputItems != viewOutputCachedCheckBox.isSelected()) {
             viewOutputCachedCheckBox.setSelected(showOutputItems);
@@ -3664,6 +3746,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_object2DJPanel1MouseMoved
 
     @UIEffect
+    @SuppressWarnings("nullness")
     private void object2DJPanel1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseEntered
         this.draggedItem = null;
         this.draggedItemsList = null;
@@ -3672,6 +3755,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.object2DJPanel1.setMouseDownPoint(null);
     }//GEN-LAST:event_object2DJPanel1MouseEntered
 
+    @UIEffect
+    @SuppressWarnings("nullness")
     private void object2DJPanel1MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseExited
         this.draggedItem = null;
         this.draggedItemsList = null;
@@ -3782,10 +3867,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonViewSnapshotCsvActionPerformed
 
+    @UIEffect
     private void object2DJPanel1ComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_object2DJPanel1ComponentResized
         object2DJPanel1.clearSizes();
     }//GEN-LAST:event_object2DJPanel1ComponentResized
 
+    @UIEffect
     private void jCheckBoxRecordLinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxRecordLinesActionPerformed
         if (jCheckBoxRecordLines.isSelected()) {
             recordLines = true;
@@ -3798,6 +3885,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jCheckBoxRecordLinesActionPerformed
 
+    @UIEffect
     private void jButtonOpenLogLinesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenLogLinesFileActionPerformed
         try {
             Desktop.getDesktop().open(new File(jTextFieldRecordLinesFile.getText()));
@@ -3806,11 +3894,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonOpenLogLinesFileActionPerformed
 
+    @UIEffect
     private void jButtonShowSelectedLogLineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonShowSelectedLogLineActionPerformed
         int selectedRow = jTableLineLog.getSelectedRow();
         showSelectedLogLine(selectedRow);
     }//GEN-LAST:event_jButtonShowSelectedLogLineActionPerformed
 
+    @UIEffect
     private void showSelectedLogLine(int selectedRow) throws NumberFormatException {
         StringBuilder sb = new StringBuilder();
         for (int i = 5; i < jTableLineLog.getColumnCount(); i++) {
@@ -3826,11 +3916,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 handleRotationEnum == HandleRotationEnum.IGNORE);
         setItems(l);
         Object xobj = jTableLineLog.getValueAt(selectedRow, 2);
-        object2DJPanel1.setCurrentX(Double.parseDouble(xobj.toString()));
+        if (null != xobj) {
+            if (xobj instanceof Double) {
+                object2DJPanel1.setCurrentX((Double) xobj);
+            } else {
+                object2DJPanel1.setCurrentX(Double.parseDouble(xobj.toString()));
+            }
+        }
         Object yobj = jTableLineLog.getValueAt(selectedRow, 3);
-        object2DJPanel1.setCurrentY(Double.parseDouble(yobj.toString()));
+        if (null != yobj) {
+            if (yobj instanceof Double) {
+                object2DJPanel1.setCurrentY((Double) yobj);
+            } else {
+                object2DJPanel1.setCurrentY(Double.parseDouble(yobj.toString()));
+            }
+        }
     }
 
+    @UIEffect
+    @SuppressWarnings("nullness")
     private void jButtonSeperateLineLogWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSeperateLineLogWindowActionPerformed
         File f = logLinesFile;
         if (null != f) {
@@ -3844,6 +3948,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonSeperateLineLogWindowActionPerformed
 
+    @UIEffect
     private void jButtonLineLogPrevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogPrevActionPerformed
         int selectedRow = jTableLineLog.getSelectedRow();
         final int rowCount = jTableLineLog.getRowCount();
@@ -3860,6 +3965,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonLineLogPrevActionPerformed
 
+    @UIEffect
     private void jButtonLineLogNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLineLogNextActionPerformed
         int selectedRow = jTableLineLog.getSelectedRow();
         final int rowCount = jTableLineLog.getRowCount();
@@ -3876,6 +3982,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jButtonLineLogNextActionPerformed
 
+    @UIEffect
     private void jCheckBoxShowOnlyOverlappingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowOnlyOverlappingActionPerformed
         if (jCheckBoxShowOnlyOverlapping.isSelected()) {
             jCheckBoxShowOverlapping.setSelected(true);
@@ -3889,6 +3996,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.repaint();
     }//GEN-LAST:event_jCheckBoxShowOnlyOverlappingActionPerformed
 
+    @UIEffect
     private void jCheckBoxShowOverlappingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxShowOverlappingActionPerformed
         if (jCheckBoxShowOverlapping.isSelected()) {
             jCheckBoxShowOnlyOverlapping.setEnabled(true);
@@ -3902,11 +4010,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.repaint();
     }//GEN-LAST:event_jCheckBoxShowOverlappingActionPerformed
 
+    @UIEffect
     private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
         object2DJPanel1.clearSizes();
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText().trim());
         setMinXMinYText(jTextFieldMinXMinY.getText().trim());
     }//GEN-LAST:event_formComponentResized
+
+    private void jCheckBoxHideItemsNearMouseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxHideItemsNearMouseActionPerformed
+        jTextFieldHideNearMouseDist.setEnabled(jCheckBoxHideItemsNearMouse.isSelected());
+    }//GEN-LAST:event_jCheckBoxHideItemsNearMouseActionPerformed
+
+    private void jTextFieldHideNearMouseDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldHideNearMouseDistActionPerformed
+        setMouseHideDist(parseDouble(jTextFieldHideNearMouseDist.getText().trim()));
+    }//GEN-LAST:event_jTextFieldHideNearMouseDistActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
@@ -4071,6 +4188,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxDetails;
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
+    private javax.swing.JCheckBox jCheckBoxHideItemsNearMouse;
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
@@ -4087,6 +4205,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JComboBox<Object2DOuterJPanel.HandleRotationEnum> jComboBoxHandleRotationsEnum;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
@@ -4127,6 +4246,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
+    private javax.swing.JTextField jTextFieldHideNearMouseDist;
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldMaxXMaxY;
     private javax.swing.JTextField jTextFieldMinXMinY;
@@ -4334,8 +4454,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         throw new IllegalStateException("propertiesFile=" + propertiesFile + " does not exist");
     }
 
-    @Nullable
-    private volatile XFutureVoid loadPropertiesFuture2 = null;
+    private volatile @Nullable
+    XFutureVoid loadPropertiesFuture2 = null;
 
     public XFutureVoid loadProperties(Properties props) {
         XFutureVoid ret = runOnDispatchThread(() -> {
@@ -4407,8 +4527,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return propschanged;
     }
 
-    @MonotonicNonNull
-    private volatile Properties tableLoadedProperties = null;
+    private volatile @MonotonicNonNull
+    Properties tableLoadedProperties = null;
 
     @UIEffect
     private void loadPropertiesTableOnDisplay(Properties props) {
@@ -4750,15 +4870,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    @Nullable
-    private String dataFileString = null;
-    @Nullable
-    private String reverseDataFileString = null;
-    @Nullable
-    private volatile String loadedDataFileString = null;
+    private @Nullable
+    String dataFileString = null;
+    private @Nullable
+    String reverseDataFileString = null;
+    private volatile @Nullable
+    String loadedDataFileString = null;
 
-    @Nullable
-    private String getCurrentDataFileString() {
+    private @Nullable
+    String getCurrentDataFileString() {
         return reverseFlag ? this.reverseDataFileString : this.dataFileString;
     }
 
@@ -4873,19 +4993,25 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return recordLines;
     }
 
+    @UIEffect
     public void setRecordLines(boolean recordLines) {
         this.recordLines = recordLines;
         jCheckBoxRecordLines.setSelected(recordLines);
     }
 
-    private volatile PrintWriter lineCsvWriter = null;
+    private volatile @Nullable
+    PrintWriter lineCsvWriter = null;
     private final AtomicInteger lineCount = new AtomicInteger();
 
+    @SuppressWarnings("guieffect")
     public void loadLogFile(File f) {
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line = br.readLine();
             while (line != null && line.trim().length() < 2) {
                 line = br.readLine();
+            }
+            if (null == line) {
+                throw new RuntimeException("File " + f + " seems empty.");
             }
             String headersArray[] = line.split(",[ ]*");
             jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
@@ -4909,7 +5035,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    private volatile File logLinesFile = null;
+    private volatile @Nullable
+    File logLinesFile = null;
 
     private String getTaskName() {
         if (null != aprsSystem) {
@@ -4920,24 +5047,27 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
+    @SuppressWarnings("guieffect")
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
             long now = System.currentTimeMillis();
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();
-                if (null == lineCsvWriter || lc < 2) {
+                final PrintWriter origLineCsvWriter = lineCsvWriter;
+                if (null == origLineCsvWriter || lc < 2) {
                     File f = Utils.createTempFile("vision_lines_" + getTaskName() + "_" + getHost() + "_" + getPort(), ".csv");
                     println("Recording vision lines to  " + f.getCanonicalPath());
                     String headingLine = VisionSocketClient.lineToHeading("count,time,currentX,currentY,ignored,", line);
 
                     String headersArray[] = headingLine.split(",[ ]*");
                     jTableLineLog.setModel(new DefaultTableModel(new Object[0][0], headersArray));
-                    lineCsvWriter = new PrintWriter(new FileWriter(f));
+                    PrintWriter lineCsvWriterNew = new PrintWriter(new FileWriter(f));
                     String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored + "," + line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
-                    lineCsvWriter.println(headingLine);
-                    lineCsvWriter.println(fullLine);
+                    lineCsvWriterNew.println(headingLine);
+                    lineCsvWriterNew.println(fullLine);
+                    lineCsvWriter = lineCsvWriterNew;
                     Utils.autoResizeTableColWidths(jTableLineLog);
                     jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
                     logLinesFile = f;
@@ -4945,7 +5075,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     String fullLine = lc + "," + now + "," + object2DJPanel1.getCurrentX() + "," + object2DJPanel1.getCurrentY() + "," + ignored + "," + line;
                     String fullLineArray[] = fullLine.split(",[ ]*");
                     ((DefaultTableModel) jTableLineLog.getModel()).addRow(fullLineArray);
-                    lineCsvWriter.println(fullLine);
+                    origLineCsvWriter.println(fullLine);
                 }
             }
             String detailsMessage = null;
@@ -5003,14 +5133,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
 
-    private final Consumer<ConcurrentLinkedDeque<File[]>> fileArrayDequeConsumer
-            = (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> {
-                File fa[] = this.fileArrayDeque.pollFirst();
-                while (null != fa) {
-                    updateSnapshotsTable(fa[0], fa[1]);
-                    fa = this.fileArrayDeque.pollFirst();
-                }
-            };
+    @UIEffect
+    private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque) {
+        File fa[] = this.fileArrayDeque.pollFirst();
+        while (null != fa) {
+            updateSnapshotsTable(fa[0], fa[1]);
+            fa = this.fileArrayDeque.pollFirst();
+        }
+    }
 
     public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
 
@@ -5018,13 +5148,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = saveSnapshotCsv(f, itemsToPaint);
             fileArrayDeque.add(new File[]{f, csvFile});
-            aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
+            if (null != aprsSystem) {
+                aprsSystem.submitDisplayConsumer(this::fileArrayDequeConsumer, fileArrayDeque);
+            }
         } else {
             List<PhysicalItem> items = getItems();
             this.object2DJPanel1.takeSnapshot(f, items, w, h);
             File csvFile = saveSnapshotCsv(f, items);
             fileArrayDeque.add(new File[]{f, csvFile});
-            aprsSystem.submitDisplayConsumer(fileArrayDequeConsumer, fileArrayDeque);
+            if (null != aprsSystem) {
+                aprsSystem.submitDisplayConsumer(this::fileArrayDequeConsumer, fileArrayDeque);
+            }
         }
     }
 
@@ -5120,7 +5254,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }
 
-    public PhysicalItem getClosestRobotPart() {
+    public @Nullable
+    PhysicalItem getClosestRobotPart() {
         if (null == aprsSystem) {
             return null;
         }
@@ -5358,11 +5493,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private volatile javax.swing.@Nullable Timer timer = null;
 
-    @Nullable
-    private volatile PoseUpdateHistoryItem lastDropUpdate = null;
+    private volatile @Nullable
+    PoseUpdateHistoryItem lastDropUpdate = null;
 
-    @Nullable
-    private volatile ConveyorPosition lastConveyorPosition = null;
+    private volatile @Nullable
+    ConveyorPosition lastConveyorPosition = null;
 
     public synchronized void handleConveyorPositionUpdate(ConveyorPosition newConveyorPosition) {
         final ConveyorPosition oldConveyorPosition = this.lastConveyorPosition;
@@ -5393,7 +5528,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     public void handlePoseUpdate(
-            PendantClientJPanel panel,
+            CrclSwingClientJPanel panel,
             CRCLStatusType stat,
             @Nullable CRCLCommandType cmd,
             boolean isHoldingObjectExpected,
@@ -5587,8 +5722,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         private final int y;
         private final boolean includeTrays;
 
-        @Nullable
-        private PhysicalItem closestItem;
+        private @Nullable
+        PhysicalItem closestItem;
         private int minIndex;
 
         ClosestItemInfo(int x, int y, int minIndex, boolean includeTrays) {
@@ -5606,7 +5741,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         continue;
                     }
                 }
-                Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y,object2DJPanel1.isAutoscale());
+                Point2D.Double screenItemPoint = object2DJPanel1.worldToScreenPoint(item.x, item.y, object2DJPanel1.isAutoscale());
                 double diff_x = screenItemPoint.x - x;
                 double diff_y = screenItemPoint.y - y;
                 double dist = Math.sqrt(diff_x * diff_x + diff_y * diff_y);

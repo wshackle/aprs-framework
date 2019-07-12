@@ -48,8 +48,7 @@ public class SocketLineReader {
         @SuppressWarnings("unused")
         public void call(String line, PrintStream ps);
     }
-    @Nullable
-    private volatile ServerSocket serverSocket = null;
+     private volatile @Nullable  ServerSocket serverSocket = null;
 
     public boolean isConnected() {
         if (null != socket) {
@@ -104,14 +103,10 @@ public class SocketLineReader {
             return "Clnt{" + "socket=" + socket + ", thread=" + thread + '}';
         }
     }
-    @Nullable
-    private volatile List<Clnt> als = null;
-    @Nullable
-    private volatile Socket socket = null;
-    @Nullable
-    private volatile Thread thread = null;
-//    @Nullable private volatile BufferedReader br = null;
-//    @Nullable private volatile PrintStream ps;
+     private volatile @Nullable  List<Clnt> als = null;
+     private volatile @Nullable  Socket socket = null;
+     private volatile @Nullable  Thread thread = null;
+
     private SocketLineReader.@Nullable CallBack cb;
 
     public int getPort() {
@@ -123,13 +118,13 @@ public class SocketLineReader {
         return socketPort;
     }
 
-    @Nullable
-    public String getHost() {
+    public @Nullable
+    String getHost() {
         return host;
     }
 
-    @Nullable
-    private String host = null;
+    private @Nullable
+    String host = null;
 
     private int port = -1;
 

@@ -10,6 +10,7 @@ package aprs.actions.optaplanner.actionmodel;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public enum OpActionType {
+    INVALID_OP_ACTION,
     PICKUP,
     DROPOFF,
     FAKE_DROPOFF,

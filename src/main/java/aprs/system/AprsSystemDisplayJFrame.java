@@ -74,8 +74,8 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  */
 class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
-    @MonotonicNonNull
-    private volatile AprsSystem aprsSystem = null;
+    private volatile @MonotonicNonNull
+    AprsSystem aprsSystem = null;
 
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
@@ -1121,8 +1121,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         browseOpenPropertiesFile();
     }//GEN-LAST:event_jMenuItemLoadPropertiesFileActionPerformed
 
-    @Nullable
-    private File getPropertiesDirectory() {
+    private @Nullable
+    File getPropertiesDirectory() {
         if (null != aprsSystem) {
             return aprsSystem.getPropertiesDirectory();
         } else {
@@ -1451,11 +1451,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
+    @SuppressWarnings("guieffect")
     private void jMenuItemStartActionListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartActionListActionPerformed
         setTitleErrorString(null);
         jCheckBoxMenuItemPause.setSelected(false);
         notifyPauseFutures();
         boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
+        if (null == aprsSystem) {
+            return;
+        }
         if (!connectedRobotSelected || !aprsSystem.isConnected()) {
             jCheckBoxMenuItemConnectedRobot.setSelected(true);
             queryConnect()
@@ -1581,8 +1585,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
 
-    @Nullable
-    private XFuture<Boolean> getContinuousDemoFuture() {
+    private @Nullable
+    XFuture<Boolean> getContinuousDemoFuture() {
         if (null != aprsSystem) {
             return aprsSystem.getContinuousDemoFuture();
         } else {
@@ -1792,15 +1796,17 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemSnapshotImageSizeActionPerformed
 
+    @SuppressWarnings("guieffect")
     private void startLookForParts() {
-        if (null != aprsSystem) {
+        final AprsSystem aprsSystemFinal = aprsSystem;
+        if (null != aprsSystemFinal) {
             boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
-            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+            if (!connectedRobotSelected || !aprsSystemFinal.isConnected()) {
                 jCheckBoxMenuItemConnectedRobot.setSelected(true);
                 queryConnect()
-                        .thenCompose(x -> aprsSystem.startLookForParts());
+                        .thenCompose(x -> aprsSystemFinal.startLookForParts());
             } else {
-                aprsSystem.startLookForParts();
+                aprsSystemFinal.startLookForParts();
             }
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
@@ -1882,27 +1888,32 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectedRobotActionPerformed
 
+    @SuppressWarnings("guieffect")
     public XFuture<Boolean> queryConnect() {
-        String name = aprsSystem.getRobotName();
+        final AprsSystem aprsSystemFinal = aprsSystem;
+        if (null == aprsSystemFinal) {
+            throw new NullPointerException("aprsSystem");
+        }
+        String name = aprsSystemFinal.getRobotName();
         if (name == null || name.length() < 1) {
-            String origRobotName = aprsSystem.getOrigRobotName();
+            String origRobotName = aprsSystemFinal.getOrigRobotName();
             name = JOptionPane.showInputDialog("Robot name?", origRobotName);
         }
-        String host = aprsSystem.getRobotCrclHost();
+        String host = aprsSystemFinal.getRobotCrclHost();
         if (host == null || host.length() < 1) {
-            String origCrclRobotHost = aprsSystem.getOrigCrclRobotHost();
+            String origCrclRobotHost = aprsSystemFinal.getOrigCrclRobotHost();
             host = JOptionPane.showInputDialog("Robot host?", origCrclRobotHost);
         }
-        int port = aprsSystem.getRobotCrclPort();
+        int port = aprsSystemFinal.getRobotCrclPort();
         if (port < 1) {
-            int origCrclRobotPort = aprsSystem.getOrigCrclRobotPort();
+            int origCrclRobotPort = aprsSystemFinal.getOrigCrclRobotPort();
             String portString = JOptionPane.showInputDialog("Robot port?", origCrclRobotPort);
             port = Integer.parseInt(portString);
         }
         clearErrors();
         resume();
         jCheckBoxMenuItemPause.setSelected(false);
-        return aprsSystem.connectRobot(name, host, port)
+        return aprsSystemFinal.connectRobot(name, host, port)
                 .thenCompose(x -> startCheckEnabled())
                 .thenApply((Boolean success) -> {
                     if (!success) {
@@ -1965,7 +1976,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemFillKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFillKitTraysActionPerformed
-        if (null == aprsSystem) {
+        final AprsSystem aprsSystemFinal = aprsSystem;
+        if (null == aprsSystemFinal) {
             System.err.println("aprsSystem==null");
             return;
         }
@@ -1978,12 +1990,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             reverseFlag = false;
             reloadForReverse(false);
             boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
-            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+            if (!connectedRobotSelected || !aprsSystemFinal.isConnected()) {
                 jCheckBoxMenuItemConnectedRobot.setSelected(true);
                 queryConnect()
-                        .thenCompose(x -> aprsSystem.fillKitTrays(true));
+                        .thenCompose(x -> aprsSystemFinal.fillKitTrays(true));
             } else {
-                aprsSystem.fillKitTrays(true);
+                aprsSystemFinal.fillKitTrays(true);
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -2010,6 +2022,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItemEmptyKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemEmptyKitTraysActionPerformed
         try {
+            final AprsSystem aprsSystemFinal = aprsSystem;
+            if (null == aprsSystemFinal) {
+                return;
+            }
             jCheckBoxMenuItemPause.setSelected(false);
             jCheckBoxMenuItemCorrectionMode.setSelected(true);
             clearErrors();
@@ -2018,12 +2034,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             reverseFlag = true;
             reloadForReverse(true);
             boolean connectedRobotSelected = jCheckBoxMenuItemConnectedRobot.isSelected();
-            if (!connectedRobotSelected || !aprsSystem.isConnected()) {
+            if (!connectedRobotSelected || !aprsSystemFinal.isConnected()) {
                 jCheckBoxMenuItemConnectedRobot.setSelected(true);
                 queryConnect()
-                        .thenCompose(x -> aprsSystem.emptyKitTrays());
+                        .thenCompose(x -> aprsSystemFinal.emptyKitTrays());
             } else {
-                aprsSystem.emptyKitTrays();
+                aprsSystemFinal.emptyKitTrays();
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -2079,10 +2095,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         aprsSystem.updateRobotLimits();
     }//GEN-LAST:event_jCheckBoxMenuItemEnforceMinMaxLimitsActionPerformed
 
+    @UIEffect
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         String filename = JOptionPane.showInputDialog("csv items file to filter");
-        aprsSystem.filterTest(filename);
-
+        if(null != filename  && null != aprsSystem) {
+            aprsSystem.filterTest(filename);
+        }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {

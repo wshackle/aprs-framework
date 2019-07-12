@@ -178,7 +178,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         }
         println("lastRunFuture = " + lastRunFuture);
         println("lastRunFile = " + lastRunFile);
-        if(null != lastRunFuture) {
+        if (null != lastRunFuture) {
             lastRunFuture.printStatus();
         }
     }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
@@ -194,9 +194,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     WrappedProcess addProcess(List<String> command) {
         return launchFileRunner.addProcess(command);
     }
-    
+
     WrappedProcess addProcess(File directory, String... command) {
-        return launchFileRunner.addProcess(directory,command);
+        return launchFileRunner.addProcess(directory, command);
     }
 
     /**
@@ -333,8 +333,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         return launchFileRunner.getStopLines();
     }
 
-    @Nullable
-    public File getProcessLaunchDirectory() {
+     public  @Nullable  File getProcessLaunchDirectory() {
         return launchFileRunner.getProcessLaunchDirectory();
     }
 
@@ -365,7 +364,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemDebug.setSelected(debug);
     }
 
-
     /**
      * Get the value of timeoutMillis
      *
@@ -386,32 +384,25 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     private final LaunchFileRunner launchFileRunner;
 
-    @Nullable private volatile File lastRunFile = null;
-    @Nullable private volatile XFutureVoid lastRunFuture = null;
-    
-    
-    
+     private volatile @Nullable  File lastRunFile = null;
+     private volatile @Nullable  XFutureVoid lastRunFuture = null;
+
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
-        setTitle("Process Launcher Running "+f);
-        XFutureVoid ret =  launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
+        setTitle("Process Launcher Running " + f);
+        XFutureVoid ret = launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
         lastRunFuture = ret;
         lastRunFile = f;
-        return ret.thenRun(() -> setTitle("Process Launcher completed "+f));
+        return ret.thenRun(() -> setTitle("Process Launcher completed " + f));
     }
-
-   
 
     public void setStopLineSeen(boolean stopLineSeen) {
         launchFileRunner.setStopLineSeen(stopLineSeen);
     }
 
-    
     public void setProcessLaunchDirectory(@Nullable File processLaunchDirectory) {
         launchFileRunner.setProcessLaunchDirectory(processLaunchDirectory);
     }
-
-    
 
     private final ConcurrentLinkedDeque<Runnable> onCloseRunnables = new ConcurrentLinkedDeque<>();
 
@@ -449,7 +440,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     void completeClose() {
         launchFileRunner.completeClose();
-         Utils.runOnDispatchThread("closeProcessLauncher", this::finalFinishClose);
+        Utils.runOnDispatchThread("closeProcessLauncher", this::finalFinishClose);
     }
 
     private void finalFinishClose() {

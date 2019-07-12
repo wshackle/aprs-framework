@@ -56,8 +56,8 @@ public class PhysicalItem extends PM_CARTESIAN {
     private @Nullable
     String fullName;
 
-    @Nullable
-    public String getSku() {
+    public @Nullable
+    String getSku() {
         return sku;
     }
 
@@ -355,7 +355,7 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     public void setVxi(double vxi) {
         this.vxi = vxi;
-        rotation = Math.atan2(vxj,vxi);
+        rotation = Math.atan2(vxj, vxi);
     }
 
     public double getVxj() {
@@ -364,7 +364,7 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     public void setVxj(double vxj) {
         this.vxj = vxj;
-        rotation = Math.atan2(vxj,vxi);
+        rotation = Math.atan2(vxj, vxi);
     }
 
     public double getVxk() {
@@ -423,8 +423,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.type = type;
     }
 
-    @Nullable
-    public AffineTransform getDisplayTransform() {
+    public @Nullable
+    AffineTransform getDisplayTransform() {
         return displayTransform;
     }
 
@@ -432,8 +432,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.displayTransform = displayTransform;
     }
 
-    @Nullable
-    public AffineTransform getOrigTransform() {
+    public @Nullable
+    AffineTransform getOrigTransform() {
         return origTransform;
     }
 
@@ -441,8 +441,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.origTransform = origTransform;
     }
 
-    @Nullable
-    public AffineTransform getRelTransform() {
+    public @Nullable
+    AffineTransform getRelTransform() {
         return relTransform;
     }
 
@@ -450,12 +450,12 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.relTransform = relTransform;
     }
 
-    @Nullable
-    public Rectangle2D getDisplayRect() {
+    public @Nullable
+    Rectangle2D getDisplayRect() {
         return displayRect;
     }
 
-    public void setDisplayRect(Rectangle2D. @Nullable Double displayRect) {
+    public void setDisplayRect(Rectangle2D.@Nullable Double displayRect) {
         this.displayRect = displayRect;
     }
 
@@ -492,8 +492,8 @@ public class PhysicalItem extends PM_CARTESIAN {
         this.timestamp = timestamp;
     }
 
-    @Nullable
-    public PhysicalItem getTray() {
+    public @Nullable
+    PhysicalItem getTray() {
         return tray;
     }
 

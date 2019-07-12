@@ -51,12 +51,13 @@ public class IconImages {
     public static final Image WORKING_IMAGE = createImage(ICON_SIZE, Color.green, Color.BLACK, BASE_IMAGE);
     public static final Image DISCONNECTED_IMAGE = createImage(ICON_SIZE, Color.GRAY, Color.BLACK, BASE_IMAGE);
 
-    @MonotonicNonNull private static BufferedImage baseImage = null;
+    static private @MonotonicNonNull
+    BufferedImage baseImage = null;
 
     private static class DefaultBaseImageLoader {
 
         final static BufferedImage DEFAULT_BASE_IMAGE = getDefaultBaseImage();
-        
+
         private static BufferedImage getDefaultBaseImage() {
             try {
                 URL baseImageUrl = Utils.getAprsIconUrl();

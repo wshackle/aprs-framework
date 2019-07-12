@@ -35,28 +35,35 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class UpdateResults {
 
     final String name;
-    private @Nullable String updateStringFilled;
+    private @Nullable
+    String updateStringFilled;
     private int updateCount;
     private int totalUpdateCount;
     private int statementExecutionCount;
-    private @Nullable PhysicalItem lastDetectedItem;
+    private @Nullable
+    PhysicalItem lastDetectedItem;
     private double x;
     private double y;
     private double rotation;
-    private @Nullable List<Map<String, String>> lastResultSetMapList;
-    private @Nullable Exception exception;
+    private @Nullable
+    List<Map<String, String>> lastResultSetMapList;
+    private @Nullable
+    Exception exception;
     private boolean returnedResultSet;
 
-    private @Nullable List<Map<String, String>> lastVerificationResultSetListMap;
+    private @Nullable
+    List<Map<String, String>> lastVerificationResultSetListMap;
 
-    private @Nullable String verificationQueryStringFilled;
+    private @Nullable
+    String verificationQueryStringFilled;
 
     /**
      * Get the value of verificationQueryStringFilled
      *
      * @return the value of verificationQueryStringFilled
      */
-    @Nullable public String getVerificationQueryStringFilled() {
+    public @Nullable
+    String getVerificationQueryStringFilled() {
         return verificationQueryStringFilled;
     }
 
@@ -75,7 +82,8 @@ public class UpdateResults {
      *
      * @return the value of lastVerificationResultSetListMap
      */
-    @Nullable public List<Map<String, String>> getLastVerificationResultSetListMap() {
+    public @Nullable
+    List<Map<String, String>> getLastVerificationResultSetListMap() {
         return lastVerificationResultSetListMap;
     }
 
@@ -128,7 +136,8 @@ public class UpdateResults {
     /**
      * @return the updateStringFilled
      */
-    @Nullable public String getUpdateStringFilled() {
+    public @Nullable
+    String getUpdateStringFilled() {
         return updateStringFilled;
     }
 
@@ -188,7 +197,8 @@ public class UpdateResults {
     /**
      * @return the lastDetectedItem
      */
-    @Nullable public PhysicalItem getLastDetectedItem() {
+    public @Nullable
+    PhysicalItem getLastDetectedItem() {
         return lastDetectedItem;
     }
 
@@ -205,7 +215,8 @@ public class UpdateResults {
     /**
      * @return the lastResultSetMapList
      */
-    @Nullable public List<Map<String, String>> getLastResultSetMapList() {
+    public @Nullable
+    List<Map<String, String>> getLastResultSetMapList() {
         return lastResultSetMapList;
     }
 
@@ -232,31 +243,33 @@ public class UpdateResults {
                 + ",\n    exception=" + exception + ((null != exception && null != exception.getCause()) ? "\n caused by \n" + exception.getCause() + "\n" : "")
                 + ",\n    returnedResultSet=" + returnedResultSet
                 + ",\n    verificationQueryStringFilled=\n" + verificationQueryStringFilled
-                + "\n\n    "+getVerifyExceptionString()
+                + "\n\n    " + getVerifyExceptionString()
                 + ",\n    verified=" + verified
                 + ",\n    lastVerificationResultSetListMap=" + lastVerificationResultSetListMap
                 + "\n}";
     }
 
     private String getVerifyExceptionString() {
-        if(null == verifyException) {
-           return "";
+        if (null == verifyException) {
+            return "";
         }
         Throwable cause = verifyException.getCause();
-        if(null == cause) {
+        if (null == cause) {
             return "verifyException=" + verifyException;
         }
-        return "verifyException=" + verifyException +  "\n caused by \n" + cause + "\n";
+        return "verifyException=" + verifyException + "\n caused by \n" + cause + "\n";
     }
-    
-    @Nullable private Exception verifyException = null;
+
+    private @Nullable
+    Exception verifyException = null;
 
     /**
      * Get the value of verifyException
      *
      * @return the value of verifyException
      */
-    @Nullable public Exception getVerifyException() {
+    public @Nullable
+    Exception getVerifyException() {
         return verifyException;
     }
 
@@ -272,7 +285,8 @@ public class UpdateResults {
     /**
      * @return the exception
      */
-    @Nullable public Exception getException() {
+    public @Nullable
+    Exception getException() {
         return exception;
     }
 
