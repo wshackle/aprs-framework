@@ -142,7 +142,7 @@ public class Action {
 
         public ActionBuilder partType(@Nullable String partType) {
             if (null != partType && !allowedPartTypes.contains(partType)) {
-                throw new RuntimeException("partType=" + partType);
+                throw new RuntimeException("partType=" + partType +" not in allowedPartTypes="+allowedPartTypes);
             }
             this.partType = partType;
             return this;
