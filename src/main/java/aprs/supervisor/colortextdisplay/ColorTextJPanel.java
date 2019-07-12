@@ -87,7 +87,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * @param name name of the robot
      * @return icon
      */
-    @Nullable public static Icon getRobotIcon(String name) {
+    public  static  @Nullable  Icon getRobotIcon(String name) {
         if (name == null || name.length() < 1) {
             return null;
         }
@@ -114,7 +114,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * @param name name of the robot
      * @return icon
      */
-    @Nullable public static BufferedImage getRobotImage(String name) throws IllegalStateException {
+    public  static  @Nullable  BufferedImage getRobotImage(String name) throws IllegalStateException {
         if (name == null || name.length() < 1) {
             return null;
         }
@@ -157,7 +157,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      */
     public static final int COLORTEXT_SOCKET_PORT = 23444;
 
-    @Nullable private SocketLineReader reader;
+    private @Nullable
+    SocketLineReader reader;
 
     /**
      * Start a separate thread to read a socket for messages to change colors
@@ -174,8 +175,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         this.reader = readerTmp;
     }
 
-    
     private volatile boolean stopReading = false;
+
     /**
      * Stop thread and close socket created with startReader.
      */
@@ -188,7 +189,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     }
 
     private void parseSocketLine(String line, PrintStream ps) {
-        if(stopReading) {
+        if (stopReading) {
             return;
         }
         String colorStrings[] = line.split("[ \t,]+");
@@ -199,7 +200,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             if (colorStrings.length != 2) {
                 ps.println("2 colors expected : line " + line);
                 System.err.println("2 colors expected : line=" + line);
-                System.err.println("colorStrings="+Arrays.toString(colorStrings));
+                System.err.println("colorStrings=" + Arrays.toString(colorStrings));
                 stopReader();
                 return;
             }
@@ -209,7 +210,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             ps.println("color2 = " + color2);
         } catch (NumberFormatException numberFormatException) {
             Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE,
-                    "line="+line+"\ncolorStrings="+Arrays.toString(colorStrings),
+                    "line=" + line + "\ncolorStrings=" + Arrays.toString(colorStrings),
                     numberFormatException);
             stopReader();
             throw new RuntimeException(numberFormatException);

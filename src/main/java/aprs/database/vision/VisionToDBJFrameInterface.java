@@ -42,7 +42,7 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
     public void setAquiring(String s);
 
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list);
-    
+
     public void updateResultsMap(final Map<String, UpdateResults> _map);
 
     public boolean isDebug();
@@ -56,16 +56,17 @@ public interface VisionToDBJFrameInterface extends SlotOffsetProvider {
     public void setLastCommand(String c);
 
     public java.sql.@Nullable Connection getSqlConnection();
-    
+
     public DbType getDbType();
-    
+
     public void setSqlConnection(java.sql.Connection connection, DbType dbtype);
-    
-    @Nullable public Callable<DbSetupPublisher> getDbSetupSupplier();
+
+    public @Nullable
+    Callable<DbSetupPublisher> getDbSetupSupplier();
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier);
-    
+
     public XFutureVoid connectVision();
-    
+
     public void updatePerformanceLine();
 }

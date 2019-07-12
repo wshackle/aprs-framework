@@ -62,12 +62,13 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
-    @Nullable private Map<DbQueryEnum, DbQueryInfo> queriesMap;
+     private  @Nullable  Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private boolean internalQueriesResourceDir = true;
-    @MonotonicNonNull private String queriesDir = null;
+    private @MonotonicNonNull
+    String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
-    @Nullable private String startScript = null;
+     private  @Nullable  String startScript = null;
 
     private static final String BASE_RESOURCE_DIR = "aprs/database/";
 
@@ -116,9 +117,9 @@ public class DbSetupBuilder {
     }
 
     /**
-     * Read a  directory of text resource files with information for
-     * each required query type and create a map of query types to database
-     * query information objects.
+     * Read a directory of text resource files with information for each
+     * required query type and create a map of query types to database query
+     * information objects.
      *
      * @param resDir resource directory
      * @return map of query types to query information objects
@@ -177,12 +178,13 @@ public class DbSetupBuilder {
         private final String user;
         private final String dbname;
         private final boolean connected;
-        private final @Nullable Map<DbQueryEnum, DbQueryInfo> queriesMap;
+        private final @Nullable
+        Map<DbQueryEnum, DbQueryInfo> queriesMap;
         private final boolean internalQueriesResourceDir;
         private final String queriesDir;
         private final boolean debug;
         private final int loginTimeout;
-        @Nullable private final String startScript;
+         private  @Nullable  final String startScript;
 
         private DbSetupInternal(
                 DbType type,
@@ -277,21 +279,22 @@ public class DbSetupBuilder {
         }
 
         @Override
-        @Nullable public String getStartScript() {
+        public @Nullable
+        String getStartScript() {
             return startScript;
         }
 
     }
 
     /**
-     * Copies the options from the given setup to the builder in order 
-     * to create a new DbSetup instance that differs in only a subset of the 
-     * options.
-     * 
+     * Copies the options from the given setup to the builder in order to create
+     * a new DbSetup instance that differs in only a subset of the options.
+     *
      * @param setup object to copy properties from
      * @return new builder with copied initial properties
      */
-    @EnsuresNonNull("this.queriesDir") public DbSetupBuilder setup(DbSetup setup) {
+    @EnsuresNonNull("this.queriesDir")
+    public DbSetupBuilder setup(DbSetup setup) {
         type = setup.getDbType();
         host = setup.getHost();
         dbname = setup.getDbName();
@@ -325,7 +328,7 @@ public class DbSetupBuilder {
 
     /**
      * Create a new instance from the current options.
-     * 
+     *
      * @return new instance
      */
     public DbSetup build() {
@@ -353,6 +356,7 @@ public class DbSetupBuilder {
 
     /**
      * Set type option in builder
+     *
      * @param type database type
      * @return this builder
      */
@@ -365,6 +369,7 @@ public class DbSetupBuilder {
 
     /**
      * Set host option in builder
+     *
      * @param host database server host
      * @return this builder
      */
@@ -377,6 +382,7 @@ public class DbSetupBuilder {
 
     /**
      * Set port option in builder
+     *
      * @param port database server port
      * @return this builder
      */
@@ -387,6 +393,7 @@ public class DbSetupBuilder {
 
     /**
      * Set passwd option in builder
+     *
      * @param passwd database passwd
      * @return this builder
      */
@@ -399,6 +406,7 @@ public class DbSetupBuilder {
 
     /**
      * Set user option in builder
+     *
      * @param user database username
      * @return this builder
      */
@@ -411,16 +419,19 @@ public class DbSetupBuilder {
 
     /**
      * Set _queriesDir option in builder
+     *
      * @param _queriesDir queries directory path
      * @return this builder
      */
-    @EnsuresNonNull("this.queriesDir") public DbSetupBuilder queriesDir(String _queriesDir) {
+    @EnsuresNonNull("this.queriesDir")
+    public DbSetupBuilder queriesDir(String _queriesDir) {
         this.queriesDir = _queriesDir;
         return this;
     }
 
     /**
      * Set internalQueriesResourceDir option in builder
+     *
      * @param internalQueriesResourceDir directory path
      * @return this builder
      */
@@ -431,6 +442,7 @@ public class DbSetupBuilder {
 
     /**
      * Set startScript option in builder
+     *
      * @param startScript script path
      * @return this builder
      */
@@ -441,6 +453,7 @@ public class DbSetupBuilder {
 
     /**
      * Set dbname option in builder
+     *
      * @param dbname database name
      * @return this builder
      */
@@ -451,8 +464,9 @@ public class DbSetupBuilder {
         return this;
     }
 
-     /**
+    /**
      * Set connected option in builder
+     *
      * @param connected desired connection state
      * @return this builder
      */
@@ -463,6 +477,7 @@ public class DbSetupBuilder {
 
     /**
      * Set debug option in builder
+     *
      * @param debug desired debug preference
      * @return this builder
      */
@@ -473,6 +488,7 @@ public class DbSetupBuilder {
 
     /**
      * Set loginTimeout option in builder
+     *
      * @param loginTimeout desired login timeout
      * @return this builder
      */
@@ -483,6 +499,7 @@ public class DbSetupBuilder {
 
     /**
      * Set queriesMap option in builder
+     *
      * @param queriesMap map of queries
      * @return this builder
      */
@@ -593,6 +610,7 @@ public class DbSetupBuilder {
 
     /**
      * Get a map with hard-coded default argument options.
+     *
      * @return map of argument options
      */
     public static Map<String, String> getDefaultArgsMap() {
@@ -754,7 +772,7 @@ public class DbSetupBuilder {
                 ret.completeExceptionally(ex);
                 LOGGER.log(Level.SEVERE, "", ex);
             }
-        }, "dbConnectionSetupThread:"+host+":"+port).start();
+        }, "dbConnectionSetupThread:" + host + ":" + port).start();
         return ret;
     }
 
@@ -773,16 +791,16 @@ public class DbSetupBuilder {
                         DriverManager.setLoginTimeout(loginTimeout);
                     }
                     return DriverManager.getConnection(mysql_url, username, password);
-                    
+
                 case NEO4J:
-                    @SuppressWarnings("unused") Class<?> neo4jDriverClass = org.neo4j.jdbc.Driver.class;
+                    @SuppressWarnings("unused") Class<?> neo4jDriverClass;
                     try {
                         neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                         //println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
                     } catch (ClassNotFoundException ex) {
                         LOGGER.log(Level.SEVERE, "", ex);
                     }
-                    
+
                     Properties properties = new Properties();
                     properties.put("user", username);
                     properties.put("password", password);
@@ -806,10 +824,11 @@ public class DbSetupBuilder {
                         return DriverManager.getConnection(neo4j_url, properties);
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                        org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
-                        return neo4jDriver.connect(neo4j_url, properties);
+//                        org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
+//                        return neo4jDriver.connect(neo4j_url, properties);
                     }
-                    
+                    break;
+
                 case NEO4J_BOLT:
                     throw new RuntimeException("Neo4J BOLT driver not supported.");
             }

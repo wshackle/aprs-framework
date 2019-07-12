@@ -34,15 +34,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class WrappedActionInfo {
 
-    @Nullable
-    private final Action parentAction;
+    private @Nullable
+    final Action parentAction;
     private final int parentActionIndex;
 
     private final Action action;
     private final int pddlActionIndex;
     private final int outIndex;
-    @Nullable
-    private CRCLCommandWrapper wrapper = null;
+    private @Nullable
+    CRCLCommandWrapper wrapper = null;
     private final int startSafeAbortRequestCount;
 
     public WrappedActionInfo(Action action, int pddlActionIndex, int outIndex, int startSafeAbortRequestCount, @Nullable Action parentAction, int parentActionIndex) {
@@ -54,8 +54,8 @@ public class WrappedActionInfo {
         this.parentActionIndex = parentActionIndex;
     }
 
-    @Nullable
-    public CRCLCommandWrapper getWrapper() {
+    public @Nullable
+    CRCLCommandWrapper getWrapper() {
         return wrapper;
     }
 
@@ -79,8 +79,8 @@ public class WrappedActionInfo {
         return startSafeAbortRequestCount;
     }
 
-    @Nullable
-    public Action getParentAction() {
+    public @Nullable
+    Action getParentAction() {
         return parentAction;
     }
 

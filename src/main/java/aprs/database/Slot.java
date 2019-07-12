@@ -35,23 +35,30 @@ public class Slot extends PhysicalItem {
 
     private int ID;
     private String SlotName;
-    private @MonotonicNonNull String PartSKU;
-    private @Nullable String ExternalShapeModelFileName;
-    private @Nullable String ExternalShapeModelFormatName;
+    private @MonotonicNonNull
+    String PartSKU;
+    private @Nullable
+    String ExternalShapeModelFileName;
+    private @Nullable
+    String ExternalShapeModelFormatName;
     private double X_OFFSET;
     private double Y_OFFSET;
-    private @Nullable Boolean SlotOccupied;
-    private @Nullable PoseType SlotPose;
+    private @Nullable
+    Boolean SlotOccupied;
+    private @Nullable
+    PoseType SlotPose;
     private double diameter;
 
-    private @Nullable String slotIndexString;
+    private @Nullable
+    String slotIndexString;
 
     /**
      * Get the value of slotIndexString
      *
      * @return the value of slotIndexString
      */
-    public @Nullable String getSlotIndexString() {
+    public @Nullable
+    String getSlotIndexString() {
         return slotIndexString;
     }
 
@@ -64,11 +71,11 @@ public class Slot extends PhysicalItem {
         this.slotIndexString = slotIndexString;
     }
 
-    public static Slot slotFromTrayPartNameIndexRotationXYDiameter(Tray tray,String partName,int index, double rotation, double x, double y, double diameter) {
-        String slotName = "slot_"+index+"_for_"+partName;
-        Slot slot = new Slot(partName,rotation,x,y);
+    public static Slot slotFromTrayPartNameIndexRotationXYDiameter(Tray tray, String partName, int index, double rotation, double x, double y, double diameter) {
+        String slotName = "slot_" + index + "_for_" + partName;
+        Slot slot = new Slot(partName, rotation, x, y);
         slot.setIndex(index);
-        slot.setSlotIndexString(""+index);
+        slot.setSlotIndexString("" + index);
         slot.setSlotForSkuName(partName);
         slot.setFullName(slotName);
         slot.setPrpName(slotName);
@@ -76,14 +83,14 @@ public class Slot extends PhysicalItem {
         slot.setDiameter(diameter);
         return slot;
     }
-    
+
     public Slot(String SlotName) {
-        super(SlotName,"S");
+        super(SlotName, "S");
         this.SlotName = SlotName;
     }
 
     public Slot(String name, double rotation, double x, double y) {
-        super(name, rotation, x, y,"S");
+        super(name, rotation, x, y, "S");
         X_OFFSET = x;
         Y_OFFSET = y;
         this.SlotName = name;
@@ -104,10 +111,10 @@ public class Slot extends PhysicalItem {
     }
 
     public PoseType getSlotPose() {
-        if(null != SlotPose) {
+        if (null != SlotPose) {
             return SlotPose;
         }
-        throw new NullPointerException("SlotPose is null in Slot with name="+getName());
+        throw new NullPointerException("SlotPose is null in Slot with name=" + getName());
     }
 
     public void setSlotPose(PoseType SlotPose) {
@@ -130,10 +137,11 @@ public class Slot extends PhysicalItem {
         this.SlotName = SlotName;
     }
 
-    @Nullable public String getPartSKU() {
-            return PartSKU;
+    public @Nullable
+    String getPartSKU() {
+        return PartSKU;
     }
-    
+
     @EnsuresNonNull("this.PartSKU")
     public void setPartSKU(String PartSKU) {
         this.PartSKU = PartSKU;
@@ -156,12 +164,11 @@ public class Slot extends PhysicalItem {
     }
 
     public Boolean getSlotOccupied() {
-        if(null != SlotOccupied) {
+        if (null != SlotOccupied) {
             return SlotOccupied;
         }
-        throw new NullPointerException("SlotOccupied is null in Slot with name="+getName());
+        throw new NullPointerException("SlotOccupied is null in Slot with name=" + getName());
     }
-    
 
     public void setSlotOccupied(Boolean SlotOccupied) {
         this.SlotOccupied = SlotOccupied;

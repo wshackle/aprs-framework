@@ -23,7 +23,6 @@
 package aprs.supervisor.screensplash;
 
 import aprs.misc.Utils;
-import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import java.awt.Color;
 import java.awt.Font;
@@ -48,7 +47,6 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -60,11 +58,12 @@ public class SplashScreen extends JFrame {
 
     private final SplashPanel panel;
 
-    @UIType
     private static class SplashPanel extends JPanel {
 
         private final Font font;
 
+        @UIEffect
+        @SuppressWarnings("initialization")
         SplashPanel(String message, float fontSize, @Nullable Image image) {
             this.messageLines = message.split("[\r\n]+");
             this.fontSize = fontSize;
@@ -96,6 +95,7 @@ public class SplashScreen extends JFrame {
     }
 
     @UIEffect
+    @SuppressWarnings("initialization")
     private SplashScreen(String message, float fontSize, @Nullable Image image) {
         super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);
@@ -117,13 +117,13 @@ public class SplashScreen extends JFrame {
 
     private static class RobotArmImageHider {
 
-        @Nullable
-        static final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
+        static @Nullable
+        final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
 
     }
 
-    @Nullable
-    private static BufferedImage readImageOrNull(String name) {
+    private static @Nullable
+    BufferedImage readImageOrNull(String name) {
         try {
             InputStream stream = SplashScreen.class.getResourceAsStream(name);
             if (null == stream) {
@@ -137,20 +137,20 @@ public class SplashScreen extends JFrame {
         return null;
     }
 
-    @Nullable
-    public static Image getRobotArmImage() {
+    static public @Nullable
+    Image getRobotArmImage() {
         return RobotArmImageHider.ROBOT_ARM_IMAGE;
     }
 
     private static class DisableImageHider {
 
-        @Nullable
-        static final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
+        static @Nullable
+        final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 
-    @Nullable
-    public static Image getDisableImageImage() {
+    public static @Nullable
+    Image getDisableImageImage() {
         return DisableImageHider.DISABLED_IMAGE;
     }
 
@@ -202,7 +202,7 @@ public class SplashScreen extends JFrame {
                                 }
                             } catch (Exception exception) {
                                 returnFuture.completeExceptionally(exception);
-                                Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "",exception);
+                                Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "", exception);
                             }
                         }
                     });

@@ -351,7 +351,8 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         }
     }
 
-    @MonotonicNonNull private Connection connection = null;
+    private @MonotonicNonNull
+    Connection connection = null;
 
     private boolean sharedConnection;
 
@@ -1197,7 +1198,8 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
     private javax.swing.JTextField jTextFieldSelectedNodeName;
     // End of variables declaration//GEN-END:variables
 
-    @MonotonicNonNull private AprsSystem aprsSystem = null;
+    private @MonotonicNonNull
+    AprsSystem aprsSystem = null;
 
     /**
      * Set the value of aprsSystemInterface

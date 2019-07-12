@@ -70,7 +70,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -86,7 +86,7 @@ import org.optaplanner.core.api.solver.SolverFactory;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@UIType
+@SuppressWarnings("guieffect")
 public class OpDisplayJPanel extends JPanel {
 
     /**
@@ -116,21 +116,23 @@ public class OpDisplayJPanel extends JPanel {
         showPlan(createTestInitPlan(), "testInit", JFrame.EXIT_ON_CLOSE);
     }
 
-    private volatile Point mouseDownPoint = null;
+    private volatile @Nullable
+    Point mouseDownPoint = null;
 
     private final MouseMotionListener mml = new MouseMotionListener() {
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (null != mouseDownPoint) {
+            final Point mouseDownPointFinal = OpDisplayJPanel.this.mouseDownPoint;
+            if (null != mouseDownPointFinal) {
                 Dimension dim = getSize();
                 int h = dim.height;
                 int w = keyVisible ? (dim.width - keyWidth) : dim.width;
-                for (OpAction action : closeActions) {
-//                    int x = keyWidth + (int) ((0.9 * (location.x - minX) / (maxX - minX)) * w + 0.05 * w);
-//                    int y = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
-                    action.getLocation().x += (maxX - minX)* ((e.getPoint().x - mouseDownPoint.x) / ((double)w));
-                    action.getLocation().y += (maxY - minY)* ((e.getPoint().y - mouseDownPoint.y) / ((double)h));
-                    
+                final List<OpAction> closeActionsFinal = OpDisplayJPanel.this.closeActions;
+                if (null != closeActionsFinal) {
+                    for (OpAction action : closeActionsFinal) {
+                        action.getLocation().x += (maxX - minX) * ((e.getPoint().x - mouseDownPointFinal.x) / ((double) w));
+                        action.getLocation().y += (maxY - minY) * ((e.getPoint().y - mouseDownPointFinal.y) / ((double) h));
+                    }
                 }
                 mouseDownPoint = e.getPoint();
             }
@@ -169,8 +171,8 @@ public class OpDisplayJPanel extends JPanel {
         }
     };
 
-    @MonotonicNonNull
-    private JPopupMenu popupMenu = null;
+    private @MonotonicNonNull
+    JPopupMenu popupMenu = null;
 
     /**
      * Get the value of showSkippedActions
@@ -225,8 +227,8 @@ public class OpDisplayJPanel extends JPanel {
         }
     }
 
-    @Nullable
-    public SolverFactory<OpActionPlan> getSolverFactory() {
+    public @Nullable
+    SolverFactory<OpActionPlan> getSolverFactory() {
         return solverFactory;
     }
 
@@ -321,6 +323,7 @@ public class OpDisplayJPanel extends JPanel {
      * @param opActionPlan plan to show
      */
     @SuppressWarnings("initialization")
+    @UIEffect
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         super.setBackground(Color.white);
@@ -334,7 +337,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      */
     public OpDisplayJPanel() {
-        this(createTestInitPlan());
+        this(createEmptyInitPlan());
     }
 
     static private OpActionPlan createTestInitPlan() {
@@ -360,6 +363,16 @@ public class OpDisplayJPanel extends JPanel {
         return ap;
     }
 
+    static private OpActionPlan createEmptyInitPlan() {
+        List<OpAction> initList = Arrays.asList(
+                new OpAction("Start", 0, 0, START, "START", true)
+        );
+        OpActionPlan ap = new OpActionPlan();
+        ap.setActions(initList);
+        ap.getEndAction().setLocation(new Point2D.Double(7, 0));
+        ap.initNextActions();
+        return ap;
+    }
     /**
      * Clear the map associating parts carried with colors.
      */
@@ -384,8 +397,8 @@ public class OpDisplayJPanel extends JPanel {
         return partsColorsMap.computeIfAbsent(partName, (k) -> colors[partsColorsMap.size() % colors.length]);
     }
 
-    @Nullable
-    private OpActionPlan opActionPlan;
+    private @Nullable
+    OpActionPlan opActionPlan;
 
     /**
      * Get the value of opActionPlan
@@ -838,8 +851,8 @@ public class OpDisplayJPanel extends JPanel {
         g2d.setTransform(origTransform);
     }
 
-    @Nullable
-    private Font boldFont = null;
+    private @Nullable
+    Font boldFont = null;
 
     private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type, boolean required) {
         String typeLetterString = type.name().substring(0, 1);
@@ -919,8 +932,8 @@ public class OpDisplayJPanel extends JPanel {
         this.carryStroke = carryStroke;
     }
 
-    @Nullable
-    private String label;
+    private @Nullable
+    String label;
 
     /**
      * Get the value of label
@@ -944,16 +957,16 @@ public class OpDisplayJPanel extends JPanel {
         this.repaint();
     }
 
-    @MonotonicNonNull
-    private Point labelPos;
+    private @MonotonicNonNull
+    Point labelPos;
 
     /**
      * Get the value of labelPos
      *
      * @return the value of labelPos
      */
-    @Nullable
-    public Point getLabelPos() {
+    public @Nullable
+    Point getLabelPos() {
         return labelPos;
     }
 
@@ -966,16 +979,16 @@ public class OpDisplayJPanel extends JPanel {
         this.labelPos = labelPos;
     }
 
-    @Nullable
-    private Font labelFont;
+    private @Nullable
+    Font labelFont;
 
     /**
      * Get the value of labelFont
      *
      * @return the value of labelFont
      */
-    @Nullable
-    public Font getLabelFont() {
+    public @Nullable
+    Font getLabelFont() {
         return labelFont;
     }
 
@@ -1025,9 +1038,13 @@ public class OpDisplayJPanel extends JPanel {
 //        setCloseActionsToolTip(e);
 //    }
 //
-    private List<OpAction> closeActions = null;
+    private @Nullable
+    List<OpAction> closeActions = null;
 
     public List<OpAction> getCloseActions() {
+        if (null == closeActions) {
+            return Collections.emptyList();
+        }
         return closeActions;
     }
 
@@ -1044,8 +1061,4 @@ public class OpDisplayJPanel extends JPanel {
         repaint();
     }
 
-//
-//    private void mouseMoved(MouseEvent e) {
-//        setCloseActionsToolTip(e);
-//    }
 }

@@ -92,24 +92,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    @MonotonicNonNull
-    private Connection con;
-    @MonotonicNonNull
-    private PreparedStatement update_statement;
-    @MonotonicNonNull
-    private PreparedStatement pre_vision_clean_statement;
-    @MonotonicNonNull
-    private PreparedStatement get_tray_slots_statement;
-    @MonotonicNonNull
-    private PreparedStatement update_parts_tray_statement;
-    @MonotonicNonNull
-    private PreparedStatement update_kit_tray_statement;
-    @MonotonicNonNull
-    private PreparedStatement query_all_statement;
-    @MonotonicNonNull
-    private PreparedStatement query_all_new_statement;
-    @MonotonicNonNull
-    private PreparedStatement get_single_statement;
+    private @MonotonicNonNull Connection con;
+    private @MonotonicNonNull PreparedStatement update_statement;
+    private @MonotonicNonNull PreparedStatement pre_vision_clean_statement;
+    private @MonotonicNonNull PreparedStatement get_tray_slots_statement;
+    private @MonotonicNonNull PreparedStatement update_parts_tray_statement;
+    private @MonotonicNonNull PreparedStatement update_kit_tray_statement;
+    private @MonotonicNonNull PreparedStatement query_all_statement;
+    private @MonotonicNonNull PreparedStatement query_all_new_statement;
+    private @MonotonicNonNull PreparedStatement get_single_statement;
 
 //    private org.neo4j.driver.v1.Driver neo4jJavaDriver;
 //    private Session neo4jSession;
@@ -285,8 +276,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return dbtype;
     }
 
-    @Nullable
-    public Connection getSqlConnection() {
+    public @Nullable
+    Connection getSqlConnection() {
         return con;
     }
 
@@ -329,24 +320,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         setupStatements();
     }
 
-    @MonotonicNonNull
-    private String queryAllString;
-    @MonotonicNonNull
-    private String queryAllNewString;
-    @MonotonicNonNull
-    private String querySingleString;
-    @MonotonicNonNull
-    private String queryDeleteSinglePoseString;
-    @MonotonicNonNull
-    private String updateStatementString;
-    @MonotonicNonNull
-    private String preVisionCleanStatementString;
-    @MonotonicNonNull
-    private String updatePartsTrayStatementString;
-    @MonotonicNonNull
-    private String updateKitTrayStatementString;
-    @MonotonicNonNull
-    private String getTraySlotsQueryString;
+    private @MonotonicNonNull String queryAllString;
+    private @MonotonicNonNull String queryAllNewString;
+    private @MonotonicNonNull String querySingleString;
+    private @MonotonicNonNull String queryDeleteSinglePoseString;
+    private @MonotonicNonNull String updateStatementString;
+    private @MonotonicNonNull String preVisionCleanStatementString;
+    private @MonotonicNonNull String updatePartsTrayStatementString;
+    private @MonotonicNonNull String updateKitTrayStatementString;
+    private @MonotonicNonNull String getTraySlotsQueryString;
 
     private static DbParamTypeEnum[] getQueryParams(Map<DbQueryEnum, DbQueryInfo> queriesMap, DbQueryEnum key) {
         DbQueryInfo info = queriesMap.get(key);
@@ -584,16 +566,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 throw new IllegalStateException("getDirectPoseList not implemented for dbtype=" + dbtype);
         }
     }
-    @MonotonicNonNull
-    private VisionToDBJFrameInterface displayInterface;
+    private @MonotonicNonNull VisionToDBJFrameInterface displayInterface;
 
     /**
      * Get the value of displayInterface
      *
      * @return the value of displayInterface
      */
-    @Nullable
-    public VisionToDBJFrameInterface getDisplayInterface() {
+    public @Nullable
+    VisionToDBJFrameInterface getDisplayInterface() {
         return displayInterface;
     }
 
@@ -758,8 +739,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return l;
     }
 
-    @Nullable
-    public String getURL() {
+    public @Nullable
+    String getURL() {
         try {
             if (null != con) {
                 return con.getMetaData().getURL();
@@ -941,8 +922,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             map.put(key, value);
         }
     }
-    @Nullable
-    private volatile SQLException getSlotOffsetsNewSqlException = null;
+     private volatile @Nullable  SQLException getSlotOffsetsNewSqlException = null;
 
     private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
@@ -1415,8 +1395,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return enableDatabaseUpdates;
     }
 
-    @Nullable
-    private volatile PrintStream dbQueryLogPrintStream = null;
+     private volatile @Nullable  PrintStream dbQueryLogPrintStream = null;
 
     private List<String> requiredParts = Collections.emptyList();
 
@@ -1478,11 +1457,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    @Nullable
-    private volatile List<PhysicalItem> lastEnabledUpdateList = null;
+     private volatile @Nullable  List<PhysicalItem> lastEnabledUpdateList = null;
 
-    @Nullable
-    public List<PhysicalItem> getLastEnabledUpdateList() {
+    public @Nullable
+    List<PhysicalItem> getLastEnabledUpdateList() {
         if (null == lastEnabledUpdateList) {
             return null;
         }
@@ -1860,10 +1838,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
             if ("P".equals(ci.getType())) {
                 if (ci.isInsideKitTray() || inside(kitTrays, ci, 10)) {
-                    if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
+                    if (!name.contains("_in_kt") && !name.contains("_in_pt")) {
                         name = name + "_in_kt";
                     } else {
-                        throw new RuntimeException("adding in_kt twice name="+name);
+                        throw new RuntimeException("adding in_kt twice name=" + name);
                     }
                     if (!keepNames) {
                         ci.setName(name);
@@ -1873,10 +1851,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     }
                     ci.setInsideKitTray(true);
                 } else if (ci.isInsidePartsTray() || inside(partsTrays, ci, 10)) {
-                    if(!name.contains("_in_kt") && !name.contains("_in_pt")) {
+                    if (!name.contains("_in_kt") && !name.contains("_in_pt")) {
                         name = name + "_in_pt";
                     } else {
-                        throw new RuntimeException("adding in_pt twice name="+name);
+                        throw new RuntimeException("adding in_pt twice name=" + name);
                     }
                     if (!keepNames) {
                         ci.setName(name);

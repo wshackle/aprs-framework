@@ -304,8 +304,7 @@ public class GoalLearnerTest {
             }
 
             @Override
-            @Nullable
-            public PoseType getPose(String name) {
+             public  @Nullable  PoseType getPose(String name) {
                 if (null == poseMap) {
                     getNewPhysicalItems();
                 }

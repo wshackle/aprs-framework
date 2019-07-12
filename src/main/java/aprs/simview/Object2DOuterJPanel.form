@@ -376,8 +376,14 @@
                                   <Component id="jTextFieldSimDropRate" min="-2" pref="101" max="-2" attributes="0"/>
                               </Group>
                               <Component id="jCheckBoxEnforceSensorLimits" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jCheckBoxHideItemsNearMouse" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="jLabel11" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jTextFieldHideNearMouseDist" min="-2" pref="100" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
-                          <EmptySpace pref="224" max="32767" attributes="0"/>
+                          <EmptySpace pref="184" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -425,7 +431,14 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jCheckBoxEnforceSensorLimits" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="217" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="jCheckBoxHideItemsNearMouse" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="jLabel11" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jTextFieldHideNearMouseDist" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace pref="27" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -560,6 +573,28 @@
                     <Property name="text" type="java.lang.String" value="Enforce Sensor Limits"/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="jCheckBoxHideItemsNearMouse">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Hide Items Near Mouse"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxHideItemsNearMouseActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JLabel" name="jLabel11">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Near Mouse Dist: "/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="jTextFieldHideNearMouseDist">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="25.0 "/>
+                    <Property name="enabled" type="boolean" value="false"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldHideNearMouseDistActionPerformed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>

@@ -773,18 +773,18 @@ public class Object2DJPanel extends JPanel {
         Dimension dim = this.getSize();
         int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
         int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
-        if(w<100) {
-            w=100;
-            if(null == opts) {
+        if (w < 100) {
+            w = 100;
+            if (null == opts) {
                 opts = new ViewOptions();
-            } 
+            }
             opts.w = w;
         }
-        if(h<100) {
-            h=100;
-            if(null == opts) {
+        if (h < 100) {
+            h = 100;
+            if (null == opts) {
                 opts = new ViewOptions();
-            } 
+            }
             opts.h = h;
         }
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
@@ -811,8 +811,8 @@ public class Object2DJPanel extends JPanel {
 
     private volatile double autoScaledScale = -1;
 
-    @Nullable
-    private volatile Point2DMinMax autoScaledMinMax = null;
+    private volatile @Nullable
+    Point2DMinMax autoScaledMinMax = null;
 
     @SuppressWarnings("guieffect")
     private void paintWithAutoScale(
@@ -865,7 +865,7 @@ public class Object2DJPanel extends JPanel {
             tempMinMax.max.x = maxX;
             tempMinMax.min.y = minY;
             tempMinMax.max.y = maxY;
-            if (opts.paintingComponent) {
+            if (null != opts && opts.paintingComponent) {
                 autoScaledMinMax = tempMinMax;
                 autoScaledScale = computeNewScale(tempMinMax, opts);
             }
@@ -1102,7 +1102,7 @@ public class Object2DJPanel extends JPanel {
     private Point2DMinMax minmax = new Point2DMinMax();
 
     public Point2DMinMax getMinmax(boolean autoscale) {
-         if (autoscale && null != autoScaledMinMax) {
+        if (autoscale && null != autoScaledMinMax) {
             return autoScaledMinMax;
         }
         return minmax;
@@ -1121,7 +1121,6 @@ public class Object2DJPanel extends JPanel {
 //        }
 //        return getScale();
 //    }
-
     @SuppressWarnings("guieffect")
     private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
 
@@ -1439,7 +1438,10 @@ public class Object2DJPanel extends JPanel {
             }
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            g.drawString(ex.getMessage(), 10, 10);
+            final String exMessageString = ex.getMessage();
+            if (null != exMessageString) {
+                g.drawString(exMessageString, 10, 10);
+            }
         } finally {
             this.lastRepaintPaintTime = System.currentTimeMillis();
         }
@@ -1469,16 +1471,16 @@ public class Object2DJPanel extends JPanel {
         Color.GREEN.darker()
     };
 
-    @MonotonicNonNull
-    private AprsSystem aprsSystem;
+    private @MonotonicNonNull
+    AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
      *
      * @return the value of aprsSystemInterface
      */
-    @Nullable
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 
@@ -1617,11 +1619,11 @@ public class Object2DJPanel extends JPanel {
         return absSlotList;
     }
 
-    @MonotonicNonNull
-    private SlotOffsetProvider slotOffsetProvider = null;
+    private @MonotonicNonNull
+    SlotOffsetProvider slotOffsetProvider = null;
 
-    @Nullable
-    public SlotOffsetProvider getSlotOffsetProvider() {
+    public @Nullable
+    SlotOffsetProvider getSlotOffsetProvider() {
         return slotOffsetProvider;
     }
 
@@ -1730,8 +1732,8 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of capturedPartImage
      */
-    @Nullable
-    public Image getCapturedPartImage() {
+    public @Nullable
+    Image getCapturedPartImage() {
         return capturedPartImage;
     }
 
@@ -1786,10 +1788,11 @@ public class Object2DJPanel extends JPanel {
         this.viewLimitsLine = viewLimitsLine;
     }
 
-    @Nullable
-    private Point mouseDownPoint = null;
+    private @Nullable
+    Point mouseDownPoint = null;
 
-    public Point getMouseDownPoint() {
+    public @Nullable
+    Point getMouseDownPoint() {
         return mouseDownPoint;
     }
 
@@ -1797,16 +1800,16 @@ public class Object2DJPanel extends JPanel {
         this.mouseDownPoint = mouseDownPoint;
     }
 
-    @Nullable
-    private Point mousePoint = null;
+    private @Nullable
+    Point mousePoint = null;
 
     /**
      * Get the value of mousePoint
      *
      * @return the value of mousePoint
      */
-    @Nullable
-    public Point getMousePoint() {
+    public @Nullable
+    Point getMousePoint() {
         return mousePoint;
     }
 
@@ -1859,6 +1862,13 @@ public class Object2DJPanel extends JPanel {
 
     private volatile boolean mouseDown = false;
 
+    public Point2D.Double getMouseWorldMousePoint() {
+        if(null == mousePoint) {
+            return new Point2D.Double(java.lang.Double.NaN,java.lang.Double.NaN);
+        }
+        return screenToWorldPoint(mousePoint.x, mousePoint.y, isAutoscale());
+    }
+    
     public boolean isMouseDown() {
         return mouseDown;
     }
@@ -1879,10 +1889,13 @@ public class Object2DJPanel extends JPanel {
                 return;
             }
             Collection<? extends PhysicalItem> origItemsToPaint = itemsToPaint;
-            if (!showOverlapping) {
-                itemsToPaint = aprsSystem.filterOverLapping(itemsToPaint);
-            } else if (showOnlyOverlapping) {
-                itemsToPaint = aprsSystem.filterNonOverLapping(itemsToPaint);
+            final AprsSystem aprsSystemFinal = aprsSystem;
+            if (null != aprsSystemFinal) {
+                if (!showOverlapping) {
+                    itemsToPaint = aprsSystemFinal.filterOverLapping(itemsToPaint);
+                } else if (showOnlyOverlapping) {
+                    itemsToPaint = aprsSystemFinal.filterNonOverLapping(itemsToPaint);
+                }
             }
             AffineTransform origTransform = g2d.getTransform();
             double currentRotationOffset = this.rotationOffset;
@@ -1898,7 +1911,7 @@ public class Object2DJPanel extends JPanel {
                 throw new IllegalArgumentException("Limits must be finite: (" + minmaxParam.min.x + "," + minmaxParam.min.y + "," + minmaxParam.max.x + "," + minmaxParam.max.y + ")");
             }
 
-            final Dimension dim = (opts != null && opts.w > 0 && opts.h > 0) ? getSize() : new Dimension(opts.w, opts.h);
+            final Dimension dim = (opts != null && opts.w > 0 && opts.h > 0) ? new Dimension(opts.w, opts.h):getSize();
             boolean useSeperateNamesThisTime = useSeparateNames;
             if (null != opts) {
                 if (opts.disableLabels) {
@@ -1909,11 +1922,11 @@ public class Object2DJPanel extends JPanel {
 
             if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
                 if (mouseInside && null != mousePoint) {
-                    boolean localAutoscale = (null != opts)?opts.enableAutoscale:this.autoscale;
-                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y,localAutoscale);
-                    if (null != aprsSystem) {
+                    boolean localAutoscale = (null != opts) ? opts.enableAutoscale : this.autoscale;
+                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, localAutoscale);
+                    if (null != aprsSystemFinal) {
                         PmCartesian robotCart
-                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(worldMousePoint.x, worldMousePoint.y, 0));
+                                = aprsSystemFinal.convertVisionToRobotPmCartesian(new PmCartesian(worldMousePoint.x, worldMousePoint.y, 0));
                         g2d.drawString(
                                 String.format(
                                         "vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
@@ -1929,11 +1942,11 @@ public class Object2DJPanel extends JPanel {
                                 10, dim.height - 10);
                     }
                 } else {
-                    if (null != aprsSystem) {
+                    if (null != aprsSystemFinal) {
                         PmCartesian robotMinCart
-                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minmaxParam.min.x, minmaxParam.min.y, 0));
+                                = aprsSystemFinal.convertVisionToRobotPmCartesian(new PmCartesian(minmaxParam.min.x, minmaxParam.min.y, 0));
                         PmCartesian robotMaxCart
-                                = aprsSystem.convertVisionToRobotPmCartesian(new PmCartesian(minmaxParam.min.x, minmaxParam.min.y, 0));
+                                = aprsSystemFinal.convertVisionToRobotPmCartesian(new PmCartesian(minmaxParam.min.x, minmaxParam.min.y, 0));
                         g2d.drawString(
                                 String.format(
                                         "MinX,MinY = vis(%.2f,%.2f):robot((%.2f,%.2f), MaxX,MaxY= vis(%.2f,%.2f):robot(%.2f,%.2f), scale=%.2f",
@@ -2216,7 +2229,7 @@ public class Object2DJPanel extends JPanel {
                     drawSenseLimitsRectangle(g2d, minmaxParam, new_scale);
                 }
             }
-            if (null != aprsSystem && (null == opts || !opts.disableRobotsReachLimitsRect)) {
+            if (null != aprsSystemFinal && (null == opts || !opts.disableRobotsReachLimitsRect)) {
                 drawRobotReachLimitsRectangle(g2d, minmaxParam, new_scale);
             }
         } catch (Exception exception) {
@@ -2225,6 +2238,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    @UIEffect
     private void paintItemLabel(PhysicalItem item, int i, Graphics2D g2d, DisplayAxis displayAxis, Point2DMinMax minmaxParam, double itemOffsetRatio, Dimension dim, double new_scale, final boolean itemIsSelected, AffineTransform origTransform) {
 
         item.setLabelColor(labelColors[i % labelColors.length]);
@@ -2462,8 +2476,8 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    @Nullable
-    private PartImageInfo getPartImageInfo(PhysicalItem item) {
+    private @Nullable
+    PartImageInfo getPartImageInfo(PhysicalItem item) {
         String name = item.getName();
         PartImageInfo info = partImageMap.get(name);
         if (null == info) {

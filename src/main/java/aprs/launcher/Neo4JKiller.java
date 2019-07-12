@@ -61,15 +61,13 @@ class Neo4JKiller {
         debug = newDebugVal;
     }
     
-    @MonotonicNonNull
-    private static File jpsCommandFile;
+    private @MonotonicNonNull static File jpsCommandFile;
 
     public static void setJpsCommandFile(File f) {
         jpsCommandFile = f;
     }
 
-    @Nullable
-    static File getJpsCommandFile() {
+     static  @Nullable  File getJpsCommandFile() {
         return jpsCommandFile;
     }
 

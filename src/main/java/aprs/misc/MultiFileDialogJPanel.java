@@ -219,8 +219,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
         Utils.autoResizeTableColWidths(jTableFiles);
     }
 
-    @Nullable
-    private Map<String, String> getMap() {
+     private  @Nullable  Map<String, String> getMap() {
         if (cancelled) {
             return null;
         }

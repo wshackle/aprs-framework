@@ -80,7 +80,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
      *
      * @return closest part
      */
-    public PhysicalItem getClosestRobotPart() {
+    public @Nullable PhysicalItem getClosestRobotPart() {
         return this.object2DOuterJPanel1.getClosestRobotPart();
     }
 
@@ -128,14 +128,15 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.clearPrevVisionListSize();
     }
 
+    @SuppressWarnings("guieffect")
     public List<PhysicalItem> csvFileToItemsList(File f) throws IOException {
         return object2DOuterJPanel1.csvFileToItemsList(f);
     }
 
     public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
-         return object2DOuterJPanel1.csvFileToItemsList(f,convertRotToRad,zeroRotations);
+        return object2DOuterJPanel1.csvFileToItemsList(f, convertRotToRad, zeroRotations);
     }
-    
+
     public void saveCsvItemsFile(File f) throws IOException {
         object2DOuterJPanel1.saveCsvItemsFile(f);
     }
@@ -236,8 +237,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.getPropertiesOnDisplay();
     }
 
-    @Nullable
-    private volatile XFutureVoid loadPropertiesFuture = null;
+     private volatile @Nullable  XFutureVoid loadPropertiesFuture = null;
 
     public XFutureVoid loadProperties() throws IOException {
         XFutureVoid ret = object2DOuterJPanel1.loadProperties();
@@ -253,8 +253,8 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         object2DOuterJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
-    @Nullable
-    public AprsSystem getAprsSystem() {
+    public @Nullable
+    AprsSystem getAprsSystem() {
         return object2DOuterJPanel1.getAprsSystem();
     }
 

@@ -58,7 +58,7 @@ public class WrappedProcess {
     private volatile boolean closed = false;
     private final XFuture<Process> processStartXFuture;
     private final String cmdLine;
-    
+
     public void printInfo(PrintStream ps) {
         ps.println("cmdLine = " + cmdLine);
         ps.println("closed = " + closed);
@@ -71,15 +71,13 @@ public class WrappedProcess {
         String outputDebugString = getOutputDebugString();
         ps.println("outputDebugString = " + outputDebugString);
         println("displayComponent = " + displayComponent);
-        if(outputStream instanceof LogDisplayPanelOutputStream) {
-            LogDisplayPanelOutputStream ljpos = (LogDisplayPanelOutputStream)
-                    outputStream;
+        if (outputStream instanceof LogDisplayPanelOutputStream) {
+            LogDisplayPanelOutputStream ljpos = (LogDisplayPanelOutputStream) outputStream;
             println("ljpos = " + ljpos);
         }
     }
- 
-    @MonotonicNonNull
-    private Component displayComponent;
+
+    private @MonotonicNonNull Component displayComponent;
 
     public XFuture<Process> getProcessStartXFuture() {
         return processStartXFuture;
@@ -90,8 +88,8 @@ public class WrappedProcess {
      *
      * @return the value of displayComponent
      */
-    @Nullable
-    public Component getDisplayComponent() {
+    public @Nullable
+    Component getDisplayComponent() {
         return displayComponent;
     }
 
@@ -195,8 +193,7 @@ public class WrappedProcess {
         errorReaderThread.start();
     }
 
-    @Nullable
-    private volatile Exception processStartException = null;
+     private volatile @Nullable  Exception processStartException = null;
 
     private Process internalStart(ProcessBuilder pb) {
         try {
@@ -278,9 +275,9 @@ public class WrappedProcess {
 
     public void close() {
         this.closed = true;
-        if(null != processStartXFuture && !processStartXFuture.isDone()) {
+        if (null != processStartXFuture && !processStartXFuture.isDone()) {
             Thread.dumpStack();
-            System.err.println("WrappedProcess.close : cancelling processStartXFuture="+processStartXFuture);
+            System.err.println("WrappedProcess.close : cancelling processStartXFuture=" + processStartXFuture);
             processStartXFuture.cancelAll(true);
         }
         if (null != process) {
