@@ -144,7 +144,6 @@ import org.jcodec.common.model.Rational;
 import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
 import java.util.IdentityHashMap;
-import java.util.Map.Entry;
 import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
@@ -172,11 +171,11 @@ public class Supervisor {
         long disableTime = this.getTotalDisableTime();
         println("disableTime = " + disableTime);
         boolean alreadyExists = f.exists();
-        long totalRandomDelays = this.getTotalRandomDelays();
-        println("totalRandomDelays = " + totalRandomDelays);
-        int ignoredToggles = this.getIgnoredToggles();
-        println("ignoredToggles = " + ignoredToggles);
-        Utils.saveTestLogEntry(f, alreadyExists, cycle_count, timeDiff, timeDiffPerCycle, disableCount, disableTime, totalRandomDelays, ignoredToggles);
+        long currentTotalRandomDelays = this.getTotalRandomDelays();
+        println("currentTotalRandomDelays = " + currentTotalRandomDelays);
+        int currentIgnoredToggles = this.getIgnoredToggles();
+        println("currentIgnoredToggles = " + currentIgnoredToggles);
+        Utils.saveTestLogEntry(f, alreadyExists, cycle_count, timeDiff, timeDiffPerCycle, disableCount, disableTime, currentTotalRandomDelays, currentIgnoredToggles);
     }
 
     @UIEffect
@@ -824,22 +823,13 @@ public class Supervisor {
     /**
      * Get the location of the last CSV Setup file used.
      *
+     * @param dirName
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
     public static @Nullable
     File getLastSetupFile(@Nullable String dirName) throws IOException {
         return readPathFromFileFile(LAST_SETUP_FILE_FILE, dirName);
-//        String firstLine = null;;
-//        if (LAST_SETUP_FILE_FILE.exists()) {
-//            firstLine = readFirstLine(LAST_SETUP_FILE_FILE);
-//            if (null != firstLine && firstLine.length() > 0) {
-//                return new File(firstLine);
-//            }
-//        }
-//        println("LAST_SETUP_FILE_FILE = " + LAST_SETUP_FILE_FILE);
-//        println("firstLine = " + firstLine);
-//        return null;
     }
 
     /**
@@ -957,21 +947,8 @@ public class Supervisor {
         return readPathFromFileFile(LAST_POSMAP_FILE_FILE, dirName);
     }
 
-    /**
-     * Reload the last saved/used setup.
-     */
-//    public void loadPrevSharedTools() {
-//        try {
-//            File sharedToolsFile = getLastSharedToolsFile();
-//            if (null != sharedToolsFile && sharedToolsFile.exists()) {
-//                loadSharedToolsFile(sharedToolsFile);
-//            }
-//        } catch (Exception ex) {
-//            log(Level.SEVERE, "", ex);
-//        }
-//    }
     public XFutureVoid loadAllPrevFiles(@Nullable String dirName) {
-        return this.loadPrevSetup()
+        return this.startLoadPrevSetup()
                 .thenComposeToVoid(() -> {
                     this.loadPrevPosMapFile(dirName);
                     this.loadPrevSimTeach();
@@ -982,14 +959,17 @@ public class Supervisor {
 
     /**
      * Reload the last saved/used setup.
+     *
+     * @return an XFutureVoid for determining when the previous setup has been
+     * loaded.
      */
-    public XFutureVoid loadPrevSetup() {
+    public XFutureVoid startLoadPrevSetup() {
         try {
-            File setupFile = getLastSetupFile(null);
-            if (null != setupFile && setupFile.exists()) {
-                return loadSetupFile(setupFile);
+            File readPrevSetupFile = getLastSetupFile(null);
+            if (null != readPrevSetupFile && readPrevSetupFile.exists()) {
+                return loadSetupFile(readPrevSetupFile);
             }
-            throw new IllegalStateException("setupFile=" + setupFile);
+            throw new IllegalStateException("readPrevSetupFile=" + readPrevSetupFile);
         } catch (Exception ex) {
             log(Level.SEVERE, "", ex);
             try {
@@ -4742,8 +4722,8 @@ public class Supervisor {
             if (null == teachItems) {
                 return;
             }
-            List<PhysicalItem> nonNullTeachItems = teachItems;
             if (!object2DOuterJPanel1.isUserMouseDown()) {
+                List<PhysicalItem> nonNullTeachItems = new ArrayList<>(teachItems);
                 XFutureVoid lastHandleTeachItemsFuture = handleTeachItemsFuture;
                 if (null == lastHandleTeachItemsFuture || lastHandleTeachItemsFuture.isDone()) {
                     handleTeachItemsFuture
@@ -4758,6 +4738,9 @@ public class Supervisor {
 
         private volatile int handleTeachItemsCount = 0;
 
+        private volatile List<PhysicalItem> lastTeachItems = Collections.emptyList();
+        private volatile List<PhysicalItem> lastChangeTeachItems = Collections.emptyList();
+        
         private void handleTeachItems(List<PhysicalItem> teachItems) {
             handleTeachItemsCount++;
             long handleTeachItemsStartTime = System.currentTimeMillis();
@@ -4829,6 +4812,37 @@ public class Supervisor {
                         System.err.println("trace = " + Arrays.toString(trace));
                         System.err.println("thread = " + thread);
                         System.err.println("diffTime = " + diffTime);
+                        System.err.println("teachItems = " + teachItems);
+                        try {
+                            File teachItemsCsvFile = Utils.createTempFile("teachItemsDiffError_", ".csv");
+                            System.err.println("teachItemsCsvFile = " + teachItemsCsvFile.getCanonicalPath());
+                            object2DOuterJPanel1.saveCsvItemsFile(teachItemsCsvFile, teachItems);
+                            File teachItemsImageFile = Utils.createTempFile("teachItemsDiffError_", ".PNG");
+                            System.err.println("teachItemsImageFile = " + teachItemsImageFile.getCanonicalPath());
+                            object2DOuterJPanel1.takeSnapshot(teachItemsCsvFile, teachItems);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            File lastTeachItemsCsvFile = Utils.createTempFile("lastTeachItemsDiffError_", ".csv");
+                            System.err.println("lastTeachItemsCsvFile = " + lastTeachItemsCsvFile.getCanonicalPath());
+                            object2DOuterJPanel1.saveCsvItemsFile(lastTeachItemsCsvFile, lastTeachItems);
+                            File lastTeachItemsImageFile = Utils.createTempFile("lastTeachItemsDiffError_", ".PNG");
+                            System.err.println("lastTeachItemsImageFile = " + lastTeachItemsImageFile.getCanonicalPath());
+                            object2DOuterJPanel1.takeSnapshot(lastTeachItemsCsvFile, lastTeachItems);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            File lastChangeTeachItemsCsvFile = Utils.createTempFile("lastChangeTeachItemsDiffError_", ".csv");
+                            System.err.println("lastChangeTeachItemsCsvFile = " + lastChangeTeachItemsCsvFile.getCanonicalPath());
+                            object2DOuterJPanel1.saveCsvItemsFile(lastChangeTeachItemsCsvFile, lastChangeTeachItems);
+                            File lastChangeTeachItemsImageFile = Utils.createTempFile("lastChangeTeachItemsDiffError_", ".PNG");
+                            System.err.println("lastChangeTeachItemsImageFile = " + lastChangeTeachItemsImageFile.getCanonicalPath());
+                            object2DOuterJPanel1.takeSnapshot(lastChangeTeachItemsCsvFile, lastChangeTeachItems);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                         Thread currentThread = Thread.currentThread();
                         System.err.println("currentThread = " + currentThread);
                         String errMsg = "completeScanTillNewInternal : diff=" + diff + " " + startingKitStrings + " != " + lastCreateActionListFromVisionKitToCheckStrings;
@@ -4884,6 +4898,7 @@ public class Supervisor {
                 println("totalHandleTime = " + totalHandleTime);
                 long avgHandleTime = totalHandleTime / handleTeachItemsCount;
                 println("avgHandleTime = " + avgHandleTime);
+                lastChangeTeachItems= new ArrayList<>(teachItems);
                 logEvent("completeScanTillNewInternal saw new after cycles=" + cycles + ", changedSystems=" + changedSystems + ", (now-start_time)=" + (now - start_time) + ",max_time_diff=" + max_time_diff + ",diff=" + diff + ",skips=" + skips + ",avgHandleTime = " + avgHandleTime + ",maxHandleTime = " + maxHandleTime);
                 object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
                 try {
@@ -4892,6 +4907,8 @@ public class Supervisor {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 future.complete();
+            } else {
+                lastTeachItems= new ArrayList<>(teachItems);
             }
         }
     }
@@ -9402,7 +9419,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData   @Nullable []  [] = null;
+    private volatile Object lastTasksTableData      @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

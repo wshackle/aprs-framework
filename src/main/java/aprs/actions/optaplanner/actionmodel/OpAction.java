@@ -7,6 +7,7 @@ package aprs.actions.optaplanner.actionmodel;
 
 import aprs.actions.executor.ActionType;
 import static aprs.actions.executor.ActionType.END_PROGRAM;
+import static aprs.actions.executor.ActionType.INVALID_ACTION_TYPE;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
@@ -40,8 +41,7 @@ import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 @PlanningEntity
 public class OpAction implements OpActionInterface {
 
-    private @Nullable
-    final ActionType executorActionType;
+    private final ActionType executorActionType;
     private final String[] executorArgs;
     private String name;
 
@@ -59,7 +59,7 @@ public class OpAction implements OpActionInterface {
      *
      * @return the value of executorActionType
      */
-    public @Nullable
+    public
     ActionType getExecutorActionType() {
         return executorActionType;
     }
@@ -79,8 +79,7 @@ public class OpAction implements OpActionInterface {
         }
     }
 
-    private static @Nullable
-    ActionType opActionToExecutorAction(OpActionType opAction) {
+    private static ActionType opActionToExecutorAction(OpActionType opAction) {
         switch (opAction) {
             case PICKUP:
                 return TAKE_PART;
@@ -88,8 +87,14 @@ public class OpAction implements OpActionInterface {
                 return PLACE_PART;
             case END:
                 return END_PROGRAM;
+            case START:
+                return INVALID_ACTION_TYPE;
+            case FAKE_DROPOFF:
+                return INVALID_ACTION_TYPE;
+            case FAKE_PICKUP:
+                return INVALID_ACTION_TYPE;
             default:
-                return null;
+                throw new IllegalArgumentException("opAction=" + opAction);
         }
     }
 
@@ -102,8 +107,8 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(int origId, String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
-        if(opActionType != START && !allowedPartTypes.contains(partType)) {
-            throw new RuntimeException("partType="+partType);
+        if (opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType=" + partType);
         }
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
@@ -131,16 +136,17 @@ public class OpAction implements OpActionInterface {
         public String toString() {
             return "AddFakeInfo{" + "pickupThisPartActions=" + pickupThisPartActions + ", dropoffThisPartActions=" + dropoffThisPartActions + '}';
         }
-        
+
     }
 
-    @Nullable AddFakeInfo addFakeInfo = null;
-    
+    @Nullable
+    AddFakeInfo addFakeInfo = null;
+
     public OpAction(String name, double x, double y, OpActionType opActionType, String partType, AddFakeInfo addFakeInfo) {
-        if(opActionType != START && !allowedPartTypes.contains(partType)) {
-            throw new RuntimeException("partType="+partType);
+        if (opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType=" + partType);
         }
-        this.addFakeInfo=addFakeInfo;
+        this.addFakeInfo = addFakeInfo;
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
         this.name = name;
@@ -152,15 +158,16 @@ public class OpAction implements OpActionInterface {
         this.required = false;
         this.trayType = getTrayType(opActionType, name);
     }
-    
+
     public static final HashSet<String> allowedPartTypes = new HashSet<>(Arrays.asList(
             "small_gear",
             "medium_gear",
             "large_gear"
     ));
+
     public OpAction(String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
-        if(opActionType != START && !allowedPartTypes.contains(partType)) {
-            throw new RuntimeException("partType="+partType);
+        if (opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType=" + partType);
         }
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
@@ -175,8 +182,8 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(int origId, ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
-        if(opActionType != START && !allowedPartTypes.contains(partType)) {
-            throw new RuntimeException("partType="+partType);
+        if (opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType=" + partType);
         }
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
@@ -191,8 +198,8 @@ public class OpAction implements OpActionInterface {
     }
 
     public OpAction(ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
-        if(opActionType != START && !allowedPartTypes.contains(partType)) {
-            throw new RuntimeException("partType="+partType);
+        if (opActionType != START && !allowedPartTypes.contains(partType)) {
+            throw new RuntimeException("partType=" + partType);
         }
         this.executorActionType = executorActionType;
         this.executorArgs = executorArgs;
@@ -456,9 +463,9 @@ public class OpAction implements OpActionInterface {
     private @Nullable
     String trayType;
 
-    @Nullable
     @Override
-    public String getTrayType() {
+    public @Nullable
+    String getTrayType() {
         return this.trayType;
     }
 

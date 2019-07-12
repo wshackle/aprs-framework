@@ -1862,6 +1862,13 @@ public class Object2DJPanel extends JPanel {
 
     private volatile boolean mouseDown = false;
 
+    public Point2D.Double getMouseWorldMousePoint() {
+        if(null == mousePoint) {
+            return new Point2D.Double(java.lang.Double.NaN,java.lang.Double.NaN);
+        }
+        return screenToWorldPoint(mousePoint.x, mousePoint.y, isAutoscale());
+    }
+    
     public boolean isMouseDown() {
         return mouseDown;
     }

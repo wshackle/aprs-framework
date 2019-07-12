@@ -28,6 +28,7 @@ package aprs.actions.executor;
  */
 public enum ActionType {
     UNINITIALIZED,
+    INVALID_ACTION_TYPE,
     TAKE_PART,
     FAKE_TAKE_PART,
     TEST_PART_POSITION,

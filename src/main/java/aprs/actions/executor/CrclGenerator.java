@@ -251,7 +251,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 continue;
             }
             ActionType executorActionType = opa.getExecutorActionType();
-            if (null != executorActionType) {
+            if (null != executorActionType
+                    && executorActionType != ActionType.INVALID_ACTION_TYPE 
+                    && executorActionType != ActionType.UNINITIALIZED) {
                 Action act = new Action.ActionBuilder()
                         .type(executorActionType)
                         .args(opa.getExecutorArgs())
