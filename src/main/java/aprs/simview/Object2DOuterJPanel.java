@@ -116,7 +116,7 @@ import org.checkerframework.checker.guieffect.qual.UI;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener, CurrentPoseListener {
+public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJFrameInterface, VisionSocketClient.VisionSocketClientListener {
 
     @UIEffect
     public static List<PhysicalItem> showAndModifyData(List<PhysicalItem> itemsIn, SlotOffsetProvider sop, double minX, double minY, double maxX, double maxY) {
@@ -851,6 +851,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         shuffleSimulatedUpdatesCachedCheckBox = new CachedCheckBox(jCheckBoxShuffleSimulatedUpdates);
         posNoiseCachedTextField = new CachedTextField(jTextFieldPosNoise);
         mouseHideDistCachedTextField = new CachedTextField(jTextFieldHideNearMouseDist);
+        robotHideDistCachedTextField = new CachedTextField(jTextFieldHideNearRobotDist);
         rotNoiseCachedTextField = new CachedTextField(jTextFieldRotNoise);
         connectedCachedCheckBox = new CachedCheckBox(jCheckBoxConnected);
         simDropRateCachedTextField = new CachedTextField(jTextFieldSimDropRate);
@@ -1309,6 +1310,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxHideItemsNearMouse = new javax.swing.JCheckBox();
         jLabel11 = new javax.swing.JLabel();
         jTextFieldHideNearMouseDist = new javax.swing.JTextField();
+        jCheckBoxHideItemsNearRobot = new javax.swing.JCheckBox();
+        jLabel14 = new javax.swing.JLabel();
+        jTextFieldHideNearRobotDist = new javax.swing.JTextField();
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
@@ -1674,11 +1678,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         jLabel11.setText("Near Mouse Dist: ");
 
-        jTextFieldHideNearMouseDist.setText("25.0 ");
+        jTextFieldHideNearMouseDist.setText("100.0 ");
         jTextFieldHideNearMouseDist.setEnabled(false);
         jTextFieldHideNearMouseDist.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jTextFieldHideNearMouseDistActionPerformed(evt);
+            }
+        });
+
+        jCheckBoxHideItemsNearRobot.setText("Hide Items Near Robot");
+        jCheckBoxHideItemsNearRobot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxHideItemsNearRobotActionPerformed(evt);
+            }
+        });
+
+        jLabel14.setText("Near Robot Dist: ");
+
+        jTextFieldHideNearRobotDist.setText("100.0 ");
+        jTextFieldHideNearRobotDist.setEnabled(false);
+        jTextFieldHideNearRobotDist.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldHideNearRobotDistActionPerformed(evt);
             }
         });
 
@@ -1690,42 +1711,52 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addContainerGap()
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxSimulationUpdateAsNeeded)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonForceUpdate))
+                        .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jCheckBoxSimulationUpdateAsNeeded)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonForceUpdate))
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jCheckBoxShuffleSimulatedUpdates)
+                            .addComponent(jCheckBoxAddPosNoise)
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel7)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel10)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel9)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jCheckBoxEnforceSensorLimits)
+                            .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                                .addComponent(jLabel11)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel14)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldHideNearRobotDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSimulationUpdateTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCheckBoxShuffleSimulatedUpdates)
-                    .addComponent(jCheckBoxAddPosNoise)
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPosNoise, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldRotNoise, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel10)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldDropOffThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldPickupDist, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldSimDropRate, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jCheckBoxEnforceSensorLimits)
-                    .addComponent(jCheckBoxHideItemsNearMouse)
-                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
-                        .addComponent(jLabel11)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(184, Short.MAX_VALUE))
+                        .addComponent(jCheckBoxHideItemsNearMouse)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxHideItemsNearRobot)
+                        .addGap(54, 54, 54))))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1765,11 +1796,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxEnforceSensorLimits)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jCheckBoxHideItemsNearMouse)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxHideItemsNearMouse)
+                    .addComponent(jCheckBoxHideItemsNearRobot))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel11)
-                    .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel14)
+                        .addComponent(jTextFieldHideNearRobotDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(27, Short.MAX_VALUE))
         );
 
@@ -2486,7 +2522,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         this.posNoise = posNoise;
     }
 
-    private double mouseHideDist = 1.0;
+    private double mouseHideDist = 100.0;
 
     /**
      * Get the value of mouseHideDist
@@ -2507,6 +2543,30 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void setMouseHideDist(double mouseHideDist) {
         updateTextFieldDouble(mouseHideDist, mouseHideDistCachedTextField, 0.01);
         this.mouseHideDist = mouseHideDist;
+    }
+    
+    
+     private double robotHideDist = 100.0;
+
+    /**
+     * Get the value of robotHideDist
+     *
+     * @return the value of robotHideDist
+     */
+    public double getRobotHideDist() {
+        return robotHideDist;
+    }
+
+    private final CachedTextField robotHideDistCachedTextField;
+
+    /**
+     * Set the value of robotHideDist
+     *
+     * @param robotHideDist new value of robotHideDist
+     */
+    private void setRobotHideDist(double robotHideDist) {
+        updateTextFieldDouble(robotHideDist, robotHideDistCachedTextField, 0.01);
+        this.robotHideDist = robotHideDist;
     }
 
     private double rotNoise = 1.0;
@@ -2576,6 +2636,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         addPosNoiseCachedCheckBox.setEnabled(simulated);
         enforceSensorLimitsCachedCheckBox.setEnabled(simulated);
         jCheckBoxViewOutput.setEnabled(simulated);
+        jCheckBoxHideItemsNearMouse.setEnabled(simulated);
+        jCheckBoxHideItemsNearRobot.setEnabled(simulated);
+        jTextFieldHideNearMouseDist.setEnabled(simulated && jCheckBoxHideItemsNearMouse.isSelected());
+        jTextFieldHideNearRobotDist.setEnabled(simulated && jCheckBoxHideItemsNearRobot.isSelected());
         jTextFieldPosNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
         jTextFieldPosNoise.setEnabled(simulated && addPosNoiseCachedCheckBox.isSelected());
         jTextFieldRotNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
@@ -2838,7 +2902,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return true;
         } else {
             Point2D.Double mouseWorldPoint = object2DJPanel1.getMouseWorldMousePoint();
-            if (physicalItem.dist(mouseWorldPoint.x, mouseWorldPoint.y) < mouseHideDist) {
+            if(!Double.isFinite(mouseWorldPoint.x) || !Double.isFinite(mouseWorldPoint.y)) {
+                return true;
+            }
+            final double distToMousePoint = physicalItem.dist(mouseWorldPoint.x, mouseWorldPoint.y);
+            if (distToMousePoint < mouseHideDist) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    
+    private boolean robotDistFilter(PhysicalItem physicalItem) {
+        if (!jCheckBoxHideItemsNearRobot.isSelected()) {
+            return true;
+        } else {
+            Point2D.Double robotWorldPoint = new Point2D.Double(object2DJPanel1.getCurrentX(), object2DJPanel1.getCurrentY());
+            if(!Double.isFinite(robotWorldPoint.x) || !Double.isFinite(robotWorldPoint.y)) {
+                return true;
+            }
+            final double distToMousePoint = physicalItem.dist(robotWorldPoint.x, robotWorldPoint.y);
+            if (distToMousePoint < robotHideDist) {
                 return false;
             } else {
                 return true;
@@ -2976,6 +3061,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             newOutputList = newOutputList.stream()
                     .filter(this::dropFilter)
                     .filter(this::mouseDistFilter)
+                    .filter(this::robotDistFilter)
                     .filter(this::limitsFilter)
                     .map(this::noiseFilter)
                     .collect(Collectors.toList());
@@ -3555,13 +3641,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private void connectCurrentPosition() {
         if (null != aprsSystem) {
-            aprsSystem.addCurrentPoseListener(this);
+            aprsSystem.addCurrentPoseListener(this.currentPoseListener);
         }
     }
 
     private void disconnectCurrentPosition() {
         if (null != aprsSystem) {
-            aprsSystem.removeCurrentPoseListener(this);
+            aprsSystem.removeCurrentPoseListener(this.currentPoseListener);
         }
     }
 
@@ -4018,12 +4104,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_formComponentResized
 
     private void jCheckBoxHideItemsNearMouseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxHideItemsNearMouseActionPerformed
-        jTextFieldHideNearMouseDist.setEnabled(jCheckBoxHideItemsNearMouse.isSelected());
+        jTextFieldHideNearMouseDist.setEnabled(jCheckBoxHideItemsNearMouse.isSelected() && isSimulated());
     }//GEN-LAST:event_jCheckBoxHideItemsNearMouseActionPerformed
 
     private void jTextFieldHideNearMouseDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldHideNearMouseDistActionPerformed
         setMouseHideDist(parseDouble(jTextFieldHideNearMouseDist.getText().trim()));
     }//GEN-LAST:event_jTextFieldHideNearMouseDistActionPerformed
+
+    private void jCheckBoxHideItemsNearRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxHideItemsNearRobotActionPerformed
+       jTextFieldHideNearRobotDist.setEnabled(jCheckBoxHideItemsNearRobot.isSelected() && isSimulated());
+    }//GEN-LAST:event_jCheckBoxHideItemsNearRobotActionPerformed
+
+    private void jTextFieldHideNearRobotDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldHideNearRobotDistActionPerformed
+        setRobotHideDist(parseDouble(jTextFieldHideNearRobotDist.getText().trim()));
+    }//GEN-LAST:event_jTextFieldHideNearRobotDistActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
@@ -4189,6 +4283,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxDetails;
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
     private javax.swing.JCheckBox jCheckBoxHideItemsNearMouse;
+    private javax.swing.JCheckBox jCheckBoxHideItemsNearRobot;
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
@@ -4208,6 +4303,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -4247,6 +4343,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
     private javax.swing.JTextField jTextFieldHideNearMouseDist;
+    private javax.swing.JTextField jTextFieldHideNearRobotDist;
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldMaxXMaxY;
     private javax.swing.JTextField jTextFieldMinXMinY;
@@ -4411,6 +4508,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("reverseFlag", Boolean.toString(reverseFlag));
         DisplayAxis displayAxis = object2DJPanel1.getDisplayAxis();
         props.setProperty("displayAxis", displayAxis.toString());
+        props.setProperty("hideNearMouse", Boolean.toString(jCheckBoxHideItemsNearMouse.isSelected()));
+        props.setProperty("hideNearMouseDist", jTextFieldHideNearMouseDist.getText());
+        props.setProperty("hideNearRobot", Boolean.toString(jCheckBoxHideItemsNearRobot.isSelected()));
+        props.setProperty("hideNearRobotDist", jTextFieldHideNearRobotDist.getText());
         List<PhysicalItem> l = getItems();
         if (null != l && l.size() > 0) {
             props.setProperty(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
@@ -4851,6 +4952,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String rotationOffsetString = props.getProperty("rotationOffset");
         if (null != rotationOffsetString) {
             object2DJPanel1.setRotationOffset(Double.parseDouble(rotationOffsetString));
+        }
+        String hideNearMouseString = props.getProperty("hideNearMouse");
+        if (null != hideNearMouseString) {
+            final boolean hidePartsNearMousePosition = Boolean.parseBoolean(hideNearMouseString);
+            jCheckBoxHideItemsNearMouse.setSelected(hidePartsNearMousePosition);
+            jTextFieldHideNearMouseDist.setEnabled(isSimulated() && hidePartsNearMousePosition);
+        }
+        String hideNearMouseDistString = props.getProperty("hideNearMouseDist");
+        if (null != hideNearMouseDistString) {
+            jTextFieldHideNearMouseDist.setText(hideNearMouseDistString);
+            this.setMouseHideDist(Double.parseDouble(hideNearMouseDistString));
+        }
+        String hideNearRobotString = props.getProperty("hideNearRobot");
+        if (null != hideNearRobotString) {
+            final boolean hidePartsNearRobotPosition = Boolean.parseBoolean(hideNearRobotString);
+            jCheckBoxHideItemsNearRobot.setSelected(hidePartsNearRobotPosition);
+            jTextFieldHideNearRobotDist.setEnabled(isSimulated() && hidePartsNearRobotPosition);
+        }
+        String hideNearRobotDistString = props.getProperty("hideNearRobotDist");
+        if (null != hideNearRobotDistString) {
+            jTextFieldHideNearRobotDist.setText(hideNearRobotDistString);
+            this.setRobotHideDist(Double.parseDouble(hideNearRobotDistString));
         }
         updatingDisplayFromProperties = false;
     }
@@ -5526,8 +5649,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    @Override
-    public void handlePoseUpdate(
+    @SuppressWarnings("initialization")
+    private final CurrentPoseListener currentPoseListener = this::handlePoseUpdate;
+    
+    private void handlePoseUpdate(
             CrclSwingClientJPanel panel,
             CRCLStatusType stat,
             @Nullable CRCLCommandType cmd,
