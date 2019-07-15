@@ -11,7 +11,7 @@
         </goals>
         <properties>
             <project.basedir>C:\Users\shackle\Documents\NetBeansProjects\aprs-framework</project.basedir>
-            <exec.args>-Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
+            <exec.args>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=aprs_heapdump.bin -Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
             <exec.executable>java</exec.executable>
             <exec.workingdir></exec.workingdir>
         </properties>
@@ -27,7 +27,7 @@
         </goals>
         <properties>
             <project.basedir>C:\Users\shackle\Documents\NetBeansProjects\aprs-framework</project.basedir>
-            <exec.args>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address} -Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
+            <exec.args>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address} -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=aprs_heapdump.bin -Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
             <exec.executable>java</exec.executable>
             <jpda.listen>true</jpda.listen>
             <exec.workingdir></exec.workingdir>
@@ -43,7 +43,7 @@
             <goal>org.codehaus.mojo:exec-maven-plugin:1.2.1:exec</goal>
         </goals>
         <properties>
-            <exec.args>-Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
+            <exec.args>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=aprs_heapdump.bin -Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Daprs.user.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Duser.home=C:\Users\shackle\Documents\NetBeansProjects\aprs-framework\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame</exec.args>
             <exec.executable>java</exec.executable>
             <exec.workingdir></exec.workingdir>
         </properties>
