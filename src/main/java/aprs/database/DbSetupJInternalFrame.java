@@ -51,7 +51,6 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     @UIEffect
     public DbSetupJInternalFrame(AprsSystem aprsSystem) {
         dbSetupJPanel1 = new aprs.database.DbSetupJPanel(aprsSystem);
-
         setIconifiable(true);
         setMaximizable(true);
         setResizable(true);

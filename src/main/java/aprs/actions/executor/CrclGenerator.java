@@ -28,7 +28,6 @@ import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupJPanel;
 import aprs.database.DbSetupListener;
 import aprs.database.DbType;
 import aprs.database.PhysicalItem;
@@ -939,7 +938,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     ret.complete(null);
                                 }
                                 if (null != ex) {
-                                    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                                    Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
                                     System.err.println("Called from :");
                                     for (StackTraceElement aStackTraceElemArray : stackTraceElemArray) {
                                         System.err.println(aStackTraceElemArray);

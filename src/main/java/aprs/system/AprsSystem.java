@@ -4481,6 +4481,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     @UIEffect
     private void activateFrame(final JInternalFrame frameToShow) {
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.hideAllInternalFrames();
+        }
         frameToShow.setVisible(true);
         if (checkInternalFrame(frameToShow)) {
             deiconifyAndActivate(frameToShow);
