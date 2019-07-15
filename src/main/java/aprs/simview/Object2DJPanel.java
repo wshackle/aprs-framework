@@ -1259,7 +1259,7 @@ public class Object2DJPanel extends JPanel {
         return currentX;
     }
 
-    private long repaintMinMillis = 60;
+    private long repaintMinMillis = 600;
 
     /**
      * Get the value of repaintMinMillis
@@ -1281,12 +1281,20 @@ public class Object2DJPanel extends JPanel {
 
     private volatile long lastRepaintPaintTime = 0;
 
+//    private int repaintsDone=0;
+//    
+//    private int repaintsSkipped=0;
+    
     void checkedRepaint() {
         long timeNow = System.currentTimeMillis();
         long diff = timeNow - lastRepaintPaintTime;
         if (diff > repaintMinMillis) {
             lastRepaintPaintTime = timeNow;
+//            repaintsDone++;
+//            System.out.println("repaintsDone = " + repaintsDone+", repaintsSkipped = " + repaintsSkipped);
             super.repaint();
+        } else {
+//            repaintsSkipped++;
         }
     }
 

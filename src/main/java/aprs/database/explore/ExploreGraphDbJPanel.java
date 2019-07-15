@@ -26,7 +26,6 @@ import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupJPanel;
 import aprs.database.DbSetupListener;
 import aprs.database.DbType;
 import static aprs.misc.AprsCommonLogger.println;
@@ -1233,7 +1232,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                                             });
                                         }
                                         if (null != ex) {
-                                            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                                            Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
                                             System.err.println("Called from :");
                                             for (StackTraceElement aStackTraceElemArray : stackTraceElemArray) {
                                                 System.err.println(aStackTraceElemArray);

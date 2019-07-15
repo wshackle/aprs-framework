@@ -283,6 +283,24 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
+    void hideAllInternalFrames() {
+        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        for (JInternalFrame f : frames) {
+            jDesktopPane1.getDesktopManager().iconifyFrame(f);
+            f.setVisible(false);
+        }
+    }
+
+    @UIEffect
+    void showAllInternalFrames() {
+        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        for (JInternalFrame f : frames) {
+            jDesktopPane1.getDesktopManager().deiconifyFrame(f);
+            f.setVisible(true);
+        }
+    }
+
+    @UIEffect
     void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
         internalFrame.setVisible(true);
         if (checkInternalFrame(internalFrame)) {
@@ -454,6 +472,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemReverse = new javax.swing.JCheckBoxMenuItem();
         jMenuItemExit = new javax.swing.JMenuItem();
         jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItemHideAllWindows = new javax.swing.JMenuItem();
+        jMenuItemShowAllWindows = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupExecutor = new javax.swing.JCheckBoxMenuItem();
@@ -511,11 +531,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS");
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent evt) {
-                formWindowClosing(evt);
-            }
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
+            }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
             }
         });
 
@@ -577,6 +597,22 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu1.add(jMenuItem1);
+
+        jMenuItemHideAllWindows.setText("Hide All Windows");
+        jMenuItemHideAllWindows.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemHideAllWindowsActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemHideAllWindows);
+
+        jMenuItemShowAllWindows.setText("Show All Windows");
+        jMenuItemShowAllWindows.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemShowAllWindowsActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItemShowAllWindows);
 
         jMenuBar1.add(jMenu1);
 
@@ -2098,10 +2134,18 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         String filename = JOptionPane.showInputDialog("csv items file to filter");
-        if(null != filename  && null != aprsSystem) {
+        if (null != filename && null != aprsSystem) {
             aprsSystem.filterTest(filename);
         }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItemHideAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemHideAllWindowsActionPerformed
+        hideAllInternalFrames();
+    }//GEN-LAST:event_jMenuItemHideAllWindowsActionPerformed
+
+    private void jMenuItemShowAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemShowAllWindowsActionPerformed
+        showAllInternalFrames();
+    }//GEN-LAST:event_jMenuItemShowAllWindowsActionPerformed
 
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
@@ -2211,6 +2255,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemEmptyKitTrays;
     private javax.swing.JMenuItem jMenuItemExit;
     private javax.swing.JMenuItem jMenuItemFillKitTrays;
+    private javax.swing.JMenuItem jMenuItemHideAllWindows;
     private javax.swing.JMenuItem jMenuItemImmediateAbort;
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
@@ -2220,6 +2265,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSaveProperties;
     private javax.swing.JMenuItem jMenuItemSavePropsAs;
     private javax.swing.JMenuItem jMenuItemSetPoseMinMaxLimits;
+    private javax.swing.JMenuItem jMenuItemShowAllWindows;
     private javax.swing.JMenuItem jMenuItemShowEmptiedKitTrays;
     private javax.swing.JMenuItem jMenuItemShowFilledKitTrays;
     private javax.swing.JMenuItem jMenuItemStartActionList;
