@@ -1006,15 +1006,22 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
 
     private void logException(Exception ex, String... ctx) {
         Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
-        jTextAreaErrors.setText(ex.toString());
-        jTextAreaErrors.append("\nCaused by: \n" + ex.getCause() + "\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append(ex.toString());
+        sb.append("\nCaused by: \n" + ex.getCause() + "\n");
         if (null != ctx) {
             for (String string : ctx) {
                 System.err.println(string);
-                jTextAreaErrors.append(string);
+                sb.append(string);
+                
             }
         }
-
+        String sbString = sb.toString();
+        if(sbString.length()> 10000) {
+            jTextAreaErrors.setText(sbString.substring(0, 9999));
+        } else {
+            jTextAreaErrors.setText(sbString);
+        }
     }
 
     @SuppressWarnings({"unchecked", "cast"})

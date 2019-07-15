@@ -3435,56 +3435,59 @@ public class Supervisor {
     private volatile @Nullable
     XFuture<?> lastFutureReturned = null;
 
-    private AtomicInteger dispatchCount = new AtomicInteger();
-    private AtomicInteger dispatchPending = new AtomicInteger();
-    private AtomicLong dispatchTime = new AtomicLong();
-    private volatile long maxStartPending = 0;
+//    private AtomicInteger dispatchCount = new AtomicInteger();
+//    private AtomicInteger dispatchPending = new AtomicInteger();
+//    private AtomicLong dispatchTime = new AtomicLong();
+//    private volatile long maxStartPending = 0;
     private volatile boolean displayUpdatesDisabled = false;
-
-    public class DisplayUpdater<T> {
-
-        private final Consumer<T> consumer;
-        private final AtomicReference<T> ref = new AtomicReference<>();
-        private volatile @Nullable
-        XFutureVoid lastFuture = null;
-
-        public DisplayUpdater(Consumer<T> consumer) {
-            this.consumer = consumer;
-        }
-
-        @SuppressWarnings("nullness")
-        public synchronized XFutureVoid submit(T val) {
-            if (lastFuture == null || lastFuture.isDone()) {
-                ref.set(val);
-                lastFuture = runOnDispatchThread(() -> {
-                    T latestVal = ref.getAndSet(null);
-                    if (latestVal != null) {
-                        consumer.accept(latestVal);
-                    }
-                });
-                return lastFuture;
-            }
-            if (ref.compareAndSet(null, val)) {
-                lastFuture = runOnDispatchThread(() -> {
-                    T latestVal = ref.getAndSet(null);
-                    if (latestVal != null) {
-                        consumer.accept(latestVal);
-                    }
-                });
-            }
-            return lastFuture;
-        }
-    }
-
-    private final IdentityHashMap<Consumer<?>, DisplayUpdater<?>> displayUpdatersMap = new IdentityHashMap<>();
+//
+//    public class DisplayUpdater<T> {
+//
+//        private final Consumer<T> consumer;
+//        private final AtomicReference<T> ref = new AtomicReference<>();
+//        private volatile @Nullable
+//        XFutureVoid lastFuture = null;
+//
+//        public DisplayUpdater(Consumer<T> consumer) {
+//            this.consumer = consumer;
+//        }
+//
+//        @SuppressWarnings("nullness")
+//        public synchronized XFutureVoid submit(T val) {
+//            if (lastFuture == null || lastFuture.isDone()) {
+//                ref.set(val);
+//                lastFuture = runOnDispatchThread(() -> {
+//                    T latestVal = ref.getAndSet(null);
+//                    if (latestVal != null) {
+//                        consumer.accept(latestVal);
+//                    }
+//                });
+//                return lastFuture;
+//            }
+//            if (ref.compareAndSet(null, val)) {
+//                lastFuture = runOnDispatchThread(() -> {
+//                    T latestVal = ref.getAndSet(null);
+//                    if (latestVal != null) {
+//                        consumer.accept(latestVal);
+//                    }
+//                });
+//            }
+//            return lastFuture;
+//        }
+//    }
+//
+//    private final IdentityHashMap<Consumer<?>, DisplayUpdater<?>> displayUpdatersMap = new IdentityHashMap<>();
 
     @SuppressWarnings({"unchecked", "nullness", "keyfor"})
     public <T> XFutureVoid submitDisplayConsumer(Consumer<T> consumer, T value) {
-        synchronized (displayUpdatersMap) {
-            DisplayUpdater<T> displayUpdater
-                    = (DisplayUpdater<T>) displayUpdatersMap.computeIfAbsent(consumer, (Consumer<?> key) -> new DisplayUpdater<>(key));
-            return displayUpdater.submit(value);
-        }
+        return Utils.runOnDispatchThread(() -> {
+            consumer.accept(value);
+        });
+//        synchronized (displayUpdatersMap) {
+//            DisplayUpdater<T> displayUpdater
+//                    = (DisplayUpdater<T>) displayUpdatersMap.computeIfAbsent(consumer, (Consumer<?> key) -> new DisplayUpdater<>(key));
+//            return displayUpdater.submit(value);
+//        }
     }
 
 //    private static String getRunOnDispatchThreadCaller() {
@@ -3524,19 +3527,19 @@ public class Supervisor {
 //                return value + 1;
 //            }
 //        });
-        long startTime = System.currentTimeMillis();
-        int startPending = dispatchPending.incrementAndGet();
-        if (startPending > maxStartPending) {
-            maxStartPending = startPending;
-        }
-        return aprs.misc.Utils.runOnDispatchThread(name, r)
-                .thenRun(() -> {
-                    long t = System.currentTimeMillis();
-                    int endPending = dispatchPending.decrementAndGet();
-                    long timeDiff = t - startTime;
-                    int count = dispatchCount.incrementAndGet();
-                    long totalTimeDiff = dispatchTime.addAndGet(timeDiff);
-                });
+//        long startTime = System.currentTimeMillis();
+//        int startPending = dispatchPending.incrementAndGet();
+//        if (startPending > maxStartPending) {
+//            maxStartPending = startPending;
+//        }
+        return aprs.misc.Utils.runOnDispatchThread(name, r);
+//                .thenRun(() -> {
+////                    long t = System.currentTimeMillis();
+////                    int endPending = dispatchPending.decrementAndGet();
+//                    long timeDiff = t - startTime;
+//                    int count = dispatchCount.incrementAndGet();
+//                    long totalTimeDiff = dispatchTime.addAndGet(timeDiff);
+//                });
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -3880,8 +3883,8 @@ public class Supervisor {
             int ecc = enableChangeCount.get();
             int cdc = ContinuousDemoCycle.get();
             int errs = logEventErrCount.get();
-            int runDispatchCount = this.dispatchCount.get();
-            long totalRunDispatchTime = this.dispatchTime.get();
+//            int runDispatchCount = this.dispatchCount.get();
+//            long totalRunDispatchTime = this.dispatchTime.get();
             String threadname = Thread.currentThread().getName();
             StackTraceElement trace[] = Thread.currentThread().getStackTrace();
 //            for (Entry<String, Integer> entry : callerList) {
@@ -3890,9 +3893,9 @@ public class Supervisor {
             long totalSupervisorRunTime = t - startSupervisorTime;
             String s = "closing ... totalSupervisorRunTime=" + totalSupervisorRunTime;
             logEventPrivate(t, s, blockersSize, ecc, cdc, errs, trace, threadname);
-            double totalRunDispatchTimePercent = 100.0 * ((double) totalRunDispatchTime / (double) totalSupervisorRunTime);
-            s = "closing ... runOnDispatchThread: runDispatchCount=" + runDispatchCount + ",totalRunDispatchTime=" + totalRunDispatchTime + ",totalRunDispatchTimePercent=" + totalRunDispatchTimePercent + ",maxStartPending=" + maxStartPending;
-            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, trace, threadname);
+//            double totalRunDispatchTimePercent = 100.0 * ((double) totalRunDispatchTime / (double) totalSupervisorRunTime);
+//            s = "closing ... runOnDispatchThread: runDispatchCount=" + runDispatchCount + ",totalRunDispatchTime=" + totalRunDispatchTime + ",totalRunDispatchTimePercent=" + totalRunDispatchTimePercent + ",maxStartPending=" + maxStartPending;
+//            logEventPrivate(t, s, blockersSize, ecc, cdc, errs, trace, threadname);
             long totalConveyorMoveTime = conveyorMoveTime.get();
             double totalConveyorMoveTimePercent = 100.0 * ((double) totalConveyorMoveTime / (double) totalSupervisorRunTime);
             int totalConveyorMoveCount = conveyorMoveCount.incrementAndGet();
