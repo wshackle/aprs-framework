@@ -252,7 +252,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             ActionType executorActionType = opa.getExecutorActionType();
             if (null != executorActionType
-                    && executorActionType != ActionType.INVALID_ACTION_TYPE 
+                    && executorActionType != ActionType.INVALID_ACTION_TYPE
                     && executorActionType != ActionType.UNINITIALIZED) {
                 Action act = new Action.ActionBuilder()
                         .type(executorActionType)
@@ -447,7 +447,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 slotPartType = origPaPartType;
                             }
                             if (!allowedPartTypes.contains(slotPartType)) {
-                                throw new RuntimeException("slotPartType=" + slotPartType+", origPaPartType= "+origPaPartType);
+                                throw new RuntimeException("slotPartType=" + slotPartType + ", origPaPartType= " + origPaPartType);
                             }
                             OpAction placePartOpAction = new OpAction(pa.getType(), pa.getArgs(), slotPt.getX(), slotPt.getY(), slotPartType, inKitTrayByName(slotName));
                             ret.add(takePartOpAction);
@@ -3014,7 +3014,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
                                                     optimizeCorrectiveActionsOk = false;
                                                 }
-                                                if(!optimizeCorrectiveActionsOk) {
+                                                if (!optimizeCorrectiveActionsOk) {
                                                     break;
                                                 }
                                                 final String shortItemNeededInSlotSkuName = Utils.shortenItemPartName(itemNeededInSlotSkuName);
@@ -3079,7 +3079,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 correctivedItems.add(absSlot);
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
                                                     optimizeCorrectiveActionsOk = false;
-                                                    if(!correctiveActions.isEmpty()) {
+                                                    if (!correctiveActions.isEmpty()) {
                                                         break;
                                                     }
                                                     poseCache.put(slotName, absSlotPose);
@@ -4896,35 +4896,41 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
-        String lastPartTaken = getLastTakenPart();
-        int lastIndex = getLastIndex();
+        final String addCheckedOpenGripperLastPartTaken = getLastTakenPart();
+        int addCheckedOpenGripperLastIndex = getLastIndex();
 
         String imgLabel;
         if (null != lastActionsList) {
-            Action act = lastActionsList.get(lastIndex);
-            imgLabel = "openGripper" + lastIndex + act.asPddlLine() + "partTaken=" + lastPartTaken;
+            Action act = lastActionsList.get(addCheckedOpenGripperLastIndex);
+            imgLabel = "openGripper" + addCheckedOpenGripperLastIndex + act.asPddlLine() + "partTaken=" + addCheckedOpenGripperLastPartTaken;
         } else {
-            imgLabel = "openGripper" + lastIndex + "partTaken=" + lastPartTaken;
+            imgLabel = "openGripper" + addCheckedOpenGripperLastIndex + "partTaken=" + addCheckedOpenGripperLastPartTaken;
         }
         addOptionalOpenGripper(cmds, (CRCLCommandWrapper ccw) -> {
             AprsSystem af = aprsSystem;
             assert (af != null) : "af == null : @AssumeAssertion(nullness)";
 
-            if (af.isObjectViewSimulated()) {
-                double distToPart = af.getClosestRobotPartDistance();
-                if (distToPart < dropOffMin) {
-                    PhysicalItem closestPart = af.getClosestRobotPart();
-                    af.takeSnapshots(imgLabel);
-                    String errString
-                            = "Can't drop off part " + lastTakenPart + " when distance to another part (" + (closestPart != null ? closestPart.getFullName() : null) + ") of " + distToPart + "  less than  " + dropOffMin;
-                    double recheckDistance = af.getClosestRobotPartDistance();
-                    logDebug("recheckDistance = " + recheckDistance);
-                    setTitleErrorString(errString);
-                    checkedPause();
-                    throw new IllegalStateException(errString);
-                }
-            }
+            openGripperCheck(af, imgLabel, addCheckedOpenGripperLastPartTaken, dropOffMin,debug);
         });
+    }
+
+    private static void openGripperCheck(AprsSystem af, String imgLabel, final String addCheckedOpenGripperLastPartTaken, final double dropOffMin, boolean debug) throws IllegalStateException {
+        if (af.isObjectViewSimulated()) {
+            double distToPart = af.getClosestRobotPartDistance();
+            if (distToPart < dropOffMin) {
+                PhysicalItem closestPart = af.getClosestRobotPart();
+                af.takeSnapshots(imgLabel);
+                String errString
+                        = "Can't drop off part " + addCheckedOpenGripperLastPartTaken + " when distance to another part (" + (closestPart != null ? closestPart.getFullName() : null) + ") of " + distToPart + "  less than  " + dropOffMin;
+                double recheckDistance = af.getClosestRobotPartDistance();
+                if (debug) {
+                    LOGGER.log(Level.INFO, "recheckDistance = " + recheckDistance);
+                }
+                af.setTitleErrorString(errString);
+                af.pause();
+                throw new IllegalStateException(errString);
+            }
+        }
     }
 
     private double dropOffMin = 25;
