@@ -1289,6 +1289,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel13 = new javax.swing.JLabel();
         jTextFieldRotationOffset = new javax.swing.JTextField();
         jCheckBoxCloning = new javax.swing.JCheckBox();
+        jCheckBoxLockTrays = new javax.swing.JCheckBox();
+        jLabel15 = new javax.swing.JLabel();
+        jTextFieldPrevListSizeDecrementInterval = new javax.swing.JTextField();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -1491,6 +1494,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxCloning.setText("Cloning");
         jCheckBoxCloning.setEnabled(false);
 
+        jCheckBoxLockTrays.setText("Lock Trays");
+        jCheckBoxLockTrays.setEnabled(false);
+        jCheckBoxLockTrays.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxLockTraysActionPerformed(evt);
+            }
+        });
+
+        jLabel15.setText("Wait For All Parts Time(ms): ");
+
+        jTextFieldPrevListSizeDecrementInterval.setText("2000  ");
+        jTextFieldPrevListSizeDecrementInterval.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldPrevListSizeDecrementIntervalActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1510,11 +1530,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jTextFieldHost))
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jButtonRefresh)
                                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                         .addComponent(jLabel12)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addComponent(jButtonRefresh))
+                                        .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel15)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jTextFieldPrevListSizeDecrementInterval, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                 .addGap(0, 0, Short.MAX_VALUE)))
                         .addGap(12, 12, 12))
                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
@@ -1523,20 +1547,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jCheckBoxSimulated)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxCloning))
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                         .addComponent(jCheckBoxDebug)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxPause)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jLabel13)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
-                                        .addComponent(jCheckBoxSimulated)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jCheckBoxCloning)))
-                                .addGap(0, 217, Short.MAX_VALUE)))
+                                        .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(jCheckBoxLockTrays)))
+                                .addGap(0, 125, Short.MAX_VALUE)))
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1558,15 +1584,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jCheckBoxDebug)
                     .addComponent(jCheckBoxPause)
                     .addComponent(jLabel13)
-                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jCheckBoxLockTrays))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
-                    .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jComboBoxHandleRotationsEnum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel15)
+                    .addComponent(jTextFieldPrevListSizeDecrementInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 329, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1800,12 +1829,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jCheckBoxHideItemsNearMouse)
                     .addComponent(jCheckBoxHideItemsNearRobot))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel11)
-                    .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel14)
-                        .addComponent(jTextFieldHideNearRobotDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jTextFieldHideNearRobotDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel11)
+                        .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(27, Short.MAX_VALUE))
         );
 
@@ -2544,9 +2574,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         updateTextFieldDouble(mouseHideDist, mouseHideDistCachedTextField, 0.01);
         this.mouseHideDist = mouseHideDist;
     }
-    
-    
-     private double robotHideDist = 100.0;
+
+    private double robotHideDist = 100.0;
 
     /**
      * Get the value of robotHideDist
@@ -2645,6 +2674,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldRotNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
         jTextFieldRotNoise.setEnabled(simulated && addPosNoiseCachedCheckBox.isSelected());
         object2DJPanel1.setShowOutputItems(simulated && viewOutputCachedCheckBox.isSelected());
+        final boolean canLockTrays = !simulated && isConnected();
+        jCheckBoxLockTrays.setEnabled(canLockTrays);
+        if (!canLockTrays) {
+            jCheckBoxLockTrays.setSelected(false);
+        }
         if (simulated) {
             jTextFieldHost.setEditable(false);
             jTextFieldHost.setEnabled(false);
@@ -2739,6 +2773,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jButtonReset.setEnabled(false);
             if (this.jCheckBoxConnected.isSelected()) {
                 connect();
+                final boolean canLockTrays = !isSimulated() && isConnected();
+                jCheckBoxLockTrays.setEnabled(canLockTrays);
+                if (!canLockTrays) {
+                    jCheckBoxLockTrays.setSelected(false);
+                    if (null != visionSocketClient) {
+                        visionSocketClient.setLockTrays(false);
+                    }
+                }
+
             } else {
                 if (simulatedCachedCheckBox.isSelected()) {
                     jButtonReset.setEnabled(true);
@@ -2902,7 +2945,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return true;
         } else {
             Point2D.Double mouseWorldPoint = object2DJPanel1.getMouseWorldMousePoint();
-            if(!Double.isFinite(mouseWorldPoint.x) || !Double.isFinite(mouseWorldPoint.y)) {
+            if (!Double.isFinite(mouseWorldPoint.x) || !Double.isFinite(mouseWorldPoint.y)) {
                 return true;
             }
             final double distToMousePoint = physicalItem.dist(mouseWorldPoint.x, mouseWorldPoint.y);
@@ -2913,13 +2956,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
     }
-    
+
     private boolean robotDistFilter(PhysicalItem physicalItem) {
         if (!jCheckBoxHideItemsNearRobot.isSelected()) {
             return true;
         } else {
             Point2D.Double robotWorldPoint = new Point2D.Double(object2DJPanel1.getCurrentX(), object2DJPanel1.getCurrentY());
-            if(!Double.isFinite(robotWorldPoint.x) || !Double.isFinite(robotWorldPoint.y)) {
+            if (!Double.isFinite(robotWorldPoint.x) || !Double.isFinite(robotWorldPoint.y)) {
                 return true;
             }
             final double distToMousePoint = physicalItem.dist(robotWorldPoint.x, robotWorldPoint.y);
@@ -3517,7 +3560,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @SuppressWarnings("guieffect")
     public List<PhysicalItem> csvFileToItemsList(File f, boolean convertRotToRad, boolean zeroRotations) throws IOException {
         String line = Files.lines(f.toPath()).skip(1).map(String::trim).collect(Collectors.joining(","));
-        final List<PhysicalItem> newItemsList = VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations);
+        final List<PhysicalItem> newItemsList = VisionSocketClient.lineToList(line, convertRotToRad, zeroRotations, false);
         return newItemsList;
     }
 
@@ -3999,7 +4042,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         String line = sb.toString();
         List<PhysicalItem> l = VisionSocketClient.lineToList(line,
                 handleRotationEnum == HandleRotationEnum.DEGREES,
-                handleRotationEnum == HandleRotationEnum.IGNORE);
+                handleRotationEnum == HandleRotationEnum.IGNORE,
+                false/* dont lock trays */);
         setItems(l);
         Object xobj = jTableLineLog.getValueAt(selectedRow, 2);
         if (null != xobj) {
@@ -4112,12 +4156,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_jTextFieldHideNearMouseDistActionPerformed
 
     private void jCheckBoxHideItemsNearRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxHideItemsNearRobotActionPerformed
-       jTextFieldHideNearRobotDist.setEnabled(jCheckBoxHideItemsNearRobot.isSelected() && isSimulated());
+        jTextFieldHideNearRobotDist.setEnabled(jCheckBoxHideItemsNearRobot.isSelected() && isSimulated());
     }//GEN-LAST:event_jCheckBoxHideItemsNearRobotActionPerformed
 
     private void jTextFieldHideNearRobotDistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldHideNearRobotDistActionPerformed
         setRobotHideDist(parseDouble(jTextFieldHideNearRobotDist.getText().trim()));
     }//GEN-LAST:event_jTextFieldHideNearRobotDistActionPerformed
+
+    private void jCheckBoxLockTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxLockTraysActionPerformed
+        if (null != visionSocketClient) {
+            visionSocketClient.setLockTrays(jCheckBoxLockTrays.isSelected());
+        }
+    }//GEN-LAST:event_jCheckBoxLockTraysActionPerformed
+
+    private void jTextFieldPrevListSizeDecrementIntervalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldPrevListSizeDecrementIntervalActionPerformed
+        final int newInterval = Integer.parseInt(jTextFieldPrevListSizeDecrementInterval.getText().trim());
+        setPrevListSizeDecrementInterval(newInterval);
+    }//GEN-LAST:event_jTextFieldPrevListSizeDecrementIntervalActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
@@ -4284,6 +4339,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
     private javax.swing.JCheckBox jCheckBoxHideItemsNearMouse;
     private javax.swing.JCheckBox jCheckBoxHideItemsNearRobot;
+    private javax.swing.JCheckBox jCheckBoxLockTrays;
     private javax.swing.JCheckBox jCheckBoxPause;
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
@@ -4304,6 +4360,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -4350,6 +4407,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldPickupDist;
     private javax.swing.JTextField jTextFieldPort;
     private javax.swing.JTextField jTextFieldPosNoise;
+    private javax.swing.JTextField jTextFieldPrevListSizeDecrementInterval;
     private javax.swing.JTextField jTextFieldRecordLinesFile;
     private javax.swing.JTextField jTextFieldRotNoise;
     private javax.swing.JTextField jTextFieldRotationOffset;
@@ -4720,7 +4778,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != itemsLine && itemsLine.length() > 0) {
             List<PhysicalItem> l = VisionSocketClient.lineToList(itemsLine,
                     handleRotationEnum == HandleRotationEnum.DEGREES,
-                    handleRotationEnum == HandleRotationEnum.IGNORE);
+                    handleRotationEnum == HandleRotationEnum.IGNORE,
+                    false/* dont lock trays */);
             if (null != l && l.size() > 0) {
                 setItems(l);
             }
@@ -4887,6 +4946,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             connectedCachedCheckBox.setSelected(connected);
             if (connected) {
                 connect();
+                final boolean canLockTrays = !isSimulated() && isConnected();
+                jCheckBoxLockTrays.setEnabled(canLockTrays);
+                if (!canLockTrays) {
+                    jCheckBoxLockTrays.setSelected(false);
+                    if (null != visionSocketClient) {
+                        visionSocketClient.setLockTrays(false);
+                    }
+                }
             }
         } else {
             throw new IllegalStateException("connected property not set");
@@ -4947,6 +5014,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         String prevListSizeDecrementIntervalString = props.getProperty("prevListSizeDecrementInterval");
         if (null != prevListSizeDecrementIntervalString) {
+            jTextFieldPrevListSizeDecrementInterval.setText(prevListSizeDecrementIntervalString);
             setPrevListSizeDecrementInterval(Integer.parseInt(prevListSizeDecrementIntervalString));
         }
         String rotationOffsetString = props.getProperty("rotationOffset");
@@ -5651,7 +5719,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @SuppressWarnings("initialization")
     private final CurrentPoseListener currentPoseListener = this::handlePoseUpdate;
-    
+
     private void handlePoseUpdate(
             CrclSwingClientJPanel panel,
             CRCLStatusType stat,

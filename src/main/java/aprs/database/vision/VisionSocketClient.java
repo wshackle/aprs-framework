@@ -175,9 +175,9 @@ public class VisionSocketClient implements AutoCloseable {
         if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
             List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
 
-            synchronized (listListeners) {
+            synchronized (ignoredLineListListeners) {
                 if (null != localLineRecieved) {
-                    for (VisionSocketClientListener listListener : listListeners) {
+                    for (VisionSocketClientListener listListener : ignoredLineListListeners) {
                         try {
                             VisionSocketClientListener listener = listListener;
                             if (null != listener) {
@@ -262,6 +262,8 @@ public class VisionSocketClient implements AutoCloseable {
         incrementCountListeners.remove(l);
     }
 
+    private volatile int emptyLines = 0;
+    
     public XFutureVoid start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -303,7 +305,8 @@ public class VisionSocketClient implements AutoCloseable {
 
                 @Override
                 public void call(final String line, PrintStream os) {
-                    if (line.length() < 0) {
+                    if (line.length() < 1 || line.trim().length() < 1) {
+                        emptyLines++;
                         return;
                     }
                     incrementLineCount();
@@ -392,8 +395,8 @@ public class VisionSocketClient implements AutoCloseable {
         this.convertRotToRadians = convertRotToRadians;
     }
 
-    public static List<PhysicalItem> lineToList(String line, boolean convertRotToRadians, boolean zeroRotations) {
-        return lineToList(line, null, convertRotToRadians, zeroRotations);
+    public static List<PhysicalItem> lineToList(String line, boolean convertRotToRadians, boolean zeroRotations, boolean traysLocked) {
+        return lineToList(line, null, convertRotToRadians, zeroRotations, traysLocked);
     }
 
     public static String lineToHeading(String prefix, String line) {
@@ -411,7 +414,7 @@ public class VisionSocketClient implements AutoCloseable {
         return sb.toString();
     }
 
-    public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface, boolean convertRotToRadians, boolean zeroRotations) {
+    public static List<PhysicalItem> lineToList(String line, @Nullable VisionToDBJFrameInterface displayInterface, boolean convertRotToRadians, boolean zeroRotations, boolean traysLocked) {
         List<PhysicalItem> listOut = new ArrayList<>();
         String fa[] = null;
         int i = 0;
@@ -487,10 +490,12 @@ public class VisionSocketClient implements AutoCloseable {
                 ci.setType(String.valueOf(fa[i + 5]));
                 ci.normalizeRotation();
                 ci.setIndex(index);
-                if (listOut.size() > index) {
-                    listOut.set(index, ci);
-                } else {
-                    listOut.add(ci);
+                if (!traysLocked || (!type.equalsIgnoreCase("PT") && !type.equalsIgnoreCase("KT"))) {
+                    if (listOut.size() > index) {
+                        listOut.set(index, ci);
+                    } else {
+                        listOut.add(ci);
+                    }
                 }
                 index++;
             }
@@ -577,6 +582,24 @@ public class VisionSocketClient implements AutoCloseable {
         return prevListSizeDecrementInterval;
     }
 
+    private final List<PhysicalItem> lockedTrays = new ArrayList<>();
+
+    private boolean lockTrays = false;
+    private boolean traysLocked = false;
+
+    public boolean isLockTrays() {
+        return lockTrays;
+    }
+
+    public boolean isTraysLocked() {
+        return traysLocked;
+    }
+    
+    public void setLockTrays(boolean lockTrays) {
+        this.lockTrays = lockTrays;
+        traysLocked = false;
+    }
+
     /**
      * Set the value of prevListSizeDecrementInterval
      *
@@ -619,7 +642,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (visionList == null) {
                 visionList = new ArrayList<>();
             }
-            List<PhysicalItem> newVisionList = lineToList(line, displayInterface, convertRotToRadians, zeroRotations);
+            List<PhysicalItem> newVisionList = lineToList(line, displayInterface, convertRotToRadians, zeroRotations, traysLocked);
             if (null == newVisionList || (newVisionList.size() < prevVisionListSize && ignoreLosingItemsLists)) {
                 this.lastIgnoredVisionList = newVisionList;
                 ignoreCount++;
@@ -638,6 +661,27 @@ public class VisionSocketClient implements AutoCloseable {
             prevListSizeSetTime = System.currentTimeMillis();
             prevVisionListSize = newVisionList.size();
             poseUpdatesParsed += newVisionList.size();
+            
+            if(lockTrays && !traysLocked) {
+                List<PhysicalItem> newLockedTraysList = new ArrayList<>();
+                for (int i = 0; i < newVisionList.size(); i++) {
+                    PhysicalItem itemI = newVisionList.get(i);
+                    if(itemI.getType().equalsIgnoreCase("PT") || itemI.getType().equalsIgnoreCase("KT")) {
+                        newLockedTraysList.add(itemI);
+                    }
+                }
+                if(!newLockedTraysList.isEmpty()) {
+                    lockedTrays.clear();
+                    lockedTrays.addAll(newLockedTraysList);
+                    traysLocked = true;
+                    prevVisionListSize -= newLockedTraysList.size();
+                    if(prevVisionListSize < 0) {
+                        prevVisionListSize=0;
+                    }
+                }
+            } else if(traysLocked) {
+                newVisionList.addAll(lockedTrays);
+            }
             this.visionList = newVisionList;
             updateListeners(newVisionList, line, false);
             if (consecutiveIgnoreCount > maxConsecutiveIgnoreCount) {
