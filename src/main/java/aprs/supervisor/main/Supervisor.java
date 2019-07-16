@@ -7042,7 +7042,8 @@ public class Supervisor {
                             throw new RuntimeException(exception);
                         }
                     })
-                    .alwaysAsync(() -> allowToggles(blockerName, sysArray), supervisorExecutorService);
+                    .alwaysAsync(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
+                    .peekNoCancelException(this::handleXFutureException);
         } catch (Exception exception) {
             log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);

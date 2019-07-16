@@ -9,11 +9,15 @@ datafile=simTeach.csv
 displayAxis=(X+,Y+)
 dropOffThreshold=25.00
 enforceSensorLimits=false
-items=sku_part_large_gear,0.0,776.2,372.3,0.91,P,sku_part_large_gear,0.0,660.7,372.9,0.91,P,sku_part_large_gear,0.0,501.0,400.2,0.91,P,sku_part_large_gear,0.0,389.2,405.5,0.91,P,sku_part_medium_gear,0.0,401.3,229.0,0.91,P,sku_part_medium_gear,0.0,659.5,141.1,0.91,P,sku_part_medium_gear,0.0,399.5,150.0,0.91,P,sku_part_medium_gear,0.0,659.7,219.8,0.91,P,sku_part_small_gear,0.0,754.4,455.3,0.91,P,sku_part_small_gear,0.0,675.5,455.4,0.91,P,sku_part_small_gear,0.0,489.0,482.9,0.91,P,sku_part_small_gear,0.0,408.6,486.5,0.91,P,sku_kit_s2l2_vessel,0.0,715.0,402.0,0.91,KT,sku_kit_s2l2_vessel,0.0,445.0,432.0,0.91,KT,sku_large_gear_vessel,0.0,154.0,384.0,0.91,PT,sku_large_gear_vessel,0.0,167.0,499.0,0.91,PT,sku_small_gear_vessel,0.0,162.0,89.0,0.91,PT,sku_medium_gear_vessel,0.0,151.0,237.0,0.91,PT,sku_kit_m2l1_vessel,0.0,709.0,182.0,0.91,KT,sku_kit_m2l1_vessel,0.0,454.0,188.0,0.91,KT,
+hideNearMouse=false
+hideNearMouseDist=100.0 
+hideNearRobot=false
+hideNearRobotDist=100.0 
+items=sku_part_large_gear,0.0,179.3,370.9,0.91,P,sku_part_large_gear,0.0,71.9,371.5,0.91,P,sku_part_large_gear,0.0,722.1,384.4,0.91,P,sku_part_large_gear,0.0,458.2,196.5,0.91,P,sku_part_large_gear,0.0,703.7,193.5,0.91,P,sku_part_medium_gear,0.0,134.7,69.6,0.91,P,sku_part_medium_gear,0.0,138.6,143.8,0.91,P,sku_part_medium_gear,0.0,64.9,148.8,0.91,P,sku_part_medium_gear,0.0,361.7,234.9,0.91,P,sku_part_small_gear,0.0,130.3,526.9,0.91,P,sku_part_small_gear,0.0,355.1,387.5,0.91,P,sku_part_small_gear,0.0,75.0,524.8,0.91,P,sku_part_small_gear,0.0,616.9,386.2,0.91,P,sku_kit_s2l2_vessel,0.0,665.0,412.0,0.91,KT,sku_kit_s2l2_vessel,0.0,410.0,420.0,0.91,KT,sku_large_gear_vessel,0.0,120.0,254.0,0.91,PT,sku_large_gear_vessel,0.0,126.0,372.0,0.91,PT,sku_small_gear_vessel,0.0,103.0,499.0,0.91,PT,sku_medium_gear_vessel,0.0,98.0,110.0,0.91,PT,sku_kit_m2l1_vessel,0.0,662.0,195.0,0.91,KT,sku_kit_m2l1_vessel,0.0,416.0,198.0,0.91,KT,
 
 pickupDist=5.00
 posNoise=1.00
-prevListSizeDecrementInterval=2000
+prevListSizeDecrementInterval=4000
 recordLines=false
 reverseFlag=false
 rotNoise=1.00
