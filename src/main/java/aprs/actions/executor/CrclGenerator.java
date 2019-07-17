@@ -1406,6 +1406,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throws Exception {
 
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
+        assert (null != gparams) : "null == gparamss";
         assert (null != gparams.options) : "null == gparams.options";
         final List<Action> gParamsActions = gparams.actions;
         assert (null != gParamsActions) : "null == gparams.actions";
@@ -1428,8 +1429,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         gparams.startSafeAbortRequestCount, physicalItemsFinal);
             } else {
                 String sublistString;
-                if (null != gParamsActions
-                        && !gParamsActions.isEmpty()
+                if (!gParamsActions.isEmpty()
                         && startingIndex < gparamsActionsSize) {
                     println("startingIndex = " + startingIndex);
                     println("gparamsActionsSize = " + gparamsActionsSize);
@@ -3179,9 +3179,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
-                if (null != physicalItemsLocal) {
-                    takeSimViewSnapshot("checkKits:" + ex.getMessage() + ".physicalItemsLocal", physicalItemsLocal);
-                }
+                takeSimViewSnapshot("checkKits:" + ex.getMessage() + ".physicalItemsLocal", physicalItemsLocal);
                 throw new RuntimeException(ex);
             }
         } catch (Exception ex) {
@@ -4222,11 +4220,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
-            if (null != trayName) {
-                partsTrayListItems.add(new Tray(trayName, partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
-            } else {
-                LOGGER.log(Level.WARNING, "partsTray has null partsTrayName : {0}", partsTray);
-            }
+            partsTrayListItems.add(new Tray(trayName, partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
             if (count > 0) {
                 try {
                     if (snapshotsEnabled()) {
@@ -6781,7 +6775,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             List<PhysicalItem> l = xfl.get();
             if (l.isEmpty()) {
-                LOGGER.warning(()-> getRunName() + ": waitForCompleteVisionUpdates returing empty list");
+                LOGGER.warning(() -> getRunName() + ": waitForCompleteVisionUpdates returing empty list");
             }
             try {
                 if (snapshotsEnabled()) {
@@ -6949,7 +6943,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             takeSnapshots("plan", "place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
         }
         if (pose == null) {
-            if (skipMissingParts && null != lastTakenPartLocal) {
+            if (skipMissingParts) {
                 PoseType origPose = poseCache.get(lastTakenPartLocal);
                 if (null != origPose) {
                     origPose = visionToRobotPose(origPose);
@@ -6995,7 +6989,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void recordSkipPlacePart(String slotName, @Nullable PoseType pose) throws IllegalStateException {
         takeSnapshots("plan", "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
     }
-
 
     public static @Nullable
     <T, E> T getKeyByValue(Map<T, E> map, E value) {
