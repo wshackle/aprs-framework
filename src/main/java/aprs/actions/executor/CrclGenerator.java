@@ -1566,7 +1566,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                         case PLACE_PART:
                             if (poseCache.isEmpty()) {
-                                LOGGER.log(Level.WARNING, "newItems.isEmpty() on place-part for run {}", getRunName());
+                                LOGGER.log(Level.WARNING, "newItems.isEmpty() on place-part for run {0}", getRunName());
                             }
                             String slotName = action.getArgs()[placePartSlotArgIndex];
                             if (null == lastTakenPart) {
@@ -1603,7 +1603,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //                            checkTakePlaceActions(takePlaceActions, gparams.actions);
 //                        }
                         if (poseCache.isEmpty()) {
-                            LOGGER.log(Level.WARNING, "newItems.isEmpty() on take-part for run {}", getRunName());
+                            LOGGER.log(Level.WARNING, "newItems.isEmpty() on take-part for run {0}", getRunName());
                         }
                         takePart(action, cmds, getNextPlacePartAction(idx, gParamsActions));
                         break;
@@ -2080,7 +2080,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private static final AtomicInteger ropCount = new AtomicInteger();
+    private static final AtomicInteger RUN_OPTO_COUNT = new AtomicInteger();
 
     private boolean isLookForPartsAction(Action action) {
         switch (action.getType()) {
@@ -2153,7 +2153,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             gparams.startingIndex = startingIndex;
         }
         gparams.runOptoToGenerateReturn = null;
-        int rc = ropCount.incrementAndGet();
+        int rc = RUN_OPTO_COUNT.incrementAndGet();
         long t0 = System.currentTimeMillis();
         setOptions(options1);
         if (actions.size() < 1) {
@@ -3129,7 +3129,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 lastCheckKitsOptimizedCorrectiveActions.addAll(correctiveActions);
                                 lastIndex.compareAndSet(origIndex, lastLookForIndex);
                                 boolean placedPart = false;
-                                CORRECT_ACTIONS_LOOP:
                                 for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
                                     Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
                                     switch (correctiveAction.getType()) {
@@ -3142,7 +3141,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                     if (!nextSlotName.contains("kit")) {
                                                         logDebug("nextSlotName = " + nextSlotName);
                                                         caIndex++;
-                                                        continue CORRECT_ACTIONS_LOOP;
+                                                        continue;
                                                     }
                                                 }
                                             }
@@ -4106,7 +4105,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             String trayName = partsTray.getPartsTrayName();
             if (null == trayName) {
-                LOGGER.log(Level.WARNING, "partsTray has null partsTrayName : " + partsTray);
+                LOGGER.log(Level.WARNING, () -> "partsTray has null partsTrayName : " + partsTray);
                 continue;
             }
             //-- getting the pose for the parts tray 
@@ -4911,7 +4910,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         = "Can't drop off part " + addCheckedOpenGripperLastPartTaken + " when distance to another part (" + (closestPart != null ? closestPart.getFullName() : null) + ") of " + distToPart + "  less than  " + dropOffMin;
                 double recheckDistance = af.getClosestRobotPartDistance();
                 if (debug) {
-                    LOGGER.log(Level.INFO, "recheckDistance = " + recheckDistance);
+                    LOGGER.log(Level.INFO, "recheckDistance = {0}", recheckDistance);
                 }
                 af.setTitleErrorString(errString);
                 af.pause();
@@ -6782,7 +6781,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             List<PhysicalItem> l = xfl.get();
             if (l.isEmpty()) {
-                LOGGER.warning(getRunName() + ": waitForCompleteVisionUpdates returing empty list");
+                LOGGER.warning(()-> getRunName() + ": waitForCompleteVisionUpdates returing empty list");
             }
             try {
                 if (snapshotsEnabled()) {
@@ -6995,40 +6994,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void recordSkipPlacePart(String slotName, @Nullable PoseType pose) throws IllegalStateException {
         takeSnapshots("plan", "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
-//        PoseType poseCheck = getPose(slotName);
-//        logDebug("poseCheck = " + poseCheck);
     }
 
-//    private void placePartRecovery(Action action, Slot slot, List<MiddleCommandType> out) throws IllegalStateException {
-//        checkDbReady();
-//        checkSettings();
-//        String slotName = action.getArgs()[0];
-//        PoseType pose = slot.getSlotPose();
-//
-//        final String msg = "placed part (recovery) in " + slotName;
-//        if (takeSnapshots) {
-//            if (takeSnapshots) {
-//                takeSnapshots("plan", "place-part-recovery-in-" + slotName + "", pose, slotName);
-//            }
-//        }
-//        if (pose == null) {
-//            throw new IllegalStateException("getPose(" + slotName + ") returned null");
-//        }
-//
-//        pose = visionToRobotPose(pose);
-//        pose.setXAxis(xAxis);
-//        pose.setZAxis(zAxis);
-//        PlacePartSlotPoseList.add(pose);
-//        placePartByPose(out, pose);
-//        final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount,null,-1);
-//        addMarkerCommand(out, msg,
-//                ((CRCLCommandWrapper wrapper) -> {
-//                    logDebug(msg + " completed at " + new Date());
-//                    ppi.setWrapper(wrapper);
-//                    notifyPlacePartConsumers(ppi);
-//                    addToInspectionResultJTextPane("&nbsp;&nbsp;" + msg + " completed at " + new Date() + "<br>");
-//                }));
-//    }
+
     public static @Nullable
     <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Entry<T, E> entry : map.entrySet()) {
@@ -7084,7 +7052,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addSetFastSpeed(cmds);
         addMoveTo(cmds, approachPose, true, "placePartByPose.approachPose.return");
 
-//        addSettleDwell(cmds);
         setLastTakenPart(null);
     }
 
@@ -7157,10 +7124,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
                 throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
             }
-//            if (!aprsSystem.isDoingActions()) {
-//                aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-//                throw new IllegalStateException("!aprsSystem.isDoingActions()");
-//            }
             consumer.accept(wrapper);
         }
     }
