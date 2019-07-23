@@ -43,12 +43,17 @@ import crcl.ui.XFuture;
 import crcl.ui.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Point;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -80,12 +85,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
-//        PmCartesian maxLimit = aprsSystem.getMaxLimit();
-//        PmCartesian minLimit = aprsSystem.getMinLimit();
-//        Utils.runOnDispatchThread(() -> {
-//            setMaxLimitMenuDisplay(maxLimit);
-//            setMinLimitMenuDisplay(minLimit);
-//        });
     }
 
     @UIEffect
@@ -183,6 +182,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     public void addToDesktopPane(JInternalFrame internalFrame) {
         JInternalFrame[] prevFrames = jDesktopPane1.getAllFramesInLayer(JLayeredPane.DEFAULT_LAYER);
+        checkFrames();
         for (JInternalFrame prevFrame : prevFrames) {
             if (internalFrame == prevFrame) {
                 throw new IllegalStateException("internalFrame=" + internalFrame + " already in prevFrames=" + Arrays.toString(prevFrames) + " of jDesktopPane1=" + jDesktopPane1);
@@ -193,6 +193,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("internalFrame=" + internalFrame + " already hasParent=" + internalFrameParent + "  ((jDesktopPane1=" + jDesktopPane1 + ")==internalFrameParent) =" + (jDesktopPane1 == internalFrameParent));
         }
         jDesktopPane1.add(internalFrame, JLayeredPane.DEFAULT_LAYER);
+        checkFrames();
     }
 
     /**
@@ -203,21 +204,46 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     public AprsSystemDisplayJFrame() {
         try {
             initComponents();
-//            setMaxLimitMenuDisplay(new PmCartesian(10000.0, 10000.0, 10000.0));
-//            setMinLimitMenuDisplay(new PmCartesian(-10000.0, -10000.0, -10000.0));
+            checkFrames();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
+    }
+
+    private volatile int prevFrameCount = 0;
+    private volatile int prevFramesLength = 0;
+
+    void checkFrames() {
+        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        int frameCount = frames.length + iconifiedFramesMap.size();
+        if (frameCount < prevFrameCount && frames.length < prevFramesLength) {
+            System.out.println("");
+            System.err.println("");
+            System.out.flush();
+            System.err.flush();
+            System.out.println("iconifiedFramesMap.size() = " + iconifiedFramesMap.size());
+            System.out.println("frames.length = " + frames.length);
+            System.out.println("prevFramesLength = " + prevFramesLength);
+            System.out.println("frames = " + Arrays.toString(frames));
+            System.out.println("prevFrameCount = " + prevFrameCount);
+            System.out.println("frameCount = " + frameCount);
+            Thread.dumpStack();
+            System.out.println("");
+            System.err.println("");
+            System.out.flush();
+            System.err.flush();
+        }
+        prevFrameCount = frameCount;
+        prevFramesLength = frames.length;
     }
 
     CachedCheckBox kitInspectionStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemKitInspectionStartup);
     }
 
-    CachedCheckBox pddlPlannerStartupCheckBox() {
-        return new CachedCheckBox(jCheckBoxMenuItemStartupPDDLPlanner);
-    }
-
+//    CachedCheckBox pddlPlannerStartupCheckBox() {
+//        return new CachedCheckBox(jCheckBoxMenuItemStartupPDDLPlanner);
+//    }
     CachedCheckBox executorStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemStartupExecutor);
     }
@@ -275,45 +301,106 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     void closeAllInternalFrames() {
         JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        checkFrames();
         for (JInternalFrame f : frames) {
             jDesktopPane1.getDesktopManager().closeFrame(f);
             f.setVisible(false);
             jDesktopPane1.remove(f);
         }
+        prevFrameCount = jDesktopPane1.getAllFrames().length;
     }
+
+    private class LocationSize {
+
+        final Point location;
+        final Dimension size;
+
+        public LocationSize(Point location, Dimension size) {
+            this.location = location;
+            this.size = size;
+        }
+
+        @Override
+        public String toString() {
+            return "LocationSize{" + "location=" + location + ", size=" + size + '}';
+        }
+
+    }
+    private final Map<JInternalFrame, LocationSize> iconifiedFramesMap = new IdentityHashMap<>();
 
     @UIEffect
     void hideAllInternalFrames() {
         JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        checkFrames();
+        final DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
         for (JInternalFrame f : frames) {
-            jDesktopPane1.getDesktopManager().iconifyFrame(f);
-            f.setVisible(false);
+            iconifyInternalFrame(desktopManager, f);
+//            f.setVisible(false);
         }
+        checkFrames();
     }
 
     @UIEffect
     void showAllInternalFrames() {
+        checkFrames();
+        final DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
+        final Set<JInternalFrame> keySet = iconifiedFramesMap.keySet();
+        List<JInternalFrame> keySetList = new ArrayList<>(keySet);
+        for (int i = 0; i < keySetList.size(); i++) {
+            JInternalFrame internalFrame = keySetList.get(i);
+            if (null != internalFrame) {
+                deiconifyInternalFrame(internalFrame, desktopManager);
+            }
+        }
         JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        checkFrames();
         for (JInternalFrame f : frames) {
-            jDesktopPane1.getDesktopManager().deiconifyFrame(f);
+            deiconifyInternalFrame(f, desktopManager);
             f.setVisible(true);
         }
+        checkFrames();
     }
 
     @UIEffect
     void checkDeiconifyActivateAndMaximize(JInternalFrame internalFrame) {
+        if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("Thread.currentThread()=" + Thread.currentThread());
+        }
+        checkFrames();
         internalFrame.setVisible(true);
         if (checkInternalFrame(internalFrame)) {
+            checkFrames();
             DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
-            desktopManager.deiconifyFrame(internalFrame);
-            desktopManager.activateFrame(internalFrame);
-            desktopManager.maximizeFrame(internalFrame);
+            Point p = internalFrame.getLocation();
+            System.out.println("p = " + p);
+            internalFrame.setLocation(0, 0);
+            JInternalFrame.JDesktopIcon desktopIcon = internalFrame.getDesktopIcon();
+            System.out.println("desktopIcon = " + desktopIcon);
+            Container c = desktopIcon.getParent();
+            System.out.println("c = " + c);
+            deiconifyInternalFrame(internalFrame, desktopManager);
+            checkFrames();
+            try {
+                desktopManager.activateFrame(internalFrame);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            checkFrames();
+            try {
+                desktopManager.maximizeFrame(internalFrame);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            checkFrames();
         }
     }
 
     @UIEffect
     boolean checkInternalFrame(JInternalFrame frm) {
         try {
+            if (iconifiedFramesMap.keySet().contains(frm)) {
+                return true;
+            }
             if (frm == null) {
                 return false;
             }
@@ -333,9 +420,29 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     void checkIconifyAndDeactivate(JInternalFrame internalFrame) {
         if (checkInternalFrame(internalFrame)) {
             DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
-            desktopManager.iconifyFrame(internalFrame);
+            checkFrames();
+            iconifyInternalFrame(desktopManager, internalFrame);
+            checkFrames();
             desktopManager.deactivateFrame(internalFrame);
+            checkFrames();
         }
+    }
+
+    private void iconifyInternalFrame(DesktopManager desktopManager, JInternalFrame internalFrame) {
+        LocationSize ls = new LocationSize(internalFrame.getLocation(), internalFrame.getSize());
+        try {
+            desktopManager.iconifyFrame(internalFrame);
+        } catch (Exception e) {
+            System.err.println("internalFrame=" + internalFrame);
+            System.err.println("ls=" + ls);
+            e.printStackTrace();
+            try {
+                desktopManager.minimizeFrame(internalFrame);
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
+        iconifiedFramesMap.put(internalFrame, ls);
     }
 
     @UIEffect
@@ -353,23 +460,72 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     void deiconifyAndActivate(final JInternalFrame frameToShow) {
         DesktopManager desktopManager = jDesktopPane1.getDesktopManager();
-        desktopManager.deiconifyFrame(frameToShow);
-        desktopManager.activateFrame(frameToShow);
+        checkFrames();
+        deiconifyInternalFrame(frameToShow, desktopManager);
+        checkFrames();
+        try {
+            desktopManager.activateFrame(frameToShow);
+        } catch (Exception e) {
+            System.out.println("frameToShow = " + frameToShow);
+            System.out.println("desktopManager = " + desktopManager);
+            e.printStackTrace();
+        }
+        checkFrames();
+    }
+
+    private void deiconifyInternalFrame(final JInternalFrame frameToShow, DesktopManager desktopManager) {
+        try {
+            LocationSize ls = iconifiedFramesMap.get(frameToShow);
+            if (null != ls) {
+                try {
+                    desktopManager.deiconifyFrame(frameToShow);
+                } catch (Exception e) {
+                    System.out.println("frameToShow = " + frameToShow);
+                    System.out.println("desktopManager = " + desktopManager);
+                    System.out.println("ls = " + ls);
+                    e.printStackTrace();
+                }
+                if (!Arrays.asList(jDesktopPane1.getAllFrames()).contains(frameToShow)) {
+                    jDesktopPane1.add(frameToShow);
+                }
+                desktopManager.resizeFrame(frameToShow, ls.location.x, ls.location.y, ls.size.width, ls.size.height);
+                iconifiedFramesMap.remove(frameToShow);
+            }
+        } catch (Throwable e) {
+            System.out.println("frameToShow = " + frameToShow);
+            System.out.println("desktopManager = " + desktopManager);
+            e.printStackTrace();
+        }
     }
 
     private String lastFrameTitles[] = new String[0];
 
+    private final AtomicInteger setupWindowMenuCount = new AtomicInteger();
+
     @UIEffect
     void setupWindowsMenu() {
+
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
-            return;
+            throw new RuntimeException("Thread.currentThread()=" + Thread.currentThread());
         }
         if (jMenuWindow.isSelected()) {
-            return;
+            throw new RuntimeException("jMenuWindow.isSelected()");
         }
+        checkFrames();
         int count = 1;
-        ArrayList<JInternalFrame> framesList = new ArrayList<>(Arrays.asList(jDesktopPane1.getAllFrames()));
+        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+        ArrayList<JInternalFrame> framesList = new ArrayList<>(Arrays.asList(frames));
+        for (JInternalFrame frame : iconifiedFramesMap.keySet()) {
+            if (!framesList.contains(frame)) {
+                framesList.add(frame);
+            }
+        }
         framesList.sort(Comparator.comparing(JInternalFrame::getTitle));
+//        Thread.dumpStack();
+//        int swmCount = setupWindowMenuCount.incrementAndGet();
+//        System.out.println("aprsSystem = " + aprsSystem);
+//        System.out.println("swmCount = " + swmCount);
+//        System.out.println("framesList = " + framesList);
         boolean framesChanged = false;
         if (lastFrameTitles.length != framesList.size()) {
             framesChanged = true;
@@ -383,6 +539,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 framesChanged = true;
             }
         }
+//        System.out.println("framesChanged = " + framesChanged);
+        int menuItemCount = jMenuWindow.getItemCount();
+//        System.out.println("menuItemCount = " + menuItemCount);
         if (!framesChanged) {
             return;
         }
@@ -407,7 +566,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         assert (framesListSize == menuItems.size()) :
                 ("menuItems = " + menuItems + " does not match framesList = " + framesList);
 
-        int menuItemCount = jMenuWindow.getItemCount();
+        menuItemCount = jMenuWindow.getItemCount();
+//        System.out.println("menuItemCount = " + menuItemCount);
         assert (framesListSize == menuItemCount) :
                 ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount
                 + "with framesList=" + framesList + ", menuItems=" + menuItems);
@@ -475,7 +635,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemHideAllWindows = new javax.swing.JMenuItem();
         jMenuItemShowAllWindows = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
-        jCheckBoxMenuItemStartupPDDLPlanner = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupExecutor = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupObjectSP = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStartupObject2DView = new javax.swing.JCheckBoxMenuItem();
@@ -617,14 +776,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuBar1.add(jMenu1);
 
         jMenu3.setText("Startup");
-
-        jCheckBoxMenuItemStartupPDDLPlanner.setText("PDDL Planner");
-        jCheckBoxMenuItemStartupPDDLPlanner.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jCheckBoxMenuItemStartupPDDLPlanner);
 
         jCheckBoxMenuItemStartupExecutor.setText("Executor");
         jCheckBoxMenuItemStartupExecutor.addActionListener(new java.awt.event.ActionListener() {
@@ -1029,22 +1180,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-
-    @UIEffect
-    private void jCheckBoxMenuItemStartupPDDLPlannerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
-        try {
-            if (jCheckBoxMenuItemStartupPDDLPlanner.isSelected()) {
-                startPddlPlanner();
-            } else {
-                closePddlPlanner();
-            }
-            setupWindowsMenu();
-            saveProperties();
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class
-                    .getName()).log(Level.SEVERE, "", ex);
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItemStartupPDDLPlannerActionPerformed
 
     private void startActionListExecutor() {
         if (null != aprsSystem) {
@@ -2236,7 +2371,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObject2DView;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupObjectSP;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupPDDLPlanner;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobotCrclGUI;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStepping;

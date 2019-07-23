@@ -1259,7 +1259,7 @@ public class Object2DJPanel extends JPanel {
         return currentX;
     }
 
-    private long repaintMinMillis = 600;
+    private long repaintMinMillis = 100;
 
     /**
      * Get the value of repaintMinMillis

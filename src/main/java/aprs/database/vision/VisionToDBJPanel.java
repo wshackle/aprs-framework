@@ -162,9 +162,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     /**
-     * Creates new form VisionToDBJPanel
-     * This 0 args constructor should only be used for the GUI Builder or testing.
-     * it bypasses the check to make sure the aprsSystem is not null.
+     * Creates new form VisionToDBJPanel This 0 args constructor should only be
+     * used for the GUI Builder or testing. it bypasses the check to make sure
+     * the aprsSystem is not null.
      */
     @SuppressWarnings({"initialization", "nullness"})
     @UIEffect
@@ -1728,8 +1728,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     private void setEnableDatabaseUpdates(boolean enableDatabaseUpdates) {
 
-        if (!enableDatabaseUpdates && !singleUpdateListeners.isEmpty()) {
-            throw new IllegalStateException("attempt to disable database updates while single listners are waiting");
+        synchronized (singleUpdateListeners) {
+            if (!enableDatabaseUpdates && !singleUpdateListeners.isEmpty()) {
+                System.out.println("");
+                System.out.flush();
+                System.err.println("singleUpdateListeners=" + singleUpdateListeners);
+                for (XFuture<List<PhysicalItem>> sul : singleUpdateListeners){
+                    System.err.println("sul="+sul);
+                    System.err.println("sul.createTrace="+Utils.traceToString(sul.getCreateTrace()));
+                }
+                throw new IllegalStateException("attempt to disable database updates while single listners are waiting");
+            }
         }
         if (null != dpu) {
             dpu.setEnableDatabaseUpdates(enableDatabaseUpdates);
@@ -2221,8 +2230,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      *
      * @return the value of aprsSystemInterface
      */
-    public
-    AprsSystem getAprsSystem() {
+    public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
 

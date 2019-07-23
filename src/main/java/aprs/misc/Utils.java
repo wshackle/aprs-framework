@@ -25,6 +25,7 @@ package aprs.misc;
 import aprs.cachedcomponents.CachedTable;
 import aprs.launcher.LauncherAprsJFrame;
 import static aprs.misc.AprsCommonLogger.println;
+import aprs.system.AprsSystem;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFuture.PrintedException;
@@ -1350,9 +1351,9 @@ public class Utils {
             LOGGER.log(Level.SEVERE, "", ex);
         }
     }
-    
+
     public static String shortenItemPartName(String itemName) {
-        if(null == itemName) {
+        if (null == itemName) {
             throw new NullPointerException("itemName");
         }
         String shortItemName = itemName;
@@ -1363,5 +1364,28 @@ public class Utils {
             shortItemName = shortItemName.substring(5);
         }
         return shortItemName;
+    }
+
+    private static final String APRS_LOOK_AND_FEEL = System.getProperty("aprs.lookAndFeel", "Nimbus");
+
+    public static void setToAprsLookAndFeel() {
+        /* Set the preferred look and feel */
+
+ /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+        * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                final String infoName = info.getName();
+                if (APRS_LOOK_AND_FEEL.equals(infoName)) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(AprsSystem.class
+                    .getName()).log(java.util.logging.Level.SEVERE, "", ex);
+
+        }
     }
 }
