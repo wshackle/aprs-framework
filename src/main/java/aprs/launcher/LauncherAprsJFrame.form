@@ -54,6 +54,11 @@
             </MenuItem>
           </SubComponents>
         </Menu>
+        <Menu class="javax.swing.JMenu" name="jMenuLaF">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Look And Feel"/>
+          </Properties>
+        </Menu>
       </SubComponents>
     </Menu>
   </NonVisualComponents>

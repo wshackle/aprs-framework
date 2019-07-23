@@ -332,7 +332,7 @@ public class GoalLearnerTest {
 
         XFutureVoid xfv1 = aprsSystem.startActionListExecutor()
                 .thenRun(() -> {
-                    aprsSystem.setPddlExecExternalPoseProvider(poseProvider);
+                    aprsSystem.setExecExternalPoseProvider(poseProvider);
                 });
         XFutureVoid xfv2 = aprsSystem.startObject2DJinternalFrame();
         XFutureVoid xfv3 = aprsSystem.startSimServerJInternalFrame();

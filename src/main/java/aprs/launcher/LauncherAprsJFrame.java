@@ -50,9 +50,12 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
+import crcl.ui.LauncherJFrame;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.net.URL;
 import java.net.URLClassLoader;
+import javax.swing.JMenuItem;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  *
@@ -61,7 +64,6 @@ import java.net.URLClassLoader;
 @SuppressWarnings({"unused", "guieffect"})
 public class LauncherAprsJFrame extends javax.swing.JFrame {
 
-    
     /**
      * Creates new form LauncherJFrame
      */
@@ -74,6 +76,25 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             setIconImage(IconImages.BASE_IMAGE);
         } catch (Exception ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+        }
+        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            final String infoName = info.getName();
+
+            JMenuItem jmi = new JMenuItem(infoName);
+            final String infoClassName = info.getClassName();
+            jmi.addActionListener(l -> {
+                try {
+                    LauncherAprsJFrame.this.setVisible(false);
+                    LauncherAprsJFrame.this.dispose();
+                    javax.swing.UIManager.setLookAndFeel(infoClassName);
+                    LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
+                    lFrame.checkFiles();
+                    lFrame.setVisible(true);
+                } catch (Exception ex) {
+                    Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                }
+            });
+            jMenuLaF.add(jmi);
         }
     }
 
@@ -106,6 +127,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemLaunchExternal = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetLaunchFile = new javax.swing.JMenuItem();
+        jMenuLaF = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("APRS Launcher");
@@ -295,6 +317,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
+        jMenuLaF.setText("Look And Feel");
+        jMenuBar1.add(jMenuLaF);
+
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -349,7 +374,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
-     private   static  @Nullable  File getLastLaunchFile() throws IOException {
+    private static @Nullable
+    File getLastLaunchFile() throws IOException {
         if (lastLaunchFileFile.exists()) {
             String firstLine = readFirstLine(lastLaunchFileFile);
             if (null != firstLine && firstLine.length() > 0) {
@@ -359,7 +385,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         return null;
     }
 
-     private  @Nullable  File lastLaunchFile = null;
+    private @Nullable
+    File lastLaunchFile = null;
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
@@ -632,8 +659,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
+        final String cyclesString = JOptionPane.showInputDialog(this, "Number of cycles?", 10);
+        if(cyclesString == null || cyclesString.length() < 1) {
+            return;
+        }
         int numCycles
-                = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
+                = Integer.parseInt(cyclesString);
         boolean useConveyor
                 = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         this.setVisible(false);
@@ -768,24 +799,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-       
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException | javax.swing.UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ex) {
-            java.util.logging.Logger.getLogger(LauncherAprsJFrame.class.getName()).log(java.util.logging.Level.SEVERE, "", ex);
-        }
-        //</editor-fold>
-        //</editor-fold>
+
+        Utils.setToAprsLookAndFeel();
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -893,6 +908,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemMultiCycleMultiSystemTest;
     private javax.swing.JMenuItem jMenuItemSetLaunchFile;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTestNoDisables;
+    private javax.swing.JMenu jMenuLaF;
     private javax.swing.JMenu jMenuSpecialTests;
     private javax.swing.JPanel jPanelMultiWorkcellSystem;
     private javax.swing.JPanel jPanelSingleWorkcellSystem;

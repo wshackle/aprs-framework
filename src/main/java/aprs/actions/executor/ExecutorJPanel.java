@@ -2435,6 +2435,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             appendGenerateAbortLog("doActionsReturning comment=" + comment + ",ret=" + ret, actionsListSize, rev, crclGenerator.getLastIndex(), safeAbortRequestCount.get(), -1);
             return ret;
         } catch (Exception ex) {
+            System.out.println("");
+            System.out.flush();
+            
             LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ") : " + aprsSystem.getRunName(), ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -3550,6 +3553,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             return ret;
         } catch (Exception ex) {
+            System.out.println("");
+            System.out.flush();
+            if(null == lastPddlActionSectionToCrclActionListCopy) { 
+            System.err.println("lastPddlActionSectionToCrclActionListCopy = " + lastPddlActionSectionToCrclActionListCopy);
+            } else {
+                for (int i = 0; i < lastPddlActionSectionToCrclActionListCopy.size(); i++) {
+                    System.err.println("lastPddlActionSectionToCrclActionListCopy.get("+i+") = " + lastPddlActionSectionToCrclActionListCopy.get(i));
+                }
+            }
+            System.err.println("aprsSystem.getRunName() = " + aprsSystem.getRunName());
+            System.err.println("crclProgram = " + crclProgram);
+            try {
+                System.err.println("crclProgram :" +CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, false));
+            } catch (Exception ex1) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex1);
+            }
             LOGGER.log(Level.SEVERE, "", ex);
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -6557,6 +6576,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
     private volatile int actionsListSize = -1;
 
+    
+    private volatile @Nullable List<Action>  lastPddlActionSectionToCrclActionListCopy = null;
+    
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
         Map<String, String> options = getTableOptions();
         final int rpi = getReplanFromIndex();
@@ -6589,6 +6611,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         checkReverse();
         int sarc2;
         synchronized (actionsList) {
+            List<Action> actionListDebugCopy =  new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();
             if (hppcIndexSet) {
                 cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber);
@@ -6597,6 +6620,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             resetReadOnlyActionsList(reverseFlag);
             actionsListSize = actionsList.size();
+            for (int i = startReplanFromIndex; i < actionsListSize && i < crclGenerator.getLastIndex(); i++) {
+                actionListDebugCopy.add(actionsList.get(i));
+            }
+            lastPddlActionSectionToCrclActionListCopy = actionListDebugCopy;
         }
         int indexes[] = crclGenerator.getActionToCrclIndexes();
         int indexesCopy[] = Arrays.copyOf(indexes, indexes.length);
@@ -6618,16 +6645,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (lastIndex < 0) {
             throw new IllegalStateException("lastIndex=" + lastIndex);
         }
-//        if (!reverseFlag) {
-//            for (int i = startReplanFromIndex; i < lastIndex; i++) {
-//                int index = indexesCopy[i];
-//                if (index < 0 || index > cmds.size()) {
-//                    System.err.println("bad index = " + index);
-//                    List<MiddleCommandType> cmds2
-//                            = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber);
-//                }
-//            }
-//        }
         if (lastIndex < startReplanFromIndex - 1) {
             throw new IllegalStateException("lastIndex=" + lastIndex + ",startReplanFromIndex=" + startReplanFromIndex);
         }

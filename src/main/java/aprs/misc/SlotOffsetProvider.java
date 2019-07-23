@@ -70,6 +70,7 @@ public interface SlotOffsetProvider {
      * @param tray tray with absolute position
      * @param offsetItem slot with relative position offset for that kind of
      * tray
+     * @param rotationOffset offset to add to the tray rotation
      * @return slot with absolute position
      */
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset);

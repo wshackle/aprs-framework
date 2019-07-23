@@ -4000,7 +4000,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            LOGGER.log(Level.WARNING, () -> "no pose for " + partName + " poseCache.keySet() =" + poseCache.keySet() + ", clearPoseCacheTrace=" + Utils.traceToString(clearPoseCacheTrace));
+
+            LOGGER.log(Level.WARNING,
+                    "no pose for {0} poseCache.keySet() = {1}, clearPoseCacheTrace={2}",
+                    new Object[]{partName, poseCache.keySet(), Utils.traceToString(clearPoseCacheTrace)});
             return;
         }
         pose = visionToRobotPose(pose);
@@ -4103,7 +4106,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
             String trayName = partsTray.getPartsTrayName();
             if (null == trayName) {
-                LOGGER.log(Level.WARNING, () -> "partsTray has null partsTrayName : " + partsTray);
+                LOGGER.log(Level.WARNING, "partsTray has null partsTrayName : {0}", partsTray);
                 continue;
             }
             //-- getting the pose for the parts tray 
@@ -4557,7 +4560,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         PoseType pose = getPose(partName);
         if (null == pose) {
-            LOGGER.log(Level.WARNING, () -> "no pose for " + partName + " poseCache.keySet() =" + poseCache.keySet() + ", clearPoseCacheTrace=" + Utils.traceToString(clearPoseCacheTrace));
+            LOGGER.log(Level.WARNING,
+                    "no pose for {0} poseCache.keySet() = {1}, clearPoseCacheTrace={2}",
+                    new Object[]{partName, poseCache.keySet(), Utils.traceToString(clearPoseCacheTrace)});
+//            LOGGER.log(Level.WARNING, 
+//                    "no pose for " + partName + " poseCache.keySet() =" + poseCache.keySet() + ", clearPoseCacheTrace=" + Utils.traceToString(clearPoseCacheTrace));
             return;
         }
         pose = visionToRobotPose(pose);
@@ -6581,6 +6588,41 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile @Nullable
     List<PhysicalItem> physicalItems = null;
 
+    private class WaitForCompleteVisionUpdatesStartInfo {
+
+        final String runName; //  = getRunName();
+        final XFuture<List<PhysicalItem>> xfl; //  = aprsSystem.getNewSingleVisionToDbUpdate();
+        final int simViewRefreshCount; //  = aprsSystem.getSimViewRefreshCount();
+        final int simViewPublishCount; //  = aprsSystem.getSimViewPublishCount();
+        final int visLineCount; //  = aprsSystem.getVisionLineCount();
+
+        final long t0; //  = System.currentTimeMillis();
+
+        final int visClientUpdateCount; //  = aprsSystem.getVisionClientUpdateCount();
+        final int visClientUpdateAquireOffCount; //  = aprsSystem.getVisionClientUpdateAquireOffCount();
+        final int visClientUpdateNoCheckRequiredPartsCount; //  = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
+        final int visClientUpdateSingleUpdateListenersEmptyCount; //  = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+        final int visClientIgnoreCount; //  = aprsSystem.getVisionClientIgnoreCount();
+        final int visClientSkippedCount; //  = aprsSystem.getVisionClientSkippedCount();
+
+        WaitForCompleteVisionUpdatesStartInfo(AprsSystem aprsSystemParam) {
+            this.runName = getRunName();
+            this.xfl = aprsSystemParam.getNewSingleVisionToDbUpdate();
+            this.simViewRefreshCount = aprsSystemParam.getSimViewRefreshCount();
+            this.simViewPublishCount = aprsSystemParam.getSimViewPublishCount();
+            this.visLineCount = aprsSystemParam.getVisionLineCount();
+            this.t0 = System.currentTimeMillis();
+
+            this.visClientUpdateCount = aprsSystemParam.getVisionClientUpdateCount();
+            this.visClientUpdateAquireOffCount = aprsSystemParam.getVisionClientUpdateAquireOffCount();
+            this.visClientUpdateNoCheckRequiredPartsCount = aprsSystemParam.getVisionClientUpdateNoCheckRequiredPartsCount();
+            this.visClientUpdateSingleUpdateListenersEmptyCount = aprsSystemParam.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+            this.visClientIgnoreCount = aprsSystemParam.getVisionClientIgnoreCount();
+            this.visClientSkippedCount = aprsSystemParam.getVisionClientSkippedCount();
+        }
+
+    }
+
     private List<PhysicalItem> waitForCompleteVisionUpdates(String prefix, Map<String, Integer> requiredPartsMap, long timeoutMillis, int startAbortCount) {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
@@ -6591,6 +6633,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
+        WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);
 
         try {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
@@ -6599,117 +6642,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 setLastProgramAborted(true);
                 return Collections.emptyList();
             }
-            String runName = getRunName();
             visionUpdateCount.incrementAndGet();
-
-            XFuture<List<PhysicalItem>> xfl = aprsSystem.getNewSingleVisionToDbUpdate();
-            int startSimViewRefreshCount = aprsSystem.getSimViewRefreshCount();
-            int startSimViewPublishCount = aprsSystem.getSimViewPublishCount();
-            int startVisLineCount = aprsSystem.getVisionLineCount();
             aprsSystem.refreshSimView();
-            long t0 = System.currentTimeMillis();
             int waitCycle = 0;
-            long last_t1 = t0;
+            long last_t1 = startInfo.t0;
 
-            int startVisClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
-            int startVisClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
-            int startVisClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
-            int startVisClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
-            int startVisClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
-            int startVisClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
-
-            while (!xfl.isDone()) {
+            while (!startInfo.xfl.isDone()) {
                 waitCycle++;
                 long t1 = System.currentTimeMillis();
-//                if (!aprsSystem.isDoingActions()) {
-//                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-//                    throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-//                }
                 if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                     takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                     aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
                     setLastProgramAborted(true);
                     return Collections.emptyList();
                 }
-                if (timeoutMillis > 0 && t1 - t0 > timeoutMillis) {
-                    System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
-                    System.err.println("runName=" + getRunName());
-                    long updateTime = aprsSystem.getLastSingleVisionToDbUpdateTime();
-                    long timeSinceUpdate = t1 - updateTime;
-                    System.err.println("timeSinceUpdate = " + timeSinceUpdate);
-                    long notifyTime = aprsSystem.getSingleVisionToDbNotifySingleUpdateListenersTime();
-                    long timeSinceNotify = t1 - notifyTime;
-                    System.err.println("timeSinceNotify = " + timeSinceNotify);
-                    System.err.println("xfl = " + xfl);
-                    System.err.println("waitCycle = " + waitCycle);
-                    long lastCycleTime = (t1 - last_t1);
-                    System.err.println("lastCycleTime = " + lastCycleTime);
-                    long simViewRefreshTime = aprsSystem.getLastSimViewRefreshTime();
-                    long simViewPublishTime = aprsSystem.getLastSimViewPublishTime();
-                    long timeSinceRefresh = simViewRefreshTime - t1;
-                    System.err.println("timeSinceRefresh = " + timeSinceRefresh);
-                    long timeSincePublish = simViewPublishTime - t1;
-                    System.err.println("timeSincePublish = " + timeSincePublish);
-                    int simViewRefreshCount = aprsSystem.getSimViewRefreshCount();
-                    int simViewPublishCount = aprsSystem.getSimViewPublishCount();
-                    int simViewRefreshCountDiff = simViewRefreshCount - startSimViewRefreshCount;
-                    System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
-                    int simViewPublishCountDiff = simViewPublishCount - startSimViewPublishCount;
-                    System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
-                    int visLineCount = aprsSystem.getVisionLineCount();
-                    int visLineCountDiff = visLineCount - startVisLineCount;
-                    System.err.println("visLineCountDiff = " + visLineCountDiff);
-                    boolean completedExceptionally = xfl.isCompletedExceptionally();
-
-                    System.err.println("startVisClientUpdateCount = " + startVisClientUpdateCount);
-                    System.err.println("startVisClientUpdateAquireOffCount = " + startVisClientUpdateAquireOffCount);
-                    System.err.println("startVisClientUpdateNoCheckRequiredPartsCount = " + startVisClientUpdateNoCheckRequiredPartsCount);
-                    System.err.println("startVisClientUpdateSingleUpdateListenersEmptyCount = " + startVisClientUpdateSingleUpdateListenersEmptyCount);
-                    System.err.println("startVisClientIgnoreCount = " + startVisClientIgnoreCount);
-                    System.err.println("startVisClientSkippedCount = " + startVisClientSkippedCount);
-
-                    int visClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
-                    System.err.println("visClientUpdateCount = " + visClientUpdateCount);
-                    int visClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
-                    System.err.println("visClientUpdateAquireOffCount = " + visClientUpdateAquireOffCount);
-                    int visClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
-                    System.err.println("visClientUpdateNoCheckRequiredPartsCount = " + visClientUpdateNoCheckRequiredPartsCount);
-                    int visClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
-                    System.err.println("visClientUpdateSingleUpdateListenersEmptyCount = " + visClientUpdateSingleUpdateListenersEmptyCount);
-                    int visClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
-                    println("visClientIgnoreCount = " + visClientIgnoreCount);
-                    int visClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
-                    println("visClientSkippedCount = " + visClientSkippedCount);
-
-                    System.err.println("xfl.isCompletedExceptionally() = " + completedExceptionally);
-                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
-                    System.err.println(errMsg);
-                    String visionToDbPerformanceLine = aprsSystem.getVisionToDbPerformanceLine();
-                    if (null != visionToDbPerformanceLine) {
-                        System.err.println(visionToDbPerformanceLine);
-                    }
-                    if (completedExceptionally) {
-                        Throwable[] ta = new Throwable[1];
-                        xfl.exceptionally((Throwable t) -> {
-                            ta[0] = t;
-                            throw (RuntimeException) t;
-                        });
-                        if (null != ta[0]) {
-                            throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
-                        }
-                    }
-                    String titleErrorString = aprsSystem.getTitleErrorString();
-                    if (null != titleErrorString && titleErrorString.length() > 1) {
-                        throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
-                    }
-                    throw new RuntimeException(errMsg);
+                if (timeoutMillis > 0 && t1 - startInfo.t0 > timeoutMillis) {
+                    handeWaitForVisionUpdatesTimeout(prefix, t1, startInfo, waitCycle, last_t1, timeoutMillis);
                 }
                 last_t1 = t1;
-                if (xfl.isDone()) {
+                if (startInfo.xfl.isDone()) {
                     break;
                 }
                 if (enableDatabaseUpdates && !aprsSystem.isEnableVisionToDatabaseUpdates()) {
-                    if (xfl.isDone()) {
+                    if (startInfo.xfl.isDone()) {
                         break;
                     }
                     System.err.println("VisionToDatabaseUpdates not enabled as expected.");
@@ -6717,14 +6672,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             enableDatabaseUpdates,
                             requiredPartsMap);
                 }
-                if (xfl.isCompletedExceptionally()) {
+                if (startInfo.xfl.isCompletedExceptionally()) {
                     Throwable[] ta = new Throwable[1];
-                    xfl.exceptionally((Throwable t) -> {
+                    startInfo.xfl.exceptionally((Throwable t) -> {
                         ta[0] = t;
                         throw (RuntimeException) t;
                     });
                     if (null != ta[0]) {
-                        String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                        String errMsg = startInfo.runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + startInfo.xfl;
                         throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
                     }
                 }
@@ -6732,18 +6687,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (null != titleErrorString && titleErrorString.length() > 1) {
                     throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
                 }
-                if (xfl.isDone()) {
+                if (startInfo.xfl.isDone()) {
                     break;
                 }
                 Thread.sleep(50);
-                if (xfl.isCompletedExceptionally()) {
+                if (startInfo.xfl.isCompletedExceptionally()) {
                     Throwable[] ta = new Throwable[1];
-                    xfl.exceptionally((Throwable t) -> {
+                    startInfo.xfl.exceptionally((Throwable t) -> {
                         ta[0] = t;
                         throw (RuntimeException) t;
                     });
                     if (null != ta[0]) {
-                        String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                        String errMsg = startInfo.runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + startInfo.xfl;
                         throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
                     }
                 }
@@ -6751,7 +6706,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (null != titleErrorString && titleErrorString.length() > 1) {
                     throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
                 }
-                if (xfl.isDone()) {
+                if (startInfo.xfl.isDone()) {
                     break;
                 }
                 aprsSystem.refreshSimView();
@@ -6762,20 +6717,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (aprsSystem.isClosing()) {
                 return Collections.emptyList();
             }
-            if (xfl.isCompletedExceptionally()) {
+            if (startInfo.xfl.isCompletedExceptionally()) {
                 Throwable[] ta = new Throwable[1];
-                xfl.exceptionally((Throwable t) -> {
+                startInfo.xfl.exceptionally((Throwable t) -> {
                     ta[0] = t;
                     throw (RuntimeException) t;
                 });
                 if (null != ta[0]) {
-                    String errMsg = runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + xfl;
+                    String errMsg = startInfo.runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + startInfo.xfl;
                     throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
                 }
             }
-            List<PhysicalItem> l = xfl.get();
+            List<PhysicalItem> l = startInfo.xfl.get();
             if (l.isEmpty()) {
-                LOGGER.warning(() -> getRunName() + ": waitForCompleteVisionUpdates returing empty list");
+                LOGGER.log(Level.WARNING, "{0}: waitForCompleteVisionUpdates returing empty list", getRunName());
             }
             try {
                 if (snapshotsEnabled()) {
@@ -6790,12 +6745,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             synchronized (this) {
                 clearPoseCache();
                 try {
-//                    if (!aprsSystem.isDoingActions()) {
-//                        aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
-//                        takeSimViewSnapshot("!aprsSystem.isDoingActions()" + prefix, l);
-//                        throw new IllegalStateException("!aprsSystem.isDoingActions() ");
-//                    }
-//                    aprsSystem.logEvent("IsDoingActionsInfo", aprsSystem.getIsDoingActionsInfo());
                     takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
                     takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
                 } catch (IOException ex) {
@@ -6809,6 +6758,81 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             LOGGER.log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
         }
+    }
+
+    private void handeWaitForVisionUpdatesTimeout(String prefix, long t1, WaitForCompleteVisionUpdatesStartInfo startInfo, int waitCycle, long last_t1, long timeoutMillis) throws RuntimeException {
+        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+        System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
+        System.err.println("runName=" + getRunName());
+        long updateTime = aprsSystem.getLastSingleVisionToDbUpdateTime();
+        long timeSinceUpdate = t1 - updateTime;
+        System.err.println("timeSinceUpdate = " + timeSinceUpdate);
+        long notifyTime = aprsSystem.getSingleVisionToDbNotifySingleUpdateListenersTime();
+        long timeSinceNotify = t1 - notifyTime;
+        System.err.println("timeSinceNotify = " + timeSinceNotify);
+        System.err.println("xfl = " + startInfo.xfl);
+        System.err.println("waitCycle = " + waitCycle);
+        long lastCycleTime = (t1 - last_t1);
+        System.err.println("lastCycleTime = " + lastCycleTime);
+        long simViewRefreshTime = aprsSystem.getLastSimViewRefreshTime();
+        long simViewPublishTime = aprsSystem.getLastSimViewPublishTime();
+        long timeSinceRefresh = simViewRefreshTime - t1;
+        System.err.println("timeSinceRefresh = " + timeSinceRefresh);
+        long timeSincePublish = simViewPublishTime - t1;
+        System.err.println("timeSincePublish = " + timeSincePublish);
+        int simViewRefreshCount = aprsSystem.getSimViewRefreshCount();
+        int simViewPublishCount = aprsSystem.getSimViewPublishCount();
+        int simViewRefreshCountDiff = simViewRefreshCount - startInfo.simViewRefreshCount;
+        System.err.println("simViewRefreshCountDiff = " + simViewRefreshCountDiff);
+        int simViewPublishCountDiff = simViewPublishCount - startInfo.simViewPublishCount;
+        System.err.println("simViewPublishCountDiff = " + simViewPublishCountDiff);
+        int visLineCount = aprsSystem.getVisionLineCount();
+        int visLineCountDiff = visLineCount - startInfo.visLineCount;
+        System.err.println("visLineCountDiff = " + visLineCountDiff);
+        boolean completedExceptionally = startInfo.xfl.isCompletedExceptionally();
+
+        System.err.println("startInfo.visClientUpdateCount = " + startInfo.visClientUpdateCount);
+        System.err.println("startInfo.visClientUpdateAquireOffCount = " + startInfo.visClientUpdateAquireOffCount);
+        System.err.println("startInfo.visClientUpdateNoCheckRequiredPartsCount = " + startInfo.visClientUpdateNoCheckRequiredPartsCount);
+        System.err.println("startInfo.visClientUpdateSingleUpdateListenersEmptyCount = " + startInfo.visClientUpdateSingleUpdateListenersEmptyCount);
+        System.err.println("startInfo.visClientIgnoreCount = " + startInfo.visClientIgnoreCount);
+        System.err.println("startInfo.visClientSkippedCount = " + startInfo.visClientSkippedCount);
+
+        int visClientUpdateCount = aprsSystem.getVisionClientUpdateCount();
+        System.err.println("visClientUpdateCount = " + visClientUpdateCount);
+        int visClientUpdateAquireOffCount = aprsSystem.getVisionClientUpdateAquireOffCount();
+        System.err.println("visClientUpdateAquireOffCount = " + visClientUpdateAquireOffCount);
+        int visClientUpdateNoCheckRequiredPartsCount = aprsSystem.getVisionClientUpdateNoCheckRequiredPartsCount();
+        System.err.println("visClientUpdateNoCheckRequiredPartsCount = " + visClientUpdateNoCheckRequiredPartsCount);
+        int visClientUpdateSingleUpdateListenersEmptyCount = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
+        System.err.println("visClientUpdateSingleUpdateListenersEmptyCount = " + visClientUpdateSingleUpdateListenersEmptyCount);
+        int visClientIgnoreCount = aprsSystem.getVisionClientIgnoreCount();
+        println("visClientIgnoreCount = " + visClientIgnoreCount);
+        int visClientSkippedCount = aprsSystem.getVisionClientSkippedCount();
+        println("visClientSkippedCount = " + visClientSkippedCount);
+
+        System.err.println("startInfo.xfl.isCompletedExceptionally() = " + completedExceptionally);
+        String errMsg = startInfo.runName + " : waitForCompleteVisionUpdates(" + prefix + ",..." + timeoutMillis + ") timedout. xfl=" + startInfo.xfl;
+        System.err.println(errMsg);
+        String visionToDbPerformanceLine = aprsSystem.getVisionToDbPerformanceLine();
+        if (null != visionToDbPerformanceLine) {
+            System.err.println(visionToDbPerformanceLine);
+        }
+        if (completedExceptionally) {
+            Throwable[] ta = new Throwable[1];
+            startInfo.xfl.exceptionally((Throwable t) -> {
+                ta[0] = t;
+                throw (RuntimeException) t;
+            });
+            if (null != ta[0]) {
+                throw new RuntimeException(ta[0].getMessage() + " causing " + errMsg, ta[0]);
+            }
+        }
+        String titleErrorString = aprsSystem.getTitleErrorString();
+        if (null != titleErrorString && titleErrorString.length() > 1) {
+            throw new RuntimeException("waitForCompleteVisionUpdates: titleErrorString=" + titleErrorString);
+        }
+        throw new RuntimeException(errMsg);
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {

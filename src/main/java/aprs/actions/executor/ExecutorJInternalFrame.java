@@ -65,7 +65,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         setIconifiable(true);
         setMaximizable(true);
         setResizable(true);
-        setTitle("PDDL Actions to CRCL (Executor)");
+        setTitle("Executor (CRCL Generator)");
         add(executorJPanel1);
         pack();
     }
