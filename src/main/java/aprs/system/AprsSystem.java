@@ -98,7 +98,6 @@ import crcl.ui.XFutureVoid;
 import crcl.ui.client.CrclSwingClientJInternalFrame;
 import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.client.ProgramLineListener;
-import crcl.ui.client.UpdateTitleListener;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
@@ -1061,11 +1060,15 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void pauseCrclProgram() {
         if (null != crclClientJInternalFrame) {
-            if (debug) {
-                Thread.dumpStack();
-            }
+            debugDumpStack();
             crclClientJInternalFrame.pauseCrclProgram();
             runOnDispatchThread(Utils::PlayAlert2);
+        }
+    }
+
+    private void debugDumpStack() {
+        if (debug) {
+            Thread.dumpStack();
         }
     }
 
@@ -1975,7 +1978,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 System.out.println("startPort = " + startPort);
                 System.out.println("portArg = " + portArg);
             }
-            Thread.dumpStack();
+            debugDumpStack();
         }
         logEvent("connectRobot", robotNameArg + " -> " + hostArg + ":" + portArg);
         enableCheckedAlready = false;
@@ -3327,9 +3330,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         if (!closing) {
                             System.err.println("RunName=" + getRunName());
                             System.err.println(newTitleErrorString);
-                            if (debug) {
-                                Thread.dumpStack();
-                            }
+                            debugDumpStack();
                             runOnDispatchThread(Utils::PlayAlert2);
                             if (!snapshotsEnabled) {
                                 snapshotsCheckBox.setSelected(true);
@@ -4311,12 +4312,6 @@ public class AprsSystem implements SlotOffsetProvider {
      */
     public void closeAllWindows() {
         startingCheckEnabled = false;
-//        try {
-//            closePddlPlanner();
-//        } catch (Exception exception) {
-//            Logger.getLogger(AprsSystem.class
-//                    .getName()).log(Level.SEVERE, "", exception);
-//        }
         try {
             closeActionsListExcecutor();
 
@@ -4336,12 +4331,12 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             immediateAbort();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             disconnectVision();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             setConnectDatabaseCheckBoxEnabled(false);
@@ -4351,18 +4346,18 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             disconnectDatabase();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             abortCrclProgram();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startingCheckEnabled = false;
             disconnectRobotPrivate();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             abortCrclProgram();
@@ -4378,12 +4373,12 @@ public class AprsSystem implements SlotOffsetProvider {
                 try {
                     simServerFrame.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
                 }
             }
             closeAllInternalFrames();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         AprsCommonLogger.instance().removeRef();
         AprsCommonLogger.instance().getStringConsumers()
@@ -4423,7 +4418,7 @@ public class AprsSystem implements SlotOffsetProvider {
 //            }
 //            internalFrame.moveToFront();
 //        } catch (Exception e) {
-//            e.printStackTrace();
+//            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
 //        }
 //    }
     public XFutureVoid showDatabaseSetupWindow() {
@@ -5386,23 +5381,23 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             immediateAbort();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             disconnectVision();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startDisconnectDatabase();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startingCheckEnabled = false;
             disconnectRobotPrivate();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
             if (connectDatabaseFuture != null) {
@@ -5423,7 +5418,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             this.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -6470,7 +6465,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private boolean checkKitTrays(List<PhysicalItem> kitTrays) {
         if (kitTrays.isEmpty()) {
-            Thread.dumpStack();
+            debugDumpStack();
             if (null == aprsSystemDisplayJFrame
                     || JOptionPane.YES_OPTION != queryUser("Create action list with no kit trays?")) {
                 setTitleErrorString("createActionListFromVision: No kit trays");
@@ -6590,7 +6585,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 if (allEmpty || actions == null || actions.isEmpty()) {
                     println("requiredItems = " + requiredItems);
                     println("teachItems = " + teachItems);
-                    Thread.dumpStack();
+                    debugDumpStack();
                     if (null == aprsSystemDisplayJFrame
                             || JOptionPane.YES_OPTION != queryUser("Load action list with all trays empty?")) {
                         setTitleErrorString("createActionListFromVision: All kit trays empty");
@@ -6970,6 +6965,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 = XFuture.supplyAsync("startContinuousDemo(task=" + getTaskName() + ") comment=" + comment,
                         new Callable<Boolean>() {
 
+                    @Override
                     public Boolean call() {
                         if (null == executorJInternalFrame1) {
                             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
@@ -7350,9 +7346,7 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("pause");
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
-        if (debug) {
-            Thread.dumpStack();
-        }
+        debugDumpStack();
         pausing = true;
         boolean badState = checkResuming();
         try {
@@ -7901,7 +7895,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public synchronized void checkFutures() throws IllegalStateException {
         final XFuture<Boolean> startLookForPartsFutureFinal = startLookForPartsFuture;
         if (doingLookForParts) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("startLookForPartsTrace=" + Utils.traceToString(startLookForPartsTrace));
             if (null != startLookForPartsFutureFinal) {
                 startLookForPartsFutureFinal.printStatus(System.err);
@@ -7910,7 +7904,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         final XFuture<Boolean> lastPrivateContinueActionListFutureFinal = lastPrivateContinueActionListFuture;
         if (runningPrivateContinueActionList) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -7922,7 +7916,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("runningPrivateContinueActionList");
         }
         if (runningPrivateStartActions) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -7938,7 +7932,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastPrivateStartActionsFutureFinal.isDone()
                 && !lastPrivateStartActionsFutureFinal.isCompletedExceptionally()
                 && !lastPrivateStartActionsFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("privateStartActionsComment = " + privateStartActionsComment);
             System.err.println("privateStartActionsTrace=" + Utils.traceToString(privateStartActionsTrace));
             System.err.println("startActionsInternalTrace=" + Utils.traceToString(startActionsInternalTrace));
@@ -7949,7 +7943,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !startLookForPartsFutureFinal.isDone()
                 && !startLookForPartsFutureFinal.isCompletedExceptionally()
                 && !startLookForPartsFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("startLookForPartsTrace=" + Utils.traceToString(startLookForPartsTrace));
             startLookForPartsFutureFinal.printStatus(System.err);
             throw new IllegalStateException("startLookForPartsFuture=" + startLookForPartsFutureFinal);
@@ -7959,7 +7953,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastStartActionsFutureFinal.isDone()
                 && !lastStartActionsFutureFinal.isCompletedExceptionally()
                 && !lastStartActionsFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -7974,7 +7968,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastContinueActionListFutureFinal.isDone()
                 && !lastContinueActionListFutureFinal.isCompletedExceptionally()
                 && !lastContinueActionListFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -7988,7 +7982,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !lastPrivateContinueActionListFutureFinal.isDone()
                 && !lastPrivateContinueActionListFutureFinal.isCompletedExceptionally()
                 && !lastPrivateContinueActionListFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -8002,7 +7996,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !safeAbortAndDisconnectFutureFinal.isDone()
                 && !safeAbortAndDisconnectFutureFinal.isCompletedExceptionally()
                 && !safeAbortAndDisconnectFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -8022,7 +8016,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 && !safeAbortFutureFinal.isDone()
                 && !safeAbortFutureFinal.isCompletedExceptionally()
                 && !safeAbortFutureFinal.isCancelled()) {
-            Thread.dumpStack();
+            debugDumpStack();
             System.err.println("isDoingActions() = " + isDoingActions());
             System.err.println("isRunningCrclProgram() = " + isRunningCrclProgram());
             System.err.println("isAborting()() = " + isAborting());
@@ -8583,6 +8577,9 @@ public class AprsSystem implements SlotOffsetProvider {
     private void initPropertiesFileInfo(AprsSystemPropDefaults propDefaults) {
         if (null == propDefaults) {
             initPropertiesFileInfo();
+        }
+        if(null == propDefaults) {
+            throw new NullPointerException("propDefaults");
         }
         propertiesDirectory = propDefaults.getPropDir();
         propertiesFile = propDefaults.getPropFile();
@@ -9433,6 +9430,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 AprsSystem aFrame = new AprsSystem();
                 aFrame.defaultInit()
@@ -9967,6 +9965,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private volatile String asString = "";
 
+    @Override
     public String toString() {
         return asString;
     }
