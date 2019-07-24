@@ -1882,7 +1882,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 try {
                     processCommands(cmds);
                 } catch (Throwable thrown) {
-                    thrown.printStackTrace();
+                    LOGGER.log(Level.SEVERE, "action="+action+",idx="+idx+",cmds="+cmds,thrown);
                     throw thrown;
                 }
             }
@@ -3332,7 +3332,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (!newCheck && null != lastKitsToCheckCopy && !lastKitsToCheckCopy.isEmpty()) {
                 kitsToFix = new ArrayList<>(lastKitsToCheckCopy);
             } else {
-                Thread.dumpStack();
                 System.err.println("getPrivateStartActionsTraceString() = " + aprsSystemFinal.getPrivateStartActionsTraceString());
                 System.err.println("getPrivateStartActionsCommentString() = " + aprsSystemFinal.getPrivateStartActionsCommentString());
                 System.err.println("getPrivateContinueActionsTraceString() = " + aprsSystemFinal.getPrivateContinueActionsTraceString());
