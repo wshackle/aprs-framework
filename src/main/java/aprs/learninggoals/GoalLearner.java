@@ -128,6 +128,9 @@ public class GoalLearner {
      * @param commonItems list of kits and parts with positions to learn from
      * @param allEmptyA optional boolean array to receive flag if all trays were
      * empty
+     * @param overrideRotationOffset whether to add rotation offset to tray rotation when computing 
+     *  absolute slot positions
+     * @param newRotationOffset offset to add if overrideRotationOffset set
      * @return list of Action's that can be used to recreate the configuration
      * of the example data.
      */
@@ -263,7 +266,6 @@ public class GoalLearner {
         ConcurrentMap<String, Integer> kitUsedMap = new ConcurrentHashMap<>();
         ConcurrentMap<String, Integer> ptUsedMap = new ConcurrentHashMap<>();
         List<String> kitToCheckStrings = new ArrayList<>();
-        List<Slot> allAbsSlots = new ArrayList<>();
         for (PhysicalItem kit : kitTrays) {
             Map<String, String> slotPrpToPartSkuMap = new HashMap<>();
             assert (null != localSlotOffsetProvider) : "@AssumeAssertion(nullness)";
@@ -283,14 +285,14 @@ public class GoalLearner {
                 if (null == absSlot) {
                     throw new IllegalStateException("No absSlot obtainable for slotOffset name " + slotOffset.getName() + " in kit " + kit.getName());
                 }
-                allAbsSlots.add(absSlot);
                 PhysicalItem closestPart = closestPart(absSlot.x, absSlot.y, teachItems);
                 if (null == closestPart) {
                     slotPrpToPartSkuMap.put(slotOffset.getPrpName(), "empty");
                     continue;
                 }
                 double minDist = Math.hypot(absSlot.x - closestPart.x, absSlot.y - closestPart.y);
-                if (minDist < 20 + slotOffset.getDiameter() / 2.0) {
+                final double maxAllowedDist = 20 + slotOffset.getDiameter() / 2.0;
+                if (minDist < maxAllowedDist) {
                     int pt_used_num = ptUsedMap.compute(closestPart.getName(), (k, v) -> (v == null) ? 1 : (v + 1));
                     String shortPartName = Utils.shortenItemPartName(closestPart.getName());
                     String partName = shortPartName + "_in_pt_" + pt_used_num;

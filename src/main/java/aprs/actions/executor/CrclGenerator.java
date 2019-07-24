@@ -2884,7 +2884,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null == physicalItemsLocal) {
                 throw new NullPointerException("physicalItemsLocal");
             }
-            boolean optimizeCorrectiveActionsOk = true;
+            boolean breakActionsSetNeeded = false;
             try {
 
                 long postCheckKitsTime = System.currentTimeMillis();
@@ -2979,13 +2979,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                                             brokenAbsSlotsChecked++;
                                             if (!itemNowInSlotSkuName.equals("empty")) {
-////                                        takePartByPose(cmds, visionToRobotPose(closestItem.getPose()));
                                                 String shortNowInSlotSkuName = Utils.shortenItemPartName(itemNowInSlotSkuName);
                                                 String slotPrefix = "empty_slot_for_" + shortNowInSlotSkuName + "_in_" + shortNowInSlotSkuName + "_vessel";
                                                 int count = prefixCountMap.compute(slotPrefix,
                                                         (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
                                                 lastTakenPart = closestItem.getName();
-////                                        placePartBySlotName(slotPrefix + "_" + count, cmds, action);
                                                 correctivedItems.add(closestItem);
                                                 correctiveActions.add(Action.newTakePartAction(closestItem.getFullName()));
                                                 correctivedItems.add(absSlot);
@@ -2993,9 +2991,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                             }
                                             if (!itemNeededInSlotSkuName.equals("empty")) {
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
-                                                    optimizeCorrectiveActionsOk = false;
+                                                    breakActionsSetNeeded = true;
                                                 }
-                                                if (!optimizeCorrectiveActionsOk) {
+                                                if (breakActionsSetNeeded) {
                                                     break;
                                                 }
                                                 final String shortItemNeededInSlotSkuName = Utils.shortenItemPartName(itemNeededInSlotSkuName);
@@ -3007,7 +3005,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 logDebug("checkKits: partNames = " + partNames);
                                                 if (partNames.isEmpty()) {
                                                     if (!correctiveActions.isEmpty() || infoListIndex < infoList.size() - 1 || brokenAbsSlotsChecked < info.getFailedSlots()) {
-                                                        optimizeCorrectiveActionsOk = false;
+                                                        breakActionsSetNeeded = true;
                                                         continue;
                                                     }
                                                     logError("No partnames for shortItemNeededInSlotSkuName=" + shortItemNeededInSlotSkuName);
@@ -3059,7 +3057,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 PoseType absSlotPose = absSlot.getPose();
                                                 correctivedItems.add(absSlot);
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
-                                                    optimizeCorrectiveActionsOk = false;
+                                                    breakActionsSetNeeded = true;
                                                     if (!correctiveActions.isEmpty()) {
                                                         break;
                                                     }
@@ -3119,12 +3117,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             lastCheckKitsCorrectiveActions.addAll(correctiveActions);
                             if (!correctiveActions.isEmpty()) {
                                 List<Action> optimizedCorrectiveActions
-                                        = optimizeCorrectiveActionsOk
-                                                ? optimizePddlActionsWithOptaPlanner(
+                                        =  optimizePddlActionsWithOptaPlanner(
                                                         correctiveActions,
                                                         0, // starting index
-                                                        physicalItemsLocal)
-                                                : new ArrayList<>(correctiveActions);
+                                                        physicalItemsLocal);
                                 lastCheckKitsOptimizedCorrectiveActions.clear();
                                 lastCheckKitsOptimizedCorrectiveActions.addAll(correctiveActions);
                                 lastIndex.compareAndSet(origIndex, lastLookForIndex);
