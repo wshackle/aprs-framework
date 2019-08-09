@@ -28,9 +28,12 @@ import aprs.actions.optaplanner.actionmodel.OpActionType;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.conveyor.EditPropertiesJPanel;
 import aprs.misc.Utils;
+import crcl.ui.XFutureVoid;
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +43,15 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.optaplanner.benchmark.api.PlannerBenchmark;
+import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -63,6 +70,25 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     public OptiplannerDisplayJFrame() {
         initComponents();
         clearPlans();
+        outerOptiplannerJPanelInput.addActionsModifiedListener(() -> doSolve());
+        loadRecentFilesMenu();
+    }
+
+    private void loadRecentFilesMenu() {
+        jMenuRecentFiles.removeAll();
+        List<File> recentFiles = OpActionPlan.getRecentActionListFiles();
+        for (int i = 0; i < recentFiles.size(); i++) {
+            File f = recentFiles.get(i);
+            JMenuItem item = new JMenuItem(f.toString());
+            item.addActionListener(e -> {
+                try {
+                    setInputOpActionPlan(OpActionPlan.loadActionList(f));
+                } catch (IOException ex) {
+                    Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            jMenuRecentFiles.add(item);
+        }
     }
 
     /**
@@ -77,10 +103,8 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanelInput = new javax.swing.JPanel();
-        jLabelInput = new javax.swing.JLabel();
         outerOptiplannerJPanelInput = new aprs.actions.optaplanner.display.OuterOptiplannerJPanel();
         jPanelOutput = new javax.swing.JPanel();
-        jLabelOutput = new javax.swing.JLabel();
         outerOptiplannerJPanelOutput = new aprs.actions.optaplanner.display.OuterOptiplannerJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -89,8 +113,10 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         jMenuItemClear = new javax.swing.JMenuItem();
         jMenuItemSaveOutputList = new javax.swing.JMenuItem();
         jMenuItemLoadOutputList = new javax.swing.JMenuItem();
+        jMenuRecentFiles = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
         jMenuItemSolve = new javax.swing.JMenuItem();
+        jMenuItemProfileSolve = new javax.swing.JMenuItem();
         jMenuItemShuffleInputList = new javax.swing.JMenuItem();
         jMenuItemRepeatedShuffleTest = new javax.swing.JMenuItem();
         jMenuItemGenerate = new javax.swing.JMenuItem();
@@ -107,9 +133,8 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
         jSplitPane1.setDividerLocation(300);
 
-        jLabelInput.setText("Input");
-
-        outerOptiplannerJPanelInput.setShowSkippedActions(true);
+        outerOptiplannerJPanelInput.setLabel("Input");
+        outerOptiplannerJPanelInput.setValueString(". . .");
 
         javax.swing.GroupLayout jPanelInputLayout = new javax.swing.GroupLayout(jPanelInput);
         jPanelInput.setLayout(jPanelInputLayout);
@@ -117,24 +142,20 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             jPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelInputLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabelInput)
-                    .addComponent(outerOptiplannerJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(outerOptiplannerJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelInputLayout.setVerticalGroup(
             jPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelInputLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabelInput)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(outerOptiplannerJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelInputLayout.createSequentialGroup()
+                .addComponent(outerOptiplannerJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jSplitPane1.setLeftComponent(jPanelInput);
 
-        jLabelOutput.setText("Output:");
+        outerOptiplannerJPanelOutput.setLabel("Output");
+        outerOptiplannerJPanelOutput.setValueString(". . .");
 
         javax.swing.GroupLayout jPanelOutputLayout = new javax.swing.GroupLayout(jPanelOutput);
         jPanelOutput.setLayout(jPanelOutputLayout);
@@ -142,20 +163,13 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             jPanelOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOutputLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelOutputLayout.createSequentialGroup()
-                        .addComponent(jLabelOutput)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(outerOptiplannerJPanelOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(outerOptiplannerJPanelOutput, javax.swing.GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelOutputLayout.setVerticalGroup(
             jPanelOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelOutputLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabelOutput)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(outerOptiplannerJPanelOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOutputLayout.createSequentialGroup()
+                .addComponent(outerOptiplannerJPanelOutput, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -203,6 +217,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItemLoadOutputList);
 
+        jMenuRecentFiles.setText("Recent Files ");
+        jMenu1.add(jMenuRecentFiles);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Test");
@@ -214,6 +231,14 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu2.add(jMenuItemSolve);
+
+        jMenuItemProfileSolve.setText("Benchmark");
+        jMenuItemProfileSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemProfileSolveActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItemProfileSolve);
 
         jMenuItemShuffleInputList.setText("Shuffle Input List");
         jMenuItemShuffleInputList.addActionListener(new java.awt.event.ActionListener() {
@@ -287,7 +312,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    
     @UIEffect
     private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentResized
         jSplitPane1.setDividerLocation(0.5);
@@ -325,9 +349,10 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         clearPlans();
     }//GEN-LAST:event_jMenuItemClearActionPerformed
 
-    private void clearPlans() {
-        setOutputOpActionPlan(new OpActionPlan());
-        setInputOpActionPlan(new OpActionPlan());
+    private XFutureVoid clearPlans() {
+        XFutureVoid setOutputFuture = setOutputOpActionPlan(new OpActionPlan());
+        XFutureVoid setInputFuture = setInputOpActionPlan(new OpActionPlan());
+        return XFutureVoid.allOf(setOutputFuture, setInputFuture);
     }
 
     @UIEffect
@@ -336,7 +361,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 final OpActionPlan opActionPlan = outerOptiplannerJPanelOutput.getOpActionPlan();
-                if(null != opActionPlan) {
+                if (null != opActionPlan) {
                     opActionPlan.saveActionList(chooser.getSelectedFile());
                 }
             } catch (IOException ex) {
@@ -369,6 +394,39 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         return timeDiff;
     }
 
+    private long doBenchmark() {
+        long t1 = System.currentTimeMillis();
+        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+        if (null == inPlan) {
+            throw new NullPointerException("outerOptiplannerJPanelInput.getOpActionPlan() returned null");
+        }
+        inPlan.checkActionList();
+        PlannerBenchmarkFactory benchmarkFactory = OpActionPlan.createBenchmarkFactory();
+        GenerateActionConfig gac = new GenerateActionConfig();
+        gac.partInfoList.add(new GenerateActionPartInfo("A", 5, 6, 7));
+        gac.partInfoList.add(new GenerateActionPartInfo("B", 7, 6, 5));
+        gac.partInfoList.add(new GenerateActionPartInfo("C", 3, 3, 3));
+        Random rand = new Random();
+        OpActionPlan genPlan1 = generateRandomProblem(gac, rand);
+        OpActionPlan genPlan2 = generateRandomProblem(gac, rand);
+        PlannerBenchmark plannerBenchmark
+                = benchmarkFactory.buildPlannerBenchmark(
+                        inPlan,
+                        inPlan.cloneAndShufflePlan(),
+                        inPlan.cloneAndShufflePlan(),
+                        inPlan.cloneAndShufflePlan(),
+                        inPlan.cloneAndShufflePlan(),
+                        inPlan.cloneAndShufflePlan(),
+                        genPlan1,
+                        genPlan1.cloneAndShufflePlan(),
+                        genPlan2,
+                        genPlan1.cloneAndShufflePlan());
+        plannerBenchmark.benchmarkAndShowReportInBrowser();
+        long t2 = System.currentTimeMillis();
+        long timeDiff = (t2 - t1);
+        return timeDiff;
+    }
+
     @UIEffect
     private void jMenuItemLoadOutputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadOutputListActionPerformed
         JFileChooser chooser = new JFileChooser();
@@ -392,50 +450,70 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         if (null == inPlan) {
             throw new NullPointerException("outerOptiplannerJPanelInput.getOpActionPlan() returned null");
         }
-        OpActionPlan newPlan = OpActionPlan.cloneAndShufflePlan(inPlan);
+        OpActionPlan newPlan = inPlan.cloneAndShufflePlan();
         setInputOpActionPlan(newPlan);
         long t2 = System.currentTimeMillis();
         return (t2 - t1);
     }
 
+    private int shuffleTestRepeatCount = 100;
+
     @UIEffect
     private void jMenuItemRepeatedShuffleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRepeatedShuffleTestActionPerformed
-        String countString = JOptionPane.showInputDialog("repeat count", "100");
-        int repeatCount = Integer.parseInt(countString);
+        String countString = JOptionPane.showInputDialog("repeat count", shuffleTestRepeatCount);
+        final int repeatCount = Integer.parseInt(countString);
+        if (repeatCount < 1) {
+            return;
+        }
+        shuffleTestRepeatCount = repeatCount;
         long totalShuffleTime = 0;
         long totalSolveTime = 0;
         OpActionPlan worstPlan = null;
         long worstScore = Long.MAX_VALUE;
         long bestScore = Long.MIN_VALUE;
+        long bestInScore = Long.MIN_VALUE;
         OpActionPlan bestPlan = null;
         long worstShuffleTime = 0;
         long totalInScore = 0;
         long totalOutScore = 0;
-        List<Double> outScoresList = new ArrayList<>();
+        final double outScoresArray[] = new double[repeatCount];
+        final double inScoresArray[] = new double[repeatCount];
+        final double diffScoresArray[] = new double[repeatCount];
+        final double timeArray[] = new double[repeatCount];
+
+        boolean bestScoreIsInput = false;
         for (int i = 0; i < repeatCount; i++) {
             long shuffleTime = doShuffle();
             if (shuffleTime > worstShuffleTime) {
                 worstShuffleTime = shuffleTime;
             }
             totalShuffleTime += shuffleTime;
+            long t0 = System.currentTimeMillis();
             OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
             if (null == inPlan) {
                 throw new NullPointerException("outerOptiplannerJPanelInput.getOpActionPlan() returned null");
             }
             HardSoftLongScore inPlanScore = inPlan.getScore();
-            if (null == inPlanScore) {
+            if (null == inPlanScore
+                    || inPlanScore.getHardScore() == Long.MIN_VALUE
+                    || inPlanScore.getSoftScore() == Long.MIN_VALUE) {
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 inPlanScore = calculator.calculateScore(inPlan);
             }
-            if (inPlanScore.getSoftScore() > bestScore) {
-                bestScore = inPlanScore.getSoftScore();
+            final long inSoftScore = inPlanScore.getSoftScore();
+            if (inSoftScore > bestScore) {
+                bestInScore = inSoftScore;
+            }
+            if (inSoftScore > bestInScore) {
+                bestScoreIsInput = true;
+                bestScore = inSoftScore;
                 bestPlan = inPlan;
             }
-            if (inPlanScore.getSoftScore() < worstScore) {
-                worstScore = inPlanScore.getSoftScore();
+            if (inSoftScore < worstScore) {
+                worstScore = inSoftScore;
                 worstPlan = inPlan;
             }
-            totalInScore += inPlanScore.getSoftScore();
+            totalInScore += inSoftScore;
             long solveTime = doSolve();
             totalSolveTime += shuffleTime;
             OpActionPlan outPlan = outerOptiplannerJPanelOutput.getOpActionPlan();
@@ -443,42 +521,119 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 throw new NullPointerException("outerOptiplannerJPanelOutput.getOpActionPlan() returned null");
             }
             HardSoftLongScore outPlanScore = outPlan.getScore();
-            if (null == outPlanScore) {
+            if (null == outPlanScore
+                    || outPlanScore.getHardScore() == Long.MIN_VALUE
+                    || outPlanScore.getSoftScore() == Long.MIN_VALUE) {
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 outPlanScore = calculator.calculateScore(outPlan);
             }
-            if (outPlanScore.getSoftScore() > bestScore) {
-                bestScore = outPlanScore.getSoftScore();
+            final long outSoftScore = outPlanScore.getSoftScore();
+            if (outSoftScore > bestScore) {
+                bestScoreIsInput = false;
+                bestScore = outSoftScore;
                 bestPlan = outPlan;
             }
-            if (outPlanScore.getSoftScore() < worstScore) {
-                worstScore = outPlanScore.getSoftScore();
+            if (outSoftScore < worstScore) {
+                worstScore = outSoftScore;
                 worstPlan = outPlan;
             }
-            totalOutScore += outPlanScore.getSoftScore();
-            outScoresList.add((double) outPlanScore.getSoftScore());
-            System.out.println("i=" + i + ",repeatCount=" + repeatCount);
+            totalOutScore += outSoftScore;
+            long t1 = System.currentTimeMillis();
+
+            outScoresArray[i] = (double) outSoftScore;
+            inScoresArray[i] = (double) inSoftScore;
+            diffScoresArray[i] = (double) (outSoftScore - inSoftScore);
+            timeArray[i] = (double) (t1 - t0);
+//            System.out.println("i=" + i + ",repeatCount=" + repeatCount);
             this.setTitle("i=" + i + ",repeatCount=" + repeatCount);
         }
-        Collections.sort(outScoresList);
-        double avgInScore = ((double) totalInScore) / ((double) repeatCount);
-        System.out.println("avgInScore = " + avgInScore);
-        double avgOutScore = ((double) totalOutScore) / ((double) repeatCount);
-        System.out.println("avgOutScore = " + avgOutScore);
-        System.out.println("worstScore = " + worstScore);
-        System.out.println("bestScore = " + bestScore);
-        setInputOpActionPlan(worstPlan);
-        setOutputOpActionPlan(bestPlan);
-        double outScoresArray[] = new double[outScoresList.size()];
-        for (int i = 0; i < outScoresArray.length; i++) {
-            outScoresArray[i] = outScoresList.get(i);
-        }
-        try {
-            diagapplet.plotter.plotterJFrame.ShowDoubleArray("outScoreHist", outScoresArray);
-        } catch (Exception ex) {
-            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        Arrays.sort(outScoresArray);
+        Arrays.sort(inScoresArray);
+        Arrays.sort(diffScoresArray);
+        Arrays.sort(timeArray);
+
+        XFutureVoid setInputFuture = setInputOpActionPlan(worstPlan);
+        XFutureVoid setOutputFuture = setOutputOpActionPlan(bestPlan);
+        XFutureVoid.allOf(setInputFuture, setOutputFuture)
+                .thenComposeToVoid(x -> {
+                    return Utils.runOnDispatchThread(() -> {
+
+                        try {
+                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("outscore", outScoresArray);
+                        } catch (Exception ex) {
+                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("inscore", inScoresArray);
+                        } catch (Exception ex) {
+                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("diffscore", diffScoresArray);
+                        } catch (Exception ex) {
+                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        try {
+                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("time", timeArray);
+                        } catch (Exception ex) {
+                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+                });
+        loadRecentFilesMenu();
     }//GEN-LAST:event_jMenuItemRepeatedShuffleTestActionPerformed
+
+    public static class GenerateActionPartInfo {
+        
+        static byte c = (byte) 'A';
+        String partType;
+        int requiredPickups;
+        int requiredDropOffs;
+        int optionals;
+
+        public GenerateActionPartInfo(String partType, int requiredPickups, int requiredDropOffs, int optionals) {
+            this.partType = partType;
+            this.requiredPickups = requiredPickups;
+            this.requiredDropOffs = requiredDropOffs;
+            this.optionals = optionals;
+        }
+
+        public GenerateActionPartInfo() {
+            c++;
+            this.partType = new String(new byte[]{c});
+            this.requiredPickups = 1;
+            this.requiredDropOffs = 1;
+            this.optionals = 1;
+        }
+    }
+    
+    public static class GenerateActionConfig {
+
+        double minDist;
+        double minX;
+        double maxX;
+        double minY;
+        double maxY;
+        List<GenerateActionPartInfo> partInfoList;
+
+        public GenerateActionConfig(double minDist, double minX, double maxX, double minY, double maxY, List<GenerateActionPartInfo> partInfoList) {
+            this.minDist = minDist;
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minY = minY;
+            this.maxY = maxY;
+            this.partInfoList = partInfoList;
+        }
+
+        public GenerateActionConfig() {        
+            this.minDist = 5.0;
+            this.minX = 10.0;
+            this.maxX = 100.0;
+            this.minY = 10.0;
+            this.maxY = 100.0;
+            this.partInfoList = new ArrayList<>();
+        }
+    }
 
     @UIEffect
     private void jMenuItemGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemGenerateActionPerformed
@@ -494,106 +649,86 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         if (null == map1) {
             return;
         }
+        GenerateActionConfig gac = new GenerateActionConfig();
         int partsTypeNeeded = Integer.parseInt(map1.getOrDefault("Number of Part Types?", "1"));
-        double minDist = Double.parseDouble(map1.getOrDefault("Minimum Distance between objects?", "5.0"));
-        double minX = Double.parseDouble(map1.getOrDefault("Minimum X?", "10.0"));
-        double maxX = Double.parseDouble(map1.getOrDefault("Maximum X?", "100.0"));
-        double minY = Double.parseDouble(map1.getOrDefault("Minimum Y?", "10.0"));
-        double maxY = Double.parseDouble(map1.getOrDefault("Maximum Y?", "100.0"));
-        List<OpAction> startingList = new ArrayList<>();
-        Set<String> partTypesSet = new TreeSet<>();
-        for (int i = 0; i < partsTypeNeeded; i++) {
-            byte c = (byte) ('A' + i);
-            partTypesSet.add(new String(new byte[]{c}));
-        }
-
+        gac.minDist = Double.parseDouble(map1.getOrDefault("Minimum Distance between objects?", "5.0"));
+        gac.minX = Double.parseDouble(map1.getOrDefault("Minimum X?", "10.0"));
+        gac.maxX = Double.parseDouble(map1.getOrDefault("Maximum X?", "100.0"));
+        gac.minY = Double.parseDouble(map1.getOrDefault("Minimum Y?", "10.0"));
+        gac.maxY = Double.parseDouble(map1.getOrDefault("Maximum Y?", "100.0"));
+        
         Random rand = new Random();
-        for (String partType : partTypesSet) {
+        for (int i = 0; i < partsTypeNeeded; i++) {
+            GenerateActionPartInfo gapi = new GenerateActionPartInfo();
+            byte c = (byte) ('A' + i);
+            gapi.partType = new String(new byte[]{c});
             Map<String, String> map2 = new TreeMap<>();
             final String pickupsInit = Integer.toString(rand.nextInt(8));
             final String dropoffsInit = Integer.toString(rand.nextInt(8));
             final String optionalsInit = Integer.toString(rand.nextInt(8));
-            map2.put("Number of Required Pickups of " + partType + "?", pickupsInit);
-            map2.put("Number of Required Dropoffs of " + partType + "?", dropoffsInit);
-            map2.put("Number of Optionals of " + partType + "?", Integer.toString(rand.nextInt(8)));
-            Map<String, String> map3 = EditPropertiesJPanel.editProperties(this, "Problem Generate Properties for parts of " + partType, true, map2);
+            map2.put("Number of Required Pickups of " + gapi.partType + "?", pickupsInit);
+            map2.put("Number of Required Dropoffs of " + gapi.partType + "?", dropoffsInit);
+            map2.put("Number of Optionals of " + gapi.partType + "?", Integer.toString(rand.nextInt(8)));
+            Map<String, String> map3 = EditPropertiesJPanel.editProperties(this, "Problem Generate Properties for parts of " + gapi.partType, true, map2);
             if (null == map3) {
                 return;
             }
-            int requiredPickups = Integer.parseInt(map3.getOrDefault("Number of Required Pickups of " + partType + "?", pickupsInit));
-            int requiredDropOffs = Integer.parseInt(map3.getOrDefault("Number of Required Dropoffs of " + partType + "?", dropoffsInit));
-            int optionals = Integer.parseInt(map3.getOrDefault("Number of Optionals of " + partType + "?", optionalsInit));
+            gapi.requiredPickups = Integer.parseInt(map3.getOrDefault("Number of Required Pickups of " + gapi.partType + "?", pickupsInit));
+            gapi.requiredDropOffs = Integer.parseInt(map3.getOrDefault("Number of Required Dropoffs of " + gapi.partType + "?", dropoffsInit));
+            gapi.optionals = Integer.parseInt(map3.getOrDefault("Number of Optionals of " + gapi.partType + "?", optionalsInit));
+            gac.partInfoList.add(gapi);
+        }
+        OpActionPlan ap = generateRandomProblem(gac, rand);
+        try {
+            ap.saveActionList(File.createTempFile("generatedActionsList", ".csv"));
+        } catch (IOException ex) {
+            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        setInputOpActionPlan(ap);
+        doSolve();
+        loadRecentFilesMenu();
+    }//GEN-LAST:event_jMenuItemGenerateActionPerformed
+
+    public OpActionPlan generateRandomProblem(GenerateActionConfig gac, Random rand) {
+        OpAction.setAllowedPartTypes(gac.partInfoList.stream().map(gapi -> gapi.partType).collect(Collectors.toSet()));
+        List<OpAction> startingList = new ArrayList<>();
+        for (int i = 0; i < gac.partInfoList.size(); i++) {
+            GenerateActionPartInfo gapi = gac.partInfoList.get(i);
             int optionalPickups;
             int optionalDropOffs;
-            if (requiredPickups >= requiredDropOffs) {
+            if (gapi.requiredPickups >= gapi.requiredDropOffs) {
                 optionalPickups = 0;
-                optionalDropOffs = optionals;
-                if (optionalDropOffs < requiredPickups - requiredDropOffs) {
-                    optionalDropOffs = requiredPickups - requiredDropOffs;
+                optionalDropOffs = gapi.optionals;
+                if (optionalDropOffs < gapi.requiredPickups - gapi.requiredDropOffs) {
+                    optionalDropOffs = gapi.requiredPickups - gapi.requiredDropOffs;
                 }
             } else {
-                optionalPickups = optionals;
-                if (optionalPickups < requiredDropOffs - requiredPickups) {
-                    optionalPickups = requiredDropOffs - requiredPickups;
+                optionalPickups = gapi.optionals;
+                if (optionalPickups < gapi.requiredDropOffs - gapi.requiredPickups) {
+                    optionalPickups = gapi.requiredDropOffs - gapi.requiredPickups;
                 }
                 optionalDropOffs = 0;
             }
-            addActionsForPartType(requiredPickups, optionalPickups, requiredDropOffs, optionalDropOffs, partType, minX, maxX, minY, maxY, rand, startingList, minDist);
+            addActionsForPartType(gapi.requiredPickups, optionalPickups, gapi.requiredDropOffs, optionalDropOffs, gapi.partType, gac.minX, gac.maxX, gac.minY, gac.maxY, rand, startingList, gac.minDist);
         }
-
         startingList.add(new OpAction(OpActionType.START.toString(), 0, 50.0, OpActionType.START, "START", true));
-
-//        // Create an initial plan with some set of parts to pickup and drop off.
-//        List<OpAction> initList = Arrays.asList(
-//                new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("pickup A3-alt", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("dropoff A3", 6 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
-//                new OpAction("Start", rand.nextDouble(), rand.nextDouble(), OpActionType.START, "START", true),
-//                new OpAction("pickup A1", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("pickup A1-alt", 1 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("dropoff A1", 2 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
-//                new OpAction("pickup A2", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("pickup A2-alt", 3 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
-//                new OpAction("dropoff A2", 4 + rand.nextDouble(), rand.nextDouble(), OpActionType.DROPOFF, "A", true),
-//                new OpAction("pickup B3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("pickup B3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("dropoff B3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
-//                new OpAction("pickup B1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("pickup B1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("dropoff B1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
-//                new OpAction("pickup B2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("pickup B2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "B", false),
-//                new OpAction("dropoff B2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "B", true),
-//                new OpAction("DROPOFF C3", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("DROPOFF C3-alt", 5 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("PICKUP C3", 6 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
-//                new OpAction("DROPOFF C1", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("DROPOFF C1-alt", 1 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("PICKUP C1", 2 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true),
-//                new OpAction("DROPOFF C2", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("DROPOFF C2-alt", 3 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.DROPOFF, "C", false),
-//                new OpAction("PICKUP C2", 4 + rand.nextDouble(), 1 + rand.nextDouble(), OpActionType.PICKUP, "C", true)
-//        );
         List<OpAction> shuffledList = new ArrayList<>(startingList);
         OpActionPlan ap = new OpActionPlan();
         ap.getEndAction().getLocation().x = 100.0;
         ap.getEndAction().getLocation().y = 50.0;
-
         ap.setAccelleration(0.1);
         ap.setMaxSpeed(0.25);
         ap.setStartEndMaxSpeed(1.0);
         Collections.shuffle(shuffledList);
         ap.setActions(shuffledList);
-
         // Set the location to return to after the task is complete.
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
         String apStr = ap.computeString();
         System.out.println("apStr = " + apStr);
         ap.initNextActions();
         ap.checkActionList();
-        setInputOpActionPlan(ap);
-        doSolve();
-    }//GEN-LAST:event_jMenuItemGenerateActionPerformed
+        return ap;
+    }
 
     private void jMenuItemSlowSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSlowSolveActionPerformed
         long timeDiff = doExhaustiveSolve();
@@ -609,6 +744,11 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         long timeDiff = doComboSolve();
         System.out.println("time to combo solve = " + timeDiff);
     }//GEN-LAST:event_jMenuItemComboSolveActionPerformed
+
+    private void jMenuItemProfileSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemProfileSolveActionPerformed
+        long timeDiff = doBenchmark();
+        System.out.println("time to solve = " + timeDiff);
+    }//GEN-LAST:event_jMenuItemProfileSolveActionPerformed
 
     private long doExhaustiveSolve() {
         long t1 = System.currentTimeMillis();
@@ -727,7 +867,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      */
     @SuppressWarnings({"guieffect"})
     public static void main(String args[]) {
-        
+
         Utils.setToAprsLookAndFeel();
 
         /* Create and display the form */
@@ -771,21 +911,21 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      *
      * @param opActionPlan new value of opActionPlan
      */
-    public void setInputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
-        outerOptiplannerJPanelInput.setOpActionPlan(opActionPlan);
+    public XFutureVoid setInputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
+        XFutureVoid part1Future = outerOptiplannerJPanelInput.setOpActionPlan(opActionPlan);
+        return part1Future.thenComposeToVoid(() -> setInputOpActionPlanPart2(opActionPlan));
+    }
+
+    private XFutureVoid setInputOpActionPlanPart2(@Nullable OpActionPlan opActionPlan) {
         if (null == opActionPlan) {
-            Utils.runOnDispatchThread(() -> jLabelInput.setText("Input : null"));
-            return;
+            return Utils.runOnDispatchThread(() -> outerOptiplannerJPanelInput.setValueString("null"));
         }
-        HardSoftLongScore score = opActionPlan.getScore();
-        if (null == score) {
-            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-            score = calculator.calculateScore(opActionPlan);
-            opActionPlan.setScore(score);
-        }
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(opActionPlan);
+        opActionPlan.setScore(score);
         final long softScoreFinal = score.getSoftScore();
         System.out.println("Input : score = " + score);
-        Utils.runOnDispatchThread(() -> jLabelInput.setText("Input : " + softScoreFinal));
+        return Utils.runOnDispatchThread(() -> outerOptiplannerJPanelInput.setValueString(" " + softScoreFinal));
     }
 
     /**
@@ -804,27 +944,26 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      *
      * @param opActionPlan new value of opActionPlan
      */
-    public void setOutputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
-        outerOptiplannerJPanelOutput.setOpActionPlan(opActionPlan);
+    public XFutureVoid setOutputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
+        XFutureVoid part1Future = outerOptiplannerJPanelOutput.setOpActionPlan(opActionPlan);
+        return part1Future.thenComposeToVoid(() -> setOutputOpActionPlanPart2(opActionPlan));
+    }
+
+    private XFutureVoid setOutputOpActionPlanPart2(@Nullable OpActionPlan opActionPlan) {
         if (null == opActionPlan) {
-            Utils.runOnDispatchThread(() -> jLabelOutput.setText("Output : null"));
-            return;
+            return Utils.runOnDispatchThread(() -> outerOptiplannerJPanelOutput.setValueString(" null"));
         }
-        HardSoftLongScore score = opActionPlan.getScore();
-        if (null == score) {
-            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-            score = calculator.calculateScore(opActionPlan);
-            opActionPlan.setScore(score);
-        }
+
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(opActionPlan);
+        opActionPlan.setScore(score);
         System.out.println("Output : score = " + score);
         final long softScoreFinal = score.getSoftScore();
 
-        Utils.runOnDispatchThread(() -> jLabelOutput.setText("Output : " + softScoreFinal));
+        return Utils.runOnDispatchThread(() -> outerOptiplannerJPanelOutput.setValueString(" " + softScoreFinal));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabelInput;
-    private javax.swing.JLabel jLabelOutput;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -834,12 +973,14 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemGreedySolve;
     private javax.swing.JMenuItem jMenuItemLoadInputList;
     private javax.swing.JMenuItem jMenuItemLoadOutputList;
+    private javax.swing.JMenuItem jMenuItemProfileSolve;
     private javax.swing.JMenuItem jMenuItemRepeatedShuffleTest;
     private javax.swing.JMenuItem jMenuItemSaveInputList;
     private javax.swing.JMenuItem jMenuItemSaveOutputList;
     private javax.swing.JMenuItem jMenuItemShuffleInputList;
     private javax.swing.JMenuItem jMenuItemSlowSolve;
     private javax.swing.JMenuItem jMenuItemSolve;
+    private javax.swing.JMenu jMenuRecentFiles;
     private javax.swing.JPanel jPanelInput;
     private javax.swing.JPanel jPanelOutput;
     private javax.swing.JSplitPane jSplitPane1;

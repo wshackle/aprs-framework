@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plannerBenchmark>
+  
+    <benchmarkDirectory>local/data/plannerBenchmark</benchmarkDirectory>
+    <inheritedSolverBenchmark>
+        <solver>
+            <solutionClass>aprs.actions.optaplanner.actionmodel.OpActionPlan</solutionClass>
+            <entityClass>aprs.actions.optaplanner.actionmodel.OpAction</entityClass>
+
+            <!-- Score configuration -->
+            <scoreDirectorFactory>
+                <!--  <scoreDrl>aprs/actions/optaplanner/actionmodel/actionScoreRules.drl</scoreDrl> -->
+                <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass>
+            </scoreDirectorFactory>
+
+            <!-- Optimization algorithms configuration -->
+            <!-- <constructionHeuristic>
+            <constructionHeuristicType>FIRST_FIT</constructionHeuristicType>
+        </constructionHeuristic>
+            -->
+            
+        </solver>
+    </inheritedSolverBenchmark>
+
+
+    <!--
+        <solverBenchmark>
+            <name>Default_GenericMoves</name>
+            <solver>
+                <localSearch>
+                    
+                    <termination>
+                        <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                    </termination>
+                </localSearch>
+            </solver>
+        </solverBenchmark>
+        
+        <solverBenchmark>
+            <name>Default_CustomMoves</name>
+            <solver>
+                <localSearch>
+                    <moveListFactory>
+                        <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+                    </moveListFactory>
+                    
+                    <termination>
+                        <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                    </termination>
+                </localSearch>
+            </solver>
+        </solverBenchmark>
+        
+        
+        <solverBenchmark>
+            <name>Tabu Search_CustomMoves</name>
+            <solver>
+                <localSearch>
+                    <moveListFactory>
+                        <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+                    </moveListFactory>
+                    
+                    <termination>
+                        <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                    </termination>
+                    <localSearchType>TABU_SEARCH</localSearchType>
+                </localSearch>
+            </solver>
+        </solverBenchmark>
+        
+        <solverBenchmark>
+            <name>Tabu Search_GenericMoves</name>
+            <solver>
+                <localSearch>
+                    <termination>
+                        <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                    </termination>
+                    <localSearchType>TABU_SEARCH</localSearchType>
+                </localSearch>
+            </solver>
+        </solverBenchmark>
+        
+        <solverBenchmark>
+            <name>Simulated Annealing</name>
+            <solver>
+                .<localSearch>
+                    <moveListFactory>
+                        <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+                    </moveListFactory>
+                    
+                    <termination>
+                        <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                    </termination>
+                    <acceptor>
+                        <simulatedAnnealingStartingTemperature>0hard/1000soft</simulatedAnnealingStartingTemperature>
+                    </acceptor>
+                    <forager>
+                        <acceptedCountLimit>1</acceptedCountLimit>
+                    </forager>
+                </localSearch>
+            </solver>
+        </solverBenchmark>
+        
+    -->
+    
+    <solverBenchmark>
+        <name>VND</name>
+        <solver>
+            .<localSearch>
+                
+                <moveListFactory>
+                    <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+                </moveListFactory>
+
+                <localSearchType>VARIABLE_NEIGHBORHOOD_DESCENT</localSearchType>
+
+
+                <termination>
+                    <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                </termination>
+                
+            </localSearch>
+        </solver>
+    </solverBenchmark>
+        
+    
+    <solverBenchmark>
+        <name>Simulated Annealing</name>
+        <solver>
+            .<localSearch>
+                <moveListFactory>
+                    <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+                </moveListFactory>
+                <termination>
+                    <millisecondsSpentLimit>500</millisecondsSpentLimit>
+                </termination>
+                <acceptor>
+                    <simulatedAnnealingStartingTemperature>0hard/1000soft</simulatedAnnealingStartingTemperature>
+                </acceptor>
+                <forager>
+                    <acceptedCountLimit>1</acceptedCountLimit>
+                </forager>
+            </localSearch>
+        </solver>
+    </solverBenchmark>
+    
+        
+    <!--  <solverBenchmark>
+        <name>Late Acceptance</name>
+        <solver>
+            <localSearch>
+                <localSearchType>LATE_ACCEPTANCE</localSearchType>
+            </localSearch>
+           
+        </solver>
+    </solverBenchmark> -->
+</plannerBenchmark>
+
+

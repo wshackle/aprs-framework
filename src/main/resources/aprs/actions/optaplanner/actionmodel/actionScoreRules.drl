@@ -1,0 +1,28 @@
+
+
+package aprs.actions.optaplanner.actionmodel;
+    dialect "java"
+
+
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScoreHolder;
+import aprs.actions.optaplanner.actionmodel.OpAction;
+
+global HardSoftLongScoreHolder scoreHolder;
+
+
+rule "distanceToNext"
+    when
+        OpAction( next != null, location != null, $distanceToNext : distToNextLong)
+    then
+        //System.out.println("distanceToNext="+$distanceToNext);
+        scoreHolder.addSoftConstraintMatch(kcontext, - $distanceToNext);
+end
+
+rule "removeFakes"
+    when
+        OpAction( next != null, location != null, fake || next.fake || opActionType == OpActionType.START || next.opActionType == OpActionType.END, $distanceToNext : distToNextLong)
+    then
+        //System.out.println("removed distanceToNext="+$distanceToNext);
+        scoreHolder.addSoftConstraintMatch(kcontext, + $distanceToNext);
+end
+

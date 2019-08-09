@@ -15,11 +15,14 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
+import aprs.system.AprsSystem;
 import java.awt.geom.Point2D;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +33,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -39,6 +45,7 @@ import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
+import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
@@ -65,6 +72,12 @@ public class OpActionPlan {
     static public SolverFactory<OpActionPlan> createSolverFactory() {
         return SolverFactory.createFromXmlResource(
                 "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
+    }
+    
+    
+    static public PlannerBenchmarkFactory createBenchmarkFactory() {
+        return PlannerBenchmarkFactory.createFromXmlResource(
+                "aprs/actions/optaplanner/actionmodel/benchmark.xml");
     }
 
     @ProblemFactProperty
@@ -392,13 +405,13 @@ public class OpActionPlan {
         return minActCost;
     }
 
-    public static OpActionPlan cloneAndShufflePlan(OpActionPlan inPlan) {
-        List<OpAction> actions = inPlan.getActions();
+    public  OpActionPlan cloneAndShufflePlan() {
+        List<OpAction> actions = this.getActions();
         if (null == actions) {
-            throw new RuntimeException("inPlan.getActions() returned null : inPlan=" + inPlan);
+            throw new RuntimeException("inPlan.getActions() returned null : this=" + this);
         }
         if (actions.isEmpty()) {
-            throw new RuntimeException("inPlan.getActions().isEmpty() : inPlan=" + inPlan);
+            throw new RuntimeException("inPlan.getActions().isEmpty() : this=" + this);
         }
         List<OpAction> newActionsList = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
@@ -416,14 +429,14 @@ public class OpActionPlan {
             }
         }
         OpActionPlan newPlan = new OpActionPlan();
-        newPlan.setAccelleration(inPlan.getAccelleration());
-        newPlan.setDebug(inPlan.isDebug());
-        newPlan.setMaxSpeed(inPlan.getMaxSpeed());
-        newPlan.setStartEndMaxSpeed(inPlan.getStartEndMaxSpeed());
-        newPlan.getEndAction().getLocation().x = inPlan.getEndAction().getLocation().x;
-        newPlan.getEndAction().getLocation().y = inPlan.getEndAction().getLocation().y;
-        newPlan.setUseDistForCost(inPlan.isUseDistForCost());
-        newPlan.setUseStartEndCost(inPlan.isUseStartEndCost());
+        newPlan.setAccelleration(this.getAccelleration());
+        newPlan.setDebug(this.isDebug());
+        newPlan.setMaxSpeed(this.getMaxSpeed());
+        newPlan.setStartEndMaxSpeed(this.getStartEndMaxSpeed());
+        newPlan.getEndAction().getLocation().x = this.getEndAction().getLocation().x;
+        newPlan.getEndAction().getLocation().y = this.getEndAction().getLocation().y;
+        newPlan.setUseDistForCost(this.isUseDistForCost());
+        newPlan.setUseStartEndCost(this.isUseStartEndCost());
         Collections.shuffle(newActionsList);
         newPlan.setActions(newActionsList);
         newPlan.initNextActions();
@@ -487,13 +500,13 @@ public class OpActionPlan {
     }
 
     private static final String CSV_HEADERS[] = {
-        "Index", "Id", "Name", "Type", "PartType", "ExecutorType", "ExecutorArgs", "X", "Y", "Cost", "Required", "Skipped", "NextId", "PossibleNexts"
+        "Index", "Id", "OrigId", "Name", "Type", "PartType", "ExecutorType", "ExecutorArgs", "X", "Y", "Cost", "Required", "Skipped", "NextId", "NextOrigId", "PossibleNextIds", "PossibleNextOrigIds"
     };
 
     private static @Nullable
     Object[] propRecord(String propName, Object propValue) {
         return new Object[]{
-            -1, -1, propName + "=" + propValue, SET_PROPERTY_PROPNAME, null, null, null, Double.NaN, Double.NaN, Double.NaN, true, false, Collections.emptyList()
+            -1, -1, -1, propName + "=" + propValue, SET_PROPERTY_PROPNAME, null, null, null, Double.NaN, Double.NaN, Double.NaN, true, false, Collections.emptyList()
         };
     }
 
@@ -519,10 +532,11 @@ public class OpActionPlan {
         }
     }
 
-    static private @Nullable
+    private @Nullable
     Object[] actionRecord(int index, OpActionInterface actionInterface, boolean skipped) {
         final OpActionInterface next = actionInterface.getNext();
         int nextId = (next != null) ? next.getId() : -1;
+        int nextOrigId = (next != null) ? next.getOrigId() : -1;
         ActionType executorType = null;
         String executorArgs = null;
         if (actionInterface instanceof OpAction) {
@@ -531,7 +545,7 @@ public class OpActionPlan {
             executorArgs = Arrays.toString(action.getExecutorArgs());
         }
         return new Object[]{
-            index, actionInterface.getId(), actionInterface.getName(), actionInterface.getOpActionType(), actionInterface.getPartType(), executorType, executorArgs, actionInterface.getLocation().x, actionInterface.getLocation().y, Double.NaN, actionInterface.isRequired(), skipped, nextId, actionInterface.getPossibleNextIds()
+            index, actionInterface.getId(), actionInterface.getOrigId(), actionInterface.getName(), actionInterface.getOpActionType(), actionInterface.getPartType(), executorType, executorArgs, actionInterface.getLocation().x, actionInterface.getLocation().y, actionInterface.cost(this), actionInterface.isRequired(), skipped, nextId, nextOrigId, actionInterface.getPossibleNextIds(), actionInterface.getPossibleNextOrigIds()
         };
     }
 
@@ -599,12 +613,78 @@ public class OpActionPlan {
     }
 
     @SuppressWarnings("nullness")
-    static private void printActionRecord(CSVPrinter printer, int index, OpActionInterface actionInterface, boolean skipped) throws IOException {
+    private void printActionRecord(CSVPrinter printer, int index, OpActionInterface actionInterface, boolean skipped) throws IOException {
         printer.printRecord(actionRecord(index, actionInterface, skipped));
     }
 
+    private static final File recentActionListsFile = new File(System.getProperty("user.home"), ".recentActionListsFile");
+
+    private static final List<File> recentActionListFiles = new ArrayList<>();
+
+    private static volatile boolean recentActionsFileListRead = false;
+
+    private static synchronized void readRecentActionListFile() throws IOException {
+        try {
+            if (recentActionListsFile.exists()) {
+                recentActionListFiles.clear();
+                try (BufferedReader br = new BufferedReader(new FileReader(recentActionListsFile))) {
+                    String line = br.readLine();
+                    while (line != null) {
+                        File f = new File(line);
+                        if (f.exists() && f.canRead()) {
+                            recentActionListFiles.add(f);
+                        }
+                        line = br.readLine();
+                    }
+                }
+                Collections.sort(recentActionListFiles, Comparators.byLongFunction(File::lastModified));
+                if (recentActionListFiles.size() > 12) {
+                    while (recentActionListFiles.size() > 12) {
+                        recentActionListFiles.remove(0);
+                    }
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(recentActionListsFile))) {
+                        for (int i = 0; i < recentActionListFiles.size(); i++) {
+                            File f = recentActionListFiles.get(i);
+                            pw.println(f.getCanonicalPath());
+                        }
+                    }
+                }
+            }
+        } finally {
+            recentActionsFileListRead = true;
+        }
+    }
+
+    public static List<File> getRecentActionListFiles() {
+        if (!recentActionsFileListRead) {
+            try {
+                readRecentActionListFile();
+            } catch (IOException ex) {
+                Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                recentActionsFileListRead = true;
+            }
+        }
+        return recentActionListFiles;
+    }
+
+    private void addRecentActionListFile(File f) throws IOException {
+        if (!recentActionsFileListRead) {
+            try {
+                readRecentActionListFile();
+            } finally {
+                recentActionsFileListRead = true;
+            }
+        }
+        try (PrintWriter pw = new PrintWriter(new FileWriter(recentActionListsFile, true))) {
+            pw.println(f.getCanonicalPath());
+        }
+        recentActionListFiles.add(f);
+    }
+
     public void saveActionList(File f) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), Utils.preferredCsvFormat().withHeader(CSV_HEADERS))) {
+        addRecentActionListFile(f);
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(CSV_HEADERS))) {
 
             printPropRecord(printer, USE_DIST_FOR_COST_PROPNAME, useDistForCost);
             printPropRecord(printer, USE_START_END_COST_PROPNAME, useStartEndCost);
@@ -631,7 +711,7 @@ public class OpActionPlan {
         return plan;
     }
 
-    private void privateLoadActionList(File f) throws IOException {
+    private void privateLoadActionList(File file) throws IOException {
         final List<OpAction> actionsFinal;
         if (null == actions) {
             actionsFinal = new ArrayList<>();
@@ -640,59 +720,133 @@ public class OpActionPlan {
             actionsFinal = actions;
         }
         actionsFinal.clear();
-        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat().withFirstRecordAsHeader())) {
+        String fileScore = "";
+//        Map<Integer, OpActionInterface> idActionMap = new HashMap<>();
+//        Map<Integer, OpActionInterface> origIdActionMap = new HashMap<>();
+//        Map<OpAction, Integer> idNextMap = new IdentityHashMap<>();
+//        Map<OpAction, Integer> origIdNextMap = new IdentityHashMap<>();
+        int recordCount = 0;
+        try (CSVParser parser = new CSVParser(new FileReader(file), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             for (CSVRecord record : parser) {
+                recordCount++;
                 String type = record.get("Type");
-                if (type.equals(SET_PROPERTY_PROPNAME)) {
-                    String name = record.get("Name");
-                    int eindex = name.indexOf('=');
-                    String vname = name.substring(0, eindex);
-                    String vval = name.substring(eindex + 1);
-                    switch (vname) {
-                        case USE_DIST_FOR_COST_PROPNAME:
-                            useDistForCost = Boolean.parseBoolean(vval);
-                            break;
+                try {
+                    if (type.equals(SET_PROPERTY_PROPNAME)) {
+                        String name = record.get("Name");
+                        int eindex = name.indexOf('=');
+                        String vname = name.substring(0, eindex);
+                        String vval = name.substring(eindex + 1);
+                        switch (vname) {
+                            case USE_DIST_FOR_COST_PROPNAME:
+                                useDistForCost = Boolean.parseBoolean(vval);
+                                break;
 
-                        case USE_START_END_COST_PROPNAME:
-                            useStartEndCost = Boolean.parseBoolean(vval);
-                            break;
+                            case USE_START_END_COST_PROPNAME:
+                                useStartEndCost = Boolean.parseBoolean(vval);
+                                break;
 
-                        case DEBUG_PROPNAME:
-                            debug = Boolean.parseBoolean(vval);
-                            break;
+                            case DEBUG_PROPNAME:
+                                debug = Boolean.parseBoolean(vval);
+                                break;
 
-                        case MAX_SPEED_PROPNAME:
-                            maxSpeed = Double.parseDouble(vval);
-                            break;
+                            case MAX_SPEED_PROPNAME:
+                                maxSpeed = Double.parseDouble(vval);
+                                break;
 
-                        case START_END_MAX_SPEED_PROPNAME:
-                            startEndMaxSpeed = Double.parseDouble(vval);
-                            break;
-                        case ACCELLERATION_PROPNAME:
-                            accelleration = Double.parseDouble(vval);
-                            break;
+                            case START_END_MAX_SPEED_PROPNAME:
+                                startEndMaxSpeed = Double.parseDouble(vval);
+                                break;
+                            case ACCELLERATION_PROPNAME:
+                                accelleration = Double.parseDouble(vval);
+                                break;
+
+                            case SCORE_PROPNAME:
+                                fileScore = vval;
+                                break;
+                        }
+                        continue;
+                    } else if (!type.equals("END")) {
+                        // String name, double x, double y, OpActionType opActionType, String partType, boolean required
+                        String name = record.get("Name");
+                        double x = Double.parseDouble(record.get("X"));
+                        double y = Double.parseDouble(record.get("Y"));
+                        boolean required = Boolean.parseBoolean(record.get("Required"));
+                        int id = Integer.parseInt(record.get("Id"));
+                        OpAction action;
+                        final String origIdString = record.get("OrigId");
+                        if (null != origIdString && origIdString.length() > 0) {
+                            int origId = Integer.parseInt(origIdString);
+                            action = new OpAction(origId, name, x, y, OpActionType.valueOf(type), record.get("PartType"), required);
+//                        origIdActionMap.put(origId, action);
+                        } else {
+                            action = new OpAction(name, x, y, OpActionType.valueOf(type), record.get("PartType"), required);
+                        }
+//                    idActionMap.put(id, action);
+//                    final String nextIdString = record.get("NextId");
+//                    if (null != nextIdString && nextIdString.length() > 0) {
+//                        int nextId = Integer.parseInt(nextIdString);
+//                        idNextMap.put(action, nextId);
+//                    }
+//                    final String nextOrigIdString = record.get("NextOrigId");
+//                    if (null != nextIdString && nextIdString.length() > 0) {
+//                        int nextOrigId = Integer.parseInt(nextIdString);
+//                        origIdNextMap.put(action, nextOrigId);
+//                    }
+                        actionsFinal.add(action);
+                    } else if (type.equals("END")) {
+                        if (null == endAction) {
+                            throw new NullPointerException("endAction");
+                        }
+                        double x = Double.parseDouble(record.get("X"));
+                        double y = Double.parseDouble(record.get("Y"));
+//                    int id = Integer.parseInt(record.get("Id"));
+//                    final String origIdString = record.get("OrigId");
+//                    if (null != origIdString && origIdString.length() > 0) {
+//                        int origId = Integer.parseInt(origIdString);
+//                        origIdActionMap.put(origId, endAction);
+//                    }
+//                    idActionMap.put(id, endAction);
+                        endAction.setLocation(new Point2D.Double(x, y));
                     }
-                    continue;
-                } else if (!type.equals("END") && !type.equals("FAKE_PICKUP") && !type.equals("FAKE_DROPOFF")) {
-                    // String name, double x, double y, OpActionType opActionType, String partType, boolean required
-                    String name = record.get("Name");
-                    double x = Double.parseDouble(record.get("X"));
-                    double y = Double.parseDouble(record.get("Y"));
-                    boolean required = Boolean.parseBoolean(record.get("Required"));
-                    OpAction action = new OpAction(type, x, y, OpActionType.valueOf(type), record.get("PartType"), required);
-                    action.setName(name);
-                    actionsFinal.add(action);
-                } else if (type.equals("END")) {
-                    if (null == endAction) {
-                        throw new NullPointerException("endAction");
+                } catch (Exception e) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "recordCount=" + recordCount + ",type=" + type + ",record=" + record, e);
+                    if (e instanceof RuntimeException) {
+                        throw (RuntimeException) e;
+                    } else {
+                        throw new RuntimeException(e);
                     }
-                    double x = Double.parseDouble(record.get("X"));
-                    double y = Double.parseDouble(record.get("Y"));
-                    endAction.setLocation(new Point2D.Double(x, y));
                 }
             }
+        } catch (Exception e) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "file=" + file, e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
-        initNextActions();
+        List<OpActionInterface> actionsWithEnd = new ArrayList<>(actionsFinal);
+        actionsWithEnd.add(endAction);
+        for (int i = 0; i < actionsFinal.size(); i++) {
+            OpAction actionI = actionsFinal.get(i);
+            OpActionInterface next;
+            if (i < actionsFinal.size() - 1) {
+                next = actionsFinal.get(i + 1);
+            } else {
+                next = endAction;
+            }
+            actionI.addPossibleNextActions(actionsWithEnd);
+            actionI.setNext(next);
+        }
+//        initNextActions();
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore calculatedScore = calculator.calculateScore(this);
+        if (null == score) {
+            score = calculatedScore;
+        }
+        if (!fileScore.equals(calculatedScore.toString())) {
+            throw new RuntimeException("fileScore = " + fileScore + ", calculatedScore = " + score);
+        }
     }
     private static final String ACCELLERATION_PROPNAME = "accelleration";
     private static final String START_END_MAX_SPEED_PROPNAME = "startEndMaxSpeed";
@@ -700,6 +854,7 @@ public class OpActionPlan {
     private static final String DEBUG_PROPNAME = "debug";
     private static final String USE_START_END_COST_PROPNAME = "useStartEndCost";
     private static final String USE_DIST_FOR_COST_PROPNAME = "useDistForCost";
+    private static final String SCORE_PROPNAME = "score";
     private boolean useDistForCost = true;
 
     /**
@@ -1078,6 +1233,15 @@ public class OpActionPlan {
         String ret = sb.toString();
         this.asString = ret;
         return ret;
+    }
+
+    public List<String> getOrderedListNames() {
+        List<OpAction> l = getOrderedList(true);
+        List<String> names = new ArrayList<>();
+        for (OpAction act : l) {
+            names.add(act.getName());
+        }
+        return names;
     }
 
     public List<OpAction> getOrderedList(boolean quiet) {

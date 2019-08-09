@@ -312,8 +312,8 @@ public class Utils {
 
     private static class LogFileDirGetter {
 
-        private static @Nullable
-        final File logFileDir = createLogFileDir();
+        private static volatile @Nullable
+        File logFileDir = createLogFileDir();
         private static @Nullable
         IOException createLogFileException = null;
 
@@ -334,7 +334,17 @@ public class Utils {
 
         File getLogFileDir() throws IOException {
             if (null != logFileDir) {
-                return logFileDir;
+                if (logFileDir.exists() && logFileDir.canWrite() && logFileDir.isDirectory()) {
+                    return logFileDir;
+                } else {
+                    synchronized (this) {
+                        File newLogFileDir = createLogFileDir();
+                        if (null != newLogFileDir) {
+                            logFileDir = newLogFileDir;
+                            return newLogFileDir;
+                        }
+                    }
+                }
             }
             if (null != createLogFileException) {
                 throw new IOException("Log File Directory was not created.", createLogFileException);
@@ -378,7 +388,15 @@ public class Utils {
      * @throws IOException file can not be created
      */
     public static File createTempFile(String prefix, String suffix) throws IOException {
-        return File.createTempFile(cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix), suffix, getlogFileDir());
+        final String fullPrefix = cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix);
+        final File logFileDir = getlogFileDir();
+        try {
+            return File.createTempFile(fullPrefix, suffix, logFileDir);
+        } catch (IOException ex) {
+            System.err.println("fullPrefix = " + fullPrefix);
+            System.err.println("logFileDir = " + logFileDir);
+            throw ex;
+        }
     }
 
     /**
@@ -883,15 +901,6 @@ public class Utils {
     }
 
     /**
-     * Get the global default preferred format for saving or parsing CSV files.
-     *
-     * @return preferred CSV format.
-     */
-    public static CSVFormat preferredCsvFormat() {
-        return CSVFormat.DEFAULT.withHeader();
-    }
-
-    /**
      * Convert the table model column names to an array of strings.
      *
      * @param jTable table to get column names from
@@ -1162,18 +1171,30 @@ public class Utils {
     }
 
     @UIEffect
-    public static void readCsvFileToTable(JTable jtable, File f) {
-        readCsvFileToTableAndMap((DefaultTableModel) jtable.getModel(), f, null, null, null);
+    public static void readCsvFileToTable(boolean forceColumns, JTable jtable, File f) {
+        if (forceColumns && !(jtable.getModel() instanceof DefaultTableModel)) {
+            jtable.setModel(new DefaultTableModel());
+        }
+        readCsvFileToTableAndMap(forceColumns, (DefaultTableModel) jtable.getModel(), f, null, null, null);
+        Utils.autoResizeTableColWidths(jtable);
+
     }
 
     @UIEffect
-    public static <T> void readCsvFileToTableAndMap(@Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+    public static <T> void readCsvFileToTableAndMap(boolean forceColumns, @Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 
         if (null != dtm) {
             dtm.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
+            if (forceColumns) {
+                dtm.setRowCount(0);
+                dtm.setColumnCount(0);
+                for (String key : headerMap.keySet()) {
+                    dtm.addColumn(key);
+                }
+            }
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
             if (null != dtm) {
@@ -1247,22 +1268,23 @@ public class Utils {
     }
 
     public static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff, long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
+        final CSVFormat format;
+        if (alreadyExists) {
+            format = CSVFormat.DEFAULT;
+        } else {
+            format = CSVFormat.DEFAULT.withHeader(
+                    "Date",
+                    "cycle_count",
+                    "timeDiff",
+                    "timeDiffPerCycle",
+                    "disableCount",
+                    "disableTime",
+                    "totalRandomDelays",
+                    "ignoredToggles"
+            );
+        }
         try (CSVPrinter printer = new CSVPrinter(
-                new FileWriter(f, true),
-                alreadyExists
-                        ? CSVFormat.DEFAULT
-                        : CSVFormat.DEFAULT.withHeader(
-                                "Date",
-                                "cycle_count",
-                                "timeDiff",
-                                "timeDiffPerCycle",
-                                "disableCount",
-                                "disableTime",
-                                "totalRandomDelays",
-                                "ignoredToggles"))) {
-            if (alreadyExists) {
-                printer.println();
-            }
+                new FileWriter(f, alreadyExists), format)) {
             printer.printRecord(
                     Utils.getDateTimeString(),
                     cycle_count,
@@ -1271,7 +1293,8 @@ public class Utils {
                     disableCount,
                     disableTime,
                     totalRandomDelays,
-                    ignoredToggles);
+                    ignoredToggles
+            );
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -1282,7 +1305,7 @@ public class Utils {
         if (null != cachedTable) {
             cachedTable.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;

@@ -99,8 +99,9 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
 import crcl.utils.CRCLCommandWrapper.CRCLCommandWrapperConsumer;
+import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.vector;
 
-import java.util.Date;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -110,7 +111,6 @@ import java.util.Set;
 import java.awt.Color;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.swing.text.BadLocationException;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Map.Entry;
@@ -130,7 +130,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.swing.Icon;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -141,17 +140,23 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import rcs.posemath.PmException;
-import rcs.posemath.PmPose;
-import rcs.posemath.Posemath;
 
 import java.io.PrintWriter;
-import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.function.Predicate;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintStream;
+import java.util.Date;
+import java.util.Iterator;
 import static java.util.Objects.requireNonNull;
+import java.util.TreeMap;
+import javax.swing.Icon;
+import javax.swing.text.BadLocationException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import rcs.posemath.PmPose;
+import rcs.posemath.Posemath;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -1882,7 +1887,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 try {
                     processCommands(cmds);
                 } catch (Throwable thrown) {
-                    LOGGER.log(Level.SEVERE, "action="+action+",idx="+idx+",cmds="+cmds,thrown);
+                    LOGGER.log(Level.SEVERE, "action=" + action + ",idx=" + idx + ",cmds=" + cmds, thrown);
                     throw thrown;
                 }
             }
@@ -2040,11 +2045,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else {
             List<PhysicalItem> newPhysicalItems = externalPoseProvider.getNewPhysicalItems();
             this.physicalItems = newPhysicalItems;
-            try {
-                takeSimViewSnapshot("crclGenerator.externalPoseProvider.getNewPhysicalItems", newPhysicalItems);
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
-            }
+            takeSimViewSnapshot("crclGenerator.externalPoseProvider.getNewPhysicalItems", newPhysicalItems);
             loadNewItemsIntoPoseCache(newPhysicalItems);
             return newPhysicalItems;
         }
@@ -2288,247 +2289,398 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private volatile int lastgfzc = -1;
 
+    public static class OptiplannerLogEntry {
+
+        private final int index;
+        private final int startingIndex;
+        private final String runName;
+        private final boolean reverse;
+        private final int actionsInSize;
+        private final int actionsOutSize;
+        private final File actionsInFile;
+        private final File actionsOutFile;
+        private final File itemsImageFile;
+        private final File itemsCsvFile;
+        private final File object2DLogLinesFile;
+        private final File object2DPropertiesFile;
+        private final File inputOpPlanFile;
+        private final File outputOpPlanFile;
+        private final double inScore;
+        private final double outScore;
+
+        public OptiplannerLogEntry(int index, int startingIndex, String runName, boolean reverse, int actionsInSize, int actionsOutSize, File actionsInFile, File actionsOutFile, File itemsImageFile, File itemsCsvFile, File object2DLogLinesFile, File object2DPropertiesFile, File inputOpPlanFile, File outputOpPlanFile, double inScore, double outScore) {
+            this.index = index;
+            this.startingIndex = startingIndex;
+            this.runName = runName;
+            this.reverse = reverse;
+            this.actionsInSize = actionsInSize;
+            this.actionsOutSize = actionsOutSize;
+            this.actionsInFile = actionsInFile;
+            this.actionsOutFile = actionsOutFile;
+            this.itemsImageFile = itemsImageFile;
+            this.itemsCsvFile = itemsCsvFile;
+            this.object2DLogLinesFile = object2DLogLinesFile;
+            this.object2DPropertiesFile = object2DPropertiesFile;
+            this.inputOpPlanFile = inputOpPlanFile;
+            this.outputOpPlanFile = outputOpPlanFile;
+            this.inScore = inScore;
+            this.outScore = outScore;
+        }
+
+       
+
+        public Object[] toArray() {
+            return new Object[]{
+                index, startingIndex, runName,reverse,
+                inScore, outScore,
+                actionsInSize, actionsOutSize,
+                actionsInFile, actionsOutFile,
+                itemsImageFile, itemsCsvFile,
+                object2DLogLinesFile, object2DPropertiesFile,
+                inputOpPlanFile, outputOpPlanFile
+            };
+        }
+
+        public static final String[] HEADERS
+                = new String[]{
+                    "index", "startingIndex", "run","reverse",
+                    "inScore", "outScore",
+                    "sizeIn", "sizeOut",
+                    "actionsIn", "actionsOut",
+                    "itemsImage", "itemsCsv",
+                    "object2DLogLines", "object2DProperties",
+                    "inputPlan", "outputPlan"
+                };
+    }
+
+    private final List<OptiplannerLogEntry> optiplannerLogEntrys = new ArrayList<>();
+
+    public synchronized List<OptiplannerLogEntry> getOptiplannerLogEntrys() {
+        return new ArrayList<>(optiplannerLogEntrys);
+    }
+
+    private volatile File logOptaPlannerResultsFile = null;
+
+    private synchronized void logOptaPlannerResult(
+            int solveCount,
+            int startingIndex,
+            int sizeIn,
+            int sizeOut,
+            File actionsInFile,
+            File actionsOutFile,
+            File[] takeSnapsPhysicalItemsFiles,
+            double inScore,
+            double outScore,
+            OpActionPlan inPlan,
+            OpActionPlan outPlan
+    ) {
+        try {
+            String runName = aprsSystem.getRunName();
+            File inPlanFile = aprsSystem.createTempFile("inPlan", ".csv");
+            inPlan.saveActionList(inPlanFile);
+            File outPlanFile = aprsSystem.createTempFile("outPlan", ".csv");
+            outPlan.saveActionList(outPlanFile);
+            final boolean newFile = null == logOptaPlannerResultsFile || optiplannerLogEntrys.isEmpty();
+            if (newFile) {
+                logOptaPlannerResultsFile = Utils.createTempFile("OptaPlannerResults" + aprsSystem.getTaskName(), ".csv");
+            }
+            final OptiplannerLogEntry logEntry
+                    = new OptiplannerLogEntry(
+                            solveCount, startingIndex, runName,aprsSystem.isReverseFlag(),
+                            sizeIn, sizeOut,
+                            actionsInFile, actionsOutFile,
+                            takeSnapsPhysicalItemsFiles[0], takeSnapsPhysicalItemsFiles[1],
+                            aprsSystem.getObject2DViewLogLinesFile(), aprsSystem.getObject2DViewPropertiesFile(),
+                            inPlanFile, outPlanFile,
+                            inScore, outScore);
+            CSVFormat format = CSVFormat.DEFAULT;
+            if (newFile) {
+                format = format.withHeader(OptiplannerLogEntry.HEADERS);
+            }
+            try (CSVPrinter printer = new CSVPrinter(new FileWriter(logOptaPlannerResultsFile, !newFile), format)) {
+                printer.printRecord(Arrays.asList(logEntry.toArray()));
+            }
+            optiplannerLogEntrys.add(logEntry);
+        } catch (IOException ex) {
+            Logger.getLogger(CrclGenerator.class
+                    .getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private List<Action> optimizePddlActionsWithOptaPlanner(
             List<Action> actions,
             int startingIndex,
-            List<PhysicalItem> physicalItemsLocal)
-            throws SQLException {
+            List<PhysicalItem> physicalItemsLocal) {
         assert (null != this.aprsSystem) : "null == aprsSystemInterface";
 
         if (null == physicalItemsLocal) {
             throw new NullPointerException("physicalItemsLocal");
         }
+
         try {
-            takeSimViewSnapshot("optimizePddlActionsWithOptaPlanner.physicalItemsLocal", physicalItemsLocal);
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        }
-        Solver<OpActionPlan> solverToRun = this.solver;
-        if (null == solverToRun) {
-            return actions;
-        }
-        int endl[] = new int[2];
-        PointType lookForPt = getLookForXYZ();
-        if (null == lookForPt) {
-            throw new IllegalStateException("null == lookForPT, startingIndex=" + startingIndex + ", actions=" + actions);
-        }
-        List<OpAction> skippedOpActionsList = new ArrayList<>();
-        List<Action> skippedPddlActionsList = new ArrayList<>();
-        List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList, skippedPddlActionsList);
 
-        List<String> physicalItemNames = getPhysicalItemNames();
-        lastOptimizePddlItemNames = physicalItemNames;
-        if (optoThread == null) {
-            optoThread = Thread.currentThread();
-        }
-        if (Thread.currentThread() != optoThread) {
-            throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
-        }
+            Solver<OpActionPlan> solverToRun = this.solver;
+            if (null == solverToRun) {
+                return actions;
+            }
+            File[] takeSnapsPhysicalItemsFiles
+                    = takeSimViewSnapshot(
+                            "optimizePddlActionsWithOptaPlanner.physicalItemsLocal",
+                            physicalItemsLocal);
 
-        if (true /*!getReverseFlag() */) {
-            MutableMultimap<String, PhysicalItem> availItemsMap
-                    = Lists.mutable.ofAll(physicalItemsLocal)
-                            .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
-                            .groupBy(item -> posNameToType(item.getName()));
+            File actionsInFile = aprsSystem.createTempFile("actionsIn", ".txt");
+            int sizeIn = 0;
+            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
+                for (int i = startingIndex; i < actions.size(); i++) {
+                    ps.println(actions.get(i).asPddlLine());
+                    sizeIn++;
+                }
+            }
+            int endl[] = new int[2];
+            PointType lookForPt = getLookForXYZ();
+            if (null == lookForPt) {
+                throw new IllegalStateException("null == lookForPT, startingIndex=" + startingIndex + ", actions=" + actions);
+            }
+            List<OpAction> skippedOpActionsList = new ArrayList<>();
+            List<Action> skippedPddlActionsList = new ArrayList<>();
+            List<OpAction> opActions = pddlActionsToOpActions(actions, startingIndex, endl, skippedOpActionsList, skippedPddlActionsList);
 
-            MutableMultimap<String, Action> takePartMap
-                    = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+            List<String> physicalItemNames = getPhysicalItemNames();
+            lastOptimizePddlItemNames = physicalItemNames;
+            if (optoThread == null) {
+                optoThread = Thread.currentThread();
+            }
+            if (Thread.currentThread() != optoThread) {
+                throw new IllegalStateException("!Thread.currentThread() != optoThread: optoThread=" + optoThread + ", Thread.currentThread() =" + Thread.currentThread());
+            }
 
-            for (String partTypeName : takePartMap.keySet()) {
-                MutableCollection<PhysicalItem> thisPartTypeItems
-                        = availItemsMap.get(partTypeName);
-                MutableCollection<Action> thisPartTypeActions
-                        = takePartMap.get(partTypeName);
-                if (thisPartTypeItems.size() > thisPartTypeActions.size() && thisPartTypeActions.size() > 0) {
-                    for (PhysicalItem item : thisPartTypeItems) {
-                        if (0 == thisPartTypeActions.count(action -> action.getArgs()[takePartArgIndex].equals(item.getFullName()))) {
-                            opActions.add(new OpAction(TAKE_PART, new String[]{item.getFullName()}, item.x, item.y, partTypeName, inKitTrayByName(item.getFullName())));
+            if (true /*!getReverseFlag() */) {
+                MutableMultimap<String, PhysicalItem> availItemsMap
+                        = Lists.mutable.ofAll(physicalItemsLocal)
+                                .select(item -> item.getType().equals("P") && item.getName().contains("_in_pt"))
+                                .groupBy(item -> posNameToType(item.getName()));
+
+                MutableMultimap<String, Action> takePartMap
+                        = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
+                                .select(action -> action.getType().equals(TAKE_PART) && !inKitTrayByName(action.getArgs()[takePartArgIndex]))
+                                .groupBy(action -> posNameToType(action.getArgs()[takePartArgIndex]));
+
+                for (String partTypeName : takePartMap.keySet()) {
+                    MutableCollection<PhysicalItem> thisPartTypeItems
+                            = availItemsMap.get(partTypeName);
+                    MutableCollection<Action> thisPartTypeActions
+                            = takePartMap.get(partTypeName);
+                    if (thisPartTypeItems.size() > thisPartTypeActions.size() && thisPartTypeActions.size() > 0) {
+                        for (PhysicalItem item : thisPartTypeItems) {
+                            if (0 == thisPartTypeActions.count(action -> action.getArgs()[takePartArgIndex].equals(item.getFullName()))) {
+                                opActions.add(new OpAction(TAKE_PART, new String[]{item.getFullName()}, item.x, item.y, partTypeName, inKitTrayByName(item.getFullName())));
+                            }
+                        }
+                    }
+                }
+                Set<String> typeSet
+                        = physicalItemsLocal
+                                .stream()
+                                .map(PhysicalItem::getType)
+                                .collect(Collectors.toSet());
+                if (debug) {
+                    logDebug("typeSet = " + typeSet);
+                }
+                MutableMultimap<String, PhysicalItem> availSlotsMap
+                        = Lists.mutable.ofAll(physicalItemsLocal)
+                                .select(item -> item.getType().equals("ES")
+                                && item.getName().startsWith("empty_slot_")
+                                && !item.getName().contains("_in_kit_"))
+                                .groupBy(item -> posNameToType(item.getName()));
+
+                MutableMultimap<String, Action> placePartMap
+                        = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
+                                .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
+                                .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
+
+                for (String partTypeName : placePartMap.keySet()) {
+                    MutableCollection<PhysicalItem> thisPartTypeSlots
+                            = availSlotsMap.get(partTypeName);
+                    MutableCollection<Action> thisPartTypeActions
+                            = placePartMap.get(partTypeName);
+                    if (thisPartTypeSlots.size() > thisPartTypeActions.size() && thisPartTypeActions.size() > 0) {
+                        for (PhysicalItem item : thisPartTypeSlots) {
+                            if (0 == thisPartTypeActions.count(action -> action.getArgs()[takePartArgIndex].equals(item.getFullName()))) {
+                                opActions.add(new OpAction(PLACE_PART, new String[]{item.getFullName()}, item.x, item.y, partTypeName, inKitTrayByName(item.getFullName())));
+                            }
                         }
                     }
                 }
             }
-            Set<String> typeSet
-                    = physicalItemsLocal
-                            .stream()
-                            .map(PhysicalItem::getType)
-                            .collect(Collectors.toSet());
-            if (debug) {
-                logDebug("typeSet = " + typeSet);
+            if (opActions.size() < 3) {
+                logDebug("optimizePddlActionsWithOptaPlanner: small size of opActions list : opActions.size()=" + opActions.size() + ", actions=" + actions);
+                return actions;
             }
-            MutableMultimap<String, PhysicalItem> availSlotsMap
-                    = Lists.mutable.ofAll(physicalItemsLocal)
-                            .select(item -> item.getType().equals("ES")
-                            && item.getName().startsWith("empty_slot_")
-                            && !item.getName().contains("_in_kit_"))
-                            .groupBy(item -> posNameToType(item.getName()));
-
-            MutableMultimap<String, Action> placePartMap
-                    = Lists.mutable.ofAll(actions.subList(endl[0], endl[1]))
-                            .select(action -> action.getType().equals(PLACE_PART) && !inKitTrayByName(action.getArgs()[placePartSlotArgIndex]))
-                            .groupBy(action -> posNameToType(action.getArgs()[placePartSlotArgIndex]));
-
-            for (String partTypeName : placePartMap.keySet()) {
-                MutableCollection<PhysicalItem> thisPartTypeSlots
-                        = availSlotsMap.get(partTypeName);
-                MutableCollection<Action> thisPartTypeActions
-                        = placePartMap.get(partTypeName);
-                if (thisPartTypeSlots.size() > thisPartTypeActions.size() && thisPartTypeActions.size() > 0) {
-                    for (PhysicalItem item : thisPartTypeSlots) {
-                        if (0 == thisPartTypeActions.count(action -> action.getArgs()[takePartArgIndex].equals(item.getFullName()))) {
-                            opActions.add(new OpAction(PLACE_PART, new String[]{item.getFullName()}, item.x, item.y, partTypeName, inKitTrayByName(item.getFullName())));
-                        }
-                    }
+            int skippedActionsCount = skippedActions.get();
+            if (skippedActionsCount > 0) {
+                logDebug("skippedActions = " + skippedActionsCount);
+                logDebug("skippedPddlActionsList.size() = " + skippedPddlActionsList.size());
+                logDebug("skippedPddlActionsList = " + skippedPddlActionsList);
+                logDebug("skippedOpActionsList = " + skippedOpActionsList);
+                logDebug("physicalItems = " + physicalItemsLocal);
+                logDebug("itemNames = " + physicalItemNames);
+                if (debug || skippedActionsCount % 2 == 1) {
+                    System.err.println("actions.size() = " + actions.size() + ", skippedActions=" + skippedActionsCount);
+                    int recheckEndl[] = new int[2];
+                    List<OpAction> recheckSkippedOpActionsList = new ArrayList<>();
+                    List<Action> recheckSkippedPddlActionsList = new ArrayList<>();
+                    List<OpAction> recheckOpActions = pddlActionsToOpActions(actions, startingIndex, recheckEndl, recheckSkippedOpActionsList, recheckSkippedPddlActionsList);
+                    logDebug("recheckOpActions = " + recheckOpActions);
+                    logDebug("recheckEndl = " + Arrays.toString(recheckEndl));
+                    logDebug("recheckSkippedPddlActionsList = " + recheckSkippedPddlActionsList);
+                    logDebug("recheckSkippedOpActionsList = " + recheckSkippedOpActionsList);
                 }
             }
-        }
-        if (opActions.size() < 3) {
-            logDebug("optimizePddlActionsWithOptaPlanner: small size of opActions list : opActions.size()=" + opActions.size() + ", actions=" + actions);
-            return actions;
-        }
-        int skippedActionsCount = skippedActions.get();
-        if (skippedActionsCount > 0) {
-            logDebug("skippedActions = " + skippedActionsCount);
-            logDebug("skippedPddlActionsList.size() = " + skippedPddlActionsList.size());
-            logDebug("skippedPddlActionsList = " + skippedPddlActionsList);
-            logDebug("skippedOpActionsList = " + skippedOpActionsList);
-            logDebug("physicalItems = " + physicalItemsLocal);
-            logDebug("itemNames = " + physicalItemNames);
-            if (debug || skippedActionsCount % 2 == 1) {
-                System.err.println("actions.size() = " + actions.size() + ", skippedActions=" + skippedActionsCount);
-                int recheckEndl[] = new int[2];
-                List<OpAction> recheckSkippedOpActionsList = new ArrayList<>();
-                List<Action> recheckSkippedPddlActionsList = new ArrayList<>();
-                List<OpAction> recheckOpActions = pddlActionsToOpActions(actions, startingIndex, recheckEndl, recheckSkippedOpActionsList, recheckSkippedPddlActionsList);
-                logDebug("recheckOpActions = " + recheckOpActions);
-                logDebug("recheckEndl = " + Arrays.toString(recheckEndl));
-                logDebug("recheckSkippedPddlActionsList = " + recheckSkippedPddlActionsList);
-                logDebug("recheckSkippedOpActionsList = " + recheckSkippedOpActionsList);
+            if (skippedActionsCount != skippedPddlActionsList.size()) {
+                System.err.println("skippedPddlActionsList = " + skippedPddlActionsList);
+                System.err.println("actions = " + actions);
+                throw new IllegalStateException("skippedPddlActionsList.size() = " + skippedPddlActionsList.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActionsCount);
             }
-        }
-        if (skippedActionsCount != skippedPddlActionsList.size()) {
-            System.err.println("skippedPddlActionsList = " + skippedPddlActionsList);
-            System.err.println("actions = " + actions);
-            throw new IllegalStateException("skippedPddlActionsList.size() = " + skippedPddlActionsList.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActionsCount);
-        }
 //        List<OpAction> opActionsCopy = new ArrayList<>(opActions);
-        OpActionPlan inputPlan = new OpActionPlan();
-        inputPlan.setUseDistForCost(false);
-        inputPlan.setUseStartEndCost(false);
-        inputPlan.setAccelleration(fastTransSpeed);
-        inputPlan.setMaxSpeed(fastTransSpeed);
-        inputPlan.setStartEndMaxSpeed(2 * fastTransSpeed);
-        inputPlan.setActions(opActions);
-        int inputRequiredCount = 0;
-        List<OpAction> inputRequiredActions = new ArrayList<>();
-        for (int i = 0; i < opActions.size(); i++) {
-            OpAction opActI = opActions.get(i);
-            if (opActI.isRequired()) {
-                inputRequiredCount++;
-                inputRequiredActions.add(opActI);
-            }
-        }
-        inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
-        inputPlan.initNextActions();
-        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
-        HardSoftLongScore score = calculator.calculateScore(inputPlan);
-        double inScore = (score.getSoftScore() / 1000.0);
-        int solveCount = solverRunCount.incrementAndGet();
-        int gfzc = generateFromZeroCount.get();
-        if (lastgfzc == gfzc) {
-            println("solveCount = " + solveCount);
-            println("generateFromZeroCount.get() = " + gfzc);
-            println("lastgfzc = " + lastgfzc);
-            println("generateSinceZeroCount.get() = " + generateSinceZeroCount.get());
-        }
-        lastgfzc = gfzc;
-        try {
-            OpActionPlan solvedPlan;
-            inputPlan.checkActionList();
-            synchronized (solverToRun) {
-                solvedPlan = solverToRun.solve(inputPlan);
-            }
-            int outputRequiredCount = 0;
-            List<OpAction> outputRequiredActions = new ArrayList<>();
-            List<OpAction> outputActions = solvedPlan.getOrderedList(false);
-            for (int i = 0; i < outputActions.size(); i++) {
-                OpAction opActI = outputActions.get(i);
+            OpActionPlan inputPlan = new OpActionPlan();
+            inputPlan.setUseDistForCost(false);
+            inputPlan.setUseStartEndCost(false);
+            inputPlan.setAccelleration(fastTransSpeed);
+            inputPlan.setMaxSpeed(fastTransSpeed);
+            inputPlan.setStartEndMaxSpeed(2 * fastTransSpeed);
+            inputPlan.setActions(opActions);
+            int inputRequiredCount = 0;
+            List<OpAction> inputRequiredActions = new ArrayList<>();
+            for (int i = 0; i < opActions.size(); i++) {
+                OpAction opActI = opActions.get(i);
                 if (opActI.isRequired()) {
-                    outputRequiredCount++;
-                    outputRequiredActions.add(opActI);
+                    inputRequiredCount++;
+                    inputRequiredActions.add(opActI);
                 }
             }
-            println("inputRequiredCount = " + inputRequiredCount);
-            println("inputRequiredActions = " + inputRequiredActions);
-            println("outputRequiredCount = " + outputRequiredCount);
-            println("outputRequiredActions = " + outputRequiredActions);
-            HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
-            assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
-            double solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
-//        logDebug("Score improved:" + (solveScore - inScore));
-            if (null != this.opDisplayJPanelInput) {
-                if (null == opDisplayJPanelInput.getOpActionPlan()) {
-                    this.opDisplayJPanelInput.setOpActionPlan(inputPlan);
-                    if (inputPlan.isUseDistForCost()) {
-                        this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -inScore));
-                    } else {
-                        this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.2f s ", -inScore));
+            inputPlan.getEndAction().setLocation(new Point2D.Double(lookForPt.getX(), lookForPt.getY()));
+            inputPlan.initNextActions();
+            EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+            HardSoftLongScore score = calculator.calculateScore(inputPlan);
+            double inScore = (score.getSoftScore() / 1000.0);
+            int solveCount = solverRunCount.incrementAndGet();
+            int gfzc = generateFromZeroCount.get();
+            if (lastgfzc == gfzc) {
+                println("solveCount = " + solveCount);
+                println("generateFromZeroCount.get() = " + gfzc);
+                println("lastgfzc = " + lastgfzc);
+                println("generateSinceZeroCount.get() = " + generateSinceZeroCount.get());
+            }
+            lastgfzc = gfzc;
+            OpActionPlan solvedPlan;
+            double solveScore;
+            try {
+                inputPlan.checkActionList();
+                synchronized (solverToRun) {
+                    solvedPlan = solverToRun.solve(inputPlan);
+                }
+                int outputRequiredCount = 0;
+                List<OpAction> outputRequiredActions = new ArrayList<>();
+                List<OpAction> outputActions = solvedPlan.getOrderedList(false);
+                for (int i = 0; i < outputActions.size(); i++) {
+                    OpAction opActI = outputActions.get(i);
+                    if (opActI.isRequired()) {
+                        outputRequiredCount++;
+                        outputRequiredActions.add(opActI);
                     }
                 }
-            }
-            double scoreDiff = solveScore - inScore;
-
-            if (null != this.opDisplayJPanelSolution) {
-                this.opDisplayJPanelSolution.setOpActionPlan(solvedPlan);
-                if (solvedPlan.isUseDistForCost()) {
-                    this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -solveScore));
-                } else {
-                    this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.2f s ", -solveScore));
+                println("inputRequiredCount = " + inputRequiredCount);
+                println("inputRequiredActions = " + inputRequiredActions);
+                println("outputRequiredCount = " + outputRequiredCount);
+                println("outputRequiredActions = " + outputRequiredActions);
+                HardSoftLongScore hardSoftLongScore = solvedPlan.getScore();
+                assert (null != hardSoftLongScore) : "solvedPlan.getScore() returned null";
+                solveScore = (hardSoftLongScore.getSoftScore() / 1000.0);
+//        logDebug("Score improved:" + (solveScore - inScore));
+                if (null != this.opDisplayJPanelInput) {
+                    if (null == opDisplayJPanelInput.getOpActionPlan()) {
+                        this.opDisplayJPanelInput.setOpActionPlan(inputPlan);
+                        if (inputPlan.isUseDistForCost()) {
+                            this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.1f mm ", -inScore));
+                        } else {
+                            this.opDisplayJPanelInput.setLabel("Input : " + String.format("%.2f s ", -inScore));
+                        }
+                    }
                 }
-            }
-            assert scoreDiff >= 0 : badScores(solveScore, inScore);
-            if (true /* scoreDiff > 0.1*/) {
-                List<Action> preStartPddlActions = new ArrayList<>(actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]));
-                List<Action> fullReplanPddlActions = new ArrayList<>(preStartPddlActions);
-                List<Action> newPddlActions = opActionsToPddlActions(solvedPlan, 0);
-                List<Action> replacedPddlActions = new ArrayList<>(actions.subList(endl[0], endl[1]));
+                double scoreDiff = solveScore - inScore;
 
-                fullReplanPddlActions.addAll(newPddlActions);
-                fullReplanPddlActions.addAll(skippedPddlActionsList);
-                List<Action> laterPddlActions = new ArrayList<>(actions.subList(endl[1], actions.size()));
-                fullReplanPddlActions.addAll(laterPddlActions);
+                if (null != this.opDisplayJPanelSolution) {
+                    this.opDisplayJPanelSolution.setOpActionPlan(solvedPlan);
+                    if (solvedPlan.isUseDistForCost()) {
+                        this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.1f mm ", -solveScore));
+                    } else {
+                        this.opDisplayJPanelSolution.setLabel("Output : " + String.format("%.2f s ", -solveScore));
+                    }
+                }
+                assert scoreDiff >= 0 : badScores(solveScore, inScore);
+                if (true /* scoreDiff > 0.1*/) {
+                    List<Action> preStartPddlActions = new ArrayList<>(actions.subList(0, startingIndex > endl[0] ? startingIndex : endl[0]));
+                    List<Action> fullReplanPddlActions = new ArrayList<>(preStartPddlActions);
+                    List<Action> newPddlActions = opActionsToPddlActions(solvedPlan, 0);
+                    List<Action> replacedPddlActions = new ArrayList<>(actions.subList(endl[0], endl[1]));
 
-                lastSkippedOpActionsList = skippedOpActionsList;
-                lastSkippedPddlActionsList = skippedPddlActionsList;
-                lastOpActionsList = opActions;
-                lastOptimizePddlItems = physicalItemsLocal;
-                lastOptimizePreStartPddlActions = preStartPddlActions;
-                lastOptimizeReplacedPddlActions = replacedPddlActions;
-                lastOptimizeNewPddlActions = newPddlActions;
-                lastOptimizeLaterPddlActions = laterPddlActions;
+                    fullReplanPddlActions.addAll(newPddlActions);
+                    fullReplanPddlActions.addAll(skippedPddlActionsList);
+                    List<Action> laterPddlActions = new ArrayList<>(actions.subList(endl[1], actions.size()));
+                    fullReplanPddlActions.addAll(laterPddlActions);
+
+                    lastSkippedOpActionsList = skippedOpActionsList;
+                    lastSkippedPddlActionsList = skippedPddlActionsList;
+                    lastOpActionsList = opActions;
+                    lastOptimizePddlItems = physicalItemsLocal;
+                    lastOptimizePreStartPddlActions = preStartPddlActions;
+                    lastOptimizeReplacedPddlActions = replacedPddlActions;
+                    lastOptimizeNewPddlActions = newPddlActions;
+                    lastOptimizeLaterPddlActions = laterPddlActions;
 //            if (fullReplanPddlActions.size() != actions.size()) {
 //                throw new IllegalStateException("skippedPddlActionsList.size() = " + skippedPddlActionsList.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
 //            }
-                return fullReplanPddlActions;
-            }
-        } catch (Exception ex) {
+                    File actionsOutFile = aprsSystem.createTempFile("actionsOut", ".txt");
+                    int sizeOut = 0;
+                    try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+                        for (int i = startingIndex; i < fullReplanPddlActions.size(); i++) {
+                            ps.println(fullReplanPddlActions.get(i).asPddlLine());
+                            sizeOut++;
+                        }
+                    }
+                    logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
+                    return fullReplanPddlActions;
+                }
+            } catch (Exception ex) {
 //            System.err.println("opActionsCopy = " + opActionsCopy);
-            System.err.println("actions = " + actions);
-            System.err.println("startingIndex = " + startingIndex);
-            System.err.println("physicalItems = " + physicalItemsLocal);
-            System.err.println("solverToRun = " + solverToRun);
-            System.err.println("solveCount = " + solveCount);
-            System.err.println("solverRunCount.get() = " + solverRunCount.get());
-            LOGGER.log(Level.SEVERE, "", ex);
-            try {
+                System.err.println("actions = " + actions);
+                System.err.println("startingIndex = " + startingIndex);
+                System.err.println("physicalItems = " + physicalItemsLocal);
+                System.err.println("solverToRun = " + solverToRun);
+                System.err.println("solveCount = " + solveCount);
+                System.err.println("solverRunCount.get() = " + solverRunCount.get());
+                LOGGER.log(Level.SEVERE, "", ex);
                 takeSimViewSnapshot(ex.toString(), physicalItemsLocal);
-            } catch (IOException ex1) {
-                LOGGER.log(Level.SEVERE, null, ex1);
+                throw new RuntimeException(ex);
             }
-            throw new RuntimeException(ex);
+            File actionsOutFile = aprsSystem.createTempFile("actionsOut", ".txt");
+            int sizeOut = 0;
+            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+                for (int i = startingIndex; i < actions.size(); i++) {
+                    ps.println(actions.get(i).asPddlLine());
+                    sizeOut++;
+                }
+            }
+            logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
+            return actions;
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
-        return actions;
     }
 
     private List<String> getPhysicalItemNames() {
@@ -3117,10 +3269,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             lastCheckKitsCorrectiveActions.addAll(correctiveActions);
                             if (!correctiveActions.isEmpty()) {
                                 List<Action> optimizedCorrectiveActions
-                                        =  optimizePddlActionsWithOptaPlanner(
-                                                        correctiveActions,
-                                                        0, // starting index
-                                                        physicalItemsLocal);
+                                        = optimizePddlActionsWithOptaPlanner(
+                                                correctiveActions,
+                                                0, // starting index
+                                                physicalItemsLocal);
                                 lastCheckKitsOptimizedCorrectiveActions.clear();
                                 lastCheckKitsOptimizedCorrectiveActions.addAll(correctiveActions);
                                 lastIndex.compareAndSet(origIndex, lastLookForIndex);
@@ -3271,7 +3423,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private volatile @Nullable
-    List<KitToCheck> lastKitsToCheckCopy = null;
+    List<KitToCheck> lastKitsToCheckCopy
+            = null;
 
     public static class ScanKitsToCheckInfo {
 
@@ -3472,11 +3625,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null == items) {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but poses == null ";
-                try {
-                    takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
                 throw new IllegalStateException(errmsg);
             } else if (items.size() < entry.getValue()) {
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
@@ -3484,11 +3633,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("kitNameItemListMap = " + kitNameItemListMap);
                 println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + items.size();
-                try {
-                    takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
                 throw new IllegalStateException(errmsg);
             }
         }
@@ -3809,39 +3954,51 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param pose optional pose to mark or null
      * @param label optional label for pose or null
      */
-    private void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    private File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(f, pose, label);
+            return aprsSystem.takeSimViewSnapshot(f, pose, label);
+        } else {
+            return new File[2];
         }
     }
 
-    public void takeSimViewSnapshot(File f, PointType point, String label) {
+    public File[] takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(f, point, label);
+            return aprsSystem.takeSimViewSnapshot(f, point, label);
+        } else {
+            return new File[2];
         }
     }
 
-    public void takeSimViewSnapshot(File f, PmCartesian pt, String label) {
+    public File[] takeSimViewSnapshot(File f, PmCartesian pt, String label) {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(f, pt, label);
+            return aprsSystem.takeSimViewSnapshot(f, pt, label);
+        } else {
+            return new File[2];
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(imgLabel, pose, label);
+            return aprsSystem.takeSimViewSnapshot(imgLabel, pose, label);
+        } else {
+            return new File[2];
         }
     }
 
-    public void takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(imgLabel, point, label);
+            return aprsSystem.takeSimViewSnapshot(imgLabel, point, label);
+        } else {
+            return new File[2];
         }
     }
 
-    private void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
+    private File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(imgLabel, pt, label);
+            return aprsSystem.takeSimViewSnapshot(imgLabel, pt, label);
+        } else {
+            return new File[2];
         }
     }
 
@@ -3852,15 +4009,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param f file to save snapshot image to
      * @param itemsToPaint items to paint in the snapshot image
      */
-    private void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    private File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(f, itemsToPaint);
+            return aprsSystem.takeSimViewSnapshot(f, itemsToPaint);
+        } else {
+            return new File[2];
         }
     }
 
-    private void takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    private File[] takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
-            aprsSystem.takeSimViewSnapshot(imgLabel, itemsToPaint);
+            return aprsSystem.takeSimViewSnapshot(imgLabel, itemsToPaint);
+        } else {
+            return new File[2];
         }
     }
 
@@ -6140,32 +6301,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final String actionsString = (action.getArgs().length == 1) ? action.getArgs()[0] : "";
         if (!atLookForPosition) {
             addMarkerCommand(out, "beforeMoveToLookPosition.lookForParts-" + actionsString, x -> {
-                try {
-                    takeSimViewSnapshot("beforeMoveToLookPosition.lookForParts-" + actionsString, null);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                takeSimViewSnapshot("beforeMoveToLookPosition.lookForParts-" + actionsString, null);
             });
             addMoveToLookForPosition(out, firstAction);
             addMarkerCommand(out, "afterMoveToLookPosition.lookForParts-" + actionsString, x -> {
-                try {
-                    takeSimViewSnapshot("afterMoveToLookPosition.lookForParts-" + actionsString, null);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                takeSimViewSnapshot("afterMoveToLookPosition.lookForParts-" + actionsString, null);
             });
             addAfterMoveToLookForDwell(out, firstAction, lastAction);
-
             if (null == externalPoseProvider) {
                 addMarkerCommand(out, "enableVisionToDatabaseUpdates", x -> {
                     setEnableVisionToDatabaseUpdates(
                             enableDatabaseUpdates,
                             immutableRequiredPartsMap);
-                    try {
-                        takeSimViewSnapshot("afterMoveToLookDwell.lookForParts-" + actionsString, null);
-                    } catch (IOException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
-                    }
+                    takeSimViewSnapshot("afterMoveToLookDwell.lookForParts-" + actionsString, null);
                 });
             }
         } else if (null == externalPoseProvider) {
@@ -6186,11 +6334,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             });
         }
         addMarkerCommand(out, "lookForParts-" + actionsString, x -> {
-            try {
-                takeSimViewSnapshot("lookForParts-" + actionsString + ".physicalItems", physicalItems);
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
-            }
+            takeSimViewSnapshot("lookForParts-" + actionsString + ".physicalItems", physicalItems);
         });
         if (action.getArgs().length >= 1) {
             if (action.getArgs()[0].startsWith("1")) {
@@ -6581,7 +6725,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private volatile boolean enableDatabaseUpdates = false;
     private volatile @Nullable
-    List<PhysicalItem> physicalItems = null;
+    List<PhysicalItem> physicalItems
+            = null;
 
     private class WaitForCompleteVisionUpdatesStartInfo {
 
@@ -6739,12 +6884,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     = aprsSystem.filterListItemWithinLimits(l);
             synchronized (this) {
                 clearPoseCache();
-                try {
-                    takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
-                    takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                }
+                takeSimViewSnapshot("unfiltered.waitForCompleteVisionUpdates" + prefix, l);
+                takeSimViewSnapshot("filtered.waitForCompleteVisionUpdates" + prefix, filteredList);
                 physicalItems = filteredList;
                 loadNewItemsIntoPoseCache(filteredList);
                 return filteredList;
@@ -7117,6 +7258,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         setCommandId(dwellCmd);
         dwellCmd.setDwellTime(skipLookDwellTime);
         cmds.add(dwellCmd);
+
     }
 
     private class CRCLCommandWrapperConsumerChecker implements CRCLCommandWrapperConsumer {

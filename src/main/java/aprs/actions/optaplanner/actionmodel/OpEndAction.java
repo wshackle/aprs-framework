@@ -112,4 +112,35 @@ public class OpEndAction implements OpActionInterface {
     OpActionInterface effectiveNext(boolean quiet) {
         return null;
     }
+    
+    public boolean isFake() {
+        return false;
+    }
+
+    @Override
+    public int getOrigId() {
+        return id;
+    }
+
+    @Override
+    public double cost(OpActionPlan plan) {
+       return Double.NaN;
+    }
+
+    @Override
+    public List<Integer> getPossibleNextOrigIds() {
+        return Collections.emptyList();
+    }
+    
+    private volatile @Nullable OpAction previous = null;
+
+    @Override
+    public @Nullable  OpAction getPrevious() {
+        return previous;
+    }
+
+    @Override
+    public void setPrevious(OpAction action) {
+        this.previous = action;
+    }
 }
