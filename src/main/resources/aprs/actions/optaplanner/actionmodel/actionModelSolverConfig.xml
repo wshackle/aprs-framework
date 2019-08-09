@@ -17,7 +17,7 @@
     <constructionHeuristic>
         <constructionHeuristicType>FIRST_FIT</constructionHeuristicType>
     </constructionHeuristic>
-    --
+    -->
 
     <localSearch>
 
