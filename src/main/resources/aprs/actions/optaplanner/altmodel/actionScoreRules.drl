@@ -1,0 +1,21 @@
+
+
+package aprs.actions.optaplanner.altmodel;
+    dialect "java"
+
+
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScoreHolder;
+import aprs.actions.optaplanner.actionmodel.OpAction;
+
+global HardSoftLongScoreHolder scoreHolder;
+
+
+rule "distanceToNext"
+    when
+        OpAltMove(  $distanceToNext : distToNextLong)
+    then
+        //System.out.println("distanceToNext="+$distanceToNext);
+        scoreHolder.addSoftConstraintMatch(kcontext, - $distanceToNext);
+end
+
+

@@ -4442,7 +4442,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             aprsSystem.logEvent("safeAboutCount", count);
             aprsSystem.logToSuper(aprsSystem.getTaskName() + ":safeAboutCount=" + count);
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
         appendGenerateAbortLog(label + ".incSafeAbortCount", actionsListSize, isReverseFlag(), replanFromIndex.get(), count, -1);
@@ -4454,7 +4454,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             aprsSystem.takeSimViewSnapshot("safeAbortRequestCount=" + count, crclGenerator.getPhysicalItems());
             aprsSystem.logEvent("safeAbortRequestCount", count);
             aprsSystem.logToSuper(aprsSystem.getTaskName() + ":safeAbortRequestCount=" + count);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
         appendGenerateAbortLog("incSafeAbortRequestCount", actionsListSize, isReverseFlag(), replanFromIndex.get(), count, -1);
@@ -4903,7 +4903,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolHolderPositionsCachedTable.setRowCount(0);
         Map<String, PoseType> toolHolderPoseMap
                 = crclGenerator.getToolHolderPoseMap();
-        try (CSVParser parser = new CSVParser(new FileReader(f), Utils.preferredCsvFormat())) {
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
@@ -6610,6 +6610,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final int startReplanFromIndex = this.getReplanFromIndex();
         checkReverse();
         int sarc2;
+        if(reverseFlag) {
+            System.out.println("reverseFlag = " + reverseFlag);
+        }
         synchronized (actionsList) {
             List<Action> actionListDebugCopy =  new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();

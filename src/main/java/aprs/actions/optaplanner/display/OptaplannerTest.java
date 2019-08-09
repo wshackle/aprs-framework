@@ -23,22 +23,29 @@
 package aprs.actions.optaplanner.display;
 
 import aprs.actions.optaplanner.actionmodel.OpAction;
+import aprs.actions.optaplanner.actionmodel.OpActionInterface;
+import aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.OpActionType;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.misc.Utils;
 
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import javax.swing.JFrame;
+import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.impl.heuristic.move.AbstractMove;
+import org.optaplanner.core.impl.score.director.ScoreDirector;
 
 /**
  * Class for Demonstrating/Testing the use of OptaPlanner to optimize a plan for
@@ -56,11 +63,31 @@ public class OptaplannerTest {
      *
      * @param args not used
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        
+        
+        long seed = 2001;
+        for (int i = 0; i < args.length -1; i++) {
+            String arg = args[i];
+            switch(arg) {
+                case "--seed":
+                    seed = Long.parseLong(args[i+1]);
+                    i++;
+                    break;
+            }
+        }
         OpActionPlan ap = new OpActionPlan();
 
-        Random rand = new Random();
+        
+        
+        Random rand;
+        if(seed > 0) {
+            rand = new Random();
+        } else {
+            rand = new Random(seed);
+        }
 
+        OpAction.setAllowedPartTypes("A", "B", "C");
         // Create an initial plan with some set of parts to pickup and drop off.
         List<OpAction> initList = Arrays.asList(
                 new OpAction("pickup A3", 5 + rand.nextDouble(), rand.nextDouble(), OpActionType.PICKUP, "A", false),
@@ -100,8 +127,10 @@ public class OptaplannerTest {
         ap.setAccelleration(0.1);
         ap.setMaxSpeed(0.25);
         ap.setStartEndMaxSpeed(1.0);
-        Collections.shuffle(shuffledList);
+//        Collections.shuffle(shuffledList);
         ap.setActions(shuffledList);
+        ap.setUseDistForCost(true);
+        ap.setUseStartEndCost(false);
 
         // Set the location to return to after the task is complete.
         ap.getEndAction().setLocation(new Point2D.Double(7, 0));
@@ -120,12 +149,92 @@ public class OptaplannerTest {
         SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
 
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
+        
+        ap.saveActionList(File.createTempFile("Optaplanner_Test_input_"+seed+"_"+Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
+//        OpActionPlan apOut = solver.solve(ap);
+        final ScoreDirector<OpActionPlan> scoreDirector
+                = solver.getScoreDirectorFactory().buildScoreDirector();
+        scoreDirector.setWorkingSolution(ap);
+
+        OpActionMoveListFactory moveFactory = new OpActionMoveListFactory();
+        List<AbstractMove<OpActionPlan>> moveList
+                = moveFactory
+                        .createMoveList(ap);
+//        List<String> origActionList = new ArrayList<>(ap.getOrderedListNames());
+//        System.out.println("origActionList = " + origActionList);
+//        File origActionListFile = File.createTempFile("origActionList", ".csv");
+//        System.out.println("origActionListFile = " + origActionListFile);
+//        ap.saveActionList(origActionListFile);
+//        for (int i = 0; i < moveList.size(); i++) {
+//            AbstractMove<OpActionPlan> moveI = moveList.get(i);
+//            if (moveI instanceof OpActionFrontBackMove) {
+//                OpActionFrontBackMove moveIFB = (OpActionFrontBackMove) moveI;
+//                System.out.println("moveIFB = " + moveIFB);
+//                if (!moveIFB.isMoveDoable(scoreDirector)) {
+//                    continue;
+//                }
+//                OpActionFrontBackMove reverseMoveI = moveIFB.createUndoMove(scoreDirector);
+//
+//                moveIFB.doMove(scoreDirector);
+//                List<String> afterMove = new ArrayList<>(ap.getOrderedListNames());
+//                System.out.println("afterMove = " + afterMove);
+//                File afterMoveFile = File.createTempFile("afterMove", ".csv");
+//                System.out.println("afterMoveFile = " + afterMoveFile);
+//                ap.saveActionList(afterMoveFile);
+//                if (afterMove.size() != origActionList.size()) {
+//                    throw new RuntimeException("afterMove.size() != origActionList.size() : afterMove.size()=" + afterMove.size() + ", origActionList.size()=" + origActionList.size());
+//                }
+//                
+//                System.out.println("reverseMoveI = " + reverseMoveI);
+//                boolean canReverse = reverseMoveI.isMoveDoable(scoreDirector);
+//                reverseMoveI.doMove(scoreDirector);
+//                List<String> afterReverse = new ArrayList<>(ap.getOrderedListNames());
+//                System.out.println("afterReverse = " + afterReverse);
+//                File afterReverseFile = File.createTempFile("afterReverse", ".csv");
+//                System.out.println("afterReverseFile = " + afterReverseFile);
+//                ap.saveActionList(afterReverseFile);
+//                if (afterReverse.size() != origActionList.size()) {
+//                    throw new RuntimeException("afterReverse.size() != origActionList.size() : afterReverse.size()=" + afterReverse.size() + ", origActionList.size()=" + origActionList.size());
+//                }
+//                for (int j = 0; j < afterReverse.size(); j++) {
+//                    String actionAfterReverseJ = afterReverse.get(j);
+//                    String actionOrigJ = origActionList.get(j);
+//                    if (!actionAfterReverseJ.equals(actionOrigJ)) {
+//                        throw new RuntimeException("j=" + j + ",actioinAfterReverseJ=" + actionAfterReverseJ + ",actionOrigJ=" + actionOrigJ);
+//                    }
+//                }
+//            }
+//
+//        }
+        Score scoreFromDrl
+                = scoreDirector.calculateScore();
+
+        System.out.println("scoreFromDrl = " + scoreFromDrl);
+        long total = 0;
+        for (int i = 0; i < ap.getActions().size(); i++) {
+            OpActionInterface apI = ap.getActions().get(i);
+            if (apI instanceof OpAction) {
+                OpAction act = (OpAction) apI;
+                if (!act.isFake() && act.getNext() != null && !act.getNext().isFake() && act.getLocation() != null && act.getNext().getLocation() != null) {
+                    final long distToNextLong = act.getDistToNextLong();
+//                    System.out.println("distToNextLong = " + distToNextLong);
+                    double cost = act.cost(ap);
+//                    System.out.println("cost = " + cost);
+                    if (Math.abs(cost * 1000.0 - distToNextLong) > 2.0) {
+//                        System.out.println("act = " + act);
+                    }
+                    total += distToNextLong;
+                }
+            }
+        }
+        System.out.println("total = " + total);
+//        System.exit(0);
 
         // Setup callback to have the solver print some status as it runs.
         solver.addEventListener(e -> System.out.println("After " + e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
         final List<OpAction> apActions = ap.getActions();
 
-        if(null == apActions) {
+        if (null == apActions) {
             throw new NullPointerException("ap.getActions() returned null");
         }
         List<OpAction> apActionsCopy = new ArrayList<>(apActions);
@@ -136,37 +245,40 @@ public class OptaplannerTest {
         OpActionPlan solvedActionPlan = solver.solve(ap);
 
         long t1 = System.currentTimeMillis();
-        HardSoftLongScore bestScore = calculator.calculateScore(solvedActionPlan);
-        OpActionPlan bestPlan = solvedActionPlan;
-        ap.checkActionList();
-        for (int i = 0; i < 20; i++) {
-            ap.checkActionList();
-            OpActionPlan shuffledPlan = OpActionPlan.cloneAndShufflePlan(ap);
-            ap.checkActionList();
-            shuffledPlan.checkActionList();
-            solvedActionPlan = solver.solve(shuffledPlan);
-            ap.checkActionList();
-            shuffledPlan.checkActionList();
-            solvedActionPlan.checkActionList();
-            score = calculator.calculateScore(solvedActionPlan);
-            System.out.println("score = " + score);
-            if (score.getHardScore() > bestScore.getHardScore()
-                    || (score.getHardScore() == bestScore.getHardScore() && score.getSoftScore() > bestScore.getSoftScore())) {
-                bestScore = score;
-                bestPlan = solvedActionPlan;
-            }
-        }
-
-        long t2 = System.currentTimeMillis();
-        System.out.println("(t1-t0) = " + (t1 - t0));
-        System.out.println("(t2-t0) = " + (t2 - t0));
+        HardSoftLongScore solvedActionPlanScore = calculator.calculateScore(solvedActionPlan);
+//        OpActionPlan bestPlan = solvedActionPlan;
+//        ap.checkActionList();
+//        for (int i = 0; i < 20; i++) {
+//            ap.checkActionList();
+//            OpActionPlan shuffledPlan = OpActionPlan.cloneAndShufflePlan(ap);
+//            ap.checkActionList();
+//            shuffledPlan.checkActionList();
+//            solvedActionPlan = solver.solve(shuffledPlan);
+//            ap.checkActionList();
+//            shuffledPlan.checkActionList();
+//            solvedActionPlan.checkActionList();
+//            score = calculator.calculateScore(solvedActionPlan);
+//            System.out.println("score = " + score);
+//            if (score.getHardScore() > bestScore.getHardScore()
+//                    || (score.getHardScore() == bestScore.getHardScore() && score.getSoftScore() > bestScore.getSoftScore())) {
+//                bestScore = score;
+//                bestPlan = solvedActionPlan;
+//            }
+//        }
+//
+//        long t2 = System.currentTimeMillis();
+//        System.out.println("(t1-t0) = " + (t1 - t0));
+//        System.out.println("(t2-t0) = " + (t2 - t0));
 
         // Print the results
-        System.out.println("bestPlan = " + bestPlan.computeString());
-        System.out.println("bestPlan.getActions() = " + bestPlan.getActions());
+        ap.saveActionList(File.createTempFile("Optaplanner_Test_solvedActionPlan_"+seed+"_"+Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
+
+        System.out.println("bestPlan = " + solvedActionPlan.computeString());
+        
+        System.out.println("bestPlan.getActions() = " + solvedActionPlan.getActions());
 //        score = calculator.calculateScore(bestPlan);
-        System.out.println("bestScore = " + bestScore);
-        aprs.actions.optaplanner.display.OptiplannerDisplayJFrame.showPlan(ap, bestPlan, "Solution: " + bestScore.getSoftScore(), JFrame.EXIT_ON_CLOSE);
+        System.out.println("bestScore = " + solvedActionPlanScore);
+        aprs.actions.optaplanner.display.OptiplannerDisplayJFrame.showPlan(ap, solvedActionPlan, "Solution: " + solvedActionPlanScore.getSoftScore(), JFrame.EXIT_ON_CLOSE);
     }
 
     private static void printInfo(List<OpAction> initList, String partType) {
@@ -176,17 +288,17 @@ public class OptaplannerTest {
         int requiredDropoffs = 0;
         for (int i = 0; i < initList.size(); i++) {
             OpAction a = initList.get(i);
-            if(!a.getPartType().equals(partType)) {
+            if (!a.getPartType().equals(partType)) {
                 continue;
             }
-            if(a.getOpActionType() == PICKUP) {
-                if(a.isRequired()) {
+            if (a.getOpActionType() == PICKUP) {
+                if (a.isRequired()) {
                     requiredPickups++;
                 } else {
                     optionalPickups++;
                 }
-            } else if(a.getOpActionType() == DROPOFF) {
-                if(a.isRequired()) {
+            } else if (a.getOpActionType() == DROPOFF) {
+                if (a.isRequired()) {
                     requiredDropoffs++;
                 } else {
                     optionalDropoffs++;

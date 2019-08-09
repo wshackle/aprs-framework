@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -118,7 +119,22 @@ public class OpDisplayJPanel extends JPanel {
 
     private volatile @Nullable
     Point mouseDownPoint = null;
+    
+    private final ConcurrentLinkedDeque<Runnable> actionsModifiedListeners = new ConcurrentLinkedDeque();
 
+    private void notifyActionsModifiedListeners() {
+        for(Runnable r : actionsModifiedListeners) {
+            r.run();
+        }
+    }
+    public void addActionsModifiedListener(Runnable r) {
+        actionsModifiedListeners.add(r);
+    }
+    
+    public void removeActionsModifiedListener(Runnable r) {
+        actionsModifiedListeners.remove(r);
+    }
+    
     private final MouseMotionListener mml = new MouseMotionListener() {
         @Override
         public void mouseDragged(MouseEvent e) {
@@ -128,11 +144,12 @@ public class OpDisplayJPanel extends JPanel {
                 int h = dim.height;
                 int w = keyVisible ? (dim.width - keyWidth) : dim.width;
                 final List<OpAction> closeActionsFinal = OpDisplayJPanel.this.closeActions;
-                if (null != closeActionsFinal) {
+                if (null != closeActionsFinal && !closeActionsFinal.isEmpty()) {
                     for (OpAction action : closeActionsFinal) {
                         action.getLocation().x += (maxX - minX) * ((e.getPoint().x - mouseDownPointFinal.x) / ((double) w));
                         action.getLocation().y += (maxY - minY) * ((e.getPoint().y - mouseDownPointFinal.y) / ((double) h));
                     }
+                    notifyActionsModifiedListeners();
                 }
                 mouseDownPoint = e.getPoint();
             }
@@ -523,7 +540,7 @@ public class OpDisplayJPanel extends JPanel {
     private final JCheckBoxMenuItem showPossibleNextMenuItem = new JCheckBoxMenuItem("Show Possible Next(s)", false);
     private final JCheckBoxMenuItem showSkippableNextMenuItem = new JCheckBoxMenuItem("Show Skippable Next(s)", false);
     private final JCheckBoxMenuItem showFakeActionsMenuItem = new JCheckBoxMenuItem("Show Fake Actions(s)", false);
-    private final JCheckBoxMenuItem showSkippedActionsMenuItem = new JCheckBoxMenuItem("Show Skipped Actions(s)", false);
+    private final JCheckBoxMenuItem showSkippedActionsMenuItem = new JCheckBoxMenuItem("Show Skipped Actions(s)", true);
     private final ConcurrentHashMap<String, Point2D.Double> fakeLocationsMap = new ConcurrentHashMap<>();
     private final Random locRandom = new Random();
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<solver>
+    <!-- <environmentMode>FAST_ASSERT</environmentMode> -->
+
+    <!-- Domain model configuration -->
+    <solutionClass>aprs.actions.optaplanner.altmodel.OpAltPlan</solutionClass>
+    <entityClass>aprs.actions.optaplanner.altmodel.OpAltMove</entityClass>
+
+    <!-- Score configuration -->
+    <scoreDirectorFactory>
+        <scoreDrl>aprs/actions/optaplanner/altmodel/actionScoreRules.drl</scoreDrl> 
+        <!--  <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass> -->
+    </scoreDirectorFactory>
+
+    <!-- Optimization algorithms configuration -->
+    <constructionHeuristic>
+        <constructionHeuristicType>FIRST_FIT</constructionHeuristicType>
+    </constructionHeuristic>
+
+
+    <localSearch>
+        <localSearchType>TABU_SEARCH</localSearchType>
+        <termination>
+            <unimprovedMillisecondsSpentLimit>50</unimprovedMillisecondsSpentLimit>
+        </termination>
+    </localSearch>
+
+    
+</solver>
