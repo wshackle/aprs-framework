@@ -17,6 +17,8 @@ public interface OpActionInterface {
 
     public int getId();
 
+    public int getOrigId();
+
     public String getName();
 
     public OpActionType getOpActionType();
@@ -26,7 +28,13 @@ public interface OpActionInterface {
     public @Nullable
     OpActionInterface getNext();
 
+    public @Nullable OpAction getPrevious();
+
+    public void setPrevious(OpAction action);
+
     public List<Integer> getPossibleNextIds();
+
+    public List<Integer> getPossibleNextOrigIds();
 
     public Point2D.Double getLocation();
 
@@ -43,4 +51,8 @@ public interface OpActionInterface {
     OpActionInterface effectiveNext(boolean quiet);
 
     public String shortString();
+
+    public boolean isFake();
+
+    public double cost(OpActionPlan plan);
 }

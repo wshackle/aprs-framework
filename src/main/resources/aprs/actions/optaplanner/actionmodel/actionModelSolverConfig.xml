@@ -8,18 +8,30 @@
 
     <!-- Score configuration -->
     <scoreDirectorFactory>
-         <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass> 
+        <!--  <scoreDrl>aprs/actions/optaplanner/actionmodel/actionScoreRules.drl</scoreDrl> -->
+        <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass>
     </scoreDirectorFactory>
 
     <!-- Optimization algorithms configuration -->
+    <!--
     <constructionHeuristic>
         <constructionHeuristicType>FIRST_FIT</constructionHeuristicType>
     </constructionHeuristic>
-
+    -->
 
     <localSearch>
+
+        <moveListFactory>
+            <moveListFactoryClass>aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory</moveListFactoryClass>
+        </moveListFactory>
+        <acceptor>
+            <simulatedAnnealingStartingTemperature>0hard/1000soft</simulatedAnnealingStartingTemperature>
+        </acceptor>
+        <forager>
+            <acceptedCountLimit>1</acceptedCountLimit>
+        </forager>
         <termination>
-            <unimprovedMillisecondsSpentLimit>50</unimprovedMillisecondsSpentLimit>
+            <unimprovedMillisecondsSpentLimit>100</unimprovedMillisecondsSpentLimit>
         </termination>
     </localSearch>
 

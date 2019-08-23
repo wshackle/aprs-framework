@@ -5037,7 +5037,7 @@ public class Supervisor {
         logEvent("fillTraysAndNextInnerRepeat: l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
         try {
             sys.takeSimViewSnapshot("fillTraysAndNextInnerRepeat:" + nextCount + ",pos=" + conveyorPos() + ",lastNonEmptyPos=" + lastNonEmptyPos, l);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (!l.isEmpty()) {
@@ -5128,7 +5128,7 @@ public class Supervisor {
         logEvent("emptyTraysAndPrevInnerRepeat: l = " + l.stream().map(PhysicalItem::getName).collect(Collectors.toList()));
         try {
             sys.takeSimViewSnapshot("emptyTraysAndPrevInnerRepeat:" + prevCount, l);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (!l.isEmpty()) {
@@ -5196,7 +5196,7 @@ public class Supervisor {
         sys.clearVisionRequiredParts();
         try {
             sys.takeSimViewSnapshot("fillTraysAndNextWithItemList", items);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return sys.fillKitTraysWithItemList(items, useUnassignedParts)
@@ -5282,7 +5282,7 @@ public class Supervisor {
                             final String info = "checkedConveyorVisNext:" + convNextCount + ",pos=" + conveyorPos() + ",lastNonEmptyPos=" + lastNonEmptyPos;
                             logEvent(info);
                             sys.takeSimViewSnapshot(info, l);
-                        } catch (IOException ex) {
+                        } catch (Exception ex) {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     })
@@ -5365,7 +5365,7 @@ public class Supervisor {
                             final String info = "checkedConveyorVisPrev:" + convPrevCount + ",pos=" + conveyorPos() + ",lastNonEmptyPos=" + lastNonEmptyPos;
                             logEvent(info);
                             sys.takeSimViewSnapshot(info, l);
-                        } catch (IOException ex) {
+                        } catch (Exception ex) {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     })
@@ -5392,7 +5392,7 @@ public class Supervisor {
         sys.clearVisionRequiredParts();
         try {
             sys.takeSimViewSnapshot("emptyTraysAndPrevWithItemList", items);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return sys.emptyKitTraysWithItemList(items)
