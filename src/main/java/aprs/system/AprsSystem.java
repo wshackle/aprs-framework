@@ -2651,7 +2651,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVParser parser = new CSVParser(new FileReader(csvFile), Utils.preferredCsvFormat())) {
+        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2674,7 +2674,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile), Utils.preferredCsvFormat().withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile), CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
                 printer.printRecord(minMax.toObjArray());
@@ -3545,7 +3545,7 @@ public class AprsSystem implements SlotOffsetProvider {
             });
 
     private void updateRunProgramServiceThread() {
-        if(Thread.currentThread() != runProgramServiceThread) {
+        if (Thread.currentThread() != runProgramServiceThread) {
             try {
                 runProgramService.submit(() -> runProgramServiceThread = Thread.currentThread())
                         .get(1000, TimeUnit.MILLISECONDS);
@@ -3554,7 +3554,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
     }
-    
+
     private @Nullable
     XFutureVoid connectDatabaseFuture = null;
 
@@ -4923,11 +4923,11 @@ public class AprsSystem implements SlotOffsetProvider {
             if (!alreadySelected) {
                 setRobotCrclGUIStartupSelected(true);
             }
-            if(null == runProgramServiceThread)  {
+            if (null == runProgramServiceThread) {
                 updateRunProgramServiceThread();
             }
             CrclSwingClientJInternalFrame newCrclClientJInternalFrame = new CrclSwingClientJInternalFrame(this.aprsSystemDisplayJFrame);
-            newCrclClientJInternalFrame.setCrclSocketActionExecutorServiceAndThread(runProgramService,runProgramServiceThread);
+            newCrclClientJInternalFrame.setCrclSocketActionExecutorServiceAndThread(runProgramService, runProgramServiceThread);
             newCrclClientJInternalFrame.setTempLogDir(Utils.getlogFileDir());
             newCrclClientJInternalFrame.setPropertiesFile(crclClientPropertiesFile());
             newCrclClientJInternalFrame.loadProperties();
@@ -4975,11 +4975,11 @@ public class AprsSystem implements SlotOffsetProvider {
     private void startSimServerJInternalFrameOnDisplay() {
         File propsFile = crclSimServerPropertiesFile();
         try {
-            ProtectionDomain simServProt  = SimServerJInternalFrame.class.getProtectionDomain();
+            ProtectionDomain simServProt = SimServerJInternalFrame.class.getProtectionDomain();
             System.out.println("simServProt = " + simServProt);
-            ProtectionDomain crclSocketProt  = CRCLSocket.class.getProtectionDomain();
+            ProtectionDomain crclSocketProt = CRCLSocket.class.getProtectionDomain();
             System.out.println("crclSocketProt = " + simServProt);
-            
+
             if (null == simServerJInternalFrame) {
                 boolean alreadySelected = isRobotCrclSimServerStartupSelected();
                 if (!alreadySelected) {
@@ -5857,7 +5857,7 @@ public class AprsSystem implements SlotOffsetProvider {
         List<PhysicalItem> filteredItems = filterListItemWithinLimits(l);
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly, useUnassignedParts);
@@ -5870,7 +5870,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             takeSimViewSnapshot("fillKitTrays", items);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
@@ -5971,7 +5971,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
             try {
                 takeSimViewSnapshot("fillKitTraysInternal" + ex.getMessage(), filledkitTraysList);
-            } catch (IOException ex1) {
+            } catch (Exception ex1) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
             }
             if (ex instanceof RuntimeException) {
@@ -5994,7 +5994,7 @@ public class AprsSystem implements SlotOffsetProvider {
             List<PhysicalItem> unassignedParts = new ArrayList<>(fillInfo.getUnassignedParts());
             try {
                 takeSimViewSnapshot("createFilledKitsList_unassignedParts", unassignedParts);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
             availableParts.addAll(unassignedParts);
@@ -6017,7 +6017,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 return Collections.emptyList();
             }
             takeSimViewSnapshot("createFilledKitsList_emptyKitSlotsList", emptyKitSlotsList);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         List<PhysicalItem> movedPartsList = new ArrayList<>();
@@ -6055,13 +6055,13 @@ public class AprsSystem implements SlotOffsetProvider {
                 return Collections.emptyList();
             }
             takeSimViewSnapshot("createFilledKitsList_movedPartsList", movedPartsList);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         outputList.addAll(availableParts);
         try {
             takeSimViewSnapshot("createFilledKitsList_outputList", outputList);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         final int outputListSize = outputList.size();
@@ -6077,7 +6077,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 takeSimViewSnapshot("createFilledKitsList_fillInfo.partsInPartsTrays", partsInPartsTrays);
                 takeSimViewSnapshot("createFilledKitsList_fillInfo.getUnassignedParts()", fillInfo.getUnassignedParts());
                 takeSimViewSnapshot("createFilledKitsList_fillInfo.getOrigItems()", fillInfo.getOrigItems());
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
             final String errMsg = outputListSize + " != " + fillOrigItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
@@ -6116,7 +6116,7 @@ public class AprsSystem implements SlotOffsetProvider {
         List<PhysicalItem> filteredItems = filterListItemWithinLimits(l);
         try {
             takeSimViewSnapshot("emptyKitTraysWithItemList.filteredItems", filteredItems);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         return emptyKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showEmptiedListOnly);
@@ -6133,7 +6133,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             takeSimViewSnapshot("emptyKitTrays", items);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         TrayFillInfo emptyInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
@@ -6212,7 +6212,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
             try {
                 takeSimViewSnapshot("emptyKitTraysInternal" + ex.getMessage(), emptiedkitTraysList);
-            } catch (IOException ex1) {
+            } catch (Exception ex1) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
             }
             if (ex instanceof RuntimeException) {
@@ -6268,7 +6268,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
         try {
             takeSimViewSnapshot("createEmptiedKitsList_outputList", outputList);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (outputSizeIncorrect) {
@@ -6278,7 +6278,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 takeSimViewSnapshot("createEmptiedKitsList_trayFillInfo.getPartsInKit()", trayFillInfo.getPartsInKit());
                 takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getUnassignedParts()", trayFillInfo.getUnassignedParts());
                 takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getOrigItems()", trayFillInfo.getOrigItems());
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             }
             final String errMsg = outputListSize + " != " + origItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
@@ -8578,7 +8578,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == propDefaults) {
             initPropertiesFileInfo();
         }
-        if(null == propDefaults) {
+        if (null == propDefaults) {
             throw new NullPointerException("propDefaults");
         }
         propertiesDirectory = propDefaults.getPropDir();
@@ -8596,10 +8596,13 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param f file to save snapshot image to
      * @param pose optional pose to mark or null
      * @param label optional label for pose or null
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    public File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8610,10 +8613,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param f file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
+     * @return array of filenames logged first image file, then csv file
+     *
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label) {
+    public File[] takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8624,10 +8631,13 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param f file to save snapshot image to
      * @param point optional point to mark or null
      * @param label optional label for pose or null
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
+    public File[] takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8638,11 +8648,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param imgLabel string that will be included in the image file name
      * @param pose optional pose to mark or null
      * @param poseLabel optional label for pose or null
+     * @return array of filenames logged first image file, then csv file
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8653,11 +8666,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param imgLabel string that will be included in the image file name
      * @param pt optional point to mark or null
      * @param pointLabel optional label for point or null
+     * @return array of filenames logged first image file, then csv file
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8668,11 +8684,15 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param imgLabel string that will be included in the image file name
      * @param pt optional point to mark or null
      * @param pointLabel optional label for point or null
+     * @return array of filenames logged first image file, then csv file
+     *
      * @throws IOException if writing the file fails
      */
-    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8681,11 +8701,15 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @param f file to save snapshot image to
      * @param itemsToPaint list of items to paint
+     * @return array of filenames logged first image file, then csv file
+     *
      */
-    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    public File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
+            return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8695,17 +8719,40 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param imgLabel string that will be added to the filename along with
      * timestamp and extention
      * @param itemsToPaint list of items to paint
-     * @throws java.io.IOException problem writing to the file
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             if (null == itemsToPaint) {
-                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile("nullItems_" + imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+                final File imgFile;
+                try {
+                    imgFile = createImageTempFile("nullItems_" + imgLabel);
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    return new File[2];
+                }
+                return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
             } else if (itemsToPaint.isEmpty()) {
-                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile("emptyItems_" + imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+                final File imgFile;
+                try {
+                    imgFile = createImageTempFile("emptyItems_" + imgLabel);
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    return new File[2];
+                }
+                return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
             } else {
-                this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, snapShotWidth, snapShotHeight);
+                final File imgFile;
+                try {
+                    imgFile = createImageTempFile(imgLabel);
+                } catch (IOException ex) {
+                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    return new File[2];
+                }
+                return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
             }
+        } else {
+            return new File[2];
         }
     }
 
@@ -8718,10 +8765,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
+     * @return array of filenames logged first image file, then csv file
+     *
      */
-    public void takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
+    public File[] takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
+            return object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8734,10 +8785,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
+     * @return array of filenames logged first image file, then csv file
+     *
      */
-    public void takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
+    public File[] takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
+            return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8750,10 +8805,14 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param label optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
+     * @return array of filenames logged first image file, then csv file
+     *
      */
-    public void takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
+    public File[] takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
+            return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8766,11 +8825,20 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param poseLabel optional label for pose or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, w, h);
+            final File imgFile;
+            try {
+                imgFile = createImageTempFile(imgLabel);
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                return new File[2];
+            }
+            return object2DViewJInternalFrame.takeSnapshot(imgFile, pose, poseLabel, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8783,11 +8851,20 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param pointLabel optional label for point or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h)  {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
+            final File imgFile;
+            try {
+                imgFile = createImageTempFile(imgLabel);
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                return new File[2];
+            }
+            return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8800,11 +8877,20 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param pointLabel optional label for point or null
      * @param w width of snapshot image
      * @param h height of snapshot image
-     * @throws IOException if writing the file fails
+     * @return array of filenames logged first image file, then csv file
      */
-    public void takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, w, h);
+            final File imgFile;
+            try {
+                imgFile = createImageTempFile(imgLabel);
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                return new File[2];
+            }
+            return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8816,10 +8902,12 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param w width of snapshot image
      * @param h height of snapshot image
      */
-    public void takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+    public File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
+            return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -8831,12 +8919,16 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param itemsToPaint list of items to paint
      * @param w width of image to create
      * @param h height of image to create
+     * @return array of filenames logged first image file, then csv file
+     *
      * @throws java.io.IOException problem writing to the file
      */
-    public void takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
+    public File[] takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
-            this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, w, h);
+            return this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, w, h);
+        } else {
+            return new File[2];
         }
     }
 
@@ -10069,5 +10161,13 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             crclClientJInternalFrame.setPreClosing(preClosing);
         }
+    }
+    
+    public  @Nullable File getObject2DViewLogLinesFile() {
+        return this.object2DViewJInternalFrame.getLogLinesFile();
+    }
+    
+    public  @Nullable File getObject2DViewPropertiesFile() {
+        return this.object2DViewJInternalFrame.getPropertiesFile();
     }
 }

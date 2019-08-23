@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import aprs.actions.executor.OptaPlannerResultJFrame;
 import aprs.misc.Utils;
 import aprs.supervisor.main.Supervisor;
 import static aprs.misc.Utils.copyOfRangeNonNullsOnly;
@@ -50,12 +51,10 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
-import crcl.ui.LauncherJFrame;
 import crcl.ui.misc.MultiLineStringJPanel;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.io.FileReader;
+import java.util.Properties;
 import javax.swing.JMenuItem;
-import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  *
@@ -71,6 +70,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @UIEffect
     public LauncherAprsJFrame() {
         AprsCommonLogger.instance();
+        if (!launchPropertiesLoaded) {
+            loadLaunchProperties();
+        }
         initComponents();
         try {
             setIconImage(IconImages.BASE_IMAGE);
@@ -124,6 +126,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleMultiSystemTest = new javax.swing.JMenuItem();
         jMenuItemTenCycleMultiSystemTestNoDisables = new javax.swing.JMenuItem();
+        jMenuItemReviewLastOptaPlannerResults = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemLaunchExternal = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetLaunchFile = new javax.swing.JMenuItem();
@@ -300,6 +303,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         });
         jMenuSpecialTests.add(jMenuItemTenCycleMultiSystemTestNoDisables);
 
+        jMenuItemReviewLastOptaPlannerResults.setText("Review Last Run Optaplanner Results ...");
+        jMenuItemReviewLastOptaPlannerResults.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemReviewLastOptaPlannerResultsActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemReviewLastOptaPlannerResults);
+
         jMenuBar1.add(jMenuSpecialTests);
 
         jMenu2.setText("Launcher Settings");
@@ -365,7 +376,27 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 
-    private final static File lastLaunchFileFile = new File(System.getProperty("aprsLastLaunchFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsLaunchFile.txt"));
+    private final static File LAST_LAUNCH_FILE_FILE = new File(System.getProperty("aprsLastLaunchFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsLaunchFile.txt"));
+
+    private final static File LAUNCH_PROPERTIES_FILE = new File(System.getProperty("aprsLaunchPropertiesFile", Utils.getAprsUserHomeDir() + File.separator + ".aprsLaunchProperties.txt"));
+
+    private static boolean launchPropertiesLoaded = false;
+
+    private static void loadLaunchProperties() {
+        launchPropertiesLoaded = true;
+        try {
+            if (LAUNCH_PROPERTIES_FILE.exists() && LAUNCH_PROPERTIES_FILE.canRead()) {
+                Properties props = new Properties();
+                props.load(new FileReader(LAUNCH_PROPERTIES_FILE));
+                String defaultCyclesString = props.getProperty("defaultCycles");
+                if (null != defaultCyclesString && defaultCyclesString.length() > 0) {
+                    defaultCycles = Integer.parseInt(defaultCyclesString);
+                }
+            }
+        } catch (Exception exception) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "LAUNCH_PROPERTIES_FILE=" + LAUNCH_PROPERTIES_FILE, exception);
+        }
+    }
 
     /**
      * Get the location of the last text file with lines to execute in the
@@ -376,8 +407,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      */
     private static @Nullable
     File getLastLaunchFile() throws IOException {
-        if (lastLaunchFileFile.exists()) {
-            String firstLine = readFirstLine(lastLaunchFileFile);
+        if (LAST_LAUNCH_FILE_FILE.exists()) {
+            String firstLine = readFirstLine(LAST_LAUNCH_FILE_FILE);
             if (null != firstLine && firstLine.length() > 0) {
                 return new File(firstLine);
             }
@@ -390,7 +421,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(lastLaunchFileFile))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -548,7 +579,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     private static void optaplannerTest() {
-        OptaplannerTest.main(new String[]{});
+        try {
+            OptaplannerTest.main(new String[]{});
+        } catch (Exception ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private static void prevSingle() {
@@ -657,14 +692,30 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
+    private static int defaultCycles = 10;
+
+    private static void saveLaunchProperties() {
+        try {
+            Properties props = new Properties();
+            props.put("defaultCycles", Integer.toString(defaultCycles));
+            props.store(new FileWriter(LAUNCH_PROPERTIES_FILE), "");
+        } catch (Exception exception) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "LAUNCH_PROPERTIES_FILE=" + LAUNCH_PROPERTIES_FILE, exception);
+        }
+    }
+
     @UIEffect
     private void jMenuItemMultiCycleMultiSystemTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
-        final String cyclesString = JOptionPane.showInputDialog(this, "Number of cycles?", 10);
-        if(cyclesString == null || cyclesString.length() < 1) {
+        final String cyclesString = JOptionPane.showInputDialog(this, "Number of cycles?", defaultCycles);
+        if (cyclesString == null || cyclesString.length() < 1) {
             return;
         }
         int numCycles
                 = Integer.parseInt(cyclesString);
+        if (numCycles != defaultCycles) {
+            defaultCycles = numCycles;
+            saveLaunchProperties();
+        }
         boolean useConveyor
                 = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         this.setVisible(false);
@@ -730,6 +781,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", iOException);
         }
     }//GEN-LAST:event_jMenuItemSetLaunchFileActionPerformed
+
+    private void jMenuItemReviewLastOptaPlannerResultsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReviewLastOptaPlannerResultsActionPerformed
+        OptaPlannerResultJFrame oprFrame = new OptaPlannerResultJFrame();
+        oprFrame.setVisible(true);
+        oprFrame.showLastRunResults();
+        this.setVisible(false);
+    }//GEN-LAST:event_jMenuItemReviewLastOptaPlannerResultsActionPerformed
 
     private static void openSingle(String args @Nullable []) {
         AprsSystem.createEmptySystem()
@@ -800,6 +858,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
 
+        loadLaunchProperties();
         Utils.setToAprsLookAndFeel();
 
         /* Create and display the form */
@@ -906,6 +965,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItemMultiCycleMultiSystemTest;
+    private javax.swing.JMenuItem jMenuItemReviewLastOptaPlannerResults;
     private javax.swing.JMenuItem jMenuItemSetLaunchFile;
     private javax.swing.JMenuItem jMenuItemTenCycleMultiSystemTestNoDisables;
     private javax.swing.JMenu jMenuLaF;

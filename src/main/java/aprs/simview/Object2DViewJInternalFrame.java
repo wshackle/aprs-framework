@@ -259,43 +259,43 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public void takeSnapshot(File f, PoseType pose, String label) {
-        object2DOuterJPanel1.takeSnapshot(f, pose, label);
+    public File[] takeSnapshot(File f, PoseType pose, String label) {
+        return object2DOuterJPanel1.takeSnapshot(f, pose, label);
     }
 
     @Override
-    public void takeSnapshot(File f, PointType point, String label) {
-        object2DOuterJPanel1.takeSnapshot(f, point, label);
+    public File[] takeSnapshot(File f, PointType point, String label) {
+        return object2DOuterJPanel1.takeSnapshot(f, point, label);
     }
 
     @Override
-    public void takeSnapshot(File f, PmCartesian point, String label) {
-        object2DOuterJPanel1.takeSnapshot(f, point, label);
+    public File[] takeSnapshot(File f, PmCartesian point, String label) {
+        return object2DOuterJPanel1.takeSnapshot(f, point, label);
     }
 
     @Override
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
+    public File[]  takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+        return this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint);
     }
 
     @Override
-    public void takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
-        object2DOuterJPanel1.takeSnapshot(f, pose, label, w, h);
+    public File[]  takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
+        return object2DOuterJPanel1.takeSnapshot(f, pose, label, w, h);
     }
 
     @Override
-    public void takeSnapshot(File f, PointType point, String label, int w, int h) {
-        object2DOuterJPanel1.takeSnapshot(f, point, label, w, h);
+    public File[] takeSnapshot(File f, PointType point, String label, int w, int h) {
+        return object2DOuterJPanel1.takeSnapshot(f, point, label, w, h);
     }
 
     @Override
-    public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
-        object2DOuterJPanel1.takeSnapshot(f, point, label, w, h);
+    public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
+        return object2DOuterJPanel1.takeSnapshot(f, point, label, w, h);
     }
 
     @Override
-    public void takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
-        this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint, w, h);
+    public File[] takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+        return this.object2DOuterJPanel1.takeSnapshot(f, itemsToPaint, w, h);
     }
 
     public boolean isSimulated() {
@@ -332,5 +332,9 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
 
     public void setSimulatedAndDisconnect() {
         this.object2DOuterJPanel1.setSimulated(true);
+    }
+    
+    public  @Nullable File getLogLinesFile() {
+        return this.object2DOuterJPanel1.getLogLinesFile();
     }
 }

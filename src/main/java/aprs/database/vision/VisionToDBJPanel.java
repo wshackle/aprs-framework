@@ -1680,8 +1680,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             try {
                                 aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
                                 aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
-                            } catch (IOException iOException) {
-                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
+                            } catch (Exception exception) {
+                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", exception);
                             }
                         }
                         IllegalStateException ex = new IllegalStateException(msg);
@@ -1694,8 +1694,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             try {
                                 aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
                                 aprsSystem.takeSimViewSnapshot("F.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
-                            } catch (IOException iOException) {
-                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
+                            } catch (Exception exception) {
+                                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", exception);
                             }
                         }
                         System.err.println(msg);
@@ -1708,8 +1708,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             try {
                 aprsSystem.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".foundRequiredParts", foundRequiredParts);
                 aprsSystem.takeSimViewSnapshot("T.checkRequiredParts." + listName + ".partsNotRequired", partsNotRequired);
-            } catch (IOException iOException) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", iOException);
+            } catch (Exception exception) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", exception);
             }
         }
         checkRequiredPartFailures.set(0);
