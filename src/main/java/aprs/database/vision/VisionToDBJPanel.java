@@ -101,6 +101,7 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import java.awt.Frame;
 import java.awt.event.WindowEvent;
+import java.util.concurrent.CompletableFuture;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 
@@ -1733,10 +1734,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 System.out.println("");
                 System.out.flush();
                 System.err.println("singleUpdateListeners=" + singleUpdateListeners);
-                for (XFuture<List<PhysicalItem>> sul : singleUpdateListeners){
-                    System.err.println("sul="+sul);
-                    System.err.println("sul.createTrace="+Utils.traceToString(sul.getCreateTrace()));
+                for (XFuture<List<PhysicalItem>> sul : singleUpdateListeners) {
+                    System.err.println("sul=" + sul);
+                    System.err.println("sul.createTrace=" + Utils.traceToString(sul.getCreateTrace()));
+                    System.err.println("sul.createThread=" + sul.getCreateThread());
                 }
+                System.err.println("Thread.currentThread()=" + Thread.currentThread());
+                Thread.dumpStack();
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
                 throw new IllegalStateException("attempt to disable database updates while single listners are waiting");
             }
         }
@@ -1829,6 +1837,23 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             singleUpdateListeners.add(ret);
         }
         return ret;
+    }
+
+    public boolean removeSingleUpdate(XFuture<List<PhysicalItem>> future) {
+        synchronized (singleUpdateListeners) {
+            boolean removed = singleUpdateListeners.remove(future);
+            if (!removed) {
+                for (CompletableFuture<?> cf : future.getAlsoCancel()) {
+                    if (cf instanceof XFuture) {
+                        removed = this.removeSingleUpdate((XFuture) cf);
+                        if (removed) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return removed;
+        }
     }
 
     /**

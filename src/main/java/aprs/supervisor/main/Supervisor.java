@@ -272,13 +272,26 @@ public class Supervisor {
         return xf4;
     }
 
+    private volatile @Nullable
+    XFutureVoid lastCompletePrevMultiFuture = null;
+
+    private volatile @Nullable
+    XFuture<?> lastCompleteMultiCycleTestFuture = null;
+
+    public XFuture<?> getLastCompleteMultiCycleTestFuture() {
+        return lastCompleteMultiCycleTestFuture;
+    }
+
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTest(long startTime, int numCycles, boolean useConveyor) {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
-
-        return completePrevMultiFuture
+        lastCompletePrevMultiFuture = completePrevMultiFuture;
+        
+        XFuture<?> ret = completePrevMultiFuture
                 .thenCompose(x -> completeMultiCycleTest(startTime, numCycles, useConveyor));
+        lastCompleteMultiCycleTestFuture = ret;
+        return ret;
     }
 
     public @Nullable
@@ -3108,13 +3121,13 @@ public class Supervisor {
             };
 
     public XFutureVoid logEvent(boolean isError, String s) {
-        if(isError) {
-           return logEventErr(s);
+        if (isError) {
+            return logEventErr(s);
         } else {
-           return logEvent(s);
+            return logEvent(s);
         }
     }
-    
+
     /**
      * Log an event string to be displayed with timestamp in event table.
      *
@@ -3825,6 +3838,13 @@ public class Supervisor {
 
         println("unstealAbortFuture = " + unstealAbortFuture);
         printStatus(unstealAbortFuture, System.out);
+
+        println("lastCompletePrevMultiFuture = " + lastCompletePrevMultiFuture);
+        printStatus(lastCompletePrevMultiFuture, System.out);
+
+        
+        println("lastCompleteMultiCycleTestFuture = " + lastCompleteMultiCycleTestFuture);
+        printStatus(lastCompleteMultiCycleTestFuture, System.out);
 
         println("oldLfrs = " + oldLfrs);
         for (int i = 0; i < oldLfrs.size(); i++) {
@@ -4623,17 +4643,17 @@ public class Supervisor {
             oldMonitor.stop();
             lastCompleteScanTillNewInternalTeachScanMonitor = null;
         }
-        TeachScanMonitor monitor = new TeachScanMonitor(aprsSystems, abortCount, isContinuousDemoSelected(), isUseTeachCameraSelected(), object2DOuterJPanel1, () -> closing, this::logEvent,this.supervisorExecutorService,this );
+        TeachScanMonitor monitor = new TeachScanMonitor(aprsSystems, abortCount, isContinuousDemoSelected(), isUseTeachCameraSelected(), object2DOuterJPanel1, () -> closing, this::logEvent, this.supervisorExecutorService, this);
         lastCompleteScanTillNewInternalTeachScanMonitor = monitor;
         return monitor.getFuture();
     }
-
 
     private final AtomicInteger newTeachCount = new AtomicInteger();
 
     public int incrementAndGetNewTeachCount() {
         return newTeachCount.incrementAndGet();
     }
+
     private XFutureVoid scanAllInternal() {
         if (aprsSystems.isEmpty()) {
             throw new IllegalStateException("aprsSystems.isEmpty()");
@@ -5988,7 +6008,6 @@ public class Supervisor {
         }
         return XFutureVoid.completedFuture();
     }
-    
 
     private volatile @Nullable
     Throwable lastLoggedException = null;
@@ -6758,14 +6777,25 @@ public class Supervisor {
         int cdc = ContinuousDemoCycle.get();
         boolean ret = max_cycles > cdc;
         if (!ret) {
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            Thread.dumpStack();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
             final String blockerName = "max_cycles limit hit = " + cdc;
-            System.err.println("max_cycles limit hit = " + cdc);
+            System.err.println("checkMaxCycles: " + blockerName);
             LockInfo lockInfo = new LockInfo(blockerName);
             toggleBlockerMap.put(blockerName, lockInfo);
             togglesAllowed = false;
             enableChangeCount.incrementAndGet();
             final XFutureVoid origCancelUnstealFuture = cancelUnStealRobotFuture.getAndSet(null);
+            System.out.println("checkMaxCycles: cancelUnStealRobotFuture.getAndSet(null) = " + origCancelUnstealFuture);
             final XFutureVoid origCancelStealFuture = cancelStealRobotFuture.getAndSet(null);
+            System.out.println("checkMaxCycles: cancelStealRobotFuture.getAndSet(null) = " + origCancelStealFuture);
             if (null != origCancelUnstealFuture) {
                 origCancelUnstealFuture.complete();
             }
@@ -6774,10 +6804,12 @@ public class Supervisor {
             }
             setTitleMessage(blockerName);
             XFutureVoid xf = togglesAllowedXfuture.get();
+            System.out.println("checkMaxCycles: togglesAllowedXfuture.get() = " + xf);
             if (null != xf) {
                 xf.complete((Void) null);
             }
             while ((xf = waitForTogglesFutures.poll()) != null) {
+                System.out.println("checkMaxCycles: waitForTogglesFutures.poll() = " + xf);
                 xf.complete((Void) null);
             }
         }
@@ -8621,8 +8653,7 @@ public class Supervisor {
     }
 
     private volatile boolean preClosing = false;
-    
-    
+
     public boolean isPreClosing() {
         return preClosing;
     }
@@ -9152,7 +9183,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData          @Nullable []  [] = null;
+    private volatile Object lastTasksTableData            @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

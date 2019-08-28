@@ -2327,11 +2327,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             this.outScore = outScore;
         }
 
-       
-
         public Object[] toArray() {
             return new Object[]{
-                index, startingIndex, runName,reverse,
+                index, startingIndex, runName, reverse,
                 inScore, outScore,
                 actionsInSize, actionsOutSize,
                 actionsInFile, actionsOutFile,
@@ -2343,7 +2341,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         public static final String[] HEADERS
                 = new String[]{
-                    "index", "startingIndex", "run","reverse",
+                    "index", "startingIndex", "run", "reverse",
                     "inScore", "outScore",
                     "sizeIn", "sizeOut",
                     "actionsIn", "actionsOut",
@@ -2386,7 +2384,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             final OptiplannerLogEntry logEntry
                     = new OptiplannerLogEntry(
-                            solveCount, startingIndex, runName,aprsSystem.isReverseFlag(),
+                            solveCount, startingIndex, runName, aprsSystem.isReverseFlag(),
                             sizeIn, sizeOut,
                             actionsInFile, actionsOutFile,
                             takeSnapsPhysicalItemsFiles[0], takeSnapsPhysicalItemsFiles[1],
@@ -6259,7 +6257,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void lookForParts(Action action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction, int startAbortCount) throws IllegalStateException {
+    private void lookForParts(Action action, List<MiddleCommandType> out, boolean firstAction, boolean lastAction, int startAbortCount) {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         lastTestApproachPose = null;
@@ -6728,7 +6726,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     List<PhysicalItem> physicalItems
             = null;
 
-    private class WaitForCompleteVisionUpdatesStartInfo {
+    private class WaitForCompleteVisionUpdatesStartInfo implements AutoCloseable{
 
         final String runName; //  = getRunName();
         final XFuture<List<PhysicalItem>> xfl; //  = aprsSystem.getNewSingleVisionToDbUpdate();
@@ -6744,10 +6742,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final int visClientUpdateSingleUpdateListenersEmptyCount; //  = aprsSystem.getVisionClientUpdateSingleUpdateListenersEmptyCount();
         final int visClientIgnoreCount; //  = aprsSystem.getVisionClientIgnoreCount();
         final int visClientSkippedCount; //  = aprsSystem.getVisionClientSkippedCount();
-
+        final AprsSystem aprsSystem;
+        
         WaitForCompleteVisionUpdatesStartInfo(AprsSystem aprsSystemParam) {
             this.runName = getRunName();
             this.xfl = aprsSystemParam.getNewSingleVisionToDbUpdate();
+            this.aprsSystem = aprsSystemParam;
             this.simViewRefreshCount = aprsSystemParam.getSimViewRefreshCount();
             this.simViewPublishCount = aprsSystemParam.getSimViewPublishCount();
             this.visLineCount = aprsSystemParam.getVisionLineCount();
@@ -6759,6 +6759,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             this.visClientUpdateSingleUpdateListenersEmptyCount = aprsSystemParam.getVisionClientUpdateSingleUpdateListenersEmptyCount();
             this.visClientIgnoreCount = aprsSystemParam.getVisionClientIgnoreCount();
             this.visClientSkippedCount = aprsSystemParam.getVisionClientSkippedCount();
+        }
+
+        @Override
+        public void close()  {
+            if(!xfl.isDone() && null != aprsSystem) {
+                if(!aprsSystem.removeSingleVisionToDbUpdate(xfl)) {
+                    throw new RuntimeException("failed to remove update future");
+                }
+            }
         }
 
     }
@@ -6773,9 +6782,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);
+       
 
-        try {
+        try ( WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);){
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -6893,7 +6902,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
-        }
+        } 
     }
 
     private void handeWaitForVisionUpdatesTimeout(String prefix, long t1, WaitForCompleteVisionUpdatesStartInfo startInfo, int waitCycle, long last_t1, long timeoutMillis) throws RuntimeException {
@@ -7278,7 +7287,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
                 throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
             }
-            consumer.accept(wrapper);
+            try {
+                consumer.accept(wrapper);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "wrapper=" + wrapper, e);
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 

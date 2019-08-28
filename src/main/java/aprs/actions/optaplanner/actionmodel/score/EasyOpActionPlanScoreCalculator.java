@@ -14,6 +14,8 @@ import java.util.Set;
 import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
 import aprs.actions.optaplanner.actionmodel.OpActionInterface;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 
 /**
@@ -29,9 +31,16 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
     private int lastStartLength = 0;
     private int lastScoreRepeats = 0;
     
+    final private Map<Integer,Double> costMap = new TreeMap<>();
+
+    public Map<Integer, Double> getCostMap() {
+        return costMap;
+    }
+    
+    
     @Override
     public HardSoftLongScore calculateScore(OpActionPlan solution) {
-        double costTotal = 0;
+        long costTotal = 0;
         int ends = 0;
         int nulls = 0;
         int starts = 0;
@@ -42,6 +51,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         List<OpAction> actionsList = solution.getActions();
         double accelleration = solution.getAccelleration();
         double maxSpeed = solution.getMaxSpeed();
+        costMap.clear();
         if (null != actionsList) {
             for (OpAction action : actionsList) {
                 OpActionInterface nextAction = action.getNext();
@@ -74,7 +84,10 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 effectiveOrderedVisited.add(orderedActName);
             }
             for(OpAction act : effectiveOrderedActionsList) {
-                costTotal +=  act.cost(solution);
+                
+                final double costInc = act.cost(solution);
+                costMap.put(solution.getActions().indexOf(act), costInc);
+                costTotal +=  (long) (-1000.0 * costInc);
             }
             lastScoreEnds = ends;
             lastScoreNulls = nulls;
@@ -83,8 +96,8 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
             lastScoreRepeats = repeats;
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
             long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
-            long softScoreLong = (long) (-1000.0 * costTotal);
-            HardSoftLongScore score = HardSoftLongScore.of(hardScoreLong, softScoreLong);
+//            long softScoreLong = (long) (-1000.0 * costTotal);
+            HardSoftLongScore score = HardSoftLongScore.of(hardScoreLong, costTotal);
             return score;
         } else {
             return HardSoftLongScore.of(Long.MIN_VALUE, Long.MIN_VALUE);

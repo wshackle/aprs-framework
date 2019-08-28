@@ -5768,7 +5768,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 handlePoseUpdateThread = Thread.currentThread();
             } else {
                 if (Thread.currentThread() != handlePoseUpdateThread) {
-                    System.out.println("lastPoseUpdateTrace = " + Utils.traceToString(lastPoseUpdateTrace));
+                    System.out.println("handlePoseUpdate: lastPoseUpdateTrace = " + Utils.traceToString(lastPoseUpdateTrace));
                     throw new RuntimeException("handlePoseUpdateThread=" + handlePoseUpdateThread + ", Thread.currentThread()=" + Thread.currentThread());
                 }
             }
@@ -5830,11 +5830,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         && lastIsHoldingObjectExpected && !isHoldingObjectExpected
                         && min_dist_index != captured_item_index) {
                     PhysicalItem captured_item = (captured_item_index >= 0 && captured_item_index < l.size()) ? l.get(captured_item_index) : null;
-                    println("captured_item = " + captured_item);
-                    println("(time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
-                    println("(time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
+                    println("handlePoseUpdate: captured_item = " + captured_item);
+                    println("handlePoseUpdate: (time-lastIsHoldingObjectExpectedTime) = " + (time - lastIsHoldingObjectExpectedTime));
+                    println("handlePoseUpdate: (time-lastNotIsHoldingObjectExpectedTime) = " + (time - lastNotIsHoldingObjectExpectedTime));
                     String errString
-                            = "Dropping item on to another item min_dist=" + min_dist
+                            = "handlePoseUpdate: Dropping item on to another item min_dist=" + min_dist
                             + ", min_dist_index=" + min_dist_index
                             + ", captured_item_index=" + captured_item_index
                             + ", bottom item at min_dist_index =" + l.get(min_dist_index)
@@ -5870,12 +5870,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         }
                     } else {
                         try {
-                            println("di = " + di);
+                            println("handlePoseUpdate: currentThread() = "+Thread.currentThread());
+                            System.out.println("");
+                            System.err.println("");
+                            System.out.flush();
+                            System.err.flush();
+                            Thread.dumpStack();
+                            System.out.println("");
+                            System.err.println("");
+                            System.out.flush();
+                            System.err.flush();
+                            println("handlePoseUpdate: di = " + di);
                             if (null != di && di.index >= 0 && di.index < l.size()) {
                                 PhysicalItem closestItem = l.get(di.index);
-                                println("closestItem = " + closestItem);
-                                println("closestItem.getFullName() = " + closestItem.getFullName());
-                                println("closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
+                                println("handlePoseUpdate: closestItem = " + closestItem);
+                                println("handlePoseUpdate: closestItem.getFullName() = " + closestItem.getFullName());
+                                println("handlePoseUpdate: closestItem.(x,y) = " + closestItem.x + "," + closestItem.y);
                             }
                             String err = "failed_to_capture_part_at_" + currentX + "_" + currentY + "_";
                             printHandlePoseInfo(err, stat, pose, cmd);
@@ -5888,12 +5898,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                     takeSnapshot(createTempFile(err, ".PNG"), l);
                                 }
                             }
-                            System.err.println("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                            System.err.println("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
 
                         } catch (Exception ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
-                        this.aprsSystem.setTitleErrorString("Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
+                        this.aprsSystem.setTitleErrorString("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                     }
                 } else if (!isHoldingObjectExpected && lastIsHoldingObjectExpected) {
                     if (null == objectPanelToClone) {
@@ -5908,13 +5918,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         }
                     }
                     if (captured_item_index < 0) {
-                        String err = "Should be dropping item but no item captured";
+                        String err = "handlePoseUpdate: Should be dropping item but no item captured";
                         try {
                             printHandlePoseInfo(err, stat, pose, cmd);
                         } catch (IOException ex) {
                             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
-                        println("lastDropUpdate = " + lastDropUpdate);
+                        println("handlePoseUpdate: lastDropUpdate = " + lastDropUpdate);
                         this.aprsSystem.setTitleErrorString(err);
                     }
                 }
