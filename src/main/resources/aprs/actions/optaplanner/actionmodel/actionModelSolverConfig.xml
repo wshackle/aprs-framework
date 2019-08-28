@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <solver>
-    <!-- <environmentMode>FAST_ASSERT</environmentMode> -->
+    <!--  <environmentMode>FULL_ASSERT</environmentMode> -->
 
     <!-- Domain model configuration -->
     <solutionClass>aprs.actions.optaplanner.actionmodel.OpActionPlan</solutionClass>
@@ -9,7 +9,11 @@
     <!-- Score configuration -->
     <scoreDirectorFactory>
         <!--  <scoreDrl>aprs/actions/optaplanner/actionmodel/actionScoreRules.drl</scoreDrl> -->
-        <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass>
+        <incrementalScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.IncrementalOpActionPlanScoreCalculator</incrementalScoreCalculatorClass>
+        <!--  <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass> -->
+        <!-- <assertionScoreDirectorFactory>
+            <easyScoreCalculatorClass>aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator</easyScoreCalculatorClass>
+        </assertionScoreDirectorFactory> -->
     </scoreDirectorFactory>
 
     <!-- Optimization algorithms configuration -->
@@ -31,7 +35,7 @@
             <acceptedCountLimit>1</acceptedCountLimit>
         </forager>
         <termination>
-            <unimprovedMillisecondsSpentLimit>100</unimprovedMillisecondsSpentLimit>
+            <unimprovedMillisecondsSpentLimit>3000</unimprovedMillisecondsSpentLimit>
         </termination>
     </localSearch>
 

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 
 /**
  *
- * @author shackle
+ *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface LineConsumer extends Consumer<String> {
 

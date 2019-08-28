@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -54,6 +57,7 @@ import org.optaplanner.core.api.domain.valuerange.ValueRangeProvider;
 import org.optaplanner.core.api.domain.solution.drools.ProblemFactProperty;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 
 /**
  *
@@ -62,34 +66,33 @@ import org.optaplanner.core.api.solver.SolverFactory;
 @SuppressWarnings("WeakerAccess")
 @PlanningSolution(solutionCloner = OpActionPlanCloner.class)
 public class OpActionPlan {
-
+    
     private final static AtomicInteger idCounter = new AtomicInteger(1);
-
+    
     static int newActionPlanId() {
         return idCounter.incrementAndGet();
     }
-
+    
     static public SolverFactory<OpActionPlan> createSolverFactory() {
         return SolverFactory.createFromXmlResource(
                 "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
     }
     
-    
     static public PlannerBenchmarkFactory createBenchmarkFactory() {
         return PlannerBenchmarkFactory.createFromXmlResource(
                 "aprs/actions/optaplanner/actionmodel/benchmark.xml");
     }
-
+    
     @ProblemFactProperty
     private final OpEndAction endAction = new OpEndAction();
-
+    
     public OpEndAction getEndAction() {
         return endAction;
     }
-
+    
     private volatile int exhaustiveSearchScored = 0;
     private volatile int comboSearchScored = 0;
-
+    
     private List<OpAction> findPossiblesNotInSet(OpAction action, Set<Integer> set) {
         List<OpActionInterface> possibles = action.getPossibleNextActions();
         List<OpAction> possiblesNotInSet = new ArrayList<>();
@@ -111,9 +114,9 @@ public class OpActionPlan {
         }
         return possiblesNotInSet;
     }
-
+    
     private OpActionPlan simpleExhaustiveSearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, int needed) {
-
+        
         set.add(action.getOrigId());
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
@@ -153,7 +156,7 @@ public class OpActionPlan {
         }
         return bestPlan;
     }
-
+    
     public OpActionPlan simpleExhaustiveSearch() {
         OpActionPlan clone = new OpActionPlanCloner().cloneSolution(this);
         List<OpAction> actions = clone.actions;
@@ -165,9 +168,9 @@ public class OpActionPlan {
         HardSoftLongScore score = calculator.calculateScore(clone);
         return clone.simpleExhaustiveSearch(start, clone, new TreeSet<>(), score, 1);
     }
-
+    
     private OpActionPlan greedySearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, int needed) {
-
+        
         set.add(action.getOrigId());
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
@@ -225,7 +228,7 @@ public class OpActionPlan {
         }
         return bestPlan;
     }
-
+    
     public OpActionPlan greedySearch() {
         OpActionPlan clone = new OpActionPlanCloner().cloneSolution(this);
         clone.checkActionList();
@@ -240,16 +243,16 @@ public class OpActionPlan {
         HardSoftLongScore score = calculator.calculateScore(clone);
         return clone.greedySearch(start, clone2, new TreeSet<>(), score, 1);
     }
-
+    
     private volatile int comboSearchSkipped = 0;
-
+    
     @SuppressWarnings({"unchecked"})
     private OpActionPlan comboSearch(OpAction action, OpActionPlan bestPlan, Set<Integer> set, HardSoftLongScore score, double costSoFar, double minRemainingCost, int requiredPickups, int availPickups, int requiredDrops, int availDrops) {
-
+        
         set.add(action.getOrigId());
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
-
+            
             Collections.sort(possiblesNotInSet,
                     Comparators.chain(
                             Comparators.byBooleanFunction((OpAction a) -> !a.isRequired()),
@@ -326,7 +329,7 @@ public class OpActionPlan {
         }
         return bestPlan;
     }
-
+    
     public OpActionPlan comboSearch() {
         this.checkActionList();
         comboSearchScored = 0;
@@ -380,10 +383,10 @@ public class OpActionPlan {
             System.out.println("minRemainingCost = " + minRemainingCost);
             System.out.println("totalCost = " + totalCost);
         }
-
+        
         return startPlan.comboSearch(start, clone, new TreeSet<>(), score, 0, minRemainingCost, requiredPickups, availPickups, requiredDrops, availDrops);
     }
-
+    
     private double findMinActCost(OpAction act, OpActionPlan startPlan) {
         if (act.getOpActionType() == FAKE_DROPOFF || act.getOpActionType() == FAKE_PICKUP) {
             return 0;
@@ -404,8 +407,120 @@ public class OpActionPlan {
         }
         return minActCost;
     }
+    
+    public OpActionPlan clonePlan() {
+        return new OpActionPlanCloner().cloneSolution(this);
+    }
+    
+    public Map<String, Object>[] createMapsArray() {
+        Map<String, Object>[] scoreVals = new Map[this.getActions().size()];
+        for (int i = 0; i < scoreVals.length; i++) {
+            OpAction actI = this.getActions().get(i);
+            scoreVals[i] = createIMap(i, actI, this);
+        }
+        return scoreVals;
+    }
+    
+    public void printDiffs(PrintStream ps, OpActionPlan otherPlan) {
+        List<Map<String, Object>[]>  mapArray =
+                createMapsArrayDiffList(otherPlan);
+        printMapsArrayDiffList(ps, mapArray);
+        ps.println();
+        ps.println("this.getMoves().size() = " + this.getMoves().size());
+        ps.println("otherPlan.getMoves().size() = " + otherPlan.getMoves().size());
+        for (int i = 0; i < this.getMoves().size() || i < otherPlan.getMoves().size(); i++) {
+            AbstractMove<OpActionPlan> thisMoveI = (i < this.getMoves().size())?this.getMoves().get(i):null;
+            AbstractMove<OpActionPlan> otherMoveI = (i < otherPlan.getMoves().size())?otherPlan.getMoves().get(i):null;
+            if(thisMoveI != otherMoveI) {
+                if(null != thisMoveI) {
+                    System.out.println(i+": thisMoveI = " + thisMoveI);
+                }
+                 if(null != otherMoveI) {
+                    System.out.println(i+": otherMoveI = " + otherMoveI);
+                }
+            }
+        }
+    }
+    
+    public List<Map<String, Object>[]> createMapsArrayDiffList(OpActionPlan otherPlan) {
+        List<Map<String, Object>[]> ret = new ArrayList<>();
+        Map<String, Object>[] scoreVals = new Map[this.getActions().size()];
+        for (int i = 0; i < Math.min(this.getActions().size(), otherPlan.getActions().size()); i++) {
+            OpAction actI = this.getActions().get(i);
+            OpAction otherActI = otherPlan.getActions().get(i);
+            double costActI = actI.cost(this);
+            double costOtherActI = otherActI.cost(otherPlan);
+            double costDiff = costActI - costOtherActI;
+            if (Math.abs(costDiff) > 0.01) {
+                Map<String, Object>[] mapArray = new Map[2];
+                mapArray[0] = createIMap(i, actI, this);
+                mapArray[1] = createIMap(i, otherActI, otherPlan);
+                ret.add(mapArray);
+            }
+        }
+        return ret;
+    }
+    
+    public static void printMapsArrayDiffList(PrintStream ps, List<Map<String, Object>[]> list) {
+        for (Map<String, Object>[] mapArray : list) {
+            Map<String, Object> map0 = mapArray[0];
+            Map<String, Object> map1 = mapArray[1];
+            for (String key : map0.keySet()) {
+                ps.println(key +": \t"+ map0.get(key) +" \t"+map1.get(key));
+            }
+            ps.println();
+        }
+    }
 
-    public  OpActionPlan cloneAndShufflePlan() {
+    private Map<String, Object> createIMap(int i, OpAction actI, OpActionPlan opActionPlan) {
+        List<OpAction> actIToScordList = actI.previousScoreList();
+        List<String> actIToScordNameList = new ArrayList<>();
+        List<Integer> actIToScoreIndexList = new ArrayList<>();
+        List<Double> actICostList = new ArrayList<>();
+        for (int j = 0; j < actIToScordList.size(); j++) {
+            OpAction actIToScore = actIToScordList.get(j);
+            int index = opActionPlan.getActions().indexOf(actIToScore);
+            actIToScoreIndexList.add(index);
+            double actICost = actIToScore.cost(this);
+            actICostList.add(actICost);
+            actIToScordNameList.add(actIToScore.getName());
+        }
+        List<OpAction> nextList = actI.nextsToEffectiveNextList();
+        List<String> nextNameList = new ArrayList<>();
+        List<Integer> nextIndexList = new ArrayList<>();
+        List<Double> nextCostList = new ArrayList<>();
+        for (int j = 0; j < nextList.size(); j++) {
+            OpAction next = nextList.get(j);
+            nextNameList.add(next.getName());
+            int nextIndex = opActionPlan.getActions().indexOf(next);
+            nextIndexList.add(nextIndex);
+            double nextCost = next.cost(this);
+            nextCostList.add(nextCost);
+        }
+        Map<String, Object> map = new TreeMap<>();
+        map.put("i", i);
+        map.put("actI", actI.getName());
+        map.put("actI.getNext()", actI.getNext().getName());
+        map.put("cost", actI.cost(this));
+        map.put("actIToScoreIndexList", actIToScoreIndexList);
+        map.put("nextIndexList", nextIndexList);
+        map.put("actIToScoreNameList", actIToScordNameList);
+        map.put("nextNameList", nextNameList);
+        map.put("actICostList", actICostList);
+        return map;
+    }
+    
+    private final List<AbstractMove<OpActionPlan>> moves = new ArrayList<>();
+    
+    public void addMove(AbstractMove<OpActionPlan> move) {
+        moves.add(move);
+    }
+    
+    public List<AbstractMove<OpActionPlan>> getMoves() {
+        return moves;
+    }
+    
+    public OpActionPlan cloneAndShufflePlan() {
         List<OpAction> actions = this.getActions();
         if (null == actions) {
             throw new RuntimeException("inPlan.getActions() returned null : this=" + this);
@@ -442,28 +557,28 @@ public class OpActionPlan {
         newPlan.initNextActions();
         return newPlan;
     }
-
+    
     @ProblemFactCollectionProperty
     private List<OpEndAction> endActions = Collections.singletonList(endAction);
-
+    
     @ValueRangeProvider(id = "endActions")
     public List<OpEndAction> getEndActions() {
         return endActions;
     }
-
+    
     public void setEndActions(List<OpEndAction> endActions) {
         this.endActions = endActions;
     }
-
+    
     @PlanningEntityCollectionProperty
     private @Nullable
     List<OpAction> actions;
-
+    
     public @Nullable
     List<OpAction> getActions() {
         return actions;
     }
-
+    
     public static void checkActionsList(@Nullable List<OpAction> actionsToCheck) {
         if (null != actionsToCheck) {
             IdentityHashMap<OpActionInterface, OpActionInterface> inverseEntityMap = new IdentityHashMap<>();
@@ -478,9 +593,9 @@ public class OpActionPlan {
             }
         }
     }
-
+    
     private volatile StackTraceElement lastCheckActionListTrace @Nullable []  = null;
-
+    
     public void checkActionList() {
         List<OpAction> orderedActions = this.getOrderedList(true);
         List<OpAction> notInBaseList = this.notInBaseList(orderedActions);
@@ -498,20 +613,20 @@ public class OpActionPlan {
         checkActionsList(getActions());
         lastCheckActionListTrace = Thread.currentThread().getStackTrace();
     }
-
+    
     private static final String CSV_HEADERS[] = {
         "Index", "Id", "OrigId", "Name", "Type", "PartType", "ExecutorType", "ExecutorArgs", "X", "Y", "Cost", "Required", "Skipped", "NextId", "NextOrigId", "PossibleNextIds", "PossibleNextOrigIds"
     };
-
+    
     private static @Nullable
     Object[] propRecord(String propName, Object propValue) {
         return new Object[]{
             -1, -1, -1, propName + "=" + propValue, SET_PROPERTY_PROPNAME, null, null, null, Double.NaN, Double.NaN, Double.NaN, true, false, Collections.emptyList()
         };
     }
-
+    
     private static final String SET_PROPERTY_PROPNAME = "SET_PROPERTY";
-
+    
     public static boolean isSkippedAction(OpAction action, @Nullable OpActionInterface prevAction) {
         if (null != prevAction && prevAction.getNext() != action) {
             throw new IllegalArgumentException("prevAction.getNext() != action : action=" + action + ",prevAction=" + prevAction);
@@ -531,7 +646,7 @@ public class OpActionPlan {
             return false;
         }
     }
-
+    
     private @Nullable
     Object[] actionRecord(int index, OpActionInterface actionInterface, boolean skipped) {
         final OpActionInterface next = actionInterface.getNext();
@@ -548,12 +663,12 @@ public class OpActionPlan {
             index, actionInterface.getId(), actionInterface.getOrigId(), actionInterface.getName(), actionInterface.getOpActionType(), actionInterface.getPartType(), executorType, executorArgs, actionInterface.getLocation().x, actionInterface.getLocation().y, actionInterface.cost(this), actionInterface.isRequired(), skipped, nextId, nextOrigId, actionInterface.getPossibleNextIds(), actionInterface.getPossibleNextOrigIds()
         };
     }
-
+    
     public List<OpAction> notInOrderedList() {
         List<OpAction> orderedActions = this.getOrderedList(true);
         return notInOrderedList(orderedActions);
     }
-
+    
     public List<OpAction> notInOrderedList(List<OpAction> orderedActions) {
         final List<OpAction> actionsFinal = actions;
         if (null == actionsFinal) {
@@ -576,12 +691,12 @@ public class OpActionPlan {
         }
         return ret;
     }
-
+    
     public List<OpAction> notInBaseList() {
         List<OpAction> orderedActions = this.getOrderedList(true);
         return notInBaseList(orderedActions);
     }
-
+    
     private List<OpAction> notInBaseList(List<OpAction> orderedActions) {
         final List<OpAction> actionsFinal = actions;
         if (null == actionsFinal) {
@@ -604,25 +719,25 @@ public class OpActionPlan {
         }
         return ret;
     }
-
+    
     @SuppressWarnings("nullness")
     static private void printPropRecord(CSVPrinter printer, String propName, @Nullable Object propValue) throws IOException {
         if (propValue != null) {
             printer.printRecord(propRecord(propName, propValue));
         }
     }
-
+    
     @SuppressWarnings("nullness")
     private void printActionRecord(CSVPrinter printer, int index, OpActionInterface actionInterface, boolean skipped) throws IOException {
         printer.printRecord(actionRecord(index, actionInterface, skipped));
     }
-
+    
     private static final File recentActionListsFile = new File(System.getProperty("user.home"), ".recentActionListsFile");
-
+    
     private static final List<File> recentActionListFiles = new ArrayList<>();
-
+    
     private static volatile boolean recentActionsFileListRead = false;
-
+    
     private static synchronized void readRecentActionListFile() throws IOException {
         try {
             if (recentActionListsFile.exists()) {
@@ -654,7 +769,7 @@ public class OpActionPlan {
             recentActionsFileListRead = true;
         }
     }
-
+    
     public static List<File> getRecentActionListFiles() {
         if (!recentActionsFileListRead) {
             try {
@@ -667,7 +782,7 @@ public class OpActionPlan {
         }
         return recentActionListFiles;
     }
-
+    
     private void addRecentActionListFile(File f) throws IOException {
         if (!recentActionsFileListRead) {
             try {
@@ -681,11 +796,11 @@ public class OpActionPlan {
         }
         recentActionListFiles.add(f);
     }
-
+    
     public void saveActionList(File f) throws IOException {
         addRecentActionListFile(f);
         try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(CSV_HEADERS))) {
-
+            
             printPropRecord(printer, USE_DIST_FOR_COST_PROPNAME, useDistForCost);
             printPropRecord(printer, USE_START_END_COST_PROPNAME, useStartEndCost);
             printPropRecord(printer, DEBUG_PROPNAME, debug);
@@ -704,13 +819,13 @@ public class OpActionPlan {
             printActionRecord(printer, orderedActions.size(), endAction, false);
         }
     }
-
+    
     public static OpActionPlan loadActionList(File f) throws IOException {
         OpActionPlan plan = new OpActionPlan();
         plan.privateLoadActionList(f);
         return plan;
     }
-
+    
     private void privateLoadActionList(File file) throws IOException {
         final List<OpAction> actionsFinal;
         if (null == actions) {
@@ -740,26 +855,26 @@ public class OpActionPlan {
                             case USE_DIST_FOR_COST_PROPNAME:
                                 useDistForCost = Boolean.parseBoolean(vval);
                                 break;
-
+                            
                             case USE_START_END_COST_PROPNAME:
                                 useStartEndCost = Boolean.parseBoolean(vval);
                                 break;
-
+                            
                             case DEBUG_PROPNAME:
                                 debug = Boolean.parseBoolean(vval);
                                 break;
-
+                            
                             case MAX_SPEED_PROPNAME:
                                 maxSpeed = Double.parseDouble(vval);
                                 break;
-
+                            
                             case START_END_MAX_SPEED_PROPNAME:
                                 startEndMaxSpeed = Double.parseDouble(vval);
                                 break;
                             case ACCELLERATION_PROPNAME:
                                 accelleration = Double.parseDouble(vval);
                                 break;
-
+                            
                             case SCORE_PROPNAME:
                                 fileScore = vval;
                                 break;
@@ -874,7 +989,7 @@ public class OpActionPlan {
     public void setUseDistForCost(boolean useDistForCost) {
         this.useDistForCost = useDistForCost;
     }
-
+    
     private boolean useStartEndCost = true;
 
     /**
@@ -894,7 +1009,7 @@ public class OpActionPlan {
     public void setUseStartEndCost(boolean useStartEndCost) {
         this.useStartEndCost = useStartEndCost;
     }
-
+    
     private boolean debug;
 
     /**
@@ -914,19 +1029,19 @@ public class OpActionPlan {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-
+    
     public void setActions(List<OpAction> actions) {
         this.actions = actions;
     }
-
+    
     @SuppressWarnings("unused")
     public void initNextActions() {
         final List<OpAction> actionsFinal = actions;
-
+        
         if (null == actionsFinal) {
             throw new IllegalStateException("actions not initialized");
         }
-
+        
         List<OpAction> tmpActions = new ArrayList<>();
         for (int i = 0; i < actionsFinal.size(); i++) {
             OpAction actionI = actionsFinal.get(i);
@@ -937,7 +1052,7 @@ public class OpActionPlan {
             }
         }
         List<OpAction> origActions = new ArrayList<>(actionsFinal);
-
+        
         if (debug) {
             println("origActions = " + origActions);
         }
@@ -1017,7 +1132,7 @@ public class OpActionPlan {
                 lastNextAction = nxtAction;
                 if (unusedActions.contains(nxtAction)) {
                     unusedActions.remove(nxtAction);
-
+                    
                     action.setNext(nxtAction);
                     if (nxtAction.getOpActionType() != END && nxtAction instanceof OpAction) {
                         newActions.add((OpAction) nxtAction);
@@ -1056,16 +1171,16 @@ public class OpActionPlan {
             println("unusedActions = " + unusedActions);
             println("actions = " + actionsFinal);
         }
-
+        
         if (debug) {
             List<OpAction> effectiveOrderedList = getEffectiveOrderedList(true);
             println("effectiveOrderedList = " + effectiveOrderedList);
         }
     }
-
+    
     private @Nullable
     HardSoftLongScore score;
-
+    
     @PlanningScore
     public HardSoftLongScore getScore() {
         if (null == score) {
@@ -1075,18 +1190,18 @@ public class OpActionPlan {
         }
         return score;
     }
-
+    
     public void setScore(HardSoftLongScore score) {
         this.score = score;
     }
-
+    
     private volatile String asString = "";
-
+    
     @Override
     public String toString() {
         return asString;
     }
-
+    
     private double maxSpeed = 1.0;
 
     /**
@@ -1106,7 +1221,7 @@ public class OpActionPlan {
     public void setMaxSpeed(double maxSpeed) {
         this.maxSpeed = maxSpeed;
     }
-
+    
     private double startEndMaxSpeed = 2 * maxSpeed;
 
     /**
@@ -1126,7 +1241,7 @@ public class OpActionPlan {
     public void setStartEndMaxSpeed(double startEndMaxSpeed) {
         this.startEndMaxSpeed = startEndMaxSpeed;
     }
-
+    
     private double accelleration = 1.0;
 
     /**
@@ -1146,7 +1261,7 @@ public class OpActionPlan {
     public void setAccelleration(double accelleration) {
         this.accelleration = accelleration;
     }
-
+    
     public String computeString() {
         double totalCost = 0;
         OpAction startAction = findStartAction();
@@ -1198,7 +1313,7 @@ public class OpActionPlan {
                 }
                 tmp = tmp.getNext();
             }
-
+            
             sb.append(": ");
             sb.append(totalCost);
             if (notInList.size() > 0) {
@@ -1234,7 +1349,7 @@ public class OpActionPlan {
         this.asString = ret;
         return ret;
     }
-
+    
     public List<String> getOrderedListNames() {
         List<OpAction> l = getOrderedList(true);
         List<String> names = new ArrayList<>();
@@ -1243,7 +1358,7 @@ public class OpActionPlan {
         }
         return names;
     }
-
+    
     public List<OpAction> getOrderedList(boolean quiet) {
         List<OpAction> l = new ArrayList<>();
         OpAction startAction = findStartAction();
@@ -1278,7 +1393,7 @@ public class OpActionPlan {
         }
         return l;
     }
-
+    
     public List<OpAction> getEffectiveOrderedList(boolean quiet) {
         List<OpAction> l = new ArrayList<>();
         try {
@@ -1314,7 +1429,7 @@ public class OpActionPlan {
         }
         return l;
     }
-
+    
     public @Nullable
     OpAction findStartAction() {
         OpAction startAction = null;
@@ -1328,5 +1443,5 @@ public class OpActionPlan {
         }
         return startAction;
     }
-
+    
 }

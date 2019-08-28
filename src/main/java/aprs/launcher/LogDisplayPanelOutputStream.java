@@ -32,7 +32,7 @@ import java.util.List;
 
 /**
  *
- * @author shackle
+ *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class LogDisplayPanelOutputStream extends OutputStream {
 

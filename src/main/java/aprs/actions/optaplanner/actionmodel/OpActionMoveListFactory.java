@@ -34,7 +34,7 @@ import org.optaplanner.core.impl.heuristic.selector.move.factory.MoveListFactory
 
 /**
  *
- * @author shackle
+ *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OpActionMoveListFactory implements MoveListFactory<OpActionPlan>{
 

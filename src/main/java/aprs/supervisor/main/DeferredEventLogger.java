@@ -26,7 +26,7 @@ import crcl.ui.XFutureVoid;
 
 /**
  *
- * @author shackle
+ *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public interface DeferredEventLogger {
     

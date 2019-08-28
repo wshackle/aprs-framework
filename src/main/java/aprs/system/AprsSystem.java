@@ -771,6 +771,16 @@ public class AprsSystem implements SlotOffsetProvider {
             return x;
         });
     }
+    
+    public boolean removeSingleVisionToDbUpdate(XFuture<List<PhysicalItem>> future) {
+        if (null == visionToDbJInternalFrame) {
+            throw new NullPointerException("visionToDbJInternalFrame");
+        }
+        return visionToDbJInternalFrame.removeSingleUpdate(future);
+    }
+
+    
+    
 
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the

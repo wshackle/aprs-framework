@@ -26,20 +26,30 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
+import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.actions.optaplanner.actionmodel.score.IncrementalOpActionPlanScoreCalculator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
 
 /**
  *
- * @author shackle
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
 
     private final OpAction action1;
     private final OpAction action2;
+
+    private OpActionPlan undoOrigPlanCopy = null;
+    private HardSoftLongScore undoOrigEasyScore = null;
+    private HardSoftLongScore undoOrigSdScore = null;
 
     public OpActionSwapMove(OpAction action1, OpAction action2) {
         this.action1 = action1;
@@ -56,7 +66,12 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
 
     @Override
     protected OpActionSwapMove createUndoMove(ScoreDirector<OpActionPlan> scoreDirector) {
-        return new OpActionSwapMove(action2, action1);
+//        return new OpActionSwapMove(action2, action1);
+        OpActionSwapMove undoMove = new OpActionSwapMove(action2, action1);
+        undoMove.undoOrigSdScore = (HardSoftLongScore) scoreDirector.calculateScore();
+        undoMove.undoOrigPlanCopy = scoreDirector.getWorkingSolution().clonePlan();
+        undoMove.undoOrigEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
+        return undoMove;
     }
 
     @Override
@@ -65,7 +80,8 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         final OpAction action2Previous = action2.getPrevious();
         final OpActionInterface action1Next = action1.getNext();
         final OpActionInterface action2Next = action2.getNext();
- 
+
+        scoreDirector.getWorkingSolution().addMove(this);
         scoreDirector.beforeVariableChanged(action1, "next");
         scoreDirector.beforeVariableChanged(action2, "next");
         scoreDirector.beforeVariableChanged(action1Previous, "next");
@@ -78,52 +94,99 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         scoreDirector.afterVariableChanged(action2, "next");
         scoreDirector.afterVariableChanged(action1Previous, "next");
         scoreDirector.afterVariableChanged(action2Previous, "next");
+
+        if (null != undoOrigSdScore) {
+            synchronized (this.getClass()) {
+                HardSoftLongScore newSdScore;
+                try {
+                    newSdScore = IncrementalOpActionPlanScoreCalculator.computeInitScore(scoreDirector.getWorkingSolution());
+                } catch (Exception ex) {
+                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                    System.out.println("diffList.size() = " + diffList.size());
+                    OpActionPlan.printMapsArrayDiffList(System.out, diffList);
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.out.flush();
+                    if (ex instanceof RuntimeException) {
+                        throw (RuntimeException) ex;
+                    } else {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+                if (undoOrigSdScore.compareTo(newSdScore) != 0) {
+                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                    System.out.println("diffList.size() = " + diffList.size());
+                    OpActionPlan.printMapsArrayDiffList(System.out, diffList);
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.out.flush();
+                    throw new RuntimeException("newSdScore = " + newSdScore + ", undoOrigSdScore=" + undoOrigSdScore);
+                }
+            }
+        }
+        if (null != undoOrigEasyScore) {
+            HardSoftLongScore newEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
+            if (undoOrigSdScore.compareTo(newEasyScore) != 0) {
+                Thread.dumpStack();
+                List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                System.out.println("diffList.size() = " + diffList.size());
+                OpActionPlan.printMapsArrayDiffList(System.out, diffList);
+                System.out.println("");
+                System.err.println("");
+                System.out.flush();
+                System.out.flush();
+                throw new RuntimeException("newEasyScore = " + newEasyScore + ", undoOrigSdScore=" + undoOrigSdScore);
+            }
+        }
     }
 
     @Override
     public boolean isMoveDoable(ScoreDirector<OpActionPlan> scoreDirector) {
-        if(action1 == action2) {
+        if (action1 == action2) {
             return false;
         }
         final OpActionInterface action1Next = action1.getNext();
-        if(action1Next == action2) {
+        if (action1Next == action2) {
             return false;
         }
         final OpAction action1Previous = action1.getPrevious();
-        if(action1Previous == action2) {
+        if (action1Previous == action2) {
             return false;
         }
-        if(action1Next == null) {
+        if (action1Next == null) {
             return false;
         }
-        if(action1Previous== null) {
+        if (action1Previous == null) {
             return false;
         }
         final OpActionInterface action2Next = action2.getNext();
-        if(action2Next == action1) {
+        if (action2Next == action1) {
             return false;
         }
         final OpAction action2Previous = action2.getPrevious();
-        if(action2Previous == action1) {
+        if (action2Previous == action1) {
             return false;
         }
-        if(action2Next == null) {
+        if (action2Next == null) {
             return false;
         }
-        if(action2Previous== null) {
+        if (action2Previous == null) {
             return false;
         }
-        switch(action1.getOpActionType()) {
+        switch (action1.getOpActionType()) {
             case PICKUP:
             case FAKE_PICKUP:
-                if(action2.getOpActionType() == DROPOFF || action2.getOpActionType()  == FAKE_DROPOFF) {
+                if (action2.getOpActionType() == DROPOFF || action2.getOpActionType() == FAKE_DROPOFF) {
                     return false;
                 }
                 break;
-                
+
             case DROPOFF:
             case FAKE_DROPOFF:
-                if(action2.getOpActionType() == PICKUP || action2.getOpActionType()  == FAKE_PICKUP) {
+                if (action2.getOpActionType() == PICKUP || action2.getOpActionType() == FAKE_PICKUP) {
                     return false;
                 }
                 break;
@@ -131,44 +194,52 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
             case START:
                 return false;
         }
-        switch(action2.getOpActionType()) {
+        switch (action2.getOpActionType()) {
             case END:
             case START:
                 return false;
-                
+
             default:
                 break;
         }
         final String action1PartType = action1.getPartType();
-        if(action1PartType == null) {
+        if (action1PartType == null) {
             return false;
         }
-        if(!action1PartType.equals(action2.getPartType())) {
+        if (!action1PartType.equals(action2.getPartType())) {
             return false;
         }
-        if(!action1Previous.getPossibleNextActions().contains(action2)) {
+        if (!action1Previous.getPossibleNextActions().contains(action2)) {
             return false;
         }
-        if(!action2Previous.getPossibleNextActions().contains(action1)) {
+        if (!action2Previous.getPossibleNextActions().contains(action1)) {
             return false;
         }
-        if(!action1.getPossibleNextActions().contains(action2Next)) {
+        if (!action1.getPossibleNextActions().contains(action2Next)) {
             return false;
         }
-        if(!action2.getPossibleNextActions().contains(action1Next)) {
+        if (!action2.getPossibleNextActions().contains(action1Next)) {
             return false;
         }
         return true;
     }
 
     @Override
-    public Collection<? extends Object> getPlanningEntities() {
-        return Arrays.asList(action1.getPrevious(),action1,action2.getPrevious(),action2);
+    public List<OpAction> getPlanningEntities() {
+        List<OpAction> entities = new ArrayList<>();
+        entities.addAll(action1.previousScoreList());
+        entities.addAll(action2.previousScoreList());
+        return entities;
     }
 
     @Override
-    public Collection<? extends Object> getPlanningValues() {
-        return Arrays.asList(action1,action1.getNext(),action2,action2.getNext());
+    public List<OpActionInterface> getPlanningValues() {
+        List<OpAction> entities = this.getPlanningEntities();
+        List<OpActionInterface> nexts = new ArrayList<>();
+        for (OpAction entity : entities) {
+            nexts.add(entity.getNext());
+        }
+        return nexts;
     }
 
     @Override
@@ -198,6 +269,11 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "OpActionSwapMove{" + "action1=" + action1 + ", action2=" + action2 + ", undoOrigPlanCopy=" + undoOrigPlanCopy + ", undoOrigEasyScore=" + undoOrigEasyScore + ", undoOrigSdScore=" + undoOrigSdScore + '}';
     }
 
     
