@@ -287,7 +287,7 @@ public class Supervisor {
 
         XFutureVoid completePrevMultiFuture = completePrevMulti();
         lastCompletePrevMultiFuture = completePrevMultiFuture;
-        
+
         XFuture<?> ret = completePrevMultiFuture
                 .thenCompose(x -> completeMultiCycleTest(startTime, numCycles, useConveyor));
         lastCompleteMultiCycleTestFuture = ret;
@@ -3842,7 +3842,6 @@ public class Supervisor {
         println("lastCompletePrevMultiFuture = " + lastCompletePrevMultiFuture);
         printStatus(lastCompletePrevMultiFuture, System.out);
 
-        
         println("lastCompleteMultiCycleTestFuture = " + lastCompleteMultiCycleTestFuture);
         printStatus(lastCompleteMultiCycleTestFuture, System.out);
 
@@ -9183,7 +9182,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData            @Nullable []  [] = null;
+    private volatile Object lastTasksTableData             @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
