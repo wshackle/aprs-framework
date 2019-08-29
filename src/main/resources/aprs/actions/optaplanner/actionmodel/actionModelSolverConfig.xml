@@ -35,7 +35,7 @@
             <acceptedCountLimit>1</acceptedCountLimit>
         </forager>
         <termination>
-            <unimprovedMillisecondsSpentLimit>3000</unimprovedMillisecondsSpentLimit>
+            <millisecondsSpentLimit>500</millisecondsSpentLimit>
         </termination>
     </localSearch>
 

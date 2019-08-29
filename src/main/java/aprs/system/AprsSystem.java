@@ -497,7 +497,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private @MonotonicNonNull
     KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
-    private String taskName = "NoTaskName";
+    private String taskName = NO_TASK_NAME;
+    private static final String NO_TASK_NAME = "NoTaskName";
 
     private volatile long lastStartRunTime = -1;
     private volatile long lastStopRunTime = -1;
@@ -771,16 +772,13 @@ public class AprsSystem implements SlotOffsetProvider {
             return x;
         });
     }
-    
+
     public boolean removeSingleVisionToDbUpdate(XFuture<List<PhysicalItem>> future) {
         if (null == visionToDbJInternalFrame) {
             throw new NullPointerException("visionToDbJInternalFrame");
         }
         return visionToDbJInternalFrame.removeSingleUpdate(future);
     }
-
-    
-    
 
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
@@ -2761,12 +2759,31 @@ public class AprsSystem implements SlotOffsetProvider {
     public boolean runCRCLProgram(CRCLProgramType program) {
         boolean ret = false;
         runCRCLProgramTrace = Thread.currentThread().getStackTrace();
+        String programString = null;
+        try {
+            programString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
+        } catch (CRCLException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            programString = null;
+        }
+        File programFile = null;
+        try {
+            if (null != programString) {
+                programFile = Utils.createTempFile("CRCLProgram", ".csv");
+                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                    pw.println(programString);
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            programFile = null;
+        }
         if (enableCheckedAlready && checkNoMoves(program)) {
-            logEvent("skipping runCrclProgram", programToString(program));
+            logEvent("skipping runCrclProgram", programFile);
             processWrapperCommands(program);
             return true;
         }
-        long startTime = logEvent("start runCrclProgram", programToString(program));
+        long startTime = logEvent("start runCrclProgram", programFile);
         CRCLProgramType progCopy = CRCLPosemath.copy(program);
         final CrclSwingClientJInternalFrame crclClientJInternalFrameFinal = crclClientJInternalFrame;
         if (null == crclClientJInternalFrameFinal) {
@@ -3465,17 +3482,26 @@ public class AprsSystem implements SlotOffsetProvider {
         return logEvent(s, Arrays.toString(args));
     }
 
+    private long firstlogTime = -1;
+
     public long logEvent(String s, @Nullable Object arg) {
         try {
             if (closing) {
                 return -1;
             }
+            if (null == taskName || taskName.equals(NO_TASK_NAME)) {
+                return -1;
+            }
+            if (null == executorJInternalFrame1) {
+                return -1;
+            }
+            String prevLastLogEvent = lastLogEvent;
             println("logEvent(" + s + "," + arg + ")");
             lastLogEvent = s;
             CSVPrinter printer = eventLogPrinter;
             if (null == printer) {
-                printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName(), ".csv")),
-                        CSVFormat.DEFAULT.withHeader("number", "time", "timediff", "event", "arg", "runDuration", "stopDuration", "thread", "runName"));
+                printer = new CSVPrinter(new FileWriter(Utils.createTempFile(getRunName() + "_events_log_", ".csv")),
+                        CSVFormat.DEFAULT.withHeader("number", "time", "timediff", "runProgamCount", "abortCount", "runProgramTime", "timeSinceLogStart", "runDuration", "stopDuration", "lastLogEvent", "event", "arg", "thread", "runName"));
                 eventLogPrinter = printer;
             }
             long curTime = System.currentTimeMillis();
@@ -3488,12 +3514,20 @@ public class AprsSystem implements SlotOffsetProvider {
             String argStringSplit[] = argString.split("\n");
             synchronized (printer) {
                 final int thisLogNumber = logNumber.incrementAndGet();
+                if (thisLogNumber < 2) {
+                    firstlogTime = curTime;
+                }
+                int currentRunProgramCount = this.runProgramCount.get();
+                int currentAbortCount = this.getSafeAbortRequestCount();
+                long totalRunProgramTime = runProgramTime.get();
+                long timeSinceLogStart = curTime - firstlogTime;
+                String diffString = String.format("%07d", diff);
                 if (argStringSplit.length < 2) {
-                    printer.printRecord(thisLogNumber, curTime, diff, s, argString.trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(),prevLastLogEvent, s, argString.trim(), Thread.currentThread(), getRunName());
                 } else {
-                    printer.printRecord(thisLogNumber, curTime, diff, s, argStringSplit[0].trim(), getRunDuration(), getStopDuration(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(), prevLastLogEvent,s, argStringSplit[0].trim(), Thread.currentThread(), getRunName());
                     for (int i = 1; i < argStringSplit.length; i++) {
-                        printer.printRecord("", "", "", "", argStringSplit[i].trim(), "", "", "", "");
+                        printer.printRecord("", "", "", "", "", "", "", "", "", "", "", argStringSplit[i].trim(), "", "");
                     }
                 }
             }
@@ -4799,10 +4833,15 @@ public class AprsSystem implements SlotOffsetProvider {
             if (isPaused()) {
                 stateString = "PAUSED";
             }
-            String newTitle = "APRS : " + ((robotName != null) ? robotName + (isConnected() ? "" : "(Disconnected)") : "NO Robot") + " : " + ((taskName != null) ? taskName : "NO Task") + " : " + stateString + " : "
+            final String robotString = (robotName != null) ? robotName + (isConnected() ? "" : "(Disconnected)") : "NO Robot";
+            final String taskString = (taskName != null) ? taskName : "NO Task";
+            final String actionSetsCompletedString = (executorJInternalFrame1 != null) ? (" : " + executorJInternalFrame1.getActionSetsCompleted()) : "";
+            String newTitle = "APRS : "
+                    + robotString + " : "
+                    + taskString + " : "
                     + stateDescription
                     + ((titleErrorString != null) ? ": " + titleErrorString : "")
-                    + ((executorJInternalFrame1 != null) ? (" : " + executorJInternalFrame1.getActionSetsCompleted()) : "")
+                    + actionSetsCompletedString
                     + (isAborting() ? " : Aborting" : "")
                     + (isReverseFlag() ? " : Reverse" : "")
                     + (getExcutorForceFakeTakeFlag() ? " : Force-Fake-Take" : "");
@@ -8863,7 +8902,7 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param h height of snapshot image
      * @return array of filenames logged first image file, then csv file
      */
-    public File[] takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h)  {
+    public File[] takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -10172,12 +10211,14 @@ public class AprsSystem implements SlotOffsetProvider {
             crclClientJInternalFrame.setPreClosing(preClosing);
         }
     }
-    
-    public  @Nullable File getObject2DViewLogLinesFile() {
+
+    public @Nullable
+    File getObject2DViewLogLinesFile() {
         return this.object2DViewJInternalFrame.getLogLinesFile();
     }
-    
-    public  @Nullable File getObject2DViewPropertiesFile() {
+
+    public @Nullable
+    File getObject2DViewPropertiesFile() {
         return this.object2DViewJInternalFrame.getPropertiesFile();
     }
 }
