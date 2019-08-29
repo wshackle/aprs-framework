@@ -2233,6 +2233,9 @@ public class Supervisor {
                 = beforeAllowTogglesFuture
                         .alwaysComposeAsync(() -> allowToggles(blocker, stealFor), supervisorExecutorService)
                         .always(() -> clearBlockConveryorMoves());
+        if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
+            return withAllowTogglesFuture;
+        }
         XFuture<Boolean> part1
                 = withAllowTogglesFuture
                         .thenComposeAsync("continueAfterSwitch" + " : srn=" + srn,

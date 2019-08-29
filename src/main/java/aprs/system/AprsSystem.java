@@ -2125,6 +2125,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new NullPointerException("pddlExecutorJInternalFrame1");
             }
             if(pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()) {
+//                System.out.println("pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()");
                 return XFuture.completedFutureWithName("emptyActionsList."+comment, true);
 //                throw new IllegalStateException("pddlExecutorJInternalFrame1Final.getActionsList().isEmpty(), comment="+comment);
             }
