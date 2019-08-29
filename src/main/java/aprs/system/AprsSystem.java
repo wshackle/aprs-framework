@@ -2124,6 +2124,10 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null == pddlExecutorJInternalFrame1Final) {
                 throw new NullPointerException("pddlExecutorJInternalFrame1");
             }
+            if(pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()) {
+                return XFuture.completedFutureWithName("emptyActionsList."+comment, true);
+//                throw new IllegalStateException("pddlExecutorJInternalFrame1Final.getActionsList().isEmpty(), comment="+comment);
+            }
             checkFutures();
             boolean connected0 = isConnected();
             continueActionsComment = comment;

@@ -1419,6 +1419,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
         }
+        if(gParamsActions.isEmpty()) {
+            throw new IllegalArgumentException("gparams.actions.isEmpty()");
+        }
+        if(gParamsActions.size() <= gparams.startingIndex) {
+            throw new IllegalArgumentException("gparams.actions.size()="+gParamsActions.size()+", gparams.startingIndex="+gparams.startingIndex);
+        }
         int blockingCount = localAprsSystem.startBlockingCrclPrograms();
         List<MiddleCommandType> cmds = new ArrayList<>();
         final int startingIndex = gparams.startingIndex;
