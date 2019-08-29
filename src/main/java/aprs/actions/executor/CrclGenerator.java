@@ -1359,7 +1359,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         @Override
         public String toString() {
-            return "GenerateParams{" + "actions.size()=" + ((null != actions) ? actions.size() : -1) + ",\n startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n\n  replan=" + replan + ",\n optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
+            return "GenerateParams{" + "actions.size()=" + ((null != actions) ? actions.size() : -1) + ", startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n  replan=" + replan + ", optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
         }
 
     }
@@ -2297,6 +2297,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private final boolean reverse;
         private final int actionsInSize;
         private final int actionsOutSize;
+        private final long solveTime;
         private final File actionsInFile;
         private final File actionsOutFile;
         private final File itemsImageFile;
@@ -2308,13 +2309,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private final double inScore;
         private final double outScore;
 
-        public OptiplannerLogEntry(int index, int startingIndex, String runName, boolean reverse, int actionsInSize, int actionsOutSize, File actionsInFile, File actionsOutFile, File itemsImageFile, File itemsCsvFile, File object2DLogLinesFile, File object2DPropertiesFile, File inputOpPlanFile, File outputOpPlanFile, double inScore, double outScore) {
+        public OptiplannerLogEntry(int index, int startingIndex, String runName, boolean reverse, int actionsInSize, int actionsOutSize, long solveTime, File actionsInFile, File actionsOutFile, File itemsImageFile, File itemsCsvFile, File object2DLogLinesFile, File object2DPropertiesFile, File inputOpPlanFile, File outputOpPlanFile, double inScore, double outScore) {
             this.index = index;
             this.startingIndex = startingIndex;
             this.runName = runName;
             this.reverse = reverse;
             this.actionsInSize = actionsInSize;
             this.actionsOutSize = actionsOutSize;
+            this.solveTime = solveTime;
             this.actionsInFile = actionsInFile;
             this.actionsOutFile = actionsOutFile;
             this.itemsImageFile = itemsImageFile;
@@ -2332,6 +2334,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 index, startingIndex, runName, reverse,
                 inScore, outScore,
                 actionsInSize, actionsOutSize,
+                solveTime,
                 actionsInFile, actionsOutFile,
                 itemsImageFile, itemsCsvFile,
                 object2DLogLinesFile, object2DPropertiesFile,
@@ -2344,6 +2347,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     "index", "startingIndex", "run", "reverse",
                     "inScore", "outScore",
                     "sizeIn", "sizeOut",
+                    "solveTime",
                     "actionsIn", "actionsOut",
                     "itemsImage", "itemsCsv",
                     "object2DLogLines", "object2DProperties",
@@ -2364,6 +2368,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             int startingIndex,
             int sizeIn,
             int sizeOut,
+            long solveTime,
             File actionsInFile,
             File actionsOutFile,
             File[] takeSnapsPhysicalItemsFiles,
@@ -2386,6 +2391,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     = new OptiplannerLogEntry(
                             solveCount, startingIndex, runName, aprsSystem.isReverseFlag(),
                             sizeIn, sizeOut,
+                            solveTime,
                             actionsInFile, actionsOutFile,
                             takeSnapsPhysicalItemsFiles[0], takeSnapsPhysicalItemsFiles[1],
                             aprsSystem.getObject2DViewLogLinesFile(), aprsSystem.getObject2DViewPropertiesFile(),
@@ -2395,10 +2401,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (newFile) {
                 format = format.withHeader(OptiplannerLogEntry.HEADERS);
             }
+            final List<Object> logEntryList = Arrays.asList(logEntry.toArray());
             try (CSVPrinter printer = new CSVPrinter(new FileWriter(logOptaPlannerResultsFile, !newFile), format)) {
-                printer.printRecord(Arrays.asList(logEntry.toArray()));
+                printer.printRecord(logEntryList);
             }
             optiplannerLogEntrys.add(logEntry);
+            aprsSystem.logEvent("logOptaPlannerResult", "solveCount=" + solveCount + ",solveTime=" + solveTime + ",inScore=" + inScore + ", outScore=" + outScore + ", logOptaPlannerResultsFile=" + logOptaPlannerResultsFile);
         } catch (IOException ex) {
             Logger.getLogger(CrclGenerator.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -2427,6 +2435,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             physicalItemsLocal);
 
             File actionsInFile = aprsSystem.createTempFile("actionsIn", ".txt");
+            aprsSystem.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
             int sizeIn = 0;
             try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
@@ -2572,11 +2581,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             lastgfzc = gfzc;
             OpActionPlan solvedPlan;
             double solveScore;
+            long solveTimeStart = System.currentTimeMillis();
+
             try {
                 inputPlan.checkActionList();
                 synchronized (solverToRun) {
                     solvedPlan = solverToRun.solve(inputPlan);
                 }
+                long solveTimeEnd = System.currentTimeMillis();
+                long solveTime = solveTimeEnd - solveTimeStart;
                 int outputRequiredCount = 0;
                 List<OpAction> outputRequiredActions = new ArrayList<>();
                 List<OpAction> outputActions = solvedPlan.getOrderedList(false);
@@ -2646,7 +2659,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             sizeOut++;
                         }
                     }
-                    logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
+                    logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, solveTime, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
                     return fullReplanPddlActions;
                 }
             } catch (Exception ex) {
@@ -2669,7 +2682,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     sizeOut++;
                 }
             }
-            logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
+            long solveTimeEnd = System.currentTimeMillis();
+            long solveTime = solveTimeEnd - solveTimeStart;
+            logOptaPlannerResult(solveCount, startingIndex, sizeIn, sizeOut, solveTime, actionsInFile, actionsOutFile, takeSnapsPhysicalItemsFiles, inScore, solveScore, inputPlan, solvedPlan);
             return actions;
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -6726,7 +6741,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     List<PhysicalItem> physicalItems
             = null;
 
-    private class WaitForCompleteVisionUpdatesStartInfo implements AutoCloseable{
+    private class WaitForCompleteVisionUpdatesStartInfo implements AutoCloseable {
 
         final String runName; //  = getRunName();
         final XFuture<List<PhysicalItem>> xfl; //  = aprsSystem.getNewSingleVisionToDbUpdate();
@@ -6743,7 +6758,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final int visClientIgnoreCount; //  = aprsSystem.getVisionClientIgnoreCount();
         final int visClientSkippedCount; //  = aprsSystem.getVisionClientSkippedCount();
         final AprsSystem aprsSystem;
-        
+
         WaitForCompleteVisionUpdatesStartInfo(AprsSystem aprsSystemParam) {
             this.runName = getRunName();
             this.xfl = aprsSystemParam.getNewSingleVisionToDbUpdate();
@@ -6762,9 +6777,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
 
         @Override
-        public void close()  {
-            if(!xfl.isDone() && null != aprsSystem) {
-                if(!aprsSystem.removeSingleVisionToDbUpdate(xfl)) {
+        public void close() {
+            if (!xfl.isDone() && null != aprsSystem) {
+                if (!aprsSystem.removeSingleVisionToDbUpdate(xfl)) {
                     throw new RuntimeException("failed to remove update future");
                 }
             }
@@ -6782,9 +6797,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-       
 
-        try ( WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);){
+        try (WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -6902,7 +6916,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
-        } 
+        }
     }
 
     private void handeWaitForVisionUpdatesTimeout(String prefix, long t1, WaitForCompleteVisionUpdatesStartInfo startInfo, int waitCycle, long last_t1, long timeoutMillis) throws RuntimeException {
