@@ -2124,9 +2124,9 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null == pddlExecutorJInternalFrame1Final) {
                 throw new NullPointerException("pddlExecutorJInternalFrame1");
             }
-            if(pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()) {
+            if (pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()) {
 //                System.out.println("pddlExecutorJInternalFrame1Final.getActionsList().isEmpty()");
-                return XFuture.completedFutureWithName("emptyActionsList."+comment, true);
+                return XFuture.completedFutureWithName("emptyActionsList." + comment, true);
 //                throw new IllegalStateException("pddlExecutorJInternalFrame1Final.getActionsList().isEmpty(), comment="+comment);
             }
             checkFutures();
@@ -3528,9 +3528,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 long timeSinceLogStart = curTime - firstlogTime;
                 String diffString = String.format("%07d", diff);
                 if (argStringSplit.length < 2) {
-                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(),prevLastLogEvent, s, argString.trim(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(), prevLastLogEvent, s, argString.trim(), Thread.currentThread(), getRunName());
                 } else {
-                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(), prevLastLogEvent,s, argStringSplit[0].trim(), Thread.currentThread(), getRunName());
+                    printer.printRecord(thisLogNumber, curTime, diffString, currentRunProgramCount, currentAbortCount, totalRunProgramTime, timeSinceLogStart, getRunDuration(), getStopDuration(), prevLastLogEvent, s, argStringSplit[0].trim(), Thread.currentThread(), getRunName());
                     for (int i = 1; i < argStringSplit.length; i++) {
                         printer.printRecord("", "", "", "", "", "", "", "", "", "", "", argStringSplit[i].trim(), "", "");
                     }
@@ -4821,13 +4821,15 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile String lastTitleStateString = "";
     private volatile String lastTitleStateDescription = "";
 
+    private volatile String lastRobotString = null;
+    private volatile String lastTaskString = null;
+    private volatile String lastCrclClientString = null;
+
     private void updateTitleStateDescription(String stateString, String stateDescription) {
         try {
             if (runProgramServiceThread != null && runProgramServiceThread != Thread.currentThread()) {
                 throw new RuntimeException("updateTitleStateDescription called from wrong thread " + Thread.currentThread() + " instead of " + runProgramServiceThread);
             }
-            lastTitleStateString = stateString;
-            lastTitleStateDescription = stateDescription;
             String oldTitle = getTitle();
             String crclClientError = getCrclClientErrorString();
             if (null != crclClientError && crclClientError.length() > 0
@@ -4866,6 +4868,21 @@ public class AprsSystem implements SlotOffsetProvider {
                     runAllUpdateRunnables();
                 }
             }
+            if (null != crclClientJInternalFrame) {
+                String crclClientString = crclClientJInternalFrame.getTitle();
+                if (!Objects.equals(crclClientString, lastCrclClientString)) {
+                    if (!Objects.equals(lastRobotString, robotString)
+                            || !Objects.equals(lastTaskString, taskString)
+                            || !Objects.equals(lastTitleStateDescription, stateDescription)) {
+                        setupWindowsMenu();
+                    }
+                }
+                lastCrclClientString = crclClientString;
+            }
+            lastRobotString = robotString;
+            lastTaskString = taskString;
+            lastTitleStateString = stateString;
+            lastTitleStateDescription = stateDescription;
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -5449,7 +5466,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             startingCheckEnabled = false;
-            disconnectRobotPrivate();
+            if(isConnected()) {
+                disconnectRobotPrivate();
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
