@@ -212,29 +212,33 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private volatile int prevFrameCount = 0;
     private volatile int prevFramesLength = 0;
+    private static final boolean DO_CHECK_JINTERNALFRAMES
+            = Boolean.getBoolean("aprs.check.jinternalframes");
 
     void checkFrames() {
-        JInternalFrame frames[] = jDesktopPane1.getAllFrames();
-        int frameCount = frames.length + iconifiedFramesMap.size();
-        if (frameCount < prevFrameCount && frames.length < prevFramesLength) {
-            System.out.println("");
-            System.err.println("");
-            System.out.flush();
-            System.err.flush();
-            System.out.println("iconifiedFramesMap.size() = " + iconifiedFramesMap.size());
-            System.out.println("frames.length = " + frames.length);
-            System.out.println("prevFramesLength = " + prevFramesLength);
-            System.out.println("frames = " + Arrays.toString(frames));
-            System.out.println("prevFrameCount = " + prevFrameCount);
-            System.out.println("frameCount = " + frameCount);
-            Thread.dumpStack();
-            System.out.println("");
-            System.err.println("");
-            System.out.flush();
-            System.err.flush();
+        if (DO_CHECK_JINTERNALFRAMES) {
+            JInternalFrame frames[] = jDesktopPane1.getAllFrames();
+            int frameCount = frames.length + iconifiedFramesMap.size();
+            if (frameCount < prevFrameCount && frames.length < prevFramesLength) {
+                System.out.println("");
+                System.err.println("");
+                System.out.flush();
+                System.err.flush();
+                System.out.println("iconifiedFramesMap.size() = " + iconifiedFramesMap.size());
+                System.out.println("frames.length = " + frames.length);
+                System.out.println("prevFramesLength = " + prevFramesLength);
+                System.out.println("frames = " + Arrays.toString(frames));
+                System.out.println("prevFrameCount = " + prevFrameCount);
+                System.out.println("frameCount = " + frameCount);
+                Thread.dumpStack();
+                System.out.println("");
+                System.err.println("");
+                System.out.flush();
+                System.err.flush();
+            }
+            prevFrameCount = frameCount;
+            prevFramesLength = frames.length;
         }
-        prevFrameCount = frameCount;
-        prevFramesLength = frames.length;
     }
 
     CachedCheckBox kitInspectionStartupCheckBox() {

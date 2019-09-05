@@ -26,6 +26,7 @@ import aprs.cachedcomponents.CachedTable;
 import aprs.launcher.LauncherAprsJFrame;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.system.AprsSystem;
+import com.google.common.base.Objects;
 import crcl.base.CRCLCommandType;
 import crcl.ui.XFuture;
 import crcl.ui.XFuture.PrintedException;
@@ -103,10 +104,25 @@ public class Utils {
         boolean isWindows = System.getProperty("os.name").startsWith("Windows");
 
         String dir;
+        final String origHomeProperty = System.getProperty("user.home");
         if (isWindows) {
-            dir = System.getProperty("windows.aprs.user.home", System.getProperty("aprs.user.home", System.getProperty("user.home")));
+            dir = System.getProperty("windows.aprs.user.home", System.getProperty("aprs.user.home", origHomeProperty));
         } else {
-            dir = System.getProperty("linux.aprs.user.home", System.getProperty("aprs.user.home", System.getProperty("user.home")));
+            dir = System.getProperty("linux.aprs.user.home", System.getProperty("aprs.user.home", origHomeProperty));
+        }
+        if (dir != null && dir.length() > 1) {
+            File dirFile = new File(dir);
+            if (dirFile.isDirectory() && dirFile.canWrite() && dirFile.exists()) {
+                try {
+                    final String dirFileCanonicalPath = dirFile.getCanonicalPath();
+                    if (!Objects.equal(dir, origHomeProperty)
+                            && !Objects.equal(dirFileCanonicalPath, origHomeProperty)) {
+                        System.setProperty("user.home", dirFileCanonicalPath);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
 //        if(!dir.endsWith("netbeans_run_user_home")) {
 //            println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
