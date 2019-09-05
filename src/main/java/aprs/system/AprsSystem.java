@@ -1826,12 +1826,12 @@ public class AprsSystem implements SlotOffsetProvider {
         disconnectRobotCount.incrementAndGet();
         checkReadyToDisconnect();
         enableCheckedAlready = false;
-        XFutureVoid waitForPausFuture = waitForPause();
-        if (runProgramService == null || runProgramService.isShutdown()) {
-            return waitForPausFuture;
+        XFutureVoid waitForPauseFuture = waitForPause();
+        if (runProgramService == null || runProgramService.isShutdown() || !isConnected()) {
+            return waitForPauseFuture;
         }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        XFutureVoid ret = waitForPausFuture
+        XFutureVoid ret = waitForPauseFuture
                 .thenRunAsync("disconnectRobot(" + getRobotName() + ")",
                         () -> {
                             try {
@@ -3914,8 +3914,10 @@ public class AprsSystem implements SlotOffsetProvider {
     private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
-        return system.defaultInit().
-                thenApply(x -> {
+        return system
+                .loadProperties()
+                .thenComposeToVoid(() -> system.defaultInit())
+                .thenApply(x -> {
                     aprsSystemDisplayJFrame1.setAprsSystem(system);
                     return system;
                 });
@@ -3956,8 +3958,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private static XFuture<AprsSystem> createPrevAprsSystemHeadless() {
         AprsSystem system = new AprsSystem();
-        return system.defaultInit().
-                thenApply(x -> {
+        return system.loadProperties()
+                .thenComposeToVoid(() -> system.defaultInit())
+                .thenApply(x -> {
                     return system;
                 });
     }
@@ -4404,7 +4407,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             startingCheckEnabled = false;
-            disconnectRobotPrivate();
+            if (isConnected()) {
+                disconnectRobotPrivate();
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -5466,7 +5471,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             startingCheckEnabled = false;
-            if(isConnected()) {
+            if (isConnected()) {
                 disconnectRobotPrivate();
             }
         } catch (Exception ex) {
@@ -9652,7 +9657,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
         }
-        updateTitle();
+        submitUpdateTitle();
     }
 
     private String propertiesFileBaseString = "";
