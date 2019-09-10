@@ -1,0 +1,1 @@
+classname=crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame

@@ -671,6 +671,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemCorrectionMode = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemAllowForceFakeTakeAnyTime = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemCustomWindowStartup = new javax.swing.JMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -993,6 +994,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemAllowForceFakeTakeAnyTime);
+
+        jMenuItemCustomWindowStartup.setText("Custom Window Startup ...");
+        jMenuItemCustomWindowStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCustomWindowStartupActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemCustomWindowStartup);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -2286,6 +2295,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         showAllInternalFrames();
     }//GEN-LAST:event_jMenuItemShowAllWindowsActionPerformed
 
+    private void jMenuItemCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCustomWindowStartupActionPerformed
+        JFileChooser chooser = new JFileChooser(aprsSystem.getPropertiesDirectory());
+        if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            aprsSystem.setCustomWindowsFile(chooser.getSelectedFile());
+        }
+    }//GEN-LAST:event_jMenuItemCustomWindowStartupActionPerformed
+
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(selected);
@@ -2389,6 +2405,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemClearErrors;
     private javax.swing.JMenuItem jMenuItemContinueActionList;
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
+    private javax.swing.JMenuItem jMenuItemCustomWindowStartup;
     private javax.swing.JMenuItem jMenuItemDebugAction;
     private javax.swing.JMenuItem jMenuItemEmptyKitTrays;
     private javax.swing.JMenuItem jMenuItemExit;

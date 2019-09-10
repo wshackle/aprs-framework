@@ -142,9 +142,11 @@ import crcl.utils.server.ServerJInternalFrameProviderInterface;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.security.ProtectionDomain;
 import java.util.Iterator;
 import java.util.Optional;
@@ -2974,7 +2976,8 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != crclClientJInternalFrame) {
                 CRCLCommandType cmd = crclClientJInternalFrame.currentProgramCommand();
                 if (null != cmd) {
-                    sb.append("crcl_cmd=").append(CRCLSocket.commandToSimpleString(cmd)).append("\r\n");
+                    final String commandSimpleString = CRCLSocket.commandToSimpleString(cmd);
+                    sb.append("crcl_cmd=").append(commandSimpleString).append("\r\n");
                 } else {
                     sb.append("crcl_cmd= \r\n");
                 }
@@ -4291,6 +4294,9 @@ public class AprsSystem implements SlotOffsetProvider {
                     futures.add(connectVisionFuture);
                 }
             }
+            if (null != customWindowsFile) {
+                loadCustomWindowsFile();
+            }
 //            setupWindowsMenuOnDisplay();
             if (futures.isEmpty()) {
                 return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckBoxes");
@@ -4301,6 +4307,45 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
+        }
+    }
+
+    private void loadCustomWindowsFile() throws IOException {
+        try (BufferedReader br = new BufferedReader(new FileReader(customWindowsFile))) {
+            String line = br.readLine();
+            while (line != null) {
+                line = line.trim();
+                if (line.length() < 1) {
+                    line = br.readLine();
+                    continue;
+                }
+                loadWindowFile(new File(customWindowsFile.getParentFile(), line));
+                line = br.readLine();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "customWindowsFile=" + customWindowsFile, ex);
+        }
+    }
+
+    private void loadWindowFile(File winFile) throws Exception {
+        Properties props = new Properties();
+        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+            props.load(br);
+        }
+        String classnameString = props.getProperty("classname");
+        if (null == classnameString || classnameString.length() < 1) {
+            throw new RuntimeException("no classname property in " + winFile);
+        }
+        Class<?> clss = Class.forName(classnameString);
+        String constArgsNumberString = props.getProperty("constArgsNumber", "0");
+        final Constructor<?> constructor = clss.getConstructor();
+        if (null == constructor) {
+            throw new RuntimeException("class doesn't have no args constructor  ,winFile=" + winFile);
+        }
+        Object newObject = constructor.newInstance();
+        if (newObject instanceof JInternalFrame) {
+            final JInternalFrame jinternalFrame = (JInternalFrame) newObject;
+            addInternalFrame(jinternalFrame);
         }
     }
 
@@ -9089,6 +9134,16 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    private File customWindowsFile = null;
+
+    public File getCustomWindowsFile() {
+        return customWindowsFile;
+    }
+
+    public void setCustomWindowsFile(File customWindowsFile) {
+        this.customWindowsFile = customWindowsFile;
+    }
+
     private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
 
         try {
@@ -9172,6 +9227,10 @@ public class AprsSystem implements SlotOffsetProvider {
             String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
             if (null != startExploreGraphDbString) {
                 setExploreGraphDBStartupSelected(Boolean.valueOf(startExploreGraphDbString));
+            }
+            String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
+            if (null != customWindowsFileString) {
+                setCustomWindowsFile(new File(propertiesDirectory, customWindowsFileString));
             }
             String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
             if (null != crclWebAppPortString) {
@@ -9427,6 +9486,10 @@ public class AprsSystem implements SlotOffsetProvider {
         propsMap.put(STARTUPCONNECTDATABASE, Boolean.toString(isConnectDatabaseOnSetupStartupSelected()));
         propsMap.put(STARTUPCONNECTVISION, Boolean.toString(isConnectVisionOnStartupSelected()));
         propsMap.put(STARTUPEXPLOREGRAPHDB, Boolean.toString(isExploreGraphDBStartupSelected()));
+        if (null != customWindowsFile) {
+            propsMap.put(CUSTOM_WINDOWS_FILE, customWindowsFile.getName());
+        }
+
 //        propsMap.put(STARTUPCRCLWEBAPP, Boolean.toString(jCheckBoxMenuItemStartupCRCLWebApp.isSelected()));
         propsMap.put(CRCLWEBAPPPORT, Integer.toString(crclWebServerHttpPort));
         propsMap.put(STARTUP_ACTIVE_WIN, activeWin.toString());
@@ -9589,6 +9652,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private static final String FANUC_CRCL_LOCAL_PORT = "fanuc.crclLocalPort";
     private static final String FANUC_ROBOT_HOST = "fanuc.robotHost";
     private static final String MOTOMAN_CRCL_LOCAL_PORT = "motoman.crclLocalPort";
+
+    private static final String CUSTOM_WINDOWS_FILE = "aprs.customWindowsFile";
 
     /**
      * @param args the command line arguments
