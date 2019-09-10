@@ -431,6 +431,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             checkFrames();
 
         }
+        LocationSize ls = new LocationSize(internalFrame.getLocation(), internalFrame.getSize());
         iconifiedFramesMap.put(internalFrame, ls);
     }
 
@@ -2285,7 +2286,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private void jMenuItemCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCustomWindowStartupActionPerformed
         JFileChooser chooser = new JFileChooser(aprsSystem.getPropertiesDirectory());
-        if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             aprsSystem.setCustomWindowsFile(chooser.getSelectedFile());
         }
     }//GEN-LAST:event_jMenuItemCustomWindowStartupActionPerformed
