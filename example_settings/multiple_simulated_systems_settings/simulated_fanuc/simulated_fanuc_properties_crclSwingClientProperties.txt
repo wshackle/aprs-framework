@@ -39,6 +39,7 @@ boolean backgroundSet=true
 boolean fontSet=true
 boolean cursorSet=false
 boolean focusTraversable=true
+
 # could not invokegetLastRunningProgramTrueInfo
 # could not invokegetLastProgRunDataList
 java.lang.Thread runProgramThread=Thread[AprsJframe.1.Fanuc-Cart-run-057-Sim_Fanuc:startActionsToCrclJInternalFrame.loadProperties//aprs.system.AprsSystem.startActionsToCrclJInternalFrame(AprsSystem.java:5280),6,main]
@@ -60,6 +61,7 @@ crcl.utils.ProgramPlotter sideProgramPlotter=crcl.utils.ProgramPlotter@224e2ba
 crcl.utils.ProgramPlotter overheadProgramPlotter=crcl.utils.ProgramPlotter@3eaee2d8
 java.awt.Container outerContainer=crcl.ui.client.CrclSwingClientJInternalFrame[,0,0,1058x725,invalid,layout=javax.swing.plaf.basic.BasicInternalFrameUI$Handler,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@3587745,flags=264,maximumSize=,minimumSize=,preferredSize=,closable=false,defaultCloseOperation=DISPOSE_ON_CLOSE,desktopIcon=javax.swing.JInternalFrame$JDesktopIcon[,658,698,113x27,layout=java.awt.BorderLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@2d023690,flags=0,maximumSize=,minimumSize=,preferredSize=],frameIcon=,iconable=true,isClosed=false,isIcon=false,isMaximum=false,isSelected=false,maximizable=true,opened=true,resizable=true,rootPane=javax.swing.JRootPane[,6,25,1046x694,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@3462c36b,flags=457,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true,title=CRCL Client: Disconnected]
 java.awt.Window outerWindow=aprs.system.AprsSystemDisplayJFrame[frame0,0,27,1070x788,invalid,layout=java.awt.BorderLayout,title=APRS : Sim_Fanuc(Disconnected) : Fanuc Cart :  : 0,resizable,normal,defaultCloseOperation=EXIT_ON_CLOSE,rootPane=javax.swing.JRootPane[,0,28,1070x760,invalid,layout=javax.swing.JRootPane$RootLayout,alignmentX=0.0,alignmentY=0.0,border=javax.swing.plaf.synth.SynthBorder@7e8c5817,flags=16777673,maximumSize=,minimumSize=,preferredSize=],rootPaneCheckingEnabled=true]
+
 double rpyJogIncrement=3.0
 crcl.ui.client.CrclSwingClientJPanel.PoseDisplayMode currentPoseDisplayMode=XYZ_XAXIS_ZAXIS
 java.lang.String version=1.9.1-SNAPSHOT

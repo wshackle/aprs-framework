@@ -429,7 +429,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             checkFrames();
             desktopManager.deactivateFrame(internalFrame);
             checkFrames();
+
         }
+        iconifiedFramesMap.put(internalFrame, ls);
     }
 
     private void iconifyInternalFrame(DesktopManager desktopManager, JInternalFrame internalFrame) {
@@ -672,6 +674,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemCorrectionMode = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemAllowForceFakeTakeAnyTime = new javax.swing.JCheckBoxMenuItem();
         jMenuItemCustomWindowStartup = new javax.swing.JMenuItem();
+
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1905,21 +1908,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemSetPoseMinMaxLimits.setText(txt);
     }
 
-//    @UIEffect
-//    public void setMinLimitMenuDisplay(PmCartesian cart) {
-//        String txt
-//                = String.format(
-//                        "Set Pose Min Limits ... (%+.0f,%+.0f,%+.0f)    ...",
-//                        cart.x, cart.y, cart.z);
-//        jMenuItemSetPoseMinLimitsLimits.setText(txt);
-//    }
-//    private PmCartesian getMaxLimit() {
-//        if (null != aprsSystem) {
-//            return aprsSystem.getMaxLimit();
-//        } else {
-//            throw new IllegalStateException("aprsSystem == null, this=" + this);
-//        }
-//    }
     @UIEffect
     private void jMenuItemSetPoseMinMaxLimitsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPoseMinMaxLimitsActionPerformed
         try {

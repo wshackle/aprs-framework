@@ -4297,7 +4297,6 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != customWindowsFile) {
                 loadCustomWindowsFile();
             }
-//            setupWindowsMenuOnDisplay();
             if (futures.isEmpty()) {
                 return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckBoxes");
             } else {
@@ -9228,6 +9227,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != startExploreGraphDbString) {
                 setExploreGraphDBStartupSelected(Boolean.valueOf(startExploreGraphDbString));
             }
+
             String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
             if (null != customWindowsFileString) {
                 setCustomWindowsFile(new File(propertiesDirectory, customWindowsFileString));
@@ -9652,6 +9652,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private static final String FANUC_CRCL_LOCAL_PORT = "fanuc.crclLocalPort";
     private static final String FANUC_ROBOT_HOST = "fanuc.robotHost";
     private static final String MOTOMAN_CRCL_LOCAL_PORT = "motoman.crclLocalPort";
+
 
     private static final String CUSTOM_WINDOWS_FILE = "aprs.customWindowsFile";
 
