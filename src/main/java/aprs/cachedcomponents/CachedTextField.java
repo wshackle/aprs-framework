@@ -2,7 +2,7 @@ package aprs.cachedcomponents;
 
 import aprs.misc.Utils;
 import static aprs.misc.Utils.isEventDispatchThread;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 

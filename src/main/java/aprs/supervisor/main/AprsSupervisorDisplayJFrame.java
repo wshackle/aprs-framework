@@ -44,9 +44,9 @@ import aprs.system.AprsSystem;
 import crcl.base.PointType;
 
 import crcl.base.PoseType;
-import crcl.ui.XFuture;
-import crcl.ui.XFuture.PrintedException;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFuture;
+import crcl.utils.XFuture.PrintedException;
+import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
 

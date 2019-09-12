@@ -23,7 +23,7 @@
 package aprs.cachedcomponents;
 
 import static aprs.misc.Utils.isEventDispatchThread;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;

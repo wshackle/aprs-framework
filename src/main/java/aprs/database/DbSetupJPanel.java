@@ -69,7 +69,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;

@@ -1,7 +1,7 @@
 package aprs.cachedcomponents;
 
 import com.google.common.base.Objects;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

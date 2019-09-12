@@ -28,7 +28,7 @@ import aprs.actions.optaplanner.actionmodel.OpActionType;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.conveyor.EditPropertiesJPanel;
 import aprs.misc.Utils;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.io.IOException;

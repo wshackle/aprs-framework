@@ -46,8 +46,8 @@ import aprs.system.AprsSystem;
 
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
-import crcl.ui.XFuture;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 
 import java.awt.Color;

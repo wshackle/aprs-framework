@@ -28,7 +28,7 @@ import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.system.AprsSystem;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

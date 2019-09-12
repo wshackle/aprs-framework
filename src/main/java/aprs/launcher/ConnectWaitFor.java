@@ -23,7 +23,7 @@
 package aprs.launcher;
 
 import static aprs.misc.AprsCommonLogger.println;
-import crcl.ui.XFuture;
+import crcl.utils.XFuture;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;

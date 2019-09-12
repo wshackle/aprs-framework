@@ -28,7 +28,7 @@ import aprs.misc.Utils;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Component;
 import java.awt.HeadlessException;

@@ -23,7 +23,7 @@
 package aprs.supervisor.main;
 
 import static aprs.supervisor.main.AprsSupervisorDisplayJFrame.getTimeString;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 
 /**
  *

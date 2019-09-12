@@ -23,7 +23,7 @@
 package aprs.cachedcomponents;
 
 import aprs.misc.Utils;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.atomic.AtomicInteger;

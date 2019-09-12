@@ -23,7 +23,7 @@
 package aprs.conveyor;
 
 import aprs.system.AprsSystem;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.awt.HeadlessException;
 import java.util.Map;
 import org.checkerframework.checker.guieffect.qual.UIType;

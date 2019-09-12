@@ -28,7 +28,7 @@ import aprs.database.PhysicalItem;
 import aprs.database.PoseQueryElem;
 import aprs.database.Slot;
 import aprs.system.AprsSystem;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.io.File;
 import java.sql.Connection;
 import java.util.List;

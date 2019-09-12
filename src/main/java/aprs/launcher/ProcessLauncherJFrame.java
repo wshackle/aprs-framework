@@ -26,7 +26,7 @@ import aprs.misc.Utils;
 import aprs.misc.AprsCommonLogger;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.io.File;
 import java.io.IOException;
 import java.util.Deque;

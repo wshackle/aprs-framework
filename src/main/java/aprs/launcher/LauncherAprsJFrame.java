@@ -32,8 +32,8 @@ import aprs.actions.optaplanner.display.OptaplannerTest;
 import aprs.misc.AprsCommonLogger;
 import aprs.misc.IconImages;
 import aprs.system.AprsSystem;
-import crcl.ui.XFuture;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
 import java.awt.Frame;
 
 import java.awt.GraphicsEnvironment;

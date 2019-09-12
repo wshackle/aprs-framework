@@ -23,7 +23,7 @@
 package aprs.launcher;
 
 import static aprs.misc.AprsCommonLogger.println;
-import crcl.ui.XFuture;
+import crcl.utils.XFuture;
 import java.awt.Component;
 import java.io.File;
 import java.io.IOException;

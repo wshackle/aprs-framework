@@ -25,7 +25,7 @@ package aprs.database;
 import aprs.misc.Utils;
 import aprs.database.vision.VisionToDBJPanel;
 import static aprs.misc.AprsCommonLogger.println;
-import crcl.ui.XFuture;
+import crcl.utils.XFuture;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

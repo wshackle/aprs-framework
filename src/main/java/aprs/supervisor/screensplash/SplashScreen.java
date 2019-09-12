@@ -23,7 +23,7 @@
 package aprs.supervisor.screensplash;
 
 import aprs.misc.Utils;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;

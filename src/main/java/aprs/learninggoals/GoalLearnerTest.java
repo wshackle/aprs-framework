@@ -45,8 +45,8 @@ import javax.swing.JFrame;
 
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.system.AprsSystem;
-import crcl.ui.XFuture;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
 import java.util.Map.Entry;
 import org.checkerframework.checker.nullness.qual.Nullable;
 

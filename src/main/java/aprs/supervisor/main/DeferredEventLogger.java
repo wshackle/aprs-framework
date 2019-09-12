@@ -22,7 +22,7 @@
  */
 package aprs.supervisor.main;
 
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 
 /**
  *

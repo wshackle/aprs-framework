@@ -25,7 +25,7 @@ package aprs.database;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

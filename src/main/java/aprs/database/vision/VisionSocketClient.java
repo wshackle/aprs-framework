@@ -26,7 +26,7 @@ import aprs.database.PhysicalItem;
 import aprs.database.SocketLineReader;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PoseType;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;

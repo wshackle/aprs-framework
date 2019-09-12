@@ -25,7 +25,7 @@ package aprs.simview;
 import aprs.database.PhysicalItem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
-import crcl.ui.XFutureVoid;
+import crcl.utils.XFutureVoid;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
