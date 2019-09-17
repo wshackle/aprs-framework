@@ -1419,11 +1419,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
         }
-        if(gParamsActions.isEmpty()) {
+        if (gParamsActions.isEmpty()) {
             throw new IllegalArgumentException("gparams.actions.isEmpty()");
         }
-        if(gParamsActions.size() <= gparams.startingIndex) {
-            throw new IllegalArgumentException("gparams.actions.size()="+gParamsActions.size()+", gparams.startingIndex="+gparams.startingIndex);
+        if (gParamsActions.size() <= gparams.startingIndex) {
+            throw new IllegalArgumentException("gparams.actions.size()=" + gParamsActions.size() + ", gparams.startingIndex=" + gparams.startingIndex);
         }
         int blockingCount = localAprsSystem.startBlockingCrclPrograms();
         List<MiddleCommandType> cmds = new ArrayList<>();
@@ -2304,18 +2304,26 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         private final int actionsInSize;
         private final int actionsOutSize;
         private final long solveTime;
-        private final File actionsInFile;
-        private final File actionsOutFile;
-        private final File itemsImageFile;
-        private final File itemsCsvFile;
-        private final File object2DLogLinesFile;
-        private final File object2DPropertiesFile;
-        private final File inputOpPlanFile;
-        private final File outputOpPlanFile;
+        private final @Nullable
+        File actionsInFile;
+        private final @Nullable
+        File actionsOutFile;
+        private final @Nullable
+        File itemsImageFile;
+        private final @Nullable
+        File itemsCsvFile;
+        private final @Nullable
+        File object2DLogLinesFile;
+        private final @Nullable
+        File object2DPropertiesFile;
+        private final @Nullable
+        File inputOpPlanFile;
+        private final @Nullable
+        File outputOpPlanFile;
         private final double inScore;
         private final double outScore;
 
-        public OptiplannerLogEntry(int index, int startingIndex, String runName, boolean reverse, int actionsInSize, int actionsOutSize, long solveTime, File actionsInFile, File actionsOutFile, File itemsImageFile, File itemsCsvFile, File object2DLogLinesFile, File object2DPropertiesFile, File inputOpPlanFile, File outputOpPlanFile, double inScore, double outScore) {
+        public OptiplannerLogEntry(int index, int startingIndex, String runName, boolean reverse, int actionsInSize, int actionsOutSize, long solveTime, @Nullable File actionsInFile, @Nullable File actionsOutFile, @Nullable File itemsImageFile, @Nullable File itemsCsvFile, @Nullable File object2DLogLinesFile, @Nullable File object2DPropertiesFile, @Nullable File inputOpPlanFile, @Nullable File outputOpPlanFile, double inScore, double outScore) {
             this.index = index;
             this.startingIndex = startingIndex;
             this.runName = runName;
@@ -2335,7 +2343,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             this.outScore = outScore;
         }
 
-        public Object[] toArray() {
+        public @Nullable
+        Object[] toArray() {
             return new Object[]{
                 index, startingIndex, runName, reverse,
                 inScore, outScore,
@@ -2367,8 +2376,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return new ArrayList<>(optiplannerLogEntrys);
     }
 
-    private volatile File logOptaPlannerResultsFile = null;
+    private volatile @Nullable
+    File logOptaPlannerResultsFile = null;
 
+    @SuppressWarnings("nullness")
     private synchronized void logOptaPlannerResult(
             int solveCount,
             int startingIndex,
@@ -2377,21 +2388,43 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             long solveTime,
             File actionsInFile,
             File actionsOutFile,
-            File[] takeSnapsPhysicalItemsFiles,
+            @Nullable File[] snapsFiles,
             double inScore,
             double outScore,
             OpActionPlan inPlan,
-            OpActionPlan outPlan
-    ) {
+            OpActionPlan outPlan) {
         try {
+            if (null == aprsSystem) {
+                return;
+            }
             String runName = aprsSystem.getRunName();
             File inPlanFile = aprsSystem.createTempFile("inPlan", ".csv");
             inPlan.saveActionList(inPlanFile);
             File outPlanFile = aprsSystem.createTempFile("outPlan", ".csv");
             outPlan.saveActionList(outPlanFile);
-            final boolean newFile = null == logOptaPlannerResultsFile || optiplannerLogEntrys.isEmpty();
-            if (newFile) {
-                logOptaPlannerResultsFile = Utils.createTempFile("OptaPlannerResults" + aprsSystem.getTaskName(), ".csv");
+            final File resultsFile;
+            final boolean newFile;
+            if (null == logOptaPlannerResultsFile) {
+                resultsFile = Utils.createTempFile("OptaPlannerResults" + aprsSystem.getTaskName(), ".csv");
+                this.logOptaPlannerResultsFile = resultsFile;
+                newFile = true;
+            } else {
+                if (optiplannerLogEntrys.isEmpty()) {
+                    resultsFile = Utils.createTempFile("OptaPlannerResults" + aprsSystem.getTaskName(), ".csv");
+                    this.logOptaPlannerResultsFile = resultsFile;
+                    newFile = true;
+                } else {
+                    resultsFile = logOptaPlannerResultsFile;
+                    newFile = false;
+                }
+            }
+            final File logLinesFile = aprsSystem.getObject2DViewLogLinesFile();
+            if (null == logLinesFile) {
+                return;
+            }
+            final File propertiesFile = aprsSystem.getObject2DViewPropertiesFile();
+            if (null == propertiesFile) {
+                return;
             }
             final OptiplannerLogEntry logEntry
                     = new OptiplannerLogEntry(
@@ -2399,8 +2432,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             sizeIn, sizeOut,
                             solveTime,
                             actionsInFile, actionsOutFile,
-                            takeSnapsPhysicalItemsFiles[0], takeSnapsPhysicalItemsFiles[1],
-                            aprsSystem.getObject2DViewLogLinesFile(), aprsSystem.getObject2DViewPropertiesFile(),
+                            snapsFiles[0], snapsFiles[1],
+                            logLinesFile, propertiesFile,
                             inPlanFile, outPlanFile,
                             inScore, outScore);
             CSVFormat format = CSVFormat.DEFAULT;
@@ -2408,7 +2441,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 format = format.withHeader(OptiplannerLogEntry.HEADERS);
             }
             final List<Object> logEntryList = Arrays.asList(logEntry.toArray());
-            try (CSVPrinter printer = new CSVPrinter(new FileWriter(logOptaPlannerResultsFile, !newFile), format)) {
+            try (CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
                 printer.printRecord(logEntryList);
             }
             optiplannerLogEntrys.add(logEntry);
@@ -2435,6 +2468,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null == solverToRun) {
                 return actions;
             }
+            @Nullable
             File[] takeSnapsPhysicalItemsFiles
                     = takeSimViewSnapshot(
                             "optimizePddlActionsWithOptaPlanner.physicalItemsLocal",
@@ -2654,9 +2688,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     lastOptimizeReplacedPddlActions = replacedPddlActions;
                     lastOptimizeNewPddlActions = newPddlActions;
                     lastOptimizeLaterPddlActions = laterPddlActions;
-//            if (fullReplanPddlActions.size() != actions.size()) {
-//                throw new IllegalStateException("skippedPddlActionsList.size() = " + skippedPddlActionsList.size() + ",actions.size() = " + actions.size() + ", skippedActions=" + skippedActions);
-//            }
                     File actionsOutFile = aprsSystem.createTempFile("actionsOut", ".txt");
                     int sizeOut = 0;
                     try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
@@ -3973,7 +4004,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param pose optional pose to mark or null
      * @param label optional label for pose or null
      */
-    private File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    private @Nullable
+    File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, pose, label);
         } else {
@@ -3981,7 +4013,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    public File[] takeSimViewSnapshot(File f, PointType point, String label) {
+    public @Nullable
+    File[] takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, point, label);
         } else {
@@ -3989,7 +4022,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    public File[] takeSimViewSnapshot(File f, PmCartesian pt, String label) {
+    public @Nullable
+    File[] takeSimViewSnapshot(File f, PmCartesian pt, String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, pt, label);
         } else {
@@ -3997,7 +4031,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    public File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
+    public @Nullable
+    File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, pose, label);
         } else {
@@ -4005,7 +4040,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    public File[] takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
+    public @Nullable
+    File[] takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, point, label);
         } else {
@@ -4013,7 +4049,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
+    private @Nullable
+    File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, pt, label);
         } else {
@@ -4028,7 +4065,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param f file to save snapshot image to
      * @param itemsToPaint items to paint in the snapshot image
      */
-    private File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    private @Nullable
+    File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, itemsToPaint);
         } else {
@@ -4036,7 +4074,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private File[] takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
+    private @Nullable
+    File[] takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, itemsToPaint);
         } else {

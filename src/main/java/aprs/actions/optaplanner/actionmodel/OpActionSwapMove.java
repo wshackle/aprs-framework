@@ -29,11 +29,10 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.actions.optaplanner.actionmodel.score.IncrementalOpActionPlanScoreCalculator;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 import org.optaplanner.core.impl.score.director.ScoreDirector;
@@ -47,9 +46,12 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
     private final OpAction action1;
     private final OpAction action2;
 
-    private OpActionPlan undoOrigPlanCopy = null;
-    private HardSoftLongScore undoOrigEasyScore = null;
-    private HardSoftLongScore undoOrigSdScore = null;
+    private @Nullable
+    OpActionPlan undoOrigPlanCopy = null;
+    private @Nullable
+    HardSoftLongScore undoOrigEasyScore = null;
+    private @Nullable
+    HardSoftLongScore undoOrigSdScore = null;
 
     public OpActionSwapMove(OpAction action1, OpAction action2) {
         this.action1 = action1;
@@ -64,20 +66,29 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         return action2;
     }
 
+    private static final boolean DO_SCORE_CHECKS = Boolean.getBoolean("aprs.doScoreChecks");
+
     @Override
     protected OpActionSwapMove createUndoMove(ScoreDirector<OpActionPlan> scoreDirector) {
-//        return new OpActionSwapMove(action2, action1);
         OpActionSwapMove undoMove = new OpActionSwapMove(action2, action1);
-        undoMove.undoOrigSdScore = (HardSoftLongScore) scoreDirector.calculateScore();
-        undoMove.undoOrigPlanCopy = scoreDirector.getWorkingSolution().clonePlan();
-        undoMove.undoOrigEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
+        if (DO_SCORE_CHECKS) {
+            undoMove.undoOrigSdScore = (HardSoftLongScore) scoreDirector.calculateScore();
+            undoMove.undoOrigPlanCopy = scoreDirector.getWorkingSolution().clonePlan();
+            undoMove.undoOrigEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
+        }
         return undoMove;
     }
 
     @Override
     protected void doMoveOnGenuineVariables(ScoreDirector<OpActionPlan> scoreDirector) {
         final OpAction action1Previous = action1.getPrevious();
+        if (null == action1Previous) {
+            throw new RuntimeException("null ==  action1.getPrevious() : action1=" + action1);
+        }
         final OpAction action2Previous = action2.getPrevious();
+        if (null == action2Previous) {
+            throw new RuntimeException("null ==  action2.getPrevious() : action2=" + action2);
+        }
         final OpActionInterface action1Next = action1.getNext();
         final OpActionInterface action2Next = action2.getNext();
 
@@ -94,8 +105,14 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         scoreDirector.afterVariableChanged(action2, "next");
         scoreDirector.afterVariableChanged(action1Previous, "next");
         scoreDirector.afterVariableChanged(action2Previous, "next");
+        if (DO_SCORE_CHECKS) {
+            checkUndoScore(scoreDirector);
+        }
 
-        if (null != undoOrigSdScore) {
+    }
+
+    private void checkUndoScore(ScoreDirector<OpActionPlan> scoreDirector) throws RuntimeException {
+        if (null != undoOrigSdScore && null != undoOrigPlanCopy) {
             synchronized (this.getClass()) {
                 HardSoftLongScore newSdScore;
                 try {
@@ -126,19 +143,19 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
                     throw new RuntimeException("newSdScore = " + newSdScore + ", undoOrigSdScore=" + undoOrigSdScore);
                 }
             }
-        }
-        if (null != undoOrigEasyScore) {
-            HardSoftLongScore newEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
-            if (undoOrigSdScore.compareTo(newEasyScore) != 0) {
-                Thread.dumpStack();
-                List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
-                System.out.println("diffList.size() = " + diffList.size());
-                OpActionPlan.printMapsArrayDiffList(System.out, diffList);
-                System.out.println("");
-                System.err.println("");
-                System.out.flush();
-                System.out.flush();
-                throw new RuntimeException("newEasyScore = " + newEasyScore + ", undoOrigSdScore=" + undoOrigSdScore);
+            if (null != undoOrigEasyScore) {
+                HardSoftLongScore newEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
+                if (undoOrigSdScore.compareTo(newEasyScore) != 0) {
+                    Thread.dumpStack();
+                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                    System.out.println("diffList.size() = " + diffList.size());
+                    OpActionPlan.printMapsArrayDiffList(System.out, diffList);
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.out.flush();
+                    throw new RuntimeException("newEasyScore = " + newEasyScore + ", undoOrigSdScore=" + undoOrigSdScore);
+                }
             }
         }
     }
@@ -237,7 +254,10 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         List<OpAction> entities = this.getPlanningEntities();
         List<OpActionInterface> nexts = new ArrayList<>();
         for (OpAction entity : entities) {
-            nexts.add(entity.getNext());
+            final OpActionInterface entityNext = entity.getNext();
+            if (null != entityNext) {
+                nexts.add(entityNext);
+            }
         }
         return nexts;
     }
@@ -251,6 +271,7 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
     }
 
     @Override
+    @SuppressWarnings({"nullness", "initialization"})
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -276,5 +297,4 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         return "OpActionSwapMove{" + "action1=" + action1 + ", action2=" + action2 + ", undoOrigPlanCopy=" + undoOrigPlanCopy + ", undoOrigEasyScore=" + undoOrigEasyScore + ", undoOrigSdScore=" + undoOrigSdScore + '}';
     }
 
-    
 }

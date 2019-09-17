@@ -64,24 +64,21 @@ public class OptaplannerTest {
      * @param args not used
      */
     public static void main(String[] args) throws IOException {
-        
-        
+
         long seed = 2001;
-        for (int i = 0; i < args.length -1; i++) {
+        for (int i = 0; i < args.length - 1; i++) {
             String arg = args[i];
-            switch(arg) {
+            switch (arg) {
                 case "--seed":
-                    seed = Long.parseLong(args[i+1]);
+                    seed = Long.parseLong(args[i + 1]);
                     i++;
                     break;
             }
         }
         OpActionPlan ap = new OpActionPlan();
 
-        
-        
         Random rand;
-        if(seed > 0) {
+        if (seed > 0) {
             rand = new Random();
         } else {
             rand = new Random(seed);
@@ -149,8 +146,8 @@ public class OptaplannerTest {
         SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
 
         Solver<OpActionPlan> solver = solverFactory.buildSolver();
-        
-        ap.saveActionList(File.createTempFile("Optaplanner_Test_input_"+seed+"_"+Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
+
+        ap.saveActionList(File.createTempFile("Optaplanner_Test_input_" + seed + "_" + Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
 //        OpActionPlan apOut = solver.solve(ap);
         final ScoreDirector<OpActionPlan> scoreDirector
                 = solver.getScoreDirectorFactory().buildScoreDirector();
@@ -211,32 +208,28 @@ public class OptaplannerTest {
 
         System.out.println("scoreFromDrl = " + scoreFromDrl);
         long total = 0;
-        for (int i = 0; i < ap.getActions().size(); i++) {
-            OpActionInterface apI = ap.getActions().get(i);
+        final List<OpAction> apActions = ap.getActions();
+        if (null == apActions) {
+            throw new NullPointerException("ap.getActions() returned null");
+        }
+        for (int i = 0; i < apActions.size(); i++) {
+            OpActionInterface apI = apActions.get(i);
             if (apI instanceof OpAction) {
                 OpAction act = (OpAction) apI;
-                if (!act.isFake() && act.getNext() != null && !act.getNext().isFake() && act.getLocation() != null && act.getNext().getLocation() != null) {
+                final OpActionInterface actNext = act.getNext();
+                if (!act.isFake() 
+                        && actNext != null 
+                        && !actNext.isFake()
+                        && act.getLocation() != null 
+                        && actNext.getLocation() != null) {
                     final long distToNextLong = act.getDistToNextLong();
-//                    System.out.println("distToNextLong = " + distToNextLong);
-                    double cost = act.cost(ap);
-//                    System.out.println("cost = " + cost);
-                    if (Math.abs(cost * 1000.0 - distToNextLong) > 2.0) {
-//                        System.out.println("act = " + act);
-                    }
                     total += distToNextLong;
                 }
             }
         }
         System.out.println("total = " + total);
-//        System.exit(0);
-
-        // Setup callback to have the solver print some status as it runs.
         solver.addEventListener(e -> System.out.println("After " + e.getTimeMillisSpent() + "ms the best score is " + e.getNewBestScore()));
-        final List<OpAction> apActions = ap.getActions();
 
-        if (null == apActions) {
-            throw new NullPointerException("ap.getActions() returned null");
-        }
         List<OpAction> apActionsCopy = new ArrayList<>(apActions);
         System.out.println("apActionsCopy = " + apActionsCopy);
 
@@ -246,37 +239,11 @@ public class OptaplannerTest {
 
         long t1 = System.currentTimeMillis();
         HardSoftLongScore solvedActionPlanScore = calculator.calculateScore(solvedActionPlan);
-//        OpActionPlan bestPlan = solvedActionPlan;
-//        ap.checkActionList();
-//        for (int i = 0; i < 20; i++) {
-//            ap.checkActionList();
-//            OpActionPlan shuffledPlan = OpActionPlan.cloneAndShufflePlan(ap);
-//            ap.checkActionList();
-//            shuffledPlan.checkActionList();
-//            solvedActionPlan = solver.solve(shuffledPlan);
-//            ap.checkActionList();
-//            shuffledPlan.checkActionList();
-//            solvedActionPlan.checkActionList();
-//            score = calculator.calculateScore(solvedActionPlan);
-//            System.out.println("score = " + score);
-//            if (score.getHardScore() > bestScore.getHardScore()
-//                    || (score.getHardScore() == bestScore.getHardScore() && score.getSoftScore() > bestScore.getSoftScore())) {
-//                bestScore = score;
-//                bestPlan = solvedActionPlan;
-//            }
-//        }
-//
-//        long t2 = System.currentTimeMillis();
-//        System.out.println("(t1-t0) = " + (t1 - t0));
-//        System.out.println("(t2-t0) = " + (t2 - t0));
 
-        // Print the results
-        ap.saveActionList(File.createTempFile("Optaplanner_Test_solvedActionPlan_"+seed+"_"+Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
+        ap.saveActionList(File.createTempFile("Optaplanner_Test_solvedActionPlan_" + seed + "_" + Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
 
         System.out.println("bestPlan = " + solvedActionPlan.computeString());
-        
         System.out.println("bestPlan.getActions() = " + solvedActionPlan.getActions());
-//        score = calculator.calculateScore(bestPlan);
         System.out.println("bestScore = " + solvedActionPlanScore);
         aprs.actions.optaplanner.display.OptiplannerDisplayJFrame.showPlan(ap, solvedActionPlan, "Solution: " + solvedActionPlanScore.getSoftScore(), JFrame.EXIT_ON_CLOSE);
     }

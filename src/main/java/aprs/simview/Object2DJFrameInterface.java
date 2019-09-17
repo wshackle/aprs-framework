@@ -29,6 +29,7 @@ import crcl.utils.XFutureVoid;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -36,20 +37,33 @@ import rcs.posemath.PmCartesian;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 interface Object2DJFrameInterface {
-    
-    public List<PhysicalItem> getItems();
-    
-    public XFutureVoid setItems(List<PhysicalItem> items);
-    
-    public File[] takeSnapshot(File f, PointType point, String label) ;
-    public File[] takeSnapshot(File f, PmCartesian point, String label) ;
-    public File[] takeSnapshot(File f, PoseType pose, String label) ;
-    public File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) ;
 
-    
-    public File[] takeSnapshot(File f, PointType point, String label, int w, int h) ;
-    public File[] takeSnapshot(File f, PmCartesian point, String label, int w, int h) ;
-    public File[] takeSnapshot(File f, PoseType pose, String label, int w, int h) ;
-    public File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) ;
+    public List<PhysicalItem> getItems();
+
+    public XFutureVoid setItems(List<PhysicalItem> items);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PointType point, String label);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PmCartesian point, String label);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PoseType pose, String label);
+
+    public @Nullable
+    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PointType point, String label, int w, int h);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PmCartesian point, String label, int w, int h);
+
+    public @Nullable
+    File[] takeSnapshot(File f, PoseType pose, String label, int w, int h);
+
+    public @Nullable
+    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h);
 
 }

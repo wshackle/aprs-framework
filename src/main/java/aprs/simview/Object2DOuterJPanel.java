@@ -232,7 +232,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile boolean settingItems = false;
 
     @Override
-    public File []takeSnapshot(File f, PoseType pose, String label) {
+    public @Nullable
+    File[] takeSnapshot(File f, PoseType pose, String label) {
         if (null != pose) {
             return takeSnapshot(f, pose.getPoint(), label);
         } else {
@@ -241,7 +242,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File [] takeSnapshot(File f, @Nullable PointType point, String label) {
+    public @Nullable
+    File[] takeSnapshot(File f, @Nullable PointType point, String label) {
         if (null != point) {
             return takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label);
         } else {
@@ -250,7 +252,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File [] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
+    @Nullable
+    public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         File csvFile = null;
         try {
             this.object2DJPanel1.takeSnapshot(f, point, label);
@@ -278,7 +281,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
-        return new File[]{f,csvFile};
+        return new File[]{f, csvFile};
     }
 
     private final AtomicInteger snapshotsCount = new AtomicInteger();
@@ -312,7 +315,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File[] takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
+    public @Nullable
+    File[] takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
         if (null != pose) {
             return takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
@@ -321,7 +325,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File[] takeSnapshot(File f, @Nullable PointType point, @Nullable String label, int w, int h) {
+    public @Nullable
+    File[] takeSnapshot(File f, @Nullable PointType point, @Nullable String label, int w, int h) {
         if (null != point) {
             return takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
@@ -330,7 +335,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
+    public @Nullable
+    File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
         File csvFile = null;
         try {
             this.object2DJPanel1.takeSnapshot(f, point, label, w, h);
@@ -358,7 +364,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
-        return new File[]{f,csvFile};
+        return new File[]{f, csvFile};
     }
 
     private boolean forceOutputFlag;
@@ -5241,10 +5247,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile @Nullable
     File logLinesFile = null;
 
-    public  @Nullable File getLogLinesFile() {
+    public @Nullable
+    File getLogLinesFile() {
         return logLinesFile;
     }
-    
 
     private String getTaskName() {
         if (null != aprsSystem) {
@@ -5351,7 +5357,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     @Override
-    public File[] takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+    public @Nullable
+    File[] takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
 
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
@@ -5393,13 +5400,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    public File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    public @Nullable
+    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
         File csvFile = saveSnapshotCsv(f, itemsToPaint);
         runOnDispatchThread(() -> {
             updateSnapshotsTable(f, csvFile);
         });
-        return new File[]{f,csvFile};
+        return new File[]{f, csvFile};
     }
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;
@@ -5557,7 +5565,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         final int poseUpdateCount;
 
         PoseUpdateHistoryItem(
-                
                 CRCLStatusType stat,
                 @Nullable CRCLCommandType cmd,
                 boolean isHoldingObjectExpected,
@@ -5749,10 +5756,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @SuppressWarnings("initialization")
     private final CurrentPoseListener currentPoseListener = this::handlePoseUpdate;
 
-    private volatile Thread handlePoseUpdateThread = null;
+    private volatile @Nullable
+    Thread handlePoseUpdateThread = null;
     private final AtomicInteger poseUpdateCount = new AtomicInteger();
-    private volatile StackTraceElement lastPoseUpdateTrace @Nullable [] = null;
-    
+    private volatile StackTraceElement lastPoseUpdateTrace @Nullable []  = null;
+
     private void handlePoseUpdate(
             CrclSwingClientJPanel panel,
             CRCLStatusType stat,
@@ -5772,7 +5780,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     throw new RuntimeException("handlePoseUpdateThread=" + handlePoseUpdateThread + ", Thread.currentThread()=" + Thread.currentThread());
                 }
             }
-            lastPoseUpdateTrace=Thread.currentThread().getStackTrace();
+            lastPoseUpdateTrace = Thread.currentThread().getStackTrace();
             if (!showCurrentCachedCheckBox.isSelected()) {
                 return;
             }
@@ -5870,7 +5878,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         }
                     } else {
                         try {
-                            println("handlePoseUpdate: currentThread() = "+Thread.currentThread());
+                            println("handlePoseUpdate: currentThread() = " + Thread.currentThread());
                             System.out.println("");
                             System.err.println("");
                             System.out.flush();

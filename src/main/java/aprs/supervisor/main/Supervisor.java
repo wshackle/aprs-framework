@@ -278,7 +278,8 @@ public class Supervisor {
     private volatile @Nullable
     XFuture<?> lastCompleteMultiCycleTestFuture = null;
 
-    public XFuture<?> getLastCompleteMultiCycleTestFuture() {
+    public @Nullable
+    XFuture<?> getLastCompleteMultiCycleTestFuture() {
         return lastCompleteMultiCycleTestFuture;
     }
 
@@ -9185,7 +9186,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData             @Nullable []  [] = null;
+    private volatile Object lastTasksTableData              @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

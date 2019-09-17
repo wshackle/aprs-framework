@@ -2284,10 +2284,23 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         showAllInternalFrames();
     }//GEN-LAST:event_jMenuItemShowAllWindowsActionPerformed
 
+    @UIEffect
     private void jMenuItemCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCustomWindowStartupActionPerformed
-        JFileChooser chooser = new JFileChooser(aprsSystem.getPropertiesDirectory());
+        if(null == aprsSystem) {
+            throw new RuntimeException("null==aprsSystem");
+        }
+        final File dir = aprsSystem.getPropertiesDirectory();
+        JFileChooser chooser;
+        if(null != dir) {
+            chooser = new JFileChooser(dir);
+        } else {
+            chooser = new JFileChooser();
+        }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            aprsSystem.setCustomWindowsFile(chooser.getSelectedFile());
+            final File selectedFile = chooser.getSelectedFile();
+            if (null != selectedFile) {
+                aprsSystem.setCustomWindowsFile(selectedFile);
+            }
         }
     }//GEN-LAST:event_jMenuItemCustomWindowStartupActionPerformed
 

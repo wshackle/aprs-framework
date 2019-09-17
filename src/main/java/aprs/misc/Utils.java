@@ -1204,7 +1204,7 @@ public class Utils {
         }
         try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
-            if (forceColumns) {
+            if (forceColumns && null != dtm) {
                 dtm.setRowCount(0);
                 dtm.setColumnCount(0);
                 for (String key : headerMap.keySet()) {

@@ -48,12 +48,12 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         int badNexts = 0;
         int skippedKitTrayAction = 0;
         int repeats = 0;
-        List<OpAction> actionsList = solution.getActions();
+        final List<OpAction> solutionActions = solution.getActions();
         double accelleration = solution.getAccelleration();
         double maxSpeed = solution.getMaxSpeed();
         costMap.clear();
-        if (null != actionsList) {
-            for (OpAction action : actionsList) {
+        if (null != solutionActions) {
+            for (OpAction action : solutionActions) {
                 OpActionInterface nextAction = action.getNext();
                 if (nextAction == null) {
                     nulls++;
@@ -84,9 +84,8 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 effectiveOrderedVisited.add(orderedActName);
             }
             for(OpAction act : effectiveOrderedActionsList) {
-                
                 final double costInc = act.cost(solution);
-                costMap.put(solution.getActions().indexOf(act), costInc);
+                costMap.put(solutionActions.indexOf(act), costInc);
                 costTotal +=  (long) (-1000.0 * costInc);
             }
             lastScoreEnds = ends;
@@ -95,7 +94,7 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
             lastStartLength = startlength;
             lastScoreRepeats = repeats;
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
-            long hardScoreLong = -Math.abs(orderedActionsList.size() - actionsList.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
+            long hardScoreLong = -Math.abs(orderedActionsList.size() - solutionActions.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
 //            long softScoreLong = (long) (-1000.0 * costTotal);
             HardSoftLongScore score = HardSoftLongScore.of(hardScoreLong, costTotal);
             return score;

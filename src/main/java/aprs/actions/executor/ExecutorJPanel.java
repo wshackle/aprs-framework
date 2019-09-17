@@ -2437,7 +2437,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             System.out.println("");
             System.out.flush();
-            
+
             LOGGER.log(Level.SEVERE, "Exception in doActions(" + comment + "," + startAbortCount + ") : " + aprsSystem.getRunName(), ex);
             abortProgram();
             showExceptionInProgram(ex);
@@ -3555,17 +3555,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             System.out.println("");
             System.out.flush();
-            if(null == lastPddlActionSectionToCrclActionListCopy) { 
-            System.err.println("lastPddlActionSectionToCrclActionListCopy = " + lastPddlActionSectionToCrclActionListCopy);
+            final List<Action> listCopy = lastPddlActionSectionToCrclActionListCopy;
+            if (null == listCopy) {
+                System.err.println("lastPddlActionSectionToCrclActionListCopy = " + listCopy);
             } else {
-                for (int i = 0; i < lastPddlActionSectionToCrclActionListCopy.size(); i++) {
-                    System.err.println("lastPddlActionSectionToCrclActionListCopy.get("+i+") = " + lastPddlActionSectionToCrclActionListCopy.get(i));
+                for (int i = 0; i < listCopy.size(); i++) {
+                    System.err.println("lastPddlActionSectionToCrclActionListCopy.get(" + i + ") = " + listCopy.get(i));
                 }
             }
             System.err.println("aprsSystem.getRunName() = " + aprsSystem.getRunName());
             System.err.println("crclProgram = " + crclProgram);
             try {
-                System.err.println("crclProgram :" +CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, false));
+                System.err.println("crclProgram :" + CRCLSocket.getUtilSocket().programToPrettyString(crclProgram, false));
             } catch (Exception ex1) {
                 Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex1);
             }
@@ -6576,9 +6577,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
     private volatile int actionsListSize = -1;
 
-    
-    private volatile @Nullable List<Action>  lastPddlActionSectionToCrclActionListCopy = null;
-    
+    private volatile @Nullable
+    List<Action> lastPddlActionSectionToCrclActionListCopy = null;
+
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
         Map<String, String> options = getTableOptions();
         final int rpi = getReplanFromIndex();
@@ -6610,11 +6611,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final int startReplanFromIndex = this.getReplanFromIndex();
         checkReverse();
         int sarc2;
-        if(reverseFlag) {
+        if (reverseFlag) {
             System.out.println("reverseFlag = " + reverseFlag);
         }
         synchronized (actionsList) {
-            List<Action> actionListDebugCopy =  new ArrayList<>();
+            List<Action> actionListDebugCopy = new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();
             if (hppcIndexSet) {
                 cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber);

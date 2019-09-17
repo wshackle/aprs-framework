@@ -34,87 +34,92 @@ import org.optaplanner.core.impl.heuristic.selector.move.factory.MoveListFactory
 
 /**
  *
- *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class OpActionMoveListFactory implements MoveListFactory<OpActionPlan>{
+public class OpActionMoveListFactory implements MoveListFactory<OpActionPlan> {
 
     @Override
     public List<AbstractMove<OpActionPlan>> createMoveList(OpActionPlan plan) {
-        Map<String,List<OpAction>> pickupsByPartType = new HashMap<>();
-        Map<String,List<OpAction>> dropoffsByPartType = new HashMap<>();
+        Map<String, List<OpAction>> pickupsByPartType = new HashMap<>();
+        Map<String, List<OpAction>> dropoffsByPartType = new HashMap<>();
         List<OpAction> actions = plan.getActions();
-        for (int i = 0; i < actions.size(); i++) {
-            OpAction actionI = actions.get(i);
-            switch(actionI.getOpActionType()) {
-                case PICKUP:
-                case FAKE_PICKUP:
-                    pickupsByPartType.compute(actionI.getPartType(), 
-                            (String key, List<OpAction> l) -> {
-                               if(l == null) {
-                                   return new ArrayList<>(Arrays.asList(actionI));
-                               } else {
-                                   l.add(actionI);
-                                   return l;
-                               }
-                            });
-                    break;
-                    
-                case DROPOFF:
-                case FAKE_DROPOFF:
-                    dropoffsByPartType.compute(actionI.getPartType(), 
-                            (String key, List<OpAction> l) -> {
-                               if(l == null) {
-                                   return new ArrayList<>(Arrays.asList(actionI));
-                               } else {
-                                   l.add(actionI);
-                                   return l;
-                               }
-                            });
-                    break;
-                    
-                default:
-                    break;
-            }
-        }
-        List<AbstractMove<OpActionPlan>> moveList = new ArrayList<>();
-        for(List<OpAction> pickupsByPartList : pickupsByPartType.values()) {
-            for (int i = 0; i < pickupsByPartList.size(); i++) {
-                OpAction actionI = pickupsByPartList.get(i);
-                for (int j = i+1; j < pickupsByPartList.size(); j++) {
-                     OpAction actionJ = pickupsByPartList.get(j);
-                     if(actionJ.isFake()
-                             && actionI.isFake()) {
-                         continue;
-                     }
-                     moveList.add(new OpActionSwapMove(actionI, actionJ));
+        if (null != actions) {
+            for (int i = 0; i < actions.size(); i++) {
+                OpAction actionI = actions.get(i);
+                switch (actionI.getOpActionType()) {
+                    case PICKUP:
+                    case FAKE_PICKUP:
+                        pickupsByPartType.compute(actionI.getPartType(),
+                                (String key, List<OpAction> l) -> {
+                                    if (l == null) {
+                                        return new ArrayList<>(Arrays.asList(actionI));
+                                    } else {
+                                        l.add(actionI);
+                                        return l;
+                                    }
+                                });
+                        break;
+
+                    case DROPOFF:
+                    case FAKE_DROPOFF:
+                        dropoffsByPartType.compute(actionI.getPartType(),
+                                (String key, List<OpAction> l) -> {
+                                    if (l == null) {
+                                        return new ArrayList<>(Arrays.asList(actionI));
+                                    } else {
+                                        l.add(actionI);
+                                        return l;
+                                    }
+                                });
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
-        for(List<OpAction> dropoffsByPartList : dropoffsByPartType.values()) {
+        List<AbstractMove<OpActionPlan>> moveList = new ArrayList<>();
+        for (List<OpAction> pickupsByPartList : pickupsByPartType.values()) {
+            for (int i = 0; i < pickupsByPartList.size(); i++) {
+                OpAction actionI = pickupsByPartList.get(i);
+                for (int j = i + 1; j < pickupsByPartList.size(); j++) {
+                    OpAction actionJ = pickupsByPartList.get(j);
+                    if (actionJ.isFake()
+                            && actionI.isFake()) {
+                        continue;
+                    }
+                    moveList.add(new OpActionSwapMove(actionI, actionJ));
+                }
+            }
+        }
+        for (List<OpAction> dropoffsByPartList : dropoffsByPartType.values()) {
             for (int i = 0; i < dropoffsByPartList.size(); i++) {
                 OpAction actionI = dropoffsByPartList.get(i);
-                for (int j = i+1; j < dropoffsByPartList.size(); j++) {
-                     OpAction actionJ = dropoffsByPartList.get(j);
-                     if(actionJ.isFake()
-                             && actionI.isFake()) {
-                         continue;
-                     }
-                     moveList.add(new OpActionSwapMove(actionI, actionJ));
+                for (int j = i + 1; j < dropoffsByPartList.size(); j++) {
+                    OpAction actionJ = dropoffsByPartList.get(j);
+                    if (actionJ.isFake()
+                            && actionI.isFake()) {
+                        continue;
+                    }
+                    moveList.add(new OpActionSwapMove(actionI, actionJ));
                 }
             }
         }
         OpAction start = plan.findStartAction();
+        if(null == start) {
+            throw new RuntimeException("plan.findStartAction() returned null : plan="+plan);
+        }
         OpEndAction end = plan.getEndAction();
         for (int i = 0; i < start.getPossibleNextActions().size(); i++) {
             OpActionInterface nextI = start.getPossibleNextActions().get(i);
-            if(nextI instanceof OpAction) {
+            if (nextI instanceof OpAction) {
                 OpAction nextActionI = (OpAction) nextI;
-                final OpActionFrontBackMove opActionFrontBackMove = new OpActionFrontBackMove(start,end,nextActionI);
+                final OpActionFrontBackMove opActionFrontBackMove = new OpActionFrontBackMove(start, end, nextActionI);
 //                opActionFrontBackMove.createUndoMove(null); // for testing
                 moveList.add(opActionFrontBackMove);
             }
         }
         return moveList;
     }
-    
+
 }

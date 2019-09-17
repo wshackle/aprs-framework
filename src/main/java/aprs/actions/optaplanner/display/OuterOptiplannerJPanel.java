@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.event.ListSelectionEvent;
@@ -250,9 +251,10 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
         jSplitPane1.setDividerLocation(0.3);
     }//GEN-LAST:event_formComponentResized
 
+    @UIEffect
     private void jButtonUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpActionPerformed
         int selectedIndex = jTable1.getSelectedRow();
-        OpActionPlan opActionPlan = opDisplayJPanel1.getOpActionPlan();
+        OpActionPlan opActionPlan = Objects.requireNonNull(opDisplayJPanel1.getOpActionPlan(), "opDisplayJPanel1.getOpActionPlan()");
         List<OpAction> actions = opActionPlan.getOrderedList(true);
         int modelIndex = jTable1.convertRowIndexToModel(selectedIndex);
         System.out.println("modelIndex = " + modelIndex);
@@ -283,34 +285,37 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jButtonUpActionPerformed
 
+    @UIEffect
     private void jButtonDownActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDownActionPerformed
         int selectedIndex = jTable1.getSelectedRow();
         OpActionPlan opActionPlan = opDisplayJPanel1.getOpActionPlan();
-        List<OpAction> actions = opActionPlan.getOrderedList(true);
-        int modelIndex = jTable1.convertRowIndexToModel(selectedIndex);
-        System.out.println("modelIndex = " + modelIndex);
-        if (modelIndex > 0 && modelIndex < actions.size()) {
-            OpAction selectedAction = actions.get(modelIndex);
-            System.out.println("selectedAction = " + selectedAction);
-            OpAction selectedActionM1 = actions.get(modelIndex - 1);
-            for (int i = modelIndex + 1; i < actions.size(); i++) {
-                OpAction actionI = actions.get(i);
-                if (selectedAction.getOpActionType() == actionI.getOpActionType() && selectedAction.getPartType().equals(actionI.getPartType())) {
-                    System.out.println("actionI = " + actionI);
-                    System.out.println("i = " + i);
-                    OpAction actionIM1 = actions.get(i - 1);
-                    selectedActionM1.setNext(actionI);
-                    OpActionInterface selectedActionNext = selectedAction.getNext();
-                    OpActionInterface actionINext = actionI.getNext();
-                    actionIM1.setNext(selectedAction);
-                    selectedAction.setNext(actionINext);
-                    actionI.setNext(selectedActionNext);
-                    List<OpAction> newOrderedActionsList = opActionPlan.getOrderedList(true);
-                    System.out.println("newOrderedActionsList.get(i) = " + newOrderedActionsList.get(i));
-                    System.out.println("newOrderedActionsList.get(modelIndex) = " + newOrderedActionsList.get(modelIndex));
-                    OpActionPlan newOpActionPlan = new OpActionPlanCloner().cloneSolution(opActionPlan);
-                    setOpActionPlan(newOpActionPlan);
-                    return;
+        if (null != opActionPlan) {
+            List<OpAction> actions = opActionPlan.getOrderedList(true);
+            int modelIndex = jTable1.convertRowIndexToModel(selectedIndex);
+            System.out.println("modelIndex = " + modelIndex);
+            if (modelIndex > 0 && modelIndex < actions.size()) {
+                OpAction selectedAction = actions.get(modelIndex);
+                System.out.println("selectedAction = " + selectedAction);
+                OpAction selectedActionM1 = actions.get(modelIndex - 1);
+                for (int i = modelIndex + 1; i < actions.size(); i++) {
+                    OpAction actionI = actions.get(i);
+                    if (selectedAction.getOpActionType() == actionI.getOpActionType() && selectedAction.getPartType().equals(actionI.getPartType())) {
+                        System.out.println("actionI = " + actionI);
+                        System.out.println("i = " + i);
+                        OpAction actionIM1 = actions.get(i - 1);
+                        selectedActionM1.setNext(actionI);
+                        OpActionInterface selectedActionNext = selectedAction.getNext();
+                        OpActionInterface actionINext = actionI.getNext();
+                        actionIM1.setNext(selectedAction);
+                        selectedAction.setNext(actionINext);
+                        actionI.setNext(selectedActionNext);
+                        List<OpAction> newOrderedActionsList = opActionPlan.getOrderedList(true);
+                        System.out.println("newOrderedActionsList.get(i) = " + newOrderedActionsList.get(i));
+                        System.out.println("newOrderedActionsList.get(modelIndex) = " + newOrderedActionsList.get(modelIndex));
+                        OpActionPlan newOpActionPlan = new OpActionPlanCloner().cloneSolution(opActionPlan);
+                        setOpActionPlan(newOpActionPlan);
+                        return;
+                    }
                 }
             }
         }
@@ -344,11 +349,11 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
     public void addActionsModifiedListener(Runnable r) {
         opDisplayJPanel1.addActionsModifiedListener(r);
     }
-    
+
     public void removeActionsModifiedListener(Runnable r) {
-        opDisplayJPanel1.removeActionsModifiedListener(r); 
+        opDisplayJPanel1.removeActionsModifiedListener(r);
     }
-    
+
     /**
      * Set the value of opActionPlan
      *
