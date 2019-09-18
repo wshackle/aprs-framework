@@ -6773,6 +6773,8 @@ public class Supervisor {
                 });
     }
 
+    private static final boolean DEBUG_CHECK_MAX_CYCLES = Boolean.valueOf("aprs.debugCheckMaxCycles");
+
     boolean checkMaxCycles() {
         if (max_cycles < 1) {
             return true;
@@ -6780,25 +6782,28 @@ public class Supervisor {
         int cdc = ContinuousDemoCycle.get();
         boolean ret = max_cycles > cdc;
         if (!ret) {
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            Thread.dumpStack();
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
+            if (DEBUG_CHECK_MAX_CYCLES) {
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                Thread.dumpStack();
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+            }
             final String blockerName = "max_cycles limit hit = " + cdc;
-            System.err.println("checkMaxCycles: " + blockerName);
+            if (DEBUG_CHECK_MAX_CYCLES) {
+                System.err.println("checkMaxCycles: " + blockerName);
+            }
             LockInfo lockInfo = new LockInfo(blockerName);
             toggleBlockerMap.put(blockerName, lockInfo);
             togglesAllowed = false;
             enableChangeCount.incrementAndGet();
             final XFutureVoid origCancelUnstealFuture = cancelUnStealRobotFuture.getAndSet(null);
-            System.out.println("checkMaxCycles: cancelUnStealRobotFuture.getAndSet(null) = " + origCancelUnstealFuture);
             final XFutureVoid origCancelStealFuture = cancelStealRobotFuture.getAndSet(null);
-            System.out.println("checkMaxCycles: cancelStealRobotFuture.getAndSet(null) = " + origCancelStealFuture);
+
             if (null != origCancelUnstealFuture) {
                 origCancelUnstealFuture.complete();
             }
@@ -6807,12 +6812,18 @@ public class Supervisor {
             }
             setTitleMessage(blockerName);
             XFutureVoid xf = togglesAllowedXfuture.get();
-            System.out.println("checkMaxCycles: togglesAllowedXfuture.get() = " + xf);
+            if (DEBUG_CHECK_MAX_CYCLES) {
+                System.out.println("checkMaxCycles: cancelUnStealRobotFuture.getAndSet(null) = " + origCancelUnstealFuture);
+                System.out.println("checkMaxCycles: cancelStealRobotFuture.getAndSet(null) = " + origCancelStealFuture);
+                System.out.println("checkMaxCycles: togglesAllowedXfuture.get() = " + xf);
+            }
             if (null != xf) {
                 xf.complete((Void) null);
             }
             while ((xf = waitForTogglesFutures.poll()) != null) {
-                System.out.println("checkMaxCycles: waitForTogglesFutures.poll() = " + xf);
+                if (DEBUG_CHECK_MAX_CYCLES) {
+                    System.out.println("checkMaxCycles: waitForTogglesFutures.poll() = " + xf);
+                }
                 xf.complete((Void) null);
             }
         }
@@ -9186,7 +9197,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData              @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                   @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

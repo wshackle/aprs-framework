@@ -3248,32 +3248,15 @@ public class AprsSystem implements SlotOffsetProvider {
                     } catch (ClassNotFoundException ex) {
                         Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    throw new RuntimeException("no motomanServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
+                    throw new RuntimeException("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
                 }
             });
-//            FanucCRCLMain newFanucCrclMain = new FanucCRCLMain();
-//            return runOnDispatchThread(() -> newFanuCRCLServerJInternalFrame(newFanucCrclMain))
-//                    .thenComposeToVoid(() -> newFanucCrclMain.startDisplayInterface())
-//                    .thenComposeToVoid(() -> newFanucCrclMain.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort))
-//                    .thenRun(() -> {
-//                        this.fanuc = newFanucCrclMain;
-//                    });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
 
-//    @UIEffect
-//    private void newFanuCRCLServerJInternalFrame(FanucCRCLMain newFanucCrclMain) {
-//        FanucCRCLServerJInternalFrame newFanucCRCLServerJInternalFrame = this.fanucCRCLServerJInternalFrame;
-//        if (null == newFanucCRCLServerJInternalFrame) {
-//            newFanucCRCLServerJInternalFrame = new FanucCRCLServerJInternalFrame();
-//            this.fanucCRCLServerJInternalFrame = newFanucCRCLServerJInternalFrame;
-//            addInternalFrame(newFanucCRCLServerJInternalFrame);
-//        }
-//        newFanucCrclMain.setDisplayInterface(newFanucCRCLServerJInternalFrame);
-//    }
     private @Nullable
     String titleErrorString = null;
 
@@ -5092,6 +5075,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return runOnDispatchThread(this::startSimServerJInternalFrameOnDisplay);
     }
 
+    private static final boolean DEBUG_START_CRCL_SERVER
+            = Boolean.valueOf("aprs.debugStartServer");
+
     /**
      * Create and display the simulation server window and start the simulation
      * server thread.
@@ -5100,11 +5086,12 @@ public class AprsSystem implements SlotOffsetProvider {
     private void startSimServerJInternalFrameOnDisplay() {
         File propsFile = crclSimServerPropertiesFile();
         try {
-            ProtectionDomain simServProt = SimServerJInternalFrame.class.getProtectionDomain();
-            System.out.println("simServProt = " + simServProt);
-            ProtectionDomain crclSocketProt = CRCLSocket.class.getProtectionDomain();
-            System.out.println("crclSocketProt = " + simServProt);
-
+            if (DEBUG_START_CRCL_SERVER) {
+                ProtectionDomain simServProt = SimServerJInternalFrame.class.getProtectionDomain();
+                System.out.println("simServProt = " + simServProt);
+                ProtectionDomain crclSocketProt = CRCLSocket.class.getProtectionDomain();
+                System.out.println("crclSocketProt = " + simServProt);
+            }
             if (null == simServerJInternalFrame) {
                 boolean alreadySelected = isRobotCrclSimServerStartupSelected();
                 if (!alreadySelected) {

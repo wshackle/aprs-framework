@@ -392,6 +392,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 if (null != defaultCyclesString && defaultCyclesString.length() > 0) {
                     defaultCycles = Integer.parseInt(defaultCyclesString);
                 }
+                String playAlertsString = props.getProperty("playAlerts");
+                if (null != playAlertsString && playAlertsString.length() > 0) {
+                    playAlerts = Boolean.parseBoolean(playAlertsString);
+                }
             }
         } catch (Exception exception) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "LAUNCH_PROPERTIES_FILE=" + LAUNCH_PROPERTIES_FILE, exception);
@@ -560,11 +564,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static void completeOpenSupevisor(Supervisor supervisor, @Nullable String dirName) {
+    private static XFutureVoid completeOpenSupevisor(Supervisor supervisor, @Nullable String dirName) {
         supervisor.loadPrevPosMapFile(dirName);
         supervisor.loadPrevSimTeach();
-        supervisor.loadPrevTeachProperties(dirName)
-                .thenRun(() -> PlayAlert());
+        XFutureVoid future = supervisor.loadPrevTeachProperties(dirName);
+        if (playAlerts) {
+            future = future
+                    .thenRun(() -> PlayAlert());
+        }
+        return future;
     }
 
     @UIEffect
@@ -694,10 +702,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private static int defaultCycles = 10;
 
+    private static boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
+
     private static void saveLaunchProperties() {
         try {
             Properties props = new Properties();
             props.put("defaultCycles", Integer.toString(defaultCycles));
+            props.put("playAlerts", Boolean.toString(playAlerts));
             props.store(new FileWriter(LAUNCH_PROPERTIES_FILE), "");
         } catch (Exception exception) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "LAUNCH_PROPERTIES_FILE=" + LAUNCH_PROPERTIES_FILE, exception);
@@ -864,7 +875,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                PlayAlert();
+                if (playAlerts) {
+                    PlayAlert();
+                }
                 if (null != args && args.length > 0) {
                     File launchFile = null;
                     try {
