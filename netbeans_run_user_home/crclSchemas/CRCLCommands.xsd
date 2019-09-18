@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun10">
+    version="2019Sep18">
     <xs:include schemaLocation="DataPrimitives.xsd"/>
 
     <xs:annotation>
@@ -662,6 +662,43 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="GuardedMoveToType">
+        <xs:annotation>
+            <xs:documentation>
+                MoveToType is derived from MiddleCommandType.
+                An instance of MoveToType has the following elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                MoveStraight
+                EndPosition.
+
+                EndPosition is a Pose to which the robot will move. If the value of
+                MoveStraight is true, the controlled point must be moved in a
+                straight line. If the value of MoveStraight is false, the
+                controlled point may be moved along any convenient trajectory.
+
+                The robot must reach the EndPosition within the tolerance
+                established (1) by the tolerance given for the pose in the
+                EndPosition, if there is a tolerance in the EndPosition, or if not
+                (2) by the most recently executed instance of
+                SetEndPoseToleranceType. The speed and acceleration to use are set
+                either in the EndPosition or by previously executed CRCL commands.
+
+                The type of EndPosition may be either PoseType or
+                PoseAndSetType, which is derived from PoseType.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="MoveStraight"
+                                type="xs:boolean"/>
+                    <xs:element name="EndPosition"
+                                type="PoseType"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
 
     <xs:complexType name="OpenToolChangerType">
         <xs:annotation>

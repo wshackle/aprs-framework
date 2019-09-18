@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun10">
+    version="2019Sep18">
     <xs:include schemaLocation="DataPrimitives.xsd"/>
 
     <xs:element name="CRCLStatus"
@@ -734,6 +734,8 @@
                                 minOccurs="0"/>
                     <xs:element name="TriggerCount"
                                 type="xs:int"/>
+                    <xs:element name="TriggerStopTimeMicros"
+                                type="xs:long"/>
                     <xs:element name="TriggerValue"
                                 type="xs:double"
                                 minOccurs="0"/>
@@ -753,8 +755,14 @@
                 An instance of SensorStatusType has the following elements:
                 Name (inherited, optional)
                 SensorID
+                ReadCount
+                LastReadTime
                 SensorParameterSetting (optional).
                 
+                SensorID should be unique and unlikely to change within a system such as hardware model and serial number or
+                a statically set IP or hostname. Read count returns the number of times
+                the sensor has been read or a frame number if available.  LastReadTime is in milliseconds
+                since 1970 (aka unix time).
             </xs:documentation>
         </xs:annotation>
         <xs:complexContent>
@@ -762,6 +770,12 @@
                 <xs:sequence>
                     <xs:element name="SensorID"
                                 type="xs:token"/>
+                    <xs:element name="ReadCount"
+                                type="xs:int"
+                                />
+                    <xs:element name="LastReadTime"
+                                type="xs:long"
+                                />
                     <xs:element name="SensorParameterSetting"
                                 type="ParameterSettingType"
                                 maxOccurs="unbounded"

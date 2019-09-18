@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Jun17">
+    version="2019Sep18">
 
     <xs:annotation>
         <xs:documentation>
@@ -624,7 +624,10 @@
                 LimitType
                 LimitValue
                 RecheckTimeMicroSeconds (optional).
-
+                CheckCount (optional) 
+                LastCheckTime (optional)
+                LastCheckValue (optional)
+                
                 A GuardType can be added to any command to indicate the
                 command should be aborted if the value of the sensors subfield
                 increases by at-least the MaxIncrease value if specified OR
@@ -637,6 +640,11 @@
                 frequency and will otherwise check at the default rate for that
                 sensor. Hardware and operating system limitations may require the
                 sensor be checked less frequently.
+                
+                CheckCount, LastCheckTime and LastCheckValue are only ignored when
+                inside a command. They may be optionaly set when included in status.
+                CheckCount is the number of times the guard has been checked. LastCheckTime is 
+                the time in milliseconds since 1970 (aka unix-time). 
             </xs:documentation>
         </xs:annotation>
         <xs:complexContent>
@@ -654,6 +662,15 @@
                                 minOccurs="0" />
                     <xs:element name="RecheckTimeMicroSeconds"
                                 type="xs:long"
+                                minOccurs="0" />
+                    <xs:element name="CheckCount"
+                                type="xs:long"
+                                minOccurs="0" />
+                    <xs:element name="LastCheckTime"
+                                type="xs:long"
+                                minOccurs="0" />
+                    <xs:element name="LastCheckValue"
+                                type="xs:double"
                                 minOccurs="0" />
                 </xs:sequence>
             </xs:extension>
