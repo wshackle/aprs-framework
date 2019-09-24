@@ -99,6 +99,7 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
 import crcl.utils.CRCLCommandWrapper.CRCLCommandWrapperConsumer;
+import static crcl.utils.CRCLCopier.copy;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 
@@ -5049,7 +5050,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         lastTestApproachPose = approachPose;
 
-        PoseType takePose = requireNonNull(CRCLPosemath.copy(pose), "CRCLPosemath.copy(pose)");
+        PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
         PointType posePoint = pose.getPoint();
         if (null == posePoint) {
             throw new IllegalStateException("pose has null point property");
@@ -5327,7 +5328,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
             lastTestApproachPose = null;
 
-            PoseType takePose = CRCLPosemath.copy(poseWithToolOffset);
+            PoseType takePose = copy(poseWithToolOffset);
             PointType poseWithToolOffsetPoint = poseWithToolOffset.getPoint();
             if (null == poseWithToolOffsetPoint) {
                 throw new IllegalStateException("null == poseWithToolOffsetPoint");
@@ -5410,7 +5411,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkSettings();
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
-        PoseType takePose = CRCLPosemath.copy(pose);
+        PoseType takePose = copy(pose);
         PointType takePosePoint = takePose.getPoint();
         if (null == takePosePoint) {
             throw new IllegalStateException("null == takePosePoint");
@@ -5731,7 +5732,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private PoseType copyAndAddZ(PoseType poseIn, double offset, double limit) {
-        PoseType poseOut = requireNonNull(CRCLPosemath.copy(poseIn), "CRCLPosemath.copy(poseIn)");
+        PoseType poseOut = requireNonNull(copy(poseIn), "copy(poseIn)");
         PointType outPoint = poseOut.getPoint();
         if (null == outPoint) {
             throw new IllegalStateException("null == outPoint");
@@ -6224,7 +6225,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         putPoseCacheThread = Thread.currentThread();
         putPoseCacheTrace = putPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
-            PoseType poseCopy = CRCLPosemath.copy(pose);
+            PoseType poseCopy = copy(pose);
             poseCache.put(name, poseCopy);
             PhysicalItem itemCopy = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, poseCopy, 0);
             itemCache.put(name, itemCopy);
@@ -7244,7 +7245,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
 
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
-        PoseType approachPose = CRCLPosemath.copy(poseWithToolOffset);
+        PoseType approachPose = copy(poseWithToolOffset);
         lastTestApproachPose = null;
 
         //logDebug("Z= " + pose.getPoint().getZ());
@@ -7252,7 +7253,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffset.getPoint()");
         approachPosePoint.setZ(poseWithToolOffsetPoint.getZ() + approachZOffset);
 
-        PoseType placePose = CRCLPosemath.copy(poseWithToolOffset);
+        PoseType placePose = copy(poseWithToolOffset);
         PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
         placePosePoint.setZ(poseWithToolOffsetPoint.getZ() + placeZOffset);
 

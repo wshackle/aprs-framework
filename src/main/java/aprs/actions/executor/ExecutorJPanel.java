@@ -172,6 +172,7 @@ import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
+import static crcl.utils.CRCLCopier.copy;
 import static java.util.Objects.requireNonNull;
 import java.util.function.Function;
 import javax.swing.SwingUtilities;
@@ -3245,7 +3246,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             loadProgramToTableInternal(crclProgram);
             return XFutureVoid.completedFuture();
         } else {
-            CRCLProgramType crclProgramCopy = CRCLPosemath.copy(crclProgram);
+            CRCLProgramType crclProgramCopy = copy(crclProgram);
             return aprsSystem.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
         }
     }
@@ -5950,7 +5951,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != partName && partName.length() > 0) {
             try {
                 PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
-                PoseType curPoseCopy = CRCLPosemath.copy(curPose);
+                PoseType curPoseCopy = copy(curPose);
                 PointType curPosePoint = requireNonNull(curPoseCopy.getPoint(), "curPose.getPoint()");
                 String curPoseString
                         = String.format("%.1f, %.1f, %.1f",

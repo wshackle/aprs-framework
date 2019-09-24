@@ -136,6 +136,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLCommandWrapper;
+import crcl.utils.CRCLCopier;
+import static crcl.utils.CRCLCopier.copy;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
@@ -2791,7 +2793,7 @@ public class AprsSystem implements SlotOffsetProvider {
             return true;
         }
         long startTime = logEvent("start runCrclProgram", programFile);
-        CRCLProgramType progCopy = CRCLPosemath.copy(program);
+        CRCLProgramType progCopy = copy(program);
         final CrclSwingClientJInternalFrame crclClientJInternalFrameFinal = crclClientJInternalFrame;
         if (null == crclClientJInternalFrameFinal) {
             throw new IllegalStateException("CRCL Client View must be open to use this function.");
@@ -4964,7 +4966,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             return crclClientJInternalFrame.getCurrentStatus()
                     .map(CRCLStatusType::getCommandStatus)
-                    .map(CRCLPosemath::copy)
+                    .map(CRCLCopier::copy)
                     .orElse(null);
         }
         return null;
