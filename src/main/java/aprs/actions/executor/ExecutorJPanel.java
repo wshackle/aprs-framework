@@ -285,7 +285,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.parentComponent = parentComponent;
 
         initComponents();
-        
+
         toolMenu = new JMenu("Tools");
         toolDropByHolderMenu = new JMenu("Drop By Holder");
         toolPickupByHolderMenu = new JMenu("Pickup By Holder");
@@ -337,7 +337,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 throw new RuntimeException(e);
             }
         }
-         positionMapJPanel1.setGoButtonCallback(this::gotoErrmapRow);
     }
 
     public JMenu getToolMenu() {
@@ -941,7 +940,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jLabel21 = new javax.swing.JLabel();
         jTextFieldCurrentToolOffset = new javax.swing.JTextField();
         jPanelContainerPositionMap = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.actions.executor.PositionMapJPanel();
+        jButtonErrMapGoIn = new javax.swing.JButton();
+        jButtonErrMapSetRobotFromCurrent = new javax.swing.JButton();
+        jButtonErrMapGoOut = new javax.swing.JButton();
+        jButtonErrMapSetVisionFromCurrent = new javax.swing.JButton();
+        jButtonErrMapSetVisionFromDB = new javax.swing.JButton();
+        jTextFieldErrMapPartInfo = new javax.swing.JTextField();
         jPanelCrcl = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTableCrclProgram = new javax.swing.JTable();
@@ -1134,6 +1140,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         });
 
         jComboBoxManualObjectName.setEditable(true);
+        jComboBoxManualObjectName.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jComboBoxManualObjectNameItemStateChanged(evt);
+            }
+        });
+        jComboBoxManualObjectName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jComboBoxManualObjectNameActionPerformed(evt);
+            }
+        });
 
         jLabel3.setText("XMin:");
 
@@ -1464,7 +1480,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonGridTest)
                     .addComponent(jButtonUpdatePoseCacheFromManual)
                     .addComponent(jButtonQuickCalib))
-                .addContainerGap(87, Short.MAX_VALUE))
+                .addContainerGap(110, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -1636,7 +1652,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
                     .addGap(40, 40, 40)
-                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
                     .addContainerGap()))
         );
 
@@ -1702,7 +1718,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
                     .addGap(42, 42, 42)
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 113, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
                     .addContainerGap()))
         );
 
@@ -1759,7 +1775,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonAddTrayAttach)
                     .addComponent(jButtonDeleteTrayAttach))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1833,26 +1849,103 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jLabel21)
                     .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
+                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("Tool Change", jPanelToolChange);
 
+        jButtonErrMapGoIn.setText("Go In");
+        jButtonErrMapGoIn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonErrMapGoInActionPerformed(evt);
+            }
+        });
+
+        jButtonErrMapSetRobotFromCurrent.setText("Set Robot From Current");
+        jButtonErrMapSetRobotFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonErrMapSetRobotFromCurrentActionPerformed(evt);
+            }
+        });
+
+        jButtonErrMapGoOut.setText("Go Out");
+        jButtonErrMapGoOut.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonErrMapGoOutActionPerformed(evt);
+            }
+        });
+
+        jButtonErrMapSetVisionFromCurrent.setText("Set Vision  From Current");
+        jButtonErrMapSetVisionFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonErrMapSetVisionFromCurrentActionPerformed(evt);
+            }
+        });
+
+        jButtonErrMapSetVisionFromDB.setText("Set Vision From DB");
+        jButtonErrMapSetVisionFromDB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonErrMapSetVisionFromDBActionPerformed(evt);
+            }
+        });
+
+        jTextFieldErrMapPartInfo.setText("part: 0.0, 0.0, 0.0 ");
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jButtonErrMapGoIn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapSetRobotFromCurrent)
+                        .addGap(173, 173, 173)
+                        .addComponent(jButtonErrMapGoOut)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapSetVisionFromCurrent)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapSetVisionFromDB)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 221, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonErrMapGoIn)
+                    .addComponent(jButtonErrMapSetRobotFromCurrent)
+                    .addComponent(jButtonErrMapGoOut)
+                    .addComponent(jButtonErrMapSetVisionFromCurrent)
+                    .addComponent(jButtonErrMapSetVisionFromDB)
+                    .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+
         javax.swing.GroupLayout jPanelContainerPositionMapLayout = new javax.swing.GroupLayout(jPanelContainerPositionMap);
         jPanelContainerPositionMap.setLayout(jPanelContainerPositionMapLayout);
         jPanelContainerPositionMapLayout.setHorizontalGroup(
             jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
+            .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1168, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelContainerPositionMapLayout.setVerticalGroup(
             jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPositionMapLayout.createSequentialGroup()
+            .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1899,7 +1992,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelCrclLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1964,7 +2057,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jPanelContainerPoseCacheLayout.setVerticalGroup(
             jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(237, Short.MAX_VALUE)
+                .addContainerGap(260, Short.MAX_VALUE)
                 .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonClearPoseCache)
                     .addComponent(jButtonUpdatePoseCache))
@@ -1972,7 +2065,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 245, Short.MAX_VALUE)
                     .addGap(38, 38, 38)))
         );
 
@@ -2005,7 +2098,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
             opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 260, Short.MAX_VALUE)
+            .addGap(0, 272, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
@@ -2256,9 +2349,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxNeedLookFor)
@@ -3505,19 +3598,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return future;
         }
     }
-    
-    private void gotoXYZ(double x,double y,double z) {
+
+    private void gotoXYZ(double x, double y, double z) {
         CRCLProgramType program = this.createEmptyProgram();
         MoveToType moveTo = new MoveToType();
-        moveTo.setEndPosition(pose(point(x,y,z),vector(1,0,0),vector(0,0,-1)));
+        PoseType currentPose = aprsSystem.getCurrentPose();
+        moveTo.setEndPosition(pose(point(x, y, z), copy(currentPose.getXAxis()),copy(currentPose.getZAxis())));
         program.getMiddleCommand().add(moveTo);
         startCrclProgram(program);
     }
-    
-    private void gotoErrmapRow(Object a[]) {
-        gotoXYZ((double) a[0], (double) a[1],(double) a[2]);
+
+    private void gotoErrmapRow(Object a @Nullable []) {
+        if(null == a) {
+            return;
+        }
+        gotoXYZ((double) a[0], (double) a[1], (double) a[2]);
     }
-    
 
     private void prepCrclProgram(CRCLProgramType crclProgram1) throws IllegalStateException {
         startCrclProgramTime = System.currentTimeMillis();
@@ -5997,6 +6093,123 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }//GEN-LAST:event_jButtonQuickCalibActionPerformed
 
+    private void jComboBoxManualObjectNameItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxManualObjectNameItemStateChanged
+        updateSelectedPartPoseInfo();
+    }//GEN-LAST:event_jComboBoxManualObjectNameItemStateChanged
+
+    private void jComboBoxManualObjectNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxManualObjectNameActionPerformed
+        updateSelectedPartPoseInfo();
+    }//GEN-LAST:event_jComboBoxManualObjectNameActionPerformed
+
+    private void jButtonErrMapGoInActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapGoInActionPerformed
+        gotoErrmapRow(this.positionMapJPanel1.getSelectedRowData());
+    }//GEN-LAST:event_jButtonErrMapGoInActionPerformed
+
+    private void jButtonErrMapSetRobotFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
+        Object data[] = this.positionMapJPanel1.getSelectedRowData();
+        if(data == null) {
+            return;
+        }
+        PoseType pose = aprsSystem.getCurrentPose();
+        if(null == pose) {
+            return;
+        }
+        PointType point = pose.getPoint();
+        if(null == point) {
+            return;
+        }
+        data[0] = point.getX();
+        data[1] = point.getY();
+        data[2] = point.getZ();
+        this.positionMapJPanel1.setSelectedRowData(data);
+    }//GEN-LAST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
+
+    private void jButtonErrMapGoOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapGoOutActionPerformed
+       Object data[] = this.positionMapJPanel1.getSelectedRowData();
+       if(null == data) {
+           return;
+       }
+       gotoXYZ((double)data[3], (double)data[4], (double) data[5]);
+    }//GEN-LAST:event_jButtonErrMapGoOutActionPerformed
+
+    private void jButtonErrMapSetVisionFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromCurrentActionPerformed
+       Object data[] = this.positionMapJPanel1.getSelectedRowData();
+        if(data == null) {
+            return;
+        }
+        PoseType pose = aprsSystem.getCurrentPose();
+        if(null == pose) {
+            return;
+        }
+        PointType point = pose.getPoint();
+        if(null == point) {
+            return;
+        }
+        data[3] = point.getX();
+        data[4] = point.getY();
+        data[5] = point.getZ();
+        this.positionMapJPanel1.setSelectedRowData(data);
+    }//GEN-LAST:event_jButtonErrMapSetVisionFromCurrentActionPerformed
+
+    private void jButtonErrMapSetVisionFromDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromDBActionPerformed
+        Object data[] = this.positionMapJPanel1.getSelectedRowData();
+        if(data == null) {
+            return;
+        }
+        PointType point = lastSelectedPoseCachePoint;
+        if(null == point) {
+            return;
+        }
+        data[3] = point.getX();
+        data[4] = point.getY();
+        data[5] = point.getZ();
+        this.positionMapJPanel1.setSelectedRowData(data);
+    }//GEN-LAST:event_jButtonErrMapSetVisionFromDBActionPerformed
+
+    private volatile @Nullable
+    PointType lastSelectedPoseCachePoint = null;
+
+    private volatile @Nullable
+    PointType lastSelectedRobotPoint = null;
+
+    private volatile @Nullable
+    PointType lastSelectedPoseCacheRobotOffset = null;
+
+    public PointType visionToRobotPoint(PointType poseIn) {
+        PointType pout = poseIn;
+        List<PositionMap> lpm = getPositionMaps();
+        if (null != lpm) {
+            for (PositionMap pm : lpm) {
+                if (null != pm) {
+                    pout = pm.correctPoint(pout);
+                }
+            }
+        }
+        return pout;
+    }
+
+    private void updateSelectedPartPoseInfo() {
+        String part = getComboPart();
+        if (null == part) {
+            return;
+        }
+        PoseType pose = crclGenerator.getPoseCache().get(part);
+        if (null != pose) {
+            PointType point = pose.getPoint();
+            if (null != point) {
+                jTextFieldErrMapPartInfo.setText(String.format("%s : %.3f,%.3f,%.3f", part, point.getX(), point.getY(), point.getZ()));
+                lastSelectedPoseCachePoint = point;
+                PointType robotPoint = visionToRobotPoint(point);
+                lastSelectedRobotPoint = robotPoint;
+                jTextFieldTestPose.setText(String.format("%.1f,%.1f,%.1f", point.getX(), point.getY(), point.getZ()));
+                jTextFieldAdjPose.setText(String.format("%.1f,%.1f,%.1f", robotPoint.getX(), robotPoint.getY(), robotPoint.getZ()));
+                PointType offsetPoint = CRCLPosemath.point(point.getX()-robotPoint.getX(), point.getY()-robotPoint.getY(), point.getZ()-robotPoint.getZ());
+                jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offsetPoint.getX(), offsetPoint.getY(), offsetPoint.getZ()));
+                lastSelectedPoseCacheRobotOffset = offsetPoint;
+            }
+        }
+    }
+
     @SuppressWarnings("guieffect")
     private void completeQuickCalib(String partName, PointType curPosePoint, String curPoseString) {
         try {
@@ -6853,6 +7066,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         program.getMiddleCommand().addAll(cmds);
         setEndCanonCmdId(program);
 
+        updatePoseTextFields();
+        replanStarted.set(false);
+        return startCrclProgram(program);
+    }
+
+    private void updatePoseTextFields() {
         for (PositionMap positionMap : getPositionMaps()) {
             if (null != positionMap) {
                 PointType offset = positionMap.getLastOffset();
@@ -6888,9 +7107,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             }
         }
-
-        replanStarted.set(false);
-        return startCrclProgram(program);
     }
 
     private XFuture<Boolean> takePart(String part) throws Exception {
@@ -6919,7 +7135,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != positionMap) {
                 PointType offset = positionMap.getLastOffset();
                 if (null != offset) {
-                    jTextFieldOffset.setText(String.format("%.1f,%.1f", offset.getX(), offset.getY()));
+                    jTextFieldOffset.setText(String.format("%.1f, %.1f, %.1f",
+                            offset.getX(),
+                            offset.getY(),
+                            offset.getZ()));
                 }
                 PointType testPoint = positionMap.getLastPointOut();
                 if (null != testPoint) {
@@ -7628,6 +7847,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonDeleteToolOffset;
     private javax.swing.JButton jButtonDeleteTrayAttach;
     private javax.swing.JButton jButtonDropTool;
+    private javax.swing.JButton jButtonErrMapGoIn;
+    private javax.swing.JButton jButtonErrMapGoOut;
+    private javax.swing.JButton jButtonErrMapSetRobotFromCurrent;
+    private javax.swing.JButton jButtonErrMapSetVisionFromCurrent;
+    private javax.swing.JButton jButtonErrMapSetVisionFromDB;
     private javax.swing.JButton jButtonGenerateAndRun;
     private javax.swing.JButton jButtonGenerateCRCL;
     private javax.swing.JButton jButtonGotoToolChangerApproach;
@@ -7686,6 +7910,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelContainerPoseCache;
     private javax.swing.JPanel jPanelContainerPositionMap;
     private javax.swing.JPanel jPanelCrcl;
@@ -7726,6 +7951,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTextField jTextFieldCurrentPart;
     private javax.swing.JTextField jTextFieldCurrentToolName;
     private javax.swing.JTextField jTextFieldCurrentToolOffset;
+    private javax.swing.JTextField jTextFieldErrMapPartInfo;
     private javax.swing.JTextField jTextFieldGridSize;
     private javax.swing.JTextField jTextFieldIndex;
     private javax.swing.JTextField jTextFieldLogFilename;

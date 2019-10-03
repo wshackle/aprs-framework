@@ -51,9 +51,9 @@ public class PositionMap {
 
     private @Nullable
     final String fileName;
-    
+
     private final String[] columnHeaders;
-    
+
     private @Nullable
     PointType lastPointIn;
     private @Nullable
@@ -82,7 +82,7 @@ public class PositionMap {
                     public Object[] next() {
                         PositionMapEntry entry = l.get(index);
                         ++index;
-                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getOffsetZ(), entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ()};
+                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getRobotZ(), entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(),entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ(), entry.getLabel()};
                     }
                 };
             }
@@ -140,6 +140,7 @@ public class PositionMap {
                 case "X":
                 case "X1":
                 case "Xin":
+                case "X_in":
                 case "Robot_X":
                     robotXIndex = i;
                     break;
@@ -147,6 +148,7 @@ public class PositionMap {
                 case "Y":
                 case "Y1":
                 case "Yin":
+                case "Y_in":
                 case "Robot_Y":
                     robotYIndex = i;
                     break;
@@ -154,6 +156,7 @@ public class PositionMap {
                 case "Z":
                 case "Z1":
                 case "Zin":
+                case "Z_in":
                 case "Robot_Z":
                     robotZIndex = i;
                     break;
@@ -174,6 +177,7 @@ public class PositionMap {
                     break;
 
                 case "Label":
+                case "PartName":
                     labelIndex = i;
                     break;
             }
@@ -203,10 +207,6 @@ public class PositionMap {
             String label = (labelIndex >= 0 && labelIndex < a.length ? a[labelIndex] : "");
             errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ, label));
         }
-//        errmapList = errmapStringsList.stream().map(a -> {
-//            return new PositionMapEntry(Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotYIndex]),
-//                    Double.parseDouble(a[robotXIndex]), Double.parseDouble(a[robotXIndex]));
-//        }).collect(Collectors.toList());
     }
 
     public void saveFile(File f) throws IOException {
@@ -315,7 +315,8 @@ public class PositionMap {
         );
     }
 
-     private   static  @Nullable  PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
+    private static @Nullable
+    PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
                 return e2;
@@ -366,7 +367,8 @@ public class PositionMap {
         );
     }
 
-     private   static  @Nullable  PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
+    private static @Nullable
+    PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotY() - y) < 1e-6) {
                 return e2;

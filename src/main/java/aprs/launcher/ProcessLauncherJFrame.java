@@ -375,6 +375,9 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     @SuppressWarnings({"unchecked", "raw_types"})
     public XFutureVoid run(File f) throws IOException {
         setTitle("Process Launcher Running " + f);
+        if(!f.exists()) {
+            JOptionPane.showMessageDialog(this, f+" does not exist.");
+        }
         XFutureVoid ret = launchFileRunner.run(f, getTimoutMillis(), jCheckBoxMenuItemDebug.isSelected());
         lastRunFuture = ret;
         lastRunFile = f;

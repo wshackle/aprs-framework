@@ -25,8 +25,6 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
-                      <Component id="jButtonGo" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonErrorMapFileBrowse" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonSave" min="-2" max="-2" attributes="0"/>
@@ -42,7 +40,7 @@
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jSpinnerIndex" alignment="0" min="-2" pref="28" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
@@ -50,14 +48,13 @@
                       <Component id="jButtonSave" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonClear" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jButtonGo" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace max="32767" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
               <Component id="jTextFieldErrorMapFilename" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jScrollPane3" min="-2" pref="123" max="-2" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
+              <Component id="jScrollPane3" pref="123" max="32767" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -86,43 +83,17 @@
         <Component class="javax.swing.JTable" name="jTablePosMap">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="6" rowCount="4">
-                <Column editable="true" title="X" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                </Column>
-                <Column editable="true" title="Y" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                  <Data value="0.0"/>
-                </Column>
-                <Column editable="true" title="Z" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                </Column>
-                <Column editable="true" title="Offset_X" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                </Column>
-                <Column editable="true" title="Offset_Y" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                  <Data value="0.0"/>
-                </Column>
-                <Column editable="true" title="Offset_Z" type="java.lang.Double">
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="0.0"/>
-                  <Data value="1.0"/>
-                </Column>
+              <Table columnCount="10" rowCount="0">
+                <Column editable="true" title="Robot_X" type="java.lang.Double"/>
+                <Column editable="true" title="Robot_Y" type="java.lang.Double"/>
+                <Column editable="true" title="Robot_Z" type="java.lang.Double"/>
+                <Column editable="true" title="Vision_X" type="java.lang.Object"/>
+                <Column editable="true" title="Vision_Y" type="java.lang.Object"/>
+                <Column editable="true" title="Vision_Z" type="java.lang.Object"/>
+                <Column editable="true" title="Offset_X" type="java.lang.Double"/>
+                <Column editable="true" title="Offset_Y" type="java.lang.Double"/>
+                <Column editable="true" title="Offset_Z" type="java.lang.Double"/>
+                <Column editable="true" title="Label" type="java.lang.String"/>
               </Table>
             </Property>
           </Properties>
@@ -159,15 +130,6 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="/1         "/>
       </Properties>
-    </Component>
-    <Component class="javax.swing.JButton" name="jButtonGo">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Go"/>
-        <Property name="enabled" type="boolean" value="false"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGoActionPerformed"/>
-      </Events>
     </Component>
   </SubComponents>
 </Form>

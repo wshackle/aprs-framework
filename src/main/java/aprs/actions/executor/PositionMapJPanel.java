@@ -32,13 +32,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
@@ -100,7 +100,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jSpinnerIndex = new javax.swing.JSpinner();
         jButtonClear = new javax.swing.JButton();
         jLabelSize = new javax.swing.JLabel();
-        jButtonGo = new javax.swing.JButton();
 
         jTextFieldErrorMapFilename.setText("errors.csv");
 
@@ -113,17 +112,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
         jTablePosMap.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0),  new Double(0.0)},
-                { new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0)},
-                { new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0)},
-                { new Double(0.0),  new Double(0.0),  new Double(1.0),  new Double(0.0),  new Double(0.0),  new Double(1.0)}
+
             },
             new String [] {
-                "X", "Y", "Z", "Offset_X", "Offset_Y", "Offset_Z"
+                "Robot_X", "Robot_Y", "Robot_Z", "Vision_X", "Vision_Y", "Vision_Z", "Offset_X", "Offset_Y", "Offset_Z", "Label"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -155,14 +151,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
         jLabelSize.setText("/1         ");
 
-        jButtonGo.setText("Go");
-        jButtonGo.setEnabled(false);
-        jButtonGo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonGoActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -176,8 +164,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabelSize)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButtonGo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSave)
@@ -196,12 +182,11 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addComponent(jButtonSave)
                         .addComponent(jButtonClear)
-                        .addComponent(jLabelSize)
-                        .addComponent(jButtonGo)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabelSize)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 123, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -350,15 +335,44 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMapFile;
     }
 
-    private Consumer<Object[]> goButtonConsumer = null;
-
-    public Consumer<Object[]> getGoButtonCallback() {
-        return goButtonConsumer;
+    public Object @Nullable [] getSelectedRowData() {
+        TableModel model = jTablePosMap.getModel();
+        if (model instanceof DefaultTableModel) {
+            DefaultTableModel dtm = (DefaultTableModel) model;
+            int selectedRow = jTablePosMap.getSelectedRow();
+            Vector vector = dtm.getDataVector();
+            if (selectedRow >= 0 && selectedRow < vector.size()) {
+                Vector vdata = (Vector) vector.get(selectedRow);
+                return vdata.toArray();
+            }
+        }
+        return null;
     }
 
-    public void setGoButtonCallback(Consumer<Object[]> goButtonRunnable) {
-        this.goButtonConsumer = goButtonRunnable;
-        this.jButtonGo.setEnabled(null != goButtonRunnable);
+    public void setSelectedRowData(Object[] data) {
+        int selectedRow = jTablePosMap.getSelectedRow();
+        if (selectedRow >= 0 && selectedRow < jTablePosMap.getRowCount()) {
+            PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
+            positionMap.getErrmapList().set(selectedRow, PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]));
+            reversePositionMaps = null;
+            List<PositionMap> newReversePositionMaps = getReversePositionMaps();
+            updatePositionMapInfoOnDisplay();
+        }
+//        TableModel model = jTablePosMap.getModel();
+//        if (model instanceof DefaultTableModel) {
+//            DefaultTableModel dtm = (DefaultTableModel) model;
+//            Vector vector = dtm.getDataVector();
+//            if (selectedRow >= 0 && selectedRow < vector.size()) {
+//                Vector vdata = (Vector) vector.get(selectedRow);
+//                for (int i = 0; i < data.length; i++) {
+//                    vdata.set(i, data[i]);
+//                }
+//                PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
+//                positionMap.getErrmapList().set(selectedRow, PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]));
+//                reversePositionMaps = null;
+//                List<PositionMap> newReversePositionMaps = getReversePositionMaps();
+//            }
+//        }
     }
 
     @SafeEffect
@@ -482,20 +496,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         clearCurrentMap();
     }//GEN-LAST:event_jButtonClearActionPerformed
 
-    private void jButtonGoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGoActionPerformed
-        final int selectedRow = jTablePosMap.getSelectedRow();
-        if (null != goButtonConsumer && selectedRow >= 0) {
-            DefaultTableModel model = (DefaultTableModel) jTablePosMap.getModel();
-            if (null != model) {
-                Vector rowVector = (Vector) model.getDataVector().get(selectedRow);
-                Object rowData[] = rowVector.toArray();
-                if (null != rowData) {
-                    goButtonConsumer.accept(rowData);
-                }
-            }
-        }
-    }//GEN-LAST:event_jButtonGoActionPerformed
-
     public void clearCurrentMap() {
         final int spinVal = spinnerIndexValue;
         setPositionMap(spinVal, PositionMap.emptyPositionMap());
@@ -526,7 +526,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonErrorMapFileBrowse;
-    private javax.swing.JButton jButtonGo;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JLabel jLabelSize;
     private javax.swing.JScrollPane jScrollPane3;
