@@ -31,11 +31,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Vector;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
@@ -89,7 +92,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel13 = new javax.swing.JLabel();
         jTextFieldErrorMapFilename = new javax.swing.JTextField();
         jButtonErrorMapFileBrowse = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -98,8 +100,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jSpinnerIndex = new javax.swing.JSpinner();
         jButtonClear = new javax.swing.JButton();
         jLabelSize = new javax.swing.JLabel();
-
-        jLabel13.setText("File name:");
+        jButtonGo = new javax.swing.JButton();
 
         jTextFieldErrorMapFilename.setText("errors.csv");
 
@@ -154,6 +155,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
         jLabelSize.setText("/1         ");
 
+        jButtonGo.setText("Go");
+        jButtonGo.setEnabled(false);
+        jButtonGo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonGoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -166,16 +175,15 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addComponent(jSpinnerIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabelSize)
-                        .addGap(10, 10, 10)
-                        .addComponent(jLabel13)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldErrorMapFilename)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonGo)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonClear)))
+                        .addComponent(jButtonClear))
+                    .addComponent(jTextFieldErrorMapFilename))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -185,14 +193,15 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jSpinnerIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel13)
-                        .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addComponent(jButtonSave)
                         .addComponent(jButtonClear)
-                        .addComponent(jLabelSize)))
+                        .addComponent(jLabelSize)
+                        .addComponent(jButtonGo)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -203,7 +212,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public final List<PositionMap> getPositionMaps() {
         return Collections.unmodifiableList(positionMaps);
     }
-    
+
     private @Nullable
     List<PositionMap> reversePositionMaps = new ArrayList<>();
 
@@ -225,7 +234,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return Collections.unmodifiableList(reversePositionMaps);
     }
 
-     private  @Nullable  PositionMap getPositionMap(int index) {
+    private @Nullable
+    PositionMap getPositionMap(int index) {
         return positionMaps.get(index);
     }
 
@@ -338,6 +348,17 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     public File getPositionMapFile() {
         return positionMapFile;
+    }
+
+    private Consumer<Object[]> goButtonConsumer = null;
+
+    public Consumer<Object[]> getGoButtonCallback() {
+        return goButtonConsumer;
+    }
+
+    public void setGoButtonCallback(Consumer<Object[]> goButtonRunnable) {
+        this.goButtonConsumer = goButtonRunnable;
+        this.jButtonGo.setEnabled(null != goButtonRunnable);
     }
 
     @SafeEffect
@@ -461,6 +482,20 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         clearCurrentMap();
     }//GEN-LAST:event_jButtonClearActionPerformed
 
+    private void jButtonGoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGoActionPerformed
+        final int selectedRow = jTablePosMap.getSelectedRow();
+        if (null != goButtonConsumer && selectedRow >= 0) {
+            DefaultTableModel model = (DefaultTableModel) jTablePosMap.getModel();
+            if (null != model) {
+                Vector rowVector = (Vector) model.getDataVector().get(selectedRow);
+                Object rowData[] = rowVector.toArray();
+                if (null != rowData) {
+                    goButtonConsumer.accept(rowData);
+                }
+            }
+        }
+    }//GEN-LAST:event_jButtonGoActionPerformed
+
     public void clearCurrentMap() {
         final int spinVal = spinnerIndexValue;
         setPositionMap(spinVal, PositionMap.emptyPositionMap());
@@ -491,8 +526,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonErrorMapFileBrowse;
+    private javax.swing.JButton jButtonGo;
     private javax.swing.JButton jButtonSave;
-    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabelSize;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSpinner jSpinnerIndex;

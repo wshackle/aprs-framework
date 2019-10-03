@@ -170,6 +170,7 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import crcl.base.MoveToType;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
@@ -284,6 +285,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.parentComponent = parentComponent;
 
         initComponents();
+        
         toolMenu = new JMenu("Tools");
         toolDropByHolderMenu = new JMenu("Drop By Holder");
         toolPickupByHolderMenu = new JMenu("Pickup By Holder");
@@ -335,6 +337,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 throw new RuntimeException(e);
             }
         }
+         positionMapJPanel1.setGoButtonCallback(this::gotoErrmapRow);
     }
 
     public JMenu getToolMenu() {
@@ -3502,6 +3505,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return future;
         }
     }
+    
+    private void gotoXYZ(double x,double y,double z) {
+        CRCLProgramType program = this.createEmptyProgram();
+        MoveToType moveTo = new MoveToType();
+        moveTo.setEndPosition(pose(point(x,y,z),vector(1,0,0),vector(0,0,-1)));
+        program.getMiddleCommand().add(moveTo);
+        startCrclProgram(program);
+    }
+    
+    private void gotoErrmapRow(Object a[]) {
+        gotoXYZ((double) a[0], (double) a[1],(double) a[2]);
+    }
+    
 
     private void prepCrclProgram(CRCLProgramType crclProgram1) throws IllegalStateException {
         startCrclProgramTime = System.currentTimeMillis();

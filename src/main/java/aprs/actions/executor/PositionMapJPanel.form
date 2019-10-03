@@ -16,27 +16,26 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="0" attributes="0">
-              <EmptySpace min="-2" max="-2" attributes="0"/>
+          <Group type="102" attributes="0">
+              <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jScrollPane3" pref="544" max="32767" attributes="0"/>
                   <Group type="102" attributes="0">
                       <Component id="jSpinnerIndex" min="-2" pref="50" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
-                      <Component id="jLabel13" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldErrorMapFilename" max="32767" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jButtonGo" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonErrorMapFileBrowse" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonSave" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonClear" min="-2" max="-2" attributes="0"/>
                   </Group>
+                  <Component id="jTextFieldErrorMapFilename" alignment="0" max="32767" attributes="0"/>
               </Group>
-              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -47,27 +46,23 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="jSpinnerIndex" alignment="0" min="-2" pref="28" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="jLabel13" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jTextFieldErrorMapFilename" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonErrorMapFileBrowse" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonSave" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonClear" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonGo" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
+              <EmptySpace max="32767" attributes="0"/>
+              <Component id="jTextFieldErrorMapFilename" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jScrollPane3" pref="118" max="32767" attributes="0"/>
+              <Component id="jScrollPane3" min="-2" pref="123" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="javax.swing.JLabel" name="jLabel13">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="File name:"/>
-      </Properties>
-    </Component>
     <Component class="javax.swing.JTextField" name="jTextFieldErrorMapFilename">
       <Properties>
         <Property name="text" type="java.lang.String" value="errors.csv"/>
@@ -164,6 +159,15 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="/1         "/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonGo">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Go"/>
+        <Property name="enabled" type="boolean" value="false"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonGoActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>
