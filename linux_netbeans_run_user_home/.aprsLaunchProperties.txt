@@ -1,4 +1,4 @@
 #
-#Wed Sep 25 14:30:23 EDT 2019
+#Tue Oct 01 09:31:48 EDT 2019
 playAlerts=false
-defaultCycles=40
+defaultCycles=55
