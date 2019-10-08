@@ -25,6 +25,8 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jButtonPlot" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="jButtonErrorMapFileBrowse" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonSave" min="-2" max="-2" attributes="0"/>
@@ -48,6 +50,7 @@
                       <Component id="jButtonSave" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jButtonClear" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabelSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="jButtonPlot" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -130,6 +133,14 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="/1         "/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonPlot">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Plot"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonPlotActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

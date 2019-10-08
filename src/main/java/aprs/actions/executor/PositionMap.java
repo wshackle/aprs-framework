@@ -32,10 +32,13 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.stream.Collectors;
 import static crcl.utils.CRCLPosemath.point;
+import diagapplet.plotter.plotterJFrame;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import static java.util.Objects.requireNonNull;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.Posemath;
@@ -82,7 +85,7 @@ public class PositionMap {
                     public Object[] next() {
                         PositionMapEntry entry = l.get(index);
                         ++index;
-                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getRobotZ(), entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(),entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ(), entry.getLabel()};
+                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getRobotZ(), entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(), entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ(), entry.getLabel()};
                     }
                 };
             }
@@ -121,6 +124,109 @@ public class PositionMap {
 
     public static PositionMap emptyPositionMap() {
         return new PositionMap();
+    }
+
+    public void plot() {
+        double minx = Double.POSITIVE_INFINITY;
+        double miny = Double.POSITIVE_INFINITY;
+        double minz = Double.POSITIVE_INFINITY;
+        double maxx = Double.NEGATIVE_INFINITY;
+        double maxy = Double.NEGATIVE_INFINITY;
+        double maxz = Double.NEGATIVE_INFINITY;
+
+        for (PositionMapEntry entry : errmapList) {
+            minx = Math.min(minx, entry.getRobotX());
+            miny = Math.min(miny, entry.getRobotY());
+            minz = Math.min(minz, entry.getRobotZ());
+            maxx = Math.max(maxx, entry.getRobotX());
+            maxy = Math.max(maxy, entry.getRobotY());
+            maxz = Math.max(maxz, entry.getRobotZ());
+        }
+        final double xdiff = Math.abs(minx - maxx);
+        final double startx = minx - xdiff / 2;
+        final double ydiff = Math.abs(miny - maxy);
+        final double starty = miny - ydiff / 2;
+        final double z = (maxz + minz) / 2;
+
+        try {
+            diagapplet.plotter.plotterJFrame plotterFrame = new diagapplet.plotter.plotterJFrame();
+            plotXFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
+            plotYFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
+            plotRobot(plotterFrame);
+            plotOther(plotterFrame);
+            plotterFrame.SetEqualizeAxis(true);
+            plotterFrame.setVisible(true);
+        } catch (Exception ex) {
+            Logger.getLogger(PositionMap.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void plotXFirst(final double startx, final double xdiff, final double starty, final double ydiff, final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[64];
+        double yA[] = new double[64];
+        double xInA[] = new double[64];
+        double yInA[] = new double[64];
+        for (int i = 0; i < 8; i++) {
+            double x = startx + i * (xdiff / 4);
+            for (int j = 0; j < 8; j++) {
+                double y = starty + j * (ydiff / 4);
+                xInA[i * 8 + j] = x;
+                yInA[i * 8 + j] = y;
+                PointType pointin = CRCLPosemath.point(x, y, z);
+                PointType pointOut = this.correctPoint(pointin);
+                xA[i * 8 + j] = pointOut.getX();
+                yA[i * 8 + j] = pointOut.getY();
+            }
+        }
+        plotterFrame.LoadXYDoubleArrays("XFirstIn", xInA, yInA);
+        plotterFrame.LoadXYDoubleArrays("correctedPointsXFirst", xA, yA);
+    }
+
+    private void plotYFirst(final double startx, final double xdiff, final double starty, final double ydiff, final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[64];
+        double yA[] = new double[64];
+        double xInA[] = new double[64];
+        double yInA[] = new double[64];
+        for (int i = 0; i < 8; i++) {
+            double y = starty + i * (ydiff / 4);
+            for (int j = 0; j < 8; j++) {
+                double x = startx + j * (xdiff / 4);
+                 xInA[i * 8 + j] = x;
+                yInA[i * 8 + j] = y;
+                PointType pointin = CRCLPosemath.point(x, y, z);
+                PointType pointOut = this.correctPoint(pointin);
+                xA[i * 8 + j] = pointOut.getX();
+                yA[i * 8 + j] = pointOut.getY();
+            }
+        }
+        plotterFrame.LoadXYDoubleArrays("YFirstIn", xInA, yInA);
+        plotterFrame.LoadXYDoubleArrays("correctedPointsYFirst", xA, yA);
+    }
+
+    private void plotRobot(plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size()];
+        double yA[] = new double[errmapList.size()];
+        for (int i = 0; i < errmapList.size(); i++) {
+            PositionMapEntry entry = errmapList.get(i);
+            double x = entry.getRobotX();
+            double y = entry.getRobotY();
+            xA[i] = x;
+            yA[i] = y;
+        }
+        plotterFrame.LoadXYDoubleArrays("robot", xA, yA);
+    }
+
+    private void plotOther(plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size()];
+        double yA[] = new double[errmapList.size()];
+        for (int i = 0; i < errmapList.size(); i++) {
+            PositionMapEntry entry = errmapList.get(i);
+            double x = entry.getOtherX();
+            double y = entry.getOtherY();
+            xA[i] = x;
+            yA[i] = y;
+        }
+        plotterFrame.LoadXYDoubleArrays("other", xA, yA);
     }
 
     public PositionMap(File f) throws IOException, BadErrorMapFormatException {
@@ -316,7 +422,10 @@ public class PositionMap {
     }
 
     private static @Nullable
-    PositionMapEntry combineX(@Nullable PositionMapEntry e1, @Nullable PositionMapEntry e2, double x) {
+    PositionMapEntry combineX(
+            @Nullable PositionMapEntry e1,
+            @Nullable PositionMapEntry e2,
+            double x) {
         if (null == e1) {
             if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
                 return e2;
@@ -337,11 +446,6 @@ public class PositionMap {
         if (Math.abs(diff.x) < 1e-6) {
             if (Math.abs(e1.getRobotX() - x) > 1e-6) {
                 return null;
-//                throw new IllegalArgumentException("Can't combine two entry  with the same x  for different target x: "
-//                        + "e1=" + e1 + ", "
-//                        + "e2=" + e2 + ", "
-//                        + "x=" + x
-//                );
             }
             return PositionMapEntry.pointOffsetEntryCombining((e1.getRobotX() + e2.getRobotX()) / 2.0,
                     (e1.getRobotY() + e2.getRobotY()) / 2.0,
@@ -351,9 +455,6 @@ public class PositionMap {
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
                     e1, e2);
         }
-//        PmCartesian xy = new PmCartesian(x, y, z);
-//        PmCartesian diff2 = xy.subtract(c1);
-//        double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag() * diff.mag());
 
         double d = (x - c1.x) / diff.x;
         PmCartesian center = c1.add(diff.multiply(d));
@@ -389,13 +490,9 @@ public class PositionMap {
         if (Math.abs(diff.y) < 1e-6) {
             if (Math.abs(e1.getRobotY() - y) > 1e-6) {
                 return null;
-//                throw new IllegalArgumentException("Can't combine two entry  with the same y  for different target y: "
-//                        + "e1=" + e1 + ", "
-//                        + "e2=" + e2 + ", "
-//                        + "y=" + y
-//                );
             }
-            return PositionMapEntry.pointOffsetEntryCombining((e1.getRobotX() + e2.getRobotX()) / 2.0,
+            return PositionMapEntry.pointOffsetEntryCombining(
+                    (e1.getRobotX() + e2.getRobotX()) / 2.0,
                     (e1.getRobotY() + e2.getRobotY()) / 2.0,
                     (e1.getRobotZ() + e2.getRobotZ()) / 2.0,
                     (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
@@ -403,9 +500,6 @@ public class PositionMap {
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
                     e1, e2);
         }
-//        PmCartesian xy = new PmCartesian(x, y, z);
-//        PmCartesian diff2 = xy.subtract(c1);
-//        double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag() * diff.mag());
 
         double d = (y - c1.y) / diff.y;
         PmCartesian center = c1.add(diff.multiply(d));

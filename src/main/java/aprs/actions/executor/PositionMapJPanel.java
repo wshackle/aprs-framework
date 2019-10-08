@@ -100,6 +100,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jSpinnerIndex = new javax.swing.JSpinner();
         jButtonClear = new javax.swing.JButton();
         jLabelSize = new javax.swing.JLabel();
+        jButtonPlot = new javax.swing.JButton();
 
         jTextFieldErrorMapFilename.setText("errors.csv");
 
@@ -151,6 +152,13 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
         jLabelSize.setText("/1         ");
 
+        jButtonPlot.setText("Plot");
+        jButtonPlot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPlotActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -164,6 +172,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabelSize)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonPlot)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonSave)
@@ -182,7 +192,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                         .addComponent(jButtonErrorMapFileBrowse)
                         .addComponent(jButtonSave)
                         .addComponent(jButtonClear)
-                        .addComponent(jLabelSize)))
+                        .addComponent(jLabelSize)
+                        .addComponent(jButtonPlot)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldErrorMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -496,6 +507,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         clearCurrentMap();
     }//GEN-LAST:event_jButtonClearActionPerformed
 
+    private void jButtonPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlotActionPerformed
+        getPositionMap(spinnerIndexValue).plot();
+    }//GEN-LAST:event_jButtonPlotActionPerformed
+
     public void clearCurrentMap() {
         final int spinVal = spinnerIndexValue;
         setPositionMap(spinVal, PositionMap.emptyPositionMap());
@@ -526,6 +541,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonErrorMapFileBrowse;
+    private javax.swing.JButton jButtonPlot;
     private javax.swing.JButton jButtonSave;
     private javax.swing.JLabel jLabelSize;
     private javax.swing.JScrollPane jScrollPane3;

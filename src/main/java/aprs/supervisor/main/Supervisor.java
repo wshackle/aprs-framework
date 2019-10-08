@@ -8428,6 +8428,21 @@ public class Supervisor {
     private @Nullable
     File lastPosMapFile = null;
 
+    public File getLastPosMapFile() {
+        return lastPosMapFile;
+    }
+    
+    public void plotLastPosMapFile() {
+        if(null != lastPosMapFile) {
+            try {
+                PositionMap pm = new PositionMap(lastPosMapFile);
+                pm.plot();
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
     void saveLastPosMapFile(File f) throws IOException {
         lastPosMapFile = f;
         savePathInLastFileFile(f, LAST_POSMAP_FILE_FILE, getSetupParent());

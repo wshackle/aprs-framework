@@ -1443,6 +1443,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jButtonAddLine = new javax.swing.JButton();
         jButtonDeleteLine = new javax.swing.JButton();
         jButtonSaveSelectedPosMap = new javax.swing.JButton();
+        jButtonPlotPositionMap = new javax.swing.JButton();
         jButtonSetInFromCurrent = new javax.swing.JButton();
         jButtonGoIn = new javax.swing.JButton();
         jPanelFuture = new javax.swing.JPanel();
@@ -1590,7 +1591,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         );
         jPanelTasksLayout.setVerticalGroup(
             jPanelTasksLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 295, Short.MAX_VALUE)
+            .addComponent(jScrollPaneTasks, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
         );
 
         jPanelRobots.setBorder(javax.swing.BorderFactory.createTitledBorder("Robots"));
@@ -1701,13 +1702,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 829, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 828, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 231, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1781,6 +1782,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jPanelSelectedPosMapFileTopButtons.add(jButtonSaveSelectedPosMap);
 
+        jButtonPlotPositionMap.setText("Plot");
+        jButtonPlotPositionMap.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPlotPositionMapActionPerformed(evt);
+            }
+        });
+        jPanelSelectedPosMapFileTopButtons.add(jButtonPlotPositionMap);
+
         jButtonSetInFromCurrent.setText("Set In From Selected Row System");
         jButtonSetInFromCurrent.setEnabled(false);
         jButtonSetInFromCurrent.addActionListener(new java.awt.event.ActionListener() {
@@ -1816,7 +1825,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanelSelectedPosMapFileTopButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jTextFieldSelectedPosMapFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -1916,7 +1925,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 151, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 127, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
@@ -1937,7 +1946,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelFutureLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneListFutures, javax.swing.GroupLayout.DEFAULT_SIZE, 353, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2012,7 +2021,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 400, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelEventsLayout.setVerticalGroup(
@@ -2028,7 +2037,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jLabel7)
                     .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 472, Short.MAX_VALUE)
+                .addComponent(jScrollPaneEventsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 536, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2050,7 +2059,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 827, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 820, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2060,7 +2069,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jComboBoxTeachSystemView, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE))
+                .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 548, Short.MAX_VALUE))
         );
 
         jTabbedPaneMain.addTab("Teach", jPanelTeachTable);
@@ -2114,7 +2123,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 827, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 820, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2136,7 +2145,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .addComponent(jButtonSyncToolsFromRobots)
                     .addComponent(jButtonSyncToolsToRobots))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)
+                .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 534, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -4247,6 +4256,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonGoInActionPerformed
 
+    private void jButtonPlotPositionMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlotPositionMapActionPerformed
+       supervisor.plotLastPosMapFile();
+    }//GEN-LAST:event_jButtonPlotPositionMapActionPerformed
+
     private String getRecordString(CSVRecord record, Map<String, Integer> headerMap, String header) {
         Integer index = headerMap.get(header);
         if (index == null || index < 0 || index > record.size()) {
@@ -5800,6 +5813,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonFuturesCancelAll;
     private javax.swing.JButton jButtonGoIn;
     private javax.swing.JButton jButtonGoOut;
+    private javax.swing.JButton jButtonPlotPositionMap;
     private javax.swing.JButton jButtonSaveSelectedPosMap;
     private javax.swing.JButton jButtonSetInFromCurrent;
     private javax.swing.JButton jButtonSetOutFromCurrent;
