@@ -3603,13 +3603,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = this.createEmptyProgram();
         MoveToType moveTo = new MoveToType();
         PoseType currentPose = aprsSystem.getCurrentPose();
-        moveTo.setEndPosition(pose(point(x, y, z), copy(currentPose.getXAxis()),copy(currentPose.getZAxis())));
+        moveTo.setEndPosition(pose(point(x, y, z), copy(currentPose.getXAxis()), copy(currentPose.getZAxis())));
         program.getMiddleCommand().add(moveTo);
         startCrclProgram(program);
     }
 
     private void gotoErrmapRow(Object a @Nullable []) {
-        if(null == a) {
+        if (null == a) {
             return;
         }
         gotoXYZ((double) a[0], (double) a[1], (double) a[2]);
@@ -3845,10 +3845,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.replanRunnable = this.defaultReplanRunnable;
         final XFuture<Boolean> runningProgramFutureFinal = runningProgramFuture;
         if (null != runningProgramFutureFinal) {
-            Thread.dumpStack();
-            System.err.println("Cancelling runningProgramFuture=" + runningProgramFutureFinal);
-            println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
-            runningProgramFutureFinal.cancelAll(false);
+            if (!runningProgramFutureFinal.isDone()) {
+                Thread.dumpStack();
+                System.err.println("Cancelling runningProgramFuture=" + runningProgramFutureFinal);
+                println("setRunProgramFutureTrace = " + Utils.traceToString(setRunProgramFutureTrace));
+                runningProgramFutureFinal.cancelAll(false);
+            }
             setRunProgramFuture(null);
         }
         if (null != aprsSystem) {
@@ -6107,15 +6109,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonErrMapSetRobotFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
-        if(data == null) {
+        if (data == null) {
             return;
         }
         PoseType pose = aprsSystem.getCurrentPose();
-        if(null == pose) {
+        if (null == pose) {
             return;
         }
         PointType point = pose.getPoint();
-        if(null == point) {
+        if (null == point) {
             return;
         }
         data[0] = point.getX();
@@ -6125,24 +6127,24 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
 
     private void jButtonErrMapGoOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapGoOutActionPerformed
-       Object data[] = this.positionMapJPanel1.getSelectedRowData();
-       if(null == data) {
-           return;
-       }
-       gotoXYZ((double)data[3], (double)data[4], (double) data[5]);
+        Object data[] = this.positionMapJPanel1.getSelectedRowData();
+        if (null == data) {
+            return;
+        }
+        gotoXYZ((double) data[3], (double) data[4], (double) data[5]);
     }//GEN-LAST:event_jButtonErrMapGoOutActionPerformed
 
     private void jButtonErrMapSetVisionFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromCurrentActionPerformed
-       Object data[] = this.positionMapJPanel1.getSelectedRowData();
-        if(data == null) {
+        Object data[] = this.positionMapJPanel1.getSelectedRowData();
+        if (data == null) {
             return;
         }
         PoseType pose = aprsSystem.getCurrentPose();
-        if(null == pose) {
+        if (null == pose) {
             return;
         }
         PointType point = pose.getPoint();
-        if(null == point) {
+        if (null == point) {
             return;
         }
         data[3] = point.getX();
@@ -6153,11 +6155,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonErrMapSetVisionFromDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromDBActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
-        if(data == null) {
+        if (data == null) {
             return;
         }
         PointType point = lastSelectedPoseCachePoint;
-        if(null == point) {
+        if (null == point) {
             return;
         }
         data[3] = point.getX();
@@ -6203,7 +6205,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 lastSelectedRobotPoint = robotPoint;
                 jTextFieldTestPose.setText(String.format("%.1f,%.1f,%.1f", point.getX(), point.getY(), point.getZ()));
                 jTextFieldAdjPose.setText(String.format("%.1f,%.1f,%.1f", robotPoint.getX(), robotPoint.getY(), robotPoint.getZ()));
-                PointType offsetPoint = CRCLPosemath.point(point.getX()-robotPoint.getX(), point.getY()-robotPoint.getY(), point.getZ()-robotPoint.getZ());
+                PointType offsetPoint = CRCLPosemath.point(point.getX() - robotPoint.getX(), point.getY() - robotPoint.getY(), point.getZ() - robotPoint.getZ());
                 jTextFieldOffset.setText(String.format("%.1f,%.1f,%.1f", offsetPoint.getX(), offsetPoint.getY(), offsetPoint.getZ()));
                 lastSelectedPoseCacheRobotOffset = offsetPoint;
             }

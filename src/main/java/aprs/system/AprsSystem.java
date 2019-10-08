@@ -3250,11 +3250,13 @@ public class AprsSystem implements SlotOffsetProvider {
                     } catch (ClassNotFoundException ex) {
                         Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    setTitleErrorString("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
                     throw new RuntimeException("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
                 }
             });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
         }
     }
@@ -3403,8 +3405,11 @@ public class AprsSystem implements SlotOffsetProvider {
                         ProtectionDomain protDom = clzz.getProtectionDomain();
                         System.out.println("protDom = " + protDom);
                     } catch (ClassNotFoundException ex) {
+                        setTitleErrorString(ex.getMessage());
                         Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
+                        throw new RuntimeException(ex);
                     }
+                    setTitleErrorString("no motomanServerProvider (Please add crcl4java-motoman classes/jar to classpath)");
                     throw new RuntimeException("no motomanServerProvider (Please add crcl4java-motoman classes/jar to classpath)");
                 }
             }
