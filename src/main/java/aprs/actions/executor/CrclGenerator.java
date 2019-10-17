@@ -84,6 +84,7 @@ import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLCommandWrapper;
+import crcl.utils.CRCLCommandWrapperConsumer;
 import crcl.utils.CRCLPosemath;
 
 import java.sql.SQLException;
@@ -98,7 +99,6 @@ import java.util.Arrays;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
-import crcl.utils.CRCLCommandWrapper.CRCLCommandWrapperConsumer;
 import static crcl.utils.CRCLCopier.copy;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
@@ -5329,6 +5329,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             lastTestApproachPose = null;
 
             PoseType takePose = copy(poseWithToolOffset);
+            assert takePose != null : "takePos == null";
             PointType poseWithToolOffsetPoint = poseWithToolOffset.getPoint();
             if (null == poseWithToolOffsetPoint) {
                 throw new IllegalStateException("null == poseWithToolOffsetPoint");
@@ -5412,6 +5413,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
         PoseType takePose = copy(pose);
+        assert takePose!=null: "takePose==null";
         PointType takePosePoint = takePose.getPoint();
         if (null == takePosePoint) {
             throw new IllegalStateException("null == takePosePoint");
@@ -6226,6 +6228,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         putPoseCacheTrace = putPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
             PoseType poseCopy = copy(pose);
+            assert poseCopy != null :"poseCopy==null";
             poseCache.put(name, poseCopy);
             PhysicalItem itemCopy = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, poseCopy, 0);
             itemCache.put(name, itemCopy);
@@ -7246,6 +7249,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
         PoseType approachPose = copy(poseWithToolOffset);
+        assert approachPose != null : "approachPose==null";
         lastTestApproachPose = null;
 
         //logDebug("Z= " + pose.getPoint().getZ());
@@ -7254,6 +7258,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         approachPosePoint.setZ(poseWithToolOffsetPoint.getZ() + approachZOffset);
 
         PoseType placePose = copy(poseWithToolOffset);
+        assert placePose != null : "placePose==null";
         PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
         placePosePoint.setZ(poseWithToolOffsetPoint.getZ() + placeZOffset);
 

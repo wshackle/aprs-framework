@@ -939,8 +939,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     for (int i = 0; i < pm.getErrmapList().size(); i++) {
                         PositionMapEntry pme = pm.getErrmapList().get(i);
                         model.addRow(new Object[]{
-                            pme.getRobotX(), pme.getRobotY(), pme.getRobotZ(),
-                            pme.getRobotX() + pme.getOffsetX(), pme.getRobotY() + pme.getOffsetY(), pme.getRobotZ() + pme.getOffsetZ(),
+                            pme.getInputX(), pme.getInputY(), pme.getInputZ(),
+                            pme.getInputX() + pme.getOffsetX(), pme.getInputY() + pme.getOffsetY(), pme.getInputZ() + pme.getOffsetZ(),
                             pme.getOffsetX(), pme.getOffsetY(), pme.getOffsetZ(),
                             pme.getLabel()
                         });

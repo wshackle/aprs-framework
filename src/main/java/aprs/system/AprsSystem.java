@@ -2793,11 +2793,11 @@ public class AprsSystem implements SlotOffsetProvider {
             return true;
         }
         long startTime = logEvent("start runCrclProgram", programFile);
-        CRCLProgramType progCopy = copy(program);
         final CrclSwingClientJInternalFrame crclClientJInternalFrameFinal = crclClientJInternalFrame;
         if (null == crclClientJInternalFrameFinal) {
             throw new IllegalStateException("CRCL Client View must be open to use this function.");
         }
+        int origSize = program.getMiddleCommand().size();
         try {
             setProgram(program);
             updateRobotLimits();
@@ -2816,7 +2816,6 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new RuntimeException(ex);
             }
         } finally {
-            int origSize = progCopy.getMiddleCommand().size();
             int curSize = program.getMiddleCommand().size();
             String origSizeString = (origSize != curSize) ? ("\n origSize=" + origSize) : "";
             final long timeDiff = System.currentTimeMillis() - startTime;

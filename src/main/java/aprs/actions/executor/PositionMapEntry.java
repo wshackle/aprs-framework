@@ -34,9 +34,9 @@ import rcs.posemath.PmCartesian;
  */
 public class PositionMapEntry {
 
-    private final double robotX;
-    private final double robotY;
-    private final double robotZ;
+    private final double inputX;
+    private final double inputY;
+    private final double inputZ;
     private final double offsetX;
     private final double offsetY;
     private final double offsetZ;
@@ -49,10 +49,10 @@ public class PositionMapEntry {
     private final String label;
     private final List<PositionMapEntry> combined;
 
-    private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, String label, PositionMapEntry ... combined) {
-        this.robotX = robotX;
-        this.robotY = robotY;
-        this.robotZ = robotZ;
+    private PositionMapEntry(double inputX, double inputY, double inputZ, double offsetX, double offsetY, double offsetZ, double minX, double maxX, double minY, double maxY, double minZ, double maxZ, String label, PositionMapEntry ... combined) {
+        this.inputX = inputX;
+        this.inputY = inputY;
+        this.inputZ = inputZ;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
@@ -76,9 +76,9 @@ public class PositionMapEntry {
 
     
     private PositionMapEntry(double robotX, double robotY, double robotZ, double offsetX, double offsetY, double offsetZ, String label) {
-        this.robotX = robotX;
-        this.robotY = robotY;
-        this.robotZ = robotZ;
+        this.inputX = robotX;
+        this.inputY = robotY;
+        this.inputZ = robotZ;
         this.maxX = this.minX = robotX;
         this.maxY = this.minY = robotY;
         this.maxZ = this.minZ = robotZ;
@@ -136,12 +136,12 @@ public class PositionMapEntry {
         return pointPairEntry(robotCart.x, robotCart.y, robotCart.z, otherCart.x, otherCart.y, otherCart.z);
     }
 
-    public double getRobotX() {
-        return robotX;
+    public double getInputX() {
+        return inputX;
     }
 
-    public double getRobotY() {
-        return robotY;
+    public double getInputY() {
+        return inputY;
     }
 
     public double getOffsetX() {
@@ -152,29 +152,29 @@ public class PositionMapEntry {
         return offsetY;
     }
 
-    public double getRobotZ() {
-        return robotZ;
+    public double getInputZ() {
+        return inputZ;
     }
 
     public double getOffsetZ() {
         return offsetZ;
     }
 
-    public double getOtherX() {
-        return robotX + offsetX;
+    public double getOutputX() {
+        return inputX + offsetX;
     }
 
-    public double getOtherY() {
-        return robotY + offsetY;
+    public double getOutputY() {
+        return inputY + offsetY;
     }
 
-    public double getOtherZ() {
-        return robotZ + offsetZ;
+    public double getOutputZ() {
+        return inputZ + offsetZ;
     }
 
     @Override
     public String toString() {
-        return "PositionMapEntry{" + "robot(X,Y,Z)=" + robotX + "," + robotY + "," + robotZ + ", other(X,Y,Z)=" + getOtherX() + "," + getOtherY() + ", " + getOtherZ() + ", offset(X,Y,Z)=" + offsetX + "," + offsetY + "," + offsetZ + ",label="+label+'}';
+        return "PositionMapEntry{" + "robot(X,Y,Z)=" + inputX + "," + inputY + "," + inputZ + ", other(X,Y,Z)=" + getOutputX() + "," + getOutputY() + ", " + getOutputZ() + ", offset(X,Y,Z)=" + offsetX + "," + offsetY + "," + offsetZ + ",label="+label+'}';
     }
 
     public double getMinX() {

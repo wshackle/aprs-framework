@@ -112,13 +112,16 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
     }
 
     private void checkUndoScore(ScoreDirector<OpActionPlan> scoreDirector) throws RuntimeException {
-        if (null != undoOrigSdScore && null != undoOrigPlanCopy) {
+        final HardSoftLongScore undoOrigSdScoreLocalFinal = undoOrigSdScore;
+        final OpActionPlan undoOrigPlanCopyLocalFinal = undoOrigPlanCopy;
+        if (null != undoOrigSdScoreLocalFinal && null != undoOrigPlanCopyLocalFinal) {
             synchronized (this.getClass()) {
                 HardSoftLongScore newSdScore;
                 try {
                     newSdScore = IncrementalOpActionPlanScoreCalculator.computeInitScore(scoreDirector.getWorkingSolution());
                 } catch (Exception ex) {
-                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                    List<Map<String, Object>[]> diffList
+                            = undoOrigPlanCopyLocalFinal.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
                     System.out.println("diffList.size() = " + diffList.size());
                     OpActionPlan.printMapsArrayDiffList(System.out, diffList);
                     System.out.println("");
@@ -132,29 +135,29 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
                     }
                 }
 
-                if (undoOrigSdScore.compareTo(newSdScore) != 0) {
-                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                if (undoOrigSdScoreLocalFinal.compareTo(newSdScore) != 0) {
+                    List<Map<String, Object>[]> diffList = undoOrigPlanCopyLocalFinal.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
                     System.out.println("diffList.size() = " + diffList.size());
                     OpActionPlan.printMapsArrayDiffList(System.out, diffList);
                     System.out.println("");
                     System.err.println("");
                     System.out.flush();
                     System.out.flush();
-                    throw new RuntimeException("newSdScore = " + newSdScore + ", undoOrigSdScore=" + undoOrigSdScore);
+                    throw new RuntimeException("newSdScore = " + newSdScore + ", undoOrigSdScore=" + undoOrigSdScoreLocalFinal);
                 }
             }
             if (null != undoOrigEasyScore) {
                 HardSoftLongScore newEasyScore = new EasyOpActionPlanScoreCalculator().calculateScore(scoreDirector.getWorkingSolution());
-                if (undoOrigSdScore.compareTo(newEasyScore) != 0) {
+                if (undoOrigSdScoreLocalFinal.compareTo(newEasyScore) != 0) {
                     Thread.dumpStack();
-                    List<Map<String, Object>[]> diffList = undoOrigPlanCopy.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
+                    List<Map<String, Object>[]> diffList = undoOrigPlanCopyLocalFinal.createMapsArrayDiffList(scoreDirector.getWorkingSolution());
                     System.out.println("diffList.size() = " + diffList.size());
                     OpActionPlan.printMapsArrayDiffList(System.out, diffList);
                     System.out.println("");
                     System.err.println("");
                     System.out.flush();
                     System.out.flush();
-                    throw new RuntimeException("newEasyScore = " + newEasyScore + ", undoOrigSdScore=" + undoOrigSdScore);
+                    throw new RuntimeException("newEasyScore = " + newEasyScore + ", undoOrigSdScore=" + undoOrigSdScoreLocalFinal);
                 }
             }
         }

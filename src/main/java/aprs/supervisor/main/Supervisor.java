@@ -240,8 +240,10 @@ public class Supervisor {
                 .always(() -> {
                     long endTime = System.currentTimeMillis();
                     long timeDiff = endTime - startTime;
-
                     int cycle_count = this.getContiousDemoCycleCount();
+                    if (cycle_count != maxCycles) {
+                        throw new RuntimeException("cycle_count = " + cycle_count + ", maxCycles=" + maxCycles);
+                    }
                     updateTestLog(cycle_count, timeDiff);
                     if (!xf2.isDone()) {
                         System.err.println("wtf");
@@ -381,8 +383,19 @@ public class Supervisor {
         XFuture<?> xf4 = randomTestFirstActionReversedFuture
                 .alwaysCompose(() -> {
                     println("supervisorScanAllFuture = " + supervisorScanAllFuture);
+                    if(supervisorScanAllFuture.isCompletedExceptionally()) {
+                        final Function<Throwable, Void> printExFunction = (Throwable throwable) -> {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, throwable);
+                            return (Void) null;
+                        };
+                        supervisorScanAllFuture.exceptionally(printExFunction);
+                    }
+                    println("xf2 = " + xf2);
                     println("randomTestFirstActionReversedFuture = " + randomTestFirstActionReversedFuture);
                     int cycle_count = this.getContiousDemoCycleCount();
+                    if (cycle_count != numCycles) {
+                        throw new RuntimeException("cycle_count = " + cycle_count + ", numCycles=" + numCycles);
+                    }
                     long endTime = System.currentTimeMillis();
                     long timeDiff = endTime - startTime;
                     updateTestLog(cycle_count, timeDiff);
@@ -8428,12 +8441,13 @@ public class Supervisor {
     private @Nullable
     File lastPosMapFile = null;
 
-    public File getLastPosMapFile() {
+    public @Nullable
+    File getLastPosMapFile() {
         return lastPosMapFile;
     }
-    
+
     public void plotLastPosMapFile() {
-        if(null != lastPosMapFile) {
+        if (null != lastPosMapFile) {
             try {
                 PositionMap pm = new PositionMap(lastPosMapFile);
                 pm.plot();
@@ -9212,7 +9226,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                   @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                     @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

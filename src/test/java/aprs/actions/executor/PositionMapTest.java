@@ -70,8 +70,8 @@ public class PositionMapTest {
         if (e1.equals(e2)) {
             return;
         }
-        assertEquals("RobotX", e1.getRobotX(), e2.getRobotX(), 1e-6);
-        assertEquals("RobotY", e1.getRobotY(), e2.getRobotY(), 1e-6);
+        assertEquals("RobotX", e1.getInputX(), e2.getInputX(), 1e-6);
+        assertEquals("RobotY", e1.getInputY(), e2.getInputY(), 1e-6);
         assertEquals("OffsetX", e1.getOffsetX(), e2.getOffsetX(), 1e-6);
         assertEquals("OffsetY", e1.getOffsetY(), e2.getOffsetY(), 1e-6);
     }

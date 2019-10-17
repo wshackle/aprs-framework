@@ -25,6 +25,7 @@ package aprs.actions.executor;
 import aprs.cachedcomponents.CachedTable;
 import aprs.system.AprsSystem;
 import java.awt.Color;
+import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,10 +35,13 @@ import java.util.Objects;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
@@ -95,7 +99,30 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jTextFieldErrorMapFilename = new javax.swing.JTextField();
         jButtonErrorMapFileBrowse = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTablePosMap = new javax.swing.JTable();
+        jTablePosMap = new JTable(  )
+        {
+            //  Returning the Class of each column will allow different
+            //  renderers to be used based on Class
+
+            public Class getColumnClass(int column)
+            {
+                return getValueAt(0, column).getClass();
+            }
+
+            public Component prepareRenderer(
+                TableCellRenderer renderer, int row, int column)
+            {
+                Component c = super.prepareRenderer(renderer, row, column);
+                JComponent jc = (JComponent)c;
+
+                //  Alternate row color
+
+                if (!isRowSelected(row))
+                c.setBackground(row % 2 == 0 ? getBackground() : Color.LIGHT_GRAY);
+
+                return c;
+            }
+        };
         jButtonSave = new javax.swing.JButton();
         jSpinnerIndex = new javax.swing.JSpinner();
         jButtonClear = new javax.swing.JButton();
@@ -116,7 +143,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Robot_X", "Robot_Y", "Robot_Z", "Vision_X", "Vision_Y", "Vision_Z", "Offset_X", "Offset_Y", "Offset_Z", "Label"
+                "Input_X", "Input_Y", "Input_Z", "Output_X", "Output_Y", "Output_Z", "Offset_X", "Offset_Y", "Offset_Z", "Label"
             }
         ) {
             Class[] types = new Class [] {
@@ -346,7 +373,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMapFile;
     }
 
-    public Object @Nullable [] getSelectedRowData() {
+    public @Nullable Object @Nullable [] getSelectedRowData() {
         TableModel model = jTablePosMap.getModel();
         if (model instanceof DefaultTableModel) {
             DefaultTableModel dtm = (DefaultTableModel) model;
@@ -364,7 +391,12 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         int selectedRow = jTablePosMap.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < jTablePosMap.getRowCount()) {
             PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
-            positionMap.getErrmapList().set(selectedRow, PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]));
+            if(null == positionMap) {
+                return;
+            }
+            final PositionMapEntry newPointPairLabelEntry 
+                    = PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]);
+            positionMap.getErrmapList().set(selectedRow, newPointPairLabelEntry);
             reversePositionMaps = null;
             List<PositionMap> newReversePositionMaps = getReversePositionMaps();
             updatePositionMapInfoOnDisplay();
@@ -507,6 +539,8 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         clearCurrentMap();
     }//GEN-LAST:event_jButtonClearActionPerformed
 
+    @UIEffect
+    @SuppressWarnings({"nullness"})
     private void jButtonPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlotActionPerformed
         getPositionMap(spinnerIndexValue).plot();
     }//GEN-LAST:event_jButtonPlotActionPerformed

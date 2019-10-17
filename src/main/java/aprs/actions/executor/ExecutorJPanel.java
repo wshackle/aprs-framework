@@ -171,6 +171,7 @@ import static crcl.utils.CRCLPosemath.vector;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import crcl.base.MoveToType;
+import crcl.base.VectorType;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
@@ -3343,6 +3344,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return XFutureVoid.completedFuture();
         } else {
             CRCLProgramType crclProgramCopy = copy(crclProgram);
+            assert crclProgramCopy != null : "crclProgramCopy ==null";
             return aprsSystem.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
         }
     }
@@ -3603,12 +3605,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = this.createEmptyProgram();
         MoveToType moveTo = new MoveToType();
         PoseType currentPose = aprsSystem.getCurrentPose();
-        moveTo.setEndPosition(pose(point(x, y, z), copy(currentPose.getXAxis()), copy(currentPose.getZAxis())));
+        if(null == currentPose) {
+            throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
+        }
+        final VectorType xAxisCopy = copy(currentPose.getXAxis());
+        assert null != xAxisCopy : "null == xAxisCopy";
+        final VectorType zAxisCopy = copy(currentPose.getZAxis());
+        assert null != zAxisCopy : "null == zAxisCopy";
+        moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
         program.getMiddleCommand().add(moveTo);
         startCrclProgram(program);
     }
 
-    private void gotoErrmapRow(Object a @Nullable []) {
+    @SuppressWarnings({"nullness"})
+    private void gotoErrmapRow( @Nullable Object a @Nullable []) {
         if (null == a) {
             return;
         }
@@ -4227,7 +4237,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         logDebug("newFile = " + newFile);
         try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
             if (newFile) {
-                pw.println("Time,PartName,Robot_X,Robot_Y,Robot_Z,Db_X,Db_Y,Db_Z,Offset_X,Offset_Y,Offset_Z");
+                pw.println("Time,PartName,Input_X,Input_Y,Input_Z,Output_X,Output_Y,Output_Z,Offset_X,Offset_Y,Offset_Z");
             }
             pw.println(line);
         }
@@ -6066,6 +6076,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             try {
                 PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
                 PoseType curPoseCopy = copy(curPose);
+                assert curPoseCopy != null : "curPoseCopy==null";
                 PointType curPosePoint = requireNonNull(curPoseCopy.getPoint(), "curPose.getPoint()");
                 String curPoseString
                         = String.format("%.1f, %.1f, %.1f",
@@ -6107,6 +6118,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         gotoErrmapRow(this.positionMapJPanel1.getSelectedRowData());
     }//GEN-LAST:event_jButtonErrMapGoInActionPerformed
 
+    @UIEffect
+    @SuppressWarnings({"nullness"})
     private void jButtonErrMapSetRobotFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
         if (data == null) {
@@ -6126,6 +6139,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.positionMapJPanel1.setSelectedRowData(data);
     }//GEN-LAST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
 
+    @UIEffect
+    @SuppressWarnings({"nullness"})
     private void jButtonErrMapGoOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapGoOutActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
         if (null == data) {
@@ -6134,6 +6149,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         gotoXYZ((double) data[3], (double) data[4], (double) data[5]);
     }//GEN-LAST:event_jButtonErrMapGoOutActionPerformed
 
+    @UIEffect
+    @SuppressWarnings({"nullness"})
     private void jButtonErrMapSetVisionFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromCurrentActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
         if (data == null) {
@@ -6153,6 +6170,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.positionMapJPanel1.setSelectedRowData(data);
     }//GEN-LAST:event_jButtonErrMapSetVisionFromCurrentActionPerformed
 
+    @UIEffect
+    @SuppressWarnings({"nullness"})
     private void jButtonErrMapSetVisionFromDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetVisionFromDBActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
         if (data == null) {

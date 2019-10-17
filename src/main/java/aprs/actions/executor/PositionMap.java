@@ -10,8 +10,8 @@
  * public domain.
  * 
  * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
+ * for its use by output parties, and makes no guarantees, expressed or 
+ * implied, about its quality, reliability, or any output characteristic. 
  * We would appreciate acknowledgement if the software is used. 
  * This software can be redistributed and/or modified freely provided 
  * that any derivative works bear some notice that they are derived from it, 
@@ -85,7 +85,7 @@ public class PositionMap {
                     public Object[] next() {
                         PositionMapEntry entry = l.get(index);
                         ++index;
-                        return new Object[]{entry.getRobotX(), entry.getRobotY(), entry.getRobotZ(), entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(), entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ(), entry.getLabel()};
+                        return new Object[]{entry.getInputX(), entry.getInputY(), entry.getInputZ(), entry.getOutputX(), entry.getOutputY(), entry.getOutputZ(), entry.getOffsetX(), entry.getOffsetY(), entry.getOffsetZ(), entry.getLabel()};
                     }
                 };
             }
@@ -135,12 +135,12 @@ public class PositionMap {
         double maxz = Double.NEGATIVE_INFINITY;
 
         for (PositionMapEntry entry : errmapList) {
-            minx = Math.min(minx, entry.getRobotX());
-            miny = Math.min(miny, entry.getRobotY());
-            minz = Math.min(minz, entry.getRobotZ());
-            maxx = Math.max(maxx, entry.getRobotX());
-            maxy = Math.max(maxy, entry.getRobotY());
-            maxz = Math.max(maxz, entry.getRobotZ());
+            minx = Math.min(minx, entry.getInputX());
+            miny = Math.min(miny, entry.getInputY());
+            minz = Math.min(minz, entry.getInputZ());
+            maxx = Math.max(maxx, entry.getInputX());
+            maxy = Math.max(maxy, entry.getInputY());
+            maxz = Math.max(maxz, entry.getInputZ());
         }
         final double xdiff = Math.abs(minx - maxx);
         final double startx = minx - xdiff / 2;
@@ -152,8 +152,10 @@ public class PositionMap {
             diagapplet.plotter.plotterJFrame plotterFrame = new diagapplet.plotter.plotterJFrame();
             plotXFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
             plotYFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
-            plotRobot(plotterFrame);
-            plotOther(plotterFrame);
+            plotInput(z, plotterFrame);
+            plotOutput(z, plotterFrame);
+            plotInputMid(z, plotterFrame);
+            plotOutputMid(z, plotterFrame);
             plotterFrame.SetEqualizeAxis(true);
             plotterFrame.setVisible(true);
         } catch (Exception ex) {
@@ -191,7 +193,7 @@ public class PositionMap {
             double y = starty + i * (ydiff / 4);
             for (int j = 0; j < 8; j++) {
                 double x = startx + j * (xdiff / 4);
-                 xInA[i * 8 + j] = x;
+                xInA[i * 8 + j] = x;
                 yInA[i * 8 + j] = y;
                 PointType pointin = CRCLPosemath.point(x, y, z);
                 PointType pointOut = this.correctPoint(pointin);
@@ -203,43 +205,135 @@ public class PositionMap {
         plotterFrame.LoadXYDoubleArrays("correctedPointsYFirst", xA, yA);
     }
 
-    private void plotRobot(plotterJFrame plotterFrame) {
-        double xA[] = new double[errmapList.size()];
-        double yA[] = new double[errmapList.size()];
+    private void plotInput(final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size() + 1];
+        double yA[] = new double[errmapList.size() + 1];
+        double xCA[] = new double[errmapList.size() + 1];
+        double yCA[] = new double[errmapList.size() + 1];
         for (int i = 0; i < errmapList.size(); i++) {
             PositionMapEntry entry = errmapList.get(i);
-            double x = entry.getRobotX();
-            double y = entry.getRobotY();
+            double x = entry.getInputX();
+            double y = entry.getInputY();
             xA[i] = x;
             yA[i] = y;
+            PointType pointin = CRCLPosemath.point(x, y, z);
+            PointType pointOut = this.correctPoint(pointin);
+            xCA[i] = pointOut.getX();
+            yCA[i] = pointOut.getY();
         }
-        plotterFrame.LoadXYDoubleArrays("robot", xA, yA);
+        xA[errmapList.size()] = xA[0];
+        yA[errmapList.size()] = yA[0];
+        xCA[errmapList.size()] = xCA[0];
+        yCA[errmapList.size()] = yCA[0];
+        plotterFrame.LoadXYDoubleArrays("input", xA, yA);
+        plotterFrame.LoadXYDoubleArrays("correctedInput", xCA, yCA);
     }
 
-    private void plotOther(plotterJFrame plotterFrame) {
-        double xA[] = new double[errmapList.size()];
-        double yA[] = new double[errmapList.size()];
+    private void plotInputMid(final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size()+1];
+        double yA[] = new double[errmapList.size()+1];
+        double xCA[] = new double[errmapList.size()+1];
+        double yCA[] = new double[errmapList.size()+1];
+        PositionMapEntry lastEntry = errmapList.get(0);
         for (int i = 0; i < errmapList.size(); i++) {
-            PositionMapEntry entry = errmapList.get(i);
-            double x = entry.getOtherX();
-            double y = entry.getOtherY();
+            int nextIndex = i+1;
+            if(nextIndex >= errmapList.size()) {
+                nextIndex = 0;
+            }
+            PositionMapEntry entry = errmapList.get(nextIndex);
+            double x = (entry.getInputX() + lastEntry.getInputX()) / 2.0;
+            double y = (entry.getInputY() + lastEntry.getInputY()) / 2.0;
             xA[i] = x;
             yA[i] = y;
+            PointType pointin = CRCLPosemath.point(x, y, z);
+            PointType pointOut = this.correctPoint(pointin);
+            xCA[i] = pointOut.getX();
+            yCA[i] = pointOut.getY();
+            lastEntry = entry;
         }
-        plotterFrame.LoadXYDoubleArrays("other", xA, yA);
+        xA[errmapList.size()] = xA[0];
+        yA[errmapList.size()] = yA[0];
+        xCA[errmapList.size()] = xCA[0];
+        yCA[errmapList.size()] = yCA[0];
+        plotterFrame.LoadXYDoubleArrays("inputMid", xA, yA);
+        plotterFrame.LoadXYDoubleArrays("correctedInputMid", xCA, yCA);
+    }
+
+    private void plotOutputMid(final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size()+1];
+        double yA[] = new double[errmapList.size()+1];
+        double xRA[] = new double[errmapList.size()+1];
+        double yRA[] = new double[errmapList.size()+1];
+        PositionMapEntry lastEntry = errmapList.get(0);
+        PositionMap reverse = this.reverse();
+        for (int i = 0; i < errmapList.size(); i++) {
+            int nextIndex = i+1;
+            if(nextIndex >= errmapList.size()) {
+                nextIndex = 0;
+            }
+            PositionMapEntry entry = errmapList.get(nextIndex);
+            double x = (entry.getOutputX() + lastEntry.getOutputX()) / 2.0;
+            double y = (entry.getOutputY() + lastEntry.getOutputY()) / 2.0;
+            xA[i] = x;
+            yA[i] = y;
+            PointType pointin = CRCLPosemath.point(x, y, z);
+            PointType pointOut = reverse.correctPoint(pointin);
+            xRA[i] = pointOut.getX();
+            yRA[i] = pointOut.getY();
+            lastEntry = entry;
+        }
+        xA[errmapList.size()] = xA[0];
+        yA[errmapList.size()] = yA[0];
+        xRA[errmapList.size()] = xRA[0];
+        yRA[errmapList.size()] = yRA[0];
+        plotterFrame.LoadXYDoubleArrays("outputMid", xA, yA);
+        plotterFrame.LoadXYDoubleArrays("ReverseOutputMid", xRA, yRA);
+    }
+
+    private void plotOutput(final double z, plotterJFrame plotterFrame) {
+        double xA[] = new double[errmapList.size() + 1];
+        double yA[] = new double[errmapList.size() + 1];
+        double xRA[] = new double[errmapList.size() + 1];
+        double yRA[] = new double[errmapList.size() + 1];
+        PositionMap reverse = this.reverse();
+        for (int i = 0; i < errmapList.size(); i++) {
+            PositionMapEntry entry = errmapList.get(i);
+            double x = entry.getOutputX();
+            double y = entry.getOutputY();
+            xA[i] = x;
+            yA[i] = y;
+            PointType pointin = CRCLPosemath.point(x, y, z);
+            PointType pointOut = reverse.correctPoint(pointin);
+            xRA[i] = pointOut.getX();
+            yRA[i] = pointOut.getY();
+        }
+        xA[errmapList.size()] = xA[0];
+        yA[errmapList.size()] = yA[0];
+        xRA[errmapList.size()] = xRA[0];
+        yRA[errmapList.size()] = yRA[0];
+
+        plotterFrame.LoadXYDoubleArrays("output", xA, yA);
+        plotterFrame.LoadXYDoubleArrays("ReverseOutput", xRA, yRA);
     }
 
     public PositionMap(File f) throws IOException, BadErrorMapFormatException {
-        errmapStringsList = Files.lines(f.toPath()).map(l -> l.split(",")).collect(Collectors.toList());
+        errmapStringsList
+                = Files
+                        .lines(f.toPath())
+                        .map(l -> l.split(","))
+                        .collect(Collectors.toList());
         columnHeaders = errmapStringsList.get(0);
 
         fileName = f.getCanonicalPath();
-        int robotXIndex = -1;
-        int robotYIndex = -1;
-        int robotZIndex = -1;
+        int inputXIndex = -1;
+        int inputYIndex = -1;
+        int inputZIndex = -1;
         int offsetXIndex = -1;
         int offsetYIndex = -1;
         int offsetZIndex = -1;
+        int outputXIndex = -1;
+        int outputYIndex = -1;
+        int outputZIndex = -1;
         int labelIndex = -1;
         for (int i = 0; i < columnHeaders.length; i++) {
             switch (columnHeaders[i]) {
@@ -247,24 +341,45 @@ public class PositionMap {
                 case "X1":
                 case "Xin":
                 case "X_in":
+                case "Input_X":
                 case "Robot_X":
-                    robotXIndex = i;
+                    inputXIndex = i;
                     break;
 
                 case "Y":
                 case "Y1":
                 case "Yin":
                 case "Y_in":
+                case "Input_Y":
                 case "Robot_Y":
-                    robotYIndex = i;
+                    inputYIndex = i;
                     break;
 
                 case "Z":
                 case "Z1":
                 case "Zin":
                 case "Z_in":
+                case "Input_Z":
                 case "Robot_Z":
-                    robotZIndex = i;
+                    inputZIndex = i;
+                    break;
+
+                case "Output_X":
+                case "Db_X":
+                case "X_Output":
+                    outputXIndex = i;
+                    break;
+
+                case "Y_Output":
+                case "Db_Y":
+                case "Output_Y":
+                    outputYIndex = i;
+                    break;
+
+                case "Z_Output":
+                case "Db_Z":
+                case "Output_Z":
+                    outputZIndex = i;
                     break;
 
                 case "Offset_X":
@@ -288,11 +403,11 @@ public class PositionMap {
                     break;
             }
         }
-        if (robotXIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find robotXIndex");
+        if (inputXIndex < 0) {
+            throw new BadErrorMapFormatException("Couldn't find inputXIndex");
         }
-        if (robotYIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find robotYIndex");
+        if (inputYIndex < 0) {
+            throw new BadErrorMapFormatException("Couldn't find inputYIndex");
         }
 
         if (offsetXIndex < 0) {
@@ -304,14 +419,27 @@ public class PositionMap {
         errmapList = new ArrayList<>();
         for (int i = 1; i < errmapStringsList.size(); i++) {
             String a[] = errmapStringsList.get(i);
-            double robotX = (robotXIndex >= 0 ? Double.parseDouble(a[robotXIndex]) : 0);
-            double robotY = (robotYIndex >= 0 ? Double.parseDouble(a[robotYIndex]) : 0);
-            double robotZ = (robotZIndex >= 0 ? Double.parseDouble(a[robotZIndex]) : 0);
+            double inputX = (inputXIndex >= 0 ? Double.parseDouble(a[inputXIndex]) : 0);
+            double inputY = (inputYIndex >= 0 ? Double.parseDouble(a[inputYIndex]) : 0);
+            double inputZ = (inputZIndex >= 0 ? Double.parseDouble(a[inputZIndex]) : 0);
+
             double offsetX = (offsetXIndex >= 0 ? Double.parseDouble(a[offsetXIndex]) : 0);
             double offsetY = (offsetYIndex >= 0 ? Double.parseDouble(a[offsetYIndex]) : 0);
             double offsetZ = (offsetZIndex >= 0 ? Double.parseDouble(a[offsetZIndex]) : 0);
+            double outputX = (outputXIndex >= 0 ? Double.parseDouble(a[outputXIndex]) : inputX + offsetX);
+            double outputY = (outputYIndex >= 0 ? Double.parseDouble(a[outputYIndex]) : inputY + offsetY);
+            double outputZ = (outputZIndex >= 0 ? Double.parseDouble(a[outputZIndex]) : inputZ + offsetZ);
+            if (Math.abs(inputX + offsetX - outputX) > 0.001) {
+                System.err.println("(inputX+offsetX-outputX)=" + (inputX + offsetX - outputX) + ", inputX=" + inputX + ",offsetX=" + offsetX + ",outputX=" + outputX);
+            }
+            if (Math.abs(inputY + offsetY - outputY) > 0.001) {
+                System.err.println("(inputY+offsetY-outputY)=" + (inputY + offsetY - outputY) + ", inputY=" + inputY + ",offsetY=" + offsetY + ",outputY=" + outputY);
+            }
+            if (Math.abs(inputZ + offsetZ - outputZ) > 0.001) {
+                System.err.println("(inputZ+offsetZ-outputZ)=" + (inputZ + offsetZ - outputZ) + ", inputZ=" + inputZ + ",offsetZ=" + offsetZ + ",outputZ=" + outputZ);
+            }
             String label = (labelIndex >= 0 && labelIndex < a.length ? a[labelIndex] : "");
-            errmapList.add(PositionMapEntry.pointOffsetLabelEntry(robotX, robotY, robotZ, offsetX, offsetY, offsetZ, label));
+            errmapList.add(PositionMapEntry.pointOffsetLabelEntry(inputX, inputY, inputZ, offsetX, offsetY, offsetZ, label));
         }
     }
 
@@ -319,7 +447,7 @@ public class PositionMap {
         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             pw.println("X,Y,Z,Offset_X,Offset_Y,Offset_Z");
             for (PositionMapEntry entry : this.errmapList) {
-                pw.println(entry.getRobotX() + "," + entry.getRobotY() + "," + entry.getRobotZ() + "," + entry.getOffsetX() + "," + entry.getOffsetY() + "," + entry.getOffsetZ());
+                pw.println(entry.getInputX() + "," + entry.getInputY() + "," + entry.getInputZ() + "," + entry.getOffsetX() + "," + entry.getOffsetY() + "," + entry.getOffsetZ());
             }
         }
     }
@@ -382,8 +510,8 @@ public class PositionMap {
     }
 
     private static double dist(PositionMapEntry e, double x, double y) {
-        double dx = e.getRobotX() - x;
-        double dy = e.getRobotY() - y;
+        double dx = e.getInputX() - x;
+        double dy = e.getInputY() - y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -394,13 +522,13 @@ public class PositionMap {
         if (null == e2) {
             return e1;
         }
-        PmCartesian c1 = new PmCartesian(e1.getRobotX(), e1.getRobotY(), e1.getRobotZ());
-        PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), e2.getRobotZ());
+        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
+        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
         PmCartesian diff = c2.subtract(c1);
         if (diff.mag() < 1e-6) {
-            return PositionMapEntry.pointOffsetEntryCombining((e1.getRobotX() + e2.getRobotX()) / 2.0,
-                    (e1.getRobotY() + e2.getRobotY()) / 2.0,
-                    (e1.getRobotZ() + e2.getRobotZ()) / 2.0,
+            return PositionMapEntry.pointOffsetEntryCombining((e1.getInputX() + e2.getInputX()) / 2.0,
+                    (e1.getInputY() + e2.getInputY()) / 2.0,
+                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
                     (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
                     (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
@@ -427,29 +555,29 @@ public class PositionMap {
             @Nullable PositionMapEntry e2,
             double x) {
         if (null == e1) {
-            if (null != e2 && Math.abs(e2.getRobotX() - x) < 1e-6) {
+            if (null != e2 && Math.abs(e2.getInputX() - x) < 1e-6) {
                 return e2;
             } else {
                 return null;
             }
         }
         if (null == e2) {
-            if (null != e1 && Math.abs(e1.getRobotX() - x) < 1e-6) {
+            if (null != e1 && Math.abs(e1.getInputX() - x) < 1e-6) {
                 return e1;
             } else {
                 return null;
             }
         }
-        PmCartesian c1 = new PmCartesian(e1.getRobotX(), e1.getRobotY(), e1.getRobotZ());
-        PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), e2.getRobotZ());
+        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
+        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
         PmCartesian diff = c2.subtract(c1);
         if (Math.abs(diff.x) < 1e-6) {
-            if (Math.abs(e1.getRobotX() - x) > 1e-6) {
+            if (Math.abs(e1.getInputX() - x) > 1e-6) {
                 return null;
             }
-            return PositionMapEntry.pointOffsetEntryCombining((e1.getRobotX() + e2.getRobotX()) / 2.0,
-                    (e1.getRobotY() + e2.getRobotY()) / 2.0,
-                    (e1.getRobotZ() + e2.getRobotZ()) / 2.0,
+            return PositionMapEntry.pointOffsetEntryCombining((e1.getInputX() + e2.getInputX()) / 2.0,
+                    (e1.getInputY() + e2.getInputY()) / 2.0,
+                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
                     (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
                     (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
@@ -471,30 +599,30 @@ public class PositionMap {
     private static @Nullable
     PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
         if (null == e1) {
-            if (null != e2 && Math.abs(e2.getRobotY() - y) < 1e-6) {
+            if (null != e2 && Math.abs(e2.getInputY() - y) < 1e-6) {
                 return e2;
             } else {
                 return null;
             }
         }
         if (null == e2) {
-            if (null != e1 && Math.abs(e1.getRobotY() - y) < 1e-6) {
+            if (null != e1 && Math.abs(e1.getInputY() - y) < 1e-6) {
                 return e1;
             } else {
                 return null;
             }
         }
-        PmCartesian c1 = new PmCartesian(e1.getRobotX(), e1.getRobotY(), e1.getRobotZ());
-        PmCartesian c2 = new PmCartesian(e2.getRobotX(), e2.getRobotY(), e2.getRobotZ());
+        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
+        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
         PmCartesian diff = c2.subtract(c1);
         if (Math.abs(diff.y) < 1e-6) {
-            if (Math.abs(e1.getRobotY() - y) > 1e-6) {
+            if (Math.abs(e1.getInputY() - y) > 1e-6) {
                 return null;
             }
             return PositionMapEntry.pointOffsetEntryCombining(
-                    (e1.getRobotX() + e2.getRobotX()) / 2.0,
-                    (e1.getRobotY() + e2.getRobotY()) / 2.0,
-                    (e1.getRobotZ() + e2.getRobotZ()) / 2.0,
+                    (e1.getInputX() + e2.getInputX()) / 2.0,
+                    (e1.getInputY() + e2.getInputY()) / 2.0,
+                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
                     (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
                     (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
                     (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
@@ -524,8 +652,8 @@ public class PositionMap {
         if (errmapList.size() == 1) {
             return point(errmapList.get(0).getOffsetX(), errmapList.get(0).getOffsetY(), errmapList.get(0).getOffsetZ());
         }
-        PositionMapEntry e12 = findXCombo(robotY -> robotY <= y, x, y, z);
-        PositionMapEntry e34 = findXCombo(robotY -> robotY >= y, x, y, z);
+        PositionMapEntry e12 = findXCombo(inputY -> inputY <= y, x, y, z);
+        PositionMapEntry e34 = findXCombo(inputY -> inputY >= y, x, y, z);
         if (null == e12 || null == e34) {
             List<PositionMapEntry> sortedList = new ArrayList<>(errmapList);
             sortedList.sort(Comparator.comparingDouble(em -> dist(em, x, y)));
@@ -536,7 +664,7 @@ public class PositionMap {
                 for (int j = i; j < sortedList.size(); j++) {
                     if (i == j) {
                         e12 = sortedList.get(i);
-                        if (Math.abs(e12.getRobotX() - x) > 1e-6) {
+                        if (Math.abs(e12.getInputX() - x) > 1e-6) {
                             e12 = null;
                             continue;
                         }
@@ -554,7 +682,7 @@ public class PositionMap {
                                         continue;
                                     }
                                     e34 = sortedList.get(k);
-                                    if (Math.abs(e34.getRobotX() - x) > 1e-6) {
+                                    if (Math.abs(e34.getInputX() - x) > 1e-6) {
                                         e34 = null;
                                         continue;
                                     }
@@ -562,8 +690,8 @@ public class PositionMap {
                                     e34 = combineX(sortedList.get(k), sortedList.get(l), x);
                                 }
                                 if (null != e34
-                                        && Math.abs(e34.getRobotY() - e12.getRobotY()) < 1e-6
-                                        && Math.abs(e34.getRobotY() - y) > 1e-6) {
+                                        && Math.abs(e34.getInputY() - e12.getInputY()) < 1e-6
+                                        && Math.abs(e34.getInputY() - y) > 1e-6) {
                                     e34 = null;
                                 }
                                 if (e34 != null) {
@@ -603,7 +731,7 @@ public class PositionMap {
     private @Nullable
     PositionMapEntry findXCombo(Predicate<Double> predy, double x, double y, double z) {
         List<PositionMapEntry> yFilteredList = errmapList.stream()
-                .filter(e -> predy.test(e.getRobotY()))
+                .filter(e -> predy.test(e.getInputY()))
                 .collect(Collectors.toList());
         return findXCombo(yFilteredList, x, y, z);
     }
@@ -612,29 +740,29 @@ public class PositionMap {
     private @Nullable
     PositionMapEntry findXCombo(List<PositionMapEntry> yFilteredList, double x, double y, double z) {
         if (yFilteredList.size() < 2) {
-            if (yFilteredList.size() == 1 && Math.abs(yFilteredList.get(0).getRobotX() - x) < 1e-6) {
+            if (yFilteredList.size() == 1 && Math.abs(yFilteredList.get(0).getInputX() - x) < 1e-6) {
                 return yFilteredList.get(0);
             }
             return null;
         } else if (yFilteredList.size() == 2) {
             return combineX(yFilteredList.get(0), yFilteredList.get(1), x);
         }
-        PositionMapEntry e1 = findEntry(robotX -> robotX <= x,
+        PositionMapEntry e1 = findEntry(inputX -> inputX <= x,
                 yFilteredList,
                 x, y);
-        PositionMapEntry e2 = findEntry(robotX -> robotX >= x,
+        PositionMapEntry e2 = findEntry(inputX -> inputX >= x,
                 yFilteredList,
                 x, y);
         if (e1 == null && e2 != null) {
-            final double e2fx = (e2.getRobotX() + Double.MIN_NORMAL);
+            final double e2fx = (e2.getInputX() + Double.MIN_NORMAL);
             e1 = findEntry(
-                    robotX -> robotX > e2fx,
+                    inputX -> inputX > e2fx,
                     yFilteredList,
                     x, y);
         } else if (e1 != null && e2 == null) {
-            final double e1fx = (e1.getRobotX() - Double.MIN_NORMAL);
+            final double e1fx = (e1.getInputX() - Double.MIN_NORMAL);
             e2 = findEntry(
-                    robotX -> robotX < e1fx,
+                    inputX -> inputX < e1fx,
                     yFilteredList,
                     x, y);
         }
@@ -644,7 +772,7 @@ public class PositionMap {
     private @Nullable
     PositionMapEntry findEntry(Predicate<Double> predx, List<PositionMapEntry> yfilteredList, double x, double y) {
         PositionMapEntry e1 = yfilteredList.stream()
-                .filter(e -> predx.test(e.getRobotX()))
+                .filter(e -> predx.test(e.getInputX()))
                 .min(Comparator.comparingDouble(em -> dist(em, x, y)))
                 .orElse(null);
         return e1;
@@ -685,7 +813,7 @@ public class PositionMap {
     public PositionMap reverse() {
         List<PositionMapEntry> l = new ArrayList<>();
         for (PositionMapEntry entry : errmapList) {
-            l.add(PositionMapEntry.pointOffsetEntry(entry.getOtherX(), entry.getOtherY(), entry.getOtherZ(), -entry.getOffsetX(), -entry.getOffsetY(), -entry.getOffsetZ()));
+            l.add(PositionMapEntry.pointOffsetEntry(entry.getOutputX(), entry.getOutputY(), entry.getOutputZ(), -entry.getOffsetX(), -entry.getOffsetY(), -entry.getOffsetZ()));
         }
         PositionMap rpm = new PositionMap(l);
         return rpm;
