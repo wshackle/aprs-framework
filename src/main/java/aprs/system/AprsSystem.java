@@ -92,6 +92,7 @@ import crcl.base.MoveToType;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.SetEndEffectorType;
+import crcl.ui.AutomaticPropertyFileUtils;
 import crcl.ui.ConcurrentBlockProgramsException;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
@@ -150,6 +151,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.security.ProtectionDomain;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -1074,7 +1076,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != crclClientJInternalFrame) {
             debugDumpStack();
             crclClientJInternalFrame.pauseCrclProgram();
-            runOnDispatchThread(Utils::PlayAlert2);
+            if (Utils.arePlayAlertsEnabled()) {
+                runOnDispatchThread(Utils::PlayAlert2);
+            }
         }
     }
 
@@ -3352,7 +3356,9 @@ public class AprsSystem implements SlotOffsetProvider {
                             System.err.println("RunName=" + getRunName());
                             System.err.println(newTitleErrorString);
                             debugDumpStack();
-                            runOnDispatchThread(Utils::PlayAlert2);
+                            if (Utils.arePlayAlertsEnabled()) {
+                                runOnDispatchThread(Utils::PlayAlert2);
+                            }
                             if (!snapshotsEnabled) {
                                 snapshotsCheckBox.setSelected(true);
                             }
@@ -4319,6 +4325,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    private final Map<File, JInternalFrame> customFileWindowMap = new IdentityHashMap<>();
+
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
         try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
@@ -4335,9 +4343,11 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new RuntimeException("class doesn't have no args constructor  ,winFile=" + winFile);
         }
         Object newObject = constructor.newInstance();
+        AutomaticPropertyFileUtils.loadPropertyFile(winFile, Collections.emptyMap(), newObject);
         if (newObject instanceof JInternalFrame) {
             final JInternalFrame jinternalFrame = (JInternalFrame) newObject;
             addInternalFrame(jinternalFrame);
+            customFileWindowMap.put(winFile, jinternalFrame);
         }
     }
 
@@ -7450,7 +7460,9 @@ public class AprsSystem implements SlotOffsetProvider {
         badState = badState || checkResuming();
         submitUpdateTitle();
         badState = badState || checkResuming();
-        runOnDispatchThread(Utils::PlayAlert2);
+        if (Utils.arePlayAlertsEnabled()) {
+            runOnDispatchThread(Utils::PlayAlert2);
+        }
         badState = badState || checkResuming();
         if (badState) {
             throw new IllegalStateException("Attempt to pause while resuming:");
@@ -9576,6 +9588,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
             }
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
+        }
+        for (Map.Entry<File, JInternalFrame> customWindowEntry : customFileWindowMap.entrySet()) {
+            AutomaticPropertyFileUtils.saveObjectProperties(customWindowEntry.getKey(), customWindowEntry.getValue());
         }
         return XFutureVoid.allOf(futures);
     }

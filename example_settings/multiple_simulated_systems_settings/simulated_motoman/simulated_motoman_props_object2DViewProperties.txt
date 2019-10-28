@@ -19,6 +19,7 @@ pickupDist=5.00
 posNoise=0.80
 prevListSizeDecrementInterval=2000
 recordLines=false
+repaintMinMillis=100
 reverseFlag=false
 reverse_datafile=start_run_motoman_shared_table_objects_in_parts_trays.csv
 rotNoise=0.80

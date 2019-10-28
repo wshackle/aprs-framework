@@ -27,8 +27,10 @@ import aprs.misc.ActiveWinEnum;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.CsvTableJPanel;
 import aprs.misc.IconImages;
+import aprs.misc.JFrameInternalHolder;
 import aprs.misc.PmCartesianMinMaxLimit;
 import aprs.misc.Utils;
+import crcl.ui.AutomaticPropertyFileUtils;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -42,9 +44,12 @@ import javax.swing.JMenuItem;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.ui.misc.ObjTableJPanel;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.HeadlessException;
 import java.awt.Point;
+import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -674,8 +679,8 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemStepping = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemCorrectionMode = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemAllowForceFakeTakeAnyTime = new javax.swing.JCheckBoxMenuItem();
-        jMenuItemCustomWindowStartup = new javax.swing.JMenuItem();
-
+        jMenuItemAddExistingCustomWindowStartup = new javax.swing.JMenuItem();
+        jMenuItemNewCustomWindowStartup = new javax.swing.JMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -999,13 +1004,21 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuOptions.add(jCheckBoxMenuItemAllowForceFakeTakeAnyTime);
 
-        jMenuItemCustomWindowStartup.setText("Custom Window Startup ...");
-        jMenuItemCustomWindowStartup.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemAddExistingCustomWindowStartup.setText("Set Custom Windows Startup File  ...");
+        jMenuItemAddExistingCustomWindowStartup.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemCustomWindowStartupActionPerformed(evt);
+                jMenuItemAddExistingCustomWindowStartupActionPerformed(evt);
             }
         });
-        jMenuOptions.add(jMenuItemCustomWindowStartup);
+        jMenuOptions.add(jMenuItemAddExistingCustomWindowStartup);
+
+        jMenuItemNewCustomWindowStartup.setText("New Custom Window Startup ...");
+        jMenuItemNewCustomWindowStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemNewCustomWindowStartupActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemNewCustomWindowStartup);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -2285,7 +2298,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemShowAllWindowsActionPerformed
 
     @UIEffect
-    private void jMenuItemCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCustomWindowStartupActionPerformed
+    private void jMenuItemAddExistingCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemAddExistingCustomWindowStartupActionPerformed
+        selectCustomWindowsFile();
+    }//GEN-LAST:event_jMenuItemAddExistingCustomWindowStartupActionPerformed
+
+    private void selectCustomWindowsFile() throws RuntimeException, HeadlessException {
         if(null == aprsSystem) {
             throw new RuntimeException("null==aprsSystem");
         }
@@ -2302,7 +2319,34 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
                 aprsSystem.setCustomWindowsFile(selectedFile);
             }
         }
-    }//GEN-LAST:event_jMenuItemCustomWindowStartupActionPerformed
+    }
+
+    private void jMenuItemNewCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemNewCustomWindowStartupActionPerformed
+        JFrameInternalHolder newHolder = new JFrameInternalHolder();
+        JFrameInternalHolder holder = ObjTableJPanel.editObject(newHolder,this,"custom win",true);
+        System.out.println("holder = " + holder);
+        final File dir = aprsSystem.getPropertiesDirectory();
+        JFileChooser chooser;
+        if(null != dir) {
+            chooser = new JFileChooser(dir);
+        } else {
+            chooser = new JFileChooser();
+        }
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            final File selectedFile = chooser.getSelectedFile();
+            AutomaticPropertyFileUtils.saveObjectProperties(selectedFile, holder.getInternalFrame());
+            File customWindowsFile = aprsSystem.getCustomWindowsFile();
+            if(customWindowsFile == null || !customWindowsFile.exists()) {
+                selectCustomWindowsFile();
+                customWindowsFile = aprsSystem.getCustomWindowsFile();
+            }
+            try(PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile,true))) {
+                pw.println(selectedFile);
+            } catch (IOException ex) {
+                Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_jMenuItemNewCustomWindowStartupActionPerformed
 
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
@@ -2404,10 +2448,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenu jMenuExecute;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItemAddExistingCustomWindowStartup;
     private javax.swing.JMenuItem jMenuItemClearErrors;
     private javax.swing.JMenuItem jMenuItemContinueActionList;
     private javax.swing.JMenuItem jMenuItemCreateActionListFromVision;
-    private javax.swing.JMenuItem jMenuItemCustomWindowStartup;
     private javax.swing.JMenuItem jMenuItemDebugAction;
     private javax.swing.JMenuItem jMenuItemEmptyKitTrays;
     private javax.swing.JMenuItem jMenuItemExit;
@@ -2417,6 +2461,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemLoadProperties;
     private javax.swing.JMenuItem jMenuItemLoadPropertiesFile;
     private javax.swing.JMenuItem jMenuItemLookFor;
+    private javax.swing.JMenuItem jMenuItemNewCustomWindowStartup;
     private javax.swing.JMenuItem jMenuItemReset;
     private javax.swing.JMenuItem jMenuItemRestoreOriginalRobotConnection;
     private javax.swing.JMenuItem jMenuItemSaveProperties;

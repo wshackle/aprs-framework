@@ -184,10 +184,13 @@ public class Supervisor {
         return this.loadAllPrevFiles(null)
                 .thenRun(() -> {
                     Supervisor.this.setVisible(true);
-                    PlayAlert();
+                    if(Utils.arePlayAlertsEnabled()) {
+                        PlayAlert();
+                    }
                 });
     }
 
+    
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
         XFutureVoid completePrevMultiFuture = completePrevMulti();

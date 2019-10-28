@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CRCLProgram>
+    <Name>testForceSensorProgram</Name>
+    <InitCanon>
+        <CommandID>2462</CommandID>
+    </InitCanon>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>2463</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Setting>100.0</Setting>
+        </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>2464</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Point>
+                <X>192.23529052734375</X>
+                <Y>-258.22076416015625</Y>
+                <Z>-98.35396575927734</Z>
+            </Point>
+            <XAxis>
+                <I>-0.7071674157182599</I>
+                <J>-0.7070461413870254</J>
+                <K>-9.801844607487502E-6</K>
+            </XAxis>
+            <ZAxis>
+                <I>-9.801844607261212E-6</I>
+                <J>2.3666616285656076E-5</J>
+                <K>-0.9999999996719076</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="ConfigureStatusReportType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>2465</CommandID>
+        <ReportJointStatuses>true</ReportJointStatuses>
+        <ReportPoseStatus>true</ReportPoseStatus>
+        <ReportGripperStatus>true</ReportGripperStatus>
+        <ReportSettingsStatus>true</ReportSettingsStatus>
+        <ReportSensorsStatus>true</ReportSensorsStatus>
+        <ReportGuardsStatus>true</ReportGuardsStatus>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="EnableSensorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>2466</CommandID>
+        <SensorID>RemoteCrclSensor8889</SensorID>
+        <SensorOption>
+            <ParameterName>port</ParameterName>
+            <ParameterValue>8889</ParameterValue>
+        </SensorOption>
+        <SensorOption>
+            <ParameterName>host</ParameterName>
+            <ParameterValue>localhost</ParameterValue>
+        </SensorOption>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>2467</CommandID>
+        <Guard>
+            <Name>RemoteCrclSensor8889Fz</Name>
+            <SensorID>RemoteCrclSensor8889</SensorID>
+            <SubField>Fz</SubField>
+            <LimitType>INCREASE_OVER_LIMIT</LimitType>
+            <LimitValue>1.0</LimitValue>
+            <RecheckTimeMicroSeconds>20</RecheckTimeMicroSeconds>
+        </Guard>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Point>
+                <X>192.2352294921875</X>
+                <Y>-258.22076416015625</Y>
+                <Z>-113.79400634765625</Z>
+            </Point>
+            <XAxis>
+                <I>-0.7071674157318519</I>
+                <J>-0.707046141376686</J>
+                <K>-9.56418398739007E-6</K>
+            </XAxis>
+            <ZAxis>
+                <I>-9.56418398716378E-6</I>
+                <J>2.309278320421567E-5</J>
+                <K>-0.9999999996876249</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <EndCanon>
+        <CommandID>2468</CommandID>
+    </EndCanon>
+</CRCLProgram>
+

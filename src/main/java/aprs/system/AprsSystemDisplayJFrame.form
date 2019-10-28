@@ -321,12 +321,20 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxMenuItemAllowForceFakeTakeAnyTimeActionPerformed"/>
               </Events>
             </MenuItem>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemCustomWindowStartup">
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemAddExistingCustomWindowStartup">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Custom Window Startup ..."/>
+                <Property name="text" type="java.lang.String" value="Set Custom Windows Startup File  ..."/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemCustomWindowStartupActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemAddExistingCustomWindowStartupActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="jMenuItemNewCustomWindowStartup">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="New Custom Window Startup ..."/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItemNewCustomWindowStartupActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
