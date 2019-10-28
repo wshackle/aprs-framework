@@ -22,6 +22,7 @@
  */
 package aprs.database;
 
+import com.sun.istack.logging.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -131,103 +132,117 @@ public class SocketLineReader {
     private SocketLineReader privateStart(boolean isClient,
             @Nullable String host, int port, final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
-        cb = _cb;
-        this.port = port;
-        if (isClient) {
-            if (null == host) {
-                throw new IllegalArgumentException("host is null and isClient is true");
-            }
-            if (null == _cb) {
-                throw new IllegalArgumentException("callback is null and isClient is true");
-            }
-            socket = new Socket();
-            this.host = host;
-            socket.connect(new InetSocketAddress(host, port), 500);
-            socket.setReuseAddress(true);
-
-            final Socket finalSocket = socket;
+        try {
+            cb = _cb;
+            this.port = port;
+            if (isClient) {
+                if (null == host) {
+                    throw new IllegalArgumentException("host is null and isClient is true");
+                }
+                if (null == _cb) {
+                    throw new IllegalArgumentException("callback is null and isClient is true");
+                }
+                socket = new Socket();
+                this.host = host;
+                socket.connect(new InetSocketAddress(host, port), 500);
+                socket.setReuseAddress(true);
+                
+                final Socket finalSocket = socket;
 //            br = brl;
 //            PrintStream psl = new PrintStream(socket.getOutputStream());
 //            ps = psl;
-            thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
-                            PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
-                        String line = null;
-                        while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
-                            _cb.call(line, psl);
-                        }
-                    } catch (Exception exception) {
-                        if (!closing) {
-                            exception.printStackTrace();
+                thread = new Thread(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
+                                PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
+                            String line = null;
+                            while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
+                                _cb.call(line, psl);
+                            }
+                        } catch (Exception exception) {
+                            if (!closing) {
+                                exception.printStackTrace();
+                            }
                         }
                     }
-                }
-            }, threadname);
-            thread.start();
-        } else {
-            ServerSocket lss = new ServerSocket(port);
-            serverSocket = lss;
-            lss.setReuseAddress(true);
-            ArrayList<Clnt> lcals = new ArrayList<>();
-            als = lcals;
-            thread = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        while (!Thread.currentThread().isInterrupted() && !closing) {
-                            final Clnt c = new Clnt();
-                            Socket lcs = lss.accept();
-                            c.socket = lcs;
-                            Thread lct = new Thread(new Runnable() {
-
-                                @Override
-                                public void run() {
-                                    try (BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
-                                            PrintStream lcps = new PrintStream(lcs.getOutputStream())) {
-                                        String line = null;
-                                        while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
-                                            _cb.call(line, lcps);
-                                        }
-                                    } catch (SocketException exception) {
-                                        if (null != c && (null != c.socket || null != c.thread)) {
+                }, threadname);
+                thread.start();
+            } else {
+                ServerSocket lss = new ServerSocket(port);
+                serverSocket = lss;
+                lss.setReuseAddress(true);
+                ArrayList<Clnt> lcals = new ArrayList<>();
+                als = lcals;
+                thread = new Thread(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        try {
+                            while (!Thread.currentThread().isInterrupted() && !closing) {
+                                final Clnt c = new Clnt();
+                                Socket lcs = lss.accept();
+                                c.socket = lcs;
+                                Thread lct = new Thread(new Runnable() {
+                                    
+                                    @Override
+                                    public void run() {
+                                        try (BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
+                                                PrintStream lcps = new PrintStream(lcs.getOutputStream())) {
+                                            String line = null;
+                                            while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
+                                                _cb.call(line, lcps);
+                                            }
+                                        } catch (SocketException exception) {
+                                            if (null != c && (null != c.socket || null != c.thread)) {
+                                                if (!closing) {
+                                                    System.err.println("Closing client socket " + c);
+                                                }
+                                            }
+                                            try {
+                                                if (null != socket) {
+                                                    socket.close();
+                                                }
+                                            } catch (Exception ex) {
+                                                // ignore
+                                            }
+                                        } catch (Exception exception) {
                                             if (!closing) {
-                                                System.err.println("Closing client socket " + c);
+                                                exception.printStackTrace();
                                             }
-                                        }
-                                        try {
-                                            if (null != socket) {
-                                                socket.close();
-                                            }
-                                        } catch (Exception ex) {
-                                            // ignore
-                                        }
-                                    } catch (Exception exception) {
-                                        if (!closing) {
-                                            exception.printStackTrace();
                                         }
                                     }
-                                }
-                            }, threadname);
-                            lct.setDaemon(true);
-                            c.thread = lct;
-                            lcals.add(c);
-                            lct.start();
-                        }
-                    } catch (Exception exception) {
-                        if (!closing) {
-                            exception.printStackTrace();
+                                }, threadname);
+                                lct.setDaemon(true);
+                                c.thread = lct;
+                                lcals.add(c);
+                                lct.start();
+                            }
+                        } catch (Exception exception) {
+                            if (!closing) {
+                                exception.printStackTrace();
+                            }
                         }
                     }
-                }
-            }, threadname + "Listener");
-            thread.setDaemon(true);
-            thread.start();
+                }, threadname + "Listener");
+                thread.setDaemon(true);
+                thread.start();
+            }
+            return this;
+        } catch (RuntimeException  runtimeException) {
+            Logger.getLogger(SocketLineReader.class)
+                    .severe(
+                            "isClient="+isClient+", host="+host+", port="+port+", threadname="+threadname+", cb="+cb,
+                        runtimeException);
+            throw new RuntimeException(runtimeException);
+        } catch (IOException iOException) {
+            Logger.getLogger(SocketLineReader.class)
+                    .severe(
+                            "isClient="+isClient+", host="+host+", port="+port+", threadname="+threadname+", cb="+cb,
+                        iOException);
+            throw iOException;
         }
-        return this;
     }
 
     public static SocketLineReader startServer(int port, final String threadname,
