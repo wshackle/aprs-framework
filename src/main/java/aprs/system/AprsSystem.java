@@ -4018,7 +4018,12 @@ public class AprsSystem implements SlotOffsetProvider {
             println("commonInitCount = " + currentCommonInitCout);
         }
         return startWindowsFromMenuCheckBoxes()
-                .thenRun(this::completeCommonInit);
+                .thenRun(this::completeCommonInit)
+                .peekNoCancelException((Throwable t) -> {
+                    Utils.runOnDispatchThread(() ->  {
+                        setupWindowsMenuOnDisplay();
+                    });
+                });
     }
 
     private void headlessEmptyCommonInit() {
@@ -4056,7 +4061,6 @@ public class AprsSystem implements SlotOffsetProvider {
             showActiveWinOnDisplay();
             setupWindowsMenuOnDisplay();
         }
-
     }
 
     private void completeCommonInit() {

@@ -4,11 +4,69 @@
     <InitCanon>
         <CommandID>3270</CommandID>
     </InitCanon>
+    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>3311</CommandID>
+        <Setting>1.0</Setting>
+    </MiddleCommand>
     <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <CommandID>3273</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
-            <Setting>100.0</Setting>
+            <Setting>50.0</Setting>
         </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>20</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Point>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-180.0</Z>
+            </Point>
+            <XAxis>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>0</CommandID>
+        <DwellTime>1.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>3</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Point>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-263.000</Z>
+            </Point>
+            <XAxis>
+                <I>0.9944363601402538</I>
+                <J>-0.10533903144368709</J>
+                <K>-1.1868238885699742E-4</K>
+            </XAxis>
+            <ZAxis>
+                <I>-1.5828550745791364E-4</I>
+                <J>-3.6759863857831556E-4</J>
+                <K>-0.9999999199084664</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>0</CommandID>
+        <DwellTime>1.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>3311</CommandID>
+        <Setting>0.0</Setting>
     </MiddleCommand>
     <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <CommandID>0</CommandID>
@@ -19,9 +77,9 @@
         <MoveStraight>true</MoveStraight>
         <EndPosition>
             <Point>
-                <X>337.219</X>
-                <Y>343.015</Y>
-                <Z>-210</Z>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-180.0</Z>
             </Point>
             <XAxis>
                 <I>0.99443397474753</I>
@@ -71,9 +129,9 @@
         <MoveStraight>true</MoveStraight>
         <EndPosition>
             <Point>
-                <X>337.224</X>
-                <Y>343.018</Y>
-                <Z>-271.91</Z>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-270.000</Z>
             </Point>
             <XAxis>
                 <I>0.9944348945871246</I>
@@ -95,20 +153,14 @@
         <CommandID>3308</CommandID>
         <Setting>1.0</Setting>
     </MiddleCommand>
-    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <CommandID>3309</CommandID>
-        <TransSpeed xsi:type="TransSpeedAbsoluteType">
-            <Setting>100.0</Setting>
-        </TransSpeed>
-    </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <CommandID>3310</CommandID>
         <MoveStraight>true</MoveStraight>
         <EndPosition>
             <Point>
-                <X>337.219</X>
-                <Y>343.015</Y>
-                <Z>-235</Z>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-235.0</Z>
             </Point>
             <XAxis>
                 <I>0.99443397474753</I>
@@ -122,9 +174,32 @@
             </ZAxis>
         </EndPosition>
     </MiddleCommand>
-    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <CommandID>3311</CommandID>
-        <Setting>0.0</Setting>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>3273</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Setting>50.0</Setting>
+        </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>20</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Point>
+                <X>350.000</X>
+                <Y>340.000</Y>
+                <Z>-180.0</Z>
+            </Point>
+            <XAxis>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
     </MiddleCommand>
     <EndCanon>
         <CommandID>3312</CommandID>
