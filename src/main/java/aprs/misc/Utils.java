@@ -176,6 +176,58 @@ public class Utils {
         PlayAlert(resourceName, false, Utils.class);
     }
 
+    private static AtomicInteger playAlertCount = new AtomicInteger();
+
+    static public void tryWithTimeout(Runnable r, long timeout) {
+        System.out.println("tryWithTimeout start");
+        long time1 = System.currentTimeMillis();
+        Thread thread1 = new Thread(() -> {
+            try {
+                r.run();
+            } catch (Exception e) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", e);
+                throw new RuntimeException(e);
+            }
+        });
+        thread1.setDaemon(true);
+        Thread thread2 = new Thread(() -> {
+            try {
+                Thread.sleep(timeout);
+                if (thread1.isAlive()) {
+                    System.out.println("timeout competed for tryWithTimeout");
+                    System.out.println("Interrupting " + thread1);
+                }
+                thread1.interrupt();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        });
+        thread2.setDaemon(true);
+        thread2.start();
+        thread1.start();
+        try {
+            thread1.join(timeout);
+            long time2 = System.currentTimeMillis();
+            long timediff = time2 - time1;
+            System.out.println("timediff = " + timediff);
+            if (thread2.isAlive()) {
+                System.out.println("Interrupting " + thread2);
+                thread2.interrupt();
+                thread2.join(timeout);
+            }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println("tryWithTimeout end");
+    }
+
+    static public void tryPlayAlert() {
+        tryWithTimeout(() -> {
+            PlayAlert("alert.wav");
+        }, 5000);
+    }
+
     @UIEffect
     static public void PlayAlert(String resourceName, boolean debug, Class<?> aClass) {
         try {
@@ -224,14 +276,24 @@ public class Utils {
         }
     }
 
+    private static boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
+
+    static public boolean arePlayAlertsEnabled() {
+        return playAlerts;
+    }
+
     @UIEffect
     static public void PlayAlert() {
-        PlayAlert("alert.wav");
+        if (playAlerts) {
+            PlayAlert("alert.wav");
+        }
     }
 
     @UIEffect
     static public void PlayAlert2() {
-        PlayAlert("alert2.wav");
+        if (playAlerts) {
+            PlayAlert("alert2.wav");
+        }
     }
 
     public static URL getAprsIconUrl() {
@@ -1275,7 +1337,16 @@ public class Utils {
                 }
             }
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE,
+                    "forceColumns=" + forceColumns
+                    + ", dtm=" + dtm
+                    + ", f=" + f
+                    + ", nameRecord=" + nameRecord
+                    + ", map=" + map
+                    + ", recordToValue=" + recordToValue,
+                    ex
+            );
+            throw new RuntimeException(ex);
         }
     }
 

@@ -87,7 +87,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * @param name name of the robot
      * @return icon
      */
-    public  static  @Nullable  Icon getRobotIcon(String name) {
+    public static @Nullable
+    Icon getRobotIcon(String name) {
         if (name == null || name.length() < 1) {
             return null;
         }
@@ -114,7 +115,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * @param name name of the robot
      * @return icon
      */
-    public  static  @Nullable  BufferedImage getRobotImage(String name) throws IllegalStateException {
+    public static @Nullable
+    BufferedImage getRobotImage(String name) throws IllegalStateException {
         if (name == null || name.length() < 1) {
             return null;
         }
@@ -165,14 +167,18 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      * etc.
      */
     public void startReader() {
-        SocketLineReader readerTmp = null;
         try {
+            SocketLineReader readerTmp = null;
             readerTmp = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
-
-        } catch (IOException ex) {
-            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: " + COLORTEXT_SOCKET_PORT, ex);
+            this.reader = readerTmp;
+        } catch (Exception e) {
+            Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: " + COLORTEXT_SOCKET_PORT, e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
-        this.reader = readerTmp;
     }
 
     private volatile boolean stopReading = false;

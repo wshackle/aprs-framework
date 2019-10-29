@@ -2305,9 +2305,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     void startCommand(Map<String, String> argsMap) {
+        String cmdPortString = argsMap.get("--commandport");
         try {
             closeCommand();
-            String cmdPortString = argsMap.get("--commandport");
             if (null == cmdPortString) {
                 throw new IllegalArgumentException("argsMap.get(\"--commandport\") returned null for argsMap=" + argsMap);
             }
@@ -2319,7 +2319,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             aprsSystem.runOnDispatchThread(() -> setCommandConnectedOnDisplay(true));
         } catch (Exception exception) {
             System.err.println(exception.getLocalizedMessage());
-            System.err.println("Starting server for command port failed.");
+            System.err.println("Starting server for command port failed. cmdPortString="+cmdPortString+", argsMap="+argsMap);
+            throw new RuntimeException(exception);
         }
     }
 
