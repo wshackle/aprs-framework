@@ -2741,11 +2741,24 @@ public class AprsSystem implements SlotOffsetProvider {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
+    private <T> T logAndRethrowException(Throwable ex) {
+        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+        setTitleErrorString(ex.getMessage());
+        showException(ex);
+        if (ex instanceof RuntimeException) {
+            throw (RuntimeException) ex;
+        } else {
+            throw new RuntimeException(ex);
+        }
+    }
+
     public XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
         if (null != supervisor) {
-            return supervisor.runOnDispatchThread(name, r);
+            return supervisor.runOnDispatchThread(name, r)
+                    .peekNoCancelException(this::logAndRethrowException);
         } else {
-            return aprs.misc.Utils.runOnDispatchThread(name, r);
+            return aprs.misc.Utils.runOnDispatchThread(name, r)
+                    .peekNoCancelException(this::logAndRethrowException);
         }
     }
 
@@ -2776,7 +2789,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             programString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
         } catch (CRCLException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
             programString = null;
         }
         File programFile = null;
@@ -2788,7 +2802,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
             programFile = null;
         }
         if (enableCheckedAlready && checkNoMoves(program)) {
@@ -2810,7 +2825,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 println("crclClientJInternalFrame.getRunProgramReturnFalseTrace() = " + Utils.traceToString(crclClientJInternalFrameFinal.getRunProgramReturnFalseTrace()));
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             showException(ex);
 
@@ -3071,7 +3087,8 @@ public class AprsSystem implements SlotOffsetProvider {
             detailsString = ret;
             return ret;
         } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", e);
             String ret = e.getMessage();
             if (null == ret) {
                 throw e;
@@ -3209,7 +3226,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
         ServiceLoader<ServerJInternalFrameProviderFinderInterface> loader
                 = ServiceLoader
-                        .load(ServerJInternalFrameProviderFinderInterface.class);
+                        .load(ServerJInternalFrameProviderFinderInterface.class
+                        );
 
         Iterator<ServerJInternalFrameProviderFinderInterface> it = loader.iterator();
 //        System.out.println("it = " + it);
@@ -3251,14 +3269,16 @@ public class AprsSystem implements SlotOffsetProvider {
                         ProtectionDomain protDom = clzz.getProtectionDomain();
                         System.out.println("protDom = " + protDom);
                     } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(CRCLServerSocket.class
+                                .getName()).log(Level.SEVERE, null, ex);
                     }
                     setTitleErrorString("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
                     throw new RuntimeException("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
                 }
             });
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -3371,7 +3391,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             this.asString = getTitle();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -3411,7 +3432,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         System.out.println("protDom = " + protDom);
                     } catch (ClassNotFoundException ex) {
                         setTitleErrorString(ex.getMessage());
-                        Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(CRCLServerSocket.class
+                                .getName()).log(Level.SEVERE, null, ex);
                         throw new RuntimeException(ex);
                     }
                     setTitleErrorString("no motomanServerProvider (Please add crcl4java-motoman classes/jar to classpath)");
@@ -3420,7 +3442,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
             if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setVisible(true);
@@ -3460,7 +3483,8 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (Exception e) {
             println("Thread.currentThread() = " + Thread.currentThread());
             println("internalFrame = " + internalFrame);
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", e);
             throw new RuntimeException(e);
         }
     }
@@ -3540,7 +3564,8 @@ public class AprsSystem implements SlotOffsetProvider {
             if (closing) {
                 return -1;
             }
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             return -1;
         }
     }
@@ -3598,7 +3623,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 runProgramService.submit(() -> runProgramServiceThread = Thread.currentThread())
                         .get(1000, TimeUnit.MILLISECONDS);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -3681,7 +3707,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 println("Finished connect to database.");
             });
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             if (null != futures) {
                 for (Future<?> f : futures) {
                     f.cancel(true);
@@ -3901,7 +3928,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         return system;
                     });
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", exception);
             if (exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;
             } else {
@@ -4009,7 +4037,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 setIconImage(ImageIO.read(url));
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -4020,7 +4049,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 setIconImage(IconImages.BASE_IMAGE);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
             }
             aprsSystemDisplayJFrame.hideAllInternalFrames();
             showActiveWinOnDisplay();
@@ -4130,6 +4160,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void setShowDatabaseSetupStartupSelected(boolean selected) {
         showDatabaseSetupOnStartupCheckBox.setSelected(selected);
+
     }
 
     @UI
@@ -4163,7 +4194,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 return ret.get();
             }
         } catch (InterruptedException | InvocationTargetException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -4300,7 +4332,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 return XFutureVoid.allOfWithName("startWindowsFromMenuCheckBoxes", futuresArray);
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -4320,7 +4353,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     line = br.readLine();
                 }
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "customWindowsFile=" + fileToLoad, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "customWindowsFile=" + fileToLoad, ex);
             }
         }
     }
@@ -4356,7 +4390,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 return runOnDispatchThread("initLoggerWindowOnDisplay", this::initLoggerWindowOnDisplay);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         }
@@ -4382,7 +4417,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -4392,7 +4428,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 return runOnDispatchThread("closeAllInternalFramesOnDisplay", this::closeAllInternalFramesOnDisplay);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         }
@@ -4430,12 +4467,14 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             immediateAbort();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             disconnectVision();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             setConnectDatabaseCheckBoxEnabled(false);
@@ -4445,12 +4484,14 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             disconnectDatabase();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             abortCrclProgram();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startingCheckEnabled = false;
@@ -4458,7 +4499,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 disconnectRobotPrivate();
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             abortCrclProgram();
@@ -4474,12 +4516,14 @@ public class AprsSystem implements SlotOffsetProvider {
                 try {
                     simServerFrame.close();
                 } catch (Exception e) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, "", e);
                 }
             }
             closeAllInternalFrames();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         AprsCommonLogger.instance().removeRef();
         AprsCommonLogger.instance().getStringConsumers()
@@ -4586,7 +4630,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 setupWindowsMenuOnDisplay();
             }
         } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", e);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", e);
         }
     }
 
@@ -4595,7 +4640,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 return runOnDispatchThread("setupWindowsMenuOnDisplay", this::setupWindowsMenuOnDisplay);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         }
@@ -4773,7 +4819,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new IllegalStateException(object2DViewPropertiesFile + " does not exist");
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -4936,7 +4983,8 @@ public class AprsSystem implements SlotOffsetProvider {
             lastTitleStateString = stateString;
             lastTitleStateDescription = stateDescription;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -5010,7 +5058,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 updateTitleStateDescription("", "");
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -5068,7 +5117,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             this.crclClientJInternalFrame = newCrclClientJInternalFrame;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -5103,9 +5153,11 @@ public class AprsSystem implements SlotOffsetProvider {
         File propsFile = crclSimServerPropertiesFile();
         try {
             if (DEBUG_START_CRCL_SERVER) {
-                ProtectionDomain simServProt = SimServerJInternalFrame.class.getProtectionDomain();
+                ProtectionDomain simServProt = SimServerJInternalFrame.class
+                        .getProtectionDomain();
                 System.out.println("simServProt = " + simServProt);
-                ProtectionDomain crclSocketProt = CRCLSocket.class.getProtectionDomain();
+                ProtectionDomain crclSocketProt = CRCLSocket.class
+                        .getProtectionDomain();
                 System.out.println("crclSocketProt = " + simServProt);
             }
             if (null == simServerJInternalFrame) {
@@ -5248,7 +5300,8 @@ public class AprsSystem implements SlotOffsetProvider {
             return Utils.composeToVoidOnDispatchThread(
                     this::startActionsToCrclJInternalFrame);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -5283,7 +5336,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         try {
                             newExecFrameCopy.loadProperties();
                         } catch (IOException ex) {
-                            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                            Logger.getLogger(AprsSystem.class
+                                    .getName()).log(Level.SEVERE, "", ex);
                             throw new RuntimeException(ex);
                         }
                     }, runProgramService)
@@ -5415,7 +5469,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         "browseOpenPropertiesFileOnDisplay",
                         this::browseOpenPropertiesFileOnDisplay);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         } else {
@@ -5464,7 +5519,8 @@ public class AprsSystem implements SlotOffsetProvider {
                         "browseSavePropertiesFileAsOnDisplay",
                         this::browseSavePropertiesFileAsOnDisplay);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         } else {
@@ -5509,17 +5565,20 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             immediateAbort();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             disconnectVision();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startDisconnectDatabase();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             startingCheckEnabled = false;
@@ -5527,7 +5586,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 disconnectRobotPrivate();
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         try {
             if (connectDatabaseFuture != null) {
@@ -5548,7 +5608,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             this.close();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -5620,7 +5681,8 @@ public class AprsSystem implements SlotOffsetProvider {
             startLookForPartsFuture = ret;
             return ret;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             doingLookForParts = false;
             if (ex instanceof RuntimeException) {
@@ -5651,7 +5713,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             return ret;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -5746,7 +5809,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 takeSimViewSnapshot(errmsg, cart, "bad point");
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
             setTitleErrorString(errmsg);
             throw new IllegalStateException(errmsg);
@@ -5836,7 +5900,8 @@ public class AprsSystem implements SlotOffsetProvider {
             takeSimViewSnapshot("filterTest output " + filename, filteredList);
             saveCsvItemsFile(createTempFile("filterTest", ".csv"));
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -5914,7 +5979,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
                 takeSimViewSnapshot("limitItems" + errmsg, limitItems);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
             setTitleErrorString(errmsg);
             throw new IllegalStateException(errmsg);
@@ -5946,7 +6012,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             fillKitTrays(false, 0, true, useUnassignedParts);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemDisplayJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -5954,7 +6021,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             emptyKitTrays(false, 0, true);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystemDisplayJFrame.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -5988,7 +6056,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             takeSimViewSnapshot("fillKitTraysWithItemList.filteredItems", filteredItems);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return fillKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showFilledListOnly, useUnassignedParts);
     }
@@ -6001,7 +6070,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             takeSimViewSnapshot("fillKitTrays", items);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         TrayFillInfo fillInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
         if (fillInfo.getKitTrays().isEmpty()) {
@@ -6098,11 +6168,13 @@ public class AprsSystem implements SlotOffsetProvider {
                     + "filledkitTraysList=" + filledkitTraysList + ",\n"
                     + "overrideRotationOffset=" + overrideRotationOffset + ",\n"
                     + "newRotationOffset=" + newRotationOffset + ",\n";
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, errMsg, ex);
             try {
                 takeSimViewSnapshot("fillKitTraysInternal" + ex.getMessage(), filledkitTraysList);
             } catch (Exception ex1) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex1);
             }
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -6125,7 +6197,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 takeSimViewSnapshot("createFilledKitsList_unassignedParts", unassignedParts);
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
             availableParts.addAll(unassignedParts);
         }
@@ -6148,7 +6221,8 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             takeSimViewSnapshot("createFilledKitsList_emptyKitSlotsList", emptyKitSlotsList);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         List<PhysicalItem> movedPartsList = new ArrayList<>();
         for (TraySlotListItem emptySlotItem : emptyKitSlots) {
@@ -6186,13 +6260,15 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             takeSimViewSnapshot("createFilledKitsList_movedPartsList", movedPartsList);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         outputList.addAll(availableParts);
         try {
             takeSimViewSnapshot("createFilledKitsList_outputList", outputList);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         final int outputListSize = outputList.size();
         final int fillOrigItemsSize = fillInfo.getOrigItems().size();
@@ -6208,7 +6284,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 takeSimViewSnapshot("createFilledKitsList_fillInfo.getUnassignedParts()", fillInfo.getUnassignedParts());
                 takeSimViewSnapshot("createFilledKitsList_fillInfo.getOrigItems()", fillInfo.getOrigItems());
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
             final String errMsg = outputListSize + " != " + fillOrigItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
             setTitleErrorString(errMsg);
@@ -6247,7 +6324,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             takeSimViewSnapshot("emptyKitTraysWithItemList.filteredItems", filteredItems);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return emptyKitTrays(filteredItems, overrideRotationOffset, newRotationOffset, showEmptiedListOnly);
     }
@@ -6264,7 +6342,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             takeSimViewSnapshot("emptyKitTrays", items);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         TrayFillInfo emptyInfo = new TrayFillInfo(items, this, overrideRotationOffset, newRotationOffset);
         if (emptyInfo.getKitTrays().isEmpty()) {
@@ -6339,11 +6418,13 @@ public class AprsSystem implements SlotOffsetProvider {
                     + "emptiedkitTraysList=" + emptiedkitTraysList + ",\n"
                     + "overrideRotationOffset=" + overrideRotationOffset + ",\n"
                     + "newRotationOffset=" + newRotationOffset + ",\n";
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errMsg, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, errMsg, ex);
             try {
                 takeSimViewSnapshot("emptyKitTraysInternal" + ex.getMessage(), emptiedkitTraysList);
             } catch (Exception ex1) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex1);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex1);
             }
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -6399,7 +6480,8 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             takeSimViewSnapshot("createEmptiedKitsList_outputList", outputList);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         if (outputSizeIncorrect) {
             try {
@@ -6409,7 +6491,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getUnassignedParts()", trayFillInfo.getUnassignedParts());
                 takeSimViewSnapshot("createEmptiedKitsList_fillInfo.getOrigItems()", trayFillInfo.getOrigItems());
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
             final String errMsg = outputListSize + " != " + origItemsSize + " : outputList.size() != fillInfo.getOrigItems().size()";
             setTitleErrorString(errMsg);
@@ -6435,7 +6518,8 @@ public class AprsSystem implements SlotOffsetProvider {
             takeSimViewSnapshot("createActionListFromVision", requiredItems);
             return createActionListFromVision(requiredItems, teachItems, false, 0, false, false, true, true);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -6516,7 +6600,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(Object2DJPanel.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -6580,7 +6665,8 @@ public class AprsSystem implements SlotOffsetProvider {
             SwingUtilities.invokeAndWait(() -> ai.set(queryUserOnDisplay(message)));
             return ai.get();
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -6752,7 +6838,8 @@ public class AprsSystem implements SlotOffsetProvider {
                                 .collect(Collectors.joining("\n")));
             }
         } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString("createActionListFromVision: " + ex.getMessage());
         }
         long t2 = System.currentTimeMillis();
@@ -6946,7 +7033,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(CrclGenerator.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(CrclGenerator.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
     }
 
@@ -7424,7 +7512,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         }
@@ -7432,7 +7521,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 executorJInternalFrame1.reloadActionsFile(reverseFlag);
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         }
@@ -7751,7 +7841,8 @@ public class AprsSystem implements SlotOffsetProvider {
             enableCheckedAlready = progRunRet;
             return progRunRet;
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             showException(ex);
             if (ex instanceof RuntimeException) {
@@ -7803,7 +7894,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
@@ -7886,6 +7978,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
         return executorJInternalFrame1.readyForNewActionsList();
+
     }
 
     @FunctionalInterface
@@ -8279,7 +8372,8 @@ public class AprsSystem implements SlotOffsetProvider {
                     try {
                         return startActionsInternal(comment, startRunNumber, startAbortCount, reverseFlag, reloadSimFiles, actionsToLoad);
                     } catch (Exception exception) {
-                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+                        Logger.getLogger(AprsSystem.class
+                                .getName()).log(Level.SEVERE, "", exception);
                         System.err.println("privateStartActions : comment=" + comment);
                         System.err.println("privateStartActions : trace1=" + Utils.traceToString(trace1));
                         setTitleErrorString(exception.getMessage());
@@ -8548,6 +8642,7 @@ public class AprsSystem implements SlotOffsetProvider {
         boolean reloadActionsFile
                 = executorJInternalFrame1.getActionsFileString(reverseFlag) != null;
         setReverseFlag(reverseFlag, true, reloadActionsFile);
+
     }
 
     private static class AprsSystemPropDefaults {
@@ -8868,7 +8963,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 try {
                     imgFile = createImageTempFile("nullItems_" + imgLabel);
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, null, ex);
                     return new File[2];
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
@@ -8877,7 +8973,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 try {
                     imgFile = createImageTempFile("emptyItems_" + imgLabel);
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, null, ex);
                     return new File[2];
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
@@ -8886,7 +8983,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 try {
                     imgFile = createImageTempFile(imgLabel);
                 } catch (IOException ex) {
-                    Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, null, ex);
                     return new File[2];
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth, snapShotHeight);
@@ -8977,7 +9075,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 imgFile = createImageTempFile(imgLabel);
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
                 return new File[2];
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pose, poseLabel, w, h);
@@ -9004,7 +9103,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 imgFile = createImageTempFile(imgLabel);
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
                 return new File[2];
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
@@ -9031,7 +9131,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 imgFile = createImageTempFile(imgLabel);
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, null, ex);
                 return new File[2];
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
@@ -9124,7 +9225,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 return x;
             });
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
     }
@@ -9282,7 +9384,8 @@ public class AprsSystem implements SlotOffsetProvider {
                                             this.executorJInternalFrame1.loadProperties();
                                         }
                                     } catch (IOException ex) {
-                                        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                                        Logger.getLogger(AprsSystem.class
+                                                .getName()).log(Level.SEVERE, "", ex);
                                     }
                                 }, runProgramService)
                                 .thenComposeToVoid(() -> {
@@ -9376,13 +9479,15 @@ public class AprsSystem implements SlotOffsetProvider {
                 return XFutureVoid.allOf(futures);
             }
         } catch (IOException exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", exception);
             exA[0] = exception;
             XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay IOException");
             xfv.completeExceptionally(exception);
             return xfv;
         } catch (Exception exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", exception);
             XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
             xfv.completeExceptionally(exception);
             return xfv;
@@ -9965,7 +10070,8 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 eventLogPrinter.close();
             } catch (IOException ex) {
-                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
             }
             eventLogPrinter = null;
         }
@@ -10142,7 +10248,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 printer.print(xmlString);
             }
         } catch (JAXBException | CRCLException | IOException ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         return f;
     }
@@ -10157,7 +10264,8 @@ public class AprsSystem implements SlotOffsetProvider {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
         }
         return f;
     }
@@ -10212,7 +10320,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
         } catch (IOException exception) {
             String errInfo = "cleanedPrefix=" + cleanedPrefix + ",suffix=" + suffix + ",dir=" + dir;
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errInfo, exception);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, errInfo, exception);
             throw new IOException(errInfo, exception);
         }
     }
@@ -10224,7 +10333,8 @@ public class AprsSystem implements SlotOffsetProvider {
         } catch (IOException iOException) {
             String errInfo = "prefix=" + prefix + ",logImageDir1=" + logImageDir1;
             System.err.println(errInfo);
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, errInfo, iOException);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, errInfo, iOException);
             throw new IOException(errInfo, iOException);
         }
     }

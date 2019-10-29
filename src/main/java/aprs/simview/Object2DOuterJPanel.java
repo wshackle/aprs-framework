@@ -2844,7 +2844,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return Integer.parseInt(portCachedTextField.getText());
     }
 
-    private void connect() throws NumberFormatException {
+    private void connect() {
         if (simulatedCachedCheckBox.isSelected()) {
             try {
                 if (getObjectPanelToClone() != null) {
