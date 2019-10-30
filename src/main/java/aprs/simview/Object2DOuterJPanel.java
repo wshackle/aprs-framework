@@ -94,6 +94,7 @@ import java.io.BufferedReader;
 import static java.lang.Double.parseDouble;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.EventListener;
@@ -5753,8 +5754,65 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    public static class Object2DOuterJPanelCurrentPoseListener implements CurrentPoseListener {
+
+        final StackTraceElement[] createTrace;
+        private Object2DOuterJPanel object2DOuterJPanel;
+        private final int index;
+        private static final  List<Object2DOuterJPanelCurrentPoseListener> items = new ArrayList<>();
+        private static final AtomicInteger itemCounter = new AtomicInteger();
+        
+        public Object2DOuterJPanelCurrentPoseListener(Object2DOuterJPanel object2DOuterJPanel) {
+            createTrace = Thread.currentThread().getStackTrace();
+            this.object2DOuterJPanel = object2DOuterJPanel;
+            this.index = itemCounter.incrementAndGet();
+            items.add(this);
+        }
+
+        @Override
+        public void handlePoseUpdate(CrclSwingClientJPanel panel, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long statRecieveTime) {
+            object2DOuterJPanel.handlePoseUpdate(panel, stat, cmd, isHoldingObjectExpected, statRecieveTime);
+        }
+
+        public String getTaskName() {
+            return object2DOuterJPanel.getTaskName();
+        }
+
+        @Override
+        public String toString() {
+            return "Object2DOuterJPanelCurrentPoseListener{\n\tindex="+index+"\n\t task="+getTaskName() + ", \n\tcreateTrace=" + Utils.traceToString(createTrace) + ",\n\t object2DOuterJPanel=" + object2DOuterJPanel + "\n}\n";
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 17 * hash + this.index;
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Object2DOuterJPanelCurrentPoseListener other = (Object2DOuterJPanelCurrentPoseListener) obj;
+            if (this.index != other.index) {
+                return false;
+            }
+            return true;
+        }
+
+    }
+
     @SuppressWarnings("initialization")
-    private final CurrentPoseListener currentPoseListener = this::handlePoseUpdate;
+    private final Object2DOuterJPanelCurrentPoseListener currentPoseListener
+            = new Object2DOuterJPanelCurrentPoseListener(this);
 
     private volatile @Nullable
     Thread handlePoseUpdateThread = null;
