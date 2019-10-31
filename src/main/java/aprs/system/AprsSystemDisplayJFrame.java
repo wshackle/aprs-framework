@@ -126,7 +126,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
         String exText = sw.toString();
         boolean forceShow = exceptionCount.incrementAndGet() < 2;
-        String dialogTitle = "Exception from " + this.getTitle();
+        String dialogTitle = "Exception from " + this.getTitle()+" : "+ex.getMessage();
         XFuture<Boolean> showTextFuture
                 = MultiLineStringJPanel.showText(exText, this, dialogTitle, false, forceShow);
         return showTextFuture
