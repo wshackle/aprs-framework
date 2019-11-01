@@ -3922,6 +3922,31 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (null == supervisor) {
                 throw new NullPointerException("supervisor");
             }
+            AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
+            final String blockerName = "interactiveStart";
+            Supplier<XFuture<LockInfo>> sup =
+                    () -> supervisor.disallowToggles(blockerName, sysArray);
+            XFuture<XFuture<LockInfo>> disallowTogglesFutureFuture
+                    = XFuture
+                            .supplyAsync("interactiveStart.disableToggles",sup, 
+                                    supervisor.getSupervisorExecutorService());
+            XFuture<LockInfo> disallowTogglesFuture
+                    = disallowTogglesFutureFuture
+                        .thenCompose(x -> x);
+            return disallowTogglesFuture.thenComposeToVoid((LockInfo lockInfo) -> {
+                XFutureVoid ret = interactiveStart2(actionName, runnable);
+                return ret.alwaysComposeAsync(() -> supervisor.allowToggles(blockerName, sysArray), supervisor.getSupervisorExecutorService());
+            });
+        } catch (Exception exception) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", exception);
+            XFutureVoid ret = new XFutureVoid("interactivStart.exception");
+            ret.completeExceptionally(exception);
+            return ret;
+        }
+    }
+
+    private XFutureVoid interactiveStart2(String actionName, Runnable runnable) {
+        try {
             supervisor.setResetting(true);
             if (null != internalInteractiveResetAllFuture) {
                 internalInteractiveResetAllFuture.cancelAll(false);
@@ -4257,7 +4282,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonGoInActionPerformed
 
     private void jButtonPlotPositionMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPlotPositionMapActionPerformed
-       supervisor.plotLastPosMapFile();
+        supervisor.plotLastPosMapFile();
     }//GEN-LAST:event_jButtonPlotPositionMapActionPerformed
 
     private String getRecordString(CSVRecord record, Map<String, Integer> headerMap, String header) {
@@ -5383,8 +5408,27 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private volatile boolean injTableRobotsSetValueAtCall = false;
 
+    private volatile StackTraceElement set01TrueTrace[] = null;
+    private volatile StackTraceElement set01FalseTrace[] = null;
+
+    public StackTraceElement[] getSet01TrueTrace() {
+        return set01TrueTrace;
+    }
+
+    public StackTraceElement[] getSet01FalseTrace() {
+        return set01FalseTrace;
+    }
+
     private void jTableRobotsSetValueAt(Object val, int row, int col) {
         synchronized (jTableRobots) {
+            if (row == 0 && col == 1 && val instanceof Boolean) {
+                Boolean bval = (Boolean) val;
+                if (bval) {
+                    set01TrueTrace = Thread.currentThread().getStackTrace();
+                } else {
+                    set01FalseTrace = Thread.currentThread().getStackTrace();
+                }
+            }
             injTableRobotsSetValueAtCall = true;
             try {
                 if (!javax.swing.SwingUtilities.isEventDispatchThread()) {

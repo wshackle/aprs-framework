@@ -184,13 +184,12 @@ public class Supervisor {
         return this.loadAllPrevFiles(null)
                 .thenRun(() -> {
                     Supervisor.this.setVisible(true);
-                    if(Utils.arePlayAlertsEnabled()) {
+                    if (Utils.arePlayAlertsEnabled()) {
                         PlayAlert();
                     }
                 });
     }
 
-    
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
         XFutureVoid completePrevMultiFuture = completePrevMulti();
@@ -386,7 +385,7 @@ public class Supervisor {
         XFuture<?> xf4 = randomTestFirstActionReversedFuture
                 .alwaysCompose(() -> {
                     println("supervisorScanAllFuture = " + supervisorScanAllFuture);
-                    if(supervisorScanAllFuture.isCompletedExceptionally()) {
+                    if (supervisorScanAllFuture.isCompletedExceptionally()) {
                         final Function<Throwable, Void> printExFunction = (Throwable throwable) -> {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, throwable);
                             return (Void) null;
@@ -1283,6 +1282,11 @@ public class Supervisor {
                 throw new IllegalArgumentException("robotName=" + enabled);
             }
             if (enabled != stealingRobots) {
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                Thread.dumpStack();
                 logEvent("SKIPPING setRobotEnabled(" + robotName + "," + enabled + ") : stealingRobots= " + stealingRobots + ", enableChangeCount.get()=" + enableChangeCount.get() + ",stealRobotNumber.get()=" + stealRobotNumber.get());
                 logEvent("setRobotEnabled: futureToComplete=" + futureToComplete);
                 if (null != futureToComplete) {
@@ -1293,8 +1297,26 @@ public class Supervisor {
                 } else {
                     println("setStealingRobotsFlagTrace = " + Utils.traceToString(setStealingRobotsFlagTrace));
                 }
-                System.exit(1);
-                return;
+                println("lastReturnRobotsComment=" + lastReturnRobotsComment);
+                println("lastReturnRobotsTrace=" + Utils.traceToString(lastReturnRobotsTrace));
+                println("displayJFrame=" + displayJFrame);
+                if (null != displayJFrame) {
+                    println("set01TrueTrace=" + Utils.traceToString(displayJFrame.getSet01TrueTrace()));
+                    println("set01FalseTrace=" + Utils.traceToString(displayJFrame.getSet01FalseTrace()));
+                }
+                try {
+                    if (null != futureToComplete) {
+                        futureToComplete.cancelAll(false);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                pause();
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                throw new RuntimeException("enabled != stealingRobots");
             }
             final int ecc = enableChangeCount.incrementAndGet();
 
@@ -1700,8 +1722,15 @@ public class Supervisor {
     private AtomicInteger returnRobotsCount = new AtomicInteger();
     private AtomicLong returnRobotsTotalTime = new AtomicLong();
 
+    private volatile @Nullable
+    String lastReturnRobotsComment = null;
+    private volatile @Nullable
+    StackTraceElement lastReturnRobotsTrace[] = null;
+
     private XFutureVoid returnRobots(String comment, @Nullable AprsSystem stealFrom, @Nullable AprsSystem stealFor, int srn, int ecc) {
         try {
+            lastReturnRobotsComment = comment;
+            lastReturnRobotsTrace = Thread.currentThread().getStackTrace();
             if (ecc != -1 || srn != -1) {
                 if (checkEcc(ecc)) {
                     return cancelledEcc(ecc);
@@ -1776,7 +1805,6 @@ public class Supervisor {
 
     private XFutureVoid returnRobots(@Nullable NamedFunction<Integer, XFutureVoid> func, String comment, int ecc) {
         checkRobotsUniquePorts();
-        clearStealingRobotsFlag();
         if (func != null) {
             Thread curThread = Thread.currentThread();
             returnRobotsThread = curThread;
@@ -1788,6 +1816,7 @@ public class Supervisor {
                         = disallowToggles(blockerName, func.getSystems());
                 return disallowTogglesFuture
                         .thenComposeAsyncToVoid(x -> {
+                            clearStealingRobotsFlag();
                             return completeReturnRobots(func, comment, blockerName, ecc);
                         }, supervisorExecutorService);
             } catch (Exception ex) {
@@ -1796,6 +1825,7 @@ public class Supervisor {
                 throw asRuntimeException(ex);
             }
         } else {
+            clearStealingRobotsFlag();
             logReturnRobotsNullRunnable(comment);
             return XFutureVoid.completedFuture();
         }
@@ -1803,7 +1833,7 @@ public class Supervisor {
 
     private XFutureVoid completeReturnRobots(NamedFunction<Integer, XFutureVoid> func, String comment, String blockerName, int ecc) {
         try {
-            logEvent(func.getName() + ", comment=" + comment + ",ecc=" + ecc);
+            logEvent("completeReturnRobots " + func.getName() + ", comment=" + comment + ",ecc=" + ecc);
             AprsSystem[] systems = func.getSystems();
             return func
                     .apply(ecc)
@@ -5674,7 +5704,7 @@ public class Supervisor {
 
     private final AtomicLong totalBlockTime = new AtomicLong();
 
-    private synchronized XFutureVoid allowToggles(String blockerName, AprsSystem... systems) {
+    synchronized XFutureVoid allowToggles(String blockerName, AprsSystem... systems) {
         return allowTogglesInternal(blockerName, true, systems);
     }
 
@@ -5697,14 +5727,7 @@ public class Supervisor {
         return XFutureVoid.completedFutureWithName("allowTogglesNoCheck");
     }
 
-//    private final Consumer<String> blockerListConsumer
-//            = (String blockerList) -> {
-//                if (closing) {
-//                    return;
-//                }
-//                showTogglesEnabled(togglesAllowed);
-//                setRobotEnableToggleBlockerText(blockerList);
-//            };
+
     private void blockerListConsumer(String blockerList) {
         if (closing) {
             return;
@@ -5739,6 +5762,9 @@ public class Supervisor {
                         if (sysAborting) {
                             sys.printAbortingInfo(System.err);
                         }
+                        System.out.println("returnRobotsThread = " + returnRobotsThread);
+                        System.out.println("returnRobotsTime = " + returnRobotsTime);
+                        System.out.println("returnRobotsStackTrace = " + Utils.traceToString(returnRobotsStackTrace));
                         String badStateMsg = "allowToggles(" + blockerName + ") : bad state for " + sys;
                         logEvent(badStateMsg);
                         sys.printRobotNameActivy(System.err);
@@ -5850,7 +5876,7 @@ public class Supervisor {
         return lockInfo;
     }
 
-    private synchronized XFuture<LockInfo> disallowToggles(String blockerName, AprsSystem... systems) {
+    synchronized XFuture<LockInfo> disallowToggles(String blockerName, AprsSystem... systems) {
 
         String blockerList = toggleBlockerMap.keySet().toString();
 
@@ -6599,6 +6625,7 @@ public class Supervisor {
 
     private final ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
+    
     private final ExecutorService defaultRandomDelayExecutorService
             = Executors.newCachedThreadPool(new ThreadFactory() {
 
@@ -9229,7 +9256,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                     @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                       @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
