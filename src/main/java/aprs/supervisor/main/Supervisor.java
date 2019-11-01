@@ -3786,7 +3786,17 @@ public class Supervisor {
         }
         clearAllToggleBlockers();
         clearAllErrors();
-        XFutureVoid immediateAbortAllFuture = immediateAbortAll("fullAbortAll");
+        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        final String blockerName = "fullAbortAll";
+        Supplier<XFuture<LockInfo>> sup
+                = () -> disallowToggles(blockerName, sysArray);
+        XFuture<XFuture<LockInfo>> disallowTogglesFutureFuture
+                = XFuture.supplyAsync("fullAbortDisableToggles", sup, supervisorExecutorService);
+        XFuture<LockInfo> disallowTogglesFuture 
+                = disallowTogglesFutureFuture
+                .thenCompose(x -> x);
+        XFutureVoid immediateAbortAllFuture = 
+                disallowTogglesFuture.thenComposeToVoid(x -> immediateAbortAll("fullAbortAll"));
         return immediateAbortAllFuture
                 .thenRun("fullAbortAll.after.immediateAbortAll",
                         () -> {
@@ -3806,7 +3816,8 @@ public class Supervisor {
                             for (AprsSystem sys : aprsSystems) {
                                 sys.clearKitsToCheck(sys.getSafeAbortRequestCount());
                             }
-                        });
+                        })
+                .alwaysComposeAsync("allowTogglesFullAbort", () -> allowTogglesNoCheck(blockerName), supervisorExecutorService);
     }
 
     private void clearCheckBoxes() {
@@ -5681,6 +5692,8 @@ public class Supervisor {
 
     private void clearAllToggleBlockers() {
         logEvent("clearAllToggleBlockers toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
+//        assert toggleBlockerMap.keySet().isEmpty() : toggleBlockerMap.keySet();
+        
         allowTogglesCount.incrementAndGet();
         allowTogglesTrace = Thread.currentThread().getStackTrace();
         for (LockInfo li : toggleBlockerMap.values()) {
@@ -5726,7 +5739,6 @@ public class Supervisor {
         }
         return XFutureVoid.completedFutureWithName("allowTogglesNoCheck");
     }
-
 
     private void blockerListConsumer(String blockerList) {
         if (closing) {
@@ -5839,9 +5851,8 @@ public class Supervisor {
 
     private synchronized XFuture<LockInfo> disallowToggles(String blockerName) {
 
+        LockInfo lockInfo = disallowTogglesPart1(blockerName);
         String blockerList = toggleBlockerMap.keySet().toString();
-
-        LockInfo lockInfo = disallowTogglesPart1(blockerName, blockerList);
         XFuture<LockInfo> ret
                 = completeDisallowToggles(blockerName, blockerList, lockInfo);
         return ret;
@@ -5858,7 +5869,7 @@ public class Supervisor {
         return ret;
     }
 
-    private LockInfo disallowTogglesPart1(String blockerName, String blockerList) throws RuntimeException {
+    private LockInfo disallowTogglesPart1(String blockerName) throws RuntimeException {
         if (this.supervisorThread != Thread.currentThread()) {
             throw new RuntimeException("disallowTogglesPart1 called from wrong thread =" + Thread.currentThread());
         }
@@ -5870,6 +5881,7 @@ public class Supervisor {
         LockInfo lockInfo = new LockInfo(blockerName);
         toggleBlockerMap.put(blockerName, lockInfo);
         int tc = togglesCount.get();
+        String blockerList = toggleBlockerMap.keySet().toString();
         logEvent("disallowToggles(" + blockerName + ") togglesCount= " + tc + ", disallowTogglesCount= " + dtc + ", blockers=" + blockerList);
         togglesAllowed = false;
         togglesAllowedXfuture.updateAndGet(this::createWaitForTogglesFuture);
@@ -5878,14 +5890,14 @@ public class Supervisor {
 
     synchronized XFuture<LockInfo> disallowToggles(String blockerName, AprsSystem... systems) {
 
-        String blockerList = toggleBlockerMap.keySet().toString();
-
-        LockInfo lockInfo = disallowTogglesPart1(blockerName, blockerList);
+        LockInfo lockInfo = disallowTogglesPart1(blockerName);
         if (null != systems) {
             for (AprsSystem sys : systems) {
                 addFinishBlocker(sys.getMyThreadId(), lockInfo.getFuture());
             }
         }
+        String blockerList = toggleBlockerMap.keySet().toString();
+
         XFuture<LockInfo> ret
                 = completeDisallowToggles(blockerName, blockerList, lockInfo);
         return ret;
@@ -6625,7 +6637,6 @@ public class Supervisor {
 
     private final ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
-    
     private final ExecutorService defaultRandomDelayExecutorService
             = Executors.newCachedThreadPool(new ThreadFactory() {
 
@@ -7810,7 +7821,6 @@ public class Supervisor {
             XFutureVoid xfv = lockInfo.getFuture();
             xfv.cancelAll(mayInterrupt);
         }
-        clearAllToggleBlockers();
         if (null != ContinuousDemoFuture) {
             ContinuousDemoFuture.cancelAll(mayInterrupt);
             ContinuousDemoFuture = null;
@@ -7881,28 +7891,6 @@ public class Supervisor {
         cancelAllFuturesSet();
     }
 
-//    void cancelAllStealUnsteal(boolean mayInterrupt) {
-//        stealingRobots = false;
-//        XFutureVoid stealFuture = this.stealRobotFuture.getAndSet(null);
-//        if (null != stealFuture) {
-//            stealFuture.cancelAll(mayInterrupt);
-//        }
-//
-//        XFutureVoid unstealFuture = this.unStealRobotFuture.getAndSet(null);
-//        if (null != unstealFuture) {
-//            unstealFuture.cancelAll(mayInterrupt);
-//        }
-//
-//        XFutureVoid cancelStealFuture = this.cancelStealRobotFuture.getAndSet(null);
-//        if (null != cancelStealFuture) {
-//            cancelStealFuture.cancelAll(mayInterrupt);
-//        }
-//
-//        XFutureVoid cancelUnstealFuture = this.cancelUnStealRobotFuture.getAndSet(null);
-//        if (null != cancelUnstealFuture) {
-//            cancelUnstealFuture.cancelAll(mayInterrupt);
-//        }
-//    }
     private volatile boolean restoringOrigRobotInfo = false;
 
     synchronized XFutureVoid restoreOrigRobotInfo() {
@@ -9256,7 +9244,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                       @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                         @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
