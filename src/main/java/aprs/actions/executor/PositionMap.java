@@ -39,6 +39,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.Posemath;
@@ -150,6 +151,7 @@ public class PositionMap {
 
         try {
             diagapplet.plotter.plotterJFrame plotterFrame = new diagapplet.plotter.plotterJFrame();
+            plotterFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             plotXFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
             plotYFirst(startx, xdiff, starty, ydiff, z, plotterFrame);
             plotInput(z, plotterFrame);
@@ -404,17 +406,17 @@ public class PositionMap {
             }
         }
         if (inputXIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find inputXIndex");
+            throw new BadErrorMapFormatException("Couldn't find inputXIndex : f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
         }
         if (inputYIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find inputYIndex");
+            throw new BadErrorMapFormatException("Couldn't find inputYIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
         }
 
         if (offsetXIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find offsetXIndex");
+            throw new BadErrorMapFormatException("Couldn't find offsetXIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
         }
         if (offsetYIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find offsetYIndex");
+            throw new BadErrorMapFormatException("Couldn't find offsetYIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
         }
         errmapList = new ArrayList<>();
         for (int i = 1; i < errmapStringsList.size(); i++) {

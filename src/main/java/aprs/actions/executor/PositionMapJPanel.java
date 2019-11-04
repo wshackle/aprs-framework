@@ -399,6 +399,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             positionMap.getErrmapList().set(selectedRow, newPointPairLabelEntry);
             reversePositionMaps = null;
             List<PositionMap> newReversePositionMaps = getReversePositionMaps();
+            loadPositionMapToTable(positionMap);
             updatePositionMapInfoOnDisplay();
         }
 //        TableModel model = jTablePosMap.getModel();

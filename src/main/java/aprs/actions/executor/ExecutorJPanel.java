@@ -944,7 +944,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jPanel2 = new javax.swing.JPanel();
         positionMapJPanel1 = new aprs.actions.executor.PositionMapJPanel();
         jButtonErrMapGoIn = new javax.swing.JButton();
-        jButtonErrMapSetRobotFromCurrent = new javax.swing.JButton();
+        jButtonErrMapSetInputFromCurrent = new javax.swing.JButton();
         jButtonErrMapGoOut = new javax.swing.JButton();
         jButtonErrMapSetVisionFromCurrent = new javax.swing.JButton();
         jButtonErrMapSetVisionFromDB = new javax.swing.JButton();
@@ -1863,10 +1863,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
-        jButtonErrMapSetRobotFromCurrent.setText("Set Robot From Current");
-        jButtonErrMapSetRobotFromCurrent.addActionListener(new java.awt.event.ActionListener() {
+        jButtonErrMapSetInputFromCurrent.setText("Set Input From Current");
+        jButtonErrMapSetInputFromCurrent.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonErrMapSetRobotFromCurrentActionPerformed(evt);
+                jButtonErrMapSetInputFromCurrentActionPerformed(evt);
             }
         });
 
@@ -1906,7 +1906,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addGap(20, 20, 20)
                         .addComponent(jButtonErrMapGoIn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonErrMapSetRobotFromCurrent)
+                        .addComponent(jButtonErrMapSetInputFromCurrent)
                         .addGap(173, 173, 173)
                         .addComponent(jButtonErrMapGoOut)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1914,7 +1914,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrMapSetVisionFromDB)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1925,7 +1925,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonErrMapGoIn)
-                    .addComponent(jButtonErrMapSetRobotFromCurrent)
+                    .addComponent(jButtonErrMapSetInputFromCurrent)
                     .addComponent(jButtonErrMapGoOut)
                     .addComponent(jButtonErrMapSetVisionFromCurrent)
                     .addComponent(jButtonErrMapSetVisionFromDB)
@@ -6120,7 +6120,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     @SuppressWarnings({"nullness"})
-    private void jButtonErrMapSetRobotFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
+    private void jButtonErrMapSetInputFromCurrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrMapSetInputFromCurrentActionPerformed
         Object data[] = this.positionMapJPanel1.getSelectedRowData();
         if (data == null) {
             return;
@@ -6137,7 +6137,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         data[1] = point.getY();
         data[2] = point.getZ();
         this.positionMapJPanel1.setSelectedRowData(data);
-    }//GEN-LAST:event_jButtonErrMapSetRobotFromCurrentActionPerformed
+    }//GEN-LAST:event_jButtonErrMapSetInputFromCurrentActionPerformed
 
     @UIEffect
     @SuppressWarnings({"nullness"})
@@ -7870,7 +7870,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonDropTool;
     private javax.swing.JButton jButtonErrMapGoIn;
     private javax.swing.JButton jButtonErrMapGoOut;
-    private javax.swing.JButton jButtonErrMapSetRobotFromCurrent;
+    private javax.swing.JButton jButtonErrMapSetInputFromCurrent;
     private javax.swing.JButton jButtonErrMapSetVisionFromCurrent;
     private javax.swing.JButton jButtonErrMapSetVisionFromDB;
     private javax.swing.JButton jButtonGenerateAndRun;

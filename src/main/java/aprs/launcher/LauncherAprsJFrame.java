@@ -566,7 +566,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     private static XFutureVoid completeOpenSupevisor(Supervisor supervisor, @Nullable String dirName) {
-        supervisor.loadPrevPosMapFile(dirName);
+        supervisor.loadPrevPositionMappingsFilesFile(dirName);
         supervisor.loadPrevSimTeach();
         XFutureVoid future = supervisor.loadPrevTeachProperties(dirName);
         if (Utils.arePlayAlertsEnabled()) {

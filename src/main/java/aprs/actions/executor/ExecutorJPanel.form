@@ -1375,7 +1375,7 @@
                                   <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapGoIn" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jButtonErrMapSetRobotFromCurrent" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jButtonErrMapSetInputFromCurrent" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace min="-2" pref="173" max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapGoOut" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
@@ -1383,7 +1383,7 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapSetVisionFromDB" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jTextFieldErrMapPartInfo" pref="471" max="32767" attributes="0"/>
+                                  <Component id="jTextFieldErrMapPartInfo" pref="475" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -1398,7 +1398,7 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jButtonErrMapGoIn" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jButtonErrMapSetRobotFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jButtonErrMapSetInputFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonErrMapGoOut" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonErrMapSetVisionFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonErrMapSetVisionFromDB" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -1420,12 +1420,12 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapGoInActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="jButtonErrMapSetRobotFromCurrent">
+                <Component class="javax.swing.JButton" name="jButtonErrMapSetInputFromCurrent">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Set Robot From Current"/>
+                    <Property name="text" type="java.lang.String" value="Set Input From Current"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetRobotFromCurrentActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetInputFromCurrentActionPerformed"/>
                   </Events>
                 </Component>
                 <Component class="javax.swing.JButton" name="jButtonErrMapGoOut">

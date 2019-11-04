@@ -431,7 +431,7 @@ public class Supervisor {
     private final Object2DOuterJPanel object2DOuterJPanel1;
     //private final JTable jTableRobots;
     private final CachedTable selectedPosMapFileCachedTable;
-    private final CachedTable positionMappingsCachedTable;
+    private final CachedTable positionMappingsFilesCachedTable;
     private final CachedTable tasksCachedTable;
     private final CachedTable sharedToolCachedTable;
 
@@ -561,8 +561,8 @@ public class Supervisor {
                 ? displayJFrame.getObject2DOuterJPanel1()
                 : new Object2DOuterJPanel();
 //        this.object2DOuterJPanel1.setDebugTimes(true);
-        this.positionMappingsCachedTable = (displayJFrame != null)
-                ? new CachedTable(displayJFrame.getPositionMappingsTable())
+        this.positionMappingsFilesCachedTable = (displayJFrame != null)
+                ? new CachedTable(displayJFrame.getPositionMappingsFilesTable())
                 : newPositionMappingsTable();
 
         this.tasksCachedTable
@@ -971,14 +971,14 @@ public class Supervisor {
      * @throws IOException file location can not be read
      */
     static @Nullable
-    File getLastPosMapFile(@Nullable String dirName) throws IOException {
+    File getLastPositionMappingsFilesFile(@Nullable String dirName) throws IOException {
         return readPathFromFileFile(LAST_POSMAP_FILE_FILE, dirName);
     }
 
     public XFutureVoid loadAllPrevFiles(@Nullable String dirName) {
         return this.startLoadPrevSetup()
                 .thenComposeToVoid(() -> {
-                    this.loadPrevPosMapFile(dirName);
+                    this.loadPrevPositionMappingsFilesFile(dirName);
                     this.loadPrevSimTeach();
                     return this.loadPrevTeachProperties(dirName);
                 });
@@ -1075,11 +1075,11 @@ public class Supervisor {
     /**
      * Reload the last posmap file read/saved.
      */
-    public void loadPrevPosMapFile(@Nullable String dirName) {
+    public void loadPrevPositionMappingsFilesFile(@Nullable String dirName) {
         try {
-            File posFile = getLastPosMapFile(dirName);
-            if (null != posFile && posFile.exists()) {
-                loadPositionMaps(posFile);
+            File posMapsFilesFile = getLastPositionMappingsFilesFile(dirName);
+            if (null != posMapsFilesFile && posMapsFilesFile.exists()) {
+                loadPositionMappingsFilesFile(posMapsFilesFile);
             }
         } catch (IOException ex) {
             log(Level.SEVERE, "", ex);
@@ -3365,9 +3365,9 @@ public class Supervisor {
 
     private void loadFromFilesMap(Map<String, String> filesMapOutNN) throws RuntimeException {
         try {
-            String mapsFile = filesMapOutNN.get("PosMap");
-            if (null != mapsFile) {
-                loadPositionMaps(new File(mapsFile));
+            String posMapsFilesFile = filesMapOutNN.get("PosMap");
+            if (null != posMapsFilesFile) {
+                loadPositionMappingsFilesFile(new File(posMapsFilesFile));
             }
             String simTeach = filesMapOutNN.get("SimTeach");
             if (null != simTeach) {
@@ -3402,13 +3402,13 @@ public class Supervisor {
 
     public String getPosMapFilePathString() throws IOException {
         String dirName = getSetupFileDirName();
-        File f = Supervisor.getLastPosMapFile(dirName);
+        File f = Supervisor.getLastPositionMappingsFilesFile(dirName);
         return canonicalPathOrBuildPath(f, dirName, POSMAPCSV);
     }
     private static final String POSMAPCSV = "posmap.csv";
 
     public static String getStaticPosMapFilePathString(String dirName) throws IOException {
-        File f = Supervisor.getLastPosMapFile(dirName);
+        File f = Supervisor.getLastPositionMappingsFilesFile(dirName);
         return canonicalPathOrBuildPath(f, dirName, POSMAPCSV);
     }
 
@@ -3690,16 +3690,16 @@ public class Supervisor {
         return displayJFrame.choosePositionMappingsFileForSaveAs(prevChosenFile);
     }
 
-    private void browseAndSavePositionMappings() throws HeadlessException {
-        File chosenFile = choosePositionMappingsFileForSaveAs(lastPosMapFile);
-        if (null != chosenFile) {
-            try {
-                savePositionMaps(chosenFile);
-            } catch (IOException ex) {
-                log(Level.SEVERE, "", ex);
-            }
-        }
-    }
+//    private void browseAndSavePositionMappings() throws HeadlessException {
+//        File chosenFile = choosePositionMappingsFileForSaveAs(lastPosMapFile);
+//        if (null != chosenFile) {
+//            try {
+//                savePositionMaps(chosenFile);
+//            } catch (IOException ex) {
+//                log(Level.SEVERE, "", ex);
+//            }
+//        }
+//    }
 
     private @Nullable
     File choosePosMapsFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
@@ -3714,11 +3714,11 @@ public class Supervisor {
      * file that points to other csv files with infomation needed to transform
      * coordinates from one robot to another.
      */
-    public void browseOpenPosMapsFile() {
-        File chosenFile = choosePosMapsFileToOpen(lastPosMapFile);
+    public void browseOpenPositionMappingsFilesFile() {
+        File chosenFile = choosePosMapsFileToOpen(lastPositionMappingsFilesFile);
         if (null != chosenFile) {
             try {
-                loadPositionMaps(chosenFile);
+                loadPositionMappingsFilesFile(chosenFile);
 
             } catch (IOException ex) {
                 log(Level.SEVERE, "", ex);
@@ -7079,21 +7079,22 @@ public class Supervisor {
                 pw.println();
             }
         }
+        lastPosMapFile = f;
     }
 
-    private void clearPosTable() {
-        positionMappingsCachedTable.setRowColumnCount(0, 0);
-        positionMappingsCachedTable.addColumn("System");
+    private void clearPositionMappingsFilesTable() {
+        positionMappingsFilesCachedTable.setRowColumnCount(0, 0);
+        positionMappingsFilesCachedTable.addColumn("System");
         for (String name : robotEnableMap.keySet()) {
-            positionMappingsCachedTable.addColumn(name);
+            positionMappingsFilesCachedTable.addColumn(name);
         }
         for (String name : robotEnableMap.keySet()) {
             Object data[] = new Object[robotEnableMap.size() + 1];
             data[0] = name;
-            positionMappingsCachedTable.addRow(data);
+            positionMappingsFilesCachedTable.addRow(data);
         }
-        Utils.autoResizeTableColWidths(positionMappingsCachedTable);
-        Utils.autoResizeTableRowHeights(positionMappingsCachedTable);
+        Utils.autoResizeTableColWidths(positionMappingsFilesCachedTable);
+        Utils.autoResizeTableRowHeights(positionMappingsFilesCachedTable);
         hidePosTablePopupMenu();
     }
 
@@ -8182,8 +8183,8 @@ public class Supervisor {
      * @throws IOException file could not be written to
      */
     public void savePositionMaps(File f) throws IOException {
-        saveCachedTable(f, positionMappingsCachedTable, CSVFormat.RFC4180);
-        saveLastPosMapFile(f);
+        saveCachedTable(f, positionMappingsFilesCachedTable, CSVFormat.RFC4180);
+        saveLastPositionMappingsFilesFile(f);
     }
 
     private final Map<String, Map<String, File>> posMaps = new HashMap<>();
@@ -8205,21 +8206,10 @@ public class Supervisor {
         if (null == f) {
             throw new IllegalStateException("no entry  for system " + sys2 + " in " + subMap);
         }
-        if (f.exists()) {
-            return f;
-        }
-        if (null != lastPosMapFile) {
-            File parentFile = lastPosMapFile.getParentFile();
-            if (null != parentFile) {
-                File altFile = parentFile.toPath().resolve(f.toPath()).toFile();
-                if (altFile.exists()) {
-                    return altFile;
-                }
-            }
-        }
         if (!f.exists()) {
             throw new FileNotFoundException(f + " does not exist. failing for getPosMapFile " + sys1 + " to " + sys2);
         }
+        lastPosMapFile = f;
         return f;
     }
 
@@ -8242,10 +8232,10 @@ public class Supervisor {
      * @param f file to load
      * @throws IOException file could not be read
      */
-    final void loadPositionMaps(File f) throws IOException {
-        println("Loading position maps  file :" + f.getCanonicalPath());
-        positionMappingsCachedTable.setRowColumnCount(0, 0);;
-        positionMappingsCachedTable.addColumn("System");
+    final void loadPositionMappingsFilesFile(File f) throws IOException {
+        println("Loading position mappings files  file :" + f.getCanonicalPath());
+        positionMappingsFilesCachedTable.setRowColumnCount(0, 0);;
+        positionMappingsFilesCachedTable.addColumn("System");
         try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
             String line = null;
             int linecount = 0;
@@ -8255,7 +8245,7 @@ public class Supervisor {
                 for (int i = 0; i < a.length; i++) {
                     a[i] = csvRecord.get(i);
                 }
-                positionMappingsCachedTable.addColumn(a[0]);
+                positionMappingsFilesCachedTable.addColumn(a[0]);
             }
         }
         try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
@@ -8269,14 +8259,14 @@ public class Supervisor {
                         if (i > 0) {
                             String fname = (String) a[i];
                             File fi = resolveFile(fname, f.getParentFile());
-                            setPosMapFile((String) a[0], positionMappingsCachedTable.getColumnName(i), fi);
+                            setPosMapFile((String) a[0], positionMappingsFilesCachedTable.getColumnName(i), fi);
                         }
                     }
                 }
-                positionMappingsCachedTable.addRow(a);
+                positionMappingsFilesCachedTable.addRow(a);
             }
         }
-        saveLastPosMapFile(f);
+        saveLastPositionMappingsFilesFile(f);
     }
 
     private static File resolveFile(String fname, @Nullable File dir) throws IOException {
@@ -8456,9 +8446,12 @@ public class Supervisor {
         saveLastSharedToolsFile(f);
     }
 
-    private @Nullable
-    File lastPosMapFile = null;
+    private volatile @Nullable
+    File lastPositionMappingsFilesFile = null;
 
+    private volatile @Nullable
+    File lastPosMapFile = null;
+    
     public @Nullable
     File getLastPosMapFile() {
         return lastPosMapFile;
@@ -8475,8 +8468,8 @@ public class Supervisor {
         }
     }
 
-    void saveLastPosMapFile(File f) throws IOException {
-        lastPosMapFile = f;
+    void saveLastPositionMappingsFilesFile(File f) throws IOException {
+        lastPositionMappingsFilesFile = f;
         savePathInLastFileFile(f, LAST_POSMAP_FILE_FILE, getSetupParent());
     }
 
@@ -9015,7 +9008,7 @@ public class Supervisor {
             return updateRobotsTable()
                     .thenComposeToVoid(() -> {
                         try {
-                            clearPosTable();
+                            clearPositionMappingsFilesTable();
                             setSetupFile(f);
                             String convTaskName = getConveyorClonedViewSystemTaskName();
                             if (null != convTaskName && convTaskName.length() > 0 && null != displayJFrame) {
@@ -9553,7 +9546,7 @@ public class Supervisor {
                         try {
                             String mapsFile = filesMapOut.get("PosMap");
                             if (null != mapsFile) {
-                                supervisor.loadPositionMaps(new File(mapsFile));
+                                supervisor.loadPositionMappingsFilesFile(new File(mapsFile));
                             }
                             String simTeach = filesMapOut.get("SimTeach");
                             if (null != simTeach) {

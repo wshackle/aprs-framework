@@ -2754,7 +2754,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemSavePosMapsActionPerformed
 
     private void browseAndSavePositionMappings() throws HeadlessException, IOException {
-        File chosenFile = choosePositionMappingsFileForSaveAs(Supervisor.getLastPosMapFile(null));
+        File chosenFile = choosePositionMappingsFileForSaveAs(Supervisor.getLastPositionMappingsFilesFile(null));
         if (null != chosenFile) {
             savePositionMaps(chosenFile);
         }
@@ -2811,7 +2811,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * coordinates from one robot to another.
      */
     public void browseOpenPosMapsFile() throws IOException {
-        File chosenFile = choosePosMapsFileToOpen(Supervisor.getLastPosMapFile(null));
+        File chosenFile = choosePosMapsFileToOpen(Supervisor.getLastPositionMappingsFilesFile(null));
         if (null != chosenFile) {
             loadPositionMaps(chosenFile);
         }
@@ -3005,7 +3005,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jButtonSaveSelectedPosMapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveSelectedPosMapActionPerformed
         try {
-            selectAndSavePosMapFile();
+            selectAndSavePositionMappingsFilesFile();
         } catch (IOException ex) {
             log(Level.SEVERE, "", ex);
         }
@@ -3019,7 +3019,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.getLastPosMapParent();
     }
 
-    private void selectAndSavePosMapFile() throws IOException, HeadlessException {
+    private void selectAndSavePositionMappingsFilesFile() throws IOException, HeadlessException {
 
         File parentFile = getLastPosMapParent();
         File f = resolveFile(jTextFieldSelectedPosMapFilename.getText(), parentFile);
@@ -3923,7 +3923,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 throw new NullPointerException("supervisor");
             }
             AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
-            final String blockerName = "interactiveStart";
+            final String blockerName = "interactiveStart."+actionName;
             Supplier<XFuture<LockInfo>> sup =
                     () -> supervisor.disallowToggles(blockerName, sysArray);
             supervisor.setResetting(true);
@@ -4164,7 +4164,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private void jMenuItemLookForPartsAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForPartsAllActionPerformed
         interactivStart(() -> lookForPartsAll(),
-                null);
+                jMenuItemLookForPartsAll.getText());
     }//GEN-LAST:event_jMenuItemLookForPartsAllActionPerformed
 
     private void jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemUseCorrectionModeByDefaultActionPerformed
@@ -4764,7 +4764,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return jTableSelectedPosMapFile;
     }
 
-    public JTable getPositionMappingsTable() {
+    public JTable getPositionMappingsFilesTable() {
         return jTablePositionMappings;
     }
 
@@ -5205,7 +5205,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.loadPositionMaps(f);
+        supervisor.loadPositionMappingsFilesFile(f);
     }
 
     private static File resolveFile(String fname, @Nullable File dir) throws IOException {
@@ -5241,7 +5241,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.saveLastPosMapFile(f);
+        supervisor.saveLastPositionMappingsFilesFile(f);
     }
 
     private XFutureVoid saveTeachProps(File f) throws IOException {
