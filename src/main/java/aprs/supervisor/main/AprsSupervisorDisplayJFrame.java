@@ -1310,21 +1310,22 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 return;
             }
             tm.removeRow(0);
-            maxEventStringLen = 0;
         }
         addOldEventToTableCount++;
         long timediff = time - addOldEventToTableTime;
         addOldEventToTableTime = time;
         tm.addRow(new Object[]{addOldEventToTableCount, getTimeString(time), timediff, blockerSize, ecc, cdc, errs, s, threadname, traceString});
-        if (tm.getRowCount() % 50 < 2 || s.length() > maxEventStringLen || threadname.length() > maxThreadNameStringLen) {
+        final int sLength = s.length();
+        final int threadNameLength = threadname.length();
+        if (tm.getRowCount() % 50 < 2 || sLength > maxEventStringLen || threadNameLength > maxThreadNameStringLen) {
             if (jCheckBoxScrollEvents.isSelected()) {
                 Utils.autoResizeTableColWidths(jTableEvents);
             }
-            if (s.length() > maxEventStringLen) {
-                maxEventStringLen = s.length();
+            if (sLength > maxEventStringLen) {
+                maxEventStringLen = sLength;
             }
-            if (threadname.length() > maxThreadNameStringLen) {
-                maxThreadNameStringLen = threadname.length();
+            if (threadNameLength > maxThreadNameStringLen) {
+                maxThreadNameStringLen = threadNameLength;
             }
         } else {
             if (jCheckBoxScrollEvents.isSelected()) {
