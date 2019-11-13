@@ -40,8 +40,6 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -52,16 +50,17 @@ import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.PmCartesianMinMaxLimit;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
-
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import rcs.posemath.Posemath;
 
 /**
  *
@@ -75,35 +74,7 @@ public class Object2DJPanel extends JPanel {
 
     @UIEffect
     public Object2DJPanel() {
-        partImageMap = new HashMap<>();
-        try {
-            BufferedImage fanucToolHolder2Image = getImageFromResourceName("aprs/partImages/fanuc_tool_holder2.png");
-            addPartImage("private", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
-            addPartImage("fanucBackLeftHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage("shared_gripper", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
-            addPartImage("sharedBackCenterHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage("small_private_holder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage("motomanBackCenterRightHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage("shared_with_fanuc_holder", fanucToolHolder2Image, 115.0, true, false, 10.0, -60.0);
-            BufferedImage pincherSmallVacTopImage = getImageFromResourceName("aprs/partImages/pincher_small_vac_top.png");
 
-            addPartImage("pincher", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
-            addPartImage("small_vacuum", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
-            addPartImage("big_gripper_holder", "aprs/partImages/big_gripper_holder2.png", 125.0, true, false, 0.0, 0.0);
-            addPartImage("big_vacuum_holder", "aprs/partImages/big_vacuum_holder.png", 215.0, true, false, 0.0, -15.0);
-            addPartImage("big_vacuum", "aprs/partImages/big_vacuum.png", 215.0, true, false, 0.0, -15.0);
-            addPartImage("big_gripper", "aprs/partImages/big_vacuum.png", 125.0, true, false, 0.0, 0.0);
-            addPartImage("sku_part_medium_gear", "aprs/partImages/medium_orange_gear.png", 75.0);
-            addPartImage("sku_part_large_gear", "aprs/partImages/large_green_gear.png", 100.0);
-            addPartImage("sku_part_small_gear", "aprs/partImages/small_yellow_gear.png", 45.0);
-            addPartImage("sku_kit_s2l2_vessel", "aprs/partImages/red_s2l2_kit_tray_up.png", 220.0);
-            addPartImage("sku_large_gear_vessel", "aprs/partImages/purple_large_gear_tray_horz.png", 220.0);
-            addPartImage("sku_medium_gear_vessel", "aprs/partImages/blue_medium_gear_parts_tray.png", 160.0);
-            addPartImage("sku_small_gear_vessel", "aprs/partImages/orange_small_gear_parts_tray.png", 110.0);
-            addPartImage("sku_kit_m2l1_vessel", "aprs/partImages/m2l1_kit_tray_right.png", 190.0);
-        } catch (IOException ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
-        }
     }
 
     private double senseMinX = Double.NaN;
@@ -224,67 +195,6 @@ public class Object2DJPanel extends JPanel {
             this.viewDetails = viewDetails;
             this.checkedRepaint();
         }
-    }
-
-    private void addPartImage(@UnknownInitialization Object2DJPanel this,
-            String partName, String resName, double realWidth) {
-        addPartImage(partName, resName, realWidth, false, false, 0.0, 0.0);
-    }
-
-    private void addPartImage(@UnknownInitialization Object2DJPanel this,
-            String partName, String resName, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
-        try {
-            BufferedImage img = getImageFromResourceName(resName);
-            addPartImage(partName, img, realWidth, ignoreRotations, useHeight, xoffset, yoffset);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void addPartImage(@UnknownInitialization Object2DJPanel this,
-            String partName, BufferedImage img, double realWidth, boolean ignoreRotations, boolean useHeight, double xoffset, double yoffset) {
-        try {
-            if (null != img) {
-                double ratio = useHeight ? realWidth / img.getHeight() : realWidth / img.getWidth();
-                if (null != partImageMap) {
-                    partImageMap.put(partName, new PartImageInfo(img, ratio, realWidth, ignoreRotations, xoffset, yoffset));
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    static private BufferedImage getImageFromResourceName(String resName) throws IOException {
-        URL url = null;
-        try {
-            if (null == url) {
-                ClassLoader cl = Object2DJPanel.class.getClassLoader();
-                if (null != cl) {
-                    url = cl.getResource(resName);//.getResource(resName);
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        try {
-            if (null == url) {
-                url = ClassLoader.getSystemResource(resName);//.getResource(resName);
-            }
-        } catch (Exception ignored) {
-        }
-        try {
-            if (null == url) {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                if (null != cl) {
-                    url = cl.getResource(resName);//.getResource(resName);
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        if (null == url) {
-            throw new IllegalArgumentException("ClassLoader.getSystemResource(" + resName + ") returned null");
-        }
-        return ImageIO.read(url);
     }
 
     /**
@@ -493,7 +403,35 @@ public class Object2DJPanel extends JPanel {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, pose, label, w, h);
+        takeSnapshot(f, imageFileToCsvFile(f), pose, label, w, h);
+    }
+
+    @SuppressWarnings("guieffect")
+    public void takeSnapshot(File f, File csvFile, PoseType pose, String label) {
+        final int w = this.getWidth();
+        final int h = this.getHeight();
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
+            return;
+        }
+        takeSnapshot(f, csvFile, pose, label, w, h);
+    }
+
+    public static File imageFileToCsvFile(File f) {
+        File csvFile = null;
+        try {
+            File csvDir = new File(f.getParentFile(), "csv");
+            csvDir.mkdirs();
+            csvFile = new File(csvDir, f.getName() + ".csv");
+            return csvFile;
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     private int snapshotHeight = -1;
@@ -548,7 +486,7 @@ public class Object2DJPanel extends JPanel {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, point, label, w, h);
+        takeSnapshot(f, imageFileToCsvFile(f), point, label, w, h);
     }
 
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
@@ -558,98 +496,72 @@ public class Object2DJPanel extends JPanel {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, point, label, w, h);
+        takeSnapshot(f, imageFileToCsvFile(f), point, label, w, h);
     }
 
-    private void takeSnapshot(File f, PoseType pose, String label, final int w, final int h) {
+    public void takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label) {
+        final int w = snapW();
+        final int h = snapH();
+        if (w < 1 || h < 1) {
+            System.err.println("Can not take snapshot with sized to " + w + " x " + h);
+            return;
+        }
+        takeSnapshot(f, csvFile, point, label, w, h);
+    }
+
+    private void takeSnapshot(File f, File csvFile, PoseType pose, String label, final int w, final int h) {
         if (null != pose) {
-            takeSnapshot(f, pose.getPoint(), label, w, h);
+            takeSnapshot(f, csvFile, pose.getPoint(), label, w, h);
         } else {
-            takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
+            takeSnapshot(f, csvFile, (PmCartesian) null, (String) null, w, h);
 
         }
     }
 
-    private void takeSnapshot(File f, @Nullable PointType point, String label, final int w, final int h) {
+    private void takeSnapshot(File f, File csvFile, @Nullable PointType point, String label, final int w, final int h) {
         if (null != point) {
-            takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
+            takeSnapshot(f, csvFile, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
-            takeSnapshot(f, (PmCartesian) null, (String) null, w, h);
+            takeSnapshot(f, csvFile, (PmCartesian) null, (String) null, w, h);
+        }
+    }
+
+    public void saveCsvItemsFile(File csvFile) throws IOException {
+        saveCsvItemsFile(csvFile, getItems());
+    }
+
+    public static void saveCsvItemsFile(File csvFile, Collection<? extends PhysicalItem> items) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(csvFile))) {
+            pw.println("name,rotation,x,y,score,type");
+            for (PhysicalItem item : items) {
+                if (null != item) {
+                    pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
+                } else {
+                    System.err.println("contains null : items=" + items);
+                    Thread.dumpStack();
+                }
+            }
         }
     }
 
     @SuppressWarnings("guieffect")
     public void takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, final int w, final int h) {
+        takeSnapshot(f, imageFileToCsvFile(f), point, label, w, h);
+    }
+
+    @SuppressWarnings("guieffect")
+    public void takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label, final int w, final int h) {
         try {
-            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
-            int pindex = f.getName().lastIndexOf('.');
             String type = "JPEG";
+            int pindex = f.getName().lastIndexOf('.');
             if (pindex > 0) {
                 type = f.getName().substring(pindex + 1);
             }
-            Graphics2D g2d = img.createGraphics();
-            AffineTransform origTransform = g2d.getTransform();
-            g2d.setColor(this.getBackground());
-            g2d.fillRect(0, 0, w, h);
-            g2d.setColor(this.getForeground());
+            ViewOptions opts = currentViewOptions();
+            opts.w = w;
+            opts.h = h;
             List<PhysicalItem> itemsToPaint = getItemsToPaint();
-
-            if (autoscale) {
-                double minX = Double.POSITIVE_INFINITY;
-                double maxX = Double.NEGATIVE_INFINITY;
-                double minY = Double.POSITIVE_INFINITY;
-                double maxY = Double.NEGATIVE_INFINITY;
-                for (PhysicalItem item : itemsToPaint) {
-                    if (minX > item.x) {
-                        minX = item.x;
-                    }
-                    if (minY > item.y) {
-                        minY = item.y;
-                    }
-                    if (maxX < item.x) {
-                        maxX = item.x;
-                    }
-                    if (maxY < item.y) {
-                        maxY = item.y;
-                    }
-                }
-                if (null != point) {
-                    double x = point.getX();
-                    double y = point.getY();
-                    if (minX > x) {
-                        minX = x;
-                    }
-                    if (maxX < x) {
-                        maxX = x;
-                    }
-                    if (minY > y) {
-                        minY = y;
-                    }
-                    if (maxY < y) {
-                        maxY = y;
-                    }
-                }
-                Point2DMinMax tempMinMax = new Point2DMinMax();
-                tempMinMax.min.x = minX;
-                tempMinMax.max.x = maxX;
-                tempMinMax.min.y = minY;
-                tempMinMax.max.y = maxY;
-                ViewOptions opts = new ViewOptions();
-                opts.w = w;
-                opts.h = h;
-                double new_scale = computeNewScale(tempMinMax, opts);
-                this.paintItems(g2d, itemsToPaint, null, tempMinMax, opts);
-                if (null != point) {
-                    paintHighlightedPose(point, g2d, label, tempMinMax, w, h, new_scale, origTransform);
-                }
-            } else {
-                this.paintComponent(g2d);
-                if (null != point) {
-                    double new_scale = computeNewScale(this.minmax, null);
-                    paintHighlightedPose(point, g2d, label, this.minmax, w, h, new_scale, origTransform);
-                }
-            }
-            writeImageFile(img, type, f);
+            writeImageFile(opts, type, f, csvFile, itemsToPaint, point, label);
 //            println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -671,14 +583,14 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    public void takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
             return;
         }
-        takeSnapshot(f, itemsToPaint, w, h);
+        takeSnapshot(f, csvFile, itemsToPaint, w, h);
     }
 
     private static final Executor imageIOWriterService
@@ -689,18 +601,97 @@ public class Object2DJPanel extends JPanel {
                 }
             });
 
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
+    public ViewOptions currentViewOptions() {
+        ViewOptions opts = new ViewOptions();
+        copyToOpts(opts);
+        return opts;
+    }
+
+    private void copyToOpts(ViewOptions opts) {
+        opts.showCurrentXY = this.showCurrentXY;
+        opts.currentX = this.currentX;
+        opts.currentY = this.currentY;
+        if (opts.w < 1 || opts.h < 1) {
+            opts.w = this.getSize().width;
+            opts.h = this.getSize().height;
+        }
+        if (null == opts.backgroundColor) {
+            opts.backgroundColor = this.getBackground();
+        }
+        if (null == opts.foregroundColor) {
+            opts.foregroundColor = this.getForeground();
+        }
+        opts.enableAutoscale = this.autoscale;
+        opts.useSeparateNames = this.useSeparateNames;
+        if (opts.minmax == null) {
+            opts.minmax = new Point2DMinMax();
+            Point2DMinMax minmax = getMinmax(autoscale);
+            if (autoscale && minmax == null) {
+                minmax = computeAutoscaleMinMax(opts, items);
+                this.autoScaledMinMax = minmax;
+            }
+            if (!opts.enableAutoscale) {
+                if (!Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.y)) {
+                    throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+                }
+            }
+            if (null == minmax) {
+                throw new RuntimeException("minmax=" + minmax);
+            }
+            opts.minmax.min.x = minmax.min.x;
+            opts.minmax.min.y = minmax.min.y;
+            opts.minmax.max.x = minmax.max.x;
+            opts.minmax.max.y = minmax.max.y;
+        }
+        opts.showOnlyOverlapping = this.showOnlyOverlapping;
+        opts.showOverlapping = this.showOverlapping;
+        if (this.showOverlapping || this.showOnlyOverlapping) {
+            opts.aprsSystem = this.aprsSystem;
+        }
+        if (null == opts.displayAxis) {
+            opts.displayAxis = this.displayAxis;
+        }
+        opts.mouseInside = this.mouseInside;
+        if (null == opts.mousePoint) {
+            opts.mousePoint = this.mousePoint;
+        }
+        if (opts.mouseInside && opts.mousePoint != null) {
+            opts.worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, this.autoscale);
+        }
+        opts.viewRotationsAndImages = this.viewRotationsAndImages;
+        opts.alternativeRotation = this.alternativeRotation;
+        opts.viewDetails = this.viewDetails;
+        if (null == opts.slotOffsetProvider) {
+            opts.slotOffsetProvider = this.slotOffsetProvider;
+        }
+        opts.slotMaxDistExpansion = this.slotMaxDistExpansion;
+        opts.capturedPartPoint = this.capturedPartPoint;
+        opts.endEffectorClosed = this.endEffectorClosed;
+        opts.senseMinX = this.senseMinX;
+        opts.senseMaxX = this.senseMaxX;
+        opts.senseMinY = this.senseMinY;
+        opts.senseMaxY = this.senseMaxY;
+    }
+
+    public void takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
         try {
-            Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+            ViewOptions opts = currentViewOptions();
             opts.h = h;
             opts.w = w;
-            BufferedImage img = createSnapshotImage(opts, itemsToPaint);
             String type = "JPEG";
-            int pindex = f.getName().lastIndexOf('.');
-            if (pindex > 0) {
-                type = f.getName().substring(pindex + 1);
-            }
-            writeImageFile(img, type, f);
+            writeImageFile(opts, type, f, csvFile, itemsToPaint);
+        } catch (Exception ex) {
+            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+
+    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
+        try {
+            ViewOptions opts = currentViewOptions();
+            opts.h = h;
+            opts.w = w;
+            String type = "JPEG";
+            writeImageFile(opts, type, f, imageFileToCsvFile(f), itemsToPaint);
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -708,21 +699,49 @@ public class Object2DJPanel extends JPanel {
 
     private static AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
     private static AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
+    private static AtomicInteger imageIOWriterServiceSkipCount = new AtomicInteger();
 
-    private static void writeImageFile(BufferedImage img, String type, File f) {
+    private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> items) {
+        writeImageFile(opts, type, f, csvFile, items, null, null);
+    }
+
+    private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> items, PmCartesian point, String label) {
+        if (!opts.enableAutoscale) {
+            if (null == opts.minmax) {
+                throw new NullPointerException("opts.minmax");
+            }
+            if (!Double.isFinite(opts.minmax.max.x) || !Double.isFinite(opts.minmax.min.x) || !Double.isFinite(opts.minmax.min.y) || !Double.isFinite(opts.minmax.max.y)) {
+                throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+            }
+        }
         int submitCount = imageIOWriterServiceSubmittedCount.get();
         int finishCount = imageIOWriterServiceFinishCount.get();
-        if (submitCount - finishCount > 100) {
+        if (submitCount - finishCount > 10) {
+            int skipCount = imageIOWriterServiceSkipCount.incrementAndGet();
             System.err.println("writeImageFile: submitCount = " + submitCount);
             System.err.println("writeImageFile: finishCount = " + finishCount);
+            System.err.println("writeImageFile: skipCount = " + skipCount);
             System.err.println("writeImageFile: skipping " + f);
             return;
         }
-        imageIOWriterService.execute(() -> writeImageFileOnService(img, type, f));
+        submitCount = imageIOWriterServiceSubmittedCount.incrementAndGet();
+        List<PhysicalItem> itemsCopy = new ArrayList<>(items);
+        imageIOWriterService.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
     }
 
-    private static void writeImageFileOnService(BufferedImage img, String type, File f) {
+    private static void writeImageFileOnService(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint, PmCartesian point, String label) {
         try {
+
+            saveCsvItemsFile(csvFile, itemsToPaint);
+            BufferedImage img = createSnapshotImage(opts, itemsToPaint);
+            Graphics2D g2d = (Graphics2D) img.createGraphics();
+            if (null != point) {
+                paintHighlightedPose(opts, itemsToPaint.size(), point, g2d, label);
+            }
+            int pindex = f.getName().lastIndexOf('.');
+            if (pindex > 0) {
+                type = f.getName().substring(pindex + 1);
+            }
             if (ImageIO.write(img, type, f)) {
 //                println("Saved snapshot to " + f.getCanonicalPath());
             } else {
@@ -731,35 +750,27 @@ public class Object2DJPanel extends JPanel {
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         } finally {
-            imageIOWriterServiceFinishCount.incrementAndGet();
+            int finishCount = imageIOWriterServiceFinishCount.incrementAndGet();
+            int skipCount = imageIOWriterServiceSkipCount.get();
+            int submitCount = imageIOWriterServiceSubmittedCount.get();
+            if (skipCount != lastFinishSkipCount && submitCount == finishCount) {
+                System.out.println("finishCount=" + finishCount + ", skipCount = " + skipCount + ", lastFinishSkipCount=" + lastFinishSkipCount);
+                lastFinishSkipCount = skipCount;
+            }
         }
     }
-
-    public static class ViewOptions {
-
-        public boolean disableLimitsLine;
-        public boolean disableLabels;
-        public boolean enableAutoscale;
-        public boolean disableShowCurrent;
-        public boolean overrideRotationOffset;
-        public boolean disableSensorLimitsRect;
-        public boolean disableRobotsReachLimitsRect;
-
-        public boolean addExtras;
-        public boolean debug;
-        public int w;
-        public int h;
-        public double rotationOffset;
-        boolean scale_set;
-        double scale;
-        boolean paintingComponent;
-    }
+    private static volatile int lastFinishSkipCount = -1;
 
     BufferedImage createSnapshotImage() {
-        return createSnapshotImage(null);
+        return createSnapshot(null);
     }
 
-    BufferedImage createSnapshotImage(@Nullable ViewOptions opts) {
+    public BufferedImage createSnapshot(@Nullable ViewOptions opts) {
+        if (null == opts) {
+            opts = currentViewOptions();
+        } else {
+            copyToOpts(opts);
+        }
         if (null != opts && opts.addExtras) {
             return createSnapshotImage(opts, itemsWithAddedExtras);
         } else {
@@ -767,44 +778,47 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    @SuppressWarnings("guieffect")
-    BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+    public BufferedImage createSnapshot(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        if (null != opts) {
+            this.copyToOpts(opts);
+            return Object2DJPanel.createSnapshotImage(opts, items);
+        } else {
+            return Object2DJPanel.createSnapshotImage(this.currentViewOptions(), items);
+        }
+    }
 
-        Dimension dim = this.getSize();
-        int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
-        int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
-        if (w < 100) {
-            w = 100;
-            if (null == opts) {
-                opts = new ViewOptions();
-            }
-            opts.w = w;
+    @SuppressWarnings("guieffect")
+    private static BufferedImage createSnapshotImage(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+
+        if (null == opts || opts.w < 1 || opts.h < 1) {
+            throw new IllegalArgumentException("opts=" + opts);
         }
-        if (h < 100) {
-            h = 100;
-            if (null == opts) {
-                opts = new ViewOptions();
+        if (!opts.enableAutoscale) {
+            if (null == opts.minmax) {
+                throw new NullPointerException("opts.minmax");
             }
-            opts.h = h;
+            if (!Double.isFinite(opts.minmax.max.x) || !Double.isFinite(opts.minmax.min.x) || !Double.isFinite(opts.minmax.min.y) || !Double.isFinite(opts.minmax.max.y)) {
+                throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+            }
         }
+        int w = (opts.w >= 100) ? opts.w : 100;
+        int h = (opts.h >= 100) ? opts.h : 100;
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = img.createGraphics();
-        g2d.setColor(this.getBackground());
+        if (null != opts.backgroundColor) {
+            g2d.setColor(opts.backgroundColor);
+        }
         g2d.fillRect(0, 0, w, h);
-        g2d.setColor(this.getForeground());
-        boolean origUseSepNames = this.useSeparateNames;
+        if (null != opts.foregroundColor) {
+            g2d.setColor(opts.foregroundColor);
+        }
+        boolean origUseSepNames = opts.useSeparateNames;
 //        boolean origViewLimitsLine = this.viewLimitsLine;
 //        boolean origAutoscale = autoscale;
-        if (null == opts) {
-            this.useSeparateNames = true;
-        }
-        if (autoscale || (null != opts && opts.enableAutoscale)) {
+        if (opts.enableAutoscale) {
             paintWithAutoScale(itemsToPaint, null, g2d, opts);
         } else {
-            paintItems(g2d, itemsToPaint, null, this.minmax, opts);
-        }
-        if (null == opts) {
-            this.useSeparateNames = origUseSepNames;
+            paintItems(g2d, itemsToPaint, null, opts.minmax, opts);
         }
         return img;
     }
@@ -815,7 +829,7 @@ public class Object2DJPanel extends JPanel {
     Point2DMinMax autoScaledMinMax = null;
 
     @SuppressWarnings("guieffect")
-    private void paintWithAutoScale(
+    private static void paintWithAutoScale(
             Collection<? extends PhysicalItem> itemsToPaint,
             @Nullable PhysicalItem selectedItem,
             Graphics2D g2d,
@@ -824,86 +838,85 @@ public class Object2DJPanel extends JPanel {
             if (itemsToPaint.isEmpty()) {
                 return;
             }
-            Dimension dim = getSize();
-            int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
-            int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
+            if (null == opts || opts.w < 1 || opts.h < 1) {
+                throw new IllegalArgumentException("opts=" + opts);
+            }
+            int w = (opts.w >= 100) ? opts.w : 100;
+            int h = (opts.h >= 100) ? opts.h : 100;
 
-            double minX = Double.POSITIVE_INFINITY;
-            double maxX = Double.NEGATIVE_INFINITY;
-            double minY = Double.POSITIVE_INFINITY;
-            double maxY = Double.NEGATIVE_INFINITY;
-
-            if (this.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
-                minX = currentX;
-                maxX = currentX;
-                minY = currentY;
-                maxY = currentY;
-            }
-            for (PhysicalItem item : itemsToPaint) {
-                double itemSize = item.getMaxSlotDist();
-                if (null != partImageMap && !partImageMap.isEmpty()) {
-                    PartImageInfo info = getPartImageInfo(item);
-                    if (info != null) {
-                        itemSize = Math.max(itemSize, info.width);
-                    }
-                }
-                if (minX > item.x - itemSize) {
-                    minX = item.x - itemSize;
-                }
-                if (minY > item.y - itemSize) {
-                    minY = item.y - itemSize;
-                }
-                if (maxX < item.x + itemSize) {
-                    maxX = item.x + itemSize;
-                }
-                if (maxY < item.y + itemSize) {
-                    maxY = item.y + itemSize;
-                }
-            }
-            Point2DMinMax tempMinMax = new Point2DMinMax();
-            tempMinMax.min.x = minX;
-            tempMinMax.max.x = maxX;
-            tempMinMax.min.y = minY;
-            tempMinMax.max.y = maxY;
-            if (null != opts && opts.paintingComponent) {
-                autoScaledMinMax = tempMinMax;
-                autoScaledScale = computeNewScale(tempMinMax, opts);
-            }
-            this.paintItems(g2d, itemsToPaint, selectedItem, tempMinMax, opts);
+            Point2DMinMax tempMinMax = computeAutoscaleMinMax(opts, itemsToPaint);
+//            if ( opts.paintingComponent) {
+//                autoScaledMinMax = tempMinMax;
+//                autoScaledScale = computeNewScale(tempMinMax, opts);
+//            }
+            paintItems(g2d, itemsToPaint, selectedItem, tempMinMax, opts);
         } catch (Exception e) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", e);
             g2d.drawString(e.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
 
-    @SuppressWarnings("guieffect")
-    public void paintHighlightedPose(PoseType pose, Graphics2D g2d, String label, double minX, double minY, double maxX, double maxY, int w, int h, double currentScale, AffineTransform origTransform) {
-        PointType point = pose.getPoint();
-        if (null != point) {
-            Point2DMinMax tempMinMax = new Point2DMinMax();
-            tempMinMax.min.x = minX;
-            tempMinMax.max.x = maxX;
-            tempMinMax.min.y = minY;
-            tempMinMax.max.y = maxY;
-            paintHighlightedPose(CRCLPosemath.toPmCartesian(point), g2d, label, tempMinMax, w, h, currentScale, origTransform);
+    private static Point2DMinMax computeAutoscaleMinMax(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        double minX = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        if (opts.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
+            minX = opts.currentX;
+            maxX = opts.currentX;
+            minY = opts.currentY;
+            maxY = opts.currentY;
         }
+        for (PhysicalItem item : itemsToPaint) {
+            double itemSize = item.getMaxSlotDist();
+            if (null != partImageMap && !partImageMap.isEmpty()) {
+                PartImageInfo info = getPartImageInfo(item);
+                if (info != null) {
+                    itemSize = Math.max(itemSize, info.width);
+                }
+            }
+            if (minX > item.x - itemSize) {
+                minX = item.x - itemSize;
+            }
+            if (minY > item.y - itemSize) {
+                minY = item.y - itemSize;
+            }
+            if (maxX < item.x + itemSize) {
+                maxX = item.x + itemSize;
+            }
+            if (maxY < item.y + itemSize) {
+                maxY = item.y + itemSize;
+            }
+        }
+        Point2DMinMax tempMinMax = new Point2DMinMax();
+        tempMinMax.min.x = minX;
+        tempMinMax.max.x = maxX;
+        tempMinMax.min.y = minY;
+        tempMinMax.max.y = maxY;
+        return tempMinMax;
     }
 
     @SuppressWarnings("guieffect")
-    private void paintHighlightedPose(@Nullable PmCartesian point, Graphics2D g2d, @Nullable String label, Point2DMinMax minmaxParam,
-            int width,
-            int height,
-            double currentScale,
-            AffineTransform origTransform) {
+    private static void paintHighlightedPose(
+            ViewOptions opts,
+            int itemsToPaintSize,
+            @Nullable PmCartesian point,
+            Graphics2D g2d,
+            @Nullable String label) {
+        DisplayAxis displayAxis = opts.displayAxis;
+        boolean useSeparateNames = opts.useSeparateNames;
+        Point2DMinMax minmaxParam = opts.minmax;
         double minX = minmaxParam.min.x;
         double minY = minmaxParam.min.y;
         double maxX = minmaxParam.max.x;
         double maxY = minmaxParam.max.y;
+        int width = opts.w;
+        int height = opts.h;
+        double currentScale = opts.scale;
         if (null != point) {
             if (label == null) {
                 label = "(null)";
             }
-            List<PhysicalItem> itemsToPaint = getItemsToPaint();
             double x = point.getX();
             double y = point.getY();
             double displayMaxY = maxY;
@@ -946,15 +959,15 @@ public class Object2DJPanel extends JPanel {
             }
             if (useSeparateNames) {
                 g2d.setColor(Color.BLACK);
-                int i = itemsToPaint.size();
+                int i = itemsToPaintSize;
                 double namex = maxX + (maxX - minX) / 10.0;
-                double namey = displayMinY + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxY - displayMinY);
+                double namey = displayMinY + ((double) (i + 1)) / (itemsToPaintSize + 2) * (displayMaxY - displayMinY);
                 switch (displayAxis) {
                     case POS_X_POS_Y:
                         break;
 
                     case POS_Y_NEG_X:
-                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
+                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaintSize + 2) * (displayMaxX - displayMinX);
                         namey = maxY + (maxY - minY) / 10.0;
                         break;
 
@@ -963,26 +976,26 @@ public class Object2DJPanel extends JPanel {
                         break;
 
                     case NEG_Y_POS_X:
-                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaint.size() + 2) * (displayMaxX - displayMinX);
+                        namex = displayMinX + ((double) (i + 1)) / (itemsToPaintSize + 2) * (displayMaxX - displayMinX);
                         namey = minY - (maxY - minY) / 10.0;
                         break;
                 }
-                this.translate(g2d, namex, namey, minmaxParam, width, height, currentScale);
+                translate(displayAxis, g2d, namex, namey, minmaxParam, width, height, currentScale);
                 g2d.setColor(Color.GREEN);
                 Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * label.length(), TO_SCREEN_Y_OFFSET);
                 g2d.fill(rect);
                 g2d.setColor(Color.BLACK);
                 g2d.drawString(label, 0, 0);
-                if (null != origTransform) {
-                    g2d.setTransform(origTransform);
-                }
+//                if (null != origTransform) {
+//                    g2d.setTransform(origTransform);
+//                }
                 g2d.draw(
                         new Line2D.Double(
                                 toScreenPoint(displayAxis, namex, namey, minmaxParam, currentScale),
                                 toScreenPoint(displayAxis, x, y, minmaxParam, currentScale)
                         ));
             }
-            this.translate(g2d, x, y, minmaxParam, width, height, currentScale);
+            translate(displayAxis, g2d, x, y, minmaxParam, width, height, currentScale);
             g2d.setColor(Color.GREEN);
             Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNames ? 1 : label.length()), TO_SCREEN_Y_OFFSET);
             g2d.fill(rect);
@@ -1129,24 +1142,24 @@ public class Object2DJPanel extends JPanel {
         tempMinMax.max.x = maxX;
         tempMinMax.min.y = minY;
         tempMinMax.max.y = maxY;
-        translate(g2d, itemx, itemy, tempMinMax, width, height, currentScale);
+        translate(this.displayAxis, g2d, itemx, itemy, tempMinMax, width, height, currentScale);
     }
 
     @SuppressWarnings("guieffect")
-    private void translate(Graphics2D g2d, double itemx, double itemy, Point2DMinMax tempMinMax, int width, int height, double currentScale) throws IllegalArgumentException {
+    private static void translate(DisplayAxis displayAxis, Graphics2D g2d, double itemx, double itemy, Point2DMinMax tempMinMax, int width, int height, double currentScale) throws IllegalArgumentException {
         Point2D.Double t = toScreenPoint(displayAxis, itemx, itemy, tempMinMax, currentScale);
         if (width > 0 && height > 0) {
             if (t.x < 0) {
-                throw new IllegalArgumentException("t.x < 0 : t.x =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
+                throw new IllegalArgumentException("t.x < 0 : t.x =" + t.x + ", width=" + width + ", height=" + height + ", currentScale=" + currentScale);
             }
             if (t.y < 0) {
-                throw new IllegalArgumentException("t.y < 0 : t.y =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
+                throw new IllegalArgumentException("t.y < 0 : t.y =" + t.x + ", width=" + width + ", height=" + height + ", currentScale=" + currentScale);
             }
             if (t.x > width) {
-                throw new IllegalArgumentException("t.x > width : t.x =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
+                throw new IllegalArgumentException("t.x > width : t.x =" + t.x + ", width=" + width + ", height=" + height + ", currentScale=" + currentScale);
             }
             if (t.y > height) {
-                throw new IllegalArgumentException("t.x > width : t.y =" + t.x + ", width=" + width + ", height=" + height + ", size=" + getSize());
+                throw new IllegalArgumentException("t.x > width : t.y =" + t.x + ", width=" + width + ", height=" + height + ", currentScale=" + currentScale);
             }
         }
         g2d.translate(t.x, t.y);
@@ -1284,7 +1297,6 @@ public class Object2DJPanel extends JPanel {
 //    private int repaintsDone=0;
 //    
 //    private int repaintsSkipped=0;
-    
     void checkedRepaint() {
         long timeNow = System.currentTimeMillis();
         long diff = timeNow - lastRepaintPaintTime;
@@ -1423,7 +1435,7 @@ public class Object2DJPanel extends JPanel {
             if (w < 10 || h < 10) {
                 return;
             }
-            ViewOptions opts = new ViewOptions();
+            ViewOptions opts = currentViewOptions();
             opts.w = w;
             opts.h = h;
             if (this.scale == 0) {
@@ -1668,70 +1680,6 @@ public class Object2DJPanel extends JPanel {
         return slotList;
     }
 
-    @UIType
-    private static class PartImageInfo {
-
-        final BufferedImage image;
-        final double ratio;
-        final double width;
-        final boolean ignoreRotations;
-        final double xoffset;
-        final double yoffset;
-        double scale;
-        Image scaledImage;
-        int scaledImageWidth;
-        int scaledImageHeight;
-
-        PartImageInfo(BufferedImage image, double ratio, double width, boolean ignoreRotations, double xoffset, double yoffset) {
-            this.image = image;
-            this.ratio = ratio;
-            this.width = width;
-            this.xoffset = xoffset;
-            this.yoffset = yoffset;
-            this.ignoreRotations = ignoreRotations;
-            scale = 1.0;
-            scaledImageWidth = image.getWidth();
-            scaledImageHeight = image.getHeight();
-            if (ratio <= Double.MIN_NORMAL) {
-                throw new IllegalArgumentException("ratio must be strictly  greater than 0. ratio=" + ratio);
-            }
-            scaledImage = image.getScaledInstance(scaledImageWidth, scaledImageHeight, Image.SCALE_DEFAULT);
-        }
-
-        public int getScaledImageWidth() {
-            return scaledImageWidth;
-        }
-
-        public int getScaledImageHeight() {
-            return scaledImageHeight;
-        }
-
-        Image getScaledImage(double scale) {
-            if (scale <= Double.MIN_NORMAL) {
-                throw new IllegalArgumentException("scale must be strictly  greater than 0. scale=" + scale);
-            }
-            int old_w = (int) (ratio * this.scale * image.getWidth());
-            int old_h = (int) (ratio * this.scale * image.getHeight());
-            int new_w = (int) (ratio * scale * image.getWidth());
-            int new_h = (int) (ratio * scale * image.getHeight());
-            if (new_w == old_w && new_h == old_h) {
-                return scaledImage;
-            }
-            if (new_w < 2) {
-                new_w = 2;
-            }
-            if (new_h < 2) {
-                new_h = 2;
-            }
-            this.scale = scale;
-            scaledImageWidth = new_w;
-            scaledImageHeight = new_h;
-            scaledImage = image.getScaledInstance(new_w, new_h, Image.SCALE_DEFAULT);
-            return scaledImage;
-        }
-
-    }
-
     private @Nullable
     Image capturedPartImage;
 
@@ -1774,7 +1722,7 @@ public class Object2DJPanel extends JPanel {
         this.capturedPartPoint = capturedPartPoint;
     }
 
-    private final Map<String, PartImageInfo> partImageMap;
+    private final static Map<String, PartImageInfo> partImageMap = PartImageMapMaker.createPartImageMap();
 
     private boolean viewLimitsLine = true;
 
@@ -1871,12 +1819,12 @@ public class Object2DJPanel extends JPanel {
     private volatile boolean mouseDown = false;
 
     public Point2D.Double getMouseWorldMousePoint() {
-        if(null == mousePoint) {
-            return new Point2D.Double(java.lang.Double.NaN,java.lang.Double.NaN);
+        if (null == mousePoint) {
+            return new Point2D.Double(java.lang.Double.NaN, java.lang.Double.NaN);
         }
         return screenToWorldPoint(mousePoint.x, mousePoint.y, isAutoscale());
     }
-    
+
     public boolean isMouseDown() {
         return mouseDown;
     }
@@ -1886,7 +1834,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    private void paintItems(Graphics2D g2d,
+    private static void paintItems(Graphics2D g2d,
             Collection<? extends PhysicalItem> itemsToPaint,
             @Nullable PhysicalItem selectedItem,
             Point2DMinMax minmaxParam,
@@ -1897,16 +1845,16 @@ public class Object2DJPanel extends JPanel {
                 return;
             }
             Collection<? extends PhysicalItem> origItemsToPaint = itemsToPaint;
-            final AprsSystem aprsSystemFinal = aprsSystem;
+            final AprsSystem aprsSystemFinal = opts.aprsSystem;
             if (null != aprsSystemFinal) {
-                if (!showOverlapping) {
+                if (!opts.showOverlapping) {
                     itemsToPaint = aprsSystemFinal.filterOverLapping(itemsToPaint);
-                } else if (showOnlyOverlapping) {
+                } else if (opts.showOnlyOverlapping) {
                     itemsToPaint = aprsSystemFinal.filterNonOverLapping(itemsToPaint);
                 }
             }
             AffineTransform origTransform = g2d.getTransform();
-            double currentRotationOffset = this.rotationOffset;
+            double currentRotationOffset = opts.rotationOffset;
             if (null != opts && opts.overrideRotationOffset) {
                 currentRotationOffset = opts.rotationOffset;
             }
@@ -1919,19 +1867,20 @@ public class Object2DJPanel extends JPanel {
                 throw new IllegalArgumentException("Limits must be finite: (" + minmaxParam.min.x + "," + minmaxParam.min.y + "," + minmaxParam.max.x + "," + minmaxParam.max.y + ")");
             }
 
-            final Dimension dim = (opts != null && opts.w > 0 && opts.h > 0) ? new Dimension(opts.w, opts.h):getSize();
-            boolean useSeperateNamesThisTime = useSeparateNames;
+            final Dimension dim = new Dimension(opts.w, opts.h);
+            boolean useSeparateNamesThisTime = opts.useSeparateNames;
             if (null != opts) {
                 if (opts.disableLabels) {
-                    useSeperateNamesThisTime = false;
+                    useSeparateNamesThisTime = false;
                 }
             }
             double new_scale = computeNewScale(minmaxParam, opts);
 
-            if (viewLimitsLine && (null == opts || !opts.disableLimitsLine)) {
-                if (mouseInside && null != mousePoint) {
-                    boolean localAutoscale = (null != opts) ? opts.enableAutoscale : this.autoscale;
-                    Point2D.Double worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, localAutoscale);
+            if (!opts.disableLimitsLine) {
+                if (opts.mouseInside && null != opts.mousePoint) {
+                    boolean localAutoscale = opts.enableAutoscale;
+                    Point mousePoint = opts.mousePoint;
+                    Point2D.Double worldMousePoint = opts.worldMousePoint;
                     if (null != aprsSystemFinal) {
                         PmCartesian robotCart
                                 = aprsSystemFinal.convertVisionToRobotPmCartesian(new PmCartesian(worldMousePoint.x, worldMousePoint.y, 0));
@@ -1972,10 +1921,10 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             Collection<? extends PhysicalItem> displayItems = itemsToPaint;
-            if (useSeperateNamesThisTime) {
+            if (useSeparateNamesThisTime) {
                 List<? extends PhysicalItem> displayItemsList = new ArrayList<>(itemsToPaint);
                 displayItems = displayItemsList;
-                switch (displayAxis) {
+                switch (opts.displayAxis) {
                     case POS_X_POS_Y:
                         displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> -item.y));
                         break;
@@ -1994,7 +1943,7 @@ public class Object2DJPanel extends JPanel {
 
             Font origFont = g2d.getFont();
 
-            float fsize = this.getWidth() / (2.2f * maxNameLength);
+            float fsize = opts.w / (2.2f * maxNameLength);
             if (fsize > 24.f) {
                 fsize = 24.f;
             }
@@ -2008,7 +1957,7 @@ public class Object2DJPanel extends JPanel {
             float newFontSize = g2d.getFont().getSize2D();
             int i = 0;
 
-            if (viewRotationsAndImages) {
+            if (opts.viewRotationsAndImages) {
                 for (PhysicalItem item : displayItems) {
                     if (null == item) {
                         continue;
@@ -2016,7 +1965,7 @@ public class Object2DJPanel extends JPanel {
                     if ("P".equals(item.getType())) {
                         continue;
                     }
-                    paintPartImage(g2d, minmaxParam, item, currentRotationOffset, new_scale);
+                    paintPartImage(opts, g2d, minmaxParam, item, currentRotationOffset, new_scale);
                     g2d.setTransform(origTransform);
                 }
                 for (PhysicalItem item : displayItems) {
@@ -2026,7 +1975,7 @@ public class Object2DJPanel extends JPanel {
                     if (!("P".equals(item.getType()))) {
                         continue;
                     }
-                    paintPartImage(g2d, minmaxParam, item, currentRotationOffset, new_scale);
+                    paintPartImage(opts, g2d, minmaxParam, item, currentRotationOffset, new_scale);
                     g2d.setTransform(origTransform);
                 }
             }
@@ -2047,11 +1996,11 @@ public class Object2DJPanel extends JPanel {
                 if (Double.isInfinite(item.getRotation()) || Double.isNaN(item.getRotation())) {
                     continue;
                 }
-                if (useSeperateNamesThisTime) {
+                if (useSeparateNamesThisTime) {
                     final int itemsToPaintSize = itemsToPaint.size();
                     final boolean itemIsSelected = item == selectedItem;
                     final double itemOffsetRatio = ((double) (i + 1)) / (itemsToPaintSize + 2);
-                    paintItemLabel(item, i, g2d, displayAxis, minmaxParam, itemOffsetRatio, dim, new_scale, itemIsSelected, origTransform);
+                    paintItemLabel(item, i, g2d, opts.displayAxis, minmaxParam, itemOffsetRatio, dim, new_scale, itemIsSelected, origTransform);
                 }
             }
             g2d.setFont(origFont);
@@ -2062,12 +2011,12 @@ public class Object2DJPanel extends JPanel {
                 }
 
                 if (null != partImageMap && !partImageMap.isEmpty()) {
-                    if (viewRotationsAndImages && null != getPartImageInfo(item)) {
+                    if (opts.viewRotationsAndImages && null != getPartImageInfo(item)) {
                         continue;
                     }
                 }
-                boolean imageShown = checkImageShown(item);
-                translateThenRotateItem(g2d, minmaxParam, item, currentRotationOffset, new_scale, false);
+                boolean imageShown = opts.viewRotationsAndImages && null != getPartImageInfo(item);
+                translateThenRotateItem(opts, g2d, minmaxParam, item, currentRotationOffset, new_scale, false);
                 item.setDisplayTransform(g2d.getTransform());
                 item.setOrigTransform(origTransform);
                 if (null != opts && opts.paintingComponent) {
@@ -2082,7 +2031,7 @@ public class Object2DJPanel extends JPanel {
                         Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
-                int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
+                int namelen = useSeparateNamesThisTime ? 1 : item.getName().length();
                 Rectangle2D.Double itemDisplayRect
                         = new Rectangle2D.Double(
                                 -5, -12, // x,y
@@ -2090,8 +2039,10 @@ public class Object2DJPanel extends JPanel {
                 if (opts != null && opts.paintingComponent) {
                     item.setDisplayRect(itemDisplayRect);
                 }
-                g2d.setColor(this.getBackground());
-                g2d.fill(itemDisplayRect);
+                if (null != opts.backgroundColor) {
+                    g2d.setColor(opts.backgroundColor);
+                    g2d.fill(itemDisplayRect);
+                }
                 g2d.setTransform(origTransform);
             }
             i = 0;
@@ -2100,11 +2051,11 @@ public class Object2DJPanel extends JPanel {
                 if (null == item) {
                     continue;
                 }
-                boolean imageShown = checkImageShown(item);
-                translateThenRotateItem(g2d, minmaxParam, item, currentRotationOffset, new_scale, false);
+                boolean imageShown = opts.viewRotationsAndImages && null != getPartImageInfo(item);;
+                translateThenRotateItem(opts, g2d, minmaxParam, item, currentRotationOffset, new_scale, false);
                 g2d.setColor(Color.BLACK);
                 if (!imageShown) {
-                    if (!useSeperateNamesThisTime) {
+                    if (!useSeparateNamesThisTime) {
                         if (item.getName() != null) {
                             g2d.drawString(item.getName(), 0, 0);
                         }
@@ -2137,7 +2088,7 @@ public class Object2DJPanel extends JPanel {
                 }
 
                 if (!imageShown) {
-                    int namelen = useSeperateNamesThisTime ? 1 : item.getName().length();
+                    int namelen = useSeparateNamesThisTime ? 1 : item.getName().length();
                     Rectangle2D.Double itemDisplayRect
                             = new Rectangle2D.Double(
                                     -5, -12, // x,y
@@ -2150,8 +2101,8 @@ public class Object2DJPanel extends JPanel {
                 }
 
                 try {
-                    if (null != slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                        List<Slot> offsets = slotOffsetProvider.getSlotOffsets(item.getName(), true);
+                    if (null != opts.slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+                        List<Slot> offsets = opts.slotOffsetProvider.getSlotOffsets(item.getName(), true);
                         if (null != offsets) {
                             for (PhysicalItem offset : offsets) {
                                 double mag = offset.mag();
@@ -2161,15 +2112,33 @@ public class Object2DJPanel extends JPanel {
                             }
                         }
                     }
-                    if (viewDetails) {
+                    if (opts.viewDetails) {
                         if (item.getMaxSlotDist() > 0) {
-                            g2d.draw(new Arc2D.Double(-item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, -item.getMaxSlotDist() * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, item.getMaxSlotDist() * 2.0 * new_scale * slotMaxDistExpansion, 0.0, 360.0, Arc2D.OPEN));
+                            final Arc2D.Double slotDistArc
+                                    = new Arc2D.Double(
+                                            -item.getMaxSlotDist() * new_scale * opts.slotMaxDistExpansion, //x 
+                                            -item.getMaxSlotDist() * new_scale * opts.slotMaxDistExpansion, //y
+                                            item.getMaxSlotDist() * 2.0 * new_scale * opts.slotMaxDistExpansion, // w
+                                            item.getMaxSlotDist() * 2.0 * new_scale * opts.slotMaxDistExpansion, // h
+                                            0.0, // start
+                                            360.0, // extent
+                                            Arc2D.OPEN);
+                            g2d.draw(slotDistArc);
                         }
                         if (item instanceof Slot) {
                             Slot slot = (Slot) item;
                             double diameter = slot.getDiameter();
                             if (diameter > 0) {
-                                g2d.draw(new Arc2D.Double(-diameter * 0.5 * new_scale, -diameter * 0.5 * new_scale, diameter * new_scale, diameter * new_scale, 0.0, 360.0, Arc2D.OPEN));
+                                final Arc2D.Double slotDiameterArc
+                                        = new Arc2D.Double(
+                                                -diameter * 0.5 * new_scale, // x
+                                                -diameter * 0.5 * new_scale, // y
+                                                diameter * new_scale, // w
+                                                diameter * new_scale, // h
+                                                0.0, // start
+                                                360.0, // extend
+                                                Arc2D.OPEN);
+                                g2d.draw(slotDiameterArc);
                             }
                         }
                     }
@@ -2180,7 +2149,7 @@ public class Object2DJPanel extends JPanel {
             }
             g2d.setColor(Color.BLACK);
             if (null != selectedItem) {
-                boolean imageShown = checkImageShown(selectedItem);
+                boolean imageShown = opts.viewRotationsAndImages && null != getPartImageInfo(selectedItem);
                 if (selectedItem.getName() == null || selectedItem.getName().length() < 1) {
                     return;
                 }
@@ -2193,15 +2162,15 @@ public class Object2DJPanel extends JPanel {
                 if (Double.isInfinite(selectedItem.getRotation()) || Double.isNaN(selectedItem.getRotation())) {
                     return;
                 }
-                if (!imageShown || viewDetails) {
-                    translateThenRotateItem(g2d, minmaxParam, selectedItem, currentRotationOffset, new_scale, false);
+                if (!imageShown || opts.viewDetails) {
+                    translateThenRotateItem(opts, g2d, minmaxParam, selectedItem, currentRotationOffset, new_scale, false);
                     g2d.setColor(Color.WHITE);
                     String typeString = getItemType(selectedItem);
-                    Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeperateNamesThisTime ? typeString.length() : selectedItem.getName().length()), TO_SCREEN_Y_OFFSET);
+                    Rectangle2D.Double rect = new Rectangle2D.Double(-5, -12, 10 + 10 * (useSeparateNamesThisTime ? typeString.length() : selectedItem.getName().length()), TO_SCREEN_Y_OFFSET);
                     g2d.fill(rect);
                     g2d.setColor(Color.BLACK);
                     g2d.draw(rect);
-                    if (!useSeperateNamesThisTime) {
+                    if (!useSeparateNamesThisTime) {
                         g2d.drawString(selectedItem.getName(), 0, 0);
                     } else {
                         g2d.drawString(selectedItem.getType(), 0, 0);
@@ -2209,17 +2178,17 @@ public class Object2DJPanel extends JPanel {
                 }
                 g2d.setTransform(origTransform);
             }
-            if (this.showCurrentXY && (null == opts || !opts.disableShowCurrent)) {
+            if (opts.showCurrentXY && !opts.disableShowCurrent) {
                 Color origColor = g2d.getColor();
-                Point2D.Double fromPoint = capturedPartPoint;
+                Point2D.Double fromPoint = opts.capturedPartPoint;
                 if (null != fromPoint) {
                     g2d.setColor(Color.MAGENTA);
-                    Point2D.Double captureScreenPt = toScreenPoint(displayAxis, fromPoint.x, fromPoint.y, minmaxParam, new_scale);
-                    Point2D.Double currentScreenPt = toScreenPoint(displayAxis, currentX, currentY, minmaxParam, new_scale);
+                    Point2D.Double captureScreenPt = toScreenPoint(opts.displayAxis, fromPoint.x, fromPoint.y, minmaxParam, new_scale);
+                    Point2D.Double currentScreenPt = toScreenPoint(opts.displayAxis, opts.currentX, opts.currentY, minmaxParam, new_scale);
                     g2d.draw(new Line2D.Double(currentScreenPt, captureScreenPt));
                 }
-                this.translate(g2d, currentX, currentY, minmaxParam, -1, -1, new_scale);
-                if (endEffectorClosed) {
+                translate(opts.displayAxis, g2d, opts.currentX, opts.currentY, minmaxParam, -1, -1, new_scale);
+                if (opts.endEffectorClosed) {
                     g2d.setColor(Color.black);
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
                 } else {
@@ -2234,11 +2203,11 @@ public class Object2DJPanel extends JPanel {
             }
             if (null != opts) {
                 if (!opts.disableSensorLimitsRect) {
-                    drawSenseLimitsRectangle(g2d, minmaxParam, new_scale);
+                    drawSenseLimitsRectangle(opts, g2d, minmaxParam, new_scale);
                 }
             }
             if (null != aprsSystemFinal && (null == opts || !opts.disableRobotsReachLimitsRect)) {
-                drawRobotReachLimitsRectangle(g2d, minmaxParam, new_scale);
+                drawRobotReachLimitsRectangle(opts, g2d, minmaxParam, new_scale);
             }
         } catch (Exception exception) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", exception);
@@ -2247,7 +2216,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     @UIEffect
-    private void paintItemLabel(PhysicalItem item, int i, Graphics2D g2d, DisplayAxis displayAxis, Point2DMinMax minmaxParam, double itemOffsetRatio, Dimension dim, double new_scale, final boolean itemIsSelected, AffineTransform origTransform) {
+    private static void paintItemLabel(PhysicalItem item, int i, Graphics2D g2d, DisplayAxis displayAxis, Point2DMinMax minmaxParam, double itemOffsetRatio, Dimension dim, double new_scale, final boolean itemIsSelected, AffineTransform origTransform) {
 
         item.setLabelColor(labelColors[i % labelColors.length]);
         g2d.setColor(item.getLabelColor());
@@ -2275,9 +2244,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     @UIEffect
-    private void drawRobotReachLimitsRectangle(Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
+    private static void drawRobotReachLimitsRectangle(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
 
-        if (null != aprsSystem) {
+        if (null != opts.aprsSystem) {
+            AprsSystem aprsSystem = opts.aprsSystem;
+            DisplayAxis displayAxis = opts.displayAxis;
             for (PmCartesianMinMaxLimit minMax : aprsSystem.getLimits()) {
 
                 PmCartesian robotReachMax = minMax.getMax();
@@ -2303,15 +2274,15 @@ public class Object2DJPanel extends JPanel {
     }
 
     @UIEffect
-    private void drawSenseLimitsRectangle(Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
-        if (Double.isFinite(senseMaxX)
-                && Double.isFinite(senseMinX)
-                && Double.isFinite(senseMinY)
-                && Double.isFinite(senseMaxY)) {
+    private static void drawSenseLimitsRectangle(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
+        if (Double.isFinite(opts.senseMaxX)
+                && Double.isFinite(opts.senseMinX)
+                && Double.isFinite(opts.senseMinY)
+                && Double.isFinite(opts.senseMaxY)) {
             g2d.setColor(Color.black);
 
-            Point2D.Double minSensePoint = toScreenPoint(displayAxis, senseMinX, senseMinY, tempMinMax, new_scale);
-            Point2D.Double maxSensePoint = toScreenPoint(displayAxis, senseMaxX, senseMaxY, tempMinMax, new_scale);
+            Point2D.Double minSensePoint = toScreenPoint(opts.displayAxis, opts.senseMinX, opts.senseMinY, tempMinMax, new_scale);
+            Point2D.Double maxSensePoint = toScreenPoint(opts.displayAxis, opts.senseMaxX, opts.senseMaxY, tempMinMax, new_scale);
             g2d.draw(new Rectangle.Double(
                     Math.min(minSensePoint.x, maxSensePoint.x),
                     Math.min(minSensePoint.y, maxSensePoint.y),
@@ -2320,48 +2291,31 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private static class Point2DMinMax {
-
-        Point2D.Double min;
-        Point2D.Double max;
-
-        Point2DMinMax() {
-            min = new Point2D.Double(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-            max = new Point2D.Double(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY);
-        }
-
-        @Override
-        public String toString() {
-            return "Point2DMinMax{" + "min=" + min.toString() + ", max=" + max.toString() + '}';
-        }
-
-    }
-
     @SuppressWarnings("guieffect")
-    private double computeNewScale(Point2DMinMax minmax, @Nullable ViewOptions opts) {
-        boolean useSeperateNamesThisTime = useSeparateNames;
+    static private double computeNewScale(Point2DMinMax minmax, @Nullable ViewOptions opts) {
+        boolean useSeparateNamesThisTime = opts.useSeparateNames;
         if (null != opts) {
             if (opts.disableLabels) {
-                useSeperateNamesThisTime = false;
+                useSeparateNamesThisTime = false;
             }
         }
-        return computeNewScale(displayAxis, useSeperateNamesThisTime, getSize(), minmax, opts);
+        return computeNewScale(opts.displayAxis, useSeparateNamesThisTime, minmax, opts);
     }
 
-    private static double computeNewScale(DisplayAxis displayAxis, boolean useSeparateNames, Dimension dim, Point2DMinMax minmax, @Nullable ViewOptions opts) {
+    private static double computeNewScale(DisplayAxis displayAxis, boolean useSeparateNames, Point2DMinMax minmax, @Nullable ViewOptions opts) {
         Point2D.Double min = minmax.min;
         Point2D.Double max = minmax.max;
         if (null != opts && opts.scale_set && opts.scale > 0) {
             return opts.scale;
         }
-        int w = (opts != null && opts.w > 0) ? opts.w : dim.width;
-        int h = (opts != null && opts.h > 0) ? opts.h : dim.height;
-        boolean useSeperateNamesThisTime = useSeparateNames;
+        int w = opts.w;
+        int h = opts.h;
+        boolean useSeparateNamesThisTime = useSeparateNames;
         int borderWidth = 30;
         int borderHeight = 60;
         if (null != opts) {
             if (opts.disableLabels) {
-                useSeperateNamesThisTime = false;
+                useSeparateNamesThisTime = false;
                 borderWidth = 0;
                 borderHeight = 0;
             }
@@ -2369,7 +2323,7 @@ public class Object2DJPanel extends JPanel {
         double new_scale;
         double scale_x = 1;
         double scale_y = 1;
-        int displayWidth = (useSeperateNamesThisTime ? (w / 2) : w);
+        int displayWidth = (useSeparateNamesThisTime ? (w / 2) : w);
         double diffx = (max.x - min.x);
         double diffy = (max.y - min.y);
         int diffwidth = (displayWidth - borderWidth - TO_SCREEN_X_OFFSET);
@@ -2397,6 +2351,11 @@ public class Object2DJPanel extends JPanel {
         if (null != opts && new_scale > 0) {
             opts.scale_set = true;
             opts.scale = new_scale;
+            opts.minmax = new Point2DMinMax();
+            opts.minmax.min.x = min.x;
+            opts.minmax.min.y = min.y;
+            opts.minmax.max.x = max.x;
+            opts.minmax.max.y = max.y;
         }
         return new_scale;
     }
@@ -2409,8 +2368,8 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    private void paintPartImage(Graphics2D g2d, Point2DMinMax tempMinMax, PhysicalItem item, double rotationOffsetParam, double currentScale) {
-        if (!viewRotationsAndImages) {
+    private static void paintPartImage(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, PhysicalItem item, double rotationOffsetParam, double currentScale) {
+        if (!opts.viewRotationsAndImages) {
             return;
         }
         if (null == partImageMap || partImageMap.isEmpty()) {
@@ -2421,70 +2380,34 @@ public class Object2DJPanel extends JPanel {
             Image img = info.getScaledImage(currentScale);
             int img_w = info.getScaledImageWidth();
             int img_h = info.getScaledImageHeight();
-//            Point2DMinMax tempMinMax = new Point2DMinMax();
-//            tempMinMax.min.x = minX;
-//            tempMinMax.max.x = maxX;
-//            tempMinMax.min.y = minY;
-//            tempMinMax.max.y = maxY;
             double infoXOffset = info.xoffset;
             double infoYOffset = info.yoffset;
             double xo = infoXOffset;
             double yo = infoYOffset;
             if (info.ignoreRotations) {
-//                if(item.origName.startsWith("fanuc")) {
-//                    println("debug me");
-//                }
-
-                double cs = Math.cos(alternativeRotation);
-                double sn = Math.sin(alternativeRotation);
+                double cs = Math.cos(opts.alternativeRotation);
+                double sn = Math.sin(opts.alternativeRotation);
                 infoXOffset = xo * cs + yo * sn;
                 infoYOffset = -xo * sn + yo * cs;
                 xo = infoXOffset;
                 yo = infoYOffset;
             }
 
-//            switch (displayAxis) {
-//                case POS_X_POS_Y:
-//                    infoXOffset = xo;
-//                    infoYOffset = yo;
-//                    displayRot = 0;
-//                    break;
-//
-//                case POS_Y_NEG_X:
-//
-//                    infoXOffset = yo;
-//                    infoYOffset = -xo;
-//                    displayRot = Math.PI / 2.0;
-//                    break;
-//
-//                case NEG_X_NEG_Y:
-//                    infoXOffset = -xo;
-//                    infoYOffset = -yo;
-//                    displayRot = Math.PI;
-//                    break;
-//
-//                case NEG_Y_POS_X:
-//                    infoXOffset = -yo;
-//                    infoYOffset = xo;
-//                    displayRot = 3.0 * Math.PI / 2.0;
-//                    break;
-//            }
-            translateThenRotate(g2d, item.x - infoXOffset, item.y - infoYOffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
+            translateThenRotate(opts, g2d, item.x - infoXOffset, item.y - infoYOffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
 //            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, rotationOffsetParam, currentScale, info.ignoreRotations);
             g2d.translate(-(img_w / 2.0), -(img_h / 2.0));
             g2d.drawImage(img, null, null);
-            if (viewDetails) {
+            if (opts.viewDetails) {
                 g2d.translate(-1, -1);
                 g2d.setColor(item.getLabelColor());
                 g2d.draw(new Rectangle2D.Double(0, 0, img_w + 2, img_h + 2));
             }
             g2d.setColor(Color.BLACK);
-
         }
     }
 
     @SuppressWarnings("guieffect")
-    private @Nullable
+    static private @Nullable
     PartImageInfo getPartImageInfo(PhysicalItem item) {
         String name = item.getName();
         PartImageInfo info = partImageMap.get(name);
@@ -2532,11 +2455,11 @@ public class Object2DJPanel extends JPanel {
         return info;
     }
 
-    private void translateThenRotateItem(Graphics2D g2d, Point2DMinMax minMaxParam, PhysicalItem item, double rotationOffsetParam, double scaleParam, boolean ignoreRotation) {
+    private static void translateThenRotateItem(ViewOptions opts, Graphics2D g2d, Point2DMinMax minMaxParam, PhysicalItem item, double rotationOffsetParam, double scaleParam, boolean ignoreRotation) {
         double itemx = item.x;
         double itemy = item.y;
         double rot = -rotationOffsetParam - item.getRotation();
-        translateThenRotate(g2d, itemx, itemy, minMaxParam, scaleParam, ignoreRotation, rot);
+        translateThenRotate(opts, g2d, itemx, itemy, minMaxParam, scaleParam, ignoreRotation, rot);
     }
 
     private double alternativeRotation = 0.0;
@@ -2563,11 +2486,11 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    private void translateThenRotate(Graphics2D g2d, double itemx, double itemy, Point2DMinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
-        Point2D.Double translatePoint = toScreenPoint(displayAxis, itemx, itemy, minMaxParam, scaleParam);
+    private static void translateThenRotate(ViewOptions opts, Graphics2D g2d, double itemx, double itemy, Point2DMinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
+        Point2D.Double translatePoint = toScreenPoint(opts.displayAxis, itemx, itemy, minMaxParam, scaleParam);
         g2d.translate(translatePoint.x, translatePoint.y);
-        if (viewRotationsAndImages) {
-            switch (displayAxis) {
+        if (opts.viewRotationsAndImages) {
+            switch (opts.displayAxis) {
                 case POS_X_POS_Y:
                     break;
 
@@ -2586,7 +2509,7 @@ public class Object2DJPanel extends JPanel {
             if (!ignoreRotation) {
                 g2d.rotate(rot);
             } else {
-                g2d.rotate(alternativeRotation);
+                g2d.rotate(opts.alternativeRotation);
             }
         }
     }

@@ -211,12 +211,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return object2DJPanel1.createSnapshotImage();
     }
 
-    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts) {
-        return object2DJPanel1.createSnapshotImage(opts);
+    public BufferedImage createSnapshotImage(ViewOptions opts) {
+        return object2DJPanel1.createSnapshot(opts);
     }
 
-    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
-        return object2DJPanel1.createSnapshotImage(opts, itemsToPaint);
+    public BufferedImage createSnapshotImage(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+        return object2DJPanel1.createSnapshot(opts, itemsToPaint);
     }
 
     public List<PhysicalItem> getItems() {
@@ -257,11 +257,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         File csvFile = null;
         try {
-            this.object2DJPanel1.takeSnapshot(f, point, label);
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
-            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
+            this.object2DJPanel1.takeSnapshot(f,csvFile, point, label);
+            
+//            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFileFinal);
@@ -340,11 +341,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
         File csvFile = null;
         try {
-            this.object2DJPanel1.takeSnapshot(f, point, label, w, h);
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
-            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
+            this.object2DJPanel1.takeSnapshot(f,csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFileFinal);
@@ -3577,26 +3577,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return newItemsList;
     }
 
-    public void saveCsvItemsFile(File f) throws IOException {
-        saveCsvItemsFile(f, getItems());
-    }
-
-    public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
-
-        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
-            pw.println("name,rotation,x,y,score,type");
-            for (PhysicalItem item : items) {
-                if (null != item) {
-                    pw.println(item.getName() + "," + item.getRotation() + "," + item.x + "," + item.y + "," + item.getScore() + "," + item.getType());
-                } else {
-                    System.err.println("contains null : items=" + items);
-                    Thread.dumpStack();
-                }
-            }
-        }
-
-    }
-
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         String fname = jTextFieldFilename.getText().trim();
@@ -3642,7 +3622,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
             try {
                 File newFile = chooser.getSelectedFile();
-                saveCsvItemsFile(newFile);
+                Object2DJPanel.saveCsvItemsFile(newFile, getItems());
                 filenameCachedTextField.setText(newFile.getCanonicalPath());
             } catch (IOException ex) {
                 Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -5363,7 +5343,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
-            File csvFile = saveSnapshotCsv(f, itemsToPaint);
+            File csvFile = imageFileToCsvFile(f);
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
@@ -5372,8 +5352,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             return fileArray;
         } else {
             List<PhysicalItem> items = getItems();
+            File csvFile = imageFileToCsvFile(f);
             this.object2DJPanel1.takeSnapshot(f, items, w, h);
-            File csvFile = saveSnapshotCsv(f, items);
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
@@ -5383,28 +5363,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
-    private File saveSnapshotCsv(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        File csvFile = null;
-        try {
-            File csvDir = new File(f.getParentFile(), "csv");
-            csvDir.mkdirs();
-            csvFile = new File(csvDir, f.getName() + ".csv");
-            saveCsvItemsFile(csvFile, itemsToPaint);
-            return csvFile;
-        } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            if (ex instanceof RuntimeException) {
-                throw (RuntimeException) ex;
-            } else {
-                throw new RuntimeException(ex);
-            }
-        }
+    public static File imageFileToCsvFile(File f) {
+        return Object2DJPanel.imageFileToCsvFile(f);
     }
 
+    public void saveCsvItemsFile(File f) throws IOException {
+        Object2DJPanel.saveCsvItemsFile(f, getItems());
+    }
+    public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
+        Object2DJPanel.saveCsvItemsFile(f, items);
+    }
     public @Nullable
     File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
-        this.object2DJPanel1.takeSnapshot(f, itemsToPaint);
-        File csvFile = saveSnapshotCsv(f, itemsToPaint);
+        File csvFile = imageFileToCsvFile(f);
+        this.object2DJPanel1.takeSnapshot(f,csvFile, itemsToPaint);
         runOnDispatchThread(() -> {
             updateSnapshotsTable(f, csvFile);
         });
@@ -5759,9 +5731,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         final StackTraceElement[] createTrace;
         private Object2DOuterJPanel object2DOuterJPanel;
         private final int index;
-        private static final  List<Object2DOuterJPanelCurrentPoseListener> items = new ArrayList<>();
+        private static final List<Object2DOuterJPanelCurrentPoseListener> items = new ArrayList<>();
         private static final AtomicInteger itemCounter = new AtomicInteger();
-        
+
         public Object2DOuterJPanelCurrentPoseListener(Object2DOuterJPanel object2DOuterJPanel) {
             createTrace = Thread.currentThread().getStackTrace();
             this.object2DOuterJPanel = object2DOuterJPanel;
@@ -5780,7 +5752,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
         @Override
         public String toString() {
-            return "Object2DOuterJPanelCurrentPoseListener{\n\tindex="+index+"\n\t task="+getTaskName() + ", \n\tcreateTrace=" + Utils.traceToString(createTrace) + ",\n\t object2DOuterJPanel=" + object2DOuterJPanel + "\n}\n";
+            return "Object2DOuterJPanelCurrentPoseListener{\n\tindex=" + index + "\n\t task=" + getTaskName() + ", \n\tcreateTrace=" + Utils.traceToString(createTrace) + ",\n\t object2DOuterJPanel=" + object2DOuterJPanel + "\n}\n";
         }
 
         @Override

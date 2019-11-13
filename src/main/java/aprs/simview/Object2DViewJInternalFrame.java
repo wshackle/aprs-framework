@@ -143,7 +143,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
-        object2DOuterJPanel1.saveCsvItemsFile(f);
+        object2DOuterJPanel1.saveCsvItemsFile(f,items);
     }
 
     /**
@@ -191,11 +191,11 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1.createSnapshotImage();
     }
 
-    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts) {
+    public BufferedImage createSnapshotImage(ViewOptions opts) {
         return object2DOuterJPanel1.createSnapshotImage(opts);
     }
 
-    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+    public BufferedImage createSnapshotImage(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
         return object2DOuterJPanel1.createSnapshotImage(opts, itemsToPaint);
     }
 

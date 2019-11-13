@@ -270,6 +270,9 @@ public class Supervisor {
                         println("===============================================================");
                         println();
                         this.close();
+                        if(null != displayJFrame) {
+                            displayJFrame.close();
+                        }
                         System.exit(0);
                     });
                 });
@@ -422,6 +425,9 @@ public class Supervisor {
                         println("===============================================================");
                         println();
                         this.close();
+                        if(null != displayJFrame) {
+                            displayJFrame.close();
+                        }
                         System.exit(0);
                     });
                 });

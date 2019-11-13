@@ -3605,7 +3605,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = this.createEmptyProgram();
         MoveToType moveTo = new MoveToType();
         PoseType currentPose = aprsSystem.getCurrentPose();
-        if(null == currentPose) {
+        if (null == currentPose) {
             throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
         }
         final VectorType xAxisCopy = copy(currentPose.getXAxis());
@@ -3618,7 +3618,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @SuppressWarnings({"nullness"})
-    private void gotoErrmapRow( @Nullable Object a @Nullable []) {
+    private void gotoErrmapRow(@Nullable Object a @Nullable []) {
         if (null == a) {
             return;
         }
@@ -6736,9 +6736,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile @Nullable
     File generateAbortLogFile = null;
 
+    private final AtomicInteger appendGenerateAbortLogCount = new AtomicInteger();
+
+    private int maxAbortLogSize = 200;
+
+    /**
+     * Get the value of maxAbortLogSize
+     *
+     * @return the value of maxAbortLogSize
+     */
+    public int getMaxAbortLogSize() {
+        return maxAbortLogSize;
+    }
+
+    /**
+     * Set the value of maxAbortLogSize
+     *
+     * @param maxAbortLogSize new value of maxAbortLogSize
+     */
+    public void setMaxAbortLogSize(int maxAbortLogSize) {
+        this.maxAbortLogSize = maxAbortLogSize;
+    }
+
     @SuppressWarnings({"nullness", "guieffect"})
     private void appendGenerateAbortLog(String type, int actionsSize, boolean reverse, int startingIndex, int startSafeAbortRequestCount, int sectionNumber) {
         try {
+            int count = appendGenerateAbortLogCount.incrementAndGet();
             if (null == aprsSystem || aprsSystem.isClosing()) {
                 return;
             }
@@ -6758,8 +6781,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             aprsSystem.runOnDispatchThread(() -> {
                 try {
-                    ((DefaultTableModel) jTableLog.getModel()).addRow(rowValues);
-                    if ((jTableLog.getRowCount() % 20) < 2) {
+                    DefaultTableModel defaultTableLogModel = ((DefaultTableModel) jTableLog.getModel());
+                    while(jTableLog.getRowCount() > maxAbortLogSize) {
+                        defaultTableLogModel.removeRow(0);
+                    }
+                    defaultTableLogModel.addRow(rowValues);
+                    if (count % 50 == 1) {
                         Utils.autoResizeTableColWidths(jTableLog);
                     }
                 } catch (Exception e) {

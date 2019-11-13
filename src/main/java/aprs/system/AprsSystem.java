@@ -64,6 +64,7 @@ import aprs.misc.PmCartesianMinMaxLimit;
 import static aprs.misc.Utils.shortenItemPartName;
 import aprs.simview.Object2DOuterDialogPanel;
 import aprs.simview.Object2DOuterJPanel;
+import aprs.simview.ViewOptions;
 import aprs.supervisor.main.Supervisor;
 
 import java.io.File;
@@ -138,7 +139,6 @@ import rcs.posemath.PmCartesian;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLCommandWrapper;
 import crcl.utils.CRCLCopier;
-import static crcl.utils.CRCLCopier.copy;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
@@ -6549,7 +6549,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
-        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        ViewOptions opts = new ViewOptions();
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
@@ -6565,7 +6565,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
-        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        ViewOptions opts = new ViewOptions();
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
@@ -6582,7 +6582,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
-        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        ViewOptions opts = new ViewOptions();
         opts.h = -1;
         opts.w = -1;
         opts.disableLabels = true;
@@ -6609,7 +6609,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    public BufferedImage createSnapshotImage(Object2DJPanel.ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
+    public BufferedImage createSnapshotImage(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
@@ -6623,7 +6623,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == object2DViewJInternalFrame) {
             throw new IllegalStateException("Object 2D View must be open to use this function");
         }
-        Object2DJPanel.ViewOptions opts = new Object2DJPanel.ViewOptions();
+        ViewOptions opts = new ViewOptions();
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;

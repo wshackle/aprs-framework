@@ -1301,6 +1301,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        addOldEventToTable(time, blockerSize, ecc, cdc, errs, s, threadname,Utils.traceToString(trace));
 //    }
     private int addOldEventToTableCount = 0;
+    private int addOldEventToTableResizeCount = 0;
     private long addOldEventToTableTime = 0;
 
     public void addOldEventToTable(long time, int blockerSize, int ecc, int cdc, int errs, String s, String threadname, String traceString) {
@@ -1317,8 +1318,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         tm.addRow(new Object[]{addOldEventToTableCount, getTimeString(time), timediff, blockerSize, ecc, cdc, errs, s, threadname, traceString});
         final int sLength = s.length();
         final int threadNameLength = threadname.length();
-        if (tm.getRowCount() % 50 < 2 || sLength > maxEventStringLen || threadNameLength > maxThreadNameStringLen) {
+        if (addOldEventToTableCount % 50 == 1 || sLength > maxEventStringLen || threadNameLength > maxThreadNameStringLen) {
             if (jCheckBoxScrollEvents.isSelected()) {
+                addOldEventToTableResizeCount++;
                 Utils.autoResizeTableColWidths(jTableEvents);
             }
             if (sLength > maxEventStringLen) {
@@ -3118,7 +3120,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private volatile boolean closing = false;
 
-    private void close() {
+    public void close() {
         closing = true;
         if (null != runTimeTimer) {
             runTimeTimer.stop();
@@ -3139,17 +3141,18 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             colorTextSocket = null;
         }
         this.setVisible(false);
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.close();
+        System.out.println("addOldEventToTableCount = " + this.addOldEventToTableCount);
+        System.out.println("addOldEventToTableResizeCount = " + this.addOldEventToTableResizeCount);
+
     }
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        supervisor.close();
         close();
     }//GEN-LAST:event_formWindowClosed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        supervisor.close();
         close();
     }//GEN-LAST:event_formWindowClosing
 
@@ -3924,9 +3927,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 throw new NullPointerException("supervisor");
             }
             AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
-            final String blockerName = "interactiveStart."+actionName;
-            Supplier<XFuture<LockInfo>> sup =
-                    () -> supervisor.disallowToggles(blockerName, sysArray);
+            final String blockerName = "interactiveStart." + actionName;
+            Supplier<XFuture<LockInfo>> sup
+                    = () -> supervisor.disallowToggles(blockerName, sysArray);
             supervisor.setResetting(true);
             if (null != internalInteractiveResetAllFuture) {
                 internalInteractiveResetAllFuture.cancelAll(false);
@@ -3943,7 +3946,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFuture<LockInfo> disallowTogglesFuture
                     = fullAbortFuture
-                            .thenComposeAsync("interactiveStart.disableToggles",sup, 
+                            .thenComposeAsync("interactiveStart.disableToggles", sup,
                                     supervisor.getSupervisorExecutorService());
             XFutureVoid iiraFuture
                     = disallowTogglesFuture
@@ -4033,8 +4036,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             return ret;
         }
     }
-    
-            
+
     private static final String INTERACTIVE_CHECK_INSTRUCTIONS
             = " \r\n"
             + " All parts in slots. \r\n"
@@ -4288,7 +4290,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         setEventsDisplayMax(-1);
         long minTime = Long.MAX_VALUE;
         long maxTime = Long.MIN_VALUE;
-        try (CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             for (CSVRecord record : parser) {
                 String timeString = getRecordString(record, headerMap, "timeString");
@@ -4605,7 +4607,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try (PrintStream ps = new PrintStream(baos)) {
+                try ( PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
