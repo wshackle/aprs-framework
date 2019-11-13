@@ -656,7 +656,10 @@ public class Object2DJPanel extends JPanel {
             opts.mousePoint = this.mousePoint;
         }
         if (opts.mouseInside && opts.mousePoint != null) {
-            opts.worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, this.autoscale);
+            double scale = getScale(autoscale);
+            if(Double.isFinite(scale) && Math.abs(scale) > 1E-9) {
+                opts.worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, this.autoscale);
+            }
         }
         opts.viewRotationsAndImages = this.viewRotationsAndImages;
         opts.alternativeRotation = this.alternativeRotation;
@@ -1877,7 +1880,7 @@ public class Object2DJPanel extends JPanel {
             double new_scale = computeNewScale(minmaxParam, opts);
 
             if (!opts.disableLimitsLine) {
-                if (opts.mouseInside && null != opts.mousePoint) {
+                if (opts.mouseInside && null != opts.mousePoint && null != opts.worldMousePoint) {
                     boolean localAutoscale = opts.enableAutoscale;
                     Point mousePoint = opts.mousePoint;
                     Point2D.Double worldMousePoint = opts.worldMousePoint;
