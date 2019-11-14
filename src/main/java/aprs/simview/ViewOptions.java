@@ -37,9 +37,11 @@ public class ViewOptions {
 
     public boolean disableLimitsLine;
     public boolean disableLabels;
-    public boolean enableAutoscale;
+    public boolean useOverridingAutoscale;
+    public boolean overridingAutoscale;
+    public boolean defaultAutoscale;
     public boolean disableShowCurrent;
-    public boolean overrideRotationOffset;
+    public boolean useOverridingRotationOffset;
     public boolean disableSensorLimitsRect;
     public boolean disableRobotsReachLimitsRect;
 
@@ -47,7 +49,8 @@ public class ViewOptions {
     public boolean debug;
     public int w;
     public int h;
-    public double rotationOffset;
+    public double overridingRotationOffset;
+    public double defaultRotationOffset;
     boolean scale_set;
     double scale;
     boolean paintingComponent;
@@ -79,8 +82,7 @@ public class ViewOptions {
 
     @Override
     public String toString() {
-        return "ViewOptions{" + "disableLimitsLine=" + disableLimitsLine + ", disableLabels=" + disableLabels + ", enableAutoscale=" + enableAutoscale + ", disableShowCurrent=" + disableShowCurrent + ", overrideRotationOffset=" + overrideRotationOffset + ", disableSensorLimitsRect=" + disableSensorLimitsRect + ", disableRobotsReachLimitsRect=" + disableRobotsReachLimitsRect + ", addExtras=" + addExtras + ", debug=" + debug + ", w=" + w + ", h=" + h + ", rotationOffset=" + rotationOffset + ", scale_set=" + scale_set + ", scale=" + scale + ", paintingComponent=" + paintingComponent + ", useSeparateNames=" + useSeparateNames + ", backgroundColor=" + backgroundColor + ", foregroundColor=" + foregroundColor + ", showCurrentXY=" + showCurrentXY + ", currentX=" + currentX + ", currentY=" + currentY + ", minmax=" + minmax + ", showOverlapping=" + showOverlapping + ", showOnlyOverlapping=" + showOnlyOverlapping + ", displayAxis=" + displayAxis + ", mousePoint=" + mousePoint + ", mouseInside=" + mouseInside + ", worldMousePoint=" + worldMousePoint + ", viewRotationsAndImages=" + viewRotationsAndImages + ", alternativeRotation=" + alternativeRotation + ", viewDetails=" + viewDetails + ", aprsSystem=" + aprsSystem + ", slotOffsetProvider=" + slotOffsetProvider + ", slotMaxDistExpansion=" + slotMaxDistExpansion + ", capturedPartPoint=" + capturedPartPoint + ", endEffectorClosed=" + endEffectorClosed + ", senseMinX=" + senseMinX + ", senseMaxX=" + senseMaxX + ", senseMinY=" + senseMinY + ", senseMaxY=" + senseMaxY + '}';
+        return "ViewOptions{" + "disableLimitsLine=" + disableLimitsLine + ", disableLabels=" + disableLabels + ", enableAutoscale=" + overridingAutoscale + ", disableShowCurrent=" + disableShowCurrent + ", useOverridingRotationOffset=" + useOverridingRotationOffset + ", disableSensorLimitsRect=" + disableSensorLimitsRect + ", disableRobotsReachLimitsRect=" + disableRobotsReachLimitsRect + ", addExtras=" + addExtras + ", debug=" + debug + ", w=" + w + ", h=" + h + ", overridingRotationOffset=" + overridingRotationOffset + ", defaultRotationOffset=" + defaultRotationOffset + ", scale_set=" + scale_set + ", scale=" + scale + ", paintingComponent=" + paintingComponent + ", useSeparateNames=" + useSeparateNames + ", backgroundColor=" + backgroundColor + ", foregroundColor=" + foregroundColor + ", showCurrentXY=" + showCurrentXY + ", currentX=" + currentX + ", currentY=" + currentY + ", minmax=" + minmax + ", showOverlapping=" + showOverlapping + ", showOnlyOverlapping=" + showOnlyOverlapping + ", displayAxis=" + displayAxis + ", mousePoint=" + mousePoint + ", mouseInside=" + mouseInside + ", worldMousePoint=" + worldMousePoint + ", viewRotationsAndImages=" + viewRotationsAndImages + ", alternativeRotation=" + alternativeRotation + ", viewDetails=" + viewDetails + ", aprsSystem=" + aprsSystem + ", slotOffsetProvider=" + slotOffsetProvider + ", slotMaxDistExpansion=" + slotMaxDistExpansion + ", capturedPartPoint=" + capturedPartPoint + ", endEffectorClosed=" + endEffectorClosed + ", senseMinX=" + senseMinX + ", senseMaxX=" + senseMaxX + ", senseMinY=" + senseMinY + ", senseMaxY=" + senseMaxY + '}';
     }
-    
-    
+
 }

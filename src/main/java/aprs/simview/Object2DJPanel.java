@@ -611,6 +611,7 @@ public class Object2DJPanel extends JPanel {
         opts.showCurrentXY = this.showCurrentXY;
         opts.currentX = this.currentX;
         opts.currentY = this.currentY;
+        opts.defaultRotationOffset = this.rotationOffset;
         if (opts.w < 1 || opts.h < 1) {
             opts.w = this.getSize().width;
             opts.h = this.getSize().height;
@@ -621,7 +622,7 @@ public class Object2DJPanel extends JPanel {
         if (null == opts.foregroundColor) {
             opts.foregroundColor = this.getForeground();
         }
-        opts.enableAutoscale = this.autoscale;
+        opts.defaultAutoscale = this.autoscale;
         opts.useSeparateNames = this.useSeparateNames;
         if (opts.minmax == null) {
             opts.minmax = new Point2DMinMax();
@@ -630,7 +631,13 @@ public class Object2DJPanel extends JPanel {
                 minmax = computeAutoscaleMinMax(opts, items);
                 this.autoScaledMinMax = minmax;
             }
-            if (!opts.enableAutoscale) {
+            boolean doAutoscale;
+            if (opts.useOverridingAutoscale) {
+                doAutoscale = opts.overridingAutoscale;
+            } else {
+                doAutoscale = opts.defaultAutoscale;
+            }
+            if (!doAutoscale) {
                 if (!Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.y)) {
                     throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
                 }
@@ -657,7 +664,7 @@ public class Object2DJPanel extends JPanel {
         }
         if (opts.mouseInside && opts.mousePoint != null) {
             double scale = getScale(autoscale);
-            if(Double.isFinite(scale) && Math.abs(scale) > 1E-9) {
+            if (Double.isFinite(scale) && Math.abs(scale) > 1E-9) {
                 opts.worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, this.autoscale);
             }
         }
@@ -709,7 +716,13 @@ public class Object2DJPanel extends JPanel {
     }
 
     private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> items, PmCartesian point, String label) {
-        if (!opts.enableAutoscale) {
+        boolean doAutoscale;
+        if (opts.useOverridingAutoscale) {
+            doAutoscale = opts.overridingAutoscale;
+        } else {
+            doAutoscale = opts.defaultAutoscale;
+        }
+        if (!doAutoscale) {
             if (null == opts.minmax) {
                 throw new NullPointerException("opts.minmax");
             }
@@ -784,9 +797,9 @@ public class Object2DJPanel extends JPanel {
     public BufferedImage createSnapshot(@Nullable ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != opts) {
             this.copyToOpts(opts);
-            return Object2DJPanel.createSnapshotImage(opts, items);
+            return Object2DJPanel.createSnapshotImage(opts, itemsToPaint);
         } else {
-            return Object2DJPanel.createSnapshotImage(this.currentViewOptions(), items);
+            return Object2DJPanel.createSnapshotImage(this.currentViewOptions(), itemsToPaint);
         }
     }
 
@@ -796,7 +809,13 @@ public class Object2DJPanel extends JPanel {
         if (null == opts || opts.w < 1 || opts.h < 1) {
             throw new IllegalArgumentException("opts=" + opts);
         }
-        if (!opts.enableAutoscale) {
+        boolean doAutoscale;
+        if (opts.useOverridingAutoscale) {
+            doAutoscale = opts.overridingAutoscale;
+        } else {
+            doAutoscale = opts.defaultAutoscale;
+        }
+        if (!doAutoscale) {
             if (null == opts.minmax) {
                 throw new NullPointerException("opts.minmax");
             }
@@ -818,7 +837,7 @@ public class Object2DJPanel extends JPanel {
         boolean origUseSepNames = opts.useSeparateNames;
 //        boolean origViewLimitsLine = this.viewLimitsLine;
 //        boolean origAutoscale = autoscale;
-        if (opts.enableAutoscale) {
+        if (doAutoscale) {
             paintWithAutoScale(itemsToPaint, null, g2d, opts);
         } else {
             paintItems(g2d, itemsToPaint, null, opts.minmax, opts);
@@ -1442,7 +1461,7 @@ public class Object2DJPanel extends JPanel {
             opts.w = w;
             opts.h = h;
             if (this.scale == 0) {
-                opts.enableAutoscale = true;
+                opts.overridingAutoscale = true;
             } else {
                 opts.scale = this.scale;
                 opts.scale_set = this.scale_set && !this.autoscale;
@@ -1857,9 +1876,12 @@ public class Object2DJPanel extends JPanel {
                 }
             }
             AffineTransform origTransform = g2d.getTransform();
-            double currentRotationOffset = opts.rotationOffset;
-            if (null != opts && opts.overrideRotationOffset) {
-                currentRotationOffset = opts.rotationOffset;
+            final double currentRotationOffset;
+
+            if (opts.useOverridingRotationOffset) {
+                currentRotationOffset = opts.overridingRotationOffset;
+            } else {
+                currentRotationOffset = opts.defaultRotationOffset;
             }
             int maxNameLength
                     = itemsToPaint.stream()
@@ -1881,7 +1903,7 @@ public class Object2DJPanel extends JPanel {
 
             if (!opts.disableLimitsLine) {
                 if (opts.mouseInside && null != opts.mousePoint && null != opts.worldMousePoint) {
-                    boolean localAutoscale = opts.enableAutoscale;
+                    boolean localAutoscale = opts.overridingAutoscale;
                     Point mousePoint = opts.mousePoint;
                     Point2D.Double worldMousePoint = opts.worldMousePoint;
                     if (null != aprsSystemFinal) {

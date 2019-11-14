@@ -19,10 +19,6 @@
  *
  *  See http://www.copyright.gov/title17/92chap1.html#105
  *
-
-
-
-
  */
 package aprs.system;
 
@@ -6553,7 +6549,7 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = false;
+        opts.useOverridingAutoscale = false;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = false;
         opts.addExtras = true;
@@ -6569,7 +6565,8 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = autoScale;
+        opts.useOverridingAutoscale = true;
+        opts.overridingAutoscale = autoScale;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
         opts.disableRobotsReachLimitsRect = true;
@@ -6586,7 +6583,8 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.h = -1;
         opts.w = -1;
         opts.disableLabels = true;
-        opts.enableAutoscale = true;
+        opts.useOverridingAutoscale = true;
+        opts.overridingAutoscale = true;
         opts.disableLimitsLine = true;
         opts.disableShowCurrent = true;
         opts.disableRobotsReachLimitsRect = true;
@@ -6627,13 +6625,14 @@ public class AprsSystem implements SlotOffsetProvider {
         opts.h = 170;
         opts.w = 170;
         opts.disableLabels = true;
-        opts.enableAutoscale = autoScale;
-        opts.overrideRotationOffset = true;
+        opts.useOverridingAutoscale = true;
+        opts.overridingAutoscale = autoScale;
+        opts.useOverridingRotationOffset = true;
         opts.disableLimitsLine = true;
         opts.disableRobotsReachLimitsRect = true;
         opts.disableSensorLimitsRect = true;
         opts.disableShowCurrent = true;
-        opts.rotationOffset = rotationOffset;
+        opts.overridingRotationOffset = rotationOffset;
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
