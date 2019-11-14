@@ -3288,7 +3288,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = new CRCLProgramType();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         if (trace.length > 3) {
-            program.setName(emptyProgramCount.incrementAndGet() + "_" + trace[2].toString());
+            String fileNameShort = trace[2].getFileName();
+            if(fileNameShort.endsWith(".java")) {
+                fileNameShort = fileNameShort.substring(0,fileNameShort.length()-4);
+            }
+            program.setName("empty"+emptyProgramCount.incrementAndGet() + "_" + fileNameShort+":"+trace[2].getLineNumber());
         }
         InitCanonType initCmd = new InitCanonType();
         setCommandId(initCmd);
