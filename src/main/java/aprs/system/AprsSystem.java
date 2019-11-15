@@ -2792,7 +2792,7 @@ public class AprsSystem implements SlotOffsetProvider {
         File programFile = null;
         try {
             if (null != programString) {
-                programFile = Utils.createTempFile("CRCLProgram", ".csv");
+                programFile = Utils.createTempFile("CRCLProgram", ".xml");
                 try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
