@@ -263,7 +263,7 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     private volatile int emptyLines = 0;
-    
+
     public XFutureVoid start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
@@ -290,13 +290,27 @@ public class VisionSocketClient implements AutoCloseable {
                 throw new IllegalArgumentException("argsMap does not contain a value for --visionport");
             }
             port = Short.valueOf(argsMapPort);
+            int connectTimeout = 0;
+            String argsMapConnectTimeout = argsMap.get("connectTimeout");
+            if (argsMapConnectTimeout != null) {
+                connectTimeout = Integer.parseInt(argsMapConnectTimeout.trim());
+            }
+            int readSoTimeout = 0;
+            String argsMapReadSoTimeout = argsMap.get("readSoTimeout");
+            if (argsMapReadSoTimeout != null) {
+                readSoTimeout = Integer.parseInt(argsMapReadSoTimeout.trim());
+            }
+            port = Short.valueOf(argsMapPort);
             final short portf = port;
             final String hostf = host;
+            final int connectTimeoutF = connectTimeout;
+            final int readSoTimeoutF = readSoTimeout;
             ExecutorService execSrv = this.visionExecServ;
             if (execSrv == null) {
                 throw new IllegalArgumentException("visionExecServ is null, already closed");
             }
-            visionSlr = SocketLineReader.startClient(hostf,
+            visionSlr = SocketLineReader.startClient(
+                    hostf,
                     port,
                     "visionReader_for_" + hostf + ":" + portf,
                     new SocketLineReader.CallBack() {
@@ -340,7 +354,7 @@ public class VisionSocketClient implements AutoCloseable {
                         lastSkippedLine = line;
                     }
                 }
-            });
+            }, connectTimeoutF, readSoTimeoutF);
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
@@ -594,7 +608,7 @@ public class VisionSocketClient implements AutoCloseable {
     public boolean isTraysLocked() {
         return traysLocked;
     }
-    
+
     public void setLockTrays(boolean lockTrays) {
         this.lockTrays = lockTrays;
         traysLocked = false;
@@ -661,25 +675,25 @@ public class VisionSocketClient implements AutoCloseable {
             prevListSizeSetTime = System.currentTimeMillis();
             prevVisionListSize = newVisionList.size();
             poseUpdatesParsed += newVisionList.size();
-            
-            if(lockTrays && !traysLocked) {
+
+            if (lockTrays && !traysLocked) {
                 List<PhysicalItem> newLockedTraysList = new ArrayList<>();
                 for (int i = 0; i < newVisionList.size(); i++) {
                     PhysicalItem itemI = newVisionList.get(i);
-                    if(itemI.getType().equalsIgnoreCase("PT") || itemI.getType().equalsIgnoreCase("KT")) {
+                    if (itemI.getType().equalsIgnoreCase("PT") || itemI.getType().equalsIgnoreCase("KT")) {
                         newLockedTraysList.add(itemI);
                     }
                 }
-                if(!newLockedTraysList.isEmpty()) {
+                if (!newLockedTraysList.isEmpty()) {
                     lockedTrays.clear();
                     lockedTrays.addAll(newLockedTraysList);
                     traysLocked = true;
                     prevVisionListSize -= newLockedTraysList.size();
-                    if(prevVisionListSize < 0) {
-                        prevVisionListSize=0;
+                    if (prevVisionListSize < 0) {
+                        prevVisionListSize = 0;
                     }
                 }
-            } else if(traysLocked) {
+            } else if (traysLocked) {
                 newVisionList.addAll(lockedTrays);
             }
             this.visionList = newVisionList;
