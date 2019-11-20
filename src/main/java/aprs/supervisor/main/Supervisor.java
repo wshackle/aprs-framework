@@ -8723,12 +8723,12 @@ public class Supervisor {
      */
     private void preCloseAllAprsSystems() {
         preClosing = true;
+        System.out.println("preClosing = " + preClosing);
         List<AprsSystem> aprsSystemsCopy = new ArrayList<>(aprsSystems);
-        aprsSystems.clear();
         for (AprsSystem aprsSystemInterface : aprsSystemsCopy) {
+            System.out.println("aprsSystemInterface = " + aprsSystemInterface);
             try {
                 aprsSystemInterface.setCrclClientPreClosing(true);
-
             } catch (Exception ex) {
                 log(Level.SEVERE, "", ex);
             }
@@ -8739,6 +8739,7 @@ public class Supervisor {
      * Close all systems.
      */
     private XFutureVoid closeAllAprsSystems() {
+        System.out.println("Supervisor.closeAllAprsSystems: aprsSystems = " + aprsSystems);
         if (aprsSystems.isEmpty()) {
             return XFutureVoid.completedFutureWithName("closeAllAprsSystems.aprsSystems=" + aprsSystems);
         }

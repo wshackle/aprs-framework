@@ -10081,6 +10081,21 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != task) {
             println("AprsSystem.close() : task=" + task);
         }
+        try {
+            if (null != crclClientJInternalFrame) {
+                File profileMapFile = crclClientJInternalFrame.writeCommandProfileMap();
+                System.out.println("profileMapFile = " + profileMapFile);
+                File commandStatusLogFile = crclClientJInternalFrame.writeCommandStatusLogFile();
+                System.out.println("commandStatusLogFile = " + commandStatusLogFile);
+                crclClientJInternalFrame.printPerfInfo(System.out, task);
+                try(PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile(task+"crcLClientPerfInfo", ".txt")))) {
+                    crclClientJInternalFrame.printPerfInfo(ps, task);
+                }
+            }
+        } catch (IOException iOException) {
+            Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", iOException);
+        }
         closeAllWindows();
         runProgramService.shutdownNow();
         if (null != aprsSystemDisplayJFrame) {
@@ -10090,6 +10105,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != r) {
             r.run();
         }
+       
     }
 
     @UIEffect
