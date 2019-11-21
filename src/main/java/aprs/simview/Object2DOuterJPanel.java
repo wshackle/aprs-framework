@@ -1536,7 +1536,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxReadTimeout.setSelected(true);
         jCheckBoxReadTimeout.setText("Read Timeout(ms):");
 
-        jTextFieldReadTimeout.setText("2500");
+        jTextFieldReadTimeout.setText("6000");
+        jTextFieldReadTimeout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldReadTimeoutActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
@@ -4246,6 +4251,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         final int newInterval = Integer.parseInt(jTextFieldPrevListSizeDecrementInterval.getText().trim());
         setPrevListSizeDecrementInterval(newInterval);
     }//GEN-LAST:event_jTextFieldPrevListSizeDecrementIntervalActionPerformed
+
+    private void jTextFieldReadTimeoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldReadTimeoutActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTextFieldReadTimeoutActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
