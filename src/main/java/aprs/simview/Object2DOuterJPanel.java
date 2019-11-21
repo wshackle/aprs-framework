@@ -260,8 +260,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
-            this.object2DJPanel1.takeSnapshot(f,csvFile, point, label);
-            
+            this.object2DJPanel1.takeSnapshot(f, csvFile, point, label);
+
 //            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
@@ -275,7 +275,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
-                    try (FileWriter fw = new FileWriter(xmlFile)) {
+                    try ( FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
                     }
                 }
@@ -344,7 +344,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
-            this.object2DJPanel1.takeSnapshot(f,csvFile, point, label, w, h);
+            this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
                 updateSnapshotsTable(f, csvFileFinal);
@@ -357,7 +357,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = new File(xmlDir, f.getName() + "-status.xml");
-                    try (FileWriter fw = new FileWriter(xmlFile)) {
+                    try ( FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
                     }
                 }
@@ -1305,6 +1305,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxLockTrays = new javax.swing.JCheckBox();
         jLabel15 = new javax.swing.JLabel();
         jTextFieldPrevListSizeDecrementInterval = new javax.swing.JTextField();
+        jCheckBoxConnectTimeout = new javax.swing.JCheckBox();
+        jTextFieldConnectTimeout = new javax.swing.JTextField();
+        jCheckBoxReadTimeout = new javax.swing.JCheckBox();
+        jTextFieldReadTimeout = new javax.swing.JTextField();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -1524,6 +1528,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxConnectTimeout.setText("Connect Timeout(ms): ");
+
+        jTextFieldConnectTimeout.setText("500");
+
+        jCheckBoxReadTimeout.setText("Read Timeout(ms):");
+
+        jTextFieldReadTimeout.setText("500");
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1575,7 +1587,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                         .addComponent(jTextFieldRotationOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                         .addComponent(jCheckBoxLockTrays)))
-                                .addGap(0, 125, Short.MAX_VALUE)))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addContainerGap())
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxConnectTimeout)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldConnectTimeout)
+                        .addContainerGap())
+                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxReadTimeout)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldReadTimeout)
                         .addContainerGap())))
         );
         jPanelConnectionsTabLayout.setVerticalGroup(
@@ -1608,7 +1630,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
+                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxConnectTimeout)
+                    .addComponent(jTextFieldConnectTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxReadTimeout)
+                    .addComponent(jTextFieldReadTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -1849,7 +1879,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel11)
                         .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(27, Short.MAX_VALUE))
+                .addContainerGap(39, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -1897,7 +1927,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelTraysLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelTraysLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 396, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabelTraySlotInfoStatus)
                 .addContainerGap())
@@ -2047,7 +2077,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2327,7 +2357,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelPropertiesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPropertiesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
+                .addComponent(jScrollPaneProperties, javax.swing.GroupLayout.DEFAULT_SIZE, 378, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanelBottomPropertiesButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -2393,7 +2423,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelSnapshotsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelSnapshotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonViewSnapshotImage)
@@ -2489,7 +2519,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 377, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonOpenLogLinesFile)
@@ -2517,7 +2547,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jPanelBottomMainLayout.setVerticalGroup(
             jPanelBottomMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(object2DJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -2601,6 +2631,42 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private final CachedTextField robotHideDistCachedTextField;
 
+    public void setConnectTimeout(int newConnectTimeout) {
+        jTextFieldConnectTimeout.setText(Integer.toString(newConnectTimeout));
+    }
+    
+    
+    public int getConnectTimeout() {
+        return Integer.parseInt(jTextFieldConnectTimeout.getText().trim());
+    }
+    
+    public void setEnableConnectTimeout(boolean enable) {
+        jCheckBoxConnectTimeout.setSelected(enable);
+    }
+    
+    
+    public boolean isEnableConnectTimeout() {
+        return  jCheckBoxConnectTimeout.isSelected();
+    }
+    
+    public void setEnableReadTimeout(boolean enable) {
+        jCheckBoxReadTimeout.setSelected(enable);
+    }
+    
+    
+    public boolean isEnableReadTimeout() {
+        return  jCheckBoxReadTimeout.isSelected();
+    }
+    
+    public void setReadTimeout(int newReadTimeout) {
+        jTextFieldReadTimeout.setText(Integer.toString(newReadTimeout));
+    }
+    
+    
+    public int getReadTimeout() {
+        return Integer.parseInt(jTextFieldReadTimeout.getText().trim());
+    }
+    
     /**
      * Set the value of robotHideDist
      *
@@ -2687,6 +2753,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldRotNoise.setEditable(simulated && addPosNoiseCachedCheckBox.isSelected());
         jTextFieldRotNoise.setEnabled(simulated && addPosNoiseCachedCheckBox.isSelected());
         object2DJPanel1.setShowOutputItems(simulated && viewOutputCachedCheckBox.isSelected());
+        jCheckBoxConnectTimeout.setEnabled(!simulated);
+        jCheckBoxReadTimeout.setEnabled(!simulated);
+        jTextFieldConnectTimeout.setEnabled(!simulated && jCheckBoxConnectTimeout.isSelected());
+        jTextFieldReadTimeout.setEnabled(!simulated && jCheckBoxReadTimeout.isSelected());
+        jTextFieldConnectTimeout.setEditable(!simulated && jCheckBoxConnectTimeout.isSelected());
+        jTextFieldReadTimeout.setEditable(!simulated && jCheckBoxReadTimeout.isSelected());
         final boolean canLockTrays = !simulated && isConnected();
         jCheckBoxLockTrays.setEnabled(canLockTrays);
         if (!canLockTrays) {
@@ -2892,6 +2964,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             argsMap.put("--visionport", portCachedTextField.getText().trim());
             argsMap.put("--visionhost", host);
             argsMap.put("handleRotationEnum", handleRotationEnum.toString());
+            if (jCheckBoxConnectTimeout.isSelected()) {
+                argsMap.put("connectTimeout", jTextFieldConnectTimeout.getText());
+            }
+            if (jCheckBoxReadTimeout.isSelected()) {
+                argsMap.put("readSoTimeout", jTextFieldReadTimeout.getText());
+            }
             clnt.setDebug(debugCachedCheckBox.isSelected());
             clnt.start(argsMap);
             if (!clnt.isConnected()) {
@@ -4326,6 +4404,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxCloning;
+    private javax.swing.JCheckBox jCheckBoxConnectTimeout;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxDetails;
@@ -4334,6 +4413,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JCheckBox jCheckBoxHideItemsNearRobot;
     private javax.swing.JCheckBox jCheckBoxLockTrays;
     private javax.swing.JCheckBox jCheckBoxPause;
+    private javax.swing.JCheckBox jCheckBoxReadTimeout;
     private javax.swing.JCheckBox jCheckBoxRecordLines;
     private javax.swing.JCheckBox jCheckBoxSeparateNames;
     private javax.swing.JCheckBox jCheckBoxShowCurrent;
@@ -4389,6 +4469,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTable jTableSnapshotFiles;
     private javax.swing.JTable jTableTraySlots;
     private javax.swing.JTextArea jTextAreaConnectDetails;
+    private javax.swing.JTextField jTextFieldConnectTimeout;
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
     private javax.swing.JTextField jTextFieldFilename;
@@ -4401,6 +4482,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldPort;
     private javax.swing.JTextField jTextFieldPosNoise;
     private javax.swing.JTextField jTextFieldPrevListSizeDecrementInterval;
+    private javax.swing.JTextField jTextFieldReadTimeout;
     private javax.swing.JTextField jTextFieldRecordLinesFile;
     private javax.swing.JTextField jTextFieldRotNoise;
     private javax.swing.JTextField jTextFieldRotationOffset;
@@ -4564,6 +4646,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("hideNearMouseDist", jTextFieldHideNearMouseDist.getText());
         props.setProperty("hideNearRobot", Boolean.toString(jCheckBoxHideItemsNearRobot.isSelected()));
         props.setProperty("hideNearRobotDist", jTextFieldHideNearRobotDist.getText());
+        props.setProperty("connectTimeout", jTextFieldConnectTimeout.getText());
+        props.setProperty("readSoTimeout", jTextFieldReadTimeout.getText());
+        props.setProperty("enableConnectTimeout", Boolean.toString(jCheckBoxConnectTimeout.isSelected()));
+        props.setProperty("enableReadSoTimeout", Boolean.toString(jCheckBoxReadTimeout.isSelected()));
         List<PhysicalItem> l = getItems();
         if (null != l && l.size() > 0) {
             props.setProperty(ITEMS_PROPERTY_NAME, VisionSocketServer.listToLine(l));
@@ -4596,7 +4682,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != propertiesFile && propertiesFile.exists()) {
             loadingProperties = true;
             Properties props = new Properties();
-            try (FileReader fr = new FileReader(propertiesFile)) {
+            try ( FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
             return loadProperties(props);
@@ -5042,6 +5128,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             jTextFieldHideNearRobotDist.setText(hideNearRobotDistString);
             this.setRobotHideDist(Double.parseDouble(hideNearRobotDistString));
         }
+        String connectTimeoutString = props.getProperty("connectTimeout");
+        if (null != connectTimeoutString) {
+            this.setConnectTimeout(Integer.parseInt(connectTimeoutString));
+        }
+        String readSoTimeoutString = props.getProperty("readSoTimeout");
+        if (null != readSoTimeoutString) {
+            this.setReadTimeout(Integer.parseInt(readSoTimeoutString));
+        }
+        String enableConnectTimeoutString = props.getProperty("enableConnectTimeout");
+        if (null != enableConnectTimeoutString) {
+            final boolean enable = Boolean.parseBoolean(enableConnectTimeoutString);
+            this.setEnableConnectTimeout(enable);
+        }
+        String enableReadSoTimeoutString = props.getProperty("enableReadSoTimeout");
+        if (null != enableReadSoTimeoutString) {
+           final boolean enable = Boolean.parseBoolean(enableReadSoTimeoutString);
+            this.setEnableReadTimeout(enable);
+        }
         updatingDisplayFromProperties = false;
     }
 
@@ -5195,7 +5299,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @SuppressWarnings("guieffect")
     public void loadLogFile(File f) {
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line = br.readLine();
             while (line != null && line.trim().length() < 2) {
                 line = br.readLine();
@@ -5370,13 +5474,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void saveCsvItemsFile(File f) throws IOException {
         Object2DJPanel.saveCsvItemsFile(f, getItems());
     }
+
     public void saveCsvItemsFile(File f, Collection<? extends PhysicalItem> items) throws IOException {
         Object2DJPanel.saveCsvItemsFile(f, items);
     }
+
     public @Nullable
     File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         File csvFile = imageFileToCsvFile(f);
-        this.object2DJPanel1.takeSnapshot(f,csvFile, itemsToPaint);
+        this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
         runOnDispatchThread(() -> {
             updateSnapshotsTable(f, csvFile);
         });
@@ -5673,7 +5779,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     private File printPoseUpdateHistory(String err) throws IOException {
         File f = createTempFile("puh_" + err, ".csv");
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
+        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
             for (PoseUpdateHistoryItem item : poseUpdateHistory) {
                 Object array[] = poseUpdateHistoryRecordItems(item);
                 if (null != array) {

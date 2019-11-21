@@ -309,11 +309,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (execSrv == null) {
                 throw new IllegalArgumentException("visionExecServ is null, already closed");
             }
-            visionSlr = SocketLineReader.startClient(
-                    hostf,
-                    port,
-                    "visionReader_for_" + hostf + ":" + portf,
-                    new SocketLineReader.CallBack() {
+            final SocketLineReader.CallBack callBack = new SocketLineReader.CallBack() {
                 private volatile @Nullable
                 String lastSkippedLine = null;
 
@@ -354,7 +350,15 @@ public class VisionSocketClient implements AutoCloseable {
                         lastSkippedLine = line;
                     }
                 }
-            }, connectTimeoutF, readSoTimeoutF);
+            };
+            visionSlr = SocketLineReader
+                    .startClient(
+                            hostf,
+                            port,
+                            "visionReader_for_" + hostf + ":" + portf,
+                            callBack,
+                            connectTimeoutF,
+                            readSoTimeoutF);
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
