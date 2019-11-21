@@ -2049,6 +2049,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line, boolean ignored) {
         try {
+            if(line.startsWith("EXCEPTION")) {
+                aprsSystem.setTitleErrorString(line);
+                 return XFutureVoid.completedFuture();
+            }
             if (ignored) {
                 return XFutureVoid.completedFuture();
             }

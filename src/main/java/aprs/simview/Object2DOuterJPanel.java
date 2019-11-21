@@ -1531,12 +1531,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxConnectTimeout.setSelected(true);
         jCheckBoxConnectTimeout.setText("Connect Timeout(ms): ");
 
-        jTextFieldConnectTimeout.setText("500");
+        jTextFieldConnectTimeout.setText("2500");
 
         jCheckBoxReadTimeout.setSelected(true);
         jCheckBoxReadTimeout.setText("Read Timeout(ms):");
 
-        jTextFieldReadTimeout.setText("500");
+        jTextFieldReadTimeout.setText("2500");
 
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
@@ -5351,6 +5351,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @SuppressWarnings("guieffect")
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
+            if(line.startsWith("EXCEPTION")) {
+                aprsSystem.setTitleErrorString(line);
+                return XFutureVoid.completedFuture();
+            }
             long now = System.currentTimeMillis();
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();

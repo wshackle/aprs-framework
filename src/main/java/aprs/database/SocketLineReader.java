@@ -142,7 +142,7 @@ public class SocketLineReader {
             this.cb = _cb;
             this.port = portParam;
             if (isClient) {
-                privateStartClient(host, portParam, threadname, _cb,  connectTimeOut,readSoTimeOut);
+                privateStartClient(host, portParam, threadname, _cb, connectTimeOut, readSoTimeOut);
             } else {
                 privateStartServer(portParam, threadname, _cb);
             }
@@ -225,7 +225,7 @@ public class SocketLineReader {
         thread.start();
     }
 
-    private void privateStartClient(String host1, int portParam, final String threadname, CallBack _cb, int connectTimeOut,int readSoTimeOut ) throws IllegalArgumentException, IOException, SocketException {
+    private void privateStartClient(String host1, int portParam, final String threadname, CallBack _cb, int connectTimeOut, int readSoTimeOut) throws IllegalArgumentException, IOException, SocketException {
         this.cb = _cb;
         this.port = portParam;
         if (null == host1) {
@@ -254,16 +254,31 @@ public class SocketLineReader {
 
             @Override
             public void run() {
+                long t1 = System.currentTimeMillis();
+                long t0 = t1;
+                int count = 0;
                 try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
                         PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
                     String line = null;
+                    t1 = System.currentTimeMillis();
                     while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
                         _cb.call(line, psl);
+                        t1 = System.currentTimeMillis();
+                        count++;
                     }
                 } catch (Exception exception) {
                     if (!closing) {
-                        exception.printStackTrace();
+                        long t2 = System.currentTimeMillis();
+                        long timeDiff = t2-t1;
+                        long time0Diff = t2-t0;
+                        System.err.println("SocketLineReader error: timeDiff = " + timeDiff+", count="+count+", time0Diff="+time0Diff);
+                        Logger.getLogger(SocketLineReader.class)
+                                .severe(
+                                        "isClient=true, host=" + host + ",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb + ",readSoTimeOut=" + readSoTimeOut,
+                                        exception);
+                        _cb.call("EXCEPTION:"+exception, null);
                     }
+                    throw new RuntimeException(exception);
                 }
             }
         }, threadname);
@@ -304,13 +319,13 @@ public class SocketLineReader {
         } catch (RuntimeException runtimeException) {
             Logger.getLogger(SocketLineReader.class)
                     .severe(
-                            "isClient=true, host="+host+",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb+",connectTimeOut="+connectTimeOut,
+                            "isClient=true, host=" + host + ",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb + ",connectTimeOut=" + connectTimeOut,
                             runtimeException);
             throw new RuntimeException(runtimeException);
         } catch (IOException iOException) {
             Logger.getLogger(SocketLineReader.class)
                     .severe(
-                            "isClient=true, host="+host+",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb+",connectTimeOut="+connectTimeOut,
+                            "isClient=true, host=" + host + ",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb + ",connectTimeOut=" + connectTimeOut,
                             iOException);
             throw iOException;
         }

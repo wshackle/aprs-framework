@@ -333,6 +333,12 @@ public class VisionSocketClient implements AutoCloseable {
                                 String origName = Thread.currentThread().getName();
                                 Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
                                 //println("visioncycle="+visioncycle);
+                                if(line.startsWith("EXCEPTION")) {
+                                    String errmsg = "EXCEPTION: VisionSocket host="+VisionSocketClient.this.visionSlr.getHost()+",port="+VisionSocketClient.this.visionSlr.getPort()+line.substring("EXCEPTION".length());
+                                    updateIgnoredLineListeners(Collections.emptyList(), errmsg);
+                                    updateListeners(Collections.emptyList(), errmsg,false);
+                                    throw new RuntimeException(line);
+                                }
                                 parseVisionLine(line);
                                 if (null != lastSkippedLine) {
                                     String skippedLine = lastSkippedLine;

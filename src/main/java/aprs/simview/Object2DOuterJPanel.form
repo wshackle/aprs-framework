@@ -382,7 +382,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldConnectTimeout">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="500"/>
+                    <Property name="text" type="java.lang.String" value="2500"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JCheckBox" name="jCheckBoxReadTimeout">
@@ -393,7 +393,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldReadTimeout">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="500"/>
+                    <Property name="text" type="java.lang.String" value="2500"/>
                   </Properties>
                 </Component>
               </SubComponents>
