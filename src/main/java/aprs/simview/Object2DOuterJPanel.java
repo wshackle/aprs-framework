@@ -1528,10 +1528,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jCheckBoxConnectTimeout.setSelected(true);
         jCheckBoxConnectTimeout.setText("Connect Timeout(ms): ");
 
         jTextFieldConnectTimeout.setText("500");
 
+        jCheckBoxReadTimeout.setSelected(true);
         jCheckBoxReadTimeout.setText("Read Timeout(ms):");
 
         jTextFieldReadTimeout.setText("500");
@@ -1633,12 +1635,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxConnectTimeout)
                     .addComponent(jTextFieldConnectTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxReadTimeout)
                     .addComponent(jTextFieldReadTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 184, Short.MAX_VALUE)
                 .addContainerGap())
         );
 

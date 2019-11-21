@@ -218,19 +218,19 @@
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonRefresh" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jCheckBoxConnectTimeout" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jTextFieldConnectTimeout" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jCheckBoxReadTimeout" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jTextFieldReadTimeout" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane3" min="-2" pref="184" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
+                          <Component id="jScrollPane3" pref="184" max="32767" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -376,6 +376,7 @@
                 </Component>
                 <Component class="javax.swing.JCheckBox" name="jCheckBoxConnectTimeout">
                   <Properties>
+                    <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" value="Connect Timeout(ms): "/>
                   </Properties>
                 </Component>
@@ -386,6 +387,7 @@
                 </Component>
                 <Component class="javax.swing.JCheckBox" name="jCheckBoxReadTimeout">
                   <Properties>
+                    <Property name="selected" type="boolean" value="true"/>
                     <Property name="text" type="java.lang.String" value="Read Timeout(ms):"/>
                   </Properties>
                 </Component>
