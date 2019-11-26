@@ -53,6 +53,7 @@ import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDispl
 import static aprs.misc.Utils.PlayAlert;
 import static aprs.misc.Utils.tryPlayAlert;
 import crcl.ui.misc.MultiLineStringJPanel;
+import java.awt.HeadlessException;
 import java.io.FileReader;
 import java.util.Properties;
 import javax.swing.JMenuItem;
@@ -426,7 +427,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -727,7 +728,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             saveLaunchProperties();
         }
         boolean useConveyor
-                = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
+                = checkForConveyorUse();
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
@@ -740,12 +741,24 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemMultiCycleMultiSystemTestActionPerformed
 
+    public boolean checkForConveyorUse() throws HeadlessException {
+        boolean queryConveyorUse = Boolean.getBoolean("aprs.queryConveyorUse");
+        if (queryConveyorUse) {
+            boolean useConveyor
+                    = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
+            return useConveyor;
+        } else{
+            boolean defaultConveyorUse = Boolean.getBoolean("aprs.defaultConveyorUse");
+            return defaultConveyorUse;
+        }
+    }
+
     @UIEffect
     private void jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemTenCycleMultiSystemTestNoDisablesActionPerformed
         int numCycles
                 = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
         boolean useConveyor
-                = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
+                = checkForConveyorUse();
         this.setVisible(false);
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {

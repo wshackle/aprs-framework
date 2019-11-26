@@ -33,6 +33,7 @@ import aprs.supervisor.colortextdisplay.ColorTextJPanel;
 import aprs.database.PhysicalItem;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapEntry;
+import aprs.conveyor.ConveyorVisJPanel;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
@@ -45,7 +46,6 @@ import crcl.base.PointType;
 
 import crcl.base.PoseType;
 import crcl.utils.XFuture;
-import crcl.utils.XFuture.PrintedException;
 import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
@@ -1486,7 +1486,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jTableSharedTools = new javax.swing.JTable();
         jButtonSyncToolsFromRobots = new javax.swing.JButton();
         jButtonSyncToolsToRobots = new javax.swing.JButton();
-        conveyorVisJPanel1 = new aprs.conveyor.ConveyorVisJPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenuFile = new javax.swing.JMenu();
         jMenuItemSaveSetup = new javax.swing.JMenuItem();
@@ -1528,6 +1527,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemRecordLiveImageMovie = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetConveyorViewCloneSystem = new javax.swing.JMenuItem();
         jCheckBoxMenuItemUseCorrectionModeByDefault = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemEnableConveyorControlView = new javax.swing.JCheckBoxMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -2153,7 +2153,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         );
 
         jTabbedPaneMain.addTab("Shared Tools", jPanelTools);
-        jTabbedPaneMain.addTab("Conveyor", conveyorVisJPanel1);
 
         getContentPane().add(jTabbedPaneMain);
 
@@ -2429,6 +2428,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemUseCorrectionModeByDefault);
+
+        jCheckBoxMenuItemEnableConveyorControlView.setText("Enable Conveyor Control View");
+        jCheckBoxMenuItemEnableConveyorControlView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemEnableConveyorControlViewActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemEnableConveyorControlView);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -3126,7 +3133,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             runTimeTimer.stop();
             runTimeTimer = null;
         }
-        this.conveyorVisJPanel1.disconnect();
+        if (null != conveyorVisJPanel1) {
+            this.conveyorVisJPanel1.disconnect();
+        }
         this.colorTextJPanel1.stopReader();
         if (null != colorTextJFrame) {
             colorTextJFrame.setVisible(false);
@@ -4274,6 +4283,45 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.plotLastPosMapFile();
     }//GEN-LAST:event_jButtonPlotPositionMapActionPerformed
 
+    private void jCheckBoxMenuItemEnableConveyorControlViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnableConveyorControlViewActionPerformed
+        final boolean selected = jCheckBoxMenuItemEnableConveyorControlView.isSelected();
+        enableConveyor(selected);
+        supervisor.setEnableConveyor(selected);
+    }//GEN-LAST:event_jCheckBoxMenuItemEnableConveyorControlViewActionPerformed
+
+    public void enableConveyor(final boolean selected) {
+        if (selected) {
+            if (null == conveyorVisJPanel1) {
+                conveyorVisJPanel1 = new ConveyorVisJPanel();
+                for (int i = 0; i < jTabbedPaneMain.getComponentCount(); i++) {
+                    String titleI = jTabbedPaneMain.getTitleAt(i);
+                    if (titleI.startsWith("Conveyor")) {
+                        final Component compI = jTabbedPaneMain.getComponentAt(i);
+                        if (compI instanceof ConveyorVisJPanel) {
+                            ConveyorVisJPanel visJPanelI = (ConveyorVisJPanel) compI;
+                            jTabbedPaneMain.remove(visJPanelI);
+                            visJPanelI.disconnect();
+                            break;
+                        }
+                    }
+                }
+                jTabbedPaneMain.addTab("Conveyor", conveyorVisJPanel1);
+                if (null != supervisor) {
+                    String convTaskName = supervisor.getConveyorClonedViewSystemTaskName();
+                    if (null != convTaskName && convTaskName.length() > 0) {
+                        setConveyorClonedViewSystemTaskName(convTaskName);
+                    }
+                }
+            }
+        } else {
+            if (null != conveyorVisJPanel1) {
+                jTabbedPaneMain.remove(conveyorVisJPanel1);
+                conveyorVisJPanel1.disconnect();
+                conveyorVisJPanel1 = null;
+            }
+        }
+    }
+
     private String getRecordString(CSVRecord record, Map<String, Integer> headerMap, String header) {
         Integer index = headerMap.get(header);
         if (index == null || index < 0 || index > record.size()) {
@@ -4423,7 +4471,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 throw new RuntimeException(ex);
             }
         } else {
-            conveyorVisJPanel1.connectMasterOnDisplay();
+            if (null != conveyorVisJPanel1) {
+                conveyorVisJPanel1.connectMasterOnDisplay();
+            }
         }
         XFutureVoid conveyorTestPrep = XFutureVoid.allOf(futuresList);
         return conveyorTestPrep;
@@ -4433,14 +4483,23 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public @Nullable
     AprsSystem getConveyorVisClonedSystem() {
+        if (null == conveyorVisJPanel1) {
+            return null;
+        }
         return conveyorVisJPanel1.getClonedSystem();
     }
 
     public double conveyorPos() {
+        if (null == conveyorVisJPanel1) {
+            return 0;
+        }
         return conveyorVisJPanel1.getEstimatedPosition();
     }
 
     public XFutureVoid conveyorVisNextTray() {
+        if (null == conveyorVisJPanel1) {
+            throw new NullPointerException("conveyorVisJPanel1");
+        }
         try {
             return conveyorVisJPanel1.nextTray();
         } catch (Exception e) {
@@ -4456,6 +4515,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public XFutureVoid conveyorVisPrevTray() {
+        if (null == conveyorVisJPanel1) {
+            throw new NullPointerException("conveyorVisJPanel1");
+        }
         try {
             return conveyorVisJPanel1.prevTray();
         } catch (Exception e) {
@@ -4470,8 +4532,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public void setConveyorClonedViewSystemTaskName(String taskName) {
-        AprsSystem sys = supervisor.getSysByTask(taskName);
-        conveyorVisJPanel1.setClonedSystem(sys);
+        if (null != conveyorVisJPanel1) {
+            AprsSystem sys = supervisor.getSysByTask(taskName);
+            conveyorVisJPanel1.setClonedSystem(sys);
+        }
     }
 
     public XFutureVoid loadProperties(Properties props) {
@@ -4481,14 +4545,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYRECORD_LIVE_IMAGE_MOVIE, jCheckBoxMenuItemRecordLiveImageMovie);
             setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYSHOW_SPLASH_MESSAGES, jCheckBoxMenuItemShowSplashMessages);
             setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYUSE_TEACH_CAMERA, jCheckBoxMenuItemUseTeachCamera);
-            Map<String, String> convMap = new TreeMap<>();
-            for (String key : props.stringPropertyNames()) {
-                if (key.startsWith(APRSSUPEVISORDISPLAYCONVEYOR)) {
-                    convMap.put(key.substring(APRSSUPEVISORDISPLAYCONVEYOR.length()), props.getProperty(key));
+            if (null != conveyorVisJPanel1) {
+                Map<String, String> convMap = new TreeMap<>();
+                for (String key : props.stringPropertyNames()) {
+                    if (key.startsWith(APRSSUPEVISORDISPLAYCONVEYOR)) {
+                        convMap.put(key.substring(APRSSUPEVISORDISPLAYCONVEYOR.length()), props.getProperty(key));
+                    }
                 }
-            }
-            if (!convMap.isEmpty()) {
-                conveyorVisJPanel1.mapToProperties(convMap);
+                if (!convMap.isEmpty()) {
+                    conveyorVisJPanel1.mapToProperties(convMap);
+                }
             }
         });
     }
@@ -4506,9 +4572,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         mapPutCheckBox(map, APRSSUPERVISORDISPLAYRECORD_LIVE_IMAGE_MOVIE, jCheckBoxMenuItemRecordLiveImageMovie);
         mapPutCheckBox(map, APRSSUPERVISORDISPLAYSHOW_SPLASH_MESSAGES, jCheckBoxMenuItemShowSplashMessages);
         mapPutCheckBox(map, APRSSUPERVISORDISPLAYUSE_TEACH_CAMERA, jCheckBoxMenuItemUseTeachCamera);
-        Map<String, String> convMap = conveyorVisJPanel1.propertiesToMap();
-        for (Entry<String, String> entry : convMap.entrySet()) {
-            map.put(APRSSUPEVISORDISPLAYCONVEYOR + entry.getKey(), entry.getValue());
+        if (null != conveyorVisJPanel1) {
+            Map<String, String> convMap = conveyorVisJPanel1.propertiesToMap();
+            for (Entry<String, String> entry : convMap.entrySet()) {
+                map.put(APRSSUPEVISORDISPLAYCONVEYOR + entry.getKey(), entry.getValue());
+            }
         }
         return map;
     }
@@ -5835,10 +5903,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return object2DOuterJPanel1;
     }
 
+    private aprs.conveyor.ConveyorVisJPanel conveyorVisJPanel1;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private aprs.supervisor.colortextdisplay.ColorTextJPanel colorTextJPanel1;
-    private aprs.conveyor.ConveyorVisJPanel conveyorVisJPanel1;
     private javax.swing.JButton jButtonAddLine;
     private javax.swing.JButton jButtonAddSharedToolsRow;
     private javax.swing.JButton jButtonDeleteLine;
@@ -5858,6 +5926,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemoRevFirst;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebug;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableConveyorControlView;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemFixedRandomTestSeed;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndRandomToggleTest;

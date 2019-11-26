@@ -270,7 +270,7 @@ public class Supervisor {
                         println("===============================================================");
                         println();
                         this.close();
-                        if(null != displayJFrame) {
+                        if (null != displayJFrame) {
                             displayJFrame.close();
                         }
                         System.exit(0);
@@ -348,7 +348,11 @@ public class Supervisor {
         this.setShowFullScreenMessages(false);
         this.setMax_cycles(numCycles);
         if (useConveyor) {
+            displayJFrame.enableConveyor(true);
             String convTaskName = getConveyorClonedViewSystemTaskName();
+            if (null != convTaskName && convTaskName.length() > 0 && null != displayJFrame) {
+                displayJFrame.setConveyorClonedViewSystemTaskName(convTaskName);
+            }
             AprsSystem sys = getSysByTask(convTaskName);
             if (null == sys) {
                 throw new RuntimeException("getSysByTask(" + convTaskName + ") returned null");
@@ -425,7 +429,7 @@ public class Supervisor {
                         println("===============================================================");
                         println();
                         this.close();
-                        if(null != displayJFrame) {
+                        if (null != displayJFrame) {
                             displayJFrame.close();
                         }
                         System.exit(0);
@@ -3706,7 +3710,6 @@ public class Supervisor {
 //            }
 //        }
 //    }
-
     private @Nullable
     File choosePosMapsFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
         if (null == displayJFrame) {
@@ -3798,11 +3801,11 @@ public class Supervisor {
                 = () -> disallowToggles(blockerName, sysArray);
         XFuture<XFuture<LockInfo>> disallowTogglesFutureFuture
                 = XFuture.supplyAsync("fullAbortDisableToggles", sup, supervisorExecutorService);
-        XFuture<LockInfo> disallowTogglesFuture 
+        XFuture<LockInfo> disallowTogglesFuture
                 = disallowTogglesFutureFuture
-                .thenCompose(x -> x);
-        XFutureVoid immediateAbortAllFuture = 
-                disallowTogglesFuture.thenComposeToVoid(x -> immediateAbortAll("fullAbortAll"));
+                        .thenCompose(x -> x);
+        XFutureVoid immediateAbortAllFuture
+                = disallowTogglesFuture.thenComposeToVoid(x -> immediateAbortAll("fullAbortAll"));
         return immediateAbortAllFuture
                 .thenRun("fullAbortAll.after.immediateAbortAll",
                         () -> {
@@ -4509,7 +4512,7 @@ public class Supervisor {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try (PrintStream ps = new PrintStream(baos)) {
+                try ( PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -5699,7 +5702,7 @@ public class Supervisor {
     private void clearAllToggleBlockers() {
         logEvent("clearAllToggleBlockers toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
 //        assert toggleBlockerMap.keySet().isEmpty() : toggleBlockerMap.keySet();
-        
+
         allowTogglesCount.incrementAndGet();
         allowTogglesTrace = Thread.currentThread().getStackTrace();
         for (LockInfo li : toggleBlockerMap.values()) {
@@ -7071,7 +7074,7 @@ public class Supervisor {
     }
 
     void savePosFile(File f) throws IOException {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < selectedPosMapFileCachedTable.getColumnCount(); i++) {
                 pw.print(selectedPosMapFileCachedTable.getColumnName(i));
                 pw.print(",");
@@ -8122,7 +8125,7 @@ public class Supervisor {
     private void saveCachedTable(File f, CachedTable cachedTable, List<Object> firstRecord, Iterable<Integer> columnIndexes) throws IOException {
         String headers[] = tableHeaders(cachedTable, columnIndexes);
         CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
             printer.printRecord(firstRecord);
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
@@ -8149,7 +8152,7 @@ public class Supervisor {
     }
 
     private void saveCachedTable(File f, CachedTable cachedTable, CSVFormat csvFormat) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < cachedTable.getColumnCount(); j++) {
@@ -8242,7 +8245,7 @@ public class Supervisor {
         println("Loading position mappings files  file :" + f.getCanonicalPath());
         positionMappingsFilesCachedTable.setRowColumnCount(0, 0);;
         positionMappingsFilesCachedTable.addColumn("System");
-        try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
+        try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
             String line = null;
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
@@ -8254,7 +8257,7 @@ public class Supervisor {
                 positionMappingsFilesCachedTable.addColumn(a[0]);
             }
         }
-        try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
+        try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
                 linecount++;
@@ -8320,7 +8323,7 @@ public class Supervisor {
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
                     try (
-                            FileWriter fileWriter = new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true); PrintWriter pw = new PrintWriter(fileWriter, true)) {
+                             FileWriter fileWriter = new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);  PrintWriter pw = new PrintWriter(fileWriter, true)) {
                         pw.println("date=" + new Date()
                                 + ", oldPath = " + oldPath
                                 + ", newFilePath = " + newFilePath
@@ -8329,7 +8332,7 @@ public class Supervisor {
                     }
                 } catch (Exception ignored) {
                 }
-                try (PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
                     pw.println(newFilePath);
                 }
             }
@@ -8369,7 +8372,7 @@ public class Supervisor {
                     println("oldPath = " + oldPath);
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
-                    try (PrintWriter pw = new PrintWriter(new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
+                    try ( PrintWriter pw = new PrintWriter(new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
                         pw.println("date=" + new Date()
                                 + ", oldPath = " + oldPath
                                 + ", newFilePath = " + newFilePath
@@ -8377,7 +8380,7 @@ public class Supervisor {
                     }
                 } catch (Exception ignored) {
                 }
-                try (PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
                     pw.println(relativeNewFilePath);
                 }
             }
@@ -8457,7 +8460,7 @@ public class Supervisor {
 
     private volatile @Nullable
     File lastPosMapFile = null;
-    
+
     public @Nullable
     File getLastPosMapFile() {
         return lastPosMapFile;
@@ -8511,7 +8514,7 @@ public class Supervisor {
             try {
                 if (isKeepAndDisplayXFutureProfilesSelected()) {
                     File profileFile = Utils.createTempFile("startAll_profile_", ".csv");
-                    try (PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
+                    try ( PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
                         xf.printProfile(ps);
                     }
                 }
@@ -8840,6 +8843,7 @@ public class Supervisor {
         if (null != this.conveyorClonedViewSystemTaskName) {
             propsMap.put("conveyorClonedViewSystemTaskName", conveyorClonedViewSystemTaskName);
         }
+        propsMap.put("enableConveyor", Boolean.toString(enableConveyor));
         if (null != this.conveyorTestObjectViewSimulatedFilePath) {
             propsMap.put("conveyorTestObjectViewSimulatedFilePath", conveyorTestObjectViewSimulatedFilePath);
         }
@@ -8848,6 +8852,16 @@ public class Supervisor {
         println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
         Utils.saveProperties(propertiesFile, props);
         return XFutureVoid.allOf(futures);
+    }
+
+    private boolean enableConveyor = false;
+
+    public boolean isEnableConveyor() {
+        return enableConveyor;
+    }
+
+    public void setEnableConveyor(boolean enableConveyor) {
+        this.enableConveyor = enableConveyor;
     }
 
     private String conveyorClonedViewSystemTaskName;
@@ -8904,7 +8918,7 @@ public class Supervisor {
             List<XFuture<?>> futures = new ArrayList<>();
             Properties props = new Properties();
             println("Supervisot loading properties from " + propertiesFile.getCanonicalPath());
-            try (FileReader fr = new FileReader(propertiesFile)) {
+            try ( FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
             XFutureVoid displayLoadPropertiesFuture = null;
@@ -8954,7 +8968,7 @@ public class Supervisor {
         closeAllAprsSystems();
         println("Loading setup file :" + f.getCanonicalPath());
         List<XFuture<?>> sysFutures = new ArrayList<>();
-        try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
+        try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
             tasksCachedTable.setRowCount(0);
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
@@ -9244,7 +9258,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                         @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                          @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

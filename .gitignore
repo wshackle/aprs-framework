@@ -1,6 +1,9 @@
 .classpath
 .project
 .settings
+.nbprofiler/*
+/linux_netbeans_run_user_home/.nbprofiler/*
+
 *.class
 *.bin
 hs_err_pid*.log

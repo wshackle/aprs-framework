@@ -138,6 +138,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             = Collections.synchronizedList(new ArrayList<>());
 
     public void addSetItemsListener(Consumer<List<PhysicalItem>> listener) {
+        if (null != objectPanelToClone) {
+            throw new RuntimeException("cloning");
+        }
         setItemsListeners.add(listener);
     }
 
@@ -2641,39 +2644,35 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public void setConnectTimeout(int newConnectTimeout) {
         jTextFieldConnectTimeout.setText(Integer.toString(newConnectTimeout));
     }
-    
-    
+
     public int getConnectTimeout() {
         return Integer.parseInt(jTextFieldConnectTimeout.getText().trim());
     }
-    
+
     public void setEnableConnectTimeout(boolean enable) {
         jCheckBoxConnectTimeout.setSelected(enable);
     }
-    
-    
+
     public boolean isEnableConnectTimeout() {
-        return  jCheckBoxConnectTimeout.isSelected();
+        return jCheckBoxConnectTimeout.isSelected();
     }
-    
+
     public void setEnableReadTimeout(boolean enable) {
         jCheckBoxReadTimeout.setSelected(enable);
     }
-    
-    
+
     public boolean isEnableReadTimeout() {
-        return  jCheckBoxReadTimeout.isSelected();
+        return jCheckBoxReadTimeout.isSelected();
     }
-    
+
     public void setReadTimeout(int newReadTimeout) {
         jTextFieldReadTimeout.setText(Integer.toString(newReadTimeout));
     }
-    
-    
+
     public int getReadTimeout() {
         return Integer.parseInt(jTextFieldReadTimeout.getText().trim());
     }
-    
+
     /**
      * Set the value of robotHideDist
      *
@@ -3761,12 +3760,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }
 
     private void connectCurrentPosition() {
+        if (null != objectPanelToClone) {
+            throw new RuntimeException("cloning");
+        }
         if (null != aprsSystem) {
             aprsSystem.addCurrentPoseListener(this.currentPoseListener);
         }
     }
 
     private void disconnectCurrentPosition() {
+        if (null != objectPanelToClone) {
+            throw new RuntimeException("cloning");
+        }
         if (null != aprsSystem) {
             aprsSystem.removeCurrentPoseListener(this.currentPoseListener);
         }
@@ -4368,6 +4373,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final CachedCheckBox showCurrentCachedCheckBox;
 
     public void setTrackCurrentPos(boolean v) {
+        if (null != objectPanelToClone) {
+            throw new RuntimeException("cloning");
+        }
         if (showCurrentCachedCheckBox.isSelected() != v) {
             showCurrentCachedCheckBox.setSelected(v);
         }
@@ -5083,12 +5091,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 object2DJPanel1.setDisplayAxis(displayAxis);
             }
         }
-        String trackCurrentPosString = props.getProperty("trackcurrentpos");
-        if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
-            boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
-            showCurrentCachedCheckBox.setSelected(trackCurrentPos);
-            this.setTrackCurrentPos(trackCurrentPos);
+
+        if (null == objectPanelToClone) {
+            String trackCurrentPosString = props.getProperty("trackcurrentpos");
+            if (trackCurrentPosString != null && trackCurrentPosString.length() > 0) {
+                boolean trackCurrentPos = Boolean.valueOf(trackCurrentPosString);
+                showCurrentCachedCheckBox.setSelected(trackCurrentPos);
+                this.setTrackCurrentPos(trackCurrentPos);
+            }
+        } else {
+            showCurrentCachedCheckBox.setSelected(false);
+            showCurrentCachedCheckBox.setEnabled(false);
         }
+
         //showrotations
         String showRotationsString = props.getProperty("showrotations");
         if (showRotationsString != null && showRotationsString.length() > 0) {
@@ -5154,7 +5169,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         String enableReadSoTimeoutString = props.getProperty("enableReadSoTimeout");
         if (null != enableReadSoTimeoutString) {
-           final boolean enable = Boolean.parseBoolean(enableReadSoTimeoutString);
+            final boolean enable = Boolean.parseBoolean(enableReadSoTimeoutString);
             this.setEnableReadTimeout(enable);
         }
         updatingDisplayFromProperties = false;
@@ -5360,7 +5375,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     @SuppressWarnings("guieffect")
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
-            if(line.startsWith("EXCEPTION")) {
+            if (line.startsWith("EXCEPTION")) {
                 aprsSystem.setTitleErrorString(line);
                 return XFutureVoid.completedFuture();
             }
@@ -5919,6 +5934,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             boolean isHoldingObjectExpected,
             long statRecievTime) {
         try {
+            if (null != objectPanelToClone) {
+                throw new NullPointerException("cloning");
+            }
             if (null == aprsSystem) {
                 throw new NullPointerException("aprsSystem");
             }
