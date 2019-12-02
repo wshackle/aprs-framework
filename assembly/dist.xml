@@ -38,13 +38,32 @@ and any modified versions bear some notice that they have been modified.
             <lineEnding>dos</lineEnding>
         </fileSet>
         <fileSet>
+            <directory>example_settings</directory>
+            <outputDirectory>aprs-framework/example_settings</outputDirectory>
+            <includes>
+                <include>**/*.txt</include>
+                <include>**/*.xml</include>
+                <include>**/*.csv</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>src</directory>
+            <outputDirectory>aprs-framework/src</outputDirectory>
+            <includes>
+                <include>**/*.java</include>
+                <include>**/*.wav</include>
+                <include>**/*.png</include>
+                <include>**/*.xml</include>
+               <include>**/*.properties</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>target/classes/</directory>
             <outputDirectory>aprs-framework/resources</outputDirectory>
             <includes>
-                <include>*.properties</include>
-                <include>*.xml</include>
+                <include>**/*.properties</include>
+                <include>**/*.xml</include>
             </includes>
-            <lineEnding>dos</lineEnding>
         </fileSet>
   
         <!-- 
