@@ -303,6 +303,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolMenu.add(toolPickupByToolMenu);
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
+        jTableOptions.getModel().addTableModelListener((TableModelEvent e) -> {
+            if(null != crclGenerator && !isRunningProgram() && !isContinuingActions()){
+                crclGenerator.setOptions(getTableOptions());
+            }
+        });
         optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
         enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
         pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);
