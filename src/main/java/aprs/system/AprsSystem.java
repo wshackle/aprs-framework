@@ -8634,9 +8634,23 @@ public class AprsSystem implements SlotOffsetProvider {
     File propertiesFile = null;
     private @MonotonicNonNull
     File propertiesDirectory = null;
+
+    public void setPropertiesDirectory(File propertiesDirectory) {
+        this.propertiesDirectory = propertiesDirectory;
+    }
     private static final String APRS_DEFAULT_PROPERTIES_FILENAME = "aprs_properties.txt";
     private @MonotonicNonNull
     File lastAprsPropertiesFileFile = null;
+
+    public File getLastAprsPropertiesFileFile() {
+        return lastAprsPropertiesFileFile;
+    }
+
+    public void setLastAprsPropertiesFileFile(File lastAprsPropertiesFileFile) {
+        this.lastAprsPropertiesFileFile = lastAprsPropertiesFileFile;
+    }
+    
+    
 
     void reloadForReverse(boolean reverseFlag) {
         if (null == executorJInternalFrame1) {
@@ -8775,7 +8789,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private static File getDefaultPropertiesDir() {
+    public static File getDefaultPropertiesDir() {
         return AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS().getPropDir();
     }
 
@@ -8794,7 +8808,7 @@ public class AprsSystem implements SlotOffsetProvider {
      *
      * @return last file location
      */
-    private static File getDefaultLastPropertiesFileFile() {
+    public static File getDefaultLastPropertiesFileFile() {
         return AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS().getLastAprsPropertiesFileFile();
     }
 

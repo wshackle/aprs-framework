@@ -427,7 +427,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try ( PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -579,7 +579,15 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jButtonPrevSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevSingleActionPerformed
-        prevSingle();
+        if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
+            try {
+                prevSingleWithLaunchFile(getLastLaunchFile());
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            prevSingle();
+        }
         this.setVisible(false);
         this.dispose();
     }//GEN-LAST:event_jButtonPrevSingleActionPerformed
@@ -596,8 +604,26 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static void prevSingle() {
-        AprsSystem.createPrevSystem()
+    private static XFutureVoid prevSingleWithLaunchFile(File launchFile) {
+        if (null != launchFile) {
+            try {
+                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
+                processLauncher.setVisible(true);
+                return processLauncher.run(launchFile)
+                        .thenComposeToVoid(() -> {
+                            return prevSingle();
+                        });
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return prevSingle();
+        }
+    }
+
+    private static XFutureVoid prevSingle() {
+        return AprsSystem.createPrevSystem()
                 .thenAccept((AprsSystem sys) -> sys.setVisible(true));
     }
 
@@ -616,7 +642,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jButtonOpenSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenSingleActionPerformed
         try {
-            openSingle(null);
+            if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
+                openSingleWithLaunchFile(getLastLaunchFile(), null);
+            } else {
+                openSingle(null);
+            }
             this.setVisible(false);
             this.dispose();
         } catch (Exception ex) {
@@ -747,7 +777,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             boolean useConveyor
                     = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
             return useConveyor;
-        } else{
+        } else {
             boolean defaultConveyorUse = Boolean.getBoolean("aprs.defaultConveyorUse");
             return defaultConveyorUse;
         }
@@ -812,13 +842,33 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
     }//GEN-LAST:event_jMenuItemReviewLastOptaPlannerResultsActionPerformed
 
-    private static void openSingle(String args @Nullable []) {
-        AprsSystem.createEmptySystem()
+    private static XFutureVoid openSingleWithLaunchFile(File launchFile, String args @Nullable []) {
+        if (null != launchFile) {
+            try {
+                ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
+                processLauncher.setVisible(true);
+                return processLauncher.run(launchFile)
+                        .thenComposeToVoid(() -> {
+                            return openSingle(args);
+                        });
+            } catch (IOException ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            return openSingle(args);
+        }
+    }
+
+    private static XFutureVoid openSingle(String args @Nullable []) {
+        return AprsSystem.createEmptySystem()
                 .thenAccept((AprsSystem sys) -> openSingleStep2(sys, args));
     }
 
     private static void openSingleStep2(AprsSystem aprsSys, String @Nullable [] args) {
         try {
+            aprsSys.setLastAprsPropertiesFileFile(AprsSystem.getDefaultLastPropertiesFileFile());
+            aprsSys.setPropertiesDirectory(AprsSystem.getDefaultPropertiesDir());
             aprsSys.setVisible(true);
             if (null == args || args.length < 1) {
                 aprsSys.browseOpenPropertiesFile();
