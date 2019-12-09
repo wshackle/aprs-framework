@@ -2049,9 +2049,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @SafeEffect
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> visionList, String line, boolean ignored) {
         try {
-            if(line.startsWith("EXCEPTION")) {
+            if (line.startsWith("EXCEPTION")) {
                 aprsSystem.setTitleErrorString(line);
-                 return XFutureVoid.completedFuture();
+                disconnectVision();
+                return XFutureVoid.completedFuture();
             }
             if (ignored) {
                 return XFutureVoid.completedFuture();
@@ -2323,7 +2324,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             aprsSystem.runOnDispatchThread(() -> setCommandConnectedOnDisplay(true));
         } catch (Exception exception) {
             System.err.println(exception.getLocalizedMessage());
-            System.err.println("Starting server for command port failed. cmdPortString="+cmdPortString+", argsMap="+argsMap);
+            System.err.println("Starting server for command port failed. cmdPortString=" + cmdPortString + ", argsMap=" + argsMap);
             throw new RuntimeException(exception);
         }
     }

@@ -333,10 +333,10 @@ public class VisionSocketClient implements AutoCloseable {
                                 String origName = Thread.currentThread().getName();
                                 Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
                                 //println("visioncycle="+visioncycle);
-                                if(line.startsWith("EXCEPTION")) {
-                                    String errmsg = "EXCEPTION: VisionSocket host="+VisionSocketClient.this.visionSlr.getHost()+",port="+VisionSocketClient.this.visionSlr.getPort()+line.substring("EXCEPTION".length());
+                                if (line.startsWith("EXCEPTION")) {
+                                    String errmsg = "EXCEPTION: VisionSocket host=" + VisionSocketClient.this.visionSlr.getHost() + ",port=" + VisionSocketClient.this.visionSlr.getPort() + line.substring("EXCEPTION".length());
                                     updateIgnoredLineListeners(Collections.emptyList(), errmsg);
-                                    updateListeners(Collections.emptyList(), errmsg,false);
+                                    updateListeners(Collections.emptyList(), errmsg, false);
                                     throw new RuntimeException(line);
                                 }
                                 parseVisionLine(line);
@@ -373,12 +373,18 @@ public class VisionSocketClient implements AutoCloseable {
                 return XFutureVoid.completedFuture();
             }
             return this.updateListeners(visionList, lineFinal, false);
-        } catch (IOException exception) {
+        } catch (Exception exception) {
             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
             System.err.println("Connect to vision on host " + host + " with port " + port + " failed with message " + exception);
             Throwable cause = exception.getCause();
             if (null != cause) {
                 System.err.println("Caused by " + exception.getCause());
+            }
+            try {
+                updateListeners(null, "EXCEPTION: " + exception.getMessage(), false);
+                updateIgnoredLineListeners(null, "EXCEPTION: " + exception.getMessage());
+            } catch (Exception ex2) {
+                // ignoring exceptions when handling exceptions
             }
             throw new RuntimeException("Failed to connect to vision " + host + ":" + port + " : " + exception.getMessage(), exception);
         }

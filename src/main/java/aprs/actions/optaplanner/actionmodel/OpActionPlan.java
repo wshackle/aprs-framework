@@ -763,21 +763,22 @@ public class OpActionPlan {
     private static synchronized void readRecentActionListFile() throws IOException {
         try {
             if (recentActionListsFile.exists()) {
-                recentActionListFiles.clear();
+                
+                List<File> newRecentActionListFiles = new ArrayList<>();
                 try (BufferedReader br = new BufferedReader(new FileReader(recentActionListsFile))) {
                     String line = br.readLine();
                     while (line != null) {
                         File f = new File(line);
                         if (f.exists() && f.canRead()) {
-                            recentActionListFiles.add(f);
+                            newRecentActionListFiles.add(f);
                         }
                         line = br.readLine();
                     }
                 }
-                Collections.sort(recentActionListFiles, Comparators.byLongFunction(File::lastModified));
-                if (recentActionListFiles.size() > 12) {
-                    while (recentActionListFiles.size() > 12) {
-                        recentActionListFiles.remove(0);
+                Collections.sort(newRecentActionListFiles, Comparators.byLongFunction(File::lastModified));
+                if (newRecentActionListFiles.size() > 12) {
+                    while (newRecentActionListFiles.size() > 12) {
+                        newRecentActionListFiles.remove(0);
                     }
                     try (PrintWriter pw = new PrintWriter(new FileWriter(recentActionListsFile))) {
                         for (int i = 0; i < recentActionListFiles.size(); i++) {
@@ -786,13 +787,15 @@ public class OpActionPlan {
                         }
                     }
                 }
+                recentActionListFiles.clear();
+                recentActionListFiles.addAll(newRecentActionListFiles);
             }
         } finally {
             recentActionsFileListRead = true;
         }
     }
 
-    public static List<File> getRecentActionListFiles() {
+    public static synchronized List<File> getRecentActionListFiles() {
         if (!recentActionsFileListRead) {
             try {
                 readRecentActionListFile();
@@ -802,7 +805,8 @@ public class OpActionPlan {
                 recentActionsFileListRead = true;
             }
         }
-        return recentActionListFiles;
+        return java.util.Collections.unmodifiableList(new ArrayList<>(recentActionListFiles));
+                //recentActionListFiles;
     }
 
     private void addRecentActionListFile(File f) throws IOException {
