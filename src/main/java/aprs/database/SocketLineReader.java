@@ -25,6 +25,7 @@ package aprs.database;
 import com.sun.istack.logging.Logger;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
@@ -33,6 +34,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -269,14 +271,29 @@ public class SocketLineReader {
                 } catch (Exception exception) {
                     if (!closing) {
                         long t2 = System.currentTimeMillis();
-                        long timeDiff = t2-t1;
-                        long time0Diff = t2-t0;
-                        System.err.println("SocketLineReader error: timeDiff = " + timeDiff+", count="+count+", time0Diff="+time0Diff);
+                        long timeDiff = t2 - t1;
+                        long time0Diff = t2 - t0;
+                        System.out.println("");
+                        System.out.flush();
+                        System.err.println("readSoTimeOut = " + readSoTimeOut);
+                        System.err.println("socket = " + socket);
+                        if (null != socket) {
+                            final InputStream inputStream;
+                            try {
+                                System.err.println("socket.getSoTimeout() = " + socket.getSoTimeout());
+                                inputStream = socket.getInputStream();
+                                System.err.println("inputStream.available() = " + inputStream.available());
+                            } catch (IOException ex) {
+                                java.util.logging.Logger.getLogger(SocketLineReader.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+
+                        System.err.println("SocketLineReader error: timeDiff = " + timeDiff + ", count=" + count + ", time0Diff=" + time0Diff);
                         Logger.getLogger(SocketLineReader.class)
                                 .severe(
                                         "isClient=true, host=" + host + ",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb + ",readSoTimeOut=" + readSoTimeOut,
                                         exception);
-                        _cb.call("EXCEPTION:"+exception, null);
+                        _cb.call("EXCEPTION:" + exception, null);
                     }
                     throw new RuntimeException(exception);
                 }

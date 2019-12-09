@@ -153,17 +153,18 @@ public class VisionSocketClient implements AutoCloseable {
             List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
 
             synchronized (listListeners) {
-                if (null != localLineRecieved) {
-                    for (VisionSocketClientListener listListener : listListeners) {
-                        try {
-                            VisionSocketClientListener listener = listListener;
-                            if (null != listener) {
-                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, ignored));
-                            }
-                        } catch (Exception e) {
-                            Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
+                int i = 0;
+                List<VisionSocketClientListener> tmpListListeners = new ArrayList<>(listListeners);
+                try {
+                    for (i = 0; i < tmpListListeners.size(); i++) {
+                        VisionSocketClientListener listener = tmpListListeners.get(i);
+                        if (null != listener) {
+                            futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, ignored));
                         }
                     }
+                } catch (Exception e) {
+                    System.out.println("i=" + i + ", tmpListListeners=" + tmpListListeners);
+                    Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
                 }
             }
         }
@@ -176,16 +177,17 @@ public class VisionSocketClient implements AutoCloseable {
             List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
 
             synchronized (ignoredLineListListeners) {
-                if (null != localLineRecieved) {
-                    for (VisionSocketClientListener listListener : ignoredLineListListeners) {
-                        try {
-                            VisionSocketClientListener listener = listListener;
-                            if (null != listener) {
-                                futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, true));
-                            }
-                        } catch (Exception e) {
-                            Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
+                List<VisionSocketClientListener> tmpIgnoredLineListListeners = new ArrayList<>(ignoredLineListListeners);
+                for (int i = 0; i < tmpIgnoredLineListListeners.size(); i++) {
+                    VisionSocketClientListener listListener = tmpIgnoredLineListListeners.get(i);
+                    try {
+                        VisionSocketClientListener listener = listListener;
+                        if (null != listener) {
+                            futures.add(listener.visionClientUpdateReceived(listToSend, localLineRecieved, true));
                         }
+                    } catch (Exception e) {
+                        System.err.println("tmpIgnoredLineListListeners=" + tmpIgnoredLineListListeners);
+                        Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", e);
                     }
                 }
             }
