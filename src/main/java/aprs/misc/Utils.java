@@ -1233,7 +1233,7 @@ public class Utils {
         if (msgCopy.length() > 400) {
             msgCopy = msgCopy.substring(0, 396) + " ...";
         }
-        for (int i = 80; i < message.length(); i += 80) {
+        for (int i = 80; i < msgCopy.length(); i += 80) {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
         if (isEventDispatchThread()) {

@@ -146,6 +146,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
+import java.net.URLClassLoader;
 import java.security.ProtectionDomain;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -3200,7 +3201,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     public final void refreshJInternalFrameFinders() {
 
-        clearJInternalFrameFinders();
+        try {
+            clearJInternalFrameFinders();
 //        try {
 //            ClassLoader cl = Thread.currentThread().getContextClassLoader();
 //            System.out.println("cl = " + cl);
@@ -3220,17 +3222,50 @@ public class AprsSystem implements SlotOffsetProvider {
 //            Logger.getLogger(CRCLServerSocket.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 
-        ServiceLoader<ServerJInternalFrameProviderFinderInterface> loader
-                = ServiceLoader
-                        .load(ServerJInternalFrameProviderFinderInterface.class
-                        );
+            ServiceLoader<ServerJInternalFrameProviderFinderInterface> loader
+                    = ServiceLoader
+                            .load(ServerJInternalFrameProviderFinderInterface.class
+                            );
 
-        Iterator<ServerJInternalFrameProviderFinderInterface> it = loader.iterator();
+            Iterator<ServerJInternalFrameProviderFinderInterface> it = loader.iterator();
 //        System.out.println("it = " + it);
-        while (it.hasNext()) {
-            ServerJInternalFrameProviderFinderInterface finder = it.next();
+            while (it.hasNext()) {
+                ServerJInternalFrameProviderFinderInterface finder = it.next();
 //            System.out.println("finder = " + finder);
-            addJInternalFrameFinder(finder);
+                addJInternalFrameFinder(finder);
+            }
+        } catch (Throwable e) {
+            String msg = e.getMessage();
+            String classpathStr = System.getProperty("java.class.path");
+            msg = msg + "\nclasspath=" + classpathStr;
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//            System.out.println("cl = " + cl);
+//            Class clzz = cl.loadClass("com.github.wshackle.atinetft_proxy.ATIForceTorqueSensorFinder");
+//            System.out.println("clzz = " + clzz);
+//            ProtectionDomain protDom = clzz.getProtectionDomain();
+//            System.out.println("protDom = " + protDom);
+            if (cl instanceof URLClassLoader) {
+                URLClassLoader ucl = (URLClassLoader) cl;
+                URL[] urls = ucl.getURLs();
+                for (int i = 0; i < urls.length; i++) {
+                    URL url = urls[i];
+                    msg = msg + "\nurl[" + i + "]=" + urls[i];
+                }
+            }
+            ClassLoader sysCl = ClassLoader.getSystemClassLoader();
+            if (sysCl != cl) {
+                if (sysCl instanceof URLClassLoader) {
+                    URLClassLoader ucl = (URLClassLoader) cl;
+                    URL[] urls = ucl.getURLs();
+                    for (int i = 0; i < urls.length; i++) {
+                        URL url = urls[i];
+                        msg = msg + "\nurl[" + i + "]=" + urls[i];
+                    }
+                }
+            }
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, msg, e);
+            throw new RuntimeException(msg, e);
         }
 //        System.out.println("this.sensorFinders = " + this.sensorFinders);
 
@@ -3947,24 +3982,31 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private static XFuture<AprsSystem> createAprsSystemWithSwingDisplay2(File propertiesFile) {
-        AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
-        AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
-        aprsSystemDisplayJFrame1.setAprsSystem(system);
-        system.setVisible(true);
-        if (null != propertiesFile) {
-            system.setPropertiesFile(propertiesFile);
-            return system.loadProperties()
-                    .thenComposeToVoid(() -> system.defaultInit())
-                    .thenApply(x -> {
+        try {
+            AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
+            AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
+            aprsSystemDisplayJFrame1.setAprsSystem(system);
+            system.setVisible(true);
+            if (null != propertiesFile) {
+                system.setPropertiesFile(propertiesFile);
+                return system.loadProperties()
+                        .thenComposeToVoid(() -> system.defaultInit())
+                        .thenApply(x -> {
+                            aprsSystemDisplayJFrame1.setAprsSystem(system);
+                            return system;
+                        });
+            }
+            return system.defaultInit().
+                    thenApply(x -> {
                         aprsSystemDisplayJFrame1.setAprsSystem(system);
                         return system;
                     });
+        } catch (Throwable e) {
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", e);
+            MultiLineStringJPanel.showException(e);
+            throw new RuntimeException(e);
         }
-        return system.defaultInit().
-                thenApply(x -> {
-                    aprsSystemDisplayJFrame1.setAprsSystem(system);
-                    return system;
-                });
     }
 
     private static XFuture<AprsSystem> createEmptyAprsSystemHeadless() {
@@ -4016,7 +4058,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return startWindowsFromMenuCheckBoxes()
                 .thenRun(this::completeCommonInit)
                 .peekNoCancelException((Throwable t) -> {
-                    Utils.runOnDispatchThread(() ->  {
+                    Utils.runOnDispatchThread(() -> {
                         setupWindowsMenuOnDisplay();
                     });
                 });
@@ -8649,8 +8691,6 @@ public class AprsSystem implements SlotOffsetProvider {
     public void setLastAprsPropertiesFileFile(File lastAprsPropertiesFileFile) {
         this.lastAprsPropertiesFileFile = lastAprsPropertiesFileFile;
     }
-    
-    
 
     void reloadForReverse(boolean reverseFlag) {
         if (null == executorJInternalFrame1) {
@@ -10102,13 +10142,13 @@ public class AprsSystem implements SlotOffsetProvider {
                 File commandStatusLogFile = crclClientJInternalFrame.writeCommandStatusLogFile();
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 crclClientJInternalFrame.printPerfInfo(System.out, task);
-                try(PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile(task+"crcLClientPerfInfo", ".txt")))) {
+                try (PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile(task + "crcLClientPerfInfo", ".txt")))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
             }
         } catch (IOException iOException) {
             Logger.getLogger(AprsSystem.class
-                        .getName()).log(Level.SEVERE, "", iOException);
+                    .getName()).log(Level.SEVERE, "", iOException);
         }
         closeAllWindows();
         runProgramService.shutdownNow();
@@ -10119,7 +10159,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != r) {
             r.run();
         }
-       
+
     }
 
     @UIEffect
