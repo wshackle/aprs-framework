@@ -27,6 +27,7 @@ import aprs.system.AprsSystem;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -55,25 +56,47 @@ public class ViewOptions {
     double scale;
     boolean paintingComponent;
     boolean useSeparateNames;
-    Color backgroundColor;
-    Color foregroundColor;
+
+    @Nullable
+    Color backgroundColor = null;
+
+    @Nullable
+    Color foregroundColor = null;
+
     boolean showCurrentXY;
     double currentX;
     double currentY;
-    Point2DMinMax minmax;
+
+    @Nullable
+    Point2DMinMax minmax = null;
+
     boolean showOverlapping;
     boolean showOnlyOverlapping;
-    DisplayAxis displayAxis;
-    Point mousePoint;
+
+    @MonotonicNonNull
+    DisplayAxis displayAxis = null;
+
+    @Nullable
+    Point mousePoint = null;
+
     boolean mouseInside;
-    Point2D.Double worldMousePoint;
+
+    Point2D.@Nullable Double worldMousePoint = null;
+
     boolean viewRotationsAndImages;
     double alternativeRotation;
     boolean viewDetails;
-    AprsSystem aprsSystem;
-    SlotOffsetProvider slotOffsetProvider;
+
+    @Nullable
+    AprsSystem aprsSystem = null;
+
+    @Nullable
+    SlotOffsetProvider slotOffsetProvider = null;
+
     double slotMaxDistExpansion;
-    Point2D.@Nullable Double capturedPartPoint;
+
+    Point2D.@Nullable Double capturedPartPoint = null;
+
     boolean endEffectorClosed;
     double senseMinX;
     double senseMaxX;

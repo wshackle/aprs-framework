@@ -2342,40 +2342,77 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private volatile @MonotonicNonNull
     PrintStream commandReplyPrintStream = null;
 
-    private void handleCommand(String line, PrintStream os) {
+    private void handleCommand(String line, @Nullable PrintStream returnStream) {
         aprsSystem.runOnDispatchThread(() -> setLastCommand(line));
         if (null == dpu) {
-            os.println("Database not connected.");
+            if (null != returnStream) {
+                returnStream.println("Database not connected.");
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Database not connected.");
+            }
             return;
         }
         if (null == visionClient) {
-            os.println("Vision not connected.");
+            if (null != returnStream) {
+                returnStream.println("Vision not connected.");
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Vision not connected.");
+            }
             return;
         }
         String fa[] = line.trim().split(" ");
         if (fa.length < 1) {
-            os.println("Not recognized: " + line);
+            if (null != returnStream) {
+                returnStream.println("Not recognized: " + line);
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Not recognized: " + line);
+            }
             return;
         }
         if (fa[0].trim().toUpperCase().compareTo("ON") == 0) {
             setAcquire(AcquireEnum.ON);
             aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.ON.toString()));
 
-            os.println("Acquire Status: " + getAcquire());
+            if (null != returnStream) {
+                returnStream.println("Acquire Status: " + getAcquire());
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Acquire Status: " + getAcquire());
+            }
         } else if (fa[0].trim().toUpperCase().compareTo("ONCE") == 0) {
             setAcquire(AcquireEnum.ONCE);
             aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.ONCE.toString()));
-            os.println("Acquire Status: " + AcquireEnum.ONCE);
+            if (null != returnStream) {
+                returnStream.println("Acquire Status: " + getAcquire());
+                returnStream.println("Acquire Status: " + AcquireEnum.ONCE);
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Acquire Status: " + getAcquire());
+            }
         } else if (fa[0].trim().toUpperCase().compareTo("OFF") == 0) {
             setAcquire(AcquireEnum.OFF);
             aprsSystem.runOnDispatchThread(() -> setAquiring(AcquireEnum.OFF.toString()));
-            os.println("Acquire Status: " + AcquireEnum.OFF);
-            commandReplyPrintStream = os;
-            if (null != visionClient) {
+            if (null != returnStream) {
+                returnStream.println("Acquire Status: " + AcquireEnum.OFF);
+                commandReplyPrintStream = returnStream;
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Acquire Status: " + getAcquire());
+            }
+            if (null != visionClient && null != commandReplyPrintStream) {
                 visionClient.setReplyPs(commandReplyPrintStream);
             }
         } else {
-            os.println("Not recognized: " + line);
+            if (null != returnStream) {
+                returnStream.println("Not recognized: " + line);
+
+            } else {
+                System.err.println("VisionToDBJPanel.handleCommand : No return stream");
+                System.err.println("Not recognized: " + line);
+            }
         }
     }
 

@@ -3294,7 +3294,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         if (trace.length > 3) {
             String fileNameShort = trace[2].getFileName();
-            if(fileNameShort.endsWith(".java")) {
+            if(fileNameShort != null && fileNameShort.endsWith(".java")) {
                 fileNameShort = fileNameShort.substring(0,fileNameShort.length()-4);
             }
             program.setName("empty"+emptyProgramCount.incrementAndGet() + "_" + fileNameShort+":"+trace[2].getLineNumber());

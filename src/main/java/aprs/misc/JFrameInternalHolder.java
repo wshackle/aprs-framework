@@ -23,6 +23,7 @@
 package aprs.misc;
 
 import javax.swing.JInternalFrame;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /**
  *
@@ -30,7 +31,8 @@ import javax.swing.JInternalFrame;
  */
 public class JFrameInternalHolder {
 
-    private JInternalFrame internalFrame;
+    private @MonotonicNonNull
+    JInternalFrame internalFrame;
 
     /**
      * Get the value of internalFrame
@@ -38,6 +40,9 @@ public class JFrameInternalHolder {
      * @return the value of internalFrame
      */
     public JInternalFrame getInternalFrame() {
+        if(null == internalFrame) {
+            throw new NullPointerException("internalFrame");
+        }
         return internalFrame;
     }
 

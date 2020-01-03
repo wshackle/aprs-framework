@@ -625,7 +625,6 @@ public class Object2DJPanel extends JPanel {
         opts.defaultAutoscale = this.autoscale;
         opts.useSeparateNames = this.useSeparateNames;
         if (opts.minmax == null) {
-            opts.minmax = new Point2DMinMax();
             Point2DMinMax minmax = getMinmax(autoscale);
             if (autoscale && minmax == null) {
                 minmax = computeAutoscaleMinMax(opts, items);
@@ -639,12 +638,13 @@ public class Object2DJPanel extends JPanel {
             }
             if (!doAutoscale) {
                 if (!Double.isFinite(minmax.max.x) || !Double.isFinite(minmax.min.x) || !Double.isFinite(minmax.min.y) || !Double.isFinite(minmax.max.y)) {
-                    throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+                    throw new IllegalArgumentException("Limits must be finite: (" + minmax.min.x + "," + minmax.min.y + "," + minmax.max.x + "," + minmax.max.y + ")");
                 }
             }
             if (null == minmax) {
                 throw new RuntimeException("minmax=" + minmax);
             }
+            opts.minmax = new Point2DMinMax();
             opts.minmax.min.x = minmax.min.x;
             opts.minmax.min.y = minmax.min.y;
             opts.minmax.max.x = minmax.max.x;
@@ -653,26 +653,31 @@ public class Object2DJPanel extends JPanel {
         opts.showOnlyOverlapping = this.showOnlyOverlapping;
         opts.showOverlapping = this.showOverlapping;
         if (this.showOverlapping || this.showOnlyOverlapping) {
-            opts.aprsSystem = this.aprsSystem;
+            final AprsSystem thisAprsSystemLocal = this.aprsSystem;
+            if (null != thisAprsSystemLocal) {
+                opts.aprsSystem = thisAprsSystemLocal;
+            }
         }
         if (null == opts.displayAxis) {
             opts.displayAxis = this.displayAxis;
         }
         opts.mouseInside = this.mouseInside;
-        if (null == opts.mousePoint) {
-            opts.mousePoint = this.mousePoint;
+        final Point thisMousePointLocal = this.mousePoint;
+        if (null == opts.mousePoint && null != thisMousePointLocal) {
+            opts.mousePoint = thisMousePointLocal;
         }
         if (opts.mouseInside && opts.mousePoint != null) {
             double scale = getScale(autoscale);
-            if (Double.isFinite(scale) && Math.abs(scale) > 1E-9) {
-                opts.worldMousePoint = screenToWorldPoint(mousePoint.x, mousePoint.y, this.autoscale);
+            if (Double.isFinite(scale) && Math.abs(scale) > 1E-9 && opts.mousePoint != null) {
+                opts.worldMousePoint = screenToWorldPoint(opts.mousePoint.x, opts.mousePoint.y, this.autoscale);
             }
         }
         opts.viewRotationsAndImages = this.viewRotationsAndImages;
         opts.alternativeRotation = this.alternativeRotation;
         opts.viewDetails = this.viewDetails;
-        if (null == opts.slotOffsetProvider) {
-            opts.slotOffsetProvider = this.slotOffsetProvider;
+        final SlotOffsetProvider thisSlotOffsetProviderLocal = this.slotOffsetProvider;
+        if (null == opts.slotOffsetProvider && thisSlotOffsetProviderLocal != null) {
+            opts.slotOffsetProvider = thisSlotOffsetProviderLocal;
         }
         opts.slotMaxDistExpansion = this.slotMaxDistExpansion;
         opts.capturedPartPoint = this.capturedPartPoint;
@@ -715,7 +720,14 @@ public class Object2DJPanel extends JPanel {
         writeImageFile(opts, type, f, csvFile, items, null, null);
     }
 
-    private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> items, PmCartesian point, String label) {
+    private static void writeImageFile(
+            ViewOptions opts,
+            String type,
+            File f,
+            File csvFile,
+            Collection<? extends PhysicalItem> items,
+            @Nullable PmCartesian point,
+            @Nullable String label) {
         boolean doAutoscale;
         if (opts.useOverridingAutoscale) {
             doAutoscale = opts.overridingAutoscale;
@@ -723,11 +735,12 @@ public class Object2DJPanel extends JPanel {
             doAutoscale = opts.defaultAutoscale;
         }
         if (!doAutoscale) {
-            if (null == opts.minmax) {
+            final Point2DMinMax optsMinmaxLocal = opts.minmax;
+            if (null == optsMinmaxLocal) {
                 throw new NullPointerException("opts.minmax");
             }
-            if (!Double.isFinite(opts.minmax.max.x) || !Double.isFinite(opts.minmax.min.x) || !Double.isFinite(opts.minmax.min.y) || !Double.isFinite(opts.minmax.max.y)) {
-                throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+            if (!Double.isFinite(optsMinmaxLocal.max.x) || !Double.isFinite(optsMinmaxLocal.min.x) || !Double.isFinite(optsMinmaxLocal.min.y) || !Double.isFinite(optsMinmaxLocal.max.y)) {
+                throw new IllegalArgumentException("Limits must be finite: (" + optsMinmaxLocal.min.x + "," + optsMinmaxLocal.min.y + "," + optsMinmaxLocal.max.x + "," + optsMinmaxLocal.max.y + ")");
             }
         }
         int submitCount = imageIOWriterServiceSubmittedCount.get();
@@ -745,12 +758,19 @@ public class Object2DJPanel extends JPanel {
         imageIOWriterService.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
     }
 
-    private static void writeImageFileOnService(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint, PmCartesian point, String label) {
+    private static void writeImageFileOnService(
+            ViewOptions opts,
+            String type,
+            File f,
+            File csvFile,
+            Collection<? extends PhysicalItem> itemsToPaint,
+            @Nullable PmCartesian point,
+            @Nullable String label) {
         try {
 
             saveCsvItemsFile(csvFile, itemsToPaint);
             BufferedImage img = createSnapshotImage(opts, itemsToPaint);
-            Graphics2D g2d = (Graphics2D) img.createGraphics();
+            Graphics2D g2d = img.createGraphics();
             if (null != point) {
                 paintHighlightedPose(opts, itemsToPaint.size(), point, g2d, label);
             }
@@ -815,12 +835,13 @@ public class Object2DJPanel extends JPanel {
         } else {
             doAutoscale = opts.defaultAutoscale;
         }
+        final Point2DMinMax optsMinmaxLocal = opts.minmax;
         if (!doAutoscale) {
-            if (null == opts.minmax) {
+            if (null == optsMinmaxLocal) {
                 throw new NullPointerException("opts.minmax");
             }
-            if (!Double.isFinite(opts.minmax.max.x) || !Double.isFinite(opts.minmax.min.x) || !Double.isFinite(opts.minmax.min.y) || !Double.isFinite(opts.minmax.max.y)) {
-                throw new IllegalArgumentException("Limits must be finite: (" + opts.minmax.min.x + "," + opts.minmax.min.y + "," + opts.minmax.max.x + "," + opts.minmax.max.y + ")");
+            if (!Double.isFinite(optsMinmaxLocal.max.x) || !Double.isFinite(optsMinmaxLocal.min.x) || !Double.isFinite(optsMinmaxLocal.min.y) || !Double.isFinite(optsMinmaxLocal.max.y)) {
+                throw new IllegalArgumentException("Limits must be finite: (" + optsMinmaxLocal.min.x + "," + optsMinmaxLocal.min.y + "," + optsMinmaxLocal.max.x + "," + optsMinmaxLocal.max.y + ")");
             }
         }
         int w = (opts.w >= 100) ? opts.w : 100;
@@ -840,7 +861,10 @@ public class Object2DJPanel extends JPanel {
         if (doAutoscale) {
             paintWithAutoScale(itemsToPaint, null, g2d, opts);
         } else {
-            paintItems(g2d, itemsToPaint, null, opts.minmax, opts);
+            if (null == optsMinmaxLocal) {
+                throw new NullPointerException("opts.minmax");
+            }
+            paintItems(g2d, itemsToPaint, null, optsMinmaxLocal, opts);
         }
         return img;
     }
@@ -926,8 +950,15 @@ public class Object2DJPanel extends JPanel {
             Graphics2D g2d,
             @Nullable String label) {
         DisplayAxis displayAxis = opts.displayAxis;
+        if (null == displayAxis) {
+            throw new NullPointerException("opts.displayAxis");
+        }
         boolean useSeparateNames = opts.useSeparateNames;
-        Point2DMinMax minmaxParam = opts.minmax;
+        final Point2DMinMax optsMinmaxLocal = opts.minmax;
+        if (null == optsMinmaxLocal) {
+            throw new NullPointerException("opts.minmax");
+        }
+        Point2DMinMax minmaxParam = optsMinmaxLocal;
         double minX = minmaxParam.min.x;
         double minY = minmaxParam.min.y;
         double maxX = minmaxParam.max.x;
@@ -1860,11 +1891,15 @@ public class Object2DJPanel extends JPanel {
             Collection<? extends PhysicalItem> itemsToPaint,
             @Nullable PhysicalItem selectedItem,
             Point2DMinMax minmaxParam,
-            @Nullable ViewOptions opts) {
+            ViewOptions opts) {
 
         try {
             if (null == itemsToPaint || itemsToPaint.isEmpty()) {
                 return;
+            }
+            final DisplayAxis optsDisplayAxisLocal = opts.displayAxis;
+            if (null == optsDisplayAxisLocal) {
+                throw new NullPointerException("opts.displayAxis");
             }
             Collection<? extends PhysicalItem> origItemsToPaint = itemsToPaint;
             final AprsSystem aprsSystemFinal = opts.aprsSystem;
@@ -1894,10 +1929,8 @@ public class Object2DJPanel extends JPanel {
 
             final Dimension dim = new Dimension(opts.w, opts.h);
             boolean useSeparateNamesThisTime = opts.useSeparateNames;
-            if (null != opts) {
-                if (opts.disableLabels) {
-                    useSeparateNamesThisTime = false;
-                }
+            if (opts.disableLabels) {
+                useSeparateNamesThisTime = false;
             }
             double new_scale = computeNewScale(minmaxParam, opts);
 
@@ -1949,7 +1982,10 @@ public class Object2DJPanel extends JPanel {
             if (useSeparateNamesThisTime) {
                 List<? extends PhysicalItem> displayItemsList = new ArrayList<>(itemsToPaint);
                 displayItems = displayItemsList;
-                switch (opts.displayAxis) {
+                if (null == optsDisplayAxisLocal) {
+                    throw new NullPointerException("opts.displayAxis");
+                }
+                switch (optsDisplayAxisLocal) {
                     case POS_X_POS_Y:
                         displayItemsList.sort(Comparator.comparing((PhysicalItem item) -> -item.y));
                         break;
@@ -2025,7 +2061,10 @@ public class Object2DJPanel extends JPanel {
                     final int itemsToPaintSize = itemsToPaint.size();
                     final boolean itemIsSelected = item == selectedItem;
                     final double itemOffsetRatio = ((double) (i + 1)) / (itemsToPaintSize + 2);
-                    paintItemLabel(item, i, g2d, opts.displayAxis, minmaxParam, itemOffsetRatio, dim, new_scale, itemIsSelected, origTransform);
+                    if (null == optsDisplayAxisLocal) {
+                        throw new NullPointerException("opts.displayAxis");
+                    }
+                    paintItemLabel(item, i, g2d, optsDisplayAxisLocal, minmaxParam, itemOffsetRatio, dim, new_scale, itemIsSelected, origTransform);
                 }
             }
             g2d.setFont(origFont);
@@ -2126,8 +2165,9 @@ public class Object2DJPanel extends JPanel {
                 }
 
                 try {
-                    if (null != opts.slotOffsetProvider && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
-                        List<Slot> offsets = opts.slotOffsetProvider.getSlotOffsets(item.getName(), true);
+                    final SlotOffsetProvider optsSlotOffsetProviderLocal = opts.slotOffsetProvider;
+                    if (null != optsSlotOffsetProviderLocal && ("PT".equals(item.getType()) || "KT".equals(item.getType()))) {
+                        List<Slot> offsets = optsSlotOffsetProviderLocal.getSlotOffsets(item.getName(), true);
                         if (null != offsets) {
                             for (PhysicalItem offset : offsets) {
                                 double mag = offset.mag();
@@ -2208,11 +2248,11 @@ public class Object2DJPanel extends JPanel {
                 Point2D.Double fromPoint = opts.capturedPartPoint;
                 if (null != fromPoint) {
                     g2d.setColor(Color.MAGENTA);
-                    Point2D.Double captureScreenPt = toScreenPoint(opts.displayAxis, fromPoint.x, fromPoint.y, minmaxParam, new_scale);
-                    Point2D.Double currentScreenPt = toScreenPoint(opts.displayAxis, opts.currentX, opts.currentY, minmaxParam, new_scale);
+                    Point2D.Double captureScreenPt = toScreenPoint(optsDisplayAxisLocal, fromPoint.x, fromPoint.y, minmaxParam, new_scale);
+                    Point2D.Double currentScreenPt = toScreenPoint(optsDisplayAxisLocal, opts.currentX, opts.currentY, minmaxParam, new_scale);
                     g2d.draw(new Line2D.Double(currentScreenPt, captureScreenPt));
                 }
-                translate(opts.displayAxis, g2d, opts.currentX, opts.currentY, minmaxParam, -1, -1, new_scale);
+                translate(optsDisplayAxisLocal, g2d, opts.currentX, opts.currentY, minmaxParam, -1, -1, new_scale);
                 if (opts.endEffectorClosed) {
                     g2d.setColor(Color.black);
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
@@ -2271,10 +2311,13 @@ public class Object2DJPanel extends JPanel {
     @UIEffect
     private static void drawRobotReachLimitsRectangle(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
 
-        if (null != opts.aprsSystem) {
-            AprsSystem aprsSystem = opts.aprsSystem;
+        AprsSystem optsAprsSystem = opts.aprsSystem;
+        if (null != optsAprsSystem) {
             DisplayAxis displayAxis = opts.displayAxis;
-            for (PmCartesianMinMaxLimit minMax : aprsSystem.getLimits()) {
+            if (null == displayAxis) {
+                return;
+            }
+            for (PmCartesianMinMaxLimit minMax : optsAprsSystem.getLimits()) {
 
                 PmCartesian robotReachMax = minMax.getMax();
                 PmCartesian robotReachMin = minMax.getMin();
@@ -2300,14 +2343,17 @@ public class Object2DJPanel extends JPanel {
 
     @UIEffect
     private static void drawSenseLimitsRectangle(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, double new_scale) {
+        final DisplayAxis optDisplayAxis = opts.displayAxis;
+
         if (Double.isFinite(opts.senseMaxX)
                 && Double.isFinite(opts.senseMinX)
                 && Double.isFinite(opts.senseMinY)
-                && Double.isFinite(opts.senseMaxY)) {
+                && Double.isFinite(opts.senseMaxY)
+                && null != optDisplayAxis) {
             g2d.setColor(Color.black);
 
-            Point2D.Double minSensePoint = toScreenPoint(opts.displayAxis, opts.senseMinX, opts.senseMinY, tempMinMax, new_scale);
-            Point2D.Double maxSensePoint = toScreenPoint(opts.displayAxis, opts.senseMaxX, opts.senseMaxY, tempMinMax, new_scale);
+            Point2D.Double minSensePoint = toScreenPoint(optDisplayAxis, opts.senseMinX, opts.senseMinY, tempMinMax, new_scale);
+            Point2D.Double maxSensePoint = toScreenPoint(optDisplayAxis, opts.senseMaxX, opts.senseMaxY, tempMinMax, new_scale);
             g2d.draw(new Rectangle.Double(
                     Math.min(minSensePoint.x, maxSensePoint.x),
                     Math.min(minSensePoint.y, maxSensePoint.y),
@@ -2317,17 +2363,25 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    static private double computeNewScale(Point2DMinMax minmax, @Nullable ViewOptions opts) {
+    static private double computeNewScale(
+            Point2DMinMax minmax,
+            ViewOptions opts) {
         boolean useSeparateNamesThisTime = opts.useSeparateNames;
-        if (null != opts) {
-            if (opts.disableLabels) {
-                useSeparateNamesThisTime = false;
-            }
+        if (opts.disableLabels) {
+            useSeparateNamesThisTime = false;
         }
-        return computeNewScale(opts.displayAxis, useSeparateNamesThisTime, minmax, opts);
+        final DisplayAxis optsDisplayAxisLocal = opts.displayAxis;
+        if (null == optsDisplayAxisLocal) {
+            throw new NullPointerException("opts.displayAxis");
+        }
+        return computeNewScale(optsDisplayAxisLocal, useSeparateNamesThisTime, minmax, opts);
     }
 
-    private static double computeNewScale(DisplayAxis displayAxis, boolean useSeparateNames, Point2DMinMax minmax, @Nullable ViewOptions opts) {
+    private static double computeNewScale(
+            DisplayAxis displayAxis,
+            boolean useSeparateNames,
+            Point2DMinMax minmax,
+            ViewOptions opts) {
         Point2D.Double min = minmax.min;
         Point2D.Double max = minmax.max;
         if (null != opts && opts.scale_set && opts.scale > 0) {
@@ -2512,10 +2566,14 @@ public class Object2DJPanel extends JPanel {
 
     @SuppressWarnings("guieffect")
     private static void translateThenRotate(ViewOptions opts, Graphics2D g2d, double itemx, double itemy, Point2DMinMax minMaxParam, double scaleParam, boolean ignoreRotation, double rot) {
-        Point2D.Double translatePoint = toScreenPoint(opts.displayAxis, itemx, itemy, minMaxParam, scaleParam);
+        final DisplayAxis optsDisplayAxisLocal = opts.displayAxis;
+        if (null == optsDisplayAxisLocal) {
+            throw new NullPointerException("opts.displayAxis");
+        }
+        Point2D.Double translatePoint = toScreenPoint(optsDisplayAxisLocal, itemx, itemy, minMaxParam, scaleParam);
         g2d.translate(translatePoint.x, translatePoint.y);
         if (opts.viewRotationsAndImages) {
-            switch (opts.displayAxis) {
+            switch (optsDisplayAxisLocal) {
                 case POS_X_POS_Y:
                     break;
 

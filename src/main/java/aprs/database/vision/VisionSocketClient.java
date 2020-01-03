@@ -171,7 +171,7 @@ public class VisionSocketClient implements AutoCloseable {
         return XFutureVoid.allOf(futures);
     }
 
-    public XFutureVoid updateIgnoredLineListeners(List<PhysicalItem> localVisionList, String localLineRecieved) {
+    public XFutureVoid updateIgnoredLineListeners(@Nullable List<PhysicalItem> localVisionList, String localLineRecieved) {
         List<XFutureVoid> futures = new ArrayList<>();
         if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
             List<PhysicalItem> listToSend = new ArrayList<>(localVisionList);
@@ -316,7 +316,7 @@ public class VisionSocketClient implements AutoCloseable {
                 String lastSkippedLine = null;
 
                 @Override
-                public void call(final String line, PrintStream os) {
+                public void call(final String line, @Nullable PrintStream os) {
                     if (line.length() < 1 || line.trim().length() < 1) {
                         emptyLines++;
                         return;
@@ -336,7 +336,13 @@ public class VisionSocketClient implements AutoCloseable {
                                 Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
                                 //println("visioncycle="+visioncycle);
                                 if (line.startsWith("EXCEPTION")) {
-                                    String errmsg = "EXCEPTION: VisionSocket host=" + VisionSocketClient.this.visionSlr.getHost() + ",port=" + VisionSocketClient.this.visionSlr.getPort() + line.substring("EXCEPTION".length());
+                                    final SocketLineReader thisVisionSlrLocal = VisionSocketClient.this.visionSlr;
+                                    final String errmsg;
+                                    if (null != thisVisionSlrLocal) {
+                                        errmsg = "EXCEPTION: VisionSocket host=" + thisVisionSlrLocal.getHost() + ",port=" + thisVisionSlrLocal.getPort() + line.substring("EXCEPTION".length());
+                                    } else {
+                                        errmsg = "EXCEPTION: VisionSocket " + line.substring("EXCEPTION".length());
+                                    }
                                     updateIgnoredLineListeners(Collections.emptyList(), errmsg);
                                     updateListeners(Collections.emptyList(), errmsg, false);
                                     throw new RuntimeException(line);

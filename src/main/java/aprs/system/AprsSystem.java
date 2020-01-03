@@ -3255,7 +3255,7 @@ public class AprsSystem implements SlotOffsetProvider {
             ClassLoader sysCl = ClassLoader.getSystemClassLoader();
             if (sysCl != cl) {
                 if (sysCl instanceof URLClassLoader) {
-                    URLClassLoader ucl = (URLClassLoader) cl;
+                    URLClassLoader ucl = (URLClassLoader) sysCl;
                     URL[] urls = ucl.getURLs();
                     for (int i = 0; i < urls.length; i++) {
                         URL url = urls[i];
@@ -8684,7 +8684,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private @MonotonicNonNull
     File lastAprsPropertiesFileFile = null;
 
-    public File getLastAprsPropertiesFileFile() {
+    public @Nullable
+    File getLastAprsPropertiesFileFile() {
         return lastAprsPropertiesFileFile;
     }
 

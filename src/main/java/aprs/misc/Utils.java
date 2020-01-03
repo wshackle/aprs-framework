@@ -134,7 +134,7 @@ public class Utils {
         return dir;
     }
 
-    public static String traceToString(StackTraceElement trace @Nullable []) {
+    public static String traceToString(@Nullable StackTraceElement trace @Nullable []) {
         return XFuture.traceToString(trace);
     }
 

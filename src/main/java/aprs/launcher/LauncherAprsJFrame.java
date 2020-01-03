@@ -581,7 +581,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jButtonPrevSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevSingleActionPerformed
         if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
             try {
-                prevSingleWithLaunchFile(getLastLaunchFile());
+                final File lastLaunchFileLocal = getLastLaunchFile();
+                if (null != lastLaunchFileLocal) {
+                    prevSingleWithLaunchFile(lastLaunchFileLocal);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Last launch file is null.");
+                }
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -643,7 +648,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jButtonOpenSingleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOpenSingleActionPerformed
         try {
             if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
-                openSingleWithLaunchFile(getLastLaunchFile(), null);
+                final File lastLaunchFileLocal = getLastLaunchFile();
+                if(null != lastLaunchFileLocal) {
+                    openSingleWithLaunchFile(lastLaunchFileLocal, null);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Last launch file is null.");
+                }
             } else {
                 openSingle(null);
             }

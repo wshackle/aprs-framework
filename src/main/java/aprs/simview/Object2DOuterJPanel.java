@@ -5376,12 +5376,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
         try {
             if (line.startsWith("EXCEPTION")) {
-                aprsSystem.setTitleErrorString(line);
+                
                 jCheckBoxConnected.setSelected(false);
                 if (simulatedCachedCheckBox.isSelected()) {
                     jButtonReset.setEnabled(true);
                 }
                 disconnect();
+                if(null == aprsSystem) {
+                    throw new NullPointerException("aprsSystem");
+                }
+                aprsSystem.setTitleErrorString(line);
                 return XFutureVoid.completedFuture();
             }
             long now = System.currentTimeMillis();
@@ -5875,6 +5879,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         private static final List<Object2DOuterJPanelCurrentPoseListener> items = new ArrayList<>();
         private static final AtomicInteger itemCounter = new AtomicInteger();
         
+        @SuppressWarnings({"initialization","nullness"})
         public Object2DOuterJPanelCurrentPoseListener(Object2DOuterJPanel object2DOuterJPanel) {
             createTrace = Thread.currentThread().getStackTrace();
             this.object2DOuterJPanel = object2DOuterJPanel;
@@ -5883,7 +5888,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         
         @Override
-        public void handlePoseUpdate(CrclSwingClientJPanel panel, CRCLStatusType stat, CRCLCommandType cmd, boolean isHoldingObjectExpected, long statRecieveTime) {
+        public void handlePoseUpdate(CrclSwingClientJPanel panel, CRCLStatusType stat, @Nullable CRCLCommandType cmd, boolean isHoldingObjectExpected, long statRecieveTime) {
             object2DOuterJPanel.handlePoseUpdate(panel, stat, cmd, isHoldingObjectExpected, statRecieveTime);
         }
         
@@ -5904,7 +5909,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             }

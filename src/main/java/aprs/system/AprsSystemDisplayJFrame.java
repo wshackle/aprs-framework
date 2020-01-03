@@ -2325,6 +2325,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         JFrameInternalHolder newHolder = new JFrameInternalHolder();
         JFrameInternalHolder holder = ObjTableJPanel.editObject(newHolder,this,"custom win",true);
         System.out.println("holder = " + holder);
+        if(null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         final File dir = aprsSystem.getPropertiesDirectory();
         JFileChooser chooser;
         if(null != dir) {
@@ -2339,6 +2342,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             if(customWindowsFile == null || !customWindowsFile.exists()) {
                 selectCustomWindowsFile();
                 customWindowsFile = aprsSystem.getCustomWindowsFile();
+            }
+            if(null == customWindowsFile) {
+                return;
             }
             try(PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile,true))) {
                 pw.println(selectedFile);

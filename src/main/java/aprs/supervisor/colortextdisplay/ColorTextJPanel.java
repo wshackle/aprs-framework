@@ -194,7 +194,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         }
     }
 
-    private void parseSocketLine(String line, PrintStream ps) {
+    private void parseSocketLine(String line, @Nullable PrintStream returnStream) {
         if (stopReading) {
             return;
         }
@@ -202,18 +202,24 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         Color color1;
         Color color2;
         try {
-            ps.println(Arrays.toString(colorStrings));
+            if (null != returnStream) {
+                returnStream.println(Arrays.toString(colorStrings));
+            }
             if (colorStrings.length != 2) {
-                ps.println("2 colors expected : line " + line);
+                if (null != returnStream) {
+                    returnStream.println("2 colors expected : line " + line);
+                }
                 System.err.println("2 colors expected : line=" + line);
                 System.err.println("colorStrings=" + Arrays.toString(colorStrings));
                 stopReader();
                 return;
             }
             color1 = Color.decode(colorStrings[1]);
-            ps.println("color1 = " + color1);
             color2 = Color.decode(colorStrings[0]);
-            ps.println("color2 = " + color2);
+            if (null != returnStream) {
+                returnStream.println("color1 = " + color1);
+                returnStream.println("color2 = " + color2);
+            }
         } catch (NumberFormatException numberFormatException) {
             Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE,
                     "line=" + line + "\ncolorStrings=" + Arrays.toString(colorStrings),

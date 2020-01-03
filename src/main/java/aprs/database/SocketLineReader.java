@@ -49,7 +49,7 @@ public class SocketLineReader {
     public interface CallBack {
 
         @SuppressWarnings("unused")
-        public void call(String line, PrintStream ps);
+        public void call(String line, @Nullable PrintStream ps);
     }
     private volatile @Nullable
     ServerSocket serverSocket = null;
@@ -135,35 +135,37 @@ public class SocketLineReader {
 
     private int port = -1;
 
-    private SocketLineReader privateStart(boolean isClient,
-            @Nullable String host, int portParam, final String threadname,
-            SocketLineReader.CallBack _cb,
-            int connectTimeOut,
-            int readSoTimeOut) throws IOException {
-        try {
-            this.cb = _cb;
-            this.port = portParam;
-            if (isClient) {
-                privateStartClient(host, portParam, threadname, _cb, connectTimeOut, readSoTimeOut);
-            } else {
-                privateStartServer(portParam, threadname, _cb);
-            }
-            return this;
-        } catch (RuntimeException runtimeException) {
-            Logger.getLogger(SocketLineReader.class)
-                    .severe(
-                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
-                            runtimeException);
-            throw new RuntimeException(runtimeException);
-        } catch (IOException iOException) {
-            Logger.getLogger(SocketLineReader.class)
-                    .severe(
-                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
-                            iOException);
-            throw iOException;
-        }
-    }
-
+//    private SocketLineReader privateStart(
+//            boolean isClient,
+//            @Nullable String host,
+//            int portParam, 
+//            final String threadname,
+//            SocketLineReader.CallBack _cb,
+//            int connectTimeOut,
+//            int readSoTimeOut) throws IOException {
+//        try {
+//            this.cb = _cb;
+//            this.port = portParam;
+//            if (isClient) {
+//                privateStartClient(host, portParam, threadname, _cb, connectTimeOut, readSoTimeOut);
+//            } else {
+//                privateStartServer(portParam, threadname, _cb);
+//            }
+//            return this;
+//        } catch (RuntimeException runtimeException) {
+//            Logger.getLogger(SocketLineReader.class)
+//                    .severe(
+//                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
+//                            runtimeException);
+//            throw new RuntimeException(runtimeException);
+//        } catch (IOException iOException) {
+//            Logger.getLogger(SocketLineReader.class)
+//                    .severe(
+//                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
+//                            iOException);
+//            throw iOException;
+//        }
+//    }
     private void privateStartServer(int portParam, final String threadname, CallBack _cb) throws SocketException, IOException {
         this.cb = _cb;
         this.port = portParam;
@@ -276,13 +278,16 @@ public class SocketLineReader {
                         System.out.println("");
                         System.out.flush();
                         System.err.println("readSoTimeOut = " + readSoTimeOut);
-                        System.err.println("socket = " + socket);
-                        if (null != socket) {
+                        final Socket socketLocal = socket;
+                        System.err.println("socket = " + socketLocal);
+                        if (null != socketLocal) {
                             final InputStream inputStream;
                             try {
-                                System.err.println("socket.getSoTimeout() = " + socket.getSoTimeout());
-                                inputStream = socket.getInputStream();
-                                System.err.println("inputStream.available() = " + inputStream.available());
+                                System.err.println("socket.getSoTimeout() = " + socketLocal.getSoTimeout());
+                                inputStream = socketLocal.getInputStream();
+                                if (null != inputStream) {
+                                    System.err.println("inputStream.available() = " + inputStream.available());
+                                }
                             } catch (IOException ex) {
                                 java.util.logging.Logger.getLogger(SocketLineReader.class.getName()).log(Level.SEVERE, null, ex);
                             }
@@ -302,7 +307,9 @@ public class SocketLineReader {
         thread.start();
     }
 
-    public static SocketLineReader startServer(int portParam, final String threadname,
+    public static SocketLineReader startServer(
+            int portParam, 
+            final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         SocketLineReader slr = new SocketLineReader();
         try {
