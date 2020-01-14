@@ -584,7 +584,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemRepeatedShuffleTestActionPerformed
 
     public static class GenerateActionPartInfo {
-        
+
         static byte c = (byte) 'A';
         String partType;
         int requiredPickups;
@@ -606,7 +606,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             this.optionals = 1;
         }
     }
-    
+
     public static class GenerateActionConfig {
 
         double minDist;
@@ -625,7 +625,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             this.partInfoList = partInfoList;
         }
 
-        public GenerateActionConfig() {        
+        public GenerateActionConfig() {
             this.minDist = 5.0;
             this.minX = 10.0;
             this.maxX = 100.0;
@@ -656,7 +656,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         gac.maxX = Double.parseDouble(map1.getOrDefault("Maximum X?", "100.0"));
         gac.minY = Double.parseDouble(map1.getOrDefault("Minimum Y?", "10.0"));
         gac.maxY = Double.parseDouble(map1.getOrDefault("Maximum Y?", "100.0"));
-        
+
         Random rand = new Random();
         for (int i = 0; i < partsTypeNeeded; i++) {
             GenerateActionPartInfo gapi = new GenerateActionPartInfo();
@@ -900,9 +900,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      *
      * @return the value of opActionPlan
      */
-    @Nullable
     @SafeEffect
-    public OpActionPlan getInputOpActionPlan() {
+    public @Nullable
+    OpActionPlan getInputOpActionPlan() {
         return outerOptiplannerJPanelInput.getOpActionPlan();
     }
 
@@ -933,9 +933,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      *
      * @return the value of opActionPlan
      */
-    @Nullable
     @SafeEffect
-    public OpActionPlan getOutputOpActionPlan() {
+    public @Nullable
+    OpActionPlan getOutputOpActionPlan() {
         return outerOptiplannerJPanelOutput.getOpActionPlan();
     }
 

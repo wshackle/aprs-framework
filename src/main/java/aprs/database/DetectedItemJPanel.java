@@ -238,6 +238,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
         return itemToReturn;
     }
 
+    @SuppressWarnings("nullness")
     public static Map<String, Object> showDetectedItemDialog(@Nullable Window owner, String title, Dialog.ModalityType modal, @Nullable Map<String, Object> propsIn) {
         DetectedItemJPanel panel = new DetectedItemJPanel();
         JDialog panelDialog = new JDialog(owner, title, modal);

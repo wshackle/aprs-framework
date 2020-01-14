@@ -74,6 +74,7 @@ public class EditPropertiesJPanel extends javax.swing.JPanel {
         }
     }
 
+    @SuppressWarnings("nullness")
     public  static  @Nullable  Map<String, String> editProperties(@Nullable JFrame owner, String title, boolean modal, Map<String, String> mapIn) {
         JDialog dialog = new JDialog(owner, title, modal);
         EditPropertiesJPanel editPropertiesJPanel = new EditPropertiesJPanel(dialog, mapIn);

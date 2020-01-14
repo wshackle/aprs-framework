@@ -119,22 +119,23 @@ public class OpDisplayJPanel extends JPanel {
 
     private volatile @Nullable
     Point mouseDownPoint = null;
-    
+
     private final ConcurrentLinkedDeque<Runnable> actionsModifiedListeners = new ConcurrentLinkedDeque();
 
     private void notifyActionsModifiedListeners() {
-        for(Runnable r : actionsModifiedListeners) {
+        for (Runnable r : actionsModifiedListeners) {
             r.run();
         }
     }
+
     public void addActionsModifiedListener(Runnable r) {
         actionsModifiedListeners.add(r);
     }
-    
+
     public void removeActionsModifiedListener(Runnable r) {
         actionsModifiedListeners.remove(r);
     }
-    
+
     private final MouseMotionListener mml = new MouseMotionListener() {
         @Override
         public void mouseDragged(MouseEvent e) {
@@ -390,6 +391,7 @@ public class OpDisplayJPanel extends JPanel {
         ap.initNextActions();
         return ap;
     }
+
     /**
      * Clear the map associating parts carried with colors.
      */
@@ -422,9 +424,9 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @return the value of opActionPlan
      */
-    @Nullable
     @SafeEffect
-    public OpActionPlan getOpActionPlan() {
+    public @Nullable
+    OpActionPlan getOpActionPlan() {
         return opActionPlan;
     }
 
@@ -957,9 +959,9 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @return the value of label
      */
-    @Nullable
     @SafeEffect
-    public String getLabel() {
+    public @Nullable
+    String getLabel() {
         return label;
     }
 

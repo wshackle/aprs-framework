@@ -60,15 +60,18 @@ public class LaunchFileRunner {
 
     private volatile List<String> stopLines = new ArrayList<>();
 
-     private volatile @Nullable  File processLaunchDirectory = null;
+    private volatile @Nullable
+    File processLaunchDirectory = null;
 
-     private volatile @Nullable  String onFailLine = null;
-     private volatile @Nullable  XFutureVoid waitForFuture = null;
+    private volatile @Nullable
+    String onFailLine = null;
+    private volatile @Nullable
+    XFutureVoid waitForFuture = null;
 
     private final Deque<Boolean> ifStack = new ArrayDeque<>();
 
-    private @Nullable
-    final ProcessLauncherJFrame processLauncherJFrame;
+    private final @Nullable
+    ProcessLauncherJFrame processLauncherJFrame;
 
     private volatile boolean debug = false;
 
@@ -164,9 +167,11 @@ public class LaunchFileRunner {
         this.timeoutStart = timeoutStart;
     }
 
-     private volatile @MonotonicNonNull  ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
+    private volatile @MonotonicNonNull
+    ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
-     private volatile @Nullable  XFutureVoid lastNewTimeoutFuture = null;
+    private volatile @Nullable
+    XFutureVoid lastNewTimeoutFuture = null;
 
     private volatile javax.swing.@Nullable Timer lastTimeoutSwingTimer = null;
 
@@ -546,9 +551,9 @@ public class LaunchFileRunner {
         return defaultValue;
     }
 
-    @Nullable
     @SuppressWarnings("nullness")
-    private WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
+    private @Nullable
+    WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
         if (line.length() < 1) {
             if (null != stringBuilder) {
                 stringBuilder.append("\n");
@@ -801,7 +806,8 @@ public class LaunchFileRunner {
         this.timeoutMillis = timeoutMillis;
     }
 
-     private volatile @Nullable  XFutureVoid lastRunAllOfFuture = null;
+    private volatile @Nullable
+    XFutureVoid lastRunAllOfFuture = null;
 
     @SuppressWarnings({"unchecked", "rawtypes", "nullness", "guieffect"})
     public XFutureVoid run(File f, int timeoutMillis, boolean debug) throws IOException {

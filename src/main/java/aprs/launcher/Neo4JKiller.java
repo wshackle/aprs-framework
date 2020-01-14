@@ -42,37 +42,38 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 class Neo4JKiller {
 
-    
     private static final Logger LOGGER = Logger.getLogger(Neo4JKiller.class.getName());
-    
+
     private static boolean debug = Boolean.getBoolean("Neo4JKiller.debug");
-    
-    private static void logDebug(String string)  {
-        if(debug) {
+
+    private static void logDebug(String string) {
+        if (debug) {
             LOGGER.log(Level.INFO, string);
         }
     }
-    
+
     public static boolean isDebug() {
         return debug;
     }
-    
+
     public static void setDebug(boolean newDebugVal) {
         debug = newDebugVal;
     }
-    
-    private @MonotonicNonNull static File jpsCommandFile;
+
+    private static @MonotonicNonNull
+    File jpsCommandFile;
 
     public static void setJpsCommandFile(File f) {
         jpsCommandFile = f;
     }
 
-     static  @Nullable  File getJpsCommandFile() {
+    static @Nullable
+    File getJpsCommandFile() {
         return jpsCommandFile;
     }
 
     static final String JPS_COMMAND_FILENAME_STRING = "jpsCommand.txt";
-    
+
     private static String getJpsCommand() throws IOException {
         String jpsCommandProperty = System.getProperty("jps.command");
         if (null != jpsCommandProperty && jpsCommandProperty.length() > 0) {
@@ -97,10 +98,10 @@ class Neo4JKiller {
             jpsCmd = DEFAULT_WINDOWS_JPS_COMMAND;
         }
         logDebug("Using command \"" + jpsCmd + "\" to run jps to find the neo4j processes, if you need to use a different command on your system put the text for that command in:");
-        if(null != jpsCommandFile) {
+        if (null != jpsCommandFile) {
             logDebug(jpsCommandFile.getCanonicalPath());
         } else {
-            logDebug(JPS_COMMAND_FILENAME_STRING+" in the directory with the launch.txt file");
+            logDebug(JPS_COMMAND_FILENAME_STRING + " in the directory with the launch.txt file");
         }
         logDebug(" or set the property jps.command");
         return jpsCmd;

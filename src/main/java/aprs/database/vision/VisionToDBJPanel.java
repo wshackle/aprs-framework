@@ -124,7 +124,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     @SafeEffect
     public List<PartsTray> getPartsTrayList() {
-        assert (null != dpu) : "dpu == null";
+        if(null == dpu)  {
+            throw new RuntimeException("dpu == null");
+        }
         return dpu.getPartsTrayList();
     }
 
@@ -149,12 +151,16 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-        assert (null != dpu) : "dpu == null";
+        if(null == dpu)  {
+            throw new RuntimeException("dpu == null");
+        }
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
-        assert (null != dpu) : "dpu == null";
+        if(null == dpu)  {
+            throw new RuntimeException("dpu == null");
+        }
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
     }
 
@@ -207,9 +213,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public double getRotationOffset() {
-        assert (null != dpu) :
-                ("dpu == null");
-
+        if(null == dpu)  {
+            throw new RuntimeException("dpu == null");
+        }
         return dpu.getRotationOffset();
     }
 
@@ -2427,9 +2433,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }//GEN-LAST:event_jTextFieldCmdPortActionPerformed
 
-    @Nullable
     @UIEffect
-    private Window getParentWindow() {
+    private @Nullable
+    Window getParentWindow() {
         Container container = this.getParent();
         while (null != container) {
             if (container instanceof Window) {
@@ -3164,9 +3170,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     @Override
-    @Nullable
     @SafeEffect
-    public Connection getSqlConnection() {
+    public @Nullable
+    Connection getSqlConnection() {
         if (null == dpu) {
             return null;
         }

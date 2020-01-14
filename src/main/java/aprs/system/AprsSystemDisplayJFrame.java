@@ -126,7 +126,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
         String exText = sw.toString();
         boolean forceShow = exceptionCount.incrementAndGet() < 2;
-        String dialogTitle = "Exception from " + this.getTitle()+" : "+ex.getMessage();
+        String dialogTitle = "Exception from " + this.getTitle() + " : " + ex.getMessage();
         XFuture<Boolean> showTextFuture
                 = MultiLineStringJPanel.showText(exText, this, dialogTitle, false, forceShow);
         return showTextFuture
@@ -1573,9 +1573,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         browseSavePropertiesFileAs();
     }//GEN-LAST:event_jMenuItemSavePropsAsActionPerformed
 
-    @Nullable
     @UIEffect
-    private File choosePropertiesFileToSaveAs() {
+    private @Nullable
+    File choosePropertiesFileToSaveAs() {
         File dir = getPropertiesDirectory();
         JFileChooser chooser;
         if (null != dir) {
@@ -2303,12 +2303,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemAddExistingCustomWindowStartupActionPerformed
 
     private void selectCustomWindowsFile() throws RuntimeException, HeadlessException {
-        if(null == aprsSystem) {
+        if (null == aprsSystem) {
             throw new RuntimeException("null==aprsSystem");
         }
         final File dir = aprsSystem.getPropertiesDirectory();
         JFileChooser chooser;
-        if(null != dir) {
+        if (null != dir) {
             chooser = new JFileChooser(dir);
         } else {
             chooser = new JFileChooser();
@@ -2323,14 +2323,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private void jMenuItemNewCustomWindowStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemNewCustomWindowStartupActionPerformed
         JFrameInternalHolder newHolder = new JFrameInternalHolder();
-        JFrameInternalHolder holder = ObjTableJPanel.editObject(newHolder,this,"custom win",true);
+        JFrameInternalHolder holder = ObjTableJPanel.editObject(newHolder, this, "custom win", true);
         System.out.println("holder = " + holder);
-        if(null == aprsSystem) {
+        if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
         final File dir = aprsSystem.getPropertiesDirectory();
         JFileChooser chooser;
-        if(null != dir) {
+        if (null != dir) {
             chooser = new JFileChooser(dir);
         } else {
             chooser = new JFileChooser();
@@ -2339,14 +2339,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             final File selectedFile = chooser.getSelectedFile();
             AutomaticPropertyFileUtils.saveObjectProperties(selectedFile, holder.getInternalFrame());
             File customWindowsFile = aprsSystem.getCustomWindowsFile();
-            if(customWindowsFile == null || !customWindowsFile.exists()) {
+            if (customWindowsFile == null || !customWindowsFile.exists()) {
                 selectCustomWindowsFile();
                 customWindowsFile = aprsSystem.getCustomWindowsFile();
             }
-            if(null == customWindowsFile) {
+            if (null == customWindowsFile) {
                 return;
             }
-            try(PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile,true))) {
+            try (PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile, true))) {
                 pw.println(selectedFile);
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);

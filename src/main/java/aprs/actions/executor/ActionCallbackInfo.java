@@ -4,6 +4,7 @@ import crcl.utils.CRCLCommandWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /**
  * Class to hold information about a given action to be passed to callback
@@ -16,14 +17,17 @@ class ActionCallbackInfo {
     private final Action action;
     private final CRCLCommandWrapper wrapper;
     private final List<Action> actions;
-     private  @Nullable  final List<Action> origActions;
+
+    private final @Nullable
+    List<Action> origActions;
+
     private final int actionsSize;
 
     ActionCallbackInfo(
-            int actionIndex, 
-            String comment, Action action, 
-            CRCLCommandWrapper wrapper, 
-            List<Action> actions, 
+            int actionIndex,
+            String comment, Action action,
+            CRCLCommandWrapper wrapper,
+            List<Action> actions,
             @Nullable List<Action> origActions) {
         this.actionIndex = actionIndex;
         this.comment = comment;
@@ -56,14 +60,15 @@ class ActionCallbackInfo {
     }
 
     @SuppressWarnings("unused")
-     public  @Nullable  List<Action> getOrigActions() {
+    public @Nullable
+    List<Action> getOrigActions() {
         return origActions;
     }
 
     @SuppressWarnings("unused")
     @Override
     public String toString() {
-        return "ActionCallbackInfo{" + "actionIndex=" + actionIndex  + "comment=" + comment+ ", action=" + action + ", wrapper=" + wrapper + ", actions=" + actions + '}';
+        return "ActionCallbackInfo{" + "actionIndex=" + actionIndex + "comment=" + comment + ", action=" + action + ", wrapper=" + wrapper + ", actions=" + actions + '}';
     }
 
 }

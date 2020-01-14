@@ -31,6 +31,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -41,7 +42,9 @@ public class CachedCheckBox extends CachedComponentBase {
 
     // NOTE AbstractButton is a convenient superclass of both
     // JCheckBox and JCheckBoxMenuItem with all the methods needed.
-     private  @Nullable  final AbstractButton abstractButton;
+    private final @Nullable
+    AbstractButton abstractButton;
+    
     private volatile boolean selected;
     private volatile boolean enabled;
 
@@ -93,20 +96,19 @@ public class CachedCheckBox extends CachedComponentBase {
 //            }
 //        }
 //    }
-
     public boolean isSelected() {
 //        checkMatch();
         return selected;
     }
 
-    private volatile StackTraceElement falseTrace @Nullable [] = null;
-    private volatile StackTraceElement trueTrace @Nullable [] = null;
-    
+    private volatile StackTraceElement falseTrace @Nullable []  = null;
+    private volatile StackTraceElement trueTrace @Nullable []  = null;
+
     public XFutureVoid setSelected(boolean newSelectedVal) {
         boolean oldSelectedVal = this.selected;
         this.selected = newSelectedVal;
         if (null != abstractButton && newSelectedVal != oldSelectedVal) {
-            if(newSelectedVal) {
+            if (newSelectedVal) {
                 trueTrace = Thread.currentThread().getStackTrace();
             } else {
                 falseTrace = Thread.currentThread().getStackTrace();
@@ -124,11 +126,11 @@ public class CachedCheckBox extends CachedComponentBase {
             int sc = getStartCount();
             int fc = getFinishCount();
             int ac = actionCount.get();
-            String text = (abstractButton !=  null)?abstractButton.getText():null;
-            System.err.println("falseTrace="+Utils.traceToString(falseTrace));
-            System.err.println("trueTrace="+Utils.traceToString(trueTrace));
-            
-            throw new IllegalStateException("selected=" + selected + ", this.selected=" + this.selected +", text="+text+ ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
+            String text = (abstractButton != null) ? abstractButton.getText() : null;
+            System.err.println("falseTrace=" + Utils.traceToString(falseTrace));
+            System.err.println("trueTrace=" + Utils.traceToString(trueTrace));
+
+            throw new IllegalStateException("selected=" + selected + ", this.selected=" + this.selected + ", text=" + text + ",dispatchCount=" + dc + ", startCount=" + sc + ", finishCount=" + fc + ", actionCount=" + ac);
         }
         if (null != abstractButton && selected != abstractButton.isSelected()) {
             abstractButton.setSelected(selected);

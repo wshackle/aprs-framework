@@ -92,15 +92,24 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-    private @MonotonicNonNull Connection con;
-    private @MonotonicNonNull PreparedStatement update_statement;
-    private @MonotonicNonNull PreparedStatement pre_vision_clean_statement;
-    private @MonotonicNonNull PreparedStatement get_tray_slots_statement;
-    private @MonotonicNonNull PreparedStatement update_parts_tray_statement;
-    private @MonotonicNonNull PreparedStatement update_kit_tray_statement;
-    private @MonotonicNonNull PreparedStatement query_all_statement;
-    private @MonotonicNonNull PreparedStatement query_all_new_statement;
-    private @MonotonicNonNull PreparedStatement get_single_statement;
+    private @MonotonicNonNull
+    Connection con;
+    private @MonotonicNonNull
+    PreparedStatement update_statement;
+    private @MonotonicNonNull
+    PreparedStatement pre_vision_clean_statement;
+    private @MonotonicNonNull
+    PreparedStatement get_tray_slots_statement;
+    private @MonotonicNonNull
+    PreparedStatement update_parts_tray_statement;
+    private @MonotonicNonNull
+    PreparedStatement update_kit_tray_statement;
+    private @MonotonicNonNull
+    PreparedStatement query_all_statement;
+    private @MonotonicNonNull
+    PreparedStatement query_all_new_statement;
+    private @MonotonicNonNull
+    PreparedStatement get_single_statement;
 
 //    private org.neo4j.driver.v1.Driver neo4jJavaDriver;
 //    private Session neo4jSession;
@@ -320,15 +329,24 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         setupStatements();
     }
 
-    private @MonotonicNonNull String queryAllString;
-    private @MonotonicNonNull String queryAllNewString;
-    private @MonotonicNonNull String querySingleString;
-    private @MonotonicNonNull String queryDeleteSinglePoseString;
-    private @MonotonicNonNull String updateStatementString;
-    private @MonotonicNonNull String preVisionCleanStatementString;
-    private @MonotonicNonNull String updatePartsTrayStatementString;
-    private @MonotonicNonNull String updateKitTrayStatementString;
-    private @MonotonicNonNull String getTraySlotsQueryString;
+    private @MonotonicNonNull
+    String queryAllString;
+    private @MonotonicNonNull
+    String queryAllNewString;
+    private @MonotonicNonNull
+    String querySingleString;
+    private @MonotonicNonNull
+    String queryDeleteSinglePoseString;
+    private @MonotonicNonNull
+    String updateStatementString;
+    private @MonotonicNonNull
+    String preVisionCleanStatementString;
+    private @MonotonicNonNull
+    String updatePartsTrayStatementString;
+    private @MonotonicNonNull
+    String updateKitTrayStatementString;
+    private @MonotonicNonNull
+    String getTraySlotsQueryString;
 
     private static DbParamTypeEnum[] getQueryParams(Map<DbQueryEnum, DbQueryInfo> queriesMap, DbQueryEnum key) {
         DbQueryInfo info = queriesMap.get(key);
@@ -566,7 +584,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 throw new IllegalStateException("getDirectPoseList not implemented for dbtype=" + dbtype);
         }
     }
-    private @MonotonicNonNull VisionToDBJFrameInterface displayInterface;
+    private @MonotonicNonNull
+    VisionToDBJFrameInterface displayInterface;
 
     /**
      * Get the value of displayInterface
@@ -922,7 +941,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             map.put(key, value);
         }
     }
-     private volatile @Nullable  SQLException getSlotOffsetsNewSqlException = null;
+    private volatile @Nullable
+    SQLException getSlotOffsetsNewSqlException = null;
 
     private final ConcurrentHashMap<String, Integer> failuresMap = new ConcurrentHashMap<>();
     private static final List<Slot> failedSlotOffsets = Collections.emptyList();
@@ -1395,7 +1415,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return enableDatabaseUpdates;
     }
 
-     private volatile @Nullable  PrintStream dbQueryLogPrintStream = null;
+    private volatile @Nullable
+    PrintStream dbQueryLogPrintStream = null;
 
     private List<String> requiredParts = Collections.emptyList();
 
@@ -1457,7 +1478,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
     }
 
-     private volatile @Nullable  List<PhysicalItem> lastEnabledUpdateList = null;
+    private volatile @Nullable
+    List<PhysicalItem> lastEnabledUpdateList = null;
 
     public @Nullable
     List<PhysicalItem> getLastEnabledUpdateList() {
@@ -1626,8 +1648,12 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                 break;
                         }
                     }
-                    assert (null != stmnt) : "stmt == null";
-                    assert (null != statementString) : "statementString == null";
+                    if (null == stmnt) {
+                        throw new RuntimeException("stmt == null");
+                    }
+                     if (null == statementString) {
+                        throw new RuntimeException("stmt == statementString");
+                    }
                     returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
                     String updateStringFilled = fillQueryString(statementString, paramsList);

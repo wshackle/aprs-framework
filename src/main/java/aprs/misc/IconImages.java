@@ -88,7 +88,7 @@ public class IconImages {
         return DefaultBaseImageLoader.DEFAULT_BASE_IMAGE;
     }
 
-    @SuppressWarnings("guieffect")
+    @SuppressWarnings({"guieffect","nullness"})
     private static Image createImage(Dimension d, Color bgColor, Color textColor, Image baseImage) {
         BufferedImage bi = new BufferedImage(d.width, d.height, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = bi.createGraphics();

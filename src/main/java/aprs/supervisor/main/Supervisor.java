@@ -142,7 +142,8 @@ import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
 import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
-import java.util.IdentityHashMap;
+import java.awt.Graphics;
+import java.awt.image.ImageObserver;
 import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
@@ -1736,9 +1737,8 @@ public class Supervisor {
 
     private volatile @Nullable
     String lastReturnRobotsComment = null;
-    
-    private volatile 
-    StackTraceElement lastReturnRobotsTrace  @Nullable [] = null;
+
+    private volatile StackTraceElement lastReturnRobotsTrace  @Nullable []  = null;
 
     private XFutureVoid returnRobots(String comment, @Nullable AprsSystem stealFrom, @Nullable AprsSystem stealFor, int srn, int ecc) {
         try {
@@ -5067,10 +5067,11 @@ public class Supervisor {
                         getSupervisorExecutorService());
     }
 
-    private static @Nullable
-    volatile XFuture<Boolean> fillTraysAndNextRepeatingFuture = null;
-    private static @Nullable
-    volatile AprsSystem fillTraysAndNextRepeatingSys = null;
+    private static volatile @Nullable
+    XFuture<Boolean> fillTraysAndNextRepeatingFuture = null;
+
+    private static volatile @Nullable
+    AprsSystem fillTraysAndNextRepeatingSys = null;
 
     private final AtomicInteger fillTraysAndNextRepeatingCount = new AtomicInteger();
 
@@ -5155,10 +5156,11 @@ public class Supervisor {
         }
     }
 
-    private static @Nullable
-    volatile XFuture<Boolean> emptyTraysAndPrevRepeatingFuture = null;
-    private static @Nullable
-    volatile AprsSystem emptyTraysAndPrevRepeatingSys = null;
+    private static volatile @Nullable
+    XFuture<Boolean> emptyTraysAndPrevRepeatingFuture = null;
+
+    private static volatile @Nullable
+    AprsSystem emptyTraysAndPrevRepeatingSys = null;
 
     private final AtomicInteger emptyTraysAndPrevRepeatingCount = new AtomicInteger();
 
@@ -7123,8 +7125,8 @@ public class Supervisor {
         }
     }
 
-    private @Nullable
-    final JPopupMenu posTablePopupMenu = null;
+    private final @MonotonicNonNull
+    JPopupMenu posTablePopupMenu = null;
 
     public XFutureVoid enableAllRobotsOnSupervisorService() {
         return XFuture.supplyAsync(
@@ -9261,7 +9263,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                           @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
@@ -9336,7 +9338,10 @@ public class Supervisor {
         if (newImage && (t - liveImageLastTime) > 40 && null != liveImages[0]) {
             BufferedImage combinedImage = new BufferedImage(liveImages[0].getWidth(), liveImages[0].getHeight() * liveImages.length, liveImages[0].getType());
             for (int i = 0; i < liveImages.length; i++) {
-                combinedImage.getGraphics().drawImage(liveImages[i], 0, i * liveImages[0].getHeight(), null);
+                final Graphics graphics = combinedImage.getGraphics();
+                final BufferedImage liveImageI = liveImages[i];
+                final int y = i * liveImages[0].getHeight();
+                drawImageNoObserver(graphics, liveImageI, 0, y);
             }
             if (liveImageFrameCount == 0) {
                 startEncodingLiveImageMovie(combinedImage);
@@ -9344,6 +9349,11 @@ public class Supervisor {
                 continueEncodingLiveImageMovie(combinedImage);
             }
         }
+    }
+
+    @SuppressWarnings("nullness")
+    private void drawImageNoObserver(final Graphics graphics, final BufferedImage liveImageI, final int x, final int y) {
+        graphics.drawImage(liveImageI, x, y, ( ImageObserver)null);
     }
 
     @Nullable

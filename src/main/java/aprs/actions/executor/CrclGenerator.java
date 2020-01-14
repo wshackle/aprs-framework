@@ -893,9 +893,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @return database setup object.
      */
-    @Nullable
-    @SuppressWarnings({"unused"})
-    public DbSetup getDbSetup() {
+    public @Nullable
+    DbSetup getDbSetup() {
         return dbSetup;
     }
 
@@ -1218,7 +1217,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws Exception {
-        assert null != aprsSystem : "(null == aprsSystemInterface)";
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         GenerateParams gparams = new GenerateParams();
         gparams.actions = actions;
         gparams.startingIndex = startingIndex;
@@ -1335,7 +1336,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         boolean optiplannerUsed;
 
         @MonotonicNonNull
-        @SuppressWarnings({"unused"})
         List<Action> origActions;
 
 //        @MonotonicNonNull
@@ -1410,12 +1410,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     private synchronized List<MiddleCommandType> generate(GenerateParams gparams)
             throws Exception {
-
-        assert (null != this.aprsSystem) : "null == aprsSystemInterface";
-        assert (null != gparams) : "null == gparamss";
-        assert (null != gparams.options) : "null == gparams.options";
+        final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
+        if (null == gparamsOptionsLocalCopy) {
+            throw new RuntimeException("null == gparams.options");
+        }
         final List<Action> gParamsActions = gparams.actions;
-        assert (null != gParamsActions) : "null == gparams.actions";
+        if (null == gParamsActions) {
+            throw new RuntimeException("null == gparams.actions");
+        }
         AprsSystem localAprsSystem = this.aprsSystem;
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
@@ -1432,13 +1434,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         Action startingAction = gParamsActions.get(startingIndex);
         final List<PhysicalItem> physicalItemsFinal = this.physicalItems;
         try {
-            aprsSystem.logEvent("CrclGenerator.generate: gparams", gparams);
+            localAprsSystem.logEvent("CrclGenerator.generate: gparams", gparams);
             final int gparamsActionsSize = gParamsActions.size();
 
             if (null != solver && gparams.replan && null != physicalItemsFinal) {
-                return runOptaPlanner(gParamsActions, startingIndex,
-                        gparams.options,
-                        gparams.startSafeAbortRequestCount, physicalItemsFinal);
+                return runOptaPlanner(gParamsActions,
+                        startingIndex, gparamsOptionsLocalCopy,
+                        gparams.startSafeAbortRequestCount,
+                        physicalItemsFinal);
             } else {
                 String sublistString;
                 if (!gParamsActions.isEmpty()
@@ -1484,7 +1487,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
 
-            setOptions(gparams.options);
+            setOptions(gparamsOptionsLocalCopy);
             final int currentCrclNumber = this.crclNumber.incrementAndGet();
 
             if (null == actionToCrclIndexes || actionToCrclIndexes.length != gparamsActionsSize) {
@@ -1611,9 +1614,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 switch (action.getType()) {
                     case TAKE_PART:
                         newTakePlaceList.add(action);
-//                        if (null != takePlaceActions) {
-//                            checkTakePlaceActions(takePlaceActions, gparams.actions);
-//                        }
                         if (poseCache.isEmpty()) {
                             LOGGER.log(Level.WARNING, "newItems.isEmpty() on take-part for run {0}", getRunName());
                         }
@@ -1691,7 +1691,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                     case PLACE_PART:
                         newTakePlaceList.add(action);
-//                        checkTakePlaceActions(takePlaceActions, gparams.actions);
                         if (poseCache.isEmpty()) {
                             throw new IllegalStateException("poseCache.isEmpty() on place-part for run " + getRunName());
                         }
@@ -1706,30 +1705,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         pause(action, cmds);
                         break;
 
-//                    case INSPECT_KIT: {
-//                        assert (gparams.startingIndex == idx) : "inspect-kit startingIndex(" + gparams.startingIndex + ") != lastIndex(" + idx + ")";
-//                        if (doInspectKit) {
-//                            try {
-//                                inspectKit(action, cmds);
-//                            } catch (Exception ex) {
-//                                LOGGER.log(Level.SEVERE, "", ex);
-//                            }
-//                        }
-//                    }
-//                    break;
                     case CLEAR_KITS_TO_CHECK:
-                        aprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
+                        localAprsSystem.logEvent("CLEAR_KITS_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
                         clearKitsToCheck(action, cmds, gparams);
                         break;
 
                     case ADD_KIT_TO_CHECK:
-                        aprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
+                        localAprsSystem.logEvent("ADD_KIT_TO_CHECK startingIndex=" + startingIndex + ",idx=" + idx, action);
                         addKitToCheck(action, cmds, gparams);
-                        aprsSystem.logEvent("ADD_KIT_TO_CHECK kitsToCheck.size()=", kitsToCheck.size());
+                        localAprsSystem.logEvent("ADD_KIT_TO_CHECK kitsToCheck.size()=", kitsToCheck.size());
                         break;
 
                     case SET_CORRECTION_MODE:
-                        aprsSystem.setCorrectionMode(Boolean.valueOf(action.getArgs()[0]));
+                        localAprsSystem.setCorrectionMode(Boolean.valueOf(action.getArgs()[0]));
                         break;
 
                     case CHECK_KITS:
@@ -1758,40 +1746,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             System.err.println("startingIndex=" + startingIndex);
                             System.err.println("startingAction=" + startingAction);
                             throw new RuntimeException("lookForPartsNeeded gparams=" + gparams.toString() + ", acbi=" + acbi);
-//                            lookForParts(action, cmds, false, false, gparams.startSafeAbortRequestCount);
-//                            addMarkerCommand(cmds, "checkKitsAfterAddedLookForParts", (CRCLCommandWrapper wrapper2) -> {
-//                                try {
-//                                    if (gparams.startSafeAbortRequestCount != aprsSystem.getSafeAbortRequestCount()) {
-//                                        takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
-//                                        aprsSystem.logEvent("checkKits:aborting", action, idx, gparams.startSafeAbortRequestCount, aprsSystem.getSafeAbortRequestCount());
-//                                        return;
-//                                    }
-//                                    final CRCLProgramType curProgram = wrapper2.getCurProgram();
-//                                    List<MiddleCommandType> l2 = curProgram.getMiddleCommand();
-//                                    takeSimViewSnapshot("corrective recursive checkKits", null);
-//                                    checkKits(action, l2, idx, finalLookForIndex, gparams);
-//                                } catch (Exception ex) {
-//                                    LOGGER.log(Level.SEVERE, "", ex);
-//                                    if (ex instanceof RuntimeException) {
-//                                        throw (RuntimeException) ex;
-//                                    } else {
-//                                        throw new RuntimeException(ex);
-//                                    }
-//                                }
-//                            });
-//                            List<MiddleCommandType> ret2 = endSection(
-//                                    action,
-//                                    idx,
-//                                    cmds,
-//                                    fixedActionsCopy,
-//                                    fixedOrigActionsCopy,
-//                                    skippedParts,
-//                                    foundParts,
-//                                    gparams,
-//                                    waitForCompleteVisionUpdatesCommentString);
-//                            if (null != ret2) {
-//                                return ret2;
-//                            }
+
                         } else {
                             final Action lookForIndexAction = gParamsActions.get(finalLookForIndex);
                             lastCheckKitsLookForIndexAction = lookForIndexAction;
@@ -1831,7 +1786,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } catch (Exception ex) {
 
-            aprsSystem.logEvent("ex", ex);
+            localAprsSystem.logEvent("ex", ex);
             System.err.println("gparams=" + gparams);
             System.err.println("startingIndex=" + startingIndex);
             System.err.println("startingAction=" + startingAction);
@@ -1847,7 +1802,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             LOGGER.log(Level.SEVERE, "", ex);
             System.err.println();
-            aprsSystem.setTitleErrorString(ex.getMessage());
+            localAprsSystem.setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -1855,12 +1810,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } finally {
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);
-//            for (int i = gparams.startingIndex; i < getLastIndex(); i++) {
-//                int index = actionToCrclIndexes[i];
-//                if (index < 0 || index > cmds.size()) {
-//                    System.err.println("bad index = " + index);
-//                }
-//            }
         }
         return cmds;
     }
@@ -2457,7 +2406,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             List<Action> actions,
             int startingIndex,
             List<PhysicalItem> physicalItemsLocal) {
-        assert (null != this.aprsSystem) : "null == aprsSystemInterface";
+        final AprsSystem aprsSystemLocal = this.aprsSystem;
+        if (null == aprsSystemLocal) {
+            throw new RuntimeException("null == this.aprsSystem");
+        }
 
         if (null == physicalItemsLocal) {
             throw new NullPointerException("physicalItemsLocal");
@@ -2475,8 +2427,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             "optimizePddlActionsWithOptaPlanner.physicalItemsLocal",
                             physicalItemsLocal);
 
-            File actionsInFile = aprsSystem.createTempFile("actionsIn", ".txt");
-            aprsSystem.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
+            File actionsInFile = aprsSystemLocal.createTempFile("actionsIn", ".txt");
+            aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
             int sizeIn = 0;
             try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
@@ -2689,7 +2641,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     lastOptimizeReplacedPddlActions = replacedPddlActions;
                     lastOptimizeNewPddlActions = newPddlActions;
                     lastOptimizeLaterPddlActions = laterPddlActions;
-                    File actionsOutFile = aprsSystem.createTempFile("actionsOut", ".txt");
+                    File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
                     int sizeOut = 0;
                     try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                         for (int i = startingIndex; i < fullReplanPddlActions.size(); i++) {
@@ -2712,7 +2664,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 takeSimViewSnapshot(ex.toString(), physicalItemsLocal);
                 throw new RuntimeException(ex);
             }
-            File actionsOutFile = aprsSystem.createTempFile("actionsOut", ".txt");
+            File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
             int sizeOut = 0;
             try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
@@ -3972,8 +3924,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return pout;
     }
 
-    private @Nullable
-    final AprsSystem aprsSystem;
+    private final @Nullable
+    AprsSystem aprsSystem;
 
     /**
      * Get the value of aprsSystemInterface
@@ -5050,15 +5002,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         lastTestApproachPose = approachPose;
 
-        PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
-        PointType posePoint = pose.getPoint();
-        if (null == posePoint) {
-            throw new IllegalStateException("pose has null point property");
-        }
-        PointType takePosePoint = takePose.getPoint();
-        if (null == takePosePoint) {
-            throw new IllegalStateException("pose has null point property");
-        }
+        final PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
+        final PointType posePoint = requireNonNull(pose.getPoint(),"posePoint");
+        final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
         takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastTestSpeed(cmds);
@@ -5328,16 +5274,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
             lastTestApproachPose = null;
 
-            PoseType takePose = copy(poseWithToolOffset);
-            assert takePose != null : "takePos == null";
-            PointType poseWithToolOffsetPoint = poseWithToolOffset.getPoint();
-            if (null == poseWithToolOffsetPoint) {
-                throw new IllegalStateException("null == poseWithToolOffsetPoint");
-            }
-            PointType takePosePoint = takePose.getPoint();
-            if (null == takePosePoint) {
-                throw new IllegalStateException("null == takePosePoint");
-            }
+            final PoseType takePose = requireNonNull(copy(poseWithToolOffset),"takePose");
+            final PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(),"poseWithToolOffsetPoint");
+            final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
             takePosePoint.setZ(poseWithToolOffsetPoint.getZ() + takeZOffset);
 
             addSetFastSpeed(cmds);
@@ -5412,16 +5351,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkSettings();
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
-        PoseType takePose = copy(pose);
-        assert takePose!=null: "takePose==null";
-        PointType takePosePoint = takePose.getPoint();
-        if (null == takePosePoint) {
-            throw new IllegalStateException("null == takePosePoint");
-        }
-        PointType posePoint = pose.getPoint();
-        if (null == posePoint) {
-            throw new IllegalStateException("null == posePoint");
-        }
+        final PoseType takePose = requireNonNull(copy(pose),"takePose");
+        final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
+        final PointType posePoint = requireNonNull(pose.getPoint(),"posePoint");
         takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
@@ -5468,7 +5400,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private boolean checkPose(PoseType pose, boolean ignoreCartTran) {
-        assert null != aprsSystem : "(null == aprsSystemInterface)";
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         return aprsSystem.checkPose(pose, ignoreCartTran, true);
     }
 
@@ -5734,11 +5668,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private PoseType copyAndAddZ(PoseType poseIn, double offset, double limit) {
-        PoseType poseOut = requireNonNull(copy(poseIn), "copy(poseIn)");
-        PointType outPoint = poseOut.getPoint();
-        if (null == outPoint) {
-            throw new IllegalStateException("null == outPoint");
-        }
+        final PoseType poseOut = requireNonNull(copy(poseIn), "copy(poseIn)");
+        final PointType outPoint = requireNonNull(poseOut.getPoint(),"outPoint");
         outPoint.setZ(Math.min(limit, outPoint.getZ() + offset));
         return poseOut;
     }
@@ -6227,8 +6158,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         putPoseCacheThread = Thread.currentThread();
         putPoseCacheTrace = putPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
-            PoseType poseCopy = copy(pose);
-            assert poseCopy != null :"poseCopy==null";
+            final PoseType poseCopy = requireNonNull(copy(pose),"poseCopy");
             poseCache.put(name, poseCopy);
             PhysicalItem itemCopy = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, poseCopy, 0);
             itemCache.put(name, itemCopy);
@@ -7245,28 +7175,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         checkSettings();
 
-        PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
+        final PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
 
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
-        PoseType approachPose = copy(poseWithToolOffset);
-        assert approachPose != null : "approachPose==null";
+        final PoseType approachPose = requireNonNull(copy(poseWithToolOffset),"approachPose");
         lastTestApproachPose = null;
 
         //logDebug("Z= " + pose.getPoint().getZ());
-        PointType approachPosePoint = requireNonNull(approachPose.getPoint(), "approachPose.getPoint()");
-        PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffset.getPoint()");
+        final PointType approachPosePoint = requireNonNull(approachPose.getPoint(), "approachPose.getPoint()");
+        final PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffset.getPoint()");
         approachPosePoint.setZ(poseWithToolOffsetPoint.getZ() + approachZOffset);
 
-        PoseType placePose = copy(poseWithToolOffset);
-        assert placePose != null : "placePose==null";
-        PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
+        final PoseType placePose = requireNonNull(copy(poseWithToolOffset),"placePose");
+        final PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
         placePosePoint.setZ(poseWithToolOffsetPoint.getZ() + placeZOffset);
 
         addSetFastSpeed(cmds);
 
         addMoveTo(cmds, approachPose, false, "placePartByPose.approachPose");
 
-//        addSettleDwell(cmds);
         addSetSlowSpeed(cmds);
 
         addMoveTo(cmds, placePose, true, "placePartByPose.placePose");

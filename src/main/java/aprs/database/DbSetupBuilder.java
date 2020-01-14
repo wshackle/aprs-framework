@@ -62,13 +62,15 @@ public class DbSetupBuilder {
     private String user = "neo4j";
     private String dbname = "";
     private boolean connected = false;
-     private  @Nullable  Map<DbQueryEnum, DbQueryInfo> queriesMap;
+    private @Nullable
+    Map<DbQueryEnum, DbQueryInfo> queriesMap;
     private boolean internalQueriesResourceDir = true;
     private @MonotonicNonNull
     String queriesDir = null;
     private boolean debug = false;
     private int loginTimeout = DEFAULT_LOGIN_TIMEOUT;
-     private  @Nullable  String startScript = null;
+    private @Nullable
+    String startScript = null;
 
     private static final String BASE_RESOURCE_DIR = "aprs/database/";
 
@@ -178,13 +180,17 @@ public class DbSetupBuilder {
         private final String user;
         private final String dbname;
         private final boolean connected;
+        
         private final @Nullable
         Map<DbQueryEnum, DbQueryInfo> queriesMap;
+        
         private final boolean internalQueriesResourceDir;
         private final String queriesDir;
         private final boolean debug;
         private final int loginTimeout;
-         private  @Nullable  final String startScript;
+
+        private final @Nullable
+        String startScript;
 
         private DbSetupInternal(
                 DbType type,

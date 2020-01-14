@@ -340,9 +340,9 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
      *
      * @return the value of opActionPlan
      */
-    @Nullable
     @SafeEffect
-    public OpActionPlan getOpActionPlan() {
+    public @Nullable
+    OpActionPlan getOpActionPlan() {
         return opDisplayJPanel1.getOpActionPlan();
     }
 
@@ -435,17 +435,22 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
             }
             final OpActionInterface next = action.getNext();
             boolean skipped = OpActionPlan.isSkippedAction(action, prevAction);
-            model.addRow(new Object[]{i, action.getId(), action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired(), skipped, (null != next) ? next.getId() : -1, action.getExecutorActionType(), Arrays.toString(action.getExecutorArgs()), possibleNextIds});
+            addNullableRow(model, new Object[]{i, action.getId(), action.getName(), action.getOpActionType(), action.getPartType(), action.getLocation().x, action.getLocation().y, action.cost(opActionPlan), action.isRequired(), skipped, (null != next) ? next.getId() : -1, action.getExecutorActionType(), Arrays.toString(action.getExecutorArgs()), possibleNextIds});
             prevAction = action;
         }
         OpEndAction endAction = opActionPlan.getEndAction();
-        model.addRow(new Object[]{actions.size(), endAction.getId(), endAction.getName(), endAction.getOpActionType(), null, endAction.getLocation().x, endAction.getLocation().y, 0, endAction.isRequired(), false, -1, Collections.emptyList()});
+        addNullableRow(model, new Object[]{actions.size(), endAction.getId(), endAction.getName(), endAction.getOpActionType(), null, endAction.getLocation().x, endAction.getLocation().y, 0, endAction.isRequired(), false, -1, Collections.emptyList()});
 
         Utils.autoResizeTableColWidths(jTable1);
         EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
         HardSoftLongScore score = calculator.calculateScore(opActionPlan);
         opActionPlan.setScore(score);
         setValueString(score.toShortString());
+    }
+
+    @SuppressWarnings("nullness")
+    private void addNullableRow(DefaultTableModel model, final @Nullable Object[] rowData) {
+        model.addRow(rowData);
     }
 
     /**

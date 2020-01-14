@@ -26,6 +26,7 @@ import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.display.OptiplannerDisplayJFrame;
 import aprs.misc.Utils;
 import aprs.simview.Object2DOuterDialogPanel;
+import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.HeadlessException;
 import java.io.File;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
@@ -200,18 +202,37 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
         showLastRunResults();
     }//GEN-LAST:event_jMenuItemLastActionPerformed
 
+    @UIEffect
+    @SuppressWarnings("nullness")
+    private static File showFileInputDialog(
+            Component parentComponent,
+            Object message, 
+            String title,
+            File[] selectionValues)
+            throws HeadlessException {
+        return (File) JOptionPane
+                .showInputDialog(
+                        parentComponent,
+                        message, // message
+                        title,
+                        QUESTION_MESSAGE, // messageType
+                        (Icon) null, // icon
+                        selectionValues, // selectionValues
+                        selectionValues[0] // initialSelectionValue
+                );
+    }
+
     public void showLastRunResults() throws HeadlessException {
         try {
             File lastDir = lastAprsLogDir();
             File optaResultsFiles[] = lastDir.listFiles(optoCsvFileFilter);
             if (null != optaResultsFiles && optaResultsFiles.length > 0) {
-                File selectedCsvFile = (File) JOptionPane.showInputDialog(this,
-                        "OptaResultsFile",
-                        "Select OptaPlanner Results Log",
-                        QUESTION_MESSAGE,
-                        null,
-                        optaResultsFiles,
-                        optaResultsFiles[0]);
+                File selectedCsvFile = 
+                        showFileInputDialog(
+                                this, //parentComponent
+                                "OptaResultsFile", // message
+                                "Select OptaPlanner Results Log", //title         
+                                optaResultsFiles);
                 loadResultsCsvFile(selectedCsvFile);
             } else {
                 System.err.println("no csv file in " + lastDir);

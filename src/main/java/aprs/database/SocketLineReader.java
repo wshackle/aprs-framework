@@ -64,12 +64,11 @@ public class SocketLineReader {
 
     private class Clnt {
 
-        @Nullable
-        volatile Socket socket;
-        @Nullable
-        volatile Thread thread;
-//        @Nullable volatile BufferedReader br;
-//        @Nullable volatile PrintStream ps;
+        volatile @Nullable
+        Socket socket;
+
+        volatile @Nullable
+        Thread thread;
 
         void close() {
             try {
@@ -79,19 +78,12 @@ public class SocketLineReader {
                 }
             } catch (Exception ignored) {
             }
-//            try {
-//                if (null != br) {
-//                    br.close();
-//                }
-//            } catch (Exception exception) {
-//            }
             try {
                 if (null != socket) {
                     socket.close();
                 }
             } catch (Exception ignored) {
             }
-//            br = null;
             socket = null;
             thread = null;
         }
@@ -135,38 +127,11 @@ public class SocketLineReader {
 
     private int port = -1;
 
-//    private SocketLineReader privateStart(
-//            boolean isClient,
-//            @Nullable String host,
-//            int portParam, 
-//            final String threadname,
-//            SocketLineReader.CallBack _cb,
-//            int connectTimeOut,
-//            int readSoTimeOut) throws IOException {
-//        try {
-//            this.cb = _cb;
-//            this.port = portParam;
-//            if (isClient) {
-//                privateStartClient(host, portParam, threadname, _cb, connectTimeOut, readSoTimeOut);
-//            } else {
-//                privateStartServer(portParam, threadname, _cb);
-//            }
-//            return this;
-//        } catch (RuntimeException runtimeException) {
-//            Logger.getLogger(SocketLineReader.class)
-//                    .severe(
-//                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
-//                            runtimeException);
-//            throw new RuntimeException(runtimeException);
-//        } catch (IOException iOException) {
-//            Logger.getLogger(SocketLineReader.class)
-//                    .severe(
-//                            "isClient=" + isClient + ", host=" + host + ", port=" + portParam + ", threadname=" + threadname + ", cb=" + cb,
-//                            iOException);
-//            throw iOException;
-//        }
-//    }
-    private void privateStartServer(int portParam, final String threadname, CallBack _cb) throws SocketException, IOException {
+    private void privateStartServer(
+            int portParam,
+            final String threadname,
+            CallBack _cb)
+            throws SocketException, IOException {
         this.cb = _cb;
         this.port = portParam;
         ServerSocket lss = new ServerSocket(portParam);
@@ -229,7 +194,14 @@ public class SocketLineReader {
         thread.start();
     }
 
-    private void privateStartClient(String host1, int portParam, final String threadname, CallBack _cb, int connectTimeOut, int readSoTimeOut) throws IllegalArgumentException, IOException, SocketException {
+    private void privateStartClient(
+            String host1,
+            int portParam,
+            final String threadname,
+            CallBack _cb,
+            int connectTimeOut,
+            int readSoTimeOut)
+            throws IllegalArgumentException, IOException, SocketException {
         this.cb = _cb;
         this.port = portParam;
         if (null == host1) {
@@ -251,9 +223,7 @@ public class SocketLineReader {
         }
         socket.setReuseAddress(true);
         final Socket finalSocket = socket;
-        //            br = brl;
-//            PrintStream psl = new PrintStream(socket.getOutputStream());
-//            ps = psl;
+        
         thread = new Thread(new Runnable() {
 
             @Override
@@ -308,7 +278,7 @@ public class SocketLineReader {
     }
 
     public static SocketLineReader startServer(
-            int portParam, 
+            int portParam,
             final String threadname,
             SocketLineReader.CallBack _cb) throws IOException {
         SocketLineReader slr = new SocketLineReader();

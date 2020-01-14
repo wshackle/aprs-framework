@@ -552,7 +552,8 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         this.executor = executor;
     }
 
-     private  @Nullable  ExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
+    private @Nullable
+    ExecutorJInternalFrame actionsToCrclJInternalFrame1 = null;
 
     public @Nullable
     ExecutorJInternalFrame getActionsToCrclJInternalFrame1() {
@@ -564,8 +565,9 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
     }
 
     public List<Action> getActionsList() {
-        assert (null != actionsToCrclJInternalFrame1) :
-                ("null == actionsToCrclJInternalFrame1");
+        if (null == actionsToCrclJInternalFrame1) {
+            throw new RuntimeException("null == actionsToCrclJInternalFrame1");
+        }
         return actionsToCrclJInternalFrame1.getActionsList();
     }
 
@@ -581,11 +583,16 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         }
     }
 
-     private  @Nullable  Process pddlProcess = null;
-     private  @Nullable  InputStream pddlInputStream = null;
-     private  @Nullable  InputStream pddlErrorStream = null;
-     private  @Nullable  Future<?> ppdlInputStreamFuture = null;
-     private  @Nullable  Future<?> ppdlErrorStreamFuture = null;
+    private @Nullable
+    Process pddlProcess = null;
+    private @Nullable
+    InputStream pddlInputStream = null;
+    private @Nullable
+    InputStream pddlErrorStream = null;
+    private @Nullable
+    Future<?> ppdlInputStreamFuture = null;
+    private @Nullable
+    Future<?> ppdlErrorStreamFuture = null;
 
     @SuppressWarnings("nullness")
     private final UserInfo sshUserInfo = new UserInfo() {
@@ -821,8 +828,10 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         return b;
     }
 
-     private  @Nullable  JSch jsch = null;
-     private  @Nullable  Session session = null;
+    private @Nullable
+    JSch jsch = null;
+    private @Nullable
+    Session session = null;
 
     private void runPddlPlannerOnceSsh() {
         try {

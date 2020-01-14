@@ -1148,7 +1148,14 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 Map<String, Object> map = thisRowListMap.get(rsIndex - 1);
                 List<String> sublist = listOfLabelsLists.get(rsIndex - 1);
                 for (int tableIndex = 0; tableIndex < sublist.size(); tableIndex++) {
-                    model.setValueAt(map.get(sublist.get(tableIndex)), rowIndex, tableOffset + tableIndex);
+                    final String listElement = sublist.get(tableIndex);
+                    final Object mapValue = map.get(listElement);
+                    final int tableOffsetIndex = tableOffset + tableIndex;
+                    if(mapValue != null) {
+                        model.setValueAt(mapValue, rowIndex, tableOffsetIndex);
+                    } else {
+                         clearModelValue(model, rowIndex, tableOffsetIndex);
+                    }
                 }
                 tableOffset += listOfLabelsLists.get(rsIndex - 1).size();
             }
@@ -1158,6 +1165,11 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> updateNodes(model));
         }
+    }
+
+    @SuppressWarnings("nullness")
+    private void clearModelValue(DefaultTableModel model, int rowIndex, final int tableOffsetIndex) {
+        model.setValueAt(null, rowIndex, tableOffsetIndex);
     }
 
     private void updateNodes(DefaultTableModel model) {

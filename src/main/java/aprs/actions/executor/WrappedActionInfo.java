@@ -23,7 +23,7 @@
 package aprs.actions.executor;
 
 import crcl.utils.CRCLCommandWrapper;
-import java.util.Arrays;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -34,8 +34,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class WrappedActionInfo {
 
-    private @Nullable
-    final Action parentAction;
+    private final @Nullable
+    Action parentAction;
+    
     private final int parentActionIndex;
 
     private final Action action;

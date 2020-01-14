@@ -219,7 +219,8 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
         Utils.autoResizeTableColWidths(jTableFiles);
     }
 
-     private  @Nullable  Map<String, String> getMap() {
+    private @Nullable
+    Map<String, String> getMap() {
         if (cancelled) {
             return null;
         }
@@ -241,9 +242,9 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
      * @param mapIn initial map of labels to filenames
      * @return map after modification by user
      */
-    @Nullable
     @SuppressWarnings("nullness")
-    public static Map<String, String> showMultiFileDialog(@Nullable Frame owner, String title, boolean modal, Map<String, MultiFileDialogInputFileInfo> mapIn) {
+    public static @Nullable
+    Map<String, String> showMultiFileDialog(@Nullable Frame owner, String title, boolean modal, Map<String, MultiFileDialogInputFileInfo> mapIn) {
         MultiFileDialogJPanel panel = new MultiFileDialogJPanel();
         panel.loadMap(mapIn);
         panel.dialog = new JDialog(owner, title, modal);

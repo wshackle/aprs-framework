@@ -47,6 +47,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -84,14 +85,20 @@ public class SplashScreen extends JFrame {
 
             }
             if (null != image) {
-                g.drawImage(image, this.getSize().width / 3, this.getSize().height / 3, null);
+                drawImageNoObserver(g);
             }
+        }
+
+        @SuppressWarnings("nullness")
+        private void drawImageNoObserver(Graphics g) {
+            g.drawImage(image, this.getSize().width / 3, this.getSize().height / 3, null);
         }
 
         final String messageLines[];
         final float fontSize;
-        @Nullable
-        final Image image;
+
+        final @MonotonicNonNull
+        Image image;
     }
 
     @UIEffect
@@ -106,7 +113,7 @@ public class SplashScreen extends JFrame {
 
     @UIEffect
     private void close(GraphicsDevice gd, XFutureVoid returnFuture) {
-        gd.setFullScreenWindow(null);
+        clearFullScreenMode(gd);
         setVisible(false);
         if (null != timer) {
             timer.stop();
@@ -115,10 +122,15 @@ public class SplashScreen extends JFrame {
         dispose();
     }
 
+    @SuppressWarnings("nullness")
+    private void clearFullScreenMode(GraphicsDevice gd) {
+        gd.setFullScreenWindow(null);
+    }
+
     private static class RobotArmImageHider {
 
-        static @Nullable
-        final BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
+        static final @MonotonicNonNull
+        BufferedImage ROBOT_ARM_IMAGE = readImageOrNull("robot-arm.jpeg");
 
     }
 
@@ -144,8 +156,8 @@ public class SplashScreen extends JFrame {
 
     private static class DisableImageHider {
 
-        static @Nullable
-        final BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
+        static final @MonotonicNonNull
+        BufferedImage DISABLED_IMAGE = readImageOrNull("DisabledRobotHalf.jpg");
 
     }
 

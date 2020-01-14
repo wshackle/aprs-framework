@@ -22,6 +22,7 @@
  */
 package aprs.database;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -33,8 +34,8 @@ public class TraySlotListItem {
     private final Slot slotOffset;
     private final PhysicalItem absSlot;
 
-    private @Nullable
-    final PhysicalItem closestPart;
+    private final @Nullable
+    PhysicalItem closestPart;
 
     public TraySlotListItem(Slot slotOffset, PhysicalItem absSlot, @Nullable PhysicalItem closestPart) {
         this.slotOffset = slotOffset;

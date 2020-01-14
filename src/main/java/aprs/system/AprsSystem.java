@@ -467,8 +467,8 @@ public class AprsSystem implements SlotOffsetProvider {
     private final CachedCheckBox useTeachTableCheckBox;
     private final CachedCheckBox connectVisionCheckBox;
 
-    private @Nullable
-    final AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
+    private final @MonotonicNonNull
+    AprsSystemDisplayJFrame aprsSystemDisplayJFrame;
 
     private @MonotonicNonNull
     VisionToDbJInternalFrame visionToDbJInternalFrame = null;

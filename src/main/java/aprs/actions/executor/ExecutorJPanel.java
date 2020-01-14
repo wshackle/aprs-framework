@@ -177,6 +177,7 @@ import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
 import static java.util.Objects.requireNonNull;
 import java.util.function.Function;
+import javax.swing.Icon;
 import javax.swing.SwingUtilities;
 
 /**
@@ -304,7 +305,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
         jTableOptions.getModel().addTableModelListener((TableModelEvent e) -> {
-            if(null != crclGenerator && !isRunningProgram() && !isContinuingActions()){
+            if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
                 crclGenerator.setOptions(getTableOptions());
             }
         });
@@ -3294,10 +3295,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         if (trace.length > 3) {
             String fileNameShort = trace[2].getFileName();
-            if(fileNameShort != null && fileNameShort.endsWith(".java")) {
-                fileNameShort = fileNameShort.substring(0,fileNameShort.length()-4);
+            if (fileNameShort != null && fileNameShort.endsWith(".java")) {
+                fileNameShort = fileNameShort.substring(0, fileNameShort.length() - 4);
             }
-            program.setName("empty"+emptyProgramCount.incrementAndGet() + "_" + fileNameShort+":"+trace[2].getLineNumber());
+            program.setName("empty" + emptyProgramCount.incrementAndGet() + "_" + fileNameShort + ":" + trace[2].getLineNumber());
         }
         InitCanonType initCmd = new InitCanonType();
         setCommandId(initCmd);
@@ -3352,8 +3353,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             loadProgramToTableInternal(crclProgram);
             return XFutureVoid.completedFuture();
         } else {
-            CRCLProgramType crclProgramCopy = copy(crclProgram);
-            assert crclProgramCopy != null : "crclProgramCopy ==null";
+            CRCLProgramType crclProgramCopy = requireNonNull(copy(crclProgram), "crclProgramCopy");
             return aprsSystem.runOnDispatchThread(() -> loadProgramToTableInternal(crclProgramCopy));
         }
     }
@@ -3617,10 +3617,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null == currentPose) {
             throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
         }
-        final VectorType xAxisCopy = copy(currentPose.getXAxis());
-        assert null != xAxisCopy : "null == xAxisCopy";
-        final VectorType zAxisCopy = copy(currentPose.getZAxis());
-        assert null != zAxisCopy : "null == zAxisCopy";
+        final VectorType xAxisCopy = requireNonNull(copy(currentPose.getXAxis()), "xAxisCopy");
+        final VectorType zAxisCopy = requireNonNull(copy(currentPose.getZAxis()), "zAxisCopy");
         moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
         program.getMiddleCommand().add(moveTo);
         startCrclProgram(program);
@@ -5343,26 +5341,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIEffect
+    @SuppressWarnings("nullness")
     private String queryUserForToolHolderPosName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Holder Pose Name?", // Object message
                 aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " " + qname + " choice", //  String title
                 JOptionPane.QUESTION_MESSAGE, // messageType
-                null,// icon 
+                (Icon) null,// icon 
                 getToolChangerNames(), // selectionValues
                 "" // initialSelectionValue
         );
     }
 
     @UIEffect
+    @SuppressWarnings("nullness")
     private String queryUserForToolName(String qname) {
         return (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Tool Name?", // Object message
                 aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " " + qname + " choice", //  String title
                 JOptionPane.QUESTION_MESSAGE, // messageType
-                null,// icon 
+                (Icon) null,// icon 
                 getToolNames(), // selectionValues
                 "" // initialSelectionValue
         );
@@ -6084,8 +6084,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != partName && partName.length() > 0) {
             try {
                 PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
-                PoseType curPoseCopy = copy(curPose);
-                assert curPoseCopy != null : "curPoseCopy==null";
+                PoseType curPoseCopy = requireNonNull(copy(curPose), "curPoseCopy");
                 PointType curPosePoint = requireNonNull(curPoseCopy.getPoint(), "curPose.getPoint()");
                 String curPoseString
                         = String.format("%.1f, %.1f, %.1f",
@@ -6791,7 +6790,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             aprsSystem.runOnDispatchThread(() -> {
                 try {
                     DefaultTableModel defaultTableLogModel = ((DefaultTableModel) jTableLog.getModel());
-                    while(jTableLog.getRowCount() > maxAbortLogSize) {
+                    while (jTableLog.getRowCount() > maxAbortLogSize) {
                         defaultTableLogModel.removeRow(0);
                     }
                     defaultTableLogModel.addRow(rowValues);
@@ -8054,8 +8053,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return fullfilename;
     }
 
-    private static @Nullable
-    final String TEMP_DIR;
+    private static final @Nullable
+    String TEMP_DIR;
 
     static {
         String tempDirName = null;

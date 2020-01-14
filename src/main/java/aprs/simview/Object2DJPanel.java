@@ -50,6 +50,7 @@ import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.PmCartesianMinMaxLimit;
+import java.awt.image.ImageObserver;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,7 +61,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import rcs.posemath.Posemath;
 
 /**
  *
@@ -2475,7 +2475,7 @@ public class Object2DJPanel extends JPanel {
             translateThenRotate(opts, g2d, item.x - infoXOffset, item.y - infoYOffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
 //            translateThenRotateItem(g2d, minX, minY, maxX, maxY, item, rotationOffsetParam, currentScale, info.ignoreRotations);
             g2d.translate(-(img_w / 2.0), -(img_h / 2.0));
-            g2d.drawImage(img, null, null);
+            g2dDrawImageNoTransformNoObserver(g2d, img);
             if (opts.viewDetails) {
                 g2d.translate(-1, -1);
                 g2d.setColor(item.getLabelColor());
@@ -2483,6 +2483,11 @@ public class Object2DJPanel extends JPanel {
             }
             g2d.setColor(Color.BLACK);
         }
+    }
+
+    @SuppressWarnings({"nullness","guieffect"})
+    private static void g2dDrawImageNoTransformNoObserver(Graphics2D g2d, Image img) {
+        g2d.drawImage(img, (AffineTransform)null, (ImageObserver) null);
     }
 
     @SuppressWarnings("guieffect")

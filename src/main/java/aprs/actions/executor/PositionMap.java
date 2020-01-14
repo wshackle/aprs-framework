@@ -53,8 +53,8 @@ public class PositionMap {
     private final List<PositionMapEntry> errmapList;
     private final List<String[]> errmapStringsList;
 
-    private @Nullable
-    final String fileName;
+    private final @Nullable
+    String fileName;
 
     private final String[] columnHeaders;
 
@@ -232,14 +232,14 @@ public class PositionMap {
     }
 
     private void plotInputMid(final double z, plotterJFrame plotterFrame) {
-        double xA[] = new double[errmapList.size()+1];
-        double yA[] = new double[errmapList.size()+1];
-        double xCA[] = new double[errmapList.size()+1];
-        double yCA[] = new double[errmapList.size()+1];
+        double xA[] = new double[errmapList.size() + 1];
+        double yA[] = new double[errmapList.size() + 1];
+        double xCA[] = new double[errmapList.size() + 1];
+        double yCA[] = new double[errmapList.size() + 1];
         PositionMapEntry lastEntry = errmapList.get(0);
         for (int i = 0; i < errmapList.size(); i++) {
-            int nextIndex = i+1;
-            if(nextIndex >= errmapList.size()) {
+            int nextIndex = i + 1;
+            if (nextIndex >= errmapList.size()) {
                 nextIndex = 0;
             }
             PositionMapEntry entry = errmapList.get(nextIndex);
@@ -262,15 +262,15 @@ public class PositionMap {
     }
 
     private void plotOutputMid(final double z, plotterJFrame plotterFrame) {
-        double xA[] = new double[errmapList.size()+1];
-        double yA[] = new double[errmapList.size()+1];
-        double xRA[] = new double[errmapList.size()+1];
-        double yRA[] = new double[errmapList.size()+1];
+        double xA[] = new double[errmapList.size() + 1];
+        double yA[] = new double[errmapList.size() + 1];
+        double xRA[] = new double[errmapList.size() + 1];
+        double yRA[] = new double[errmapList.size() + 1];
         PositionMapEntry lastEntry = errmapList.get(0);
         PositionMap reverse = this.reverse();
         for (int i = 0; i < errmapList.size(); i++) {
-            int nextIndex = i+1;
-            if(nextIndex >= errmapList.size()) {
+            int nextIndex = i + 1;
+            if (nextIndex >= errmapList.size()) {
                 nextIndex = 0;
             }
             PositionMapEntry entry = errmapList.get(nextIndex);
@@ -406,17 +406,17 @@ public class PositionMap {
             }
         }
         if (inputXIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find inputXIndex : f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
+            throw new BadErrorMapFormatException("Couldn't find inputXIndex : f=" + f + ",columnHeaders=" + Arrays.toString(columnHeaders));
         }
         if (inputYIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find inputYIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
+            throw new BadErrorMapFormatException("Couldn't find inputYIndex :  f=" + f + ",columnHeaders=" + Arrays.toString(columnHeaders));
         }
 
         if (offsetXIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find offsetXIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
+            throw new BadErrorMapFormatException("Couldn't find offsetXIndex :  f=" + f + ",columnHeaders=" + Arrays.toString(columnHeaders));
         }
         if (offsetYIndex < 0) {
-            throw new BadErrorMapFormatException("Couldn't find offsetYIndex :  f="+f+",columnHeaders="+Arrays.toString(columnHeaders));
+            throw new BadErrorMapFormatException("Couldn't find offsetYIndex :  f=" + f + ",columnHeaders=" + Arrays.toString(columnHeaders));
         }
         errmapList = new ArrayList<>();
         for (int i = 1; i < errmapStringsList.size(); i++) {
