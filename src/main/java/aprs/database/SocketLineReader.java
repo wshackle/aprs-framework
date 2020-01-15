@@ -223,7 +223,7 @@ public class SocketLineReader {
         }
         socket.setReuseAddress(true);
         final Socket finalSocket = socket;
-        
+
         thread = new Thread(new Runnable() {
 
             @Override
@@ -231,6 +231,7 @@ public class SocketLineReader {
                 long t1 = System.currentTimeMillis();
                 long t0 = t1;
                 int count = 0;
+                String lastLine = null;
                 try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
                         PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
                     String line = null;
@@ -239,6 +240,7 @@ public class SocketLineReader {
                         _cb.call(line, psl);
                         t1 = System.currentTimeMillis();
                         count++;
+                        lastLine = line;
                     }
                 } catch (Exception exception) {
                     if (!closing) {
@@ -253,17 +255,20 @@ public class SocketLineReader {
                         if (null != socketLocal) {
                             final InputStream inputStream;
                             try {
-                                System.err.println("socket.getSoTimeout() = " + socketLocal.getSoTimeout());
-                                inputStream = socketLocal.getInputStream();
-                                if (null != inputStream) {
-                                    System.err.println("inputStream.available() = " + inputStream.available());
+                                if (!socketLocal.isClosed()) {
+                                    System.err.println("socket.getSoTimeout() = " + socketLocal.getSoTimeout());
+                                    inputStream = socketLocal.getInputStream();
+                                    if (null != inputStream) {
+                                        System.err.println("inputStream.available() = " + inputStream.available());
+                                    }
                                 }
                             } catch (IOException ex) {
-                                java.util.logging.Logger.getLogger(SocketLineReader.class.getName()).log(Level.SEVERE, null, ex);
+                                java.util.logging.Logger.getLogger(SocketLineReader.class.getName()).log(Level.SEVERE, "", ex);
                             }
                         }
 
                         System.err.println("SocketLineReader error: timeDiff = " + timeDiff + ", count=" + count + ", time0Diff=" + time0Diff);
+                        System.err.println("SocketLineReader error: lastLine=" + lastLine);
                         Logger.getLogger(SocketLineReader.class)
                                 .severe(
                                         "isClient=true, host=" + host + ",portParam=" + portParam + ", threadname=" + threadname + ", cb=" + _cb + ",readSoTimeOut=" + readSoTimeOut,
