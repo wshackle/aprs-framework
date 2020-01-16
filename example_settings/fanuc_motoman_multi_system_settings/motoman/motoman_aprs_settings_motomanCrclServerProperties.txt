@@ -1,9 +1,9 @@
 #
-#Mon Dec 09 15:52:08 EST 2019
-statCacheTime=30
+#Wed Jan 15 15:47:35 EST 2020
+CRCL_PORT=64445
 debug=false
+readTimeoutMillis=2000
 MOTOPLUS_PORT=12222
+statCacheTime=30
 connectTimeoutMillis=2000
 MOTOPLUS_HOST=192.168.1.33
-readTimeoutMillis=2000
-CRCL_PORT=64445

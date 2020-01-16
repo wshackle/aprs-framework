@@ -5805,7 +5805,7 @@ public class Supervisor {
             String blockerList = toggleBlockerMap.keySet().toString();
 
             if (null == lockInfo && withChecks) {
-                final String errmsg = "allowToggle called for blocker " + blockerName + " not in toggleBlockerMap " + toggleBlockerMap;
+                final String errmsg = "allowToggle called for blocker \"" + blockerName + " \"not in toggleBlockerMap " + toggleBlockerMap;
                 logEventErr(errmsg);
                 throw new RuntimeException(errmsg);
             } else {

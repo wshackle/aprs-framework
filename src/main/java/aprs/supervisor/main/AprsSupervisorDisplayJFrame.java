@@ -3928,24 +3928,33 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private volatile XFutureVoid internalInteractiveResetAllFuture = null;
     private volatile XFutureVoid interactivStartFuture = null;
+    private final static AtomicInteger INTERACTIVE_START_ATOMIC = new AtomicInteger();
 
     @UIEffect
     private XFutureVoid interactivStart(Runnable runnable, String actionName) {
+        int isn = INTERACTIVE_START_ATOMIC.incrementAndGet();
+        final String blockerName = "interactiveStart." + actionName + ",isn=" + isn;
         try {
             if (null == supervisor) {
                 throw new NullPointerException("supervisor");
             }
             AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
-            final String blockerName = "interactiveStart." + actionName;
+            logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
             Supplier<XFuture<LockInfo>> sup
                     = () -> supervisor.disallowToggles(blockerName, sysArray);
             supervisor.setResetting(true);
             if (null != internalInteractiveResetAllFuture) {
-                internalInteractiveResetAllFuture.cancelAll(false);
+                if (!internalInteractiveResetAllFuture.isDone()) {
+                    System.err.println("Cancelling internalInteractiveResetAllFuture= " + internalInteractiveResetAllFuture);
+                    internalInteractiveResetAllFuture.cancelAll(false);
+                }
                 internalInteractiveResetAllFuture = null;
             }
             if (null != interactivStartFuture) {
-                interactivStartFuture.cancelAll(false);
+                if (!interactivStartFuture.isDone()) {
+                    System.err.println("Cancelling interactivStartFuture= " + interactivStartFuture);
+                    interactivStartFuture.cancelAll(false);
+                }
                 interactivStartFuture = null;
             }
             supervisor.setIconImage(IconImages.BASE_IMAGE);
@@ -3955,12 +3964,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFuture<LockInfo> disallowTogglesFuture
                     = fullAbortFuture
-                            .thenComposeAsync("interactiveStart.disableToggles", sup,
+                            .thenComposeAsync("interactiveStart.disableToggles",
+                                    sup,
                                     supervisor.getSupervisorExecutorService());
             XFutureVoid iiraFuture
                     = disallowTogglesFuture
                             .thenComposeToVoid(
-                                    "interactivStart(" + actionName + ")internalInteractiveResetAll",
+                                    "interactivStart(" + actionName + ",isn=" + isn + ")internalInteractiveResetAll",
                                     x -> internalInteractiveResetAll());
             internalInteractiveResetAllFuture = iiraFuture;
             XFutureVoid ret = iiraFuture
@@ -3970,7 +3980,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     })
                     .always(() -> supervisor.setResetting(false))
                     .thenComposeAsyncToVoid(
-                            "interactivStart(" + actionName + ")LookForParts",
+                            "interactivStart(" + actionName + ",isn=" + isn + ")LookForParts",
                             x -> {
                                 List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
                                 List<AprsSystem> aprsSystems = supervisor.getAprsSystems();
@@ -4005,7 +4015,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             },
                             getSupervisorExecutorService())
                     .thenComposeToVoid(
-                            "interactivStart(" + actionName + ")afterLookForParts",
+                            "interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
                             () -> {
                                 return Utils.runOnDispatchThread(
                                         "interactivStart(" + actionName + ")confirmContinue",
@@ -4035,12 +4045,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                             }
                                         });
                             })
-                    .alwaysComposeAsync(() -> supervisor.allowToggles(blockerName, sysArray), supervisor.getSupervisorExecutorService());
+                    .alwaysComposeAsync(() -> supervisor.allowToggles(blockerName, sysArray), supervisor.getSupervisorExecutorService())
+                    .thenRun(() -> logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn));
             interactivStartFuture = ret;
             return ret;
         } catch (Exception exception) {
-            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", exception);
-            XFutureVoid ret = new XFutureVoid("interactivStart.exception");
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "actionName=" + actionName + ",isn=" + isn, exception);
+            XFutureVoid ret = new XFutureVoid("interactivStart.exception actionName=" + actionName + ",isn=" + isn);
             ret.completeExceptionally(exception);
             return ret;
         }
@@ -4338,7 +4349,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         setEventsDisplayMax(-1);
         long minTime = Long.MAX_VALUE;
         long maxTime = Long.MIN_VALUE;
-        try ( CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             for (CSVRecord record : parser) {
                 String timeString = getRecordString(record, headerMap, "timeString");
@@ -4675,7 +4686,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try ( PrintStream ps = new PrintStream(baos)) {
+                try (PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);

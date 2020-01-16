@@ -23,6 +23,7 @@
 package aprs.database;
 
 import com.sun.istack.logging.Logger;
+import crcl.utils.Utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -202,6 +203,7 @@ public class SocketLineReader {
             int connectTimeOut,
             int readSoTimeOut)
             throws IllegalArgumentException, IOException, SocketException {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         this.cb = _cb;
         this.port = portParam;
         if (null == host1) {
@@ -249,6 +251,7 @@ public class SocketLineReader {
                         long time0Diff = t2 - t0;
                         System.out.println("");
                         System.out.flush();
+                        System.out.println("trace = " + Utils.traceToString(trace));
                         System.err.println("readSoTimeOut = " + readSoTimeOut);
                         final Socket socketLocal = socket;
                         System.err.println("socket = " + socketLocal);

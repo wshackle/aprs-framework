@@ -4735,6 +4735,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void loadPropertiesOnDisplay(Properties props) {
         updateDisplayFromProperties(props);
         loadPropertiesTableOnDisplay(props);
+        checkConnectedProperty(props);
         loadingProperties = false;
     }
 
@@ -5054,24 +5055,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setRepaintMinMillis(Long.parseLong(repaintMinMillisString));
         }
 
-        String connectedString = props.getProperty("connected");
-        if (null != connectedString && connectedString.length() > 0) {
-            boolean connected = Boolean.valueOf(connectedString);
-            connectedCachedCheckBox.setSelected(connected);
-            if (connected) {
-                connect();
-                final boolean canLockTrays = !isSimulated() && isConnected();
-                jCheckBoxLockTrays.setEnabled(canLockTrays);
-                if (!canLockTrays) {
-                    jCheckBoxLockTrays.setSelected(false);
-                    if (null != visionSocketClient) {
-                        visionSocketClient.setLockTrays(false);
-                    }
-                }
-            }
-        } else {
-            throw new IllegalStateException("connected property not set");
-        }
+        
         if (!dialogMode) {
             if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
                 if (needReloadDataFile()) {
@@ -5182,7 +5166,29 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             final boolean enable = Boolean.parseBoolean(enableReadSoTimeoutString);
             this.setEnableReadTimeout(enable);
         }
+        
         updatingDisplayFromProperties = false;
+    }
+
+    private void checkConnectedProperty(Properties props) throws IllegalStateException {
+        String connectedString = props.getProperty("connected");
+        if (null != connectedString && connectedString.length() > 0) {
+            boolean connected = Boolean.valueOf(connectedString);
+            connectedCachedCheckBox.setSelected(connected);
+            if (connected) {
+                connect();
+                final boolean canLockTrays = !isSimulated() && isConnected();
+                jCheckBoxLockTrays.setEnabled(canLockTrays);
+                if (!canLockTrays) {
+                    jCheckBoxLockTrays.setSelected(false);
+                    if (null != visionSocketClient) {
+                        visionSocketClient.setLockTrays(false);
+                    }
+                }
+            }
+        } else {
+            throw new IllegalStateException("connected property not set");
+        }
     }
 
     public boolean isSimulated() {
