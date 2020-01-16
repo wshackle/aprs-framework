@@ -8635,7 +8635,7 @@ public class Supervisor {
                         .thenComposeAsyncToVoid(() -> waitTimeoutOrAllOthers(10000, ContinuousDemoFuture, stealRobotFuture.getAndSet(null), unStealRobotFuture.getAndSet(null)));
         setLastSafeAbortAllFuture(f);
 
-        XFutureVoid f2 = f.alwaysCompose(() -> {
+        XFutureVoid f2 = f.alwaysComposeAsync(() -> {
             int startingAbortCount2 = getAbortCount();
             if (null != safeAbortReturnRobot) {
                 try {
@@ -8654,7 +8654,7 @@ public class Supervisor {
             } else {
                 return showSafeAbortComplete(startingAbortCount2);
             }
-        });
+        },supervisorExecutorService);
         clearCheckBoxes();
         setMainFuture(f2);
     }
