@@ -61,6 +61,8 @@ import crcl.base.CloseToolChangerType;
 import crcl.base.DwellType;
 import crcl.base.EndCanonType;
 import crcl.base.InitCanonType;
+import crcl.base.JointPositionToleranceSettingType;
+import crcl.base.JointPositionsTolerancesType;
 import crcl.base.JointSpeedAccelType;
 import crcl.base.JointStatusType;
 import crcl.base.JointStatusesType;
@@ -70,10 +72,13 @@ import crcl.base.MiddleCommandType;
 import crcl.base.MoveToType;
 import crcl.base.OpenToolChangerType;
 import crcl.base.PointType;
+import crcl.base.PoseToleranceType;
 import crcl.base.PoseType;
 import crcl.base.RotSpeedAbsoluteType;
 import crcl.base.SetAngleUnitsType;
+import crcl.base.SetDefaultJointPositonsTolerancesType;
 import crcl.base.SetEndEffectorType;
+import crcl.base.SetEndPoseToleranceType;
 import crcl.base.SetLengthUnitsType;
 import crcl.base.SetRotSpeedType;
 import crcl.base.SetTransSpeedType;
@@ -1137,6 +1142,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.unitsSet = false;
         this.rotSpeedSet = false;
         this.genThread = null;
+        this.endPoseTolerancesChecked=false;
+        this.jointTolerancesChecked=false;
         setLastActionsIndex(null, 0);
         clearLastRequiredPartsMap();
     }
@@ -2149,7 +2156,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             showPddlActionsList(actions);
         }
         gparams.optiplannerUsed = true;
-        MessageType messageCmd = new MessageType();
         String messageString
                 = "\nstartingIndex=" + startingIndex + "\n"
                 + "origActions.size()=" + origActions.size() + "\n"
@@ -2160,10 +2166,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 + "copyFullReplanPddlActions=" + copyFullReplanPddlActions + "\n"
                 + "copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size())=" + copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size()) + "\n";
         logDebug(messageString);
-        messageCmd.setMessage(messageString);
-        setCommandId(messageCmd);
+       
         List<MiddleCommandType> newCmds = generate(gparams);
-        newCmds.add(0, messageCmd);
+        addMessageCommand(newCmds, messageString);
         if (debug) {
             showCmdList(newCmds);
         }
@@ -4720,10 +4725,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
-        MessageType msg = new MessageType();
-        msg.setMessage("fake-take-part " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-        setCommandId(msg);
-        out.add(msg);
+        addMessageCommand(out,"fake-take-part " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
 
         PoseType pose = getPose(partName);
         if (null == pose) {
@@ -4757,10 +4759,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
         }
         checkSettings();
-        MessageType msg = new MessageType();
-        msg.setMessage("take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-        setCommandId(msg);
-        out.add(msg);
+        addMessageCommand(out,"take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
@@ -5003,8 +5002,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         lastTestApproachPose = approachPose;
 
         final PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
-        final PointType posePoint = requireNonNull(pose.getPoint(),"posePoint");
-        final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
+        final PointType posePoint = requireNonNull(pose.getPoint(), "posePoint");
+        final PointType takePosePoint = requireNonNull(takePose.getPoint(), "takePosePoint");
         takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastTestSpeed(cmds);
@@ -5274,9 +5273,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             PoseType approachPose = addZToPose(poseWithToolOffset, approachZOffset);
             lastTestApproachPose = null;
 
-            final PoseType takePose = requireNonNull(copy(poseWithToolOffset),"takePose");
-            final PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(),"poseWithToolOffsetPoint");
-            final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
+            final PoseType takePose = requireNonNull(copy(poseWithToolOffset), "takePose");
+            final PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffsetPoint");
+            final PointType takePosePoint = requireNonNull(takePose.getPoint(), "takePosePoint");
             takePosePoint.setZ(poseWithToolOffsetPoint.getZ() + takeZOffset);
 
             addSetFastSpeed(cmds);
@@ -5351,9 +5350,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkSettings();
         PoseType approachPose = addZToPose(pose, approachZOffset);
 
-        final PoseType takePose = requireNonNull(copy(pose),"takePose");
-        final PointType takePosePoint = requireNonNull(takePose.getPoint(),"takePosePoint");
-        final PointType posePoint = requireNonNull(pose.getPoint(),"posePoint");
+        final PoseType takePose = requireNonNull(copy(pose), "takePose");
+        final PointType takePosePoint = requireNonNull(takePose.getPoint(), "takePosePoint");
+        final PointType posePoint = requireNonNull(pose.getPoint(), "posePoint");
         takePosePoint.setZ(posePoint.getZ() + takeZOffset);
 
         addSetFastSpeed(cmds);
@@ -5669,7 +5668,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private PoseType copyAndAddZ(PoseType poseIn, double offset, double limit) {
         final PoseType poseOut = requireNonNull(copy(poseIn), "copy(poseIn)");
-        final PointType outPoint = requireNonNull(poseOut.getPoint(),"outPoint");
+        final PointType outPoint = requireNonNull(poseOut.getPoint(), "outPoint");
         outPoint.setZ(Math.min(limit, outPoint.getZ() + offset));
         return poseOut;
     }
@@ -5733,6 +5732,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void addMoveTo(List<MiddleCommandType> cmds, PoseType pose, boolean straight, String message) {
         addMessageCommand(cmds, message);
+        checkEndPoseToleranceSetting(cmds);
         MoveToType moveCmd = new MoveToType();
         setCommandId(moveCmd);
         if (!checkPose(pose)) {
@@ -5914,6 +5914,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         } else {
             assert (null != lookForJointsString) : "@AssumeAssertion(nullness)";
             double jointVals[] = jointValStringToArray(lookForJointsString);
+            checkJointToleranceSetting(out);
             addPrepJointMove(jointVals, out);
             addJointMove(out, jointVals, 1.0);
         }
@@ -5922,10 +5923,111 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         });
     }
 
+    private @Nullable
+    JointPositionsTolerancesType jointPositionsTolerancesType = null;
+
+    public JointPositionsTolerancesType getJointPositionsTolerancesType() {
+        return jointPositionsTolerancesType;
+    }
+
+    public void setJointPositionsTolerancesType(JointPositionsTolerancesType jointPositionsTolerancesType) {
+        this.jointPositionsTolerancesType = jointPositionsTolerancesType;
+    }
+
+    private volatile boolean jointTolerancesChecked = false;
+
+    private void checkJointToleranceSetting(List<MiddleCommandType> out) {
+        if (!jointTolerancesChecked) {
+            if (null == jointPositionsTolerancesType) {
+                String jointTolerancesString = options.get("jointTolerances");
+                double jointTolerancesVals[] = jointValStringToArray(jointTolerancesString);
+                JointPositionsTolerancesType newJointTolerances = new JointPositionsTolerancesType();
+                for (int i = 0; i < jointTolerancesVals.length; i++) {
+                    double jointTolerancesVal = jointTolerancesVals[i];
+                    final JointPositionToleranceSettingType settingI = new JointPositionToleranceSettingType();
+                    settingI.setJointNumber(i + 1);
+                    settingI.setJointPositionTolerance(jointTolerancesVals[i]);
+                    newJointTolerances.getSetting().add(settingI);
+                }
+                final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
+                        = new SetDefaultJointPositonsTolerancesType();
+                setDefaultJointPositonsTolerancesCommand.setJointTolerances(newJointTolerances);
+                setCommandId(setDefaultJointPositonsTolerancesCommand);
+                out.add(setDefaultJointPositonsTolerancesCommand);
+                this.jointPositionsTolerancesType = newJointTolerances;
+            } else {
+                final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
+                        = new SetDefaultJointPositonsTolerancesType();
+                setDefaultJointPositonsTolerancesCommand.setJointTolerances(jointPositionsTolerancesType);
+                setCommandId(setDefaultJointPositonsTolerancesCommand);
+                out.add(setDefaultJointPositonsTolerancesCommand);
+            }
+            jointTolerancesChecked = true;
+        }
+    }
+
+    private volatile boolean endPoseTolerancesChecked = false;
+
+    private @Nullable
+    PoseToleranceType endPoseTolerance = null;
+
+    public PoseToleranceType getEndPoseTolerance() {
+        return endPoseTolerance;
+    }
+
+    public void setEndPoseTolerance(PoseToleranceType endPoseTolerance) {
+        this.endPoseTolerance = endPoseTolerance;
+    }
+
+    private void checkEndPoseToleranceSetting(List<MiddleCommandType> out) {
+        if (!endPoseTolerancesChecked) {
+            if (null == endPoseTolerance) {
+                String useEndPoseToleranceString = options.get("useEndPoseTolerance");
+                boolean useEndPoseTolerance = Boolean.parseBoolean(useEndPoseToleranceString);
+                if (useEndPoseTolerance) {
+                    PoseToleranceType newEndPoseTolerance = new PoseToleranceType();
+                    String endPoseXPointToleranceString = options.getOrDefault("endPoseXPointTolerance", "10.0");
+                    double endPoseXPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    newEndPoseTolerance.setXPointTolerance(endPoseXPointToleranceValue);
+
+                    String endPoseYPointToleranceString = options.getOrDefault("endPoseYPointTolerance", "10.0");
+                    double endPoseYPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    newEndPoseTolerance.setYPointTolerance(endPoseYPointToleranceValue);
+
+                    String endPoseZPointToleranceString = options.getOrDefault("endPoseZPointTolerance", "10.0");
+                    double endPoseZPointToleranceValue = Double.parseDouble(endPoseZPointToleranceString);
+                    newEndPoseTolerance.setZPointTolerance(endPoseZPointToleranceValue);
+
+                    String endPoseXAxisToleranceString = options.getOrDefault("endPoseXAxisTolerance", "10.0");
+                    double endPoseXAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
+                    newEndPoseTolerance.setXAxisTolerance(endPoseZPointToleranceValue);
+
+                    String endPoseYAxisToleranceString = options.getOrDefault("endPoseZAxisTolerance", "10.0");
+                    double endPoseYAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
+                    newEndPoseTolerance.setZAxisTolerance(endPoseZPointToleranceValue);
+
+                    final SetEndPoseToleranceType setEndPoseToleranceCommand
+                            = new SetEndPoseToleranceType();
+                    setEndPoseToleranceCommand.setTolerance(newEndPoseTolerance);
+                    setCommandId(setEndPoseToleranceCommand);
+                    out.add(setEndPoseToleranceCommand);
+                    this.endPoseTolerance = newEndPoseTolerance;
+                }
+            } else {
+                final SetEndPoseToleranceType setEndPoseToleranceCommand
+                        = new SetEndPoseToleranceType();
+                setEndPoseToleranceCommand.setTolerance(endPoseTolerance);
+                setCommandId(setEndPoseToleranceCommand);
+                out.add(setEndPoseToleranceCommand);
+            }
+            endPoseTolerancesChecked = true;
+        }
+    }
+
     private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
         double joint0 = jointVals[0];
         double joint0diff = joint0 - expectedJoint0Val;
-
+        checkJointToleranceSetting(out);
         if (toolHolderOperationEnabled
                 && Double.isFinite(expectedJoint0Val)
                 && joint0DiffTolerance > 0
@@ -6116,6 +6218,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale) {
+        checkJointToleranceSetting(out);
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
         ajCmd.getActuateJoint().clear();
@@ -6158,7 +6261,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         putPoseCacheThread = Thread.currentThread();
         putPoseCacheTrace = putPoseCacheThread.getStackTrace();
         synchronized (poseCache) {
-            final PoseType poseCopy = requireNonNull(copy(pose),"poseCopy");
+            final PoseType poseCopy = requireNonNull(copy(pose), "poseCopy");
             poseCache.put(name, poseCopy);
             PhysicalItem itemCopy = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, poseCopy, 0);
             itemCache.put(name, itemCopy);
@@ -7178,7 +7281,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final PoseType poseWithToolOffset = CRCLPosemath.multiply(pose, toolOffsetPose);
 
         logToolOffsetInfo(cmds, pose, poseWithToolOffset);
-        final PoseType approachPose = requireNonNull(copy(poseWithToolOffset),"approachPose");
+        final PoseType approachPose = requireNonNull(copy(poseWithToolOffset), "approachPose");
         lastTestApproachPose = null;
 
         //logDebug("Z= " + pose.getPoint().getZ());
@@ -7186,7 +7289,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final PointType poseWithToolOffsetPoint = requireNonNull(poseWithToolOffset.getPoint(), "poseWithToolOffset.getPoint()");
         approachPosePoint.setZ(poseWithToolOffsetPoint.getZ() + approachZOffset);
 
-        final PoseType placePose = requireNonNull(copy(poseWithToolOffset),"placePose");
+        final PoseType placePose = requireNonNull(copy(poseWithToolOffset), "placePose");
         final PointType placePosePoint = requireNonNull(placePose.getPoint(), "placePose.getPoint()");
         placePosePoint.setZ(poseWithToolOffsetPoint.getZ() + placeZOffset);
 
@@ -7300,11 +7403,28 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         cmds.add(wrapper);
     }
 
+    private boolean useMessageCommands = false;
+
+    public boolean isUseMessageCommands() {
+        return useMessageCommands;
+    }
+
+    public void setUseMessageCommands(boolean useMessageCommands) {
+        this.useMessageCommands = useMessageCommands;
+    }
+
     private void addMessageCommand(List<MiddleCommandType> cmds, String message) {
-        MessageType messageCmd = new MessageType();
-        messageCmd.setMessage(message);
-        setCommandId(messageCmd);
-        cmds.add(messageCmd);
+        String useMessageCommandsString = options.get("useMessageCommands");
+        useMessageCommands = (null != useMessageCommandsString
+                && useMessageCommandsString.length() > 0
+                && Boolean.parseBoolean(useMessageCommandsString));
+
+        if (useMessageCommands) {
+            MessageType messageCmd = new MessageType();
+            messageCmd.setMessage(message);
+            setCommandId(messageCmd);
+            cmds.add(messageCmd);
+        }
     }
 
     private void addOptionalCommand(MiddleCommandType optCmd, List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {

@@ -4,17 +4,26 @@
 addPosNoise=true
 alternativeRotation=0.00
 autoscale=false
+connectTimeout=2500
 connected=true
 datafile=teach_objects2.csv
 displayAxis=(X+,Y+)
 dropOffThreshold=25.00
+enableConnectTimeout=true
+enableReadSoTimeout=true
 enforceSensorLimits=false
+hideNearMouse=false
+hideNearMouseDist=100.0 
+hideNearRobot=false
+hideNearRobotDist=100.0 
 items=sku_large_gear_vessel,0.03,580.9963099630996,-97.7859778597786,0.75,PT,sku_medium_gear_vessel,0.04,233.94833948339482,-38.191881918819206,0.81,PT,sku_kit_m2l1_vessel,0.7853981633974483,510.0,242.22222222222223,0.97,KT,sku_kit_m2l1_vessel,-0.7853981633974483,220.68965517241378,221.8965517241379,0.88,KT,sku_small_gear_vessel,0.0,563.468634686347,49.446494464944635,0.95,PT,sku_large_gear_vessel,1.5707963267948966,742.2509225092251,-385.239852398524,1.0,PT,sku_large_gear_vessel,1.5707963267948966,570.479704797048,-392.2509225092251,0.77,PT,sku_kit_s2l2_vessel,-0.01,286.53136531365317,-521.9557195571956,0.98,KT,sku_kit_s2l2_vessel,0.01,170.84870848708488,-301.10701107011073,0.97,KT,sku_part_medium_gear,0.0,446.240181540409,232.85305737150048,100.0,P,sku_part_medium_gear,0.0,276.01476014760146,0.36900369003689093,100.0,P,sku_part_large_gear,0.0,532.2809346751882,275.0531900727136,100.0,P,sku_part_medium_gear,0.0,211.32049032169203,285.6563701837289,100.0,P,sku_part_medium_gear,0.0,156.9298367128228,231.26571657485965,100.0,P,sku_part_large_gear,0.0,521.4022140221402,-97.7859778597786,100.0,P,sku_part_small_gear,0.0,319.07975616036566,-467.2784642009723,100.0,P,sku_part_large_gear,0.0,573.9852398523985,-444.8339483394834,100.0,P,sku_part_small_gear,0.0,255.08295613369904,-466.6384748675856,100.0,P,sku_part_large_gear,0.0,232.25406995779656,-549.4143285688173,100.0,P,sku_part_small_gear,0.0,206.86405435482925,-247.51147035279882,100.0,P,sku_part_large_gear,0.0,223.43173431734317,-325.64575645756463,100.0,P,sku_part_small_gear,0.0,138.30031764037238,-246.42975571388746,100.0,P,sku_part_large_gear,0.0,117.13140379794163,-329.64560208182235,100.0,P,
 
 pickupDist=5.00
 posNoise=1.00
 prevListSizeDecrementInterval=2000
+readSoTimeout=6000
 recordLines=false
+repaintMinMillis=100
 reverseFlag=false
 rotNoise=1.00
 rotationOffset=0.0

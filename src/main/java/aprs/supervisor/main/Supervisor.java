@@ -144,6 +144,7 @@ import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
 import java.awt.Graphics;
 import java.awt.image.ImageObserver;
+import java.util.TreeMap;
 import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
@@ -240,7 +241,7 @@ public class Supervisor {
                     return this.startContinuousDemoRevFirst();
                 });
         XFuture<?> xf4 = xf3
-                .always(() -> {
+                .alwaysRun(() -> {
                     long endTime = System.currentTimeMillis();
                     long timeDiff = endTime - startTime;
                     int cycle_count = this.getContiousDemoCycleCount();
@@ -1375,7 +1376,7 @@ public class Supervisor {
             XFuture<?> nextLFR
                     = stealUnstealFuture
                             .peekNoCancelException(this::handleXFutureException)
-                            .always("END:ecc=" + ecc + ",enabled=" + enabled,
+                            .alwaysRun("END:ecc=" + ecc + ",enabled=" + enabled,
                                     () -> {
                                         try {
                                             takeAllSnapshots("END " + info);
@@ -1782,7 +1783,7 @@ public class Supervisor {
                         }
                         return returnRobots(returnRobotFunction.getAndSet(null), comment, ecc);
                     }, supervisorExecutorService)
-                    .alwaysComposeAsync(() -> {
+                    .alwaysComposeAsyncToVoid(() -> {
                         XFutureVoid ret = allowToggles(blockername, new AprsSystem[0]);
                         clearBlockConveryorMoves();
                         long timeDiff = System.currentTimeMillis() - startTime;
@@ -1851,7 +1852,7 @@ public class Supervisor {
             return func
                     .apply(ecc)
                     .peekNoCancelException(this::handleXFutureException)
-                    .alwaysComposeAsync(() -> allowToggles(blockerName, systems), supervisorExecutorService);
+                    .alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, systems), supervisorExecutorService);
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
             throw asRuntimeException(ex);
@@ -2291,8 +2292,8 @@ public class Supervisor {
         lastStealRobotsInternalBeforeAllowTogglesFuture = beforeAllowTogglesFuture;
         XFutureVoid withAllowTogglesFuture
                 = beforeAllowTogglesFuture
-                        .alwaysComposeAsync(() -> allowToggles(blocker, stealFor), supervisorExecutorService)
-                        .always(() -> clearBlockConveryorMoves());
+                        .alwaysComposeAsyncToVoid(() -> allowToggles(blocker, stealFor), supervisorExecutorService)
+                        .alwaysRun(() -> clearBlockConveryorMoves());
         if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
             return withAllowTogglesFuture;
         }
@@ -2460,7 +2461,7 @@ public class Supervisor {
                 }, supervisorExecutorService);
         lastStealRobotsInternalPart7 = part7;
         XFutureVoid part8 = part7
-                .alwaysAsync("stealRobotsInternal.logFinish", () -> {
+                .alwaysRunAsync("stealRobotsInternal.logFinish", () -> {
                     int curAbortCount3 = abortCount.get();
                     int currentEcc = enableChangeCount.get();
                     logEvent("stealRobotsInternal.logFinish ecc=" + ecc + ",currentEcc=" + currentEcc + ",curAbortCount3=" + curAbortCount3 + ", startingStealRobotsInternalAbortCount=" + startingStealRobotsInternalAbortCount);
@@ -2903,7 +2904,7 @@ public class Supervisor {
                             return returnRobots("unsteal.returnRobots1" + " : srn=" + srn, stealFor, stealFrom, srn, ecc);
                         }, supervisorExecutorService)
                         .thenRun("unsteal.connectAll" + " : srn=" + srn, this::connectAll)
-                        .alwaysComposeAsync(() -> {
+                        .alwaysComposeAsyncToVoid(() -> {
                             return allowToggles(revBlocker, stealFor, stealFrom);
                         }, supervisorExecutorService);
         return part1Future
@@ -3829,7 +3830,7 @@ public class Supervisor {
                                 sys.clearKitsToCheck(sys.getSafeAbortRequestCount());
                             }
                         })
-                .alwaysComposeAsync("allowTogglesFullAbort", () -> allowTogglesNoCheck(blockerName), supervisorExecutorService);
+                .alwaysComposeAsyncToVoid("allowTogglesFullAbort", () -> allowTogglesNoCheck(blockerName), supervisorExecutorService);
     }
 
     private void clearCheckBoxes() {
@@ -5102,12 +5103,15 @@ public class Supervisor {
                     }
                     return ret;
                 });
-        XFuture<Boolean> ret = itemsFuture
+        final Function<List<PhysicalItem>, XFuture<Boolean>> fillTraysFunction = (List<PhysicalItem> l) -> {
+            logEvent("recieved vision update for fillTraysAndNextRepeating " + count);
+            return fillTraysAndNextInnerRepeat(l, sys, startAbortCount, startEnableChangeCount, useUnassignedParts);
+        };
+        final XFuture<List<PhysicalItem>> itemsFutureAfterAllowToggles = itemsFuture
                 .alwaysComposeAsync(() -> allowToggles(blocker, systems), supervisorExecutorService)
-                .thenComposeAsync((List<PhysicalItem> l) -> {
-                    logEvent("recieved vision update for fillTraysAndNextRepeating " + count);
-                    return fillTraysAndNextInnerRepeat(l, sys, startAbortCount, startEnableChangeCount, useUnassignedParts);
-                }, supervisorExecutorService);
+                .thenApply((XFuture.ComposedPair<List<PhysicalItem>,Void> pair) -> pair.getInput());
+        XFuture<Boolean> ret = itemsFutureAfterAllowToggles
+                .thenComposeAsync(fillTraysFunction, supervisorExecutorService);
         fillTraysAndNextRepeatingFuture = ret;
 
         return ret;
@@ -5199,6 +5203,7 @@ public class Supervisor {
         XFuture<Boolean> ret
                 = itemsFuture
                         .alwaysComposeAsync(() -> allowToggles(blocker, systems), supervisorExecutorService)
+                        .thenApply((XFuture.ComposedPair<List<PhysicalItem>,Void> pair) -> pair.getInput())
                         .thenComposeAsync((List<PhysicalItem> l) -> {
                             logEvent("recieved vision update for emptyTraysAndPrevRepeating " + count);
                             return emptyTraysAndPrevInnerRepeat(sys, startAbortCount, startEnableChangeCount, l, useUnassignedParts);
@@ -5358,7 +5363,7 @@ public class Supervisor {
                                 sys.clearVisionRequiredParts();
                                 return conveyorVisNext();
                             })
-                            .always(() -> {
+                            .alwaysRun(() -> {
                                 try {
                                     takeAllSnapshots("END conveyorVisNex:" + convNextCount + ",pos=" + conveyorPos() + " ");
                                 } catch (IOException ex) {
@@ -5381,7 +5386,7 @@ public class Supervisor {
                         }
                     })
                     .thenApply(x -> lastStepOk && sys.getSafeAbortRequestCount() == startAbortCount)
-                    .alwaysComposeAsync(() -> allowToggles(blockerName, systems), supervisorExecutorService);
+                    .alwaysComposeAsyncToInput(() -> allowToggles(blockerName, systems), supervisorExecutorService);
         } else {
             return XFuture.completedFutureWithName("skippedConveyorVisNext", lastStepOk);
         }
@@ -5446,7 +5451,7 @@ public class Supervisor {
                         sys.clearVisionRequiredParts();
                         return conveyorVisPrev();
                     })
-                    .always(() -> {
+                    .alwaysRun(() -> {
                         try {
                             takeAllSnapshots("END conveyorVisPrev:" + convPrevCount + ",pos=" + conveyorPos() + " ");
                         } catch (IOException ex) {
@@ -5464,7 +5469,7 @@ public class Supervisor {
                         }
                     })
                     .thenApply(x -> lastStepOk && sys.getSafeAbortRequestCount() == startAbortCount)
-                    .alwaysComposeAsync(() -> allowToggles(blockerName, systems), supervisorExecutorService);
+                    .alwaysComposeAsyncToInput(() -> allowToggles(blockerName, systems), supervisorExecutorService);
         } else {
             return XFutureVoid.completedFutureWithName("skippedConveyorVisPrev", lastStepOk);
         }
@@ -5684,7 +5689,7 @@ public class Supervisor {
             logEvent("START waitTogglesAllowed " + count);
             return xf
                     .peekNoCancelException(this::handleXFutureException)
-                    .always(() -> {
+                    .alwaysRun(() -> {
                         logEvent("END waitTogglesAllowed " + count);
                     });
         } else {
@@ -5735,11 +5740,11 @@ public class Supervisor {
         return allowTogglesInternal(blockerName, true, systems);
     }
 
-    private synchronized XFutureVoid allowToggles(String blockerName) {
+     synchronized XFutureVoid allowToggles(String blockerName) {
         return allowTogglesInternal(blockerName, true);
     }
 
-    private synchronized XFutureVoid allowTogglesNoCheck(@Nullable String... blockerNames) {
+     synchronized XFutureVoid allowTogglesNoCheck(@Nullable String... blockerNames) {
 
         if (null != blockerNames) {
             List<XFutureVoid> l = new ArrayList<>();
@@ -5801,7 +5806,7 @@ public class Supervisor {
             boolean origTogglesAllowed = togglesAllowed;
             allowTogglesCount.incrementAndGet();
             allowTogglesTrace = Thread.currentThread().getStackTrace();
-            LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
+             LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
             String blockerList = toggleBlockerMap.keySet().toString();
 
             if (null == lockInfo && withChecks) {
@@ -5858,6 +5863,11 @@ public class Supervisor {
     private final AtomicInteger disallowTogglesCount = new AtomicInteger();
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
+    public synchronized  Map<String, LockInfo> getToggleBlockerMap() {
+        return Collections.unmodifiableMap(new TreeMap<>(toggleBlockerMap));
+    }
+
+    
     private volatile @Nullable
     XFuture<LockInfo> lastDisallowTogglesFuture = null;
     private volatile @Nullable
@@ -6436,7 +6446,7 @@ public class Supervisor {
                         .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle", x -> incrementContinuousDemoCycle("startPrivateContinuousDemoRevFirst", startingAbortCount))
                         .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots", x -> startCheckAndEnableAllRobots(startingAbortCount), supervisorExecutorService)
                         .thenComposeAsyncToVoid("startContinuousDemoRevFirst", ok -> checkOkElseToVoid(ok, () -> continueContinuousDemo(part3BlockerName, startingAbortCount), this::showCheckEnabledErrorSplash), supervisorExecutorService)
-                        .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName), supervisorExecutorService);
+                        .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName), supervisorExecutorService);
         ContinuousDemoFuture = ret;
         return ret;
     }
@@ -6718,7 +6728,7 @@ public class Supervisor {
                                         .thenCompose("allowToggles" + part3BlockerName, x -> allowToggles(part3BlockerName).thenApply(v -> x))
                                         .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + cdcCount, ok -> checkOkElseToVoid(ok, () -> continueContinuousScanAndRun(part3BlockerName, startingAbortCount), this::showCheckEnabledErrorSplash), supervisorExecutorService)
                                         .peekNoCancelException(this::handleXFutureException)
-                                        .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName), supervisorExecutorService);
+                                        .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName), supervisorExecutorService);
                         ContinuousDemoFuture = ret;
                         if (null != randomTestFuture) {
                             if (isRandomTestSelected()) {
@@ -6828,7 +6838,7 @@ public class Supervisor {
                                             },
                                             supervisorExecutorService)
                                     .peekNoCancelException(this::handleXFutureException)
-                                    .alwaysComposeAsync(() -> allowTogglesNoCheck(prevBlockerName, part1BlockerName, part2BlockerName, part3BlockerName, part4BlockerName), supervisorExecutorService);
+                                    .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(prevBlockerName, part1BlockerName, part2BlockerName, part3BlockerName, part4BlockerName), supervisorExecutorService);
                     ContinuousDemoFuture = ret;
                     if (null != randomTestFuture) {
                         if (isRandomTestSelected()) {
@@ -6935,7 +6945,7 @@ public class Supervisor {
                                 connectAll();
                             }, supervisorExecutorService)
                     .peekNoCancelException(this::handleXFutureException)
-                    .alwaysCompose(() -> allowToggles(blocker, sysArray));
+                    .alwaysComposeToVoid(() -> allowToggles(blocker, sysArray));
         } catch (Exception exception) {
             logException(exception);
             Logger.getLogger(Supervisor.class
@@ -7157,7 +7167,7 @@ public class Supervisor {
                             throw new RuntimeException(exception);
                         }
                     })
-                    .alwaysAsync(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
+                    .alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
                     .peekNoCancelException(this::handleXFutureException);
         } catch (Exception exception) {
             log(Level.SEVERE, "", exception);
@@ -7221,7 +7231,7 @@ public class Supervisor {
                             }, supervisorExecutorService)
                             .thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService);
                     return step2Future
-                            .alwaysComposeAsync(() -> {
+                            .alwaysComposeAsyncToInput(() -> {
                                 return allowToggles(blockerName, sysArray)
                                         .thenRun(() -> {
                                             logStartCheckAndEnableAllRobotsComplete();
@@ -7300,7 +7310,7 @@ public class Supervisor {
                     .thenCombine("checkEnabledAll(" + (i + 1) + "/" + futures.length + ")",
                             fi, andBiFunction);
         }
-        return ret.always(() -> {
+        return ret.alwaysRun(() -> {
             if (!origIgnoreTitleErrs) {
                 ignoreTitleErrors.set(false);
             }
@@ -8016,7 +8026,7 @@ public class Supervisor {
                     }
                     logEvent("safeAbortAll completed");
                 }, supervisorExecutorService);
-        return f2.alwaysCompose(() -> allowToggles(blocker, sysArray));
+        return f2.alwaysComposeToVoid(() -> allowToggles(blocker, sysArray));
     }
 
     public @Nullable
@@ -8635,7 +8645,7 @@ public class Supervisor {
                         .thenComposeAsyncToVoid(() -> waitTimeoutOrAllOthers(10000, ContinuousDemoFuture, stealRobotFuture.getAndSet(null), unStealRobotFuture.getAndSet(null)));
         setLastSafeAbortAllFuture(f);
 
-        XFutureVoid f2 = f.alwaysComposeAsync(() -> {
+        XFutureVoid f2 = f.alwaysComposeAsyncToVoid(() -> {
             int startingAbortCount2 = getAbortCount();
             if (null != safeAbortReturnRobot) {
                 try {
@@ -8679,7 +8689,7 @@ public class Supervisor {
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
             return f.thenComposeToVoid(x -> displayJFrameLocal.showSafeAbortComplete())
-                    .alwaysCompose(() -> allowTogglesInternal(blockerName, false, systems));
+                    .alwaysComposeToVoid(() -> allowTogglesInternal(blockerName, false, systems));
         } else {
             return XFutureVoid.completedFuture();
         }

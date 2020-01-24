@@ -1651,7 +1651,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
                 if (!doingActons) {
                     return disconnectRobot()
-                            .alwaysAsync(() -> {
+                            .alwaysRunAsync(() -> {
                                 synchronized (this) {
                                     logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
                                     logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
@@ -1694,7 +1694,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 XFutureVoid localsafeAbortAndDisconnectFutureWaitAll2
                         = localsafeAbortAndDisconnectFutureDisconnect2
                                 .thenComposeToVoid(x -> waitAllLastFutures())
-                                .alwaysAsync(() -> {
+                                .alwaysRunAsync(() -> {
                                     synchronized (this) {
                                         logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
                                         logToSuper("END startSafeAbortAndDisconnect " + comment + ",connected=" + connected + ",doingActons=" + doingActons + ",count=" + count);
@@ -1997,7 +1997,7 @@ public class AprsSystem implements SlotOffsetProvider {
         enableCheckedAlready = false;
         return waitForPause().
                 thenRunAsync(() -> connectRobotPrivate(robotNameArg, hostArg, portArg, wasConnected0), runProgramService)
-                .always(() -> logEvent("finished connectRobot", robotNameArg + " -> " + hostArg + ":" + portArg));
+                .alwaysRun(() -> logEvent("finished connectRobot", robotNameArg + " -> " + hostArg + ":" + portArg));
     }
 
     private void maybeSetOrigCrclRobotPort(int port) {
@@ -2168,7 +2168,7 @@ public class AprsSystem implements SlotOffsetProvider {
             }
             ret = ret
                     .peekException(this::logException)
-                    .alwaysAsync(() -> {
+                    .alwaysRunAsync(() -> {
                         synchronized (this) {
                             setEndLogged(trace, comment);
                             logEvent("END continueActionList", comment, revFlag, caCount, saCount);
@@ -2303,7 +2303,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                 }, runProgramService);
         XFuture<Boolean> ret2
                 = ret
-                        .alwaysAsync(() -> {
+                        .alwaysRunAsync(() -> {
                             synchronized (this) {
                                 logEvent("END privateContinueActionList", comment, startAbortCount, count, ret);
                                 takeSnapshots("END privateContinueActionList" + comment + "," + startAbortCount + "," + count + "," + ret);
@@ -5211,7 +5211,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 newSimServerJInternalFrame.setPropertiesFile(propsFile);
                 newSimServerJInternalFrame.loadProperties();
                 addInternalFrame(newSimServerJInternalFrame);
-                newSimServerJInternalFrame.restartServer();
+                if(!newSimServerJInternalFrame.isRunning()) {
+                    newSimServerJInternalFrame.restartServer();
+                }
                 this.simServerJInternalFrame = newSimServerJInternalFrame;
             }
         } catch (Exception ex) {
@@ -5708,7 +5710,7 @@ public class AprsSystem implements SlotOffsetProvider {
                             .thenApplyAsync("startLookForParts.lookForPartsInternal",
                                     x -> lookForPartsOnDisplay(),
                                     runProgramService)
-                            .alwaysAsync(() -> {
+                            .alwaysRunAsync(() -> {
                                 synchronized (this) {
                                     setEndLogged(trace, "lookForParts");
                                     logEvent("END startLookForParts", (System.currentTimeMillis() - t0));
@@ -6181,7 +6183,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     = privateStartActions("fillKitTrays" + fktic, false, null);
             XFuture<Boolean> psaClearFuture
                     = psaFuture
-                            .always(() -> {
+                            .alwaysRun(() -> {
                                 logEvent("Finished fillKitTrays" + fktic + " psaFuture= " + psaFuture);
                                 logToSuper("Finished fillKitTrays" + fktic + " psaFuture= " + psaFuture);
                                 noWarnClearActionsList(false);
@@ -6447,7 +6449,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     = privateStartActions("emptyKitTrays" + ektic, true, null);
             XFuture<Boolean> psaClearFuture
                     = psaFuture
-                            .always(() -> {
+                            .alwaysRun(() -> {
                                 logEvent("Finished emptyKitTrays" + ektic + " psaFuture=" + psaFuture);
                                 logToSuper("Finished emptyKitTrays" + ektic + " psaFuture=" + psaFuture);
                                 noWarnClearActionsList(true);
@@ -7199,7 +7201,7 @@ public class AprsSystem implements SlotOffsetProvider {
         int startAbortCount = getSafeAbortRequestCount();
         int startDisconnectCount = disconnectRobotCount.get();
         continuousDemoFuture = startContinuousDemo(comment, reverseFirst, startAbortCount, startDisconnectCount, cdStart.incrementAndGet());
-        return continuousDemoFuture.always(() -> logEvent("finished startContinuousDemo"));
+        return continuousDemoFuture.alwaysRun(() -> logEvent("finished startContinuousDemo"));
     }
 
     private XFuture<Boolean> startContinuousDemo(String comment, boolean reverseFirst, int startAbortCount, int startDisconnectCount, int cdStart) {
@@ -7831,7 +7833,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.lastStartCheckEnabledFuture1 = doCheckEnabledFuture;
         XFuture<Boolean> alwaysLogFuture
                 = doCheckEnabledFuture
-                        .always(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
+                        .alwaysRun(() -> logEvent("finished " + logString, (System.currentTimeMillis() - t0)));
         this.lastStartCheckEnabledFuture2 = alwaysLogFuture;
         return alwaysLogFuture;
     }
@@ -8147,7 +8149,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 ret = privateStartActions(comment, reverseFlag, null);
             }
         }
-        ret = ret.alwaysAsync(() -> {
+        ret = ret.alwaysRunAsync(() -> {
             synchronized (this) {
                 setEndLogged(trace1, comment);
                 logEvent("END startActions", comment, reverseFlag, saCount);
@@ -8431,7 +8433,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     }
                 }, runProgramService
                 )
-                .alwaysAsync(() -> {
+                .alwaysRunAsync(() -> {
                     synchronized (this) {
                         setEndLogged(trace1, comment);
                         boolean ready = pddlExecutorJInternalFrame1Final.readyForNewActionsList();

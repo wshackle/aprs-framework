@@ -60,6 +60,62 @@
         </xs:sequence>
     </xs:complexType>
 
+
+    <xs:complexType name="JointPositionToleranceSettingType">
+        <xs:annotation>
+            <xs:documentation>
+                JointPositionToleranceType is derived from DataThingType.
+                An instance of JointPositionToleranceType has the following elements:
+                Name (inherited, optional)
+                JointNumber
+                JointPositionTolerance
+
+                Used to specify how close to a given joint position given with
+                an actuate joints command the joint with the given jointnumber 
+                must be to to the goal position before the command may 
+                be considered done.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:element name="JointNumber"
+                                type="xs:int"/>
+                    <xs:element name="JointPositionTolerance"
+                                type="xs:double"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    
+    <xs:complexType name="JointPositionsTolerancesType">
+        <xs:annotation>
+            <xs:documentation>
+                JointPositionsTolerancesType is derived from DataThingType.
+                An instance of JointPositionsTolerancesType has the following elements:
+                Name (inherited, optional)
+                JointTolerances
+                
+                Used to specify how close to a given joint position given with
+                an actuate joints command the joint with the given jointnumber 
+                must be to to the goal position before the command may 
+                be considered done.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:sequence>
+                        <xs:element name="Setting"
+                                    type="JointPositionToleranceSettingType"
+                                    maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
     <xs:simpleType name="ForceUnitEnumType">
         <xs:annotation>
             <xs:documentation>

@@ -3359,7 +3359,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                         connectAll();
                                         return enableAllRobots();
                                     })
-                                    .always(() -> {
+                                    .alwaysRun(() -> {
                                         resetting = false;
                                         if (!origIgnoreTitleErrs) {
                                             ignoreTitleErrors.set(false);
@@ -3934,14 +3934,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private XFutureVoid interactivStart(Runnable runnable, String actionName) {
         int isn = INTERACTIVE_START_ATOMIC.incrementAndGet();
         final String blockerName = "interactiveStart." + actionName + ",isn=" + isn;
+        final Map<String, LockInfo> afterDisableToggleBlockerMap = new TreeMap<>();
         try {
             if (null == supervisor) {
                 throw new NullPointerException("supervisor");
             }
             AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
             logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
-            Supplier<XFuture<LockInfo>> sup
-                    = () -> supervisor.disallowToggles(blockerName, sysArray);
             supervisor.setResetting(true);
             if (null != internalInteractiveResetAllFuture) {
                 if (!internalInteractiveResetAllFuture.isDone()) {
@@ -3964,8 +3963,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             XFutureVoid fullAbortFuture = fullAbortAll();
             XFuture<LockInfo> disallowTogglesFuture
                     = fullAbortFuture
-                            .thenComposeAsync("interactiveStart.disableToggles",
-                                    sup,
+                            .alwaysComposeAsyncToOutput("interactiveStart.disableToggles",
+                                    () ->  supervisor.disallowToggles(blockerName, sysArray),
                                     supervisor.getSupervisorExecutorService());
             XFutureVoid iiraFuture
                     = disallowTogglesFuture
@@ -3978,7 +3977,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         MultiLineStringJPanel.closeAllPanels();
                         MultiLineStringJPanel.setIgnoreForceShow(false);
                     })
-                    .always(() -> supervisor.setResetting(false))
+                    .alwaysRun(() -> supervisor.setResetting(false))
                     .thenComposeAsyncToVoid(
                             "interactivStart(" + actionName + ",isn=" + isn + ")LookForParts",
                             x -> {
@@ -4045,7 +4044,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                             }
                                         });
                             })
-                    .alwaysComposeAsync(() -> supervisor.allowToggles(blockerName, sysArray), supervisor.getSupervisorExecutorService())
+                    .alwaysComposeAsyncToVoid(() -> supervisor.allowTogglesNoCheck(blockerName), 
+                            supervisor.getSupervisorExecutorService()
+                    )
                     .thenRun(() -> logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn));
             interactivStartFuture = ret;
             return ret;

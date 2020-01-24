@@ -1529,11 +1529,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         if (this.jCheckBoxMenuItemConnectDatabase.isSelected()) {
             this.jCheckBoxMenuItemConnectDatabase.setEnabled(false);
             startConnectDatabase()
-                    .always(() -> safeSetMenuItemConnectDatabaseEnabled(true));
+                    .alwaysRun(() -> safeSetMenuItemConnectDatabaseEnabled(true));
         } else {
             this.jCheckBoxMenuItemConnectDatabase.setEnabled(false);
             startDisconnectDatabase()
-                    .always(() -> safeSetMenuItemConnectDatabaseEnabled(true));
+                    .alwaysRun(() -> safeSetMenuItemConnectDatabaseEnabled(true));
         }
     }//GEN-LAST:event_jCheckBoxMenuItemConnectDatabaseActionPerformed
 

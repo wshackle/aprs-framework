@@ -872,10 +872,10 @@ public class LaunchFileRunner {
                             Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     })
-                    .always(WrappedProcess::shutdownStarterService);
+                    .alwaysRun(WrappedProcess::shutdownStarterService);
         } else {
             return allOfXFuture
-                    .always(WrappedProcess::shutdownStarterService);
+                    .alwaysRun(WrappedProcess::shutdownStarterService);
         }
     }
 }

@@ -556,7 +556,7 @@
                     <xs:element name="MotionCoordinated"
                                 type="xs:boolean"
                                 minOccurs="0" />
-                    <xs:element name="PoseTolerance"
+                    <xs:element name="EndPoseTolerance"
                                 type="PoseToleranceType"
                                 minOccurs="0" />
                     <xs:element name="RobotParameterSetting"
@@ -590,6 +590,9 @@
                     <xs:element name="TransSpeedRelative"
                                 type="TransSpeedRelativeType"
                                 minOccurs="0" />
+                    <xs:element name="JointTolerances"
+                                type="JointPositionsTolerancesType"
+                                minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -772,10 +775,10 @@
                                 type="xs:token"/>
                     <xs:element name="ReadCount"
                                 type="xs:int"
-                                />
+                    />
                     <xs:element name="LastReadTime"
                                 type="xs:long"
-                                />
+                    />
                     <xs:element name="SensorParameterSetting"
                                 type="ParameterSettingType"
                                 maxOccurs="unbounded"

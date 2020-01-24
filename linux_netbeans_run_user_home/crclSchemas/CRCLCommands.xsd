@@ -126,6 +126,9 @@
                     <xs:element name="ActuateJoint"
                                 type="ActuateJointType"
                                 maxOccurs="unbounded"/>
+                    <xs:element name="JointTolerances"
+                                type="JointPositionsTolerancesType"
+                                minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -818,6 +821,34 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="SetDefaultJointPositonsTolerancesType">
+        <xs:annotation>
+            <xs:documentation>
+                SetDefaultJointsPositonToleranceType is derived from MiddleCommandType.
+                An instance of SetDefaultJointsPositonToleranceType has the following
+                elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                JointTolerances.
+
+                The Tolerance element indicates to the robot the precision with
+                which it must reach its end location for each joint for which
+                an ActuateJoints command does not include a specific tolerance.
+                It does not apply during force control or cartesian moves.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="JointTolerances"
+                                type="JointPositionsTolerancesType"
+                    />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    
     <xs:complexType name="SetForceUnitsType">
         <xs:annotation>
             <xs:documentation>

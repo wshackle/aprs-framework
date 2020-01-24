@@ -1098,7 +1098,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 {"skipMissingParts", "false"},
                 {"useJointMovesForToolHolderApproach", "true"},
                 {"saveProgramRunData", "false"},
-                {"joint0DiffTolerance", "20.0"}
+                {"jointTolerances", "2,2,2,2,2,2,2,2"},
+                {"joint0DiffTolerance", "20.0"},
+                {"useEndPoseTolerance", "false"},
+                {"endPoseXPointTolerance", "10.0"},
+                {"endPoseYPointTolerance", "10.0"},
+                {"endPoseZPointTolerance", "10.0"},
+                {"endPoseXAxisTolerance", "10.0"},
+                {"endPoseXAxisTolerance", "10.0"},
+                {"useMessageCommands", "false"}
             },
             new String [] {
                 "Name", "Value"
