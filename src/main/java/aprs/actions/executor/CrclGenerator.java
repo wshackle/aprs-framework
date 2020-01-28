@@ -673,10 +673,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             = (PrintWriter pw, String prefix, KitToCheck kit) -> kit.print(pw, prefix);
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
-        final AprsSystem aprsSystem1 = this.aprsSystem;
-        if (null == aprsSystem1) {
-            throw new NullPointerException("aprsSystem");
-        }
+        final AprsSystem aprsSystem1 = Objects.requireNonNull(this.aprsSystem);
         try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
@@ -1142,8 +1139,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.unitsSet = false;
         this.rotSpeedSet = false;
         this.genThread = null;
-        this.endPoseTolerancesChecked=false;
-        this.jointTolerancesChecked=false;
+        this.endPoseTolerancesChecked = false;
+        this.jointTolerancesChecked = false;
         setLastActionsIndex(null, 0);
         clearLastRequiredPartsMap();
     }
@@ -1224,15 +1221,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws Exception {
-        if (null == aprsSystem) {
-            throw new NullPointerException("aprsSystem");
-        }
+        final AprsSystem localAprsSystem = Objects.requireNonNull(this.aprsSystem);
         GenerateParams gparams = new GenerateParams();
         gparams.actions = actions;
         gparams.startingIndex = startingIndex;
         gparams.options = options;
         gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
-        gparams.replan = !aprsSystem.isCorrectionMode() && !lastProgramAborted;
+        gparams.replan = !localAprsSystem.isCorrectionMode() && !lastProgramAborted;
         generateCount.incrementAndGet();
         if (gparams.startingIndex == 0) {
             generateFromZeroCount.incrementAndGet();
@@ -2166,7 +2161,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 + "copyFullReplanPddlActions=" + copyFullReplanPddlActions + "\n"
                 + "copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size())=" + copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size()) + "\n";
         logDebug(messageString);
-       
+
         List<MiddleCommandType> newCmds = generate(gparams);
         addMessageCommand(newCmds, messageString);
         if (debug) {
@@ -2411,13 +2406,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             List<Action> actions,
             int startingIndex,
             List<PhysicalItem> physicalItemsLocal) {
-        final AprsSystem aprsSystemLocal = this.aprsSystem;
-        if (null == aprsSystemLocal) {
-            throw new RuntimeException("null == this.aprsSystem");
-        }
-
+        final AprsSystem aprsSystemLocal = Objects.requireNonNull(this.aprsSystem);
         if (null == physicalItemsLocal) {
-            throw new NullPointerException("physicalItemsLocal");
+            throw new IllegalArgumentException("physicalItemsLocal=" + physicalItemsLocal);
         }
 
         try {
@@ -2937,10 +2928,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (getNewItems) {
                 checkNewItems("recheckKitsOnly", gparams.startSafeAbortRequestCount);
             }
-            List<PhysicalItem> physicalItemsLocal = physicalItems;
-            if (null == physicalItemsLocal) {
-                throw new NullPointerException("physicalItems");
-            }
+            List<PhysicalItem> physicalItemsLocal = Objects.requireNonNull(physicalItems);
             List<PhysicalItem> parts = checkKitsItemsToParts(physicalItemsLocal);
             Map<String, List<Slot>> kitInstanceAbsSlotMap = new HashMap<>();
 
@@ -3006,52 +2994,43 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        final AprsSystem aprsSystemFinal = aprsSystem;
-        if (null == aprsSystemFinal) {
-            throw new NullPointerException("aprsSystem");
-        }
-        if (!aprsSystemFinal.isDoingActions()) {
-            aprsSystemFinal.logEvent("IsDoingActionsInfo", aprsSystemFinal.getIsDoingActionsInfo());
+        final AprsSystem localAprsSystem = Objects.requireNonNull(aprsSystem);
+        if (!localAprsSystem.isDoingActions()) {
+            localAprsSystem.logEvent("IsDoingActionsInfo", localAprsSystem.getIsDoingActionsInfo());
             throw new IllegalStateException("!aprsSystem.isDoingActions()");
         }
         List<PhysicalItem> origPhysicalItemsLocal = physicalItems;
 
         try {
 
-            if (gparams.startSafeAbortRequestCount != aprsSystemFinal.getSafeAbortRequestCount()) {
-                takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + aprsSystemFinal.getSafeAbortRequestCount(), origPhysicalItemsLocal);
-                aprsSystemFinal.logEvent("checkKits:aborting", action, origIndex, lastLookForIndex, gparams.startSafeAbortRequestCount, aprsSystemFinal.getSafeAbortRequestCount());
+            if (gparams.startSafeAbortRequestCount != localAprsSystem.getSafeAbortRequestCount()) {
+                takeSimViewSnapshot("checkKits.aborting_" + gparams.startSafeAbortRequestCount + "_" + localAprsSystem.getSafeAbortRequestCount(), origPhysicalItemsLocal);
+                localAprsSystem.logEvent("checkKits:aborting", action, origIndex, lastLookForIndex, gparams.startSafeAbortRequestCount, localAprsSystem.getSafeAbortRequestCount());
                 setLastProgramAborted(true);
                 addMoveToLookForPosition(cmds, false);
                 return true;
             }
             checkSettings();
-            if (null == aprsSystemFinal) {
-                throw new NullPointerException("aprsSystem");
-            }
-            boolean correctionMode = aprsSystemFinal.isCorrectionMode();
+            boolean correctionMode = localAprsSystem.isCorrectionMode();
             if (IGNORE_KIT_CHECK_FAILURES) {
                 if (!correctionMode && pauseInsteadOfRecover) {
                     return false;
                 }
             }
-            int prePubs = aprsSystemFinal.getSimLineCount();
-            int preVis = aprsSystemFinal.getVisionLineCount();
-            long preTimeDiff = aprsSystemFinal.getSimVisionTimeDiff();
+            int prePubs = localAprsSystem.getSimLineCount();
+            int preVis = localAprsSystem.getVisionLineCount();
+            long preTimeDiff = localAprsSystem.getSimVisionTimeDiff();
             long preCheckKitsTime = System.currentTimeMillis();
             List<PhysicalItem> physicalItemsLocal
                     = checkNewItems("checkKits", gparams.startSafeAbortRequestCount);
-            if (null == physicalItemsLocal) {
-                throw new NullPointerException("physicalItemsLocal");
-            }
             boolean breakActionsSetNeeded = false;
             try {
 
                 long postCheckKitsTime = System.currentTimeMillis();
                 long checkKitsTimeDiff = postCheckKitsTime - preCheckKitsTime;
-                int postPubs = aprsSystemFinal.getSimLineCount();
-                int postVis = aprsSystemFinal.getVisionLineCount();
-                long postTimeDiff = aprsSystemFinal.getSimVisionTimeDiff();
+                int postPubs = localAprsSystem.getSimLineCount();
+                int postVis = localAprsSystem.getVisionLineCount();
+                long postTimeDiff = localAprsSystem.getSimVisionTimeDiff();
 
                 takeSnapshots("plan", "checkKits-", null, "");
 
@@ -3189,7 +3168,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                                     partsInPartsTrayFullNames,
                                                                     name2 -> name2.contains(shortItemNeededInSlotSkuName));
                                                     logError("recalcPartNames = " + recalcPartNames);
-                                                    aprsSystemFinal.setSnapshotsSelected(true);
+                                                    localAprsSystem.setSnapshotsSelected(true);
                                                     takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
                                                     throw new IllegalStateException("No partnames for finalShortSkuName=" + shortItemNeededInSlotSkuName
                                                             + ", absSlotPrpName=" + absSlotPrpName
@@ -3350,14 +3329,27 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return false;
     }
 
-    private String showKitToFixErrors(List<PhysicalItem> physicalItemsLocal, Map<String, List<Slot>> kitInstanceAbsSlotMap, List<PhysicalItem> parts, Set<String> matchedKitInstanceNames, List<KitToCheck> kitsToFix, int prePubs, int preVis, long preTimeDiff, int postPubs, int postVis, long postTimeDiff, long checkKitsTimeDiff, List<MiddleCommandType> cmds) throws IOException {
+    private String
+            showKitToFixErrors(
+                    List<PhysicalItem> physicalItemsLocal,
+                    Map<String, List<Slot>> kitInstanceAbsSlotMap,
+                    List<PhysicalItem> parts,
+                    Set<String> matchedKitInstanceNames,
+                    List<KitToCheck> kitsToFix,
+                    int prePubs,
+                    int preVis,
+                    long preTimeDiff,
+                    int postPubs,
+                    int postVis,
+                    long postTimeDiff,
+                    long checkKitsTimeDiff,
+                    List<MiddleCommandType> cmds
+            ) throws IOException {
         StringBuilder errMsgSb = new StringBuilder();
-        if (null == aprsSystem) {
-            throw new NullPointerException("aprsSystem");
-        }
-        aprsSystem.setSnapshotsSelected(true);
+        final AprsSystem localAprsSystem = Objects.requireNonNull(this.aprsSystem);
+        localAprsSystem.setSnapshotsSelected(true);
         takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
-        String errMsgStart = aprsSystem.getRunName();
+        String errMsgStart = localAprsSystem.getRunName();
         errMsgSb.append(errMsgStart);
         logError("checkKits: errMsgStart=" + errMsgStart);
         logError("checkKits: newItems = " + physicalItemsLocal);
@@ -3400,7 +3392,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     logError("checkKits: failedItemInfo.failedClosestItemDist = " + failedItemInfo.failedClosestItemDist);
                     logError("checkKits: failedItemInfo.failedAbsSlot = " + failedItemInfo.failedAbsSlot);
                 }
-
 //                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg);
             }
         }
@@ -3415,10 +3406,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         program.setInitCanon(new InitCanonType());
         program.setEndCanon(new EndCanonType());
         program.getMiddleCommand().addAll(cmds);
-        aprsSystem.logCrclProgFile(program);
+        localAprsSystem.logCrclProgFile(program);
         String errMsg = errMsgSb.toString();
         takeSimViewSnapshot(errMsg, physicalItemsLocal);
-        aprsSystem.setTitleErrorString(errMsg);
+        localAprsSystem.setTitleErrorString(errMsg);
         return errMsg;
     }
 
@@ -4725,7 +4716,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
-        addMessageCommand(out,"fake-take-part " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
+        addMessageCommand(out, "fake-take-part " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
 
         PoseType pose = getPose(partName);
         if (null == pose) {
@@ -4759,7 +4750,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
         }
         checkSettings();
-        addMessageCommand(out,"take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
+        addMessageCommand(out, "take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
 
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
