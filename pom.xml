@@ -7,15 +7,15 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <main.class>aprs.launcher.PreCheckLauncher</main.class>
         <exec.mainClass>${main.class}</exec.mainClass>
         <optiplanner.version>7.24.0.Final</optiplanner.version>
         <crcl4java.version>1.9.1-SNAPSHOT</crcl4java.version>
-        <checker-framework.version>3.1.0</checker-framework.version>
+        <checker-framework.version>3.1.1</checker-framework.version>
         <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
-        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <name>aprs-framework</name>
     <url>
@@ -268,16 +268,6 @@
             </resource>
         </resources>
         
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <showDeprecation>true</showDeprecation>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
     <profiles>
         <profile>
@@ -795,7 +785,7 @@
                                 <!-- If using JDK 11, remove the two arguments above, remove the
                                 space in the one below, and uncomment it. -->
                                 <arg>-J- -add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
-
+                                <arg>-AstubDebug</arg>
                                 <!-- Optionally, -Awarns turns type-checking errors into warnings. -->
                                 <!-- <arg>-Awarns</arg> -->
                             </compilerArgs>

@@ -142,6 +142,7 @@ import org.jcodec.common.io.SeekableByteChannel;
 import org.jcodec.common.model.Rational;
 import static aprs.misc.Utils.tableHeaders;
 import static aprs.misc.Utils.PlayAlert;
+import crcl.base.CommandStatusType;
 import java.awt.Graphics;
 import java.awt.image.ImageObserver;
 import java.util.TreeMap;
@@ -5109,7 +5110,7 @@ public class Supervisor {
         };
         final XFuture<List<PhysicalItem>> itemsFutureAfterAllowToggles = itemsFuture
                 .alwaysComposeAsync(() -> allowToggles(blocker, systems), supervisorExecutorService)
-                .thenApply((XFuture.ComposedPair<List<PhysicalItem>,Void> pair) -> pair.getInput());
+                .thenApply((XFuture.ComposedPair<List<PhysicalItem>, Void> pair) -> pair.getInput());
         XFuture<Boolean> ret = itemsFutureAfterAllowToggles
                 .thenComposeAsync(fillTraysFunction, supervisorExecutorService);
         fillTraysAndNextRepeatingFuture = ret;
@@ -5203,7 +5204,7 @@ public class Supervisor {
         XFuture<Boolean> ret
                 = itemsFuture
                         .alwaysComposeAsync(() -> allowToggles(blocker, systems), supervisorExecutorService)
-                        .thenApply((XFuture.ComposedPair<List<PhysicalItem>,Void> pair) -> pair.getInput())
+                        .thenApply((XFuture.ComposedPair<List<PhysicalItem>, Void> pair) -> pair.getInput())
                         .thenComposeAsync((List<PhysicalItem> l) -> {
                             logEvent("recieved vision update for emptyTraysAndPrevRepeating " + count);
                             return emptyTraysAndPrevInnerRepeat(sys, startAbortCount, startEnableChangeCount, l, useUnassignedParts);
@@ -5740,11 +5741,11 @@ public class Supervisor {
         return allowTogglesInternal(blockerName, true, systems);
     }
 
-     synchronized XFutureVoid allowToggles(String blockerName) {
+    synchronized XFutureVoid allowToggles(String blockerName) {
         return allowTogglesInternal(blockerName, true);
     }
 
-     synchronized XFutureVoid allowTogglesNoCheck(@Nullable String... blockerNames) {
+    synchronized XFutureVoid allowTogglesNoCheck(@Nullable String... blockerNames) {
 
         if (null != blockerNames) {
             List<XFutureVoid> l = new ArrayList<>();
@@ -5806,7 +5807,7 @@ public class Supervisor {
             boolean origTogglesAllowed = togglesAllowed;
             allowTogglesCount.incrementAndGet();
             allowTogglesTrace = Thread.currentThread().getStackTrace();
-             LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
+            LockInfo lockInfo = toggleBlockerMap.remove(blockerName);
             String blockerList = toggleBlockerMap.keySet().toString();
 
             if (null == lockInfo && withChecks) {
@@ -5863,11 +5864,10 @@ public class Supervisor {
     private final AtomicInteger disallowTogglesCount = new AtomicInteger();
     private final ConcurrentHashMap<String, LockInfo> toggleBlockerMap = new ConcurrentHashMap<>();
 
-    public synchronized  Map<String, LockInfo> getToggleBlockerMap() {
+    public synchronized Map<String, LockInfo> getToggleBlockerMap() {
         return Collections.unmodifiableMap(new TreeMap<>(toggleBlockerMap));
     }
 
-    
     private volatile @Nullable
     XFuture<LockInfo> lastDisallowTogglesFuture = null;
     private volatile @Nullable
@@ -6136,11 +6136,13 @@ public class Supervisor {
     private boolean allSystemsOk() {
         for (AprsSystem sys : aprsSystems) {
             CRCLStatusType status = sys.getCurrentStatus();
-            if (status != null
-                    && status.getCommandStatus() != null
-                    && status.getCommandStatus().getCommandState() == CommandStateEnumType.CRCL_ERROR) {
-                logEventErr("allSystemsOk failing: bad status for sys=" + sys);
-                return false;
+            if (status != null) {
+                final CommandStatusType commandStatus = status.getCommandStatus();
+                if (commandStatus != null
+                        && commandStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR) {
+                    logEventErr("allSystemsOk failing: bad status for sys=" + sys);
+                    return false;
+                }
             }
             String titleErrorString = sys.getTitleErrorString();
             if (titleErrorString != null && titleErrorString.length() > 0) {
@@ -8664,7 +8666,7 @@ public class Supervisor {
             } else {
                 return showSafeAbortComplete(startingAbortCount2);
             }
-        },supervisorExecutorService);
+        }, supervisorExecutorService);
         clearCheckBoxes();
         setMainFuture(f2);
     }
@@ -9273,7 +9275,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                 @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
@@ -9363,7 +9365,7 @@ public class Supervisor {
 
     @SuppressWarnings("nullness")
     private void drawImageNoObserver(final Graphics graphics, final BufferedImage liveImageI, final int x, final int y) {
-        graphics.drawImage(liveImageI, x, y, ( ImageObserver)null);
+        graphics.drawImage(liveImageI, x, y, (ImageObserver) null);
     }
 
     @Nullable

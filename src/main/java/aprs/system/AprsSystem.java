@@ -135,6 +135,7 @@ import rcs.posemath.PmCartesian;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLCommandWrapper;
 import crcl.utils.CRCLCopier;
+import crcl.utils.CRCLUtils;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
@@ -167,6 +168,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.initialization.qual.Initialized;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -217,7 +219,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         try {
             CRCLProgramType program = createEmptyProgram();
-            executorJInternalFrame1.testPartPositionByPose(program.getMiddleCommand(), pose);
+            executorJInternalFrame1.testPartPositionByPose(CRCLUtils.middleCommands(program), pose);
             return startCRCLProgram(program);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
@@ -2708,7 +2710,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private boolean checkNoMoves(CRCLProgramType program) {
-        for (MiddleCommandType midCmd : program.getMiddleCommand()) {
+        final List<MiddleCommandType> middleCommandsList
+                = CRCLUtils.middleCommands(program);
+        for (MiddleCommandType midCmd : middleCommandsList) {
             if (isMove(midCmd)) {
                 return false;
             }
@@ -2723,8 +2727,9 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private void processWrapperCommands(CRCLProgramType program) {
-        List<MiddleCommandType> cmds = program.getMiddleCommand();
-        for (MiddleCommandType cmd : cmds) {
+        final List<MiddleCommandType> middleCommandsList
+                = CRCLUtils.middleCommands(program);
+        for (MiddleCommandType cmd : middleCommandsList) {
             if (cmd instanceof CRCLCommandWrapper) {
                 CRCLCommandWrapper wrapper = (CRCLCommandWrapper) cmd;
                 wrapper.setCurProgram(program);
@@ -2813,7 +2818,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null == crclClientJInternalFrameFinal) {
             throw new IllegalStateException("CRCL Client View must be open to use this function.");
         }
-        int origSize = program.getMiddleCommand().size();
+        final List<MiddleCommandType> middleCommandsList
+                = CRCLUtils.middleCommands(program);
+        int origSize = middleCommandsList.size();
         try {
             setProgram(program);
             updateRobotLimits();
@@ -2833,7 +2840,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new RuntimeException(ex);
             }
         } finally {
-            int curSize = program.getMiddleCommand().size();
+            int curSize = middleCommandsList.size();
             String origSizeString = (origSize != curSize) ? ("\n origSize=" + origSize) : "";
             final long timeDiff = System.currentTimeMillis() - startTime;
             int count = runProgramCount.incrementAndGet();
@@ -3001,7 +3008,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
                 CRCLProgramType prog = getCrclProgram();
                 if (null != prog) {
-                    sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(prog.getMiddleCommand().size()).append("), ");
+                    final List<MiddleCommandType> middleCommandsList
+                            = CRCLUtils.middleCommands(prog);
+                    sb.append("crcl_program_index=(").append(getCrclProgramLine()).append(" / ").append(middleCommandsList.size()).append("), ");
                     sb.append("crcl_program_name=").append(prog.getName()).append("\r\n");
                 } else {
                     sb.append("crcl_program_index=").append(getCrclProgramLine()).append(", ");
@@ -3603,7 +3612,8 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private String programToString(CRCLProgramType prog) {
         StringBuilder sb = new StringBuilder();
-        List<MiddleCommandType> midCmds = prog.getMiddleCommand();
+        List<MiddleCommandType> midCmds
+                = CRCLUtils.middleCommands(prog);
         for (int i = 0; i < midCmds.size(); i++) {
             sb.append(String.format("%03d", i));
             sb.append(" \t");
@@ -5082,27 +5092,36 @@ public class AprsSystem implements SlotOffsetProvider {
                 CommandStatusType cs = crclClientJInternalFrame.getCurrentStatus()
                         .map(CRCLStatusType::getCommandStatus)
                         .orElse(null);
-                if (null == cs || null == cs.getCommandState()) {
-                    updateTitleStateDescription("", "");
+                if (null == cs) {
+                    updateTitleStateDescriptionEmpty();
                 } else {
-                    if (cs.getCommandState() == CommandStateEnumType.CRCL_DONE) {
-                        CommandStatusType errCmdStatus = titleErrorStringCommandStatus;
-                        if (null != errCmdStatus
-                                && (errCmdStatus.getCommandID() != cs.getCommandID()
-                                || (errCmdStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR))) {
-                            titleErrorString = null;
+                    final CommandStateEnumType commandState = cs.getCommandState();
+                    if (null == commandState) {
+                        updateTitleStateDescriptionEmpty();
+                    } else {
+                        if (commandState == CommandStateEnumType.CRCL_DONE) {
+                            CommandStatusType errCmdStatus = titleErrorStringCommandStatus;
+                            if (null != errCmdStatus
+                                    && (errCmdStatus.getCommandID() != cs.getCommandID()
+                                    || (errCmdStatus.getCommandState() == CommandStateEnumType.CRCL_ERROR))) {
+                                titleErrorString = null;
+                            }
                         }
+                        String description = Objects.toString(cs.getStateDescription(), "");
+                        updateTitleStateDescription(commandState.toString(), description);
                     }
-                    String description = Objects.toString(cs.getStateDescription(), "");
-                    updateTitleStateDescription(cs.getCommandState().toString(), description);
                 }
             } else {
-                updateTitleStateDescription("", "");
+                updateTitleStateDescriptionEmpty();
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
         }
+    }
+
+    private void updateTitleStateDescriptionEmpty() {
+        updateTitleStateDescription("", "");
     }
 
     /**
@@ -5211,7 +5230,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 newSimServerJInternalFrame.setPropertiesFile(propsFile);
                 newSimServerJInternalFrame.loadProperties();
                 addInternalFrame(newSimServerJInternalFrame);
-                if(!newSimServerJInternalFrame.isRunning()) {
+                if (!newSimServerJInternalFrame.isRunning()) {
                     newSimServerJInternalFrame.restartServer();
                 }
                 this.simServerJInternalFrame = newSimServerJInternalFrame;
@@ -7735,11 +7754,15 @@ public class AprsSystem implements SlotOffsetProvider {
         if (trace.length > 3) {
             prog.setName(c + "_" + trace[2].toString());
         }
-        prog.setInitCanon(new InitCanonType());
-        setCommandID(prog.getInitCanon());
-        prog.getMiddleCommand().clear();
-        prog.setEndCanon(new EndCanonType());
-        setCommandID(prog.getEndCanon());
+        final InitCanonType initCmd
+                = new InitCanonType();
+        prog.setInitCanon(initCmd);
+
+        final EndCanonType endCmd
+                = new EndCanonType();
+        prog.setEndCanon(endCmd);
+        setCommandID(initCmd);
+        setCommandID(endCmd);
         return prog;
     }
 
@@ -7878,8 +7901,6 @@ public class AprsSystem implements SlotOffsetProvider {
                 setConnected(true);
             }
             CRCLProgramType emptyProgram = createEmptyProgram();
-            setCommandID(emptyProgram.getInitCanon());
-            setCommandID(emptyProgram.getEndCanon());
             emptyProgram.setName("checkEnabled." + checkEnabledCount.incrementAndGet());
             setProgram(emptyProgram);
             boolean progRunRet = crclClientJInternalFrame.runCurrentProgram(isStepMode());
@@ -7917,7 +7938,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         CrclSwingClientJInternalFrame clntJiF = crclClientJInternalFrame;
         synchronized (clntJiF) {
-            if (program.getMiddleCommand().isEmpty()) {
+            if (CRCLUtils.middleCommands(program).isEmpty()) {
                 emptyProgramCount.incrementAndGet();
                 int cepCount = consecutiveEmptyProgramCount.incrementAndGet();
                 if (cepCount > 1 && debug) {
@@ -9702,10 +9723,13 @@ public class AprsSystem implements SlotOffsetProvider {
             propsMap.put(APRSTASK_PROPERTY_NAME, taskName);
         }
         if (null != fanucServerProvider) {
+            final String providerRemoteRobotHost = fanucServerProvider.getRemoteRobotHost();
             this.fanucCrclPort = fanucServerProvider.getCrclPort();
-            this.fanucRobotHost = fanucServerProvider.getRemoteRobotHost();
             propsMap.put(FANUC_CRCL_LOCAL_PORT, Integer.toString(fanucCrclPort));
-            propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
+            if (null != providerRemoteRobotHost) {
+                this.fanucRobotHost = providerRemoteRobotHost;
+                propsMap.put(FANUC_ROBOT_HOST, fanucRobotHost);
+            }
         }
         if (null != motomanServerProvider) {
             this.motomanCrclPort = motomanServerProvider.getCrclPort();

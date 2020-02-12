@@ -5055,7 +5055,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             object2DJPanel1.setRepaintMinMillis(Long.parseLong(repaintMinMillisString));
         }
 
-        
         if (!dialogMode) {
             if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
                 if (needReloadDataFile()) {
@@ -5166,7 +5165,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             final boolean enable = Boolean.parseBoolean(enableReadSoTimeoutString);
             this.setEnableReadTimeout(enable);
         }
-        
+
         updatingDisplayFromProperties = false;
     }
 
@@ -5735,7 +5734,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         return String.format("%.3f", d);
     }
 
-    private Object @Nullable [] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
+    private @Nullable
+    Object @Nullable [] poseUpdateHistoryRecordItems(PoseUpdateHistoryItem item) throws IOException {
         File cmdFile = null;
         String cmdClassName = "";
         String cmdFileName = "";
@@ -5761,7 +5761,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         CRCLStatusType stat = item.stat;
-        PointType point = CRCLPosemath.getPoint(stat);
+        PointType point = CRCLPosemath.getNullablePoint(stat);
         if (null == point) {
             return null;
         }
@@ -5840,13 +5840,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         File f = createTempFile("puh_" + err, ".csv");
         try (CSVPrinter printer = new CSVPrinter(new FileWriter(f), CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
             for (PoseUpdateHistoryItem item : poseUpdateHistory) {
-                Object array[] = poseUpdateHistoryRecordItems(item);
-                if (null != array) {
-                    printer.printRecord(array);
-                }
+                printPoseUpdateHistoryRecordItem(item, printer);
             }
         }
         return f;
+    }
+
+    @SuppressWarnings("nullness")
+    private void printPoseUpdateHistoryRecordItem(PoseUpdateHistoryItem item, final CSVPrinter printer) throws IOException {
+        Object array[] = poseUpdateHistoryRecordItems(item);
+        if (null != array) {
+            printer.printRecord(array);
+        }
     }
 
     private final ConcurrentLinkedDeque<PoseUpdateHistoryItem> poseUpdateHistory
@@ -5983,7 +5988,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!showCurrentCachedCheckBox.isSelected()) {
                 return;
             }
-            PoseType pose = CRCLPosemath.getPose(stat);
+            PoseType pose = CRCLPosemath.getNullablePose(stat);
             if (null == pose) {
                 return;
             }

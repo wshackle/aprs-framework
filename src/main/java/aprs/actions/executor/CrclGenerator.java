@@ -127,6 +127,7 @@ import java.util.function.Consumer;
 import java.util.Collection;
 
 import crcl.utils.CRCLSocket;
+import crcl.utils.CRCLUtils;
 
 import java.awt.geom.Point2D;
 import java.lang.reflect.InvocationTargetException;
@@ -157,6 +158,7 @@ import java.util.Date;
 import java.util.Iterator;
 import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
+import java.util.stream.StreamSupport;
 import javax.swing.Icon;
 import javax.swing.text.BadLocationException;
 import org.apache.commons.csv.CSVFormat;
@@ -3392,7 +3394,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     logError("checkKits: failedItemInfo.failedClosestItemDist = " + failedItemInfo.failedClosestItemDist);
                     logError("checkKits: failedItemInfo.failedAbsSlot = " + failedItemInfo.failedAbsSlot);
                 }
-//                                JOptionPane.showMessageDialog(this.aprsSystemInterface,errmsg);
             }
         }
         logError("prePubs = " + prePubs);
@@ -3405,7 +3406,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         CRCLProgramType program = new CRCLProgramType();
         program.setInitCanon(new InitCanonType());
         program.setEndCanon(new EndCanonType());
-        program.getMiddleCommand().addAll(cmds);
+        final List<MiddleCommandType> middleCommandsList
+                = CRCLUtils.middleCommands(program);
+        middleCommandsList.addAll(cmds);
         localAprsSystem.logCrclProgFile(program);
         String errMsg = errMsgSb.toString();
         takeSimViewSnapshot(errMsg, physicalItemsLocal);
@@ -5917,7 +5920,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private @Nullable
     JointPositionsTolerancesType jointPositionsTolerancesType = null;
 
-    public JointPositionsTolerancesType getJointPositionsTolerancesType() {
+    public @Nullable
+    JointPositionsTolerancesType getJointPositionsTolerancesType() {
         return jointPositionsTolerancesType;
     }
 
@@ -5931,21 +5935,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (!jointTolerancesChecked) {
             if (null == jointPositionsTolerancesType) {
                 String jointTolerancesString = options.get("jointTolerances");
-                double jointTolerancesVals[] = jointValStringToArray(jointTolerancesString);
-                JointPositionsTolerancesType newJointTolerances = new JointPositionsTolerancesType();
-                for (int i = 0; i < jointTolerancesVals.length; i++) {
-                    double jointTolerancesVal = jointTolerancesVals[i];
-                    final JointPositionToleranceSettingType settingI = new JointPositionToleranceSettingType();
-                    settingI.setJointNumber(i + 1);
-                    settingI.setJointPositionTolerance(jointTolerancesVals[i]);
-                    newJointTolerances.getSetting().add(settingI);
+                if (null != jointTolerancesString) {
+                    double jointTolerancesVals[] = jointValStringToArray(jointTolerancesString);
+                    JointPositionsTolerancesType newJointTolerances = new JointPositionsTolerancesType();
+                    List<JointPositionToleranceSettingType> newSettingsList = new ArrayList<>();
+                    for (int i = 0; i < jointTolerancesVals.length; i++) {
+                        double jointTolerancesVal = jointTolerancesVals[i];
+                        final JointPositionToleranceSettingType settingI = new JointPositionToleranceSettingType();
+                        settingI.setJointNumber(i + 1);
+                        settingI.setJointPositionTolerance(jointTolerancesVals[i]);
+                        newSettingsList.add(settingI);
+                    }
+                    CRCLUtils.clearAndSetList(newJointTolerances.getSetting(), newSettingsList);
+                    final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
+                            = new SetDefaultJointPositonsTolerancesType();
+                    setDefaultJointPositonsTolerancesCommand.setJointTolerances(newJointTolerances);
+                    setCommandId(setDefaultJointPositonsTolerancesCommand);
+                    out.add(setDefaultJointPositonsTolerancesCommand);
+                    this.jointPositionsTolerancesType = newJointTolerances;
                 }
-                final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
-                        = new SetDefaultJointPositonsTolerancesType();
-                setDefaultJointPositonsTolerancesCommand.setJointTolerances(newJointTolerances);
-                setCommandId(setDefaultJointPositonsTolerancesCommand);
-                out.add(setDefaultJointPositonsTolerancesCommand);
-                this.jointPositionsTolerancesType = newJointTolerances;
             } else {
                 final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
                         = new SetDefaultJointPositonsTolerancesType();
@@ -5962,7 +5970,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private @Nullable
     PoseToleranceType endPoseTolerance = null;
 
-    public PoseToleranceType getEndPoseTolerance() {
+    public @Nullable
+    PoseToleranceType getEndPoseTolerance() {
         return endPoseTolerance;
     }
 
@@ -6212,7 +6221,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkJointToleranceSetting(out);
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
-        ajCmd.getActuateJoint().clear();
+        List<ActuateJointType>  newActuateJointsList = new ArrayList<>();
         for (int i = 0; i < jointVals.length; i++) {
             ActuateJointType aj = new ActuateJointType();
             JointSpeedAccelType jsa = new JointSpeedAccelType();
@@ -6221,8 +6230,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             aj.setJointDetails(jsa);
             aj.setJointNumber(i + 1);
             aj.setJointPosition(jointVals[i]);
-            ajCmd.getActuateJoint().add(aj);
+            newActuateJointsList.add(aj);
         }
+        CRCLUtils.clearAndSetList(ajCmd.getActuateJoint(), newActuateJointsList);
         out.add(ajCmd);
         atLookForPosition = false;
         if (toolHolderOperationEnabled) {
@@ -6301,17 +6311,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (jss == null) {
                 return false;
             }
-            List<JointStatusType> l = jss.getJointStatus();
+            Iterable<JointStatusType> jointStatusIterable = CRCLUtils.getNonNullJointStatusIterable(jss);
             assert (null != lookForJointsString) : "@AssumeAssertion(nullness)";
             String jointPosStrings[] = lookForJointsString.split("[,]+");
             for (int i = 0; i < jointPosStrings.length; i++) {
                 final int number = i + 1;
-                JointStatusType js = l.stream().filter(x -> x.getJointNumber() == number).findFirst().orElse(null);
+                JointStatusType js 
+                        = StreamSupport.stream(jointStatusIterable.spliterator(),false)
+                                .filter(x -> x.getJointNumber() == number)
+                                .findFirst()
+                                .orElse(null);
                 if (null == js) {
                     return false;
                 }
                 double jpos = Double.parseDouble(jointPosStrings[i]);
-                if (Math.abs(jpos - js.getJointPosition()) > 2.0) {
+                double statusJpos = Objects.requireNonNull(js.getJointPosition(),"js.getJointPosition()").doubleValue();
+                if (Math.abs(jpos - statusJpos)  > 2.0) {
                     return false;
                 }
             }

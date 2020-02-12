@@ -23,7 +23,7 @@
 package aprs.database;
 
 import com.sun.istack.logging.Logger;
-import crcl.utils.Utils;
+import crcl.utils.CRCLUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -251,7 +251,7 @@ public class SocketLineReader {
                         long time0Diff = t2 - t0;
                         System.out.println("");
                         System.out.flush();
-                        System.out.println("trace = " + Utils.traceToString(trace));
+                        System.out.println("trace = " + CRCLUtils.traceToString(trace));
                         System.err.println("readSoTimeOut = " + readSoTimeOut);
                         final Socket socketLocal = socket;
                         System.err.println("socket = " + socketLocal);

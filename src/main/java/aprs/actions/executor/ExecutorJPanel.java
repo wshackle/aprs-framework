@@ -170,13 +170,17 @@ import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
 import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
+import crcl.base.CommandStatusType;
 import crcl.base.MoveToType;
 import crcl.base.VectorType;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
+import crcl.utils.CRCLUtils;
 import static java.util.Objects.requireNonNull;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 import javax.swing.Icon;
 import javax.swing.SwingUtilities;
 
@@ -722,7 +726,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null == curProgram) {
                 throw new IllegalArgumentException(" ppi.getWrapper().getCurProgram() == null");
             }
-            List<MiddleCommandType> l = curProgram.getMiddleCommand();
+            List<MiddleCommandType> l = CRCLUtils.middleCommands(curProgram);
             int programIndex = wrapper.getCurProgramIndex();
             while (l.size() > programIndex + 1) {
                 l.remove(programIndex + 1);
@@ -3462,7 +3466,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 LOGGER.log(Level.SEVERE, "", ex);
             }
         }
-        final List<MiddleCommandType> middleCommands = crclProgram.getMiddleCommand();
+        final List<MiddleCommandType> middleCommands = CRCLUtils.middleCommands(crclProgram);
         int initialSize = middleCommands.size();
         for (int i = 0; i < middleCommands.size() && initialSize == middleCommands.size(); i++) {
             MiddleCommandType midCmd = middleCommands.get(i);
@@ -3625,10 +3629,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null == currentPose) {
             throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
         }
-        final VectorType xAxisCopy = requireNonNull(copy(currentPose.getXAxis()), "xAxisCopy");
-        final VectorType zAxisCopy = requireNonNull(copy(currentPose.getZAxis()), "zAxisCopy");
+        final VectorType xAxisCopy = copy(requireNonNull(currentPose.getXAxis(), "xAxisCopy"));
+        final VectorType zAxisCopy = copy(requireNonNull(currentPose.getZAxis(), "zAxisCopy"));
         moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
-        program.getMiddleCommand().add(moveTo);
+        CRCLUtils.middleCommands(program).add(moveTo);
         startCrclProgram(program);
     }
 
@@ -4977,9 +4981,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != stat) {
             JointStatusesType jointStatuses = stat.getJointStatuses();
             if (null != jointStatuses) {
-                List<JointStatusType> jointList = jointStatuses.getJointStatus();
+                Iterable<JointStatusType> jointListIterable = CRCLUtils.getNonNullJointStatusIterable(jointStatuses);
                 String jointVals
-                        = jointStatusListToString(jointList);
+                        = jointStatusListToString(jointListIterable);
                 logDebug("jointVals = " + jointVals);
                 boolean keyFound = false;
                 for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
@@ -4996,12 +5000,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private String jointStatusListToString(List<JointStatusType> jointList) {
+    private String jointStatusListToString(Iterable<JointStatusType> jointStatusIterable) {
         String jointVals
-                = jointList
-                        .stream()
+                = StreamSupport.stream(jointStatusIterable.spliterator(),false)
                         .sorted(Comparator.comparing(JointStatusType::getJointNumber))
-                        .map(JointStatusType::getJointPosition)
+                        .map((JointStatusType js) -> Optional.ofNullable(js.getJointPosition()))
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
                         .map(Objects::toString)
                         .collect(Collectors.joining(","));
         return jointVals;
@@ -5418,7 +5423,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != stat) {
             JointStatusesType jointStatuses = stat.getJointStatuses();
             if (null != jointStatuses) {
-                List<JointStatusType> jointList = jointStatuses.getJointStatus();
+                Iterable<JointStatusType> jointList 
+                        = CRCLUtils.getNonNullJointStatusIterable(jointStatuses);
                 String jointVals
                         = jointStatusListToString(jointList);
                 return jointVals;
@@ -6434,7 +6440,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void showExceptionInProgramInternalOnDisplay(final java.lang.Exception ex) {
         CRCLProgramType program = createEmptyProgram();
-        List<MiddleCommandType> cmds = program.getMiddleCommand();
+        List<MiddleCommandType> cmds = CRCLUtils.middleCommands(program);
         MessageType message = new MessageType();
         setCommandId(message);
         message.setMessage(ex.toString());
@@ -6627,7 +6633,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 setReplanFromIndex(abortReplanFromIndex, true);
                 return atLastAction();
             }
-            boolean emptyProgram = program.getMiddleCommand().isEmpty();
+            boolean emptyProgram = CRCLUtils.middleCommands(program).isEmpty();
             boolean nextReplanAfterCrclBlock
                     = crclGenerator.getLastIndex() < actionsListSize - 1
                     && replanCachedCheckBox.isSelected();
@@ -6952,8 +6958,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(actionsListSize - 1);
         }
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         updatePositionCacheTable();
         return program;
@@ -6975,16 +6981,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void setEndCanonCmdId(CRCLProgramType program) {
-        setCommandId(program.getEndCanon());
-        long initCmdId = program.getInitCanon().getCommandID();
-        long endCmdId = program.getEndCanon().getCommandID();
-        int midSize = program.getMiddleCommand().size();
+        final EndCanonType endCmd 
+                = Objects.requireNonNull(program.getEndCanon(),"program.getEndCanon()");
+        setCommandId(endCmd);
+        final InitCanonType initCmd 
+                = Objects.requireNonNull(program.getInitCanon(),"program.getEndCanon()");
+        long initCmdId = initCmd.getCommandID();
+        long endCmdId = endCmd.getCommandID();
+        int midSize = CRCLUtils.middleCommands(program).size();
         if (midSize > 0) {
-            long firstMidCmdId = program.getMiddleCommand().get(0).getCommandID();
+            long firstMidCmdId = CRCLUtils.middleCommands(program).get(0).getCommandID();
             if (firstMidCmdId != initCmdId + 1) {
                 logDebug("firstMidCmdId != initCmdId+1 : " + firstMidCmdId + "!= " + (initCmdId + 1));
             }
-            long lastMidCmdId = program.getMiddleCommand().get(midSize - 1).getCommandID();
+            long lastMidCmdId = CRCLUtils.middleCommands(program).get(midSize - 1).getCommandID();
             if (lastMidCmdId != initCmdId + midSize) {
                 logDebug("lastMidCmdId != initCmdId+midSize : " + lastMidCmdId + "!= " + (initCmdId + midSize));
             }
@@ -7098,8 +7108,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         List<MiddleCommandType> cmds = generate(placePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
         crclGenerator.setManualAction(false);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         XFuture<Boolean> ret = startCrclProgram(program);
         replanStarted.set(false);
@@ -7126,8 +7136,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
 
         updatePoseTextFields();
@@ -7191,8 +7201,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
 
         for (PositionMap positionMap : getPositionMaps()) {
@@ -7238,8 +7248,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.returnPart(part, cmds);
 
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         replanStarted.set(false);
         return startCrclProgram(program);
@@ -7366,8 +7376,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
 
         PointType testDropOffPosePoint
@@ -7437,8 +7447,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.placePartByPose(cmds, testDropOffPose);
         CRCLProgramType program = createEmptyProgram();
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         setCrclProgram(program);
         PointType testDropOffPosePoint
@@ -7470,8 +7480,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.takePartByPose(cmds, testDropOffPose, "testDropOffPose");
         CRCLProgramType program = createEmptyProgram();
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         replanStarted.set(false);
         return startCrclProgram(program);
@@ -7533,8 +7543,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         List<MiddleCommandType> cmds = generate(lookForActionsList, 0, options, safeAbortRequestCount.get(), -1);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-        program.getMiddleCommand().clear();
-        program.getMiddleCommand().addAll(cmds);
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
         setEndCanonCmdId(program);
         replanStarted.set(false);
         return program;
@@ -7710,8 +7720,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             options,
                             safeAbortRequestCount.get(), -1);
             indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
-            program.getMiddleCommand().clear();
-            program.getMiddleCommand().addAll(cmds);
+            CRCLUtils.middleCommands(program).clear();
+            CRCLUtils.middleCommands(program).addAll(cmds);
             setEndCanonCmdId(program);
             replanStarted.set(false);
             return startCrclProgram(program);
@@ -8535,13 +8545,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @Override
     public void accept(CrclSwingClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
         if (this.debug && null != program) {
-            int sz = program.getMiddleCommand().size();
+            int sz = CRCLUtils.middleCommands(program).size();
             logDebug("replanStarted = " + replanStarted);
             logDebug("replanRunnable = " + replanRunnable);
             logDebug("jCheckBoxReplan.isSelected() = " + replanCachedCheckBox.isSelected());
             logDebug("sz = " + sz);
             logDebug("line = " + line);
-            CommandStateEnumType state = status.getCommandStatus().getCommandState();
+            final CommandStatusType commandStatus
+                    = CRCLUtils.getNonNullCommandStatus(status);
+            CommandStateEnumType state = commandStatus.getCommandState();
 
             logDebug("state = " + state);
             logDebug("crclProgName = " + crclProgName);

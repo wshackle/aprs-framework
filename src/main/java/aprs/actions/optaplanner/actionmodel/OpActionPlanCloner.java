@@ -5,7 +5,7 @@
  */
 package aprs.actions.optaplanner.actionmodel;
 
-import crcl.utils.Utils;
+import crcl.utils.CRCLUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -80,7 +80,7 @@ public class OpActionPlanCloner implements SolutionCloner<OpActionPlan> {
                     }
                     final OpAction.CheckNextInfoPair checkNextInfoPair = new OpAction.CheckNextInfoPair(new OpAction.CheckNextInfo(origAction), new OpAction.CheckNextInfo(origNextAction));
                     if (!OpAction.checkNextActionInfoPair(checkNextInfoPair)) {
-                        System.err.println("setNextTrace = " + Utils.traceToString(origAction.getSetNextTrace()));
+                        System.err.println("setNextTrace = " + CRCLUtils.traceToString(origAction.getSetNextTrace()));
                         System.err.println("setNextInfoPair = " + origAction.getSetNextInfoPair());
                         throw new IllegalStateException("origAction=" + origAction.getName() + " has next set to " + origNextAction.shortString() + " : possibles=" + origAction.getPossibleNextActions());
                     }

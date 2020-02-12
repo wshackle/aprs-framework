@@ -17,7 +17,7 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
 import aprs.actions.optaplanner.actionmodel.score.DistToTime;
-import crcl.utils.Utils;
+import crcl.utils.CRCLUtils;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -370,13 +370,6 @@ public class OpAction implements OpActionInterface {
     }
 
     public void setNext(@Nullable OpActionInterface next) {
-
-//        final CheckNextInfoPair checkNextInfoPair = new CheckNextInfoPair(new CheckNextInfo(this), new CheckNextInfo(next));
-//        if (!checkNextActionInfoPair(checkNextInfoPair)) {
-//            System.err.println("setNextTrace = " + Utils.traceToString(setNextTrace));
-//            System.err.println("setNextInfoPair = " + setNextInfoPair);
-//            throw new IllegalStateException("this=" + name + " Settting next to " + next.shortString() + " : possibles=" + getPossibleNextActions());
-//        }
         this.next = next;
         this.setNextValue = next;
         if (null != next) {
@@ -384,7 +377,6 @@ public class OpAction implements OpActionInterface {
         }
         setNextTrace = Thread.currentThread().getStackTrace();
         setNextThread = Thread.currentThread();
-//        setNextInfoPair = checkNextInfoPair;
     }
 
     public void clearNext() {
@@ -542,7 +534,7 @@ public class OpAction implements OpActionInterface {
         List<OpActionInterface> startPossibleNextAction = new ArrayList<>(possibleNextActions);
         if (!startPossibleNextAction.isEmpty()) {
             System.out.println("startPossibleNextAction = " + startPossibleNextAction);
-            System.out.println("addPossibleNextActionsTrace = " + Utils.traceToString(addPossibleNextActionsTrace));
+            System.out.println("addPossibleNextActionsTrace = " + CRCLUtils.traceToString(addPossibleNextActionsTrace));
         }
         for (OpActionInterface action : allActions) {
             if (!possibleNextActions.contains(action)) {
@@ -680,13 +672,13 @@ public class OpAction implements OpActionInterface {
         System.out.println("this.next = " + this.next);
         System.out.println("this.setNextValue = " + this.setNextValue);
         System.out.println("this.setNextInfoPair = " + this.setNextInfoPair);
-        System.out.println("this.setNextTrace = " + Utils.traceToString(this.setNextTrace));
+        System.out.println("this.setNextTrace = " + CRCLUtils.traceToString(this.setNextTrace));
         if (null != this.next) {
             final OpAction nextPrev = this.next.getPrevious();
             System.out.println("this.next.getPrevious = " + nextPrev);
             if (null != nextPrev) {
                 System.out.println("nextPrev.setPreviousThread = " + nextPrev.setPreviousThread);
-                System.out.println("nextPrev.setPreviousTrace = " + Utils.traceToString(nextPrev.setPreviousTrace));
+                System.out.println("nextPrev.setPreviousTrace = " + CRCLUtils.traceToString(nextPrev.setPreviousTrace));
             }
         }
         System.out.println("this.previous = " + this.previous);
@@ -696,7 +688,7 @@ public class OpAction implements OpActionInterface {
             if (prevNext instanceof OpAction) {
                 OpAction prevNextAction = (OpAction) prevNext;
                 System.out.println("prevNextAction.setNextThread = " + prevNextAction.setNextThread);
-                System.out.println("prevNextAction.setNextTrace = " + Utils.traceToString(prevNextAction.setNextTrace));
+                System.out.println("prevNextAction.setNextTrace = " + CRCLUtils.traceToString(prevNextAction.setNextTrace));
             }
         }
         System.out.println("this = " + this);
