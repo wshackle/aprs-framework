@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Sep18">
+    version="2019Sep24">
     <xs:include schemaLocation="DataPrimitives.xsd"/>
 
     <xs:annotation>
@@ -126,6 +126,9 @@
                     <xs:element name="ActuateJoint"
                                 type="ActuateJointType"
                                 maxOccurs="unbounded"/>
+                    <xs:element name="JointTolerances"
+                                type="JointPositionsTolerancesType"
+                                minOccurs="0"/>
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
@@ -662,44 +665,6 @@
         </xs:complexContent>
     </xs:complexType>
 
-    <xs:complexType name="GuardedMoveToType">
-        <xs:annotation>
-            <xs:documentation>
-                MoveToType is derived from MiddleCommandType.
-                An instance of MoveToType has the following elements:
-                Name (inherited, optional)
-                CommandID (inherited)
-                MoveStraight
-                EndPosition.
-
-                EndPosition is a Pose to which the robot will move. If the value of
-                MoveStraight is true, the controlled point must be moved in a
-                straight line. If the value of MoveStraight is false, the
-                controlled point may be moved along any convenient trajectory.
-
-                The robot must reach the EndPosition within the tolerance
-                established (1) by the tolerance given for the pose in the
-                EndPosition, if there is a tolerance in the EndPosition, or if not
-                (2) by the most recently executed instance of
-                SetEndPoseToleranceType. The speed and acceleration to use are set
-                either in the EndPosition or by previously executed CRCL commands.
-
-                The type of EndPosition may be either PoseType or
-                PoseAndSetType, which is derived from PoseType.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:complexContent>
-            <xs:extension base="MiddleCommandType">
-                <xs:sequence>
-                    <xs:element name="MoveStraight"
-                                type="xs:boolean"/>
-                    <xs:element name="EndPosition"
-                                type="PoseType"/>
-                </xs:sequence>
-            </xs:extension>
-        </xs:complexContent>
-    </xs:complexType>
-
     <xs:complexType name="OpenToolChangerType">
         <xs:annotation>
             <xs:documentation>
@@ -716,63 +681,6 @@
         </xs:annotation>
         <xs:complexContent>
             <xs:extension base="MiddleCommandType"/>
-        </xs:complexContent>
-    </xs:complexType>
-
-
-    <xs:complexType name="PoseAndSetType">
-        <xs:annotation>
-            <xs:documentation>
-                PoseAndSetType is derived from PoseType. 
-                An instance of PoseAndSetType has the following elements:
-                Name (inherited, optional)
-                Point (inherited)
-                XAxis (inherited)
-                ZAxis  (inherited)
-                Coordinated
-                TransSpeed (optional)
-                RotSpeed (optional)
-                TransAccel (optional)
-                RotAccel (optional)
-                Tolerance (optional).
-
-                PoseAndSetType is used for waypoints of move commands. The
-                TransSpeed and TransAccel elements are the target translational
-                speed and acceleration for the controlled point as it moves to the
-                given pose. The RotSpeed and RotAccel elements are the target
-                rotational speed and acceleration for the single axis rotation
-                required to move from the initial pose to the target pose. The
-                Tolerance is the tolerance for the given pose. The TransSpeed,
-                TransAccel, RotSpeed, RotAccel, and Tolerance temporarily override
-                any set values. The set values apply again once the given pose is
-                reached. If the Coordinated element is set to true, translation and
-                rotation should finish simultaneously. If Coordinated is false,
-                either translation or rotation may finish first.
-        
-            </xs:documentation>
-        </xs:annotation>
-        <xs:complexContent>
-            <xs:extension base="PoseType">
-                <xs:sequence>
-                    <xs:element name="Coordinated"
-                                type="xs:boolean"/>
-                    <xs:element name="TransSpeed"
-                                type="TransSpeedType"
-                                minOccurs="0"/>
-                    <xs:element name="RotSpeed"
-                                type="RotSpeedType"
-                                minOccurs="0"/>
-                    <xs:element name="TransAccel"
-                                type="TransAccelType"
-                                minOccurs="0"/>
-                    <xs:element name="RotAccel"
-                                type="RotAccelType"
-                                minOccurs="0"/>
-                    <xs:element name="Tolerance"
-                                type="PoseToleranceType"
-                                minOccurs="0"/>
-                </xs:sequence>
-            </xs:extension>
         </xs:complexContent>
     </xs:complexType>
 
@@ -913,6 +821,34 @@
         </xs:complexContent>
     </xs:complexType>
 
+    <xs:complexType name="SetDefaultJointPositonsTolerancesType">
+        <xs:annotation>
+            <xs:documentation>
+                SetDefaultJointsPositonToleranceType is derived from MiddleCommandType.
+                An instance of SetDefaultJointsPositonToleranceType has the following
+                elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                JointTolerances.
+
+                The Tolerance element indicates to the robot the precision with
+                which it must reach its end location for each joint for which
+                an ActuateJoints command does not include a specific tolerance.
+                It does not apply during force control or cartesian moves.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="JointTolerances"
+                                type="JointPositionsTolerancesType"
+                    />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    
     <xs:complexType name="SetForceUnitsType">
         <xs:annotation>
             <xs:documentation>

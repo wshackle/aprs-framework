@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Sep18">
+    version="2019Sep24">
 
     <xs:annotation>
         <xs:documentation>
@@ -60,6 +60,62 @@
         </xs:sequence>
     </xs:complexType>
 
+
+    <xs:complexType name="JointPositionToleranceSettingType">
+        <xs:annotation>
+            <xs:documentation>
+                JointPositionToleranceType is derived from DataThingType.
+                An instance of JointPositionToleranceType has the following elements:
+                Name (inherited, optional)
+                JointNumber
+                JointPositionTolerance
+
+                Used to specify how close to a given joint position given with
+                an actuate joints command the joint with the given jointnumber 
+                must be to to the goal position before the command may 
+                be considered done.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:element name="JointNumber"
+                                type="xs:int"/>
+                    <xs:element name="JointPositionTolerance"
+                                type="xs:double"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    
+    <xs:complexType name="JointPositionsTolerancesType">
+        <xs:annotation>
+            <xs:documentation>
+                JointPositionsTolerancesType is derived from DataThingType.
+                An instance of JointPositionsTolerancesType has the following elements:
+                Name (inherited, optional)
+                JointTolerances
+                
+                Used to specify how close to a given joint position given with
+                an actuate joints command the joint with the given jointnumber 
+                must be to to the goal position before the command may 
+                be considered done.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="DataThingType">
+                <xs:sequence>
+                    <xs:sequence>
+                        <xs:element name="Setting"
+                                    type="JointPositionToleranceSettingType"
+                                    maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
     <xs:simpleType name="ForceUnitEnumType">
         <xs:annotation>
             <xs:documentation>
@@ -156,6 +212,64 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+
+
+    <xs:complexType name="PoseAndSetType">
+        <xs:annotation>
+            <xs:documentation>
+                PoseAndSetType is derived from PoseType. 
+                An instance of PoseAndSetType has the following elements:
+                Name (inherited, optional)
+                Point (inherited)
+                XAxis (inherited)
+                ZAxis  (inherited)
+                Coordinated
+                TransSpeed (optional)
+                RotSpeed (optional)
+                TransAccel (optional)
+                RotAccel (optional)
+                Tolerance (optional).
+
+                PoseAndSetType is used for waypoints of move commands. The
+                TransSpeed and TransAccel elements are the target translational
+                speed and acceleration for the controlled point as it moves to the
+                given pose. The RotSpeed and RotAccel elements are the target
+                rotational speed and acceleration for the single axis rotation
+                required to move from the initial pose to the target pose. The
+                Tolerance is the tolerance for the given pose. The TransSpeed,
+                TransAccel, RotSpeed, RotAccel, and Tolerance temporarily override
+                any set values. The set values apply again once the given pose is
+                reached. If the Coordinated element is set to true, translation and
+                rotation should finish simultaneously. If Coordinated is false,
+                either translation or rotation may finish first.
+        
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="PoseType">
+                <xs:sequence>
+                    <xs:element name="Coordinated"
+                                type="xs:boolean"/>
+                    <xs:element name="TransSpeed"
+                                type="TransSpeedType"
+                                minOccurs="0"/>
+                    <xs:element name="RotSpeed"
+                                type="RotSpeedType"
+                                minOccurs="0"/>
+                    <xs:element name="TransAccel"
+                                type="TransAccelType"
+                                minOccurs="0"/>
+                    <xs:element name="RotAccel"
+                                type="RotAccelType"
+                                minOccurs="0"/>
+                    <xs:element name="Tolerance"
+                                type="PoseToleranceType"
+                                minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
 
     <xs:simpleType name="PositiveDecimalType">
         <xs:restriction base="xs:double">
@@ -658,20 +772,19 @@
                     <xs:element name="LimitType"
                                 type="GuardLimitEnumType"/>
                     <xs:element name="LimitValue"
-                                type="xs:double"
-                                minOccurs="0" />
+                                type="xs:double" />
                     <xs:element name="RecheckTimeMicroSeconds"
                                 type="xs:long"
-                                minOccurs="0" />
+                                default="0" />
                     <xs:element name="CheckCount"
                                 type="xs:long"
-                                minOccurs="0" />
+                                default="0" />
                     <xs:element name="LastCheckTime"
                                 type="xs:long"
-                                minOccurs="0" />
+                                default="0" />
                     <xs:element name="LastCheckValue"
                                 type="xs:double"
-                                minOccurs="0" />
+                                default="0" />
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
