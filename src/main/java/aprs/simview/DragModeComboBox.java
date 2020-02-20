@@ -20,34 +20,30 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.actions.executor;
+package aprs.simview;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public enum ActionType {
-    UNINITIALIZED,
-    INVALID_ACTION_TYPE,
-    TAKE_PART,
-    FAKE_TAKE_PART,
-    TEST_PART_POSITION,
-    PLACE_PART,
-    LOOK_FOR_PARTS,
-    GOTO_TOOL_CHANGER_APPROACH,
-    GOTO_TOOL_CHANGER_POSE,
-    DROP_TOOL_BY_HOLDER,
-    DROP_TOOL_ANY,
-    PICKUP_TOOL_BY_HOLDER,
-    PICKUP_TOOL_BY_TOOL,
-    SWITCH_TOOL,
-    PAUSE,
-    INSPECT_KIT,
-    CLEAR_KITS_TO_CHECK,
-    ADD_KIT_TO_CHECK,
-    CHECK_KITS,
-    SET_CORRECTION_MODE,
-    TAKE_PART_BY_TYPE_AND_POSITION,
-    END_PROGRAM;
+public class DragModeComboBox extends JComboBox<Object2DViewDragMode> {
 
+    public DragModeComboBox() {
+        super(new DefaultComboBoxModel<>(Object2DViewDragMode.values()));
+    }
+
+    @Override
+    public Object2DViewDragMode getSelectedItem() {
+        Object item = super.getSelectedItem();
+        if(item instanceof Object2DViewDragMode) {
+            return (Object2DViewDragMode) item;
+        }
+        super.setSelectedItem(Object2DViewDragMode.DO_NOTHING);
+        return Object2DViewDragMode.DO_NOTHING; 
+    }
+    
+    
 }

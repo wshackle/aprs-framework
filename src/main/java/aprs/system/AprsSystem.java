@@ -192,6 +192,8 @@ public class AprsSystem implements SlotOffsetProvider {
             headlessEmptyInit();
         }
     }
+    
+    
 
     public XFuture<Boolean> gotoPose(PoseType pose) {
         if (null == executorJInternalFrame1) {

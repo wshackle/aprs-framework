@@ -22,6 +22,7 @@
  */
 package aprs.simview;
 
+import aprs.actions.executor.Action;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedTextField;
 import aprs.conveyor.ConveyorPosition;
@@ -94,7 +95,6 @@ import java.io.BufferedReader;
 import static java.lang.Double.parseDouble;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.EventListener;
@@ -112,6 +112,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Objects.requireNonNull;
 import org.checkerframework.checker.guieffect.qual.UI;
+import rcs.posemath.PM_CARTESIAN;
 
 /**
  *
@@ -1320,6 +1321,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jTextFieldConnectTimeout = new javax.swing.JTextField();
         jCheckBoxReadTimeout = new javax.swing.JCheckBox();
         jTextFieldReadTimeout = new javax.swing.JTextField();
+        dragModeComboBox = new aprs.simview.DragModeComboBox();
+        jLabel16 = new javax.swing.JLabel();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -1554,6 +1557,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        dragModeComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dragModeComboBoxActionPerformed(evt);
+            }
+        });
+
+        jLabel16.setText("Drag Action: ");
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1573,7 +1584,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jTextFieldHost))
                             .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jButtonRefresh)
+                                    .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
+                                        .addComponent(jButtonRefresh)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel16)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(dragModeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                         .addComponent(jLabel12)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1646,7 +1662,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     .addComponent(jLabel15)
                     .addComponent(jTextFieldPrevListSizeDecrementInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRefresh)
+                .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRefresh)
+                    .addComponent(dragModeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel16))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxConnectTimeout)
@@ -3260,76 +3279,58 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @UIEffect
     private void object2DJPanel1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseDragged
-        object2DJPanel1.setMouseDown(true);
-        double scale = object2DJPanel1.getScale(object2DJPanel1.isAutoscale());
-        double min_x = object2DJPanel1.getMinX();
-        double max_x = object2DJPanel1.getMaxX();
-        double min_y = object2DJPanel1.getMinY();
-        double max_y = object2DJPanel1.getMaxY();
-        PhysicalItem itemToDrag = this.draggedItem;
-        mouseDragTime = System.currentTimeMillis();
-        if (null != itemToDrag) {
-            double orig_x = itemToDrag.x;
-            double orig_y = itemToDrag.y;
-            Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY(), object2DJPanel1.isAutoscale());
-            itemToDrag.x = worldPoint.x;
-            itemToDrag.y = worldPoint.y;
-//            switch (object2DJPanel1.getDisplayAxis()) {
-//                case POS_X_POS_Y:
-//                    itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
-//                    itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
-//                    break;
-//
-//                case POS_Y_NEG_X:
-//                    itemToDrag.x = ((evt.getY() - 20) / scale) + min_x;
-//                    itemToDrag.y = ((evt.getX() - 15) / scale) + min_y;
-//                    break;
-//
-//                case NEG_X_NEG_Y:
-//                    itemToDrag.x = max_x - ((evt.getX() - 15) / scale);
-//                    itemToDrag.y = ((evt.getY() - 20) / scale) + min_y;
-//                    break;
-//
-//                case NEG_Y_POS_X:
-//                    itemToDrag.x = max_x - ((evt.getY() - 20) / scale);
-//                    itemToDrag.y = max_y - ((evt.getX() - 15) / scale);
-//                    break;
-//            }
-//            itemToDrag.x = ((evt.getX() - 15) / scale) + min_x;
-//            itemToDrag.y = max_y - ((evt.getY() - 20) / scale);
-            double xdiff = itemToDrag.x - orig_x;
-            double ydiff = itemToDrag.y - orig_y;
-//            if (Math.abs(xdiff) > 100 || Math.abs(ydiff) > 100) {
-//                println("big drag jump");
-//                this.draggedItem = null;
-//                return;
-//            }
-            last_drag_max_x = max_x;
-            last_drag_min_x = min_x;
-            last_drag_max_y = max_y;
-            last_drag_min_y = min_y;
-            last_drag_scale = scale;
-
-            List<PhysicalItem> includedItemsToDrag = this.draggedItemsList;
-            if (null != includedItemsToDrag) {
-                for (PhysicalItem item : includedItemsToDrag) {
-                    item.x += xdiff;
-                    item.y += ydiff;
-                }
-            }
-            long t = System.currentTimeMillis();
-            if (t - mouseDraggedUpdateTableTime > 200) {
-                this.updateItemsTable(getItems());
-                mouseDraggedUpdateTableTime = System.currentTimeMillis();
-                object2DJPanel1.checkedRepaint();
-            }
+        if (object2DJPanel1.getDragMode() != Object2DViewDragMode.DO_NOTHING) {
             object2DJPanel1.setMouseDown(true);
+            double scale = object2DJPanel1.getScale(object2DJPanel1.isAutoscale());
+            double min_x = object2DJPanel1.getMinX();
+            double max_x = object2DJPanel1.getMaxX();
+            double min_y = object2DJPanel1.getMinY();
+            double max_y = object2DJPanel1.getMaxY();
+            PhysicalItem itemToDrag = this.draggedItem;
+            mouseDragTime = System.currentTimeMillis();
+            if (null != itemToDrag) {
+                double orig_x = itemToDrag.x;
+                double orig_y = itemToDrag.y;
+                Point2D.Double worldPoint = object2DJPanel1.screenToWorldPoint(evt.getX(), evt.getY(), object2DJPanel1.isAutoscale());
+                itemToDrag.x = worldPoint.x;
+                itemToDrag.y = worldPoint.y;
+
+                double xdiff = itemToDrag.x - orig_x;
+                double ydiff = itemToDrag.y - orig_y;
+
+                last_drag_max_x = max_x;
+                last_drag_min_x = min_x;
+                last_drag_max_y = max_y;
+                last_drag_min_y = min_y;
+                last_drag_scale = scale;
+
+                List<PhysicalItem> includedItemsToDrag = this.draggedItemsList;
+                if (null != includedItemsToDrag) {
+                    for (PhysicalItem item : includedItemsToDrag) {
+                        item.x += xdiff;
+                        item.y += ydiff;
+                    }
+                }
+                long t = System.currentTimeMillis();
+                if (t - mouseDraggedUpdateTableTime > 200) {
+                    this.updateItemsTable(getItems());
+                    mouseDraggedUpdateTableTime = System.currentTimeMillis();
+                    object2DJPanel1.checkedRepaint();
+                }
+                object2DJPanel1.setMouseDown(true);
+            }
+            object2DJPanel1.setMousePoint(evt.getPoint());
+        } else {
+            draggedItem = null;
+            draggedItemsList = null;
         }
-        object2DJPanel1.setMousePoint(evt.getPoint());
     }//GEN-LAST:event_object2DJPanel1MouseDragged
 
     private volatile @Nullable
     PhysicalItem draggedItem = null;
+
+    private volatile @Nullable
+    PM_CARTESIAN draggedItemStartingPoint = null;
 
     private volatile @Nullable
     List<PhysicalItem> draggedItemsList = null;
@@ -3394,6 +3395,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         draggedItem = closestItem;
+        draggedItemStartingPoint = new PM_CARTESIAN(closestItem.x, closestItem.y, closestItem.z);
         object2DJPanel1.setMouseDown(true);
 
     }//GEN-LAST:event_object2DJPanel1MousePressed
@@ -3447,18 +3449,44 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setMouseDown(false);
         draggedItemsList = null;
         if (null != draggedItem) {
-            draggedItem = null;
-            List<PhysicalItem> itemsList = getItems();
-            this.updateItemsTable(itemsList);
-            if (!setItemsListeners.isEmpty()) {
-                if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
-                    notifySetItemsListeners(itemsList);
-                } else {
-                    notifySetItemsListeners(getOutputItems());
-                }
-            }
-            if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
-                object2DJPanel1.setItems(itemsList);
+            switch (object2DJPanel1.getDragMode()) {
+                case SIMULATED_MOVE:
+                    draggedItem = null;
+                    List<PhysicalItem> itemsList = getItems();
+                    this.updateItemsTable(itemsList);
+                    if (!setItemsListeners.isEmpty()) {
+                        if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
+                            notifySetItemsListeners(itemsList);
+                        } else {
+                            notifySetItemsListeners(getOutputItems());
+                        }
+                    }
+                    if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
+                        object2DJPanel1.setItems(itemsList);
+                    }
+                    break;
+
+                case COMMAND_MOVE:
+                    List<Action> actions = new ArrayList<>();
+//                    aprsSystem.immediateAbort()
+//                            .thenRun(() -> {
+//                                 aprsSystem.clearErrors();
+//                            })
+//                            .thenCompose(() -> aprsSystem.reset())
+//                            .thenCompose(() -> aprsSystem.startLookForParts())
+//        aprsSystem.reset();
+//        aprsSystem.resume();
+//        startLookForParts();
+                            
+       
+                    actions.add(Action.newTakePartByTypeAndPostion(draggedItem.getName(), draggedItemStartingPoint.x, draggedItemStartingPoint.y));
+                    
+                    aprsSystem.startActionsList("inteactive move part", actions, false);
+                    break;
+
+                case DO_NOTHING:
+                    break;
+
             }
         }
         draggedItem = null;
@@ -4269,6 +4297,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextFieldReadTimeoutActionPerformed
 
+    private void dragModeComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dragModeComboBoxActionPerformed
+        object2DJPanel1.setDragMode(dragModeComboBox.getSelectedItem());
+    }//GEN-LAST:event_dragModeComboBoxActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -4409,6 +4441,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private aprs.simview.DragModeComboBox dragModeComboBox;
     private javax.swing.JButton jButtonAdd;
     private javax.swing.JButton jButtonCurrent;
     private javax.swing.JButton jButtonDelete;
@@ -4461,6 +4494,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;

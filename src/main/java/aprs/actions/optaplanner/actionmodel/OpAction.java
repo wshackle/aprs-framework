@@ -68,6 +68,8 @@ public class OpAction implements OpActionInterface {
         switch (at) {
             case TAKE_PART:
                 return PICKUP;
+            case TAKE_PART_BY_TYPE_AND_POSITION:
+                return PICKUP;
             case PLACE_PART:
                 return DROPOFF;
             case FAKE_TAKE_PART:
@@ -225,7 +227,7 @@ public class OpAction implements OpActionInterface {
                 && null != allowedPartTypes
                 && !allowedPartTypes.isEmpty()
                 && !allowedPartTypes.contains(partType1)) {
-            throw new RuntimeException("partType=" + partType1);
+            throw new RuntimeException("partType=" + partType1+",allowedPartType="+allowedPartTypes);
         }
     }
 

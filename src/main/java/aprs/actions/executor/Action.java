@@ -25,9 +25,9 @@ package aprs.actions.executor;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
+import static aprs.actions.executor.ActionType.TAKE_PART_BY_TYPE_AND_POSITION;
 import static aprs.actions.executor.ActionType.UNINITIALIZED;
 import static aprs.actions.optaplanner.actionmodel.OpAction.allowedPartTypes;
-import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -52,6 +52,13 @@ public class Action {
                 .build();
     }
 
+    public static Action newTakePartByTypeAndPostion(String part,double x, double y) {
+        return new Action.ActionBuilder()
+                .type(TAKE_PART_BY_TYPE_AND_POSITION)
+                .args(new String[]{part,Double.toString(x),Double.toString(y)})
+                .build();
+    }
+    
     public static Action newPlacePartAction(String slotName, @Nullable String partType) {
         ActionBuilder ab1
                 = new Action.ActionBuilder()

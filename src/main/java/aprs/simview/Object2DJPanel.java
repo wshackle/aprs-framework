@@ -50,6 +50,7 @@ import rcs.posemath.PmCartesian;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.PmCartesianMinMaxLimit;
+import static aprs.simview.Object2DViewDragMode.DO_NOTHING;
 import java.awt.image.ImageObserver;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,6 +76,26 @@ public class Object2DJPanel extends JPanel {
     @UIEffect
     public Object2DJPanel() {
 
+    }
+
+    private Object2DViewDragMode dragMode = DO_NOTHING;
+
+    /**
+     * Get the value of dragMode
+     *
+     * @return the value of dragMode
+     */
+    public Object2DViewDragMode getDragMode() {
+        return dragMode;
+    }
+
+    /**
+     * Set the value of dragMode
+     *
+     * @param dragMode new value of dragMode
+     */
+    public void setDragMode(Object2DViewDragMode dragMode) {
+        this.dragMode = dragMode;
     }
 
     private double senseMinX = Double.NaN;
@@ -2485,9 +2506,9 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    @SuppressWarnings({"nullness","guieffect"})
+    @SuppressWarnings({"nullness", "guieffect"})
     private static void g2dDrawImageNoTransformNoObserver(Graphics2D g2d, Image img) {
-        g2d.drawImage(img, (AffineTransform)null, (ImageObserver) null);
+        g2d.drawImage(img, (AffineTransform) null, (ImageObserver) null);
     }
 
     @SuppressWarnings("guieffect")

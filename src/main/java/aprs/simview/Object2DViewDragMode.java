@@ -20,34 +20,14 @@
  *  See http://www.copyright.gov/title17/92chap1.html#105
  * 
  */
-package aprs.actions.executor;
+package aprs.simview;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public enum ActionType {
-    UNINITIALIZED,
-    INVALID_ACTION_TYPE,
-    TAKE_PART,
-    FAKE_TAKE_PART,
-    TEST_PART_POSITION,
-    PLACE_PART,
-    LOOK_FOR_PARTS,
-    GOTO_TOOL_CHANGER_APPROACH,
-    GOTO_TOOL_CHANGER_POSE,
-    DROP_TOOL_BY_HOLDER,
-    DROP_TOOL_ANY,
-    PICKUP_TOOL_BY_HOLDER,
-    PICKUP_TOOL_BY_TOOL,
-    SWITCH_TOOL,
-    PAUSE,
-    INSPECT_KIT,
-    CLEAR_KITS_TO_CHECK,
-    ADD_KIT_TO_CHECK,
-    CHECK_KITS,
-    SET_CORRECTION_MODE,
-    TAKE_PART_BY_TYPE_AND_POSITION,
-    END_PROGRAM;
-
+public enum Object2DViewDragMode {
+    DO_NOTHING,
+    SIMULATED_MOVE,
+    COMMAND_MOVE;
 }

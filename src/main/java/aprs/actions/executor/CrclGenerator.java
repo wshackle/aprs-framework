@@ -84,6 +84,7 @@ import crcl.base.SetRotSpeedType;
 import crcl.base.SetTransSpeedType;
 import crcl.base.TransSpeedAbsoluteType;
 import crcl.base.VectorType;
+import crcl.ui.ConcurrentBlockProgramsException;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
@@ -106,6 +107,7 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
 import static crcl.utils.CRCLCopier.copy;
 import static crcl.utils.CRCLPosemath.point;
+import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
 
 import java.io.File;
@@ -221,7 +223,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         }
         if (partName.startsWith("part_")) {
-            partName = partName.substring(5);
+            partName = partName.substring("part_".length());
+        }
+        if (partName.startsWith("sku_")) {
+            partName = partName.substring("sku_".length());
+        }
+        if (partName.startsWith("part_")) {
+            partName = partName.substring("part_".length());
         }
         int in_index = partName.indexOf("_in_");
         if (in_index > 0) {
@@ -328,7 +336,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 skippedOpActionsList,
                 skippedPddlActionsList,
                 getLookForXYZ(),
-                takePartArgIndex,
                 skipMissingParts);
     }
 
@@ -357,7 +364,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             @Nullable List<OpAction> skippedOpActionsList,
             @Nullable List<Action> skippedPddlActionsList,
             @Nullable PointType lookForPt,
-            int takePartArgIndex,
             boolean skipMissingParts) throws SQLException {
         List<OpAction> ret = new ArrayList<>();
         boolean moveOccurred = false;
@@ -403,6 +409,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         takePartOpAction = new OpAction(pa.getType(), pa.getArgs(), partPt.getX(), partPt.getY(), posNameToType(partName), inKitTrayByName(partName));
                         takePartPddlAction = pa;
                     }
+                    break;
+
+                case TAKE_PART_BY_TYPE_AND_POSITION:
+                    if (!moveOccurred) {
+                        if (null != endl && endl.length > 0) {
+                            endl[0] = i;
+                        }
+                        moveOccurred = true;
+                    }
+                    String partBtapName = pa.getArgs()[takePartArgIndex];
+                    String xargString = pa.getArgs()[takePartArgIndex + 1];
+                    String yargString = pa.getArgs()[takePartArgIndex + 2];
+
+                    PoseType partBtapPose = getClosestPose(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
+                    if (null == partBtapPose) {
+                        throw new IllegalStateException("pose for " + partBtapName + " is null");
+                    }
+                    PointType partPt = partBtapPose.getPoint();
+                    if (null == partPt) {
+                        throw new IllegalStateException("pose for " + partBtapName + " has null point property");
+                    }
+                    takePartOpAction = new OpAction(pa.getType(), pa.getArgs(), partPt.getX(), partPt.getY(), posNameToType(partBtapName), inKitTrayByName(partBtapName));
+                    takePartPddlAction = pa;
                     break;
 
                 case PLACE_PART:
@@ -501,6 +530,60 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     KitInspectionJInternalFrame kitInspectionJInternalFrame = null;
 
     private volatile boolean pauseInsteadOfRecover;
+
+    public @Nullable
+    PhysicalItem getClosestItem(String name, double x, double y) {
+        PhysicalItem closestItem = null;
+        double closestDist = Double.POSITIVE_INFINITY;
+        for (Entry<String, PhysicalItem> entry : itemCache.entrySet()) {
+            PhysicalItem item = entry.getValue();
+            if (null != item && item.getName().contains(name)) {
+                double dist = Math.hypot((item.x - x), (item.y - y));
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestItem = item;
+                }
+            }
+        }
+        return closestItem;
+    }
+
+    public @Nullable
+    PoseType getClosestPose(String name, double x, double y) {
+        PoseType closestPose = null;
+        double closestDist = Double.POSITIVE_INFINITY;
+        if (name.startsWith("sku_part_")) {
+            name = name.substring("sku_part_".length());
+        }
+        if (name.startsWith("part_")) {
+            name = name.substring("part_".length());
+        }
+        if (name.startsWith("sku_")) {
+            name = name.substring("sku_".length());
+        }
+
+        for (Entry<String, PoseType> entry : poseCache.entrySet()) {
+            PoseType pose = entry.getValue();
+            String key = entry.getKey();
+            if (null != pose) {
+                final PointType point = pose.getPoint();
+                if (null != point && key.contains(name)) {
+                    double dist = Math.hypot((point.getX() - x), (point.getY() - y));
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestPose = pose;
+                    }
+                }
+            }
+        }
+        if (null == closestPose) {
+            throw new RuntimeException("no match for name=\"" + name + "\" in " + poseCache.keySet());
+        }
+        if (closestDist > 15.0) {
+            return pose(point(x, y, closestPose.getPoint().getZ()), closestPose.getXAxis(), closestPose.getZAxis());
+        }
+        return closestPose;
+    }
 
     /**
      * Get the value of pauseInsteadOfRecover
@@ -1245,7 +1328,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logError("genThreadSetTrace = " + Arrays.toString(genThreadSetTrace));
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
-        List<MiddleCommandType> cmds = generate(gparams);
+        List<MiddleCommandType> cmds = privateGenerate(gparams);
         this.lastProgramAborted = false;
         return cmds;
     }
@@ -1412,16 +1495,30 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @throws java.util.concurrent.ExecutionException exception occurred in
      * another thread servicing the waitForCompleteVisionUpdates
      */
-    private synchronized List<MiddleCommandType> generate(GenerateParams gparams)
+    private synchronized List<MiddleCommandType> privateGenerate(GenerateParams gparams)
             throws Exception {
+
+        final List<PhysicalItem> physicalItemsFinal = this.physicalItems;
+        if (null != solver && gparams.replan && null != physicalItemsFinal) {
+            return runOptaPlanner(gparams.actions,
+                    gparams.startingIndex, gparams.options,
+                    gparams.startSafeAbortRequestCount,
+                    physicalItemsFinal);
+        }
+        return privateGenerateNoReplan(gparams, physicalItemsFinal);
+    }
+
+    private List<MiddleCommandType> privateGenerateNoReplan(GenerateParams gparams, final List<PhysicalItem> physicalItemsFinal) throws ConcurrentBlockProgramsException, RuntimeException, IllegalStateException, IllegalArgumentException {
         final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
             throw new RuntimeException("null == gparams.options");
         }
+        final int startingIndex = gparams.startingIndex;
         final List<Action> gParamsActions = gparams.actions;
         if (null == gParamsActions) {
             throw new RuntimeException("null == gparams.actions");
         }
+
         AprsSystem localAprsSystem = this.aprsSystem;
         if (null == localAprsSystem) {
             throw new IllegalStateException("aprsJframe is null");
@@ -1434,38 +1531,31 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         int blockingCount = localAprsSystem.startBlockingCrclPrograms();
         List<MiddleCommandType> cmds = new ArrayList<>();
-        final int startingIndex = gparams.startingIndex;
+
         Action startingAction = gParamsActions.get(startingIndex);
-        final List<PhysicalItem> physicalItemsFinal = this.physicalItems;
+
         try {
             localAprsSystem.logEvent("CrclGenerator.generate: gparams", gparams);
             final int gparamsActionsSize = gParamsActions.size();
 
-            if (null != solver && gparams.replan && null != physicalItemsFinal) {
-                return runOptaPlanner(gParamsActions,
-                        startingIndex, gparamsOptionsLocalCopy,
-                        gparams.startSafeAbortRequestCount,
-                        physicalItemsFinal);
+            String sublistString;
+            if (!gParamsActions.isEmpty()
+                    && startingIndex < gparamsActionsSize) {
+                println("startingIndex = " + startingIndex);
+                println("gparamsActionsSize = " + gparamsActionsSize);
+                final List<Action> subList = gParamsActions.subList(startingIndex, gparamsActionsSize);
+                sublistString = "gparams.actions.subList(gparams.startingIndex, gparams.actions.size())=" + subList;
             } else {
-                String sublistString;
-                if (!gParamsActions.isEmpty()
-                        && startingIndex < gparamsActionsSize) {
-                    println("startingIndex = " + startingIndex);
-                    println("gparamsActionsSize = " + gparamsActionsSize);
-                    final List<Action> subList = gParamsActions.subList(startingIndex, gparamsActionsSize);
-                    sublistString = "gparams.actions.subList(gparams.startingIndex, gparams.actions.size())=" + subList;
-                } else {
-                    sublistString = "";
-                }
-                String messageString = "\n"
-                        + "gparams.startingIndex=" + startingIndex + "\n"
-                        + "gparams.replan=" + gparams.replan + "\n"
-                        + "gparams.actions.size()=" + gparamsActionsSize + "\n"
-                        + "gparams.actions=" + gParamsActions + "\n"
-                        + sublistString
-                        + "\n";
-                addMessageCommand(cmds, messageString);
+                sublistString = "";
             }
+            String messageString = "\n"
+                    + "gparams.startingIndex=" + startingIndex + "\n"
+                    + "gparams.replan=" + gparams.replan + "\n"
+                    + "gparams.actions.size()=" + gparamsActionsSize + "\n"
+                    + "gparams.actions=" + gParamsActions + "\n"
+                    + sublistString
+                    + "\n";
+            addMessageCommand(cmds, messageString);
             this.startSafeAbortRequestCount = gparams.startSafeAbortRequestCount;
             checkDbReady();
             if (localAprsSystem.isRunningCrclProgram()) {
@@ -1583,6 +1673,34 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             }
                             break;
 
+                        case TAKE_PART_BY_TYPE_AND_POSITION:
+                            if (poseCache.isEmpty()) {
+                                System.err.println("physicalItems = " + physicalItemsFinal);
+                                System.err.println("clearPoseCacheTrace = " + Utils.traceToString(clearPoseCacheTrace));
+                                throw new IllegalStateException("TAKE_PART when poseCache is empty");
+                            }
+                            String partBtapName = action.getArgs()[takePartArgIndex];
+                            String xargString = action.getArgs()[takePartArgIndex + 1];
+                            String yargString = action.getArgs()[takePartArgIndex + 2];
+
+                            PoseType partBtapPose = getClosestPose(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
+                            if (null == partBtapPose) {
+                                throw new IllegalStateException("pose for " + partBtapName + " is null");
+                            }
+                            if (partBtapPose == null) {
+                                skippedParts.add(partBtapName);
+                                recordSkipTakePart(partBtapName, partBtapPose);
+                                if (skipStartIndex < 0) {
+                                    skipStartIndex = idx;
+                                }
+                                needSkip = true;
+                            } else {
+                                foundParts.add(partBtapName);
+                                skipStartIndex = -1;
+                                needSkip = false;
+                            }
+                            break;
+
                         case PLACE_PART:
                             if (poseCache.isEmpty()) {
                                 LOGGER.log(Level.WARNING, "newItems.isEmpty() on place-part for run {0}", getRunName());
@@ -1622,6 +1740,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             LOGGER.log(Level.WARNING, "newItems.isEmpty() on take-part for run {0}", getRunName());
                         }
                         takePart(action, cmds, getNextPlacePartAction(idx, gParamsActions));
+                        break;
+
+                    case TAKE_PART_BY_TYPE_AND_POSITION:
+                        newTakePlaceList.add(action);
+                        if (poseCache.isEmpty()) {
+                            LOGGER.log(Level.WARNING, "newItems.isEmpty() on take-part for run {0}", getRunName());
+                        }
+                        String partBtapName = action.getArgs()[takePartArgIndex];
+                        String xargString = action.getArgs()[takePartArgIndex + 1];
+                        String yargString = action.getArgs()[takePartArgIndex + 2];
+                        PoseType partBtapPose = getClosestPose(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
+                        takePartByPose(cmds, partBtapPose, partBtapName);
                         break;
 
                     case FAKE_TAKE_PART:
@@ -2066,6 +2196,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         switch (action.getType()) {
             case PLACE_PART:
             case TAKE_PART:
+            case TAKE_PART_BY_TYPE_AND_POSITION:
             case FAKE_TAKE_PART:
             case TEST_PART_POSITION:
                 return true;
@@ -2104,7 +2235,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 || (lfpIndex >= 0 && mIndex > lfpIndex)) {
             gparams.replan = false;
             gparams.runOptoToGenerateReturn = new RunOptoToGenerateReturn();
-            List<MiddleCommandType> l = generate(gparams);
+            List<MiddleCommandType> l = privateGenerateNoReplan(gparams,physicalItemsLocal);
             if (!l.isEmpty()
                     || null == gparams.runOptoToGenerateReturn
                     || gparams.runOptoToGenerateReturn.newIndex <= startingIndex) {
@@ -2137,7 +2268,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         if (fullReplanPddlActions == actions) {
             gparams.replan = false;
-            return generate(gparams);
+            return privateGenerateNoReplan(gparams,physicalItemsLocal);
         }
         List<Action> copyFullReplanPddlActions = new ArrayList<>(fullReplanPddlActions);
         synchronized (actions) {
@@ -2164,7 +2295,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 + "copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size())=" + copyFullReplanPddlActions.subList(gparams.startingIndex, origActions.size()) + "\n";
         logDebug(messageString);
 
-        List<MiddleCommandType> newCmds = generate(gparams);
+        List<MiddleCommandType> newCmds = privateGenerateNoReplan(gparams,physicalItemsLocal);
         addMessageCommand(newCmds, messageString);
         if (debug) {
             showCmdList(newCmds);
@@ -5610,7 +5741,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         String takePartArgIndexString = optionsMap.get("takePartArgIndex");
         if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
-            this.takePartArgIndex = Integer.parseInt(takePartArgIndexString);
+            int newTakePartArgIndex = Integer.parseInt(takePartArgIndexString);
+            this.setTakePartArgIndex(newTakePartArgIndex);
         }
         String placePartSlotArgIndexString = optionsMap.get("placePartSlotArgIndex");
         if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
@@ -6221,7 +6353,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkJointToleranceSetting(out);
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
-        List<ActuateJointType>  newActuateJointsList = new ArrayList<>();
+        List<ActuateJointType> newActuateJointsList = new ArrayList<>();
         for (int i = 0; i < jointVals.length; i++) {
             ActuateJointType aj = new ActuateJointType();
             JointSpeedAccelType jsa = new JointSpeedAccelType();
@@ -6316,8 +6448,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             String jointPosStrings[] = lookForJointsString.split("[,]+");
             for (int i = 0; i < jointPosStrings.length; i++) {
                 final int number = i + 1;
-                JointStatusType js 
-                        = StreamSupport.stream(jointStatusIterable.spliterator(),false)
+                JointStatusType js
+                        = StreamSupport.stream(jointStatusIterable.spliterator(), false)
                                 .filter(x -> x.getJointNumber() == number)
                                 .findFirst()
                                 .orElse(null);
@@ -6325,8 +6457,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     return false;
                 }
                 double jpos = Double.parseDouble(jointPosStrings[i]);
-                double statusJpos = Objects.requireNonNull(js.getJointPosition(),"js.getJointPosition()").doubleValue();
-                if (Math.abs(jpos - statusJpos)  > 2.0) {
+                double statusJpos = Objects.requireNonNull(js.getJointPosition(), "js.getJointPosition()").doubleValue();
+                if (Math.abs(jpos - statusJpos) > 2.0) {
                     return false;
                 }
             }
