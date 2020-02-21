@@ -111,6 +111,8 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Objects.requireNonNull;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import org.checkerframework.checker.guieffect.qual.UI;
 import rcs.posemath.PM_CARTESIAN;
 
@@ -3450,7 +3452,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         draggedItemsList = null;
         if (null != draggedItem) {
             switch (object2DJPanel1.getDragMode()) {
-                case SIMULATED_MOVE:
+                case SIMULATED_MOVE: {
                     draggedItem = null;
                     List<PhysicalItem> itemsList = getItems();
                     this.updateItemsTable(itemsList);
@@ -3464,9 +3466,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
                         object2DJPanel1.setItems(itemsList);
                     }
-                    break;
+                }
+                break;
 
-                case COMMAND_MOVE:
+                case COMMAND_MOVE: {
                     List<Action> actions = new ArrayList<>();
 //                    aprsSystem.immediateAbort()
 //                            .thenRun(() -> {
@@ -3477,12 +3480,28 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        aprsSystem.reset();
 //        aprsSystem.resume();
 //        startLookForParts();
-                            
-       
+                    actions.add(Action.newDisableOptimization());
                     actions.add(Action.newTakePartByTypeAndPostion(draggedItem.getName(), draggedItemStartingPoint.x, draggedItemStartingPoint.y));
-                    
+                    actions.add(Action.newPlacePartByPosition( draggedItem.x, draggedItem.y,draggedItem.getName()));
+                    actions.add(Action.newLookForParts(0));
                     aprsSystem.startActionsList("inteactive move part", actions, false);
-                    break;
+                    draggedItem.x = draggedItemStartingPoint.x;
+                    draggedItem.y = draggedItemStartingPoint.y;
+                    List<PhysicalItem> itemsList = getItems();
+                    this.updateItemsTable(itemsList);
+                    if (!setItemsListeners.isEmpty()) {
+                        if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
+                            notifySetItemsListeners(itemsList);
+                        } else {
+                            notifySetItemsListeners(getOutputItems());
+                        }
+                    }
+                    if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
+                        object2DJPanel1.setItems(itemsList);
+                    }
+                    draggedItem = null;
+                }
+                break;
 
                 case DO_NOTHING:
                     break;

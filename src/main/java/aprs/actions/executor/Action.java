@@ -22,6 +22,7 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.ActionType.DISABLE_OPTIMIZATION;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
@@ -52,6 +53,13 @@ public class Action {
                 .build();
     }
 
+    public static Action newDisableOptimization() {
+        return new Action.ActionBuilder()
+                .type(DISABLE_OPTIMIZATION)
+                .args(new String[]{})
+                .build();
+    }
+    
     public static Action newTakePartByTypeAndPostion(String part,double x, double y) {
         return new Action.ActionBuilder()
                 .type(TAKE_PART_BY_TYPE_AND_POSITION)
@@ -70,6 +78,19 @@ public class Action {
         return ab1
                 .build();
     }
+    
+    public static Action newPlacePartByPosition(double x, double y, @Nullable String partName) {
+        ActionBuilder ab1
+                = new Action.ActionBuilder()
+                        .type(ActionType.PLACE_PART_BY_POSITION)
+                        .args(new String[]{Double.toString(x),Double.toString(y)});
+        if (null != partName) {
+            ab1 = ab1.partType(CrclGenerator.partNameToPartType(partName));
+        }
+        return ab1
+                .build();
+    }
+    
 
     public static Action newSingleArgAction(ActionType type, Object arg) {
         return new Action.ActionBuilder()
