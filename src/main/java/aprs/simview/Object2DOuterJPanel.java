@@ -3393,11 +3393,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 println("Hold SHIFT to move trays : closestItem=" + closestItem.getFullName());
                 draggedItem = null;
                 this.draggedItemsList = null;
+                draggedItemStartingPoint = null;
                 return;
             }
+            draggedItem = closestItem;
+            draggedItemStartingPoint = new PM_CARTESIAN(closestItem.x, closestItem.y, closestItem.z);
+        } else {
+            draggedItem = null;
+            draggedItemStartingPoint = null;
         }
-        draggedItem = closestItem;
-        draggedItemStartingPoint = new PM_CARTESIAN(closestItem.x, closestItem.y, closestItem.z);
+
         object2DJPanel1.setMouseDown(true);
 
     }//GEN-LAST:event_object2DJPanel1MousePressed
@@ -3482,7 +3487,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        startLookForParts();
                     actions.add(Action.newDisableOptimization());
                     actions.add(Action.newTakePartByTypeAndPostion(draggedItem.getName(), draggedItemStartingPoint.x, draggedItemStartingPoint.y));
-                    actions.add(Action.newPlacePartByPosition( draggedItem.x, draggedItem.y,draggedItem.getName()));
+                    actions.add(Action.newPlacePartByPosition(draggedItem.x, draggedItem.y, draggedItem.getName()));
                     actions.add(Action.newLookForParts(0));
                     aprsSystem.startActionsList("inteactive move part", actions, false);
                     draggedItem.x = draggedItemStartingPoint.x;
@@ -5457,6 +5462,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 return XFutureVoid.completedFuture();
             }
             long now = System.currentTimeMillis();
+            if(object2DJPanel1.isMouseDown()) {
+                lastVisionUpdateTime=now;
+                return XFutureVoid.completedFuture();
+            }
             if (recordLines) {
                 int lc = lineCount.incrementAndGet();
                 final PrintWriter origLineCsvWriter = lineCsvWriter;
@@ -5502,6 +5511,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
+            
             setItems(l);
             return runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
         } catch (Exception ex) {
@@ -6022,6 +6032,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             boolean isHoldingObjectExpected,
             long statRecievTime) {
         try {
+            if(object2DJPanel1.isMouseDown()) {
+                return;
+            }
             if (null != objectPanelToClone) {
                 throw new NullPointerException("cloning");
             }

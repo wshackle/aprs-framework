@@ -543,15 +543,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String partBtapName = pa.getArgs()[takePartArgIndex];
         String xargString = pa.getArgs()[takePartArgIndex + 1];
         String yargString = pa.getArgs()[takePartArgIndex + 2];
-        PoseType partBtapPose = getClosestPose(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
-        if (null == partBtapPose) {
-            throw new IllegalStateException("pose for " + partBtapName + " is null");
+        final double x = Double.parseDouble(xargString);
+        final double y = Double.parseDouble(yargString);
+        PointType partBtapPt = getClosestPoint(partBtapName, x, y);
+        if (null == partBtapPt) {
+            throw new IllegalStateException("point for " + partBtapName + " is null");
         }
-        PointType partPt = partBtapPose.getPoint();
-        if (null == partPt) {
-            throw new IllegalStateException("pose for " + partBtapName + " has null point property");
-        }
-        takePartOpAction = new OpAction(pa.getType(), pa.getArgs(), partPt.getX(), partPt.getY(), posNameToType(partBtapName), true);
+        takePartOpAction = new OpAction(pa.getType(), pa.getArgs(), partBtapPt.getX(), partBtapPt.getY(), posNameToType(partBtapName), true);
         return takePartOpAction;
     }
 
@@ -661,7 +659,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     public @Nullable
-    PoseType getClosestPose(String name, double x, double y) {
+    PointType getClosestPoint(String name, double x, double y) {
         PoseType closestPose = null;
         double closestDist = Double.POSITIVE_INFINITY;
         if (name.startsWith("sku_part_")) {
@@ -691,10 +689,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == closestPose) {
             throw new RuntimeException("no match for name=\"" + name + "\" in " + poseCache.keySet());
         }
-        if (closestDist > 15.0) {
-            return pose(point(x, y, closestPose.getPoint().getZ()), closestPose.getXAxis(), closestPose.getZAxis());
+        if (closestDist > 50.0) {
+            return point(x, y, closestPose.getPoint().getZ());
         }
-        return closestPose;
+        return closestPose.getPoint();
     }
 
     /**
@@ -1623,7 +1621,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != solver
                 && !disableOptimization
                 && gparams.replan
-                && null != physicalItemsFinal) {
+                && null != physicalItemsFinal
+                && gparams.actions.size() > gparams.startingIndex+1) {
             return runOptaPlanner(gparams.actions,
                     gparams.startingIndex, gparams.options,
                     gparams.startSafeAbortRequestCount,
@@ -1807,17 +1806,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             String xargString = action.getArgs()[takePartArgIndex + 1];
                             String yargString = action.getArgs()[takePartArgIndex + 2];
 
-                            PoseType partBtapPose = getClosestPose(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
-                            if (null == partBtapPose) {
-                                throw new IllegalStateException("pose for " + partBtapName + " is null");
-                            }
-                            if (partBtapPose == null) {
-                                skippedParts.add(partBtapName);
-                                recordSkipTakePart(partBtapName, partBtapPose);
-                                if (skipStartIndex < 0) {
-                                    skipStartIndex = idx;
-                                }
-                                needSkip = true;
+                            PointType partBtapPoint = getClosestPoint(partBtapName, Double.parseDouble(xargString), Double.parseDouble(yargString));
+                            if (null == partBtapPoint) {
+                                throw new IllegalStateException("point for " + partBtapName + " is null");
                             } else {
                                 foundParts.add(partBtapName);
                                 skipStartIndex = -1;
@@ -1876,14 +1867,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         String yargString = action.getArgs()[takePartArgIndex + 2];
                         final double x = Double.parseDouble(xargString);
                         final double y = Double.parseDouble(yargString);
-                        PoseType partBtapPose = getClosestPose(partBtapName, x, y);
+                        PointType partBtapPoint = getClosestPoint(partBtapName, x, y);
                         final PhysicalItem closestItem = getClosestItem(partBtapName, x, y);
                         if (null != closestItem) {
                             lastTakenPart = closestItem.getFullName();
                         } else {
                             lastTakenPart = partBtapName;
                         }
-                        takePartByPose(cmds, partBtapPose, partBtapName);
+                        takePartByPose(cmds, visionToRobotPose(pose(partBtapPoint,xAxis,zAxis)), partBtapName);
                     }
                     break;
 
