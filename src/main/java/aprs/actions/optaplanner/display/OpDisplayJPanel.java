@@ -120,7 +120,8 @@ public class OpDisplayJPanel extends JPanel {
     private volatile @Nullable
     Point mouseDownPoint = null;
 
-    private final ConcurrentLinkedDeque<Runnable> actionsModifiedListeners = new ConcurrentLinkedDeque();
+    private final ConcurrentLinkedDeque<Runnable> actionsModifiedListeners
+            = new ConcurrentLinkedDeque<>();
 
     private void notifyActionsModifiedListeners() {
         for (Runnable r : actionsModifiedListeners) {

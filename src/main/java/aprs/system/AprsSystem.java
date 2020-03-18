@@ -192,8 +192,6 @@ public class AprsSystem implements SlotOffsetProvider {
             headlessEmptyInit();
         }
     }
-    
-    
 
     public XFuture<Boolean> gotoPose(PoseType pose) {
         if (null == executorJInternalFrame1) {
@@ -608,6 +606,8 @@ public class AprsSystem implements SlotOffsetProvider {
         this.executorJInternalFrame1.reloadErrorMaps();
     }
 
+    private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable [] = null;
+
     public XFutureVoid restoreOrigRobotInfo() {
         String origRobotName1 = this.getOrigRobotName();
         if (null == origRobotName1 || origRobotName1.length() < 1) {
@@ -622,6 +622,7 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("origCrclRobotPort1=" + origCrclRobotPort1);
         }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        this.restorOrigRobotInfoTrace = trace;
         XFutureVoid immediateAbortFuture
                 = this.immediateAbort();
         boolean wasConnected0 = isConnected();
@@ -665,7 +666,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         })
                 .thenRunAsync(
                         "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
-                        () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0),
+                        () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0,trace),
                         runProgramService);
     }
 
@@ -1955,6 +1956,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return connectRobot(robotNameFinal, robotCrclHostFinal, getRobotCrclPort());
     }
 
+    private volatile StackTraceElement connectRobotTrace @Nullable[] = null;
+
     /**
      * Connect to a given robot with a CRCL server running on the given host and
      * TCP port.
@@ -1965,6 +1968,8 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return future providing info on when complete
      */
     public XFutureVoid connectRobot(String robotNameArg, String hostArg, int portArg) {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        this.connectRobotTrace = trace;
         maybeSetOrigRobotName(robotNameArg);
         maybeSetOrigCrclRobotHost(hostArg);
         maybeSetOrigCrclRobotPort(portArg);
@@ -1982,6 +1987,7 @@ public class AprsSystem implements SlotOffsetProvider {
             updateConnectedRobotDisplay(wasConnected0, robotNameArg, hostArg, portArg);
             return XFutureVoid.completedFuture();
         } else if (wasConnected0) {
+            System.out.println("wasConnected0 = " + wasConnected0);
             if (wasPaused0) {
                 System.out.println("wasPaused0 = " + wasPaused0);
             }
@@ -2000,7 +2006,7 @@ public class AprsSystem implements SlotOffsetProvider {
         logEvent("connectRobot", robotNameArg + " -> " + hostArg + ":" + portArg);
         enableCheckedAlready = false;
         return waitForPause().
-                thenRunAsync(() -> connectRobotPrivate(robotNameArg, hostArg, portArg, wasConnected0), runProgramService)
+                thenRunAsync(() -> connectRobotPrivate(robotNameArg, hostArg, portArg, wasConnected0, trace), runProgramService)
                 .alwaysRun(() -> logEvent("finished connectRobot", robotNameArg + " -> " + hostArg + ":" + portArg));
     }
 
@@ -2020,7 +2026,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private void connectRobotPrivate(String robotName, String host, int port, boolean wasConnected0) {
+    private void connectRobotPrivate(String robotName, String host, int port, boolean wasConnected0, StackTraceElement trace[]) {
         setThreadName();
         enableCheckedAlready = false;
         if (this.closing) {
@@ -2039,7 +2045,12 @@ public class AprsSystem implements SlotOffsetProvider {
             maybeSetOrigCrclRobotPort(port);
             updateConnectedRobotDisplay(isConnected(), robotName, host, port);
         } catch (Exception e) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "robotName=" + robotName + ",host=" + host + ",port=" + port + ",oldRobotName=" + oldRobotName + ",oldPort=" + oldPort + ",wasConnected0=" + wasConnected0 + ",wasConnected1=" + wasConnected1, e);
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            final String traceString = "trace = " + CRCLUtils.traceToString(trace);
+            System.err.println(traceString);
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "robotName=" + robotName + ",host=" + host + ",port=" + port + ",oldRobotName=" + oldRobotName + ",oldPort=" + oldPort + ",wasConnected0=" + wasConnected0 + ",wasConnected1=" + wasConnected1 + "," + traceString, e);
             throw new RuntimeException(e);
         }
     }

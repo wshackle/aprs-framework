@@ -1845,13 +1845,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return ret;
     }
 
-    public boolean removeSingleUpdate(XFuture<List<PhysicalItem>> future) {
+    public boolean removeSingleUpdate(XFuture<?> future) {
         synchronized (singleUpdateListeners) {
             boolean removed = singleUpdateListeners.remove(future);
             if (!removed) {
                 for (CompletableFuture<?> cf : future.getAlsoCancel()) {
                     if (cf instanceof XFuture) {
-                        removed = this.removeSingleUpdate((XFuture) cf);
+                        XFuture<?> nextfuture = (XFuture<?>) cf;
+                        removed = this.removeSingleUpdate(nextfuture);
                         if (removed) {
                             return true;
                         }
