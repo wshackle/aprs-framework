@@ -62,12 +62,12 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         this.aprsSystem = aprsSystem1;
         executorJPanel1 = new ExecutorJPanel(aprsSystem,this);
 
-        setIconifiable(true);
-        setMaximizable(true);
-        setResizable(true);
-        setTitle("Executor (CRCL Generator)");
-        add(executorJPanel1);
-        pack();
+        super.setIconifiable(true);
+        super.setMaximizable(true);
+        super.setResizable(true);
+        super.setTitle("Executor (CRCL Generator)");
+        super.add(executorJPanel1);
+        super.pack();
     }
 
     public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
@@ -355,7 +355,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
 
-    private aprs.actions.executor.ExecutorJPanel executorJPanel1;
+    private final aprs.actions.executor.ExecutorJPanel executorJPanel1;
 
     public void loadProperties() throws IOException {
         this.executorJPanel1.loadProperties();

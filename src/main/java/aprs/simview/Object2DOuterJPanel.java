@@ -3455,7 +3455,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void object2DJPanel1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_object2DJPanel1MouseReleased
         object2DJPanel1.setMouseDown(false);
         draggedItemsList = null;
-        if (null != draggedItem) {
+        final PhysicalItem draggedItemLocal = draggedItem;
+        if (null != draggedItemLocal) {
             switch (object2DJPanel1.getDragMode()) {
                 case SIMULATED_MOVE: {
                     draggedItem = null;
@@ -3474,7 +3475,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 break;
 
-                case COMMAND_MOVE: {
+                case COMMAND_MOVE:  {
+                    final PM_CARTESIAN draggedItemStartingPointLocal 
+                            = Objects.requireNonNull(draggedItemStartingPoint,"draggedItemStartingPoint");
                     List<Action> actions = new ArrayList<>();
 //                    aprsSystem.immediateAbort()
 //                            .thenRun(() -> {
@@ -3486,12 +3489,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //        aprsSystem.resume();
 //        startLookForParts();
                     actions.add(Action.newDisableOptimization());
-                    actions.add(Action.newTakePartByTypeAndPostion(draggedItem.getName(), draggedItemStartingPoint.x, draggedItemStartingPoint.y));
-                    actions.add(Action.newPlacePartByPosition(draggedItem.x, draggedItem.y, draggedItem.getName()));
+                    actions.add(Action.newTakePartByTypeAndPostion(draggedItemLocal.getName(), draggedItemStartingPointLocal.x, draggedItemStartingPointLocal.y));
+                    actions.add(Action.newPlacePartByPosition(draggedItemLocal.x, draggedItemLocal.y, draggedItemLocal.getName()));
                     actions.add(Action.newLookForParts(0));
-                    aprsSystem.startActionsList("inteactive move part", actions, false);
-                    draggedItem.x = draggedItemStartingPoint.x;
-                    draggedItem.y = draggedItemStartingPoint.y;
+                    final AprsSystem aprsSystemLocal 
+                            = Objects.requireNonNull(aprsSystem,"aprsSystem");
+                    aprsSystemLocal.startActionsList("inteactive move part", actions, false);
+                    draggedItemLocal.x = draggedItemStartingPointLocal.x;
+                    draggedItemLocal.y = draggedItemStartingPointLocal.y;
                     List<PhysicalItem> itemsList = getItems();
                     this.updateItemsTable(itemsList);
                     if (!setItemsListeners.isEmpty()) {
@@ -3505,8 +3510,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         object2DJPanel1.setItems(itemsList);
                     }
                     draggedItem = null;
+                    draggedItemStartingPoint=null;
                 }
                 break;
+
 
                 case DO_NOTHING:
                     break;
@@ -3514,6 +3521,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         draggedItem = null;
+        draggedItemStartingPoint=null;
         draggedItemsList = null;
         object2DJPanel1.setMouseDown(false);
     }//GEN-LAST:event_object2DJPanel1MouseReleased
@@ -5462,8 +5470,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 return XFutureVoid.completedFuture();
             }
             long now = System.currentTimeMillis();
-            if(object2DJPanel1.isMouseDown()) {
-                lastVisionUpdateTime=now;
+            if (object2DJPanel1.isMouseDown()) {
+                lastVisionUpdateTime = now;
                 return XFutureVoid.completedFuture();
             }
             if (recordLines) {
@@ -5511,7 +5519,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
-            
+
             setItems(l);
             return runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
         } catch (Exception ex) {
@@ -6032,7 +6040,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             boolean isHoldingObjectExpected,
             long statRecievTime) {
         try {
-            if(object2DJPanel1.isMouseDown()) {
+            if (object2DJPanel1.isMouseDown()) {
                 return;
             }
             if (null != objectPanelToClone) {

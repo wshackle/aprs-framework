@@ -420,9 +420,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         }
                         moveOccurred = true;
                     }
-                    final List<OpAction> takePlaceActions
-                            = opActionForTakePlaceToPddlActions(takePartOpAction, takePartPddlAction, skipMissingParts, skippedPddlActionsList, pa, start, i, skippedOpActionsList);
-                    ret.addAll(takePlaceActions);
+                    final List<OpAction> convertedTakePlaceActions
+                            = opActionForTakePlaceToPddlActions(
+                                    takePartOpAction,
+                                    takePartPddlAction,
+                                    skipMissingParts,
+                                    skippedPddlActionsList,
+                                    pa,
+                                    start,
+                                    i,
+                                    skippedOpActionsList);
+                    ret.addAll(convertedTakePlaceActions);
                     takePartPddlAction = null;
                     takePartOpAction = null;
                     break;
@@ -457,37 +465,44 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
-    private List<OpAction> opActionForTakePlaceByPosToPddlActions(OpAction takePartOpAction, Action takePartPddlAction, boolean skipMissingParts1, List<Action> skippedPddlActionsList, Action pa, int start, int i, List<OpAction> skippedOpActionsList) throws RuntimeException {
-        List<OpAction> ret = new ArrayList<>();
-        if (null == takePartOpAction
-                || null == takePartPddlAction) {
-            if (skipMissingParts1) {
-                skippedActions.incrementAndGet();
-                if (null != skippedPddlActionsList) {
-                    skippedPddlActionsList.add(pa);
-                }
-            } else {
-                throw new IllegalStateException("takePart not set :,start=" + start + ",i=" + i + ",pa=" + pa);
-            }
-        } else {
-            String xString = pa.getArgs()[0];
-            String yString = pa.getArgs()[1];
-            double x = Double.parseDouble(xString);
-            double y = Double.parseDouble(yString);
-            final String slotPartType = pa.getPartType();
-            if (null != slotPartType) {
-                if (!allowedPartTypes.contains(slotPartType)) {
-                    throw new RuntimeException("slotPartType=" + slotPartType);
-                }
-            }
-            OpAction placePartOpAction = new OpAction(pa.getType(), pa.getArgs(), x, y, slotPartType, true);
-            ret.add(takePartOpAction);
-            ret.add(placePartOpAction);
-        }
-        return ret;
-    }
-
-    private List<OpAction> opActionForTakePlaceToPddlActions(OpAction takePartOpAction, Action takePartPddlAction, boolean skipMissingParts1, List<Action> skippedPddlActionsList, Action pa, int start, int i, List<OpAction> skippedOpActionsList) throws RuntimeException {
+//    private List<OpAction> opActionForTakePlaceByPosToPddlActions(OpAction takePartOpAction, Action takePartPddlAction, boolean skipMissingParts1, List<Action> skippedPddlActionsList, Action pa, int start, int i, List<OpAction> skippedOpActionsList) throws RuntimeException {
+//        List<OpAction> ret = new ArrayList<>();
+//        if (null == takePartOpAction
+//                || null == takePartPddlAction) {
+//            if (skipMissingParts1) {
+//                skippedActions.incrementAndGet();
+//                if (null != skippedPddlActionsList) {
+//                    skippedPddlActionsList.add(pa);
+//                }
+//            } else {
+//                throw new IllegalStateException("takePart not set :,start=" + start + ",i=" + i + ",pa=" + pa);
+//            }
+//        } else {
+//            String xString = pa.getArgs()[0];
+//            String yString = pa.getArgs()[1];
+//            double x = Double.parseDouble(xString);
+//            double y = Double.parseDouble(yString);
+//            final String slotPartType = pa.getPartType();
+//            if (null != slotPartType) {
+//                if (!allowedPartTypes.contains(slotPartType)) {
+//                    throw new RuntimeException("slotPartType=" + slotPartType);
+//                }
+//            }
+//            OpAction placePartOpAction = new OpAction(pa.getType(), pa.getArgs(), x, y, slotPartType, true);
+//            ret.add(takePartOpAction);
+//            ret.add(placePartOpAction);
+//        }
+//        return ret;
+//    }
+    private List<OpAction> opActionForTakePlaceToPddlActions(
+            @Nullable OpAction takePartOpAction,
+            @Nullable Action takePartPddlAction,
+            boolean skipMissingParts1,
+            @Nullable List<Action> skippedPddlActionsList,
+            Action pa,
+            int start,
+            int i,
+            @Nullable List<OpAction> skippedOpActionsList) throws RuntimeException {
         List<OpAction> ret = new ArrayList<>();
         if (null == takePartOpAction
                 || null == takePartPddlAction) {
@@ -553,7 +568,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return takePartOpAction;
     }
 
-    private OpAction takePartPddlActionToOpAction(Action pa, boolean skipMissingParts1, List<Action> skippedPddlActionsList, int start, int i) throws IllegalStateException {
+    private @Nullable
+    OpAction takePartPddlActionToOpAction(Action pa, boolean skipMissingParts1, @Nullable List<Action> skippedPddlActionsList, int start, int i) throws IllegalStateException {
         String partName = pa.getArgs()[takePartArgIndex];
         PoseType partPose = getPose(partName);
 //                    PoseType partPose = getPose.apply(partName, reverseFlag);
@@ -1524,17 +1540,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     class GenerateParams {
 
-        @MonotonicNonNull
-        List<Action> actions;
+        List<Action> actions = Collections.emptyList();
         int startingIndex;
-        @MonotonicNonNull
-        Map<String, String> options;
+        Map<String, String> options = Collections.emptyMap();
         int startSafeAbortRequestCount;
         boolean replan;
         boolean optiplannerUsed;
 
-        @MonotonicNonNull
-        List<Action> origActions;
+        List<Action> origActions = Collections.emptyList();
 
 //        @MonotonicNonNull
 //        List<PhysicalItem> newItems;
@@ -1611,27 +1624,36 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         final List<PhysicalItem> physicalItemsFinal = this.physicalItems;
         boolean disableOptimization = false;
-        for (Action act : gparams.actions) {
-            if (act.getType() == ActionType.DISABLE_OPTIMIZATION) {
-                gparams.replan = false;
-                disableOptimization = true;
-                break;
+        final List<Action> gparamsActions = gparams.actions;
+        if (null != gparamsActions) {
+            for (Action act : gparamsActions) {
+                if (act.getType() == ActionType.DISABLE_OPTIMIZATION) {
+                    gparams.replan = false;
+                    disableOptimization = true;
+                    break;
+                }
             }
         }
         if (null != solver
                 && !disableOptimization
                 && gparams.replan
                 && null != physicalItemsFinal
-                && gparams.actions.size() > gparams.startingIndex+1) {
-            return runOptaPlanner(gparams.actions,
-                    gparams.startingIndex, gparams.options,
+                && null != gparamsActions
+                && gparamsActions.size() > gparams.startingIndex + 1) {
+            return runOptaPlanner(gparamsActions,
+                    gparams.startingIndex,
+                    gparams.options,
                     gparams.startSafeAbortRequestCount,
                     physicalItemsFinal);
         }
-        return privateGenerateNoReplan(gparams, physicalItemsFinal);
+        return privateGenerateNoReplan(
+                gparams,
+                physicalItemsFinal);
     }
 
-    private List<MiddleCommandType> privateGenerateNoReplan(GenerateParams gparams, final List<PhysicalItem> physicalItemsFinal) throws ConcurrentBlockProgramsException, RuntimeException, IllegalStateException, IllegalArgumentException {
+    private List<MiddleCommandType> privateGenerateNoReplan(
+            GenerateParams gparams,
+            @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException, RuntimeException, IllegalStateException, IllegalArgumentException {
         final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
             throw new RuntimeException("null == gparams.options");
@@ -1760,8 +1782,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             checkSettings();
             Action lastAction = null;
-            if (null != physicalItemsFinal) {
-                takeSimViewSnapshot("generate.startingIndex=" + startingIndex, physicalItemsFinal);
+            if (null != physicalItemsParam) {
+                takeSimViewSnapshot("generate.startingIndex=" + startingIndex, physicalItemsParam);
             }
 
             for (this.setLastActionsIndex(gParamsActions, startingIndex); getLastIndex() < gparamsActionsSize; incLastActionsIndex()) {
@@ -1776,7 +1798,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     switch (action.getType()) {
                         case TAKE_PART:
                             if (poseCache.isEmpty()) {
-                                System.err.println("physicalItems = " + physicalItemsFinal);
+                                System.err.println("physicalItems = " + physicalItemsParam);
                                 System.err.println("clearPoseCacheTrace = " + Utils.traceToString(clearPoseCacheTrace));
                                 throw new IllegalStateException("TAKE_PART when poseCache is empty");
                             }
@@ -1798,7 +1820,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                         case TAKE_PART_BY_TYPE_AND_POSITION:
                             if (poseCache.isEmpty()) {
-                                System.err.println("physicalItems = " + physicalItemsFinal);
+                                System.err.println("physicalItems = " + physicalItemsParam);
                                 System.err.println("clearPoseCacheTrace = " + Utils.traceToString(clearPoseCacheTrace));
                                 throw new IllegalStateException("TAKE_PART when poseCache is empty");
                             }
@@ -1867,14 +1889,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         String yargString = action.getArgs()[takePartArgIndex + 2];
                         final double x = Double.parseDouble(xargString);
                         final double y = Double.parseDouble(yargString);
-                        PointType partBtapPoint = getClosestPoint(partBtapName, x, y);
+                        PointType partBtapPoint = Objects.requireNonNull(getClosestPoint(partBtapName, x, y),"partBtapPoint");
                         final PhysicalItem closestItem = getClosestItem(partBtapName, x, y);
                         if (null != closestItem) {
                             lastTakenPart = closestItem.getFullName();
                         } else {
                             lastTakenPart = partBtapName;
                         }
-                        takePartByPose(cmds, visionToRobotPose(pose(partBtapPoint,xAxis,zAxis)), partBtapName);
+                        takePartByPose(cmds, visionToRobotPose(pose(partBtapPoint, xAxis, zAxis)), partBtapName);
                     }
                     break;
 
@@ -1965,7 +1987,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         String yargString = action.getArgs()[1];
                         double x = Double.parseDouble(xargString);
                         double y = Double.parseDouble(yargString);
-                        placePartByPose(cmds, pose(point(x, y, getMinZ(x, y,25.0)), xAxis, zAxis));
+                        placePartByPose(cmds, pose(point(x, y, getMinZ(x, y, 25.0)), xAxis, zAxis));
                     }
                     break;
 
@@ -2062,7 +2084,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             System.err.println("startingAction=" + startingAction);
             System.err.println("getRunName() = " + getRunName());
             System.err.println("poseCache.keySet() = " + poseCache.keySet());
-            List<PhysicalItem> physicalItemsLocal = physicalItemsFinal;
+            List<PhysicalItem> physicalItemsLocal = physicalItemsParam;
             if (null != physicalItemsLocal) {
                 System.err.println("physicalItems.size()=" + physicalItemsLocal.size());
                 System.err.println("physicalItems=" + physicalItemsLocal);
@@ -6215,7 +6237,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         settingI.setJointPositionTolerance(jointTolerancesVals[i]);
                         newSettingsList.add(settingI);
                     }
-                    CRCLUtils.clearAndSetList(newJointTolerances.getSetting(), newSettingsList);
+                    final List<JointPositionToleranceSettingType> newJointTolerancesSetting 
+                            = newJointTolerances.getSetting();
+                    newJointTolerancesSetting.clear();
+                    newJointTolerancesSetting.addAll(newSettingsList);
                     final SetDefaultJointPositonsTolerancesType setDefaultJointPositonsTolerancesCommand
                             = new SetDefaultJointPositonsTolerancesType();
                     setDefaultJointPositonsTolerancesCommand.setJointTolerances(newJointTolerances);
@@ -6501,7 +6526,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             aj.setJointPosition(jointVals[i]);
             newActuateJointsList.add(aj);
         }
-        CRCLUtils.clearAndSetList(ajCmd.getActuateJoint(), newActuateJointsList);
+        final List<ActuateJointType> ajCmdActuateJoint = ajCmd.getActuateJoint();
+        ajCmdActuateJoint.clear();
+        ajCmdActuateJoint.addAll(newActuateJointsList);
         out.add(ajCmd);
         atLookForPosition = false;
         if (toolHolderOperationEnabled) {

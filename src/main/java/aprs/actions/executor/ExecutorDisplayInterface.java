@@ -23,7 +23,6 @@
 package aprs.actions.executor;
 
 import aprs.system.AprsSystem;
-import java.io.IOException;
 import java.util.List;
 
 /**

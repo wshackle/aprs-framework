@@ -629,7 +629,24 @@
                 </plugins>
             </build>
         </profile>
-        
+        <profile>
+            <id>verbose_javac</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${maven-compiler-plugin.version}</version>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Xlint:all</arg>
+                                <arg>-Werror</arg>
+                            </compilerArgs>
+                        </configuration> 
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>checkerframework_jdk8</id>
             <dependencies>

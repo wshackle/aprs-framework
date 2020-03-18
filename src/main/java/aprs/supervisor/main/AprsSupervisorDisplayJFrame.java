@@ -1507,6 +1507,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemImmediateAbortAll = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jMenuItemContinueAll = new javax.swing.JMenuItem();
+        jMenuItemReturnRobot = new javax.swing.JMenuItem();
+        jMenuItemEnableAndContinueAll = new javax.swing.JMenuItem();
         jMenuItemConnectAll = new javax.swing.JMenuItem();
         jCheckBoxMenuItemContinuousDemo = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemContinuousDemoRevFirst = new javax.swing.JCheckBoxMenuItem();
@@ -2293,6 +2295,22 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuActions.add(jMenuItemContinueAll);
 
+        jMenuItemReturnRobot.setText("Return Robot");
+        jMenuItemReturnRobot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemReturnRobotActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemReturnRobot);
+
+        jMenuItemEnableAndContinueAll.setText("Enable And Continue All");
+        jMenuItemEnableAndContinueAll.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemEnableAndContinueAllActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemEnableAndContinueAll);
+
         jMenuItemConnectAll.setText("Connect All");
         jMenuItemConnectAll.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -2736,15 +2754,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllActionPerformed
-        interactivStart(() -> performStartAllAction(),
-                jMenuItemStartAll.getText());
+        interactivStartFutureSupplier(() -> performStartAllAction(),
+                jMenuItemStartAll.getText())
+                .thenCompose(x -> Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(this, "Start all done.")));
     }//GEN-LAST:event_jMenuItemStartAllActionPerformed
 
-    private void performStartAllAction() {
+    private XFutureVoid performStartAllAction() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.performStartAllAction();
+        return supervisor.performStartAllAction();
     }
 
     private XFutureVoid prepActions() {
@@ -2892,6 +2911,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.fullAbortAll();
+    }
+
+    private XFutureVoid returnRobot() {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.publicReturnRobot();
     }
 
     public void clearCheckBoxes() {
@@ -3196,7 +3222,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemContinuousDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             jCheckBoxMenuItemContinuousDemoRevFirst.setSelected(false);
             prepAndFinishOnDispatch(() -> {
                 immediateAbortAll("jCheckBoxMenuItemContinuousDemoActionPerformed");
@@ -3266,7 +3292,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemRandomTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemRandomTestActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             prepAndFinishOnDispatch(this::jCheckBoxMenuItemRandomTestActionPerformed2OnDisplay);
         }, jCheckBoxMenuItemRandomTest.getText());
     }//GEN-LAST:event_jCheckBoxMenuItemRandomTestActionPerformed
@@ -3295,7 +3321,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartAllReverseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartAllReverseActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             if (null != lastFutureReturned) {
                 if (!lastFutureReturned.isDone()) {
                     lastFutureReturned.cancelAll(true);
@@ -3304,21 +3330,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             prepAndFinishOnDispatch(() -> {
                 immediateAbortAll("jMenuItemStartAllReverseActionPerformed");
-                connectAll();
-                jMenuItemStartAllReverseActionPerformed2OnDisplay();
+                supervisor.performReverseStartAllAction();
             });
-        }, jMenuItemStartAllReverse.getText());
-    }//GEN-LAST:event_jMenuItemStartAllReverseActionPerformed
+        }, jMenuItemStartAllReverse.getText())
+                .thenCompose(x -> Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(this, "Start all reverse done.")));
 
-    @UIEffect
-    private void jMenuItemStartAllReverseActionPerformed2OnDisplay() {
-        int startingAbortCount = supervisor.getAbortCount();
-        enableAllRobots()
-                .thenRun(() -> {
-                    lastFutureReturned = startReverseActions(startingAbortCount);
-                    setMainFuture(lastFutureReturned);
-                });
-    }
+    }//GEN-LAST:event_jMenuItemStartAllReverseActionPerformed
 
     @UIEffect
     private void jMenuItemResetAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemResetAllActionPerformed
@@ -3413,7 +3430,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jCheckBoxMenuItemPauseResumeTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemPauseResumeTestActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             prepAndFinishOnDispatch(() -> {
                 XFutureVoid ContinuousDemoFuture = getContinuousDemoFuture();
                 if (null != ContinuousDemoFuture) {
@@ -3484,12 +3501,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemDebugActionPerformed
 
     @UIEffect
-    private void jMenuItemContinueAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueAllActionPerformed
+    private void jMenuItemEnableAndContinueAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemEnableAndContinueAllActionPerformed
 
+        enableAndContinueAll();
+    }//GEN-LAST:event_jMenuItemEnableAndContinueAllActionPerformed
+
+    public XFutureVoid enableAndContinueAll() {
         if (null != lastFutureReturned) {
             lastFutureReturned.cancelAll(true);
         }
-        prepAndFinishOnDispatch(() -> {
+        return prepAndFinishOnDispatch(() -> {
             XFutureVoid randomTestFuture = getRandomTestFuture();
             if (null != randomTestFuture) {
                 randomTestFuture.cancelAll(true);
@@ -3509,7 +3530,42 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemRandomTest.setSelected(false);
             jCheckBoxMenuItemPause.setSelected(false);
             resume();
-            XFutureVoid continueAllXF = continueAll();
+            XFutureVoid continueAllXF = continueAllActions();
+            lastFutureReturned = continueAllXF;
+            if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
+                ContinuousDemoFuture
+                        = continueAllXF
+                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> enableAndContinueAllActions());
+                setMainFuture(ContinuousDemoFuture);
+            }
+        });
+    }
+
+    public XFutureVoid continueAll() {
+        if (null != lastFutureReturned) {
+            lastFutureReturned.cancelAll(true);
+        }
+        return Utils.composeToVoidOnDispatchThread(() -> {
+            XFutureVoid randomTestFuture = getRandomTestFuture();
+            if (null != randomTestFuture) {
+                randomTestFuture.cancelAll(true);
+                setRandomTestFuture(null);
+            }
+            XFutureVoid pauseTestFuture = getPauseTestFuture();
+            if (null != pauseTestFuture) {
+                pauseTestFuture.cancelAll(true);
+                setPauseTestFuture(null);
+            }
+            XFutureVoid ContinuousDemoFuture = getContinuousDemoFuture();
+            if (null != ContinuousDemoFuture) {
+                ContinuousDemoFuture.cancelAll(true);
+                ContinuousDemoFuture = null;
+            }
+            jCheckBoxMenuItemRandomTest.setSelected(false);
+            jCheckBoxMenuItemPause.setSelected(false);
+            resume();
+            XFutureVoid continueAllXF = continueAllActions();
             lastFutureReturned = continueAllXF;
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
@@ -3518,12 +3574,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                         x -> continueAllActions());
                 setMainFuture(ContinuousDemoFuture);
             }
+            return continueAllXF;
         });
-    }//GEN-LAST:event_jMenuItemContinueAllActionPerformed
+    }
 
     @UIEffect
     private void jCheckBoxMenuItemContinuousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemContinuousDemoRevFirstActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             if (jCheckBoxMenuItemContinuousDemoRevFirst.isSelected()) {
                 startContinuousDemoRevFirst();
             } else {
@@ -3543,18 +3600,22 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private void jMenuItemScanAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemScanAllActionPerformed
         try {
-            interactivStart(() -> {
-                prepAndFinishOnDispatch(() -> {
+            interactivStartFutureSupplier(() -> {
+                return prepAndFinishOnDispatch(() -> {
                     try {
-                        lastFutureReturned = startScanAll();
+                        XFutureVoid  ret =startScanAll();
+                        lastFutureReturned = ret;
                         setMainFuture(lastFutureReturned);
+                        return ret;
                     } catch (Exception e) {
                         logEvent("Exception occurred: " + e);
                         Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
                         MultiLineStringJPanel.showText("Exception occurred: " + e);
+                        throw new RuntimeException(e);
                     }
                 });
-            }, jMenuItemScanAll.getText());
+            }, jMenuItemScanAll.getText())
+                    .thenCompose(x -> Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(this, "Scan all done.")));
         } catch (Exception e) {
             logEvent("Exception occurred: " + e);
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3571,7 +3632,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemRandomTestReverseFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemRandomTestReverseFirstActionPerformed
-        interactivStart(() -> startRandomTestFirstActionReversed(),
+        interactivStartRunnable(() -> startRandomTestFirstActionReversed(),
                 jMenuItemRandomTestReverseFirst.getText());
     }//GEN-LAST:event_jMenuItemRandomTestReverseFirstActionPerformed
 
@@ -3901,7 +3962,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartContinuousScanAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartContinuousScanAndRunActionPerformed
-        interactivStart(() -> {
+        interactivStartRunnable(() -> {
             jCheckBoxMenuItemContinuousDemoRevFirst.setSelected(false);
             prepAndFinishOnDispatch(() -> {
                 immediateAbortAll("jMenuItemStartContinuousScanAndRunActionPerformed");
@@ -3931,7 +3992,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private final static AtomicInteger INTERACTIVE_START_ATOMIC = new AtomicInteger();
 
     @UIEffect
-    private XFutureVoid interactivStart(Runnable runnable, String actionName) {
+    private XFutureVoid interactivStartRunnable(Runnable runnable, String actionName) {
         int isn = INTERACTIVE_START_ATOMIC.incrementAndGet();
         final String blockerName = "interactiveStart." + actionName + ",isn=" + isn;
         final Map<String, LockInfo> afterDisableToggleBlockerMap = new TreeMap<>();
@@ -3939,112 +4000,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (null == supervisor) {
                 throw new NullPointerException("supervisor");
             }
-            AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
-            logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
-            supervisor.setResetting(true);
-            if (null != internalInteractiveResetAllFuture) {
-                if (!internalInteractiveResetAllFuture.isDone()) {
-                    System.err.println("Cancelling internalInteractiveResetAllFuture= " + internalInteractiveResetAllFuture);
-                    internalInteractiveResetAllFuture.cancelAll(false);
-                }
-                internalInteractiveResetAllFuture = null;
-            }
-            if (null != interactivStartFuture) {
-                if (!interactivStartFuture.isDone()) {
-                    System.err.println("Cancelling interactivStartFuture= " + interactivStartFuture);
-                    interactivStartFuture.cancelAll(false);
-                }
-                interactivStartFuture = null;
-            }
-            supervisor.setIconImage(IconImages.BASE_IMAGE);
-            supervisor.setTitleMessage("starting action ...");
-            MultiLineStringJPanel.setIgnoreForceShow(true);
-            MultiLineStringJPanel.closeAllPanels();
-            XFutureVoid fullAbortFuture = fullAbortAll();
-            XFuture<LockInfo> disallowTogglesFuture
-                    = fullAbortFuture
-                            .alwaysComposeAsyncToOutput("interactiveStart.disableToggles",
-                                    () ->  supervisor.disallowToggles(blockerName, sysArray),
-                                    supervisor.getSupervisorExecutorService());
-            XFutureVoid iiraFuture
-                    = disallowTogglesFuture
-                            .thenComposeToVoid(
-                                    "interactivStart(" + actionName + ",isn=" + isn + ")internalInteractiveResetAll",
-                                    x -> internalInteractiveResetAll());
-            internalInteractiveResetAllFuture = iiraFuture;
-            XFutureVoid ret = iiraFuture
-                    .thenRun(() -> {
-                        MultiLineStringJPanel.closeAllPanels();
-                        MultiLineStringJPanel.setIgnoreForceShow(false);
-                    })
-                    .alwaysRun(() -> supervisor.setResetting(false))
-                    .thenComposeAsyncToVoid(
-                            "interactivStart(" + actionName + ",isn=" + isn + ")LookForParts",
-                            x -> {
-                                List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
-                                List<AprsSystem> aprsSystems = supervisor.getAprsSystems();
-                                for (int i = 0; i < aprsSystems.size(); i++) {
-                                    AprsSystem sys = aprsSystems.get(i);
-                                    boolean limitsEnforced = sys.isEnforceMinMaxLimits();
-                                    logEvent("sys=" + sys + ", limitsEnforced=" + limitsEnforced);
-                                    if (!limitsEnforced) {
-                                        continue;
-                                    }
-                                    PointType currentPoint = sys.getCurrentPosePoint();
-                                    boolean inLimits = sys.checkLimitsNoAlert(CRCLPosemath.toPmCartesian(currentPoint));
-                                    if (inLimits) {
-                                        continue;
-                                    }
-                                    int confirmRet
-                                    = JOptionPane.showConfirmDialog(this, "Disable cartesian limits on " + sys);
-                                    if (confirmRet == JOptionPane.YES_OPTION) {
-                                        sys.setEnforceMinMaxLimits(false);
-                                        sys.updateRobotLimits();
-                                        aprsSystemsToReEnableLimits.add(sys);
-                                    }
-                                }
-                                return lookForPartsAll()
-                                        .thenRun(() -> {
-                                            for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
-                                                AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
-                                                sys.setEnforceMinMaxLimits(true);
-                                                sys.updateRobotLimits();
-                                            }
-                                        });
-                            },
-                            getSupervisorExecutorService())
-                    .thenComposeToVoid(
-                            "interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
-                            () -> {
-                                return Utils.runOnDispatchThread(
-                                        "interactivStart(" + actionName + ")confirmContinue",
-                                        () -> {
-                                            supervisor.setResetting(true);
-                                            disableRobotTableModelListener();
-                                            for (int i = 0; i < jTableRobots.getRowCount(); i++) {
-                                                jTableRobotsSetValueAt(true, i, 1);
-                                            }
-                                            enableRobotTableModelListener();
-                                            Utils.autoResizeTableColWidths(jTableRobots);
-                                            MultiLineStringJPanel.setIgnoreForceShow(false);
-                                            MultiLineStringJPanel.closeAllPanels();
-                                            supervisor.setResetting(false);
-                                            if (null != actionName && null != runnable) {
-                                                String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
-                                                boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
-                                                if (confirmed) {
-                                                    supervisor.setTitleMessage(actionName);
-                                                    this.interactivStartFuture = null;
-                                                    this.internalInteractiveResetAllFuture = null;
-                                                    runnable.run();
-                                                } else {
-                                                    this.interactivStartFuture = null;
-                                                    this.internalInteractiveResetAllFuture = null;
-                                                }
-                                            }
-                                        });
-                            })
-                    .alwaysComposeAsyncToVoid(() -> supervisor.allowTogglesNoCheck(blockerName), 
+            XFutureVoid prep1Future = prepInteractiveStart(actionName, isn, blockerName);
+            final XFutureVoid dispatchRunnableFuture = prep1Future
+                    .thenComposeToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
+                            () -> dispatchAction(actionName, runnable));
+            XFutureVoid ret = dispatchRunnableFuture
+                    .alwaysComposeAsyncToVoid(() -> supervisor.allowTogglesNoCheck(blockerName),
                             supervisor.getSupervisorExecutorService()
                     )
                     .thenRun(() -> logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn));
@@ -4058,6 +4019,179 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+    @UIEffect
+    private  <T> XFutureVoid interactivStartFutureSupplier(
+            Supplier<XFuture<Void>> supplier, 
+            String actionName) {
+        int isn = INTERACTIVE_START_ATOMIC.incrementAndGet();
+        final String blockerName = "interactiveStart." + actionName + ",isn=" + isn;
+        final Map<String, LockInfo> afterDisableToggleBlockerMap = new TreeMap<>();
+        try {
+            if (null == supervisor) {
+                throw new NullPointerException("supervisor");
+            }
+            XFutureVoid prep1Future = prepInteractiveStart(actionName, isn, blockerName);
+            final XFutureVoid dispatchRunnableFuture = prep1Future
+                    .thenComposeToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
+                            () -> dispatchFutureSupplierAction(actionName, supplier,Void.class));
+            XFutureVoid allowToggleFuture = prep1Future
+                    .alwaysComposeAsyncToVoid(() -> supervisor.allowTogglesNoCheck(blockerName),
+                            supervisor.getSupervisorExecutorService()
+                    )
+                    .thenRun(() -> logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn));
+            XFutureVoid ret = XFutureVoid.allOf(allowToggleFuture,dispatchRunnableFuture);
+            interactivStartFuture = ret;
+            return ret;
+        } catch (Exception exception) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "actionName=" + actionName + ",isn=" + isn, exception);
+            XFutureVoid ret = new XFutureVoid("interactivStart.exception actionName=" + actionName + ",isn=" + isn);
+            ret.completeExceptionally(exception);
+            return ret;
+        }
+    }
+
+    private XFutureVoid prepInteractiveStart(String actionName, int isn, final String blockerName) {
+        AprsSystem sysArray[] = supervisor.getAprsSystems().toArray(new AprsSystem[0]);
+        logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
+        supervisor.setResetting(true);
+        if (null != internalInteractiveResetAllFuture) {
+            if (!internalInteractiveResetAllFuture.isDone()) {
+                System.err.println("Cancelling internalInteractiveResetAllFuture= " + internalInteractiveResetAllFuture);
+                internalInteractiveResetAllFuture.cancelAll(false);
+            }
+            internalInteractiveResetAllFuture = null;
+        }
+        if (null != interactivStartFuture) {
+            if (!interactivStartFuture.isDone()) {
+                System.err.println("Cancelling interactivStartFuture= " + interactivStartFuture);
+                interactivStartFuture.cancelAll(false);
+            }
+            interactivStartFuture = null;
+        }
+        supervisor.setIconImage(IconImages.BASE_IMAGE);
+        supervisor.setTitleMessage("starting action ...");
+        MultiLineStringJPanel.setIgnoreForceShow(true);
+        MultiLineStringJPanel.closeAllPanels();
+        XFutureVoid fullAbortFuture = fullAbortAll();
+        XFuture<LockInfo> disallowTogglesFuture
+                = fullAbortFuture
+                        .alwaysComposeAsyncToOutput("interactiveStart.disableToggles",
+                                () -> supervisor.disallowToggles(blockerName, sysArray),
+                                supervisor.getSupervisorExecutorService());
+        XFutureVoid iiraFuture
+                = disallowTogglesFuture
+                        .thenComposeToVoid(
+                                "interactivStart(" + actionName + ",isn=" + isn + ")internalInteractiveResetAll",
+                                x -> internalInteractiveResetAll());
+        internalInteractiveResetAllFuture = iiraFuture;
+        final XFutureVoid prep1Future = iiraFuture
+                .thenRun(() -> {
+                    MultiLineStringJPanel.closeAllPanels();
+                    MultiLineStringJPanel.setIgnoreForceShow(false);
+                })
+                .alwaysRun(() -> supervisor.setResetting(false))
+                .thenComposeAsyncToVoid(
+                        "interactivStart(" + actionName + ",isn=" + isn + ")LookForParts",
+                        x -> {
+                            List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
+                            List<AprsSystem> aprsSystems = supervisor.getAprsSystems();
+                            for (int i = 0; i < aprsSystems.size(); i++) {
+                                AprsSystem sys = aprsSystems.get(i);
+                                boolean limitsEnforced = sys.isEnforceMinMaxLimits();
+                                logEvent("sys=" + sys + ", limitsEnforced=" + limitsEnforced);
+                                if (!limitsEnforced) {
+                                    continue;
+                                }
+                                PointType currentPoint = sys.getCurrentPosePoint();
+                                boolean inLimits = sys.checkLimitsNoAlert(CRCLPosemath.toPmCartesian(currentPoint));
+                                if (inLimits) {
+                                    continue;
+                                }
+                                int confirmRet
+                                = JOptionPane.showConfirmDialog(this, "Disable cartesian limits on " + sys);
+                                if (confirmRet == JOptionPane.YES_OPTION) {
+                                    sys.setEnforceMinMaxLimits(false);
+                                    sys.updateRobotLimits();
+                                    aprsSystemsToReEnableLimits.add(sys);
+                                }
+                            }
+                            return lookForPartsAll()
+                                    .thenRun(() -> {
+                                        for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
+                                            AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
+                                            sys.setEnforceMinMaxLimits(true);
+                                            sys.updateRobotLimits();
+                                        }
+                                    });
+                        },
+                        getSupervisorExecutorService());
+        return prep1Future;
+    }
+
+    private <T> XFuture<T> dispatchFutureSupplierAction(String actionName, Supplier<XFuture<T>> supplier, Class<T> clzz) {
+        final UiSupplier<XFuture<T>> function = () -> {
+            return supplyActionFuture(actionName, supplier);
+        };
+        return Utils.composeOnDispatchThread(function);
+    }
+
+    private <T> XFuture<T> supplyActionFuture(String actionName, Supplier<XFuture<T>> supplier) throws HeadlessException {
+        supervisor.setResetting(true);
+        disableRobotTableModelListener();
+        for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+            jTableRobotsSetValueAt(true, i, 1);
+        }
+        enableRobotTableModelListener();
+        Utils.autoResizeTableColWidths(jTableRobots);
+        MultiLineStringJPanel.setIgnoreForceShow(false);
+        MultiLineStringJPanel.closeAllPanels();
+        supervisor.setResetting(false);
+        if (null != actionName && null != supplier) {
+            String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
+            boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
+            if (confirmed) {
+                supervisor.setTitleMessage(actionName);
+                this.interactivStartFuture = null;
+                this.internalInteractiveResetAllFuture = null;
+                return supplier.get();
+            } else {
+                this.interactivStartFuture = null;
+                this.internalInteractiveResetAllFuture = null;
+            }
+        }
+        return XFuture.completedFuture(null);
+    }
+
+    private XFutureVoid dispatchAction(String actionName, Runnable runnable) {
+        return Utils.runOnDispatchThread(
+                "interactivStart(" + actionName + ")confirmContinue",
+                () -> {
+                    supervisor.setResetting(true);
+                    disableRobotTableModelListener();
+                    for (int i = 0; i < jTableRobots.getRowCount(); i++) {
+                        jTableRobotsSetValueAt(true, i, 1);
+                    }
+                    enableRobotTableModelListener();
+                    Utils.autoResizeTableColWidths(jTableRobots);
+                    MultiLineStringJPanel.setIgnoreForceShow(false);
+                    MultiLineStringJPanel.closeAllPanels();
+                    supervisor.setResetting(false);
+                    if (null != actionName && null != runnable) {
+                        String userCheckMessage = "Confirm continue with \"" + actionName + "\"? " + INTERACTIVE_CHECK_INSTRUCTIONS;
+                        boolean confirmed = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, userCheckMessage));
+                        if (confirmed) {
+                            supervisor.setTitleMessage(actionName);
+                            this.interactivStartFuture = null;
+                            this.internalInteractiveResetAllFuture = null;
+                            runnable.run();
+                        } else {
+                            this.interactivStartFuture = null;
+                            this.internalInteractiveResetAllFuture = null;
+                        }
+                    }
+                });
+    }
+
     private static final String INTERACTIVE_CHECK_INSTRUCTIONS
             = " \r\n"
             + " All parts in slots. \r\n"
@@ -4067,7 +4201,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
-        interactivStart(() -> setMainFuture(startScanAllThenContinuousDemoRevFirst()),
+        interactivStartRunnable(() -> setMainFuture(startScanAllThenContinuousDemoRevFirst()),
                 jMenuItemStartScanAllThenContinuousDemoRevFirst.getText());
     }//GEN-LAST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
 
@@ -4166,12 +4300,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         }
 
-        interactivStart(() -> conveyorTest(),
+        interactivStartRunnable(() -> conveyorTest(),
                 jMenuItemConveyorTest.getText());
     }//GEN-LAST:event_jMenuItemConveyorTestActionPerformed
 
     private void jMenuItemReloadSimFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReloadSimFilesActionPerformed
-        interactivStart(() -> resetAll(true),
+        interactivStartRunnable(() -> resetAll(true),
                 jMenuItemReloadSimFiles.getText());
     }//GEN-LAST:event_jMenuItemReloadSimFilesActionPerformed
 
@@ -4181,13 +4315,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         boolean useConveyor
                 = JOptionPane.showConfirmDialog(this, "Use Conveyor") == JOptionPane.YES_OPTION;
         if (numCycles > 0) {
-            interactivStart(() -> supervisor.completeMultiCycleTest(System.currentTimeMillis(), numCycles, useConveyor),
+            interactivStartRunnable(() -> supervisor.completeMultiCycleTest(System.currentTimeMillis(), numCycles, useConveyor),
                     jMenuItemMultiCycleTest.getText());
         }
     }//GEN-LAST:event_jMenuItemMultiCycleTestActionPerformed
 
     private void jMenuItemLookForPartsAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForPartsAllActionPerformed
-        interactivStart(() -> lookForPartsAll(),
+        interactivStartRunnable(() -> lookForPartsAll(),
                 jMenuItemLookForPartsAll.getText());
     }//GEN-LAST:event_jMenuItemLookForPartsAllActionPerformed
 
@@ -4215,7 +4349,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
 
         supervisor.setupSystemForConveyorTest(sys);
-        interactivStart(()
+        interactivStartRunnable(()
                 -> setMainFuture(conveyorTestPrep(sys)
                         .thenCompose(x -> startScanAllThenContinuousDemoRevFirst())),
                 jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst.getText());
@@ -4255,7 +4389,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double z = (Double) jTableSelectedPosMapFile.getValueAt(row, 5);
 
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
-                        interactivStart(() -> lookForPartsAll(), null)
+                        interactivStartRunnable(() -> lookForPartsAll(), null)
                                 .thenRun(() -> posMapOutSys.gotoPose(newPose));
                     }
                 }
@@ -4283,7 +4417,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double othery = (double) otherYObject;
                         double otherz = (double) otherZObject;
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
-                        interactivStart(() -> lookForPartsAll(), null)
+                        interactivStartRunnable(() -> lookForPartsAll(), null)
                                 .thenRun(() -> posMapInSys.gotoPose(newPose));
                     }
                 }
@@ -4300,6 +4434,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         enableConveyor(selected);
         supervisor.setEnableConveyor(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemEnableConveyorControlViewActionPerformed
+
+    private void jMenuItemContinueAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemContinueAllActionPerformed
+        continueAll()
+                .thenCompose(x -> Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(this, "Continue all done.")));
+    }//GEN-LAST:event_jMenuItemContinueAllActionPerformed
+
+    private void jMenuItemReturnRobotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemReturnRobotActionPerformed
+        returnRobot()
+                .thenCompose(x -> Utils.runOnDispatchThread(() -> JOptionPane.showMessageDialog(this, "Return robot done.")));
+    }//GEN-LAST:event_jMenuItemReturnRobotActionPerformed
 
     public void enableConveyor(final boolean selected) {
         if (selected) {
@@ -4793,11 +4937,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
      * @return future that allows actions to be added after all scans are
      * complete.
      */
-    private XFuture<?> startScanAll() {
+    private XFutureVoid startScanAll() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startScanAll();
+        return supervisor.startScanAll()
+                .thenComposeToVoid(supervisor::updateTasksTableOnSupervisorService);
     }
 
     /**
@@ -5089,6 +5234,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         logEvent("Exception thrown : msg=" + msg + ",thrown=" + thrown + ", trace=" + shortTrace(thrown.getStackTrace()));
     }
 
+    private XFutureVoid enableAndContinueAllActions() {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.enableAndContinueAllActions();
+    }
+
     private XFutureVoid continueAllActions() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -5102,13 +5254,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } else {
             return notOkSupplier.get();
         }
-    }
-
-    private XFutureVoid continueAll() {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.continueAll();
     }
 
     /**
@@ -5163,11 +5308,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     /**
      * Connect to all robots.
      */
-    private void connectAll() {
+    private XFutureVoid connectAll() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        supervisor.connectAll();
+        return supervisor.connectAll();
     }
 
     /**
@@ -5974,6 +6119,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemContinueAll;
     private javax.swing.JMenuItem jMenuItemConveyorTest;
     private javax.swing.JMenuItem jMenuItemDbgAction;
+    private javax.swing.JMenuItem jMenuItemEnableAndContinueAll;
     private javax.swing.JMenuItem jMenuItemImmediateAbortAll;
     private javax.swing.JMenuItem jMenuItemLoadEventsLog;
     private javax.swing.JMenuItem jMenuItemLoadPosMaps;
@@ -5986,6 +6132,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemRemoveSelectedSystem;
     private javax.swing.JMenuItem jMenuItemResetAll;
     private javax.swing.JMenuItem jMenuItemRestoreOrigRobotInfo;
+    private javax.swing.JMenuItem jMenuItemReturnRobot;
     private javax.swing.JMenuItem jMenuItemRunCustom;
     private javax.swing.JMenuItem jMenuItemSafeAbortAll;
     private javax.swing.JMenuItem jMenuItemSaveAll;

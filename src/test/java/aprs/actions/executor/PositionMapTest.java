@@ -22,7 +22,7 @@
  */
 package aprs.actions.executor;
 
-import static aprs.actions.executor.PositionMap.combine;
+import static aprs.actions.executor.PositionMapEntry.combine;
 import crcl.base.PointType;
 import crcl.utils.CRCLPosemath;
 import static crcl.utils.CRCLPosemath.point;
@@ -109,7 +109,7 @@ public class PositionMapTest {
         double x = 0.0;
         double y = 0.5;
         PositionMapEntry expResult = PositionMapEntry.pointOffsetEntry(0, 0.5, 0, 3, 3, 0);
-        PositionMapEntry result = PositionMap.combine(e1, e2, x, y, 0);
+        PositionMapEntry result = combine(e1, e2, x, y, 0);
         assertErrorMapEntryEquals(expResult, result);
         x = 10.0;
         y = 0.5;

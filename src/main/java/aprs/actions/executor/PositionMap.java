@@ -22,6 +22,8 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.PositionMapEntry.combineX;
+import static aprs.actions.executor.PositionMapEntry.combineY;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
@@ -41,8 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import rcs.posemath.PmCartesian;
-import rcs.posemath.Posemath;
 
 /**
  *
@@ -517,131 +517,7 @@ public class PositionMap {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    static public PositionMapEntry combine(PositionMapEntry e1, PositionMapEntry e2, double x, double y, double z) {
-        if (null == e1) {
-            return e2;
-        }
-        if (null == e2) {
-            return e1;
-        }
-        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
-        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
-        PmCartesian diff = c2.subtract(c1);
-        if (diff.mag() < 1e-6) {
-            return PositionMapEntry.pointOffsetEntryCombining((e1.getInputX() + e2.getInputX()) / 2.0,
-                    (e1.getInputY() + e2.getInputY()) / 2.0,
-                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
-                    (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
-                    (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
-                    (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
-                    e1, e2);
-        }
-        PmCartesian xy = new PmCartesian(x, y, z);
-        PmCartesian diff2 = xy.subtract(c1);
-        double d = Posemath.pmCartCartDot(diff, diff2) / (diff.mag() * diff.mag());
-        PmCartesian center = c1.add(diff.multiply(d));
-        double s1 = d;
-        double s2 = (1 - d);
-        return PositionMapEntry.pointOffsetEntryCombining(
-                center.x, center.y, center.z,
-                e1.getOffsetX() * s2 + e2.getOffsetX() * s1,
-                e1.getOffsetY() * s2 + e2.getOffsetY() * s1,
-                e1.getOffsetZ() * s2 + e2.getOffsetZ() * s1,
-                e1, e2
-        );
-    }
-
-    private static @Nullable
-    PositionMapEntry combineX(
-            @Nullable PositionMapEntry e1,
-            @Nullable PositionMapEntry e2,
-            double x) {
-        if (null == e1) {
-            if (null != e2 && Math.abs(e2.getInputX() - x) < 1e-6) {
-                return e2;
-            } else {
-                return null;
-            }
-        }
-        if (null == e2) {
-            if (null != e1 && Math.abs(e1.getInputX() - x) < 1e-6) {
-                return e1;
-            } else {
-                return null;
-            }
-        }
-        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
-        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
-        PmCartesian diff = c2.subtract(c1);
-        if (Math.abs(diff.x) < 1e-6) {
-            if (Math.abs(e1.getInputX() - x) > 1e-6) {
-                return null;
-            }
-            return PositionMapEntry.pointOffsetEntryCombining((e1.getInputX() + e2.getInputX()) / 2.0,
-                    (e1.getInputY() + e2.getInputY()) / 2.0,
-                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
-                    (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
-                    (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
-                    (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
-                    e1, e2);
-        }
-
-        double d = (x - c1.x) / diff.x;
-        PmCartesian center = c1.add(diff.multiply(d));
-        double s1 = d;
-        double s2 = (1 - d);
-        return PositionMapEntry.pointOffsetEntryCombining(center.x, center.y, center.z,
-                e1.getOffsetX() * s2 + e2.getOffsetX() * s1,
-                e1.getOffsetY() * s2 + e2.getOffsetY() * s1,
-                e1.getOffsetZ() * s2 + e2.getOffsetZ() * s1,
-                e1, e2
-        );
-    }
-
-    private static @Nullable
-    PositionMapEntry combineY(PositionMapEntry e1, PositionMapEntry e2, double y) {
-        if (null == e1) {
-            if (null != e2 && Math.abs(e2.getInputY() - y) < 1e-6) {
-                return e2;
-            } else {
-                return null;
-            }
-        }
-        if (null == e2) {
-            if (null != e1 && Math.abs(e1.getInputY() - y) < 1e-6) {
-                return e1;
-            } else {
-                return null;
-            }
-        }
-        PmCartesian c1 = new PmCartesian(e1.getInputX(), e1.getInputY(), e1.getInputZ());
-        PmCartesian c2 = new PmCartesian(e2.getInputX(), e2.getInputY(), e2.getInputZ());
-        PmCartesian diff = c2.subtract(c1);
-        if (Math.abs(diff.y) < 1e-6) {
-            if (Math.abs(e1.getInputY() - y) > 1e-6) {
-                return null;
-            }
-            return PositionMapEntry.pointOffsetEntryCombining(
-                    (e1.getInputX() + e2.getInputX()) / 2.0,
-                    (e1.getInputY() + e2.getInputY()) / 2.0,
-                    (e1.getInputZ() + e2.getInputZ()) / 2.0,
-                    (e1.getOffsetX() + e2.getOffsetX()) / 2.0,
-                    (e1.getOffsetY() + e2.getOffsetY()) / 2.0,
-                    (e1.getOffsetZ() + e2.getOffsetZ()) / 2.0,
-                    e1, e2);
-        }
-
-        double d = (y - c1.y) / diff.y;
-        PmCartesian center = c1.add(diff.multiply(d));
-        double s1 = d;
-        double s2 = (1 - d);
-        return PositionMapEntry.pointOffsetEntryCombining(center.x, center.y, center.z,
-                e1.getOffsetX() * s2 + e2.getOffsetX() * s1,
-                e1.getOffsetY() * s2 + e2.getOffsetY() * s1,
-                e1.getOffsetZ() * s2 + e2.getOffsetZ() * s1,
-                e1, e2
-        );
-    }
+    
 
     public PointType getOffset(double x, double y, double z) {
         return getOffsetInternal(x, y, z, 0);

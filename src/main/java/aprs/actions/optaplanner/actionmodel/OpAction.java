@@ -208,7 +208,13 @@ public class OpAction implements OpActionInterface {
         setAllowedPartTypes(Arrays.asList(newPartTypes));
     }
 
-    public OpAction(String name, double x, double y, OpActionType opActionType, String partType, boolean required) {
+    public OpAction(
+            String name,
+            double x,
+            double y,
+            OpActionType opActionType,
+            String partType,
+            boolean required) {
         checkAllowedPartTypes(opActionType, partType);
         this.executorActionType = opActionToExecutorAction(opActionType);
         this.executorArgs = argsFromName(name);
@@ -222,12 +228,14 @@ public class OpAction implements OpActionInterface {
         this.trayType = getTrayType(opActionType, name);
     }
 
-    static private void checkAllowedPartTypes(OpActionType opActionType1, String partType1) throws RuntimeException {
+    static private void checkAllowedPartTypes(
+            @Nullable OpActionType opActionType1,
+            @Nullable String partType1) throws RuntimeException {
         if (opActionType1 != START
                 && null != allowedPartTypes
                 && !allowedPartTypes.isEmpty()
                 && !allowedPartTypes.contains(partType1)) {
-            throw new RuntimeException("partType=" + partType1+",allowedPartType="+allowedPartTypes);
+            throw new RuntimeException("partType=" + partType1 + ",allowedPartType=" + allowedPartTypes);
         }
     }
 
@@ -247,8 +255,20 @@ public class OpAction implements OpActionInterface {
 //        this.trayType = getTrayType(opActionType, name);
     }
 
-    public OpAction(ActionType executorActionType, String executorArgs[], double x, double y, String partType, boolean required) {
-        this(executorActionType + "-" + Arrays.toString(executorArgs), x, y, executorActionToOpAction(executorActionType), partType, required);
+    public OpAction(
+            ActionType executorActionType,
+            String executorArgs[],
+            double x,
+            double y,
+            String partType,
+            boolean required) {
+        this(
+                executorActionType + "-" + Arrays.toString(executorArgs),
+                x,
+                y,
+                executorActionToOpAction(executorActionType),
+                partType,
+                required);
 //        checkAllowedPartTypes(opActionType, partType);
 //        this.executorActionType = executorActionType;
 //        this.executorArgs = executorArgs;

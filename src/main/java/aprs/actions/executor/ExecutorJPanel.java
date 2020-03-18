@@ -121,7 +121,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
@@ -199,18 +198,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final JMenu toolSwitchToolMenu;
 
     /**
-     * Create an empty ExecutorJPanel. This should only be used by Netbeans GUI
-     * builder. All other users should use constructor with AprsSystem argument.
+     * Create an empty ExecutorJPanel.This should only be used by Netbeans GUI
+     * builder. All other users should use constructor with AprsSystem argument
+     * and parentComponent argument.
      *
-     * @throws InterruptedException
-     * @throws ExecutionException
      */
-    @SuppressWarnings({"initialization", "nullness"})
-    @UIEffect
-    public ExecutorJPanel(AprsSystem aprsSystem1) {
-        this(aprsSystem1, null);
-    }
-
     @SuppressWarnings({"initialization", "nullness"})
     @UIEffect
     public ExecutorJPanel() {
@@ -283,6 +275,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * Creates new form ActionsToCrclJPanel
      *
      * @param aprsSystem1 AprsSystem that this will be a part of.
+     * @param parentComponent swing GUI component that will contain this panel
+     *
+     * Both parameters must be non-null except when created in Netbeans GUI
+     * builder for display only.
+     *
      */
     @SuppressWarnings("initialization")
     @UIEffect
@@ -578,12 +575,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (this.reverseFlag != reverseFlag) {
                 warnIfNewActionsNotReady();
                 if (reverseFlag) {
-
                     int tc = setReverseTrueCount.incrementAndGet();
-//                    if (tc > 1) {
-//                        println("tc = " + tc);
-//
-//                    }
                     setReverseFlagTrueTrace = Thread.currentThread().getStackTrace();
                 } else {
                     setReverseFalseCount.incrementAndGet();
@@ -2397,16 +2389,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     public void browseActionsFile() throws IOException {
         String text = pddlOutputActionsCachedText.getText();
-        File actionsFile = null;
         File actionsFileParent = null;
         if (null != text) {
-            actionsFile = new File(text);
-            if (null != actionsFile) {
-                actionsFileParent = actionsFile.getParentFile();
-            }
+            File actionsFile = new File(text);
+            actionsFileParent = actionsFile.getParentFile();
         }
 
-        JFileChooser chooser = null;
+        final JFileChooser chooser;
         if (null != actionsFileParent) {
             chooser = new JFileChooser(actionsFileParent);
         } else {
@@ -2939,7 +2928,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private static final SolverFactory<OpActionPlan> solverFactory = OpActionPlan.createSolverFactory();
+    private static final SolverFactory<OpActionPlan> PRIVATE_SOLVER_FACTORY
+            = OpActionPlan.createSolverFactory();
 
     private @MonotonicNonNull
     Solver<OpActionPlan> solver = null;
@@ -3111,8 +3101,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             OpActionPlan bestPlan = null;
             double bestScore = Double.NEGATIVE_INFINITY;
             if (null == showSolver) {
-                synchronized (solverFactory) {
-                    showSolver = solverFactory.buildSolver();
+                synchronized (PRIVATE_SOLVER_FACTORY) {
+                    showSolver = PRIVATE_SOLVER_FACTORY.buildSolver();
                 }
             }
             showSolver.addEventListener(e -> logDebug(e.getTimeMillisSpent() + ", " + e.getNewBestScore()));
@@ -3388,7 +3378,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @SuppressWarnings("guieffect")
     private class CrclTableCellEditor implements TableCellEditor {
 
-        private List<CellEditorListener> listeners = new ArrayList<>();
+        private final List<CellEditorListener> listeners = new ArrayList<>();
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
@@ -3520,6 +3510,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @return the value of aprsSystemInterface
      */
+    @Override
     public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
@@ -3858,6 +3849,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Abort the currently running CRCL program.
+     *
+     * @return future to determine when the abort completes etc.
      */
     public XFutureVoid abortProgram() {
         abortProgramThread = Thread.currentThread();
@@ -5002,7 +4995,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private String jointStatusListToString(Iterable<JointStatusType> jointStatusIterable) {
         String jointVals
-                = StreamSupport.stream(jointStatusIterable.spliterator(),false)
+                = StreamSupport.stream(jointStatusIterable.spliterator(), false)
                         .sorted(Comparator.comparing(JointStatusType::getJointNumber))
                         .map((JointStatusType js) -> Optional.ofNullable(js.getJointPosition()))
                         .filter(Optional::isPresent)
@@ -5191,9 +5184,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public static PoseType recordToPose(CSVRecord rec) {
-        PoseType pose = null;
         try {
-            pose = CRCLPosemath.toPoseType(
+            PoseType pose = CRCLPosemath.toPoseType(
                     new PmCartesian(
                             Double.parseDouble(rec.get(X_COLUMN_HEADER)),
                             Double.parseDouble(rec.get(Y_COLUMN_HEADER)),
@@ -5423,7 +5415,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null != stat) {
             JointStatusesType jointStatuses = stat.getJointStatuses();
             if (null != jointStatuses) {
-                Iterable<JointStatusType> jointList 
+                Iterable<JointStatusType> jointList
                         = CRCLUtils.getNonNullJointStatusIterable(jointStatuses);
                 String jointVals
                         = jointStatusListToString(jointList);
@@ -5999,29 +5991,27 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return Utils.runOnDispatchThread(() -> {
                     manualObjectCachedComboBox.removeAllElements();
                     manualSlotCachedComboBox.removeAllElements();
-                    if (newItemsCopy != null) {
-                        Function<PhysicalItem, String> keyExtractor = PhysicalItem::getFullName;
-                        final Comparator<PhysicalItem> itemsComparator = Comparator.comparing(keyExtractor);
-                        newItemsCopy.sort(itemsComparator);
-                        for (PhysicalItem item : newItemsCopy) {
-                            String fullName = item.getFullName();
-                            if (null != fullName) {
-                                switch (item.getType()) {
-                                    case "P":
-                                    case "KT":
-                                    case "PT":
-                                        manualObjectCachedComboBox.addElement(fullName);
-                                        break;
+                    Function<PhysicalItem, String> keyExtractor = PhysicalItem::getFullName;
+                    final Comparator<PhysicalItem> itemsComparator = Comparator.comparing(keyExtractor);
+                    newItemsCopy.sort(itemsComparator);
+                    for (PhysicalItem item : newItemsCopy) {
+                        String fullName = item.getFullName();
+                        if (null != fullName) {
+                            switch (item.getType()) {
+                                case "P":
+                                case "KT":
+                                case "PT":
+                                    manualObjectCachedComboBox.addElement(fullName);
+                                    break;
 
-                                    case "ES":
-                                    case "SLOT":
-                                        manualSlotCachedComboBox.addElement(fullName);
-                                        break;
-                                }
+                                case "ES":
+                                case "SLOT":
+                                    manualSlotCachedComboBox.addElement(fullName);
+                                    break;
                             }
                         }
-                        updatePositionCacheTable();
                     }
+                    updatePositionCacheTable();
                 });
             });
         } catch (Exception ex) {
@@ -6547,15 +6537,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         boolean doSafeAbort;
         synchronized (this) {
             lastCheckAbortCurrentPart = currentPart;
-            boolean safeAbortRequested = (safeAbortRequestCount.get() != startSafeAbortRequestCount);
-            if (safeAbortRequested != aprsSystem.isAborting()) {
-                logDebug("safeAbortRequested=" + safeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystem.isAborting());
+            final boolean initialSafeAbortRequested = (safeAbortRequestCount.get() != startSafeAbortRequestCount);
+            final boolean safeAbortRequested;
+            if (initialSafeAbortRequested != aprsSystem.isAborting()) {
+                logDebug("safeAbortRequested=" + initialSafeAbortRequested + ", aprsSystemInterface.isAborting()=" + aprsSystem.isAborting());
                 safeAbortRequested = true;
+            } else {
+                safeAbortRequested = initialSafeAbortRequested;
             }
             lastCheckAbortSafeAbortRequested = safeAbortRequested;
             lastCheckSafeAbortTime = System.currentTimeMillis();
             if (safeAbortRequested && null == currentPart) {
-                safeAbortRequested = false;
                 autoStart = false;
                 doSafeAbort = true;
             } else {
@@ -6594,16 +6586,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (abortReplanFromIndex == 0) {
             aprsSystem.runOnDispatchThread(this::clearOpDisplay);
         }
-        List<Integer> lil = new ArrayList<>();
         final int li0 = crclGenerator.getLastIndex();
-        lil.add(li0);
         final int rpi0 = getReplanFromIndex();
 
         CRCLProgramType program = pddlActionSectionToCrcl(0);
         programGenerated = true;
         lastGenerateCrclGeneratedProgram = programGenerated;
         final int li1 = crclGenerator.getLastIndex();
-        lil.add(li1);
         if (li1 < li0 && li1 < rpi0) {
             logDebug("lastIndex decreased: li0=" + li0 + ",li1=" + li1);
         }
@@ -6670,7 +6659,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             final int li3 = crclGenerator.getLastIndex();
             program = pddlActionSectionToCrcl(sectionNumber++);
             final int li4 = crclGenerator.getLastIndex();
-            lil.add(li4);
             if (li4 < li3) {
                 logDebug("lastIndex decreased: li3=" + li3 + ",li4=" + li4);
             }
@@ -6793,8 +6781,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return;
             }
             String actionsFileName = getActionsFileString(reverse);
-            boolean runningProgram = isRunningProgram();
-            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), runningProgram, aprsSystem.getRobotName(), actionsFileName};
+            final boolean initialRunningProgram = isRunningProgram();
+            Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), initialRunningProgram, aprsSystem.getRobotName(), actionsFileName};
             aprsSystem.logEvent("appendGenerateAbortLog." + type, rowValues);
             try (
                     FileWriter fw = new FileWriter(logFile, true);
@@ -6891,8 +6879,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         if (enableOptaplannerCachedCheckBox.isSelected()) {
             if (null == solver) {
-                synchronized (solverFactory) {
-                    solver = solverFactory.buildSolver();
+                synchronized (PRIVATE_SOLVER_FACTORY) {
+                    solver = PRIVATE_SOLVER_FACTORY.buildSolver();
                 }
             }
             crclGenerator.setSolver(solver);
@@ -6981,11 +6969,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void setEndCanonCmdId(CRCLProgramType program) {
-        final EndCanonType endCmd 
-                = Objects.requireNonNull(program.getEndCanon(),"program.getEndCanon()");
+        final EndCanonType endCmd
+                = Objects.requireNonNull(program.getEndCanon(), "program.getEndCanon()");
         setCommandId(endCmd);
-        final InitCanonType initCmd 
-                = Objects.requireNonNull(program.getInitCanon(),"program.getEndCanon()");
+        final InitCanonType initCmd
+                = Objects.requireNonNull(program.getInitCanon(), "program.getEndCanon()");
         long initCmdId = initCmd.getCommandID();
         long endCmdId = endCmd.getCommandID();
         int midSize = CRCLUtils.middleCommands(program).size();
