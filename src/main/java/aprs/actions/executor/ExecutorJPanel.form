@@ -1387,19 +1387,18 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="positionMapJPanel1" max="32767" attributes="0"/>
                               </Group>
-                              <Group type="102" attributes="0">
+                              <Group type="102" alignment="1" attributes="0">
                                   <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapGoIn" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jButtonErrMapSetInputFromCachedVisionDb" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jTextFieldErrMapPartInfo" pref="261" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapSetInputFromCurrent" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="-2" pref="173" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapGoOut" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jButtonErrMapSetVisionFromCurrent" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jButtonErrMapSetVisionFromDB" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jTextFieldErrMapPartInfo" pref="475" max="32767" attributes="0"/>
+                                  <EmptySpace min="0" pref="426" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -1416,8 +1415,7 @@
                               <Component id="jButtonErrMapGoIn" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonErrMapSetInputFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jButtonErrMapGoOut" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jButtonErrMapSetVisionFromCurrent" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jButtonErrMapSetVisionFromDB" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jButtonErrMapSetInputFromCachedVisionDb" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jTextFieldErrMapPartInfo" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -1438,7 +1436,7 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="jButtonErrMapSetInputFromCurrent">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Set Input From Current"/>
+                    <Property name="text" type="java.lang.String" value="Set Output From Current Robot"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetInputFromCurrentActionPerformed"/>
@@ -1452,20 +1450,12 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapGoOutActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="jButtonErrMapSetVisionFromCurrent">
+                <Component class="javax.swing.JButton" name="jButtonErrMapSetInputFromCachedVisionDb">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Set Vision  From Current"/>
+                    <Property name="text" type="java.lang.String" value="Set Input From Cached  Vision  DB"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetVisionFromCurrentActionPerformed"/>
-                  </Events>
-                </Component>
-                <Component class="javax.swing.JButton" name="jButtonErrMapSetVisionFromDB">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Set Vision From DB"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetVisionFromDBActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonErrMapSetInputFromCachedVisionDbActionPerformed"/>
                   </Events>
                 </Component>
                 <Component class="javax.swing.JTextField" name="jTextFieldErrMapPartInfo">
