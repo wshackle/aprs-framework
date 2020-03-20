@@ -5,7 +5,6 @@
     <artifactId>aprs-framework</artifactId>
     <version>1.4.dev2-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <!-- test change --> 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
