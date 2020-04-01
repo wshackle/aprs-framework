@@ -57,6 +57,11 @@
     
     <dependencies>
         <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-jdbc-driver</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
             <version>9.0.0</version>
@@ -89,26 +94,6 @@
             <version>0.2.2</version>
         </dependency>
         
-                
-        <!-- <dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>6.0.6</version>
-        </dependency>
-        -->
-        <!-- <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-jdbc-driver</artifactId>
-            <version>3.0.1</version>
-        </dependency> -->
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-jdbc</artifactId>
-            <version>2.3.2</version>
-            <optional>true</optional>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>crcl4java-base</artifactId>
@@ -124,23 +109,12 @@
             <artifactId>crcl4java-ui</artifactId>
             <version>${crcl4java.version}</version>
         </dependency>
-        <!-- <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>crcl4java-vaadin-webapp</artifactId>
-            <version>${crcl4java.version}</version>
-            <classifier>classes</classifier>
-        </dependency> -->
-        
+
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.54</version>
         </dependency>
-        <!-- <dependency>
-            <groupId>com.bsb.common.vaadin</groupId>
-            <artifactId>com.bsb.common.vaadin7.embed</artifactId>
-            <version>0.6</version>
-        </dependency> -->
         
         <dependency>
             <groupId>junit</groupId>
@@ -181,26 +155,6 @@
             <version>${checker-framework.version}</version>
         </dependency>
                 
-        <!-- <dependency>
-            <groupId>org.drools</groupId>
-            <artifactId>drools-core</artifactId>
-            <version>${optiplanner.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.optaplanner</groupId>
-            <artifactId>optaplanner-benchmark</artifactId>
-            <version>${optiplanner.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.drools</groupId>
-            <artifactId>drools-compiler</artifactId>
-            <version>${optiplanner.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.kie</groupId>
-            <artifactId>kie-api</artifactId>
-            <version>${optiplanner.version}</version>
-        </dependency> -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

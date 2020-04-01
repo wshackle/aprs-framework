@@ -1,1 +1,1 @@
-/home/shackle/aprs-framework/example_settings/multiple_simulated_systems_settings/multisim9.csv
+/home/will/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/multisim9.csv

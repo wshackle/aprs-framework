@@ -22,7 +22,7 @@
  */
 package aprs.actions.executor;
 
-import static aprs.actions.executor.PositionMapEntry.combine;
+//import static aprs.actions.executor.PositionMap.combine;
 import crcl.base.PointType;
 import crcl.utils.CRCLPosemath;
 import static crcl.utils.CRCLPosemath.point;
@@ -98,61 +98,61 @@ public class PositionMapTest {
 //        assertEquals("Z", expectedPt.getZ(), actualPt.getZ(), 1e-6);
     }
     
-    /**
-     * Test of combine method, of class
-     */
-    ///@Test
-    public void testCombine() {
-        System.out.println("combine");
-        PositionMapEntry e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
-        PositionMapEntry e2 = PositionMapEntry.pointOffsetEntry(0, 1, 0, 4, 4, 0);
-        double x = 0.0;
-        double y = 0.5;
-        PositionMapEntry expResult = PositionMapEntry.pointOffsetEntry(0, 0.5, 0, 3, 3, 0);
-        PositionMapEntry result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-        x = 10.0;
-        y = 0.5;
-        expResult = PositionMapEntry.pointOffsetEntry(0, 0.5, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-        x = 10.0;
-        y = 1.0;
-        expResult = PositionMapEntry.pointOffsetEntry(0, 1.0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-
-        e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
-        e2 = PositionMapEntry.pointOffsetEntry(1, 0, 0, 4, 4, 0);
-        x = 0.5;
-        y = 0.0;
-        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-        x = 0.5;
-        y = 10.0;
-        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-        x = 1.0;
-        y = 10.0;
-        expResult = PositionMapEntry.pointOffsetEntry(1.0, 0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-
-        e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
-        e2 = PositionMapEntry.pointOffsetEntry(1, 1, 0, 4, 4, 0);
-        x = 0.5;
-        y = 0.5;
-        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0.5, 0, 3, 3, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-        x = 1.0;
-        y = 1.0;
-        expResult = PositionMapEntry.pointOffsetEntry(1.0, 1.0, 0, 4, 4, 0);
-        result = combine(e1, e2, x, y, 0);
-        assertErrorMapEntryEquals(expResult, result);
-    }
+//    /**
+//     * Test of combine method, of class
+//     */
+//    ///@Test
+//    public void testCombine() {
+//        System.out.println("combine");
+//        PositionMapEntry e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
+//        PositionMapEntry e2 = PositionMapEntry.pointOffsetEntry(0, 1, 0, 4, 4, 0);
+//        double x = 0.0;
+//        double y = 0.5;
+//        PositionMapEntry expResult = PositionMapEntry.pointOffsetEntry(0, 0.5, 0, 3, 3, 0);
+//        PositionMapEntry result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//        x = 10.0;
+//        y = 0.5;
+//        expResult = PositionMapEntry.pointOffsetEntry(0, 0.5, 0, 3, 3, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//        x = 10.0;
+//        y = 1.0;
+//        expResult = PositionMapEntry.pointOffsetEntry(0, 1.0, 0, 4, 4, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//
+//        e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
+//        e2 = PositionMapEntry.pointOffsetEntry(1, 0, 0, 4, 4, 0);
+//        x = 0.5;
+//        y = 0.0;
+//        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0, 0, 3, 3, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//        x = 0.5;
+//        y = 10.0;
+//        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0, 0, 3, 3, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//        x = 1.0;
+//        y = 10.0;
+//        expResult = PositionMapEntry.pointOffsetEntry(1.0, 0, 0, 4, 4, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//
+//        e1 = PositionMapEntry.pointOffsetEntry(0, 0, 0, 2, 2, 0);
+//        e2 = PositionMapEntry.pointOffsetEntry(1, 1, 0, 4, 4, 0);
+//        x = 0.5;
+//        y = 0.5;
+//        expResult = PositionMapEntry.pointOffsetEntry(0.5, 0.5, 0, 3, 3, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//        x = 1.0;
+//        y = 1.0;
+//        expResult = PositionMapEntry.pointOffsetEntry(1.0, 1.0, 0, 4, 4, 0);
+//        result = combine(e1, e2, x, y, 0);
+//        assertErrorMapEntryEquals(expResult, result);
+//    }
 
     private static void checkMapPoint(PositionMap pm, PointType pt, PointType expected) {
         PointType correctedPoint = pm.correctPoint(pt);

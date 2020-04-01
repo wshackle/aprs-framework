@@ -180,10 +180,10 @@ public class DbSetupBuilder {
         private final String user;
         private final String dbname;
         private final boolean connected;
-        
+
         private final @Nullable
         Map<DbQueryEnum, DbQueryInfo> queriesMap;
-        
+
         private final boolean internalQueriesResourceDir;
         private final String queriesDir;
         private final boolean debug;
@@ -810,7 +810,7 @@ public class DbSetupBuilder {
                     Properties properties = new Properties();
                     properties.put("user", username);
                     properties.put("password", password);
-                    String neo4j_url = "jdbc:neo4j://" + host + ":" + port;
+                    String neo4j_url = "jdbc:neo4j:http://" + host + ":" + port;
                     if (debug) {
                         LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
                         LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
@@ -829,17 +829,19 @@ public class DbSetupBuilder {
                         }
                         return DriverManager.getConnection(neo4j_url, properties);
                     } catch (Exception ex) {
-                        ex.printStackTrace();
-//                        org.neo4j.jdbc.Driver neo4jDriver = new org.neo4j.jdbc.Driver();
-//                        return neo4jDriver.connect(neo4j_url, properties);
+                        System.err.println("dbtype="+dbtype+",host="+host+",port="+port+",db="+db+",username="+username);
+                        Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
+                        throw new RuntimeException(ex);
                     }
-                    break;
 
                 case NEO4J_BOLT:
                     throw new RuntimeException("Neo4J BOLT driver not supported.");
+                default:
+                    throw new IllegalArgumentException("Unsupported dbtype =" + dbtype);
+
             }
-            throw new IllegalArgumentException("Unsupported dbtype =" + dbtype);
-        } catch (ClassNotFoundException ex) {
+
+        } catch (ClassNotFoundException ex) { 
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }

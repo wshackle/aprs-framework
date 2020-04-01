@@ -1002,7 +1002,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                             }
                             for (int j = 1; j <= meta.getColumnCount(); j++) {
                                 String name = meta.getColumnName(j);
-                                String value = rs.getObject(name, Object.class).toString();
+                                // After upgrading to neo4j-jdbc 3.0  started getting 
+                                // java.lang.UnsupportedOperationException: Method getObject in class org.neo4j.jdbc.ResultSet is not yet implemented.
+//                                String value = rs.getObject(name, Object.class).toString();
+                                String value = rs.getString(name);
                                 resultMap.put(name, value);
                             }
                             if (null != displayInterface
