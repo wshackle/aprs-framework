@@ -124,7 +124,9 @@ easier to setup multiple instances.
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=true
 
+
     with
+
 
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=false
@@ -160,7 +162,9 @@ easier to setup multiple instances.
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=true
 
+
     with
+
 
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=false
