@@ -174,14 +174,6 @@
     </dependencies>
     <repositories>
         <repository>
-            <id>neo4j-public</id>
-            <url>https://m2.neo4j.org/content/groups/public</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-        </repository>
-        <repository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
             <releases>

@@ -95,7 +95,7 @@ easier to setup multiple instances.
         cd ..
 
 
-6.  Change the ports for the motoman directory. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
+6.  Change the ports for the motoman directory and disable authentication which is required after changing to the newer neo4j-jdbc driver after the old repository stopped working. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
     
     Replace
 
@@ -119,7 +119,20 @@ easier to setup multiple instances.
         org.neo4j.server.webserver.https.port=7495
 
 
-7.  Change the ports for the fanuc directory. By editing the text file "fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
+   Replace 
+
+        # Require (or disable the requirement of) auth to access Neo4j
+        dbms.security.auth_enabled=true
+
+    with
+
+        # Require (or disable the requirement of) auth to access Neo4j
+        dbms.security.auth_enabled=false
+
+
+
+
+7.  Change the ports for the fanuc directory and disable authentication which is required after changing to the newer neo4j-jdbc driver after the old repository stopped working. By editing the text file "fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
     
     Replace
 
@@ -141,6 +154,17 @@ easier to setup multiple instances.
 
         # https port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.https.port=7493
+
+   Replace 
+
+        # Require (or disable the requirement of) auth to access Neo4j
+        dbms.security.auth_enabled=true
+
+    with
+
+        # Require (or disable the requirement of) auth to access Neo4j
+        dbms.security.auth_enabled=false
+
 
 9.  Extract the data from the zip file into the fanuc data directory
 
