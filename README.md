@@ -75,9 +75,10 @@ downloaded by going to
 1.  Go to https://neo4j.com/
 2.  Follow "Download" link on the top-right
 3.  Follow "Other releases" link to https://neo4j.com/download/other-releases/
-4.  Get the tar or zip file rather than the exe of dmg file for your operating system in the community column/tab in the center at the bottom
-of the page with the latest 2.3.?? version. Using the tar or zip file will make it
-easier to setup multiple instances. 
+4.  Get the tar or zip file rather than the exe of dmg file for your operating 
+system in the community column/tab in the center at the bottom of the page with 
+the latest 2.3.?? version. Using the tar or zip file will make it easier to 
+setup multiple instances. 
 
   (These were the links on 9/4/2018. )
   https://go.neo4j.com/download-thanks.html?edition=community&release=2.3.12&flavour=unix&_ga=2.168339553.1327877516.1536067407-1405908250.1536067407
@@ -95,37 +96,40 @@ easier to setup multiple instances.
         cd ..
 
 
-6.  Change the ports for the motoman directory and disable authentication which is required after changing to the newer neo4j-jdbc driver after the old repository stopped working. By editing the text file "motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
+6.  Change the ports for the motoman directory and disable authentication which
+ is required after changing to the newer neo4j-jdbc driver after the old 
+repository stopped working. By editing the text file 
+"motoman-neo4j-database/neo4j-community-2.3.12/conf/neo4j-server.properties".
     
-    Replace
+Replace
 
         # http port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.port=7474
 
-    with
+with
 
         # http port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.port=7496
 
-    Replace
+Replace
 
         # https port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.https.port=7473
 
 
-    with
+with
 
         # https port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.https.port=7495
 
 
-   Replace 
+Replace 
 
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=true
 
 
-    with
+with
 
 
         # Require (or disable the requirement of) auth to access Neo4j
@@ -134,36 +138,38 @@ easier to setup multiple instances.
 
 
 
-7.  Change the ports for the fanuc directory and disable authentication which is required after changing to the newer neo4j-jdbc driver after the old repository stopped working. By editing the text file "fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
+7.  Change the ports for the fanuc directory and disable authentication which is
+ required after changing to the newer neo4j-jdbc driver after the old repository
+ stopped working. By editing the text file 
+"fanuc-neo4j-database/neo4j-community-2.3.11/conf/neo4j-server.properties".
     
-    Replace
+Replace
 
         # http port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.port=7474
 
-    with
+with
 
         # http port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.port=7494
 
-    Replace
+Replace
 
         # https port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.https.port=7473
 
 
-    with
+with
 
         # https port (for all data, administrative, and UI access)
         org.neo4j.server.webserver.https.port=7493
 
-   Replace 
+Replace 
 
         # Require (or disable the requirement of) auth to access Neo4j
         dbms.security.auth_enabled=true
 
-
-    with
+with
 
 
         # Require (or disable the requirement of) auth to access Neo4j
