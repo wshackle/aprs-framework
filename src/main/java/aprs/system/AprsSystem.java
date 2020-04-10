@@ -168,7 +168,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.initialization.qual.Initialized;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -225,6 +224,30 @@ public class AprsSystem implements SlotOffsetProvider {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
             setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
+        }
+    }
+
+    private boolean useCsvFilesInsteadOfDatabase;
+
+    /**
+     * Get the value of useCsvFilesInsteadOfDatabase
+     *
+     * @return the value of useCsvFilesInsteadOfDatabase
+     */
+    public boolean isUseCsvFilesInsteadOfDatabase() {
+        return useCsvFilesInsteadOfDatabase;
+    }
+
+    /**
+     * Set the value of useCsvFilesInsteadOfDatabase
+     *
+     * @param useCsvFilesInsteadOfDatabase new value of
+     * useCsvFilesInsteadOfDatabase
+     */
+    public void setUseCsvFilesInsteadOfDatabase(boolean useCsvFilesInsteadOfDatabase) {
+        this.useCsvFilesInsteadOfDatabase = useCsvFilesInsteadOfDatabase;
+        if (null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setCheckBoxMenuItemUseCsvFilesInsteadOfDatabase(useCsvFilesInsteadOfDatabase);
         }
     }
 
@@ -606,7 +629,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.executorJInternalFrame1.reloadErrorMaps();
     }
 
-    private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable [] = null;
+    private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable []  = null;
 
     public XFutureVoid restoreOrigRobotInfo() {
         String origRobotName1 = this.getOrigRobotName();
@@ -666,7 +689,7 @@ public class AprsSystem implements SlotOffsetProvider {
                         })
                 .thenRunAsync(
                         "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
-                        () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0,trace),
+                        () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0, trace),
                         runProgramService);
     }
 
@@ -1956,7 +1979,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return connectRobot(robotNameFinal, robotCrclHostFinal, getRobotCrclPort());
     }
 
-    private volatile StackTraceElement connectRobotTrace @Nullable[] = null;
+    private volatile StackTraceElement connectRobotTrace @Nullable []  = null;
 
     /**
      * Connect to a given robot with a CRCL server running on the given host and
@@ -7104,7 +7127,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public void takeSnapshots(String comment) {
         try {
             if (snapshotsEnabled()) {
-                takeSimViewSnapshot(createImageTempFile(comment), (PmCartesian) null, (String) null);
+                takeSimViewSnapshot(snapshotImageFile(comment), (PmCartesian) null, (String) null);
                 if (null != visionToDbJInternalFrame
                         && visionToDbJInternalFrame.isDbConnected()
                         && visionToDbJInternalFrame.databasesUpdatesEnabled()) {
@@ -8978,7 +9001,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public @Nullable
     File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pose, poseLabel, snapShotWidth, snapShotHeight);
         } else {
             return new File[2];
         }
@@ -8997,7 +9020,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public @Nullable
     File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         } else {
             return new File[2];
         }
@@ -9017,7 +9040,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public @Nullable
     File[] takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
-            return object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
+            return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth, snapShotHeight);
         } else {
             return new File[2];
         }
@@ -9055,7 +9078,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null == itemsToPaint) {
                 final File imgFile;
                 try {
-                    imgFile = createImageTempFile("nullItems_" + imgLabel);
+                    imgFile = snapshotImageFile("nullItems_" + imgLabel);
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
@@ -9065,7 +9088,7 @@ public class AprsSystem implements SlotOffsetProvider {
             } else if (itemsToPaint.isEmpty()) {
                 final File imgFile;
                 try {
-                    imgFile = createImageTempFile("emptyItems_" + imgLabel);
+                    imgFile = snapshotImageFile("emptyItems_" + imgLabel);
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
@@ -9075,7 +9098,7 @@ public class AprsSystem implements SlotOffsetProvider {
             } else {
                 final File imgFile;
                 try {
-                    imgFile = createImageTempFile(imgLabel);
+                    imgFile = snapshotImageFile(imgLabel);
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
@@ -9167,7 +9190,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
-                imgFile = createImageTempFile(imgLabel);
+                imgFile = snapshotImageFile(imgLabel);
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -9195,7 +9218,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
-                imgFile = createImageTempFile(imgLabel);
+                imgFile = snapshotImageFile(imgLabel);
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -9223,7 +9246,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
-                imgFile = createImageTempFile(imgLabel);
+                imgFile = snapshotImageFile(imgLabel);
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
@@ -9269,7 +9292,7 @@ public class AprsSystem implements SlotOffsetProvider {
     File[] takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) throws IOException {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
-            return this.object2DViewJInternalFrame.takeSnapshot(createImageTempFile(imgLabel), itemsToPaint, w, h);
+            return this.object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), itemsToPaint, w, h);
         } else {
             return new File[2];
         }
@@ -9465,6 +9488,10 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != startKitInspetion) {
                 setKitInspectionStartupSelected(Boolean.valueOf(startKitInspetion));
             }
+            String useCsvFilesInsteadOfDatabaseString = props.getProperty(USE_CSV_FILES_INSTEAD_OF_DATABASE);
+            if (null != useCsvFilesInsteadOfDatabaseString) {
+                this.setUseCsvFilesInsteadOfDatabase(Boolean.valueOf(useCsvFilesInsteadOfDatabaseString));
+            }
             this.updateSubPropertiesFiles();
             if (null != this.pddlPlannerJInternalFrame) {
                 this.pddlPlannerJInternalFrame.loadProperties();
@@ -9587,6 +9614,7 @@ public class AprsSystem implements SlotOffsetProvider {
             return xfv;
         }
     }
+    private static final String USE_CSV_FILES_INSTEAD_OF_DATABASE = "UseCsvFilesInsteadOfDatabase";
     private static final String ALERT_LIMITS = "alertLimits";
 
     private XFutureVoid syncPauseRecoverCheckbox() {
@@ -9728,6 +9756,7 @@ public class AprsSystem implements SlotOffsetProvider {
         propsMap.put(SNAP_SHOT_HEIGHT_PROP, Integer.toString(snapShotHeight));
         propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckBoxSelected()));
         propsMap.put(LOG_CRCL_PROGRAMS_ENABLED, Boolean.toString(isLogCrclProgramsSelected()));
+        propsMap.put(USE_CSV_FILES_INSTEAD_OF_DATABASE, Boolean.toString(this.isUseCsvFilesInsteadOfDatabase()));
         setDefaultRobotName();
         if (null != robotName) {
             propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
@@ -10439,10 +10468,24 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    public File createImageTempFile(String prefix) throws IOException {
+    private static final AtomicInteger SIF_INT = new AtomicInteger();
+
+    public File snapshotImageFile(String prefix, String suffix, File dir) throws IOException {
+        String cleanedPrefix = cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix);
+        try {
+            return new File(dir, prefix + String.format("%06d", SIF_INT.incrementAndGet()) + suffix);
+        } catch (Exception exception) {
+            String errInfo = "cleanedPrefix=" + cleanedPrefix + ",suffix=" + suffix + ",dir=" + dir;
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, errInfo, exception);
+            throw new IOException(errInfo, exception);
+        }
+    }
+
+    public File snapshotImageFile(String prefix) throws IOException {
         File logImageDir1 = getLogImageDir();
         try {
-            return createTempFile(prefix, ".PNG", logImageDir1);
+            return snapshotImageFile(prefix, ".PNG", logImageDir1);
         } catch (IOException iOException) {
             String errInfo = "prefix=" + prefix + ",logImageDir1=" + logImageDir1;
             System.err.println(errInfo);

@@ -7791,6 +7791,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private @Nullable
     String getConnnectionURL() throws SQLException {
+        if(this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            return "UseCsvFilesInsteadOfDatabase";
+        }
         Connection con = crclGenerator.getDbConnection();
         if (null == con) {
             throw new IllegalStateException("connection is null");

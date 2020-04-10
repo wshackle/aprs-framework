@@ -2,6 +2,7 @@
 LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
+UseCsvFilesInsteadOfDatabase=true
 alertLimits=true
 aprs.customWindowsFile=customwindows.txt
 aprs.robotName=Sim_Fanuc

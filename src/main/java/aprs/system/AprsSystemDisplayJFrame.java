@@ -681,6 +681,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemAllowForceFakeTakeAnyTime = new javax.swing.JCheckBoxMenuItem();
         jMenuItemAddExistingCustomWindowStartup = new javax.swing.JMenuItem();
         jMenuItemNewCustomWindowStartup = new javax.swing.JMenuItem();
+        jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1019,6 +1020,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jMenuItemNewCustomWindowStartup);
+
+        jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.setSelected(true);
+        jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.setText("Use CSV files instead of Database");
+        jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemUseCsvFilesInsteadOfDatabaseActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -2159,6 +2169,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemCorrectionMode.setSelected(selected);
         });
     }
+    
+    void setCheckBoxMenuItemUseCsvFilesInsteadOfDatabase(boolean selected) {
+        Utils.runOnDispatchThread(() -> {
+            AprsSystemDisplayJFrame.this.jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.setSelected(selected);
+        });
+    }
 
     @UIEffect
     private void jMenuItemFillKitTraysActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFillKitTraysActionPerformed
@@ -2354,6 +2370,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemNewCustomWindowStartupActionPerformed
 
+    private void jCheckBoxMenuItemUseCsvFilesInsteadOfDatabaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemUseCsvFilesInsteadOfDatabaseActionPerformed
+        try {
+            if (null != aprsSystem) {
+                aprsSystem.setUseCsvFilesInsteadOfDatabase(this.jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.isSelected());
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemUseCsvFilesInsteadOfDatabaseActionPerformed
+
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(selected);
@@ -2446,6 +2472,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobotCrclGUI;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStepping;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachTable;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;

@@ -1,13 +1,13 @@
 classname=crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame
+boolean resizable=false
+boolean focusCycleRoot=true
 boolean closable=false
 boolean iconifiable=false
 boolean maximizable=false
-boolean resizable=false
-boolean focusCycleRoot=true
-int cRCLSensorOutPort=8888
 int poseCRCLPort=64444
+int cRCLSensorOutPort=8888
 java.lang.String poseCRCLHost=localhost
 java.lang.String objectsFileName=
-int layer=0
 int defaultCloseOperation=3
 java.lang.String title=Force Torque Sensor Simulation
+int layer=0

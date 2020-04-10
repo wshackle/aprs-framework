@@ -1,0 +1,8 @@
+index,name,type
+1,name,String
+2,x,String
+3,y,String
+4,sku_name,String
+5,prp_name,String
+6,tray_name,String
+7,diameter,String

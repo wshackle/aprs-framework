@@ -1,0 +1,4 @@
+match pointpath =(p:PartsTray)-[:hasPartsTray_Slot]-(s:Slot)-[:hasSlot_PartRefAndPose]-(prp:PartRefAndPose)-[:hasPartRefAndPose_Pose]-(pose:Pose)-[:hasPose_Point]-(point:Point), 
+prpstuff=(prp) - [:hasPartRefAndPose_Sku] -> (sku:StockKeepingUnit)-[:hasStockKeepingUnit_ExternalShape]-(xshape:ExternalShape)
+where p.name='kit_s2l2_vessel_2'
+return s.name as name, s.hasSlot_IsOccupied as slot_occupied, s.hasSlot_ID as slot_id, sku.name as sku_name, point.hasPoint_X as x, point.hasPoint_Y as y, point.hasPoint_Z as z

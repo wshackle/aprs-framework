@@ -95,15 +95,11 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.misc.Utils.autoResizeTableColWidths;
-import aprs.simview.Object2DJFrame;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.vector;
-import java.awt.Frame;
-import java.awt.event.WindowEvent;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 
 /**
  *
@@ -1386,7 +1382,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     argsMapPasswd,
                     type,
                     dbSetup,
-                    isDebug())
+                    isDebug(),
+                    aprsSystem.getTaskName(),
+                    aprsSystem)
                     .thenAccept((DatabasePoseUpdater x) -> {
                         if (null != x) {
                             x.setRotationOffset(ro);
@@ -1420,6 +1418,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         try {
             if (null == dpu) {
                 return false;
+            }
+            if(this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                return true;
             }
             Connection con = dpu.getSqlConnection();
             if (con == null) {
@@ -2078,7 +2079,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             lastVisionClientUpdateLine = line;
             lastVisionClientUpdateList = visionList;
             lastVisionClientUpdateListCopy = new ArrayList<>(visionList);
-            if (null != dpu && null != dpu.getSqlConnection()) {
+            if (null != dpu && (this.aprsSystem.isUseCsvFilesInsteadOfDatabase() ||   null != dpu.getSqlConnection())) {
                 boolean addRepeatCounts = addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected();
                 boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
                 updating = true;
@@ -3193,8 +3194,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     public void setSqlConnection(Connection connection, DbType dbtype) {
         try {
             closeDatabasePoseUpdater();
-            dpu = new DatabasePoseUpdater(connection, dbtype, true,
-                    dbSetupPublisher.getDbSetup());
+            dpu = new DatabasePoseUpdater(
+                    connection, 
+                    dbtype, 
+                    true,
+                    dbSetupPublisher.getDbSetup(),
+                    aprsSystem.getTaskName(),
+                    aprsSystem);
             dpu.setVerify(verifyUpdatesCachedCheckBox.isSelected());
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
         } catch (Exception ex) {

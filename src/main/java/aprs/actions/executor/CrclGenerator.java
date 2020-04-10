@@ -1014,12 +1014,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != externalPoseProvider) {
             return true;
         }
+        if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            return true;
+        }
         try {
-            if (null == dbConnection) {
-                return false;
-            }
-            if (dbConnection.isClosed()) {
-                return false;
+            if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                if (null == dbConnection) {
+                    return false;
+                }
+                if (dbConnection.isClosed()) {
+                    return false;
+                }
             }
             if (null == qs) {
                 return false;
@@ -1074,7 +1079,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param dbConnection new database connection to use
      */
     private synchronized void setDbConnection(java.sql.@Nullable Connection dbConnection) {
+
         try {
+            if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                if (qs != null) {
+                    qs.close();
+                }
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
+                return;
+            }
             if (null != this.dbConnection && dbConnection != this.dbConnection) {
                 try {
                     if (!this.dbConnection.isClosed()) {
@@ -1091,7 +1104,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this.dbConnection = dbConnection;
             }
             if (null != dbConnection && null != dbSetup) {
-                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap());
+                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
             } else if (qs != null) {
                 qs.close();
             }
@@ -1112,6 +1125,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private boolean dbConnectionIsClosedOrNull() {
+        if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            return false;
+        }
         try {
             return dbConnection == null || dbConnection.isClosed();
         } catch (SQLException ex) {
@@ -1128,6 +1144,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public XFutureVoid setDbSetup(DbSetup dbSetup) {
 
+        if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            try {
+                if (qs != null) {
+                    qs.close();
+                }
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            return XFutureVoid.completedFuture();
+        }
         this.dbSetup = dbSetup;
         if (null != this.dbSetup && this.dbSetup.isConnected()) {
             if (null == dbSetup.getDbType() || DbType.NONE == dbSetup.getDbType()) {
@@ -1889,7 +1916,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         String yargString = action.getArgs()[takePartArgIndex + 2];
                         final double x = Double.parseDouble(xargString);
                         final double y = Double.parseDouble(yargString);
-                        PointType partBtapPoint = Objects.requireNonNull(getClosestPoint(partBtapName, x, y),"partBtapPoint");
+                        PointType partBtapPoint = Objects.requireNonNull(getClosestPoint(partBtapName, x, y), "partBtapPoint");
                         final PhysicalItem closestItem = getClosestItem(partBtapName, x, y);
                         if (null != closestItem) {
                             lastTakenPart = closestItem.getFullName();
@@ -3102,7 +3129,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 }
             }
             return names;
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
@@ -3904,11 +3931,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return kitsToFix;
     }
 
-    private void checkKitsToCheckInstanceCounts(
+    private synchronized void checkKitsToCheckInstanceCounts(
             List<PhysicalItem> physicalItemsLocal) throws IllegalStateException {
         ConcurrentHashMap<String, Integer> kitNameCountMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, List<PhysicalItem>> kitNameItemListMap = new ConcurrentHashMap<>();
-        for (KitToCheck kit : kitsToCheck) {
+        List<KitToCheck> kitsToChecksList = new ArrayList<>(kitsToCheck);
+        if(physicalItemsLocal.isEmpty() && !kitsToChecksList.isEmpty()) {
+            throw new IllegalArgumentException("physicalItemsLocal.isEmpty()");
+        }
+        for (KitToCheck kit : kitsToChecksList) {
             kitNameCountMap.compute(kit.name, (String name, Integer v) -> ((v != null) ? v + 1 : 1));
             kitNameItemListMap.compute(kit.name, (String name, List<PhysicalItem> v) -> ((v != null) ? v : getKitInstanceItems(physicalItemsLocal, name)));
         }
@@ -3920,12 +3951,31 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
                 throw new IllegalStateException(errmsg);
             } else if (items.size() < entry.getValue()) {
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                final List<String> kitInstanceNames = getKitInstanceNames(entry.getKey());
+                System.err.println("kitInstanceNames = " + kitInstanceNames);
+                System.err.println("skuNameToInstanceNamesMap = " + skuNameToInstanceNamesMap);
+                List<PhysicalItem> recheckList = getKitInstanceItems(physicalItemsLocal, entry.getKey());
+                System.err.println("recheckList = " + recheckList);
+                System.err.println("entry = " + entry);
+                System.err.println("kitNameCountMap = " + kitNameCountMap);
+                System.err.println("kitsToChecksList = " + kitsToChecksList);
                 System.err.println("lastRequiredPartsMap = " + lastRequiredPartsMap);
                 System.err.println("items = " + items);
+                System.err.println("physicalItemsLocal = " + physicalItemsLocal);
                 System.err.println("kitNameItemListMap = " + kitNameItemListMap);
                 println("getKitInstancePoses(name) = " + getKitInstancePoses(entry.getKey()));
                 final String errmsg = "checkKitsToCheckInstanceCounts: need " + entry.getValue() + " kits of " + entry.getKey() + " but only have " + items.size();
                 takeSimViewSnapshot(errmsg + "physicalItemsLocal", physicalItemsLocal);
+                List<String> trayInstances = getPartTrayInstancesFromSkuName(entry.getKey());
+                System.out.println("trayInstances = " + trayInstances);
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
                 throw new IllegalStateException(errmsg);
             }
         }
@@ -4538,193 +4588,192 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @return tray from database
      * @throws SQLException if query fails
      */
-    private @Nullable
-    PartsTray findCorrectKitTray(String kitSku) throws SQLException {
-
-        assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
-        assert (null != this.qs) : "null == this.qs: @AssumeAssertion(nullness)";
-        List<PartsTray> dpuPartsTrayList = aprsSystem.getPartsTrayList();
-
-        //-- retrieveing from the database all the parts trays that have the sku kitSku
-        List<PartsTray> partsTraysList = getPartsTrays(kitSku);
-
-        List<PhysicalItem> partsTrayListItems = new ArrayList<>();
-        List<PhysicalItem> dpuPartsTrayListItems = new ArrayList<>();
-
-        /*
-        logDebug("-Checking parts trays");
-        for (int i = 0; i < partsTraysList.size(); i++) {
-            PartsTray partsTray = partsTraysList.get(i);
-            logDebug("-Parts tray: " + partsTray.getPartsTrayName());
-        }
-         */
-        for (PartsTray partsTray : partsTraysList) {
-
-            String trayName = partsTray.getPartsTrayName();
-            if (null == trayName) {
-                LOGGER.log(Level.WARNING, "partsTray has null partsTrayName : {0}", partsTray);
-                continue;
-            }
-            //-- getting the pose for the parts tray 
-            PoseType partsTrayPose = qs.getPose(trayName);
-
-            if (partsTrayPose == null) {
-                LOGGER.log(Level.WARNING, "recieve null pose for {0}", partsTray.getPartsTrayName());
-                continue;
-            }
-//            partsTrayPose = visionToRobotPose(partsTrayPose);
-            PointType partsTrayPosePoint = partsTrayPose.getPoint();
-            if (null == partsTrayPosePoint) {
-                throw new IllegalStateException("pose for tray=" + trayName + " has null point property");
-            }
-            logDebug("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPosePoint.getX() + "," + partsTrayPosePoint.getY() + ")");
-            partsTray.setpartsTrayPose(partsTrayPose);
-            double partsTrayPoseX = partsTrayPosePoint.getX();
-            double partsTrayPoseY = partsTrayPosePoint.getY();
-            double partsTrayPoseZ = partsTrayPosePoint.getZ();
-
-            //-- Read partsTrayList
-            //-- Assign rotation to myPartsTray by comparing poses from vision vs database
-            //System.out.print("-Assigning proper rotation: ");
-            logDebug("-Comparing with other parts trays from vision");
-            for (int c = 0; c < dpuPartsTrayList.size(); c++) {
-                PartsTray pt = dpuPartsTrayList.get(c);
-
-                PointType dpuPartsTrayPoint = point(pt.getX(), pt.getY(), 0);
-
-//                dpuPartsTrayPoint = visionToRobotPoint(dpuPartsTrayPoint);
-                double ptX = dpuPartsTrayPoint.getX();
-                double ptY = dpuPartsTrayPoint.getY();
-                logDebug("    Parts tray:(" + pt.getX() + "," + pt.getY() + ")");
-                logDebug("    Rotation:(" + pt.getRotation() + ")");
-                //-- Check if X for parts trays are close enough
-                //double diffX = Math.abs(partsTrayPoseX - ptX);
-                //logDebug("diffX= "+diffX);
-                /*
-                if (diffX < 1E-7) {
-                    //-- Check if Y for parts trays are close enough
-                    double diffY = Math.abs(partsTrayPoseY - ptY);
-                    //logDebug("diffY= "+diffY);
-                    if (diffY < 1E-7) {
-                        rotation=pt.getRotation();
-                        partsTray.setRotation(pt.getRotation());
-                    }
-                }
-                 */
-
-                double distance = Math.hypot(partsTrayPoseX - ptX, partsTrayPoseY - ptY);
-                logDebug("    Distance = " + distance + "\n");
-                if (distance < 2) {
-                    double rotation = pt.getRotation();
-                    partsTray.setRotation(rotation);
-                }
-                if (c >= dpuPartsTrayListItems.size()) {
-                    String name = pt.getPartsTrayName();
-                    if (null != name) {
-                        dpuPartsTrayListItems.add(new Tray(name, pt.getRotation(), ptX, ptY));
-                    } else {
-                        LOGGER.log(Level.WARNING, "partsTray has null name : pt={0}", pt);
-                    }
-                }
-            }
-
-            //rotation = partsTray.getRotation();
-            //logDebug(rotation);
-            //-- retrieve the rotationOffset
-            double rotationOffset = getVisionToDBRotationOffset();
-
-            logDebug("rotationOffset " + rotationOffset);
-            logDebug("rotation " + partsTray.getRotation());
-            //-- compute the angle
-            double angle = normAngle(partsTray.getRotation() + rotationOffset);
-
-            //-- Get list of slots for this parts tray
-            logDebug("-Checking slots");
-            List<Slot> slotList = partsTray.getSlotList();
-            int count = 0;
-            for (Slot slot : slotList) {
-                double x_offset = slot.getX_OFFSET() * 1000;
-                double y_offset = slot.getY_OFFSET() * 1000;
-                double slotX = partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
-                double slotY = partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
-                double slotZ = partsTrayPoseZ;
-                PointType slotPoint = new PointType();
-                slotPoint.setX(slotX);
-                slotPoint.setY(slotY);
-                slotPoint.setZ(slotZ);
-                PoseType slotPose = new PoseType();
-                slotPose.setPoint(slotPoint);
-                slot.setSlotPose(slotPose);
-
-                logDebug("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
-                //-- compare this slot pose with the ones in PlacePartSlotPoseList
-                for (PoseType pose : PlacePartSlotPoseList) {
-                    PointType point = pose.getPoint();
-                    if (null == point) {
-                        throw new IllegalStateException("pose on PlacePartSlotPoseList has null point property: PlacePartSlotPoseList=" + PlacePartSlotPoseList);
-                    }
-                    logDebug("      placepartpose :(" + point.getX() + "," + point.getY() + ")");
-                    double distance = Math.hypot(point.getX() - slotX, point.getY() - slotY);
-                    logDebug("         Distance = " + distance + "\n");
-                    if (distance < 5.0) {
-                        count++;
-                    }
-                }
-            }
-            try {
-                if (snapshotsEnabled()) {
-                    takeSimViewSnapshot(createImageTempFile("PlacePartSlotPoseList"), posesToDetectedItemList(PlacePartSlotPoseList));
-                    takeSimViewSnapshot(createImageTempFile("partsTray.getSlotList"), slotList);
-                }
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, "", ex);
-            }
-            partsTrayListItems.add(new Tray(trayName, partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
-            if (count > 0) {
-                try {
-                    if (snapshotsEnabled()) {
-                        takeSimViewSnapshot(createImageTempFile("dpuPartsTrayList"), dpuPartsTrayListItems);
-                        takeSimViewSnapshot(createImageTempFile("partsTrayList"), partsTrayListItems);
-                    }
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, "", ex);
-                }
-                correctPartsTray = partsTray;
-                logDebug("Found partstray: " + partsTray.getPartsTrayName());
-                return partsTray;
-            }
-        }
-        try {
-            if (snapshotsEnabled()) {
-                takeSimViewSnapshot(createImageTempFile("dpuPartsTrayList"), dpuPartsTrayListItems);
-                takeSimViewSnapshot(createImageTempFile("partsTrayList"), partsTrayListItems);
-            }
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
-        }
-        System.err.println("findCorrectKitTray(" + kitSku + ") returning null. partsTraysList=" + partsTraysList);
-        return null;
-    }
-
-    private String getKitResultImage(Set<Slot> list) {
-        StringBuilder kitResultImage = new StringBuilder();
-        List<Integer> idList = new ArrayList<>();
-        for (Slot slot : list) {
-            int id = slot.getID();
-            idList.add(id);
-        }
-        if (!idList.isEmpty()) {
-            Collections.sort(idList);
-        } else {
-            logDebug("idList is empty");
-        }
-        for (Integer s : idList) {
-            kitResultImage.append(s);
-        }
-
-        return kitResultImage.toString();
-    }
-
+//    private @Nullable
+//    PartsTray findCorrectKitTray(String kitSku) throws SQLException, IOException {
+//
+//        assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
+//        assert (null != this.qs) : "null == this.qs: @AssumeAssertion(nullness)";
+//        List<PartsTray> dpuPartsTrayList = aprsSystem.getPartsTrayList();
+//
+//        //-- retrieveing from the database all the parts trays that have the sku kitSku
+//        List<PartsTray> partsTraysList = getPartsTrays(kitSku);
+//
+//        List<PhysicalItem> partsTrayListItems = new ArrayList<>();
+//        List<PhysicalItem> dpuPartsTrayListItems = new ArrayList<>();
+//
+//        /*
+//        logDebug("-Checking parts trays");
+//        for (int i = 0; i < partsTraysList.size(); i++) {
+//            PartsTray partsTray = partsTraysList.get(i);
+//            logDebug("-Parts tray: " + partsTray.getPartsTrayName());
+//        }
+//         */
+//        for (PartsTray partsTray : partsTraysList) {
+//
+//            String trayName = partsTray.getPartsTrayName();
+//            if (null == trayName) {
+//                LOGGER.log(Level.WARNING, "partsTray has null partsTrayName : {0}", partsTray);
+//                continue;
+//            }
+//            //-- getting the pose for the parts tray 
+//            PoseType partsTrayPose = qs.getPose(trayName);
+//
+//            if (partsTrayPose == null) {
+//                LOGGER.log(Level.WARNING, "recieve null pose for {0}", partsTray.getPartsTrayName());
+//                continue;
+//            }
+////            partsTrayPose = visionToRobotPose(partsTrayPose);
+//            PointType partsTrayPosePoint = partsTrayPose.getPoint();
+//            if (null == partsTrayPosePoint) {
+//                throw new IllegalStateException("pose for tray=" + trayName + " has null point property");
+//            }
+//            logDebug("-Checking parts tray [" + partsTray.getPartsTrayName() + "] :(" + partsTrayPosePoint.getX() + "," + partsTrayPosePoint.getY() + ")");
+//            partsTray.setpartsTrayPose(partsTrayPose);
+//            double partsTrayPoseX = partsTrayPosePoint.getX();
+//            double partsTrayPoseY = partsTrayPosePoint.getY();
+//            double partsTrayPoseZ = partsTrayPosePoint.getZ();
+//
+//            //-- Read partsTrayList
+//            //-- Assign rotation to myPartsTray by comparing poses from vision vs database
+//            //System.out.print("-Assigning proper rotation: ");
+//            logDebug("-Comparing with other parts trays from vision");
+//            for (int c = 0; c < dpuPartsTrayList.size(); c++) {
+//                PartsTray pt = dpuPartsTrayList.get(c);
+//
+//                PointType dpuPartsTrayPoint = point(pt.getX(), pt.getY(), 0);
+//
+////                dpuPartsTrayPoint = visionToRobotPoint(dpuPartsTrayPoint);
+//                double ptX = dpuPartsTrayPoint.getX();
+//                double ptY = dpuPartsTrayPoint.getY();
+//                logDebug("    Parts tray:(" + pt.getX() + "," + pt.getY() + ")");
+//                logDebug("    Rotation:(" + pt.getRotation() + ")");
+//                //-- Check if X for parts trays are close enough
+//                //double diffX = Math.abs(partsTrayPoseX - ptX);
+//                //logDebug("diffX= "+diffX);
+//                /*
+//                if (diffX < 1E-7) {
+//                    //-- Check if Y for parts trays are close enough
+//                    double diffY = Math.abs(partsTrayPoseY - ptY);
+//                    //logDebug("diffY= "+diffY);
+//                    if (diffY < 1E-7) {
+//                        rotation=pt.getRotation();
+//                        partsTray.setRotation(pt.getRotation());
+//                    }
+//                }
+//                 */
+//
+//                double distance = Math.hypot(partsTrayPoseX - ptX, partsTrayPoseY - ptY);
+//                logDebug("    Distance = " + distance + "\n");
+//                if (distance < 2) {
+//                    double rotation = pt.getRotation();
+//                    partsTray.setRotation(rotation);
+//                }
+//                if (c >= dpuPartsTrayListItems.size()) {
+//                    String name = pt.getPartsTrayName();
+//                    if (null != name) {
+//                        dpuPartsTrayListItems.add(new Tray(name, pt.getRotation(), ptX, ptY));
+//                    } else {
+//                        LOGGER.log(Level.WARNING, "partsTray has null name : pt={0}", pt);
+//                    }
+//                }
+//            }
+//
+//            //rotation = partsTray.getRotation();
+//            //logDebug(rotation);
+//            //-- retrieve the rotationOffset
+//            double rotationOffset = getVisionToDBRotationOffset();
+//
+//            logDebug("rotationOffset " + rotationOffset);
+//            logDebug("rotation " + partsTray.getRotation());
+//            //-- compute the angle
+//            double angle = normAngle(partsTray.getRotation() + rotationOffset);
+//
+//            //-- Get list of slots for this parts tray
+//            logDebug("-Checking slots");
+//            List<Slot> slotList = partsTray.getSlotList();
+//            int count = 0;
+//            for (Slot slot : slotList) {
+//                double x_offset = slot.getX_OFFSET() * 1000;
+//                double y_offset = slot.getY_OFFSET() * 1000;
+//                double slotX = partsTrayPoseX + x_offset * Math.cos(angle) - y_offset * Math.sin(angle);
+//                double slotY = partsTrayPoseY + x_offset * Math.sin(angle) + y_offset * Math.cos(angle);
+//                double slotZ = partsTrayPoseZ;
+//                PointType slotPoint = new PointType();
+//                slotPoint.setX(slotX);
+//                slotPoint.setY(slotY);
+//                slotPoint.setZ(slotZ);
+//                PoseType slotPose = new PoseType();
+//                slotPose.setPoint(slotPoint);
+//                slot.setSlotPose(slotPose);
+//
+//                logDebug("+++ " + slot.getSlotName() + ":(" + slotX + "," + slotY + ")");
+//                //-- compare this slot pose with the ones in PlacePartSlotPoseList
+//                for (PoseType pose : PlacePartSlotPoseList) {
+//                    PointType point = pose.getPoint();
+//                    if (null == point) {
+//                        throw new IllegalStateException("pose on PlacePartSlotPoseList has null point property: PlacePartSlotPoseList=" + PlacePartSlotPoseList);
+//                    }
+//                    logDebug("      placepartpose :(" + point.getX() + "," + point.getY() + ")");
+//                    double distance = Math.hypot(point.getX() - slotX, point.getY() - slotY);
+//                    logDebug("         Distance = " + distance + "\n");
+//                    if (distance < 5.0) {
+//                        count++;
+//                    }
+//                }
+//            }
+//            try {
+//                if (snapshotsEnabled()) {
+//                    takeSimViewSnapshot(createImageTempFile("PlacePartSlotPoseList"), posesToDetectedItemList(PlacePartSlotPoseList));
+//                    takeSimViewSnapshot(createImageTempFile("partsTray.getSlotList"), slotList);
+//                }
+//            } catch (IOException ex) {
+//                LOGGER.log(Level.SEVERE, "", ex);
+//            }
+//            partsTrayListItems.add(new Tray(trayName, partsTray.getRotation(), partsTrayPoseX, partsTrayPoseY));
+//            if (count > 0) {
+//                try {
+//                    if (snapshotsEnabled()) {
+//                        takeSimViewSnapshot(createImageTempFile("dpuPartsTrayList"), dpuPartsTrayListItems);
+//                        takeSimViewSnapshot(createImageTempFile("partsTrayList"), partsTrayListItems);
+//                    }
+//                } catch (IOException ex) {
+//                    LOGGER.log(Level.SEVERE, "", ex);
+//                }
+//                correctPartsTray = partsTray;
+//                logDebug("Found partstray: " + partsTray.getPartsTrayName());
+//                return partsTray;
+//            }
+//        }
+//        try {
+//            if (snapshotsEnabled()) {
+//                takeSimViewSnapshot(createImageTempFile("dpuPartsTrayList"), dpuPartsTrayListItems);
+//                takeSimViewSnapshot(createImageTempFile("partsTrayList"), partsTrayListItems);
+//            }
+//        } catch (IOException ex) {
+//            LOGGER.log(Level.SEVERE, "", ex);
+//        }
+//        System.err.println("findCorrectKitTray(" + kitSku + ") returning null. partsTraysList=" + partsTraysList);
+//        return null;
+//    }
+//
+//    private String getKitResultImage(Set<Slot> list) {
+//        StringBuilder kitResultImage = new StringBuilder();
+//        List<Integer> idList = new ArrayList<>();
+//        for (Slot slot : list) {
+//            int id = slot.getID();
+//            idList.add(id);
+//        }
+//        if (!idList.isEmpty()) {
+//            Collections.sort(idList);
+//        } else {
+//            logDebug("idList is empty");
+//        }
+//        for (Integer s : idList) {
+//            kitResultImage.append(s);
+//        }
+//
+//        return kitResultImage.toString();
+//    }
     private double normAngle(double angleIn) {
         double angleOut = angleIn;
         if (angleOut > Math.PI) {
@@ -4735,34 +4784,33 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return angleOut;
     }
 
-    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException {
-        int nbOfOccupiedSlots = 0;
-        List<String> allPartsInKt = new ArrayList<>();
-        //-- queries the database 10 times to make sure we are not missing some part_in_kt
-        for (int i = 0; i < 20; i++) {
-            if (allPartsInKt.isEmpty()) {
-
-                allPartsInKt = getAllPartsInKt(partInKt);
-            }
-        }
-        if (!allPartsInKt.isEmpty()) {
-            for (String newPartInKt : allPartsInKt) {
-                System.out.print("-------- " + newPartInKt);
-                if (checkPartInSlot(newPartInKt, slot)) {
-                    logDebug("-------- Located in slot");
-                    nbOfOccupiedSlots++;
-                } else {
-                    logDebug("-------- Not located in slot");
-                }
-            }
-            //part_in_kt_found=true;
-        } else {
-            addToInspectionResultJTextPane("&nbsp;&nbsp;No part_in_kt of type " + partInKt + " was found in the database<br>");
-            //part_in_kt_found=false;
-        }
-        return nbOfOccupiedSlots;
-    }
-
+//    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, IOException {
+//        int nbOfOccupiedSlots = 0;
+//        List<String> allPartsInKt = new ArrayList<>();
+//        //-- queries the database 10 times to make sure we are not missing some part_in_kt
+//        for (int i = 0; i < 20; i++) {
+//            if (allPartsInKt.isEmpty()) {
+//
+//                allPartsInKt = getAllPartsInKt(partInKt);
+//            }
+//        }
+//        if (!allPartsInKt.isEmpty()) {
+//            for (String newPartInKt : allPartsInKt) {
+//                System.out.print("-------- " + newPartInKt);
+//                if (checkPartInSlot(newPartInKt, slot)) {
+//                    logDebug("-------- Located in slot");
+//                    nbOfOccupiedSlots++;
+//                } else {
+//                    logDebug("-------- Not located in slot");
+//                }
+//            }
+//            //part_in_kt_found=true;
+//        } else {
+//            addToInspectionResultJTextPane("&nbsp;&nbsp;No part_in_kt of type " + partInKt + " was found in the database<br>");
+//            //part_in_kt_found=false;
+//        }
+//        return nbOfOccupiedSlots;
+//    }
     private double kitInspectDistThreshold = 20.0;
 
     /**
@@ -5160,56 +5208,53 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            return pose;
 //        }
 //    }
-    private @Nullable
-    PoseType getNewPoseFromDb(String posename) throws SQLException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-
-        qs.setAprsSystem(aprsSystem);
-        PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
-        return pose;
-    }
-
-    private @Nullable
-    PoseType debugGetNewPoseFromDb(String posename) throws SQLException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-
-        boolean origDebug = qs.isDebug();
-        qs.setDebug(true);
-        PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
-        qs.setDebug(origDebug);
-        return pose;
-    }
-
-    private List<PartsTray> getPartsTrays(String name) throws SQLException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-        List<PartsTray> list = new ArrayList<>(qs.getPartsTrays(name));
-
-        return list;
-    }
-
-    private int getPartDesignPartCount(String kitName) throws SQLException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-        int count = qs.getPartDesignPartCount(kitName);
-        return count;
-    }
-
-    private List<String> getAllPartsInKt(String name) throws SQLException {
+//    private @Nullable
+//    PoseType getNewPoseFromDb(String posename) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//
+//        qs.setAprsSystem(aprsSystem);
+//        PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
+//        return pose;
+//    }
+//    private @Nullable
+//    PoseType debugGetNewPoseFromDb(String posename) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//
+//        boolean origDebug = qs.isDebug();
+//        qs.setDebug(true);
+//        PoseType pose = qs.getPose(posename, requireNewPoses, visionCycleNewDiffThreshold);
+//        qs.setDebug(origDebug);
+//        return pose;
+//    }
+//    private List<PartsTray> getPartsTrays(String name) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//        List<PartsTray> list = new ArrayList<>(qs.getPartsTrays(name));
+//
+//        return list;
+//    }
+//
+//    private int getPartDesignPartCount(String kitName) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//        int count = qs.getPartDesignPartCount(kitName);
+//        return count;
+//    }
+    private List<String> getAllPartsInKt(String name) throws SQLException, IOException {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
@@ -5221,17 +5266,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return partsInKtList;
     }
 
-    private List<String> getAllPartsInPt(String name) throws SQLException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-        List<String> partsInPtList = new ArrayList<>(qs.getAllPartsInPt(name));
-
-        return partsInPtList;
-    }
-
+//    private List<String> getAllPartsInPt(String name) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//        List<String> partsInPtList = new ArrayList<>(qs.getAllPartsInPt(name));
+//
+//        return partsInPtList;
+//    }
     private volatile @Nullable
     PoseType lastTestApproachPose = null;
 
@@ -6237,7 +6281,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         settingI.setJointPositionTolerance(jointTolerancesVals[i]);
                         newSettingsList.add(settingI);
                     }
-                    final List<JointPositionToleranceSettingType> newJointTolerancesSetting 
+                    final List<JointPositionToleranceSettingType> newJointTolerancesSetting
                             = newJointTolerances.getSetting();
                     newJointTolerancesSetting.clear();
                     newJointTolerancesSetting.addAll(newSettingsList);

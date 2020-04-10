@@ -1,0 +1,4 @@
+name,slot_occupied,slot_id,sku_name,x,y,z
+kit_m2l1_vessel_2_slot_mg_2,"""false""","""2""",sku_part_medium_gear,"""-0.051710""","""-0.038460""","""0.000000"""
+kit_m2l1_vessel_2_slot_lg_1,"""false""","""3""",sku_part_large_gear,"""0.038970""","""0.007460""","""0.000000"""
+kit_m2l1_vessel_2_slot_mg_1,"""false""","""1""",sku_part_medium_gear,"""-0.051710""","""0.038460""","""0.000000"""

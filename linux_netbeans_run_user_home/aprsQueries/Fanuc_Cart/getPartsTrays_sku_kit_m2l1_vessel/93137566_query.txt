@@ -1,0 +1,5 @@
+match pointpath=(n:StockKeepingUnit)-[:hasSkuObject_Sku]-(pt:PartsTray),
+externalshape=(n)-[:hasStockKeepingUnit_ExternalShape]-(xshape),
+design=(pt)-[:hasPartsTray_Design]->(d:PartsTrayDesign)
+where n.name='sku_kit_m2l1_vessel'
+return pt.name as name, n.name as sku_name, ID(pt) as id, d.name as design, pt.hasPartsTray_Complete as complete

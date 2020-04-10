@@ -1,0 +1,5 @@
+name,x,y,sku_name,prp_name,tray_name,diameter
+kit_s2l2_1_slot_sg_2,0.037,"""0.055000""",sku_part_small_gear,part_ref_and_pose_kit_s2l2_vessel_sg_2,kit_s2l2_vessel_1,"""0.050000"""
+kit_s2l2_1_slot_lg_2,"""0.054000""","""-0.028000""",sku_part_large_gear,part_ref_and_pose_kit_s2l2_vessel_lg_2,kit_s2l2_vessel_1,"""0.100000"""
+kit_s2l2_1_slot_sg_1,-0.037,"""0.055000""",sku_part_small_gear,part_ref_and_pose_kit_s2l2_vessel_sg_1,kit_s2l2_vessel_1,"""0.050000"""
+kit_s2l2_1_slot_lg_1,"""-0.054000""","""-0.028000""",sku_part_large_gear,part_ref_and_pose_kit_s2l2_vessel_lg_1,kit_s2l2_vessel_1,"""0.100000"""

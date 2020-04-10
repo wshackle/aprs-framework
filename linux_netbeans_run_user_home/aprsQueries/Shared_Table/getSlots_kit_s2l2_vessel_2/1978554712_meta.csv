@@ -1,0 +1,8 @@
+index,name,type
+1,name,String
+2,slot_occupied,String
+3,slot_id,String
+4,sku_name,String
+5,x,String
+6,y,String
+7,z,String
