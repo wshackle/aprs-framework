@@ -56,7 +56,28 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         jSpinnerMaxLines.setValue(250);
     }
 
-    private boolean parentVisible;
+    private Process process;
+
+    /**
+     * Get the value of process
+     *
+     * @return the value of process
+     */
+    public Process getProcess() {
+        return process;
+    }
+
+    /**
+     * Set the value of process
+     *
+     * @param process new value of process
+     */
+    public void setProcess(Process process) {
+        this.process = process;
+        jButtonProcessInfo.setEnabled(process != null);
+    }
+
+    private boolean parentVisible = true;
 
     /**
      * Get the value of parentVisible
@@ -92,6 +113,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         jButtonToExternal = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
+        jButtonProcessInfo = new javax.swing.JButton();
 
         jCheckBoxPauseOutput.setText("Pause Output");
 
@@ -119,6 +141,14 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         });
         jScrollPane1.setViewportView(jTextArea1);
 
+        jButtonProcessInfo.setText("Process Info");
+        jButtonProcessInfo.setEnabled(false);
+        jButtonProcessInfo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonProcessInfoActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -127,7 +157,8 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 26, Short.MAX_VALUE)
+                        .addComponent(jButtonProcessInfo)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonToExternal)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)
@@ -146,7 +177,8 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
                     .addComponent(jCheckBoxPauseOutput)
                     .addComponent(jSpinnerMaxLines, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
-                    .addComponent(jButtonToExternal))
+                    .addComponent(jButtonToExternal)
+                    .addComponent(jButtonProcessInfo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
                 .addContainerGap())
@@ -211,6 +243,14 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
             showPopup(evt.getComponent(), evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_jTextArea1MouseClicked
+
+    private void jButtonProcessInfoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonProcessInfoActionPerformed
+        System.out.println("process = " + process);
+        System.out.println("process = " + process.isAlive());
+        jTextArea1.append("\nprocess = " + process
+                + "\nprocess = " + process.isAlive() + "\n");
+        jTextArea1.setCaretPosition(jTextArea1.getText().length()-1);
+    }//GEN-LAST:event_jButtonProcessInfoActionPerformed
 
     private List<String> logLines = new ArrayList<>();
 
@@ -305,6 +345,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButtonProcessInfo;
     private javax.swing.JButton jButtonToExternal;
     private javax.swing.JCheckBox jCheckBoxPauseOutput;
     private javax.swing.JLabel jLabel1;

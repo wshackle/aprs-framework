@@ -22,6 +22,7 @@
  */
 package aprs.launcher;
 
+import aprs.logdisplay.LogDisplayJPanel;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.utils.XFuture;
 import java.awt.Component;
@@ -30,7 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,8 +55,8 @@ public class WrappedProcess {
     private final Thread errorReaderThread;
     private final OutputStream outputStream;
     private final OutputStream errorStream;
-    private final PrintStream outputPrintStream;
-    private final PrintStream errorPrintStream;
+//    private final PrintStream outputPrintStream;
+//    private final PrintStream errorPrintStream;
     private volatile Process process;
     private volatile boolean closed = false;
     private final XFuture<Process> processStartXFuture;
@@ -78,7 +80,8 @@ public class WrappedProcess {
         }
     }
 
-    private @MonotonicNonNull Component displayComponent;
+    private @MonotonicNonNull
+    LogDisplayJPanel displayComponent;
 
     public XFuture<Process> getProcessStartXFuture() {
         return processStartXFuture;
@@ -90,7 +93,7 @@ public class WrappedProcess {
      * @return the value of displayComponent
      */
     public @Nullable
-    Component getDisplayComponent() {
+    LogDisplayJPanel getDisplayComponent() {
         return displayComponent;
     }
 
@@ -99,8 +102,11 @@ public class WrappedProcess {
      *
      * @param displayComponent new value of displayComponent
      */
-    public void setDisplayComponent(Component displayComponent) {
+    public void setDisplayComponent(LogDisplayJPanel displayComponent) {
         this.displayComponent = displayComponent;
+        if (null != displayComponent) {
+            displayComponent.setProcess(process);
+        }
     }
 
     private final char readOutputDebugBuff[] = new char[256];
@@ -127,12 +133,23 @@ public class WrappedProcess {
         try {
             int readRet = -1;
             InputStream inputStream = process.getInputStream();
+            System.out.println("inputStream = " + inputStream);
+            System.out.println("closed = " + closed);
+            int readCount = 0;
+            StringBuilder sb = new StringBuilder();
             while (!closed && (-1 != (readRet = inputStream.read()))) {
+                readCount++;
                 int c = readOutputDebugCount.incrementAndGet();
                 int index = (c - 1) % readOutputDebugBuff.length;
-                readOutputDebugBuff[index] = (char) readRet;
-                outputPrintStream.write(readRet);
+                final char readRetChar = (char) readRet;
+                readOutputDebugBuff[index] = readRetChar;
+                sb.append(readRetChar);
+                outputStream.write(readRet);
             }
+            System.out.println("readCount = " + readCount);
+            System.out.println("readRet = " + readRet);
+            System.out.println("readOutputDebugBuff = " + readOutputDebugBuff);
+            System.out.println("sb = " + sb);
         } catch (IOException ex) {
             if (!closed) {
                 Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, "", ex);
@@ -157,13 +174,24 @@ public class WrappedProcess {
     private void readErrorStream() {
         try {
             int readRet = -1;
-            InputStream errorStream = process.getErrorStream();
-            while (!closed && (-1 != (readRet = errorStream.read()))) {
+            InputStream processErrorStream = process.getErrorStream();
+            System.out.println("errorStream = " + processErrorStream);
+            System.out.println("closed = " + closed);
+            StringBuilder sb = new StringBuilder();
+            int readCount = 0;
+            while (!closed && (-1 != (readRet = processErrorStream.read()))) {
+                readCount++;
                 int c = readErrorDebugCount.incrementAndGet();
                 int index = (c - 1) % readErrorDebugBuff.length;
-                readErrorDebugBuff[index] = (char) readRet;
-                errorPrintStream.write(readRet);
+                final char readRetChar = (char) readRet;
+                readErrorDebugBuff[index] = readRetChar;
+                sb.append(readRetChar);
+                this.errorStream.write(readRet);
             }
+            System.out.println("readCount = " + readCount);
+            System.out.println("readRet = " + readRet);
+            System.out.println("readErrorDebugBuff = " + readErrorDebugBuff);
+            System.out.println("sb = " + sb);
         } catch (IOException ex) {
             if (!closed) {
                 Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, "", ex);
@@ -192,16 +220,43 @@ public class WrappedProcess {
         this.process = p;
         outputReaderThread.start();
         errorReaderThread.start();
+        if (null != displayComponent) {
+            displayComponent.setProcess(process);
+        }
     }
 
-     private volatile @Nullable  Exception processStartException = null;
+    private volatile @Nullable
+    Exception processStartException = null;
 
     private Process internalStart(ProcessBuilder pb) {
         try {
-            return pb.start();
+            System.out.println("pb = " + pb);
+            System.out.println("pb.command() = " + pb.command());
+            System.out.println("pb.directory() = " + pb.directory());
+            final String errPrintMsg = "errorStream pb = " + pb +"\n" 
+                    + "errorStream pb.command() = " + pb.command() + "\n"
+                    + "errorStream pb.directory() = " + pb.directory()+"\n";
+            errorStream.write(errPrintMsg.getBytes(),0,errPrintMsg.length());
+            
+            final String outPrintMsg = "outputStream pb = " + pb +"\n" 
+                    + "outputStream pb.command() = " + pb.command() + "\n"
+                    + "outputStream pb.directory() = " + pb.directory()+"\n";
+            outputStream.write(errPrintMsg.getBytes(),0,errPrintMsg.length());
+            
+
+            Process process = pb.start();
+            System.out.println("process = " + process);
+            return process;
         } catch (Exception ex) {
             processStartException = ex;
-            ex.printStackTrace(errorPrintStream);
+            StringWriter sw = new StringWriter();
+            ex.printStackTrace(new PrintWriter(sw, true));
+            String trace = sw.toString();
+            try {
+                errorStream.write(trace.getBytes(),0,trace.length());
+            } catch (IOException ex1) {
+                Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, null, ex1);
+            }
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -219,14 +274,14 @@ public class WrappedProcess {
         pb.redirectError(ProcessBuilder.Redirect.PIPE);
         this.outputStream = outputStream;
         this.errorStream = errorStream;
-        this.errorPrintStream
-                = (errorStream instanceof PrintStream)
-                        ? (PrintStream) errorStream
-                        : new PrintStream(errorStream);
-        this.outputPrintStream
-                = (outputStream instanceof PrintStream)
-                        ? (PrintStream) outputStream
-                        : new PrintStream(outputStream);
+//        this.errorPrintStream
+//                = (errorStream instanceof PrintStream)
+//                        ? (PrintStream) errorStream
+//                        : new PrintStream(errorStream);
+//        this.outputPrintStream
+//                = (outputStream instanceof PrintStream)
+//                        ? (PrintStream) outputStream
+//                        : new PrintStream(outputStream);
         outputReaderThread = new Thread(this::readOutputStream, "outputReader:" + myNum + cmdLine);
         outputReaderThread.setDaemon(true);
         errorReaderThread = new Thread(this::readErrorStream, "errorReader:" + myNum + cmdLine);
@@ -308,12 +363,12 @@ public class WrappedProcess {
             }
         }
         try {
-            outputPrintStream.close();
+            outputStream.close();
         } catch (Exception ex) {
             Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, "", ex);
         }
         try {
-            errorPrintStream.close();
+            errorStream.close();
         } catch (Exception ex) {
             Logger.getLogger(WrappedProcess.class.getName()).log(Level.SEVERE, "", ex);
         }

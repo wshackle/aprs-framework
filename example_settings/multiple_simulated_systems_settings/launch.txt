@@ -5,12 +5,12 @@ plj-timeout 90000
 
 if!connectOK localhost 7496
 plj-connectWaitFor host=localhost port=7496 delay=100 timeout=100 max_tries=100
-env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 endif
 
 if!connectOK localhost 7494
 plj-connectWaitFor host=localhost port=7494 delay=100 timeout=100 max_tries=100
-env JAVA_HOME=/home/shackle/adoptopenjdk/jdk8u202-b08 ${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
 endif
 
 #if!connectOK localhost 6001

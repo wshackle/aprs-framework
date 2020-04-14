@@ -116,6 +116,7 @@ public class LaunchFileRunner {
         WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
         wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
         return wrappedProcess;
     }
 
@@ -136,6 +137,7 @@ public class LaunchFileRunner {
         wrappedProcess.setDisplayComponent(logPanel);
         List<WrappedProcess> processes = getProcesses();
         processes.add(wrappedProcess);
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
         return wrappedProcess;
     }
 
@@ -154,6 +156,7 @@ public class LaunchFileRunner {
         lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
         wrappedProcess.setDisplayComponent(logPanel);
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
