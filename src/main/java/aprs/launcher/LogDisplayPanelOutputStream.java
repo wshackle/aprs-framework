@@ -28,6 +28,7 @@ import aprs.misc.Utils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -75,14 +76,16 @@ public class LogDisplayPanelOutputStream extends OutputStream {
         }
     }
 
+    private static final long T0 = System.currentTimeMillis();
+    
     @Override
     public void write(byte[] buf, int off, int len) {
         final String s = new String(buf, off, len);
-       
+        String timeString = new Date() +" ("+(System.currentTimeMillis()-T0)+" ms) \n";
         if (null != logDisplayJPanel) {
             sb.append(s);
             if (s.contains("\n") || s.contains("\r")) {
-                String fullString = sb.toString();
+                String fullString = timeString+ sb.toString();
 //                println("fullString = " + fullString.replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
                 notifiyLineConsumers(fullString);
                 Utils.runOnDispatchThread(() -> {
@@ -93,7 +96,7 @@ public class LogDisplayPanelOutputStream extends OutputStream {
 //                println("sb = " + sb.toString().replace("\r","\\r").replace("\n","\\n").replace("\t","\\t"));
             }
         } else {
-             println("logDisplayJPanel="+logDisplayJPanel+",s="+s);
+             println("logDisplayJPanel="+logDisplayJPanel+",s="+s+",timeString="+timeString);
         }
     }
 
