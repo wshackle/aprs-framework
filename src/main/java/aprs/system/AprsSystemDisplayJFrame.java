@@ -284,6 +284,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     CachedCheckBox exploreGraphDBStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemExploreGraphDbStartup);
     }
+    
+    CachedCheckBox forceTorqueSimStartupCheckBox() {
+        return new CachedCheckBox(jCheckBoxMenuItemForceTorqueSimStartup);
+    }
 
     CachedCheckBox showDatabaseSetupOnStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemShowDatabaseSetupOnStartup);
@@ -661,6 +665,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemConnectVisionOnStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemExploreGraphDbStartup = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemKitInspectionStartup = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemForceTorqueSimStartup = new javax.swing.JCheckBoxMenuItem();
         jMenuWindow = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemConnectDatabase = new javax.swing.JCheckBoxMenuItem();
@@ -884,6 +889,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu3.add(jCheckBoxMenuItemKitInspectionStartup);
+
+        jCheckBoxMenuItemForceTorqueSimStartup.setText("Force Torque Sim");
+        jCheckBoxMenuItemForceTorqueSimStartup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemForceTorqueSimStartupActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jCheckBoxMenuItemForceTorqueSimStartup);
 
         jMenuBar1.add(jMenu3);
 
@@ -1493,6 +1506,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemStartupFanucCRCLServerActionPerformed
 
+    private void startForceTorqueSim() {
+        if (null != aprsSystem) {
+            aprsSystem.startForceTorqueSim();
+        } else {
+            throw new IllegalStateException("aprsSystem ==null, this=" + this);
+        }
+    }
+    
     private void startExploreGraphDb() {
         if (null != aprsSystem) {
             aprsSystem.startExploreGraphDb();
@@ -1508,6 +1529,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
+    
+    private void closeForceTorqueSim() {
+        if (null != aprsSystem) {
+            aprsSystem.closeForceTorqeSim();
+        } else {
+            throw new IllegalStateException("aprsSystem ==null, this=" + this);
+        }
+    }
+    
 
     @UIEffect
     private void jCheckBoxMenuItemExploreGraphDbStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
@@ -2380,6 +2410,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemUseCsvFilesInsteadOfDatabaseActionPerformed
 
+    @UIEffect
+    private void jCheckBoxMenuItemForceTorqueSimStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemForceTorqueSimStartupActionPerformed
+        if (this.jCheckBoxMenuItemForceTorqueSimStartup.isSelected()) {
+            startForceTorqueSim();
+        } else {
+            closeForceTorqueSim();
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemForceTorqueSimStartupActionPerformed
+
     public XFutureVoid setEnforceMinMaxLimitsSelected(boolean selected) {
         return Utils.runOnDispatchThread(() -> {
             jCheckBoxMenuItemEnforceMinMaxLimits.setSelected(selected);
@@ -2456,6 +2495,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnforceMinMaxLimits;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemExploreGraphDbStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceFakeTake;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemForceTorqueSimStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemKitInspectionStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemLogCrclPrograms;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemPause;

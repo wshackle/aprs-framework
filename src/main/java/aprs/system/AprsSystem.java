@@ -96,6 +96,7 @@ import crcl.utils.XFutureVoid;
 import crcl.ui.client.CrclSwingClientJInternalFrame;
 import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.client.ProgramLineListener;
+import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLException;
 import crcl.utils.CRCLPosemath;
@@ -505,6 +506,8 @@ public class AprsSystem implements SlotOffsetProvider {
     PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
     private @MonotonicNonNull
     DbSetupJInternalFrame dbSetupJInternalFrame = null;
+    private @MonotonicNonNull
+    ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = null;
     private volatile @MonotonicNonNull
     CrclSwingClientJInternalFrame crclClientJInternalFrame = null;
     private @MonotonicNonNull
@@ -8683,6 +8686,29 @@ public class AprsSystem implements SlotOffsetProvider {
     public XFutureVoid startExploreGraphDb() {
         return runOnDispatchThread(this::startExploreGraphDbOnDisplay);
     }
+    
+     public XFutureVoid startForceTorqueSim() {
+        return runOnDispatchThread(this::startForceTorqueSimOnDisplay);
+    }
+     
+     @UIEffect
+    private void startForceTorqueSimOnDisplay() {
+       
+        try {
+            if (null == this.forceTorqueSimJInternalFrame) {
+                this.forceTorqueSimJInternalFrame = new ForceTorqueSimJInternalFrame();
+                this.addInternalFrame(forceTorqueSimJInternalFrame);
+                if(null != this.crclClientJInternalFrame) {
+                    forceTorqueSimJInternalFrame.setCrclClientPanel(crclClientJInternalFrame.getPendantClientJPanel1());
+                }
+            }
+//            activateInternalFrame(this.exploreGraphDbJInternalFrame);
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
 
     @UIEffect
     private void startExploreGraphDbOnDisplay() {
@@ -8706,6 +8732,19 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    public void closeForceTorqeSim() {
+        try {
+            if (null != this.forceTorqueSimJInternalFrame) {
+                forceTorqueSimJInternalFrame.setVisible(false);
+            }
+            saveProperties();
+
+        } catch (IOException ex) {
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "", ex);
+        }
+    }
+    
     public void closeExploreGraphDb() {
         try {
             if (null != this.exploreGraphDbJInternalFrame) {
