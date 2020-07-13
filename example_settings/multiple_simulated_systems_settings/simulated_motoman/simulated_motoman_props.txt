@@ -15,6 +15,7 @@ snapShotWidth=900
 startup.connectdatabase=true
 startup.connectvision=true
 startup.exploreGraphDb=false
+startup.forceTorqueSim=true
 startup.kitinspection=false
 startup.pddl.executor=true
 startup.pddl.objectsp=true

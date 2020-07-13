@@ -429,6 +429,7 @@ public class AprsSystem implements SlotOffsetProvider {
             alertLimitsCheckBox = aprsSystemDisplayJFrame1.alertLimitsCheckBox();
             robotCrclFanucServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclFanucServerStartupCheckBox();
             robotCrclGUIStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclGUIStartupCheckBox();
+            forceTorqueSimStartupCheckBox = aprsSystemDisplayJFrame1.forceTorqueSimStartupCheckBox();
             robotCrclMotomanServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclMotomanServerStartupCheckBox();
             robotCrclSimServerStartupCheckBox = aprsSystemDisplayJFrame1.robotCrclSimServerStartupCheckBox();
             showDatabaseSetupOnStartupCheckBox = aprsSystemDisplayJFrame1.showDatabaseSetupOnStartupCheckBox();
@@ -456,6 +457,7 @@ public class AprsSystem implements SlotOffsetProvider {
             alertLimitsCheckBox = new CachedCheckBox();
             robotCrclFanucServerStartupCheckBox = new CachedCheckBox();
             robotCrclGUIStartupCheckBox = new CachedCheckBox();
+            forceTorqueSimStartupCheckBox = new CachedCheckBox();
             robotCrclMotomanServerStartupCheckBox = new CachedCheckBox();
             robotCrclSimServerStartupCheckBox = new CachedCheckBox();
             showDatabaseSetupOnStartupCheckBox = new CachedCheckBox();
@@ -485,6 +487,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private final CachedCheckBox alertLimitsCheckBox;
     private final CachedCheckBox robotCrclFanucServerStartupCheckBox;
     private final CachedCheckBox robotCrclGUIStartupCheckBox;
+    private final CachedCheckBox forceTorqueSimStartupCheckBox;
     private final CachedCheckBox robotCrclMotomanServerStartupCheckBox;
     private final CachedCheckBox robotCrclSimServerStartupCheckBox;
     private final CachedCheckBox showDatabaseSetupOnStartupCheckBox;
@@ -4207,8 +4210,16 @@ public class AprsSystem implements SlotOffsetProvider {
         return robotCrclGUIStartupCheckBox.isSelected();
     }
 
+    private boolean isForceTorqueSimStartupSelected() {
+        return forceTorqueSimStartupCheckBox.isSelected();
+    }
+
     private void setRobotCrclGUIStartupSelected(boolean selected) {
         robotCrclGUIStartupCheckBox.setSelected(selected);
+    }
+
+    private void setForceTorqueSimStartupSelected(boolean selected) {
+        forceTorqueSimStartupCheckBox.setSelected(selected);
     }
 
     private boolean isRobotCrclSimServerStartupSelected() {
@@ -4375,6 +4386,16 @@ public class AprsSystem implements SlotOffsetProvider {
                 } else {
                     XFutureVoid startCrclClientFuture = startCrclClientJInternalFrame();
                     futures.add(startCrclClientFuture);
+                }
+            }
+            if (isForceTorqueSimStartupSelected()) {
+                if (null != serverFuture) {
+                    XFutureVoid startForceTorqueSimFuture
+                            = serverFuture.thenComposeToVoid(x -> startForceTorqueSim());
+                    futures.add(startForceTorqueSimFuture);
+                } else {
+                    XFutureVoid startForceTorqueSimFuture = startForceTorqueSim();
+                    futures.add(startForceTorqueSimFuture);
                 }
             }
             if (!skipCreateDbSetupFrame || isShowDatabaseSetupStartupSelected()) {
@@ -8694,14 +8715,25 @@ public class AprsSystem implements SlotOffsetProvider {
     private void startForceTorqueSimOnDisplay() {
 
         try {
+            boolean alreadySelected = isForceTorqueSimStartupSelected();
+            if (!alreadySelected) {
+                setForceTorqueSimStartupSelected(true);
+            }
             if (null == this.forceTorqueSimJInternalFrame) {
-                this.forceTorqueSimJInternalFrame = new ForceTorqueSimJInternalFrame();
-                this.addInternalFrame(forceTorqueSimJInternalFrame);
+                ForceTorqueSimJInternalFrame newForceTorqueSimJInternalFrame
+                        = new ForceTorqueSimJInternalFrame();
+                final File forceTorqueSimPropsFile = getForceTorqueSimPropsFile();
+                if (forceTorqueSimPropsFile.exists()) {
+                    AutomaticPropertyFileUtils.loadPropertyFile(forceTorqueSimPropsFile,
+                            Collections.emptyMap(),
+                            newForceTorqueSimJInternalFrame);
+                }
+                this.forceTorqueSimJInternalFrame = newForceTorqueSimJInternalFrame;
+                this.addInternalFrame(newForceTorqueSimJInternalFrame);
                 if (null != this.crclClientJInternalFrame) {
-                    forceTorqueSimJInternalFrame.setCrclClientPanel(crclClientJInternalFrame.getPendantClientJPanel1());
+                    newForceTorqueSimJInternalFrame.setCrclClientPanel(crclClientJInternalFrame.getPendantClientJPanel1());
                 }
             }
-//            activateInternalFrame(this.exploreGraphDbJInternalFrame);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -8733,6 +8765,17 @@ public class AprsSystem implements SlotOffsetProvider {
 
     public void closeForceTorqeSim() {
         try {
+            System.out.println("");
+            System.err.println("");
+            System.out.flush();
+            System.err.flush();
+            Thread.dumpStack();
+            System.out.println("crclClientJInternalFrame = " + this.crclClientJInternalFrame);
+            System.out.println("forceTorqueSimJInternalFrame = " + forceTorqueSimJInternalFrame);
+            System.out.println("");
+            System.err.println("");
+            System.out.flush();
+            System.err.flush();
             if (null != this.forceTorqueSimJInternalFrame) {
                 forceTorqueSimJInternalFrame.setVisible(false);
             }
@@ -9473,6 +9516,10 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != startCRCLClientString) {
                 setRobotCrclGUIStartupSelected(Boolean.valueOf(startCRCLClientString));
             }
+            String startForceTorqueSimString = props.getProperty(STARTUPFORCETORQUESIM);
+            if (null != startForceTorqueSimString) {
+                setForceTorqueSimStartupSelected(Boolean.valueOf(startForceTorqueSimString));
+            }
             String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
             if (null != startCRCLSimServerString) {
                 setRobotCrclSimServerStartupSelected(Boolean.valueOf(startCRCLSimServerString));
@@ -9773,6 +9820,7 @@ public class AprsSystem implements SlotOffsetProvider {
         propsMap.put(STARTUPPDDLOBJECTSP, Boolean.toString(isObjectSpStartupSelected()));
         propsMap.put(STARTUPPDDLOBJECTVIEW, Boolean.toString(isObject2DViewStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLCLIENT, Boolean.toString(isRobotCrclGUIStartupSelected()));
+        propsMap.put(STARTUPFORCETORQUESIM, Boolean.toString(isForceTorqueSimStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLSIMSERVER, Boolean.toString(isRobotCrclSimServerStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLFANUCSERVER, Boolean.toString(isRobotCrclFanucServerStartupSelected()));
         propsMap.put(STARTUPROBOTCRCLMOTOMANSERVER, Boolean.toString(isRobotCrclMotomanServerStartupSelected()));
@@ -9851,6 +9899,11 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != this.fanucServerProvider) {
             fanucServerProvider.saveProperties();
         }
+        if (null != this.forceTorqueSimJInternalFrame) {
+            AutomaticPropertyFileUtils.saveObjectProperties(
+                    getForceTorqueSimPropsFile(),
+                    forceTorqueSimJInternalFrame);
+        }
         if (null != dbSetup) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
             if (null != dbSetupJInternalFrame) {
@@ -9864,6 +9917,10 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.allOf(futures);
     }
 
+    private File getForceTorqueSimPropsFile() {
+        return new File(propertiesDirectory, this.propertiesFileBaseString + "_force_torque_sim.txt");
+    }
+
     public boolean checkPose(PoseType goalPose, boolean ignoreCartTran, boolean reverseCorrectPoint) {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
@@ -9875,19 +9932,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 throw new NullPointerException("goalPose.getPoint()");
             }
             if (reverseCorrectPoint) {
-//                boolean origPointInLimits = isWithinLimits(CRCLPosemath.toPmCartesian(point));
-//                println("origPointInLimits = " + origPointInLimits);
                 PointType reversedPoint = convertRobotToVisionPoint(point);
-//                PointType rereversedPoint = convertVisionToRobotPointType(reversedPoint);
-//                double diffx = goalPose.getPoint().getX() - rereversedPoint.getX();
-//                println("diffx = " + diffx);
-//                double diffy = goalPose.getPoint().getY() - rereversedPoint.getY();
-//                println("diffy = " + diffy);
-//                double diffz = goalPose.getPoint().getZ() - rereversedPoint.getZ();
-//                println("diffz = " + diffz);
-//                PointType doubleCorrectedPoint = convertVisionToRobotPointType(goalPose.getPoint());
-//                boolean doubleCorrectedPointWithinLimits =  isWithinLimits(CRCLPosemath.toPmCartesian(doubleCorrectedPoint));
-//                println("doubleCorrectedPointWithinLimits = " + doubleCorrectedPointWithinLimits);
                 point = reversedPoint;
             }
             PmCartesian cart = CRCLPosemath.toPmCartesian(point);
@@ -9941,6 +9986,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private static final String STARTUPPDDLOBJECTSP = "startup.pddl.objectsp";
     private static final String STARTUPPDDLOBJECTVIEW = "startup.pddl.objectview";
     private static final String STARTUPROBOTCRCLCLIENT = "startup.robotcrclclient";
+    private static final String STARTUPFORCETORQUESIM = "startup.forceTorqueSim";
     private static final String STARTUPROBOTCRCLSIMSERVER = "startup.robotcrclsimserver";
     private static final String STARTUPROBOTCRCLFANUCSERVER = "startup.robotcrclfanucserver";
     private static final String STARTUPROBOTCRCLMOTOMANSERVER = "startup.robotcrclmotomanserver";
