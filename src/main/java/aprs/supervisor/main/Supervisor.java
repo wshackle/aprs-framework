@@ -9742,9 +9742,9 @@ public class Supervisor {
             return node;
         }
         if (null != future) {
-            ConcurrentLinkedDeque<?> deque = future.getAlsoCancel();
-            if (null != deque) {
-                for (Object o : deque) {
+            Collection<?> cancelFutures = future.getAlsoCancel();
+            if (null != cancelFutures) {
+                for (Object o : cancelFutures) {
                     if (o instanceof XFuture) {
                         XFuture<?> xf = (XFuture<?>) o;
                         if (showDoneFutures

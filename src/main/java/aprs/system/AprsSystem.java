@@ -10473,7 +10473,7 @@ public class AprsSystem implements SlotOffsetProvider {
             try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
-        } catch (JAXBException | CRCLException | IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
         }

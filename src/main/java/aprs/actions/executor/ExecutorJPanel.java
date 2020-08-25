@@ -102,7 +102,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
-import javax.xml.bind.JAXBException;
 import java.awt.event.ActionEvent;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -3439,7 +3438,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
-            } catch (JAXBException | CRCLException ex) {
+            } catch (Exception ex) {
                 crclProgramCachedTable.addRow(new Object[]{initCanon.getCommandID(),
                     ex.getMessage()
                 });
@@ -3461,7 +3460,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                     });
 
-                } catch (JAXBException | CRCLException ex) {
+                } catch (Exception ex) {
                     crclProgramCachedTable.addRow(new Object[]{midCmd.getCommandID(),
                         ex.getMessage()
                     });
@@ -3477,7 +3476,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     trimXml(crclSocket.commandInstanceToPrettyString(instance, true))
                 });
 
-            } catch (JAXBException | CRCLException ex) {
+            } catch (Exception ex) {
                 crclProgramCachedTable.addRow(new Object[]{endCanon.getCommandID(),
                     ex.getMessage()
                 });

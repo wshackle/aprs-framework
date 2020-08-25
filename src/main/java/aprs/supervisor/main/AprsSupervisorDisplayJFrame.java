@@ -80,6 +80,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EventObject;
@@ -95,7 +96,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -5880,9 +5880,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             return node;
         }
         if (null != future && depth < XFUTURE_MAX_DEPTH) {
-            ConcurrentLinkedDeque<?> deque = future.getAlsoCancel();
-            if (null != deque) {
-                for (Object o : deque) {
+            Collection<?> cancelFutures = future.getAlsoCancel();
+            if (null != cancelFutures) {
+                for (Object o : cancelFutures) {
                     if (o instanceof XFuture) {
                         XFuture<?> xf = (XFuture<?>) o;
                         if (showDoneFutures
