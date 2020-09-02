@@ -1,0 +1,5 @@
+name,x,y,sku_name,prp_name,tray_name,diameter
+small_gear_vessel_1_slot_3,"""-0.026500""","""-0.026500""",sku_part_small_gear,part_ref_and_pose_small_gear_vessel_sg_3,small_gear_vessel_1,"""0.050000"""
+small_gear_vessel_1_slot_4,"""0.026500""","""-0.026500""",sku_part_small_gear,part_ref_and_pose_small_gear_vessel_sg_4,small_gear_vessel_1,"""0.050000"""
+small_gear_vessel_1_slot_1,"""-0.026500""","""0.026500""",sku_part_small_gear,part_ref_and_pose_small_gear_vessel_sg_1,small_gear_vessel_1,"""0.050000"""
+small_gear_vessel_1_slot_2,"""0.026500""","""0.026500""",sku_part_small_gear,part_ref_and_pose_small_gear_vessel_sg_2,small_gear_vessel_1,"""0.050000"""
