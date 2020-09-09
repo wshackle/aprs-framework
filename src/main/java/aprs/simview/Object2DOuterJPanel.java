@@ -287,7 +287,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
         return new File[]{f, csvFile};
     }
@@ -317,10 +317,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     Utils.autoResizeTableColWidths(jTableSnapshotFiles);
                 }
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "f="+f+",csvFile="+csvFile, ex);
             }
         }
     }
+    private static final Logger LOGGER = Logger.getLogger(Object2DOuterJPanel.class.getName());
 
     @Override
     public @Nullable
@@ -369,7 +370,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
         return new File[]{f, csvFile};
     }
@@ -446,7 +447,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             loadFileFuture = loadFile(f);
                             fileLoaded = true;
                         } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                            LOGGER.log(Level.SEVERE, "", ex);
                         }
                     }
                 }
@@ -610,12 +611,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             loadTraySlotInfo(items);
             lastSetItemsInternalTime = System.currentTimeMillis();
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showException(ex);
             try {
                 disconnect();
             } catch (Exception ex2) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex2);
+                LOGGER.log(Level.SEVERE, "", ex2);
             }
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -2909,7 +2910,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 disconnect();
             }
         } catch (Exception exception) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
+            LOGGER.log(Level.SEVERE, "", exception);
             String message = exception.getMessage();
             if (null != message) {
                 MultiLineStringJPanel.showText(message);
@@ -2925,7 +2926,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 visionSocketClient.close();
             } catch (Exception ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
             visionSocketClient.removeListListener(this);
             visionSocketClient = null;
@@ -2974,7 +2975,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 visionSocketServerLocal.setDebug(debugCachedCheckBox.isSelected());
                 publishCurrentItems();
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         } else {
             int port = Integer.parseInt(portCachedTextField.getText().trim());
@@ -2988,7 +2989,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 try {
                     visionSocketClient.close();
                 } catch (Exception ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
             }
             VisionSocketClient clnt = new VisionSocketClient();
@@ -3012,7 +3013,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 try {
                     clnt.close();
                 } catch (Exception ex) {
-                    Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
                 visionSocketClient = null;
                 return;
@@ -3355,7 +3356,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            println("newPoint = " + newPoint.getX() + ", " + newPoint.getY());
             inside = itemDisplayRect.contains(newPoint);
         } catch (NoninvertibleTransformException ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
         return inside;
     }
@@ -3690,7 +3691,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
         if (f.isDirectory()) {
@@ -3704,7 +3705,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
         return XFutureVoid.allOf(futuresList)
@@ -3750,7 +3751,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
                 loadFile(chooser.getSelectedFile(), selectedItemHandleRotations == HandleRotationEnum.DEGREES, selectedItemHandleRotations == HandleRotationEnum.IGNORE);
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }//GEN-LAST:event_jButtonLoadActionPerformed
@@ -3777,7 +3778,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 Object2DJPanel.saveCsvItemsFile(newFile, getItems());
                 filenameCachedTextField.setText(newFile.getCanonicalPath());
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
         }
     }//GEN-LAST:event_jButtonSaveActionPerformed
@@ -4125,7 +4126,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jButtonViewSnapshotImageActionPerformed
@@ -4142,7 +4143,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 Desktop.getDesktop().open(new File(filename));
             } catch (IOException ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_jButtonViewSnapshotCsvActionPerformed
@@ -4170,7 +4171,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         try {
             Desktop.getDesktop().open(new File(jTextFieldRecordLinesFile.getText()));
         } catch (IOException ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButtonOpenLogLinesFileActionPerformed
 
@@ -4372,7 +4373,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 refresh(false);
             }
         } catch (Exception e) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", e);
+            LOGGER.log(Level.SEVERE, "", e);
             stopSimUpdateTimerOnDisplay();
             showException(e);
             disconnect();
@@ -4438,7 +4439,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
         }
     }
 
@@ -4589,7 +4590,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             try {
                 visionSocketClient.close();
             } catch (Exception ex) {
-                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                LOGGER.log(Level.SEVERE, "", ex);
             }
             visionSocketClient = null;
         }
@@ -4625,8 +4626,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
             return canString;
         } catch (Exception exception) {
-            Logger.getLogger(Object2DOuterJPanel.class
-                    .getName()).log(Level.SEVERE, "", exception);
+            LOGGER.log(Level.SEVERE, "", exception);
         }
         return str;
     }
@@ -5127,7 +5127,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     try {
                         reloadDataFile();
                     } catch (IOException ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                        LOGGER.log(Level.SEVERE, "", ex);
                     }
                 }
             }
@@ -5425,7 +5425,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             Utils.autoResizeTableColWidths(jTableLineLog);
             jTextFieldRecordLinesFile.setText(f.getCanonicalPath());
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showException(ex);
             disconnect();
             if (ex instanceof RuntimeException) {
@@ -5523,7 +5523,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             setItems(l);
             return runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showException(ex);
             disconnect();
             if (ex instanceof RuntimeException) {
@@ -5541,7 +5541,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 jTextAreaConnectDetails.setText(detailsMessage);
             }
         } catch (Exception ex) {
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            LOGGER.log(Level.SEVERE, "", ex);
             showException(ex);
             disconnect();
             if (ex instanceof RuntimeException) {
@@ -6128,7 +6128,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     try {
                         printHandlePoseInfo(errString, stat, pose, cmd);
                     } catch (IOException ex) {
-                        Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                        LOGGER.log(Level.SEVERE, "", ex);
                     }
                     this.aprsSystem.setTitleErrorString(errString);
                     this.aprsSystem.pause();
@@ -6151,7 +6151,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                     printHandlePoseInfo(captureMsg, stat, pose, cmd);
                                 }
                             } catch (IOException ex) {
-                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                                LOGGER.log(Level.SEVERE, "", ex);
                             }
                         }
                     } else {
@@ -6187,7 +6187,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             System.err.println("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
 
                         } catch (Exception ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                            LOGGER.log(Level.SEVERE, "", ex);
                         }
                         this.aprsSystem.setTitleErrorString("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
                     }
@@ -6199,7 +6199,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             try {
                                 takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
                             } catch (IOException ex) {
-                                Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                                LOGGER.log(Level.SEVERE, "", ex);
                             }
                         }
                     }
@@ -6208,7 +6208,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         try {
                             printHandlePoseInfo(err, stat, pose, cmd);
                         } catch (IOException ex) {
-                            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                            LOGGER.log(Level.SEVERE, "", ex);
                         }
                         println("handlePoseUpdate: lastDropUpdate = " + lastDropUpdate);
                         this.aprsSystem.setTitleErrorString(err);
@@ -6235,7 +6235,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 showCurrentCachedCheckBox.setSelected(false);
             }
             disconnect();
-            Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", exception);
+            LOGGER.log(Level.SEVERE, "", exception);
             showException(exception);
             if (exception instanceof RuntimeException) {
                 throw (RuntimeException) exception;

@@ -5751,7 +5751,7 @@ public class Supervisor {
                 .getName());
     }
 
-    private volatile boolean togglesAllowed = false;
+    private volatile boolean togglesAllowed = true;
     private final AtomicInteger waitForTogglesFutureCount;
 
     private final ConcurrentLinkedDeque<XFutureVoid> waitForTogglesFutures;
@@ -5799,11 +5799,30 @@ public class Supervisor {
         roboteEnableToggleBlockerText = text;
     }
 
+    private boolean autoEnable;
+
+    /**
+     * Get the value of autoEnable
+     *
+     * @return the value of autoEnable
+     */
+    public boolean isAutoEnable() {
+        return autoEnable;
+    }
+
+    /**
+     * Set the value of autoEnable
+     *
+     * @param autoEnable new value of autoEnable
+     */
+    public void setAutoEnable(boolean autoEnable) {
+        this.autoEnable = autoEnable;
+    }
+
     private volatile StackTraceElement allowTogglesTrace @Nullable []  = null;
 
     private void clearAllToggleBlockers() {
         logEvent("clearAllToggleBlockers toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
-//        assert toggleBlockerMap.keySet().isEmpty() : toggleBlockerMap.keySet();
 
         allowTogglesCount.incrementAndGet();
         allowTogglesTrace = Thread.currentThread().getStackTrace();
@@ -7776,8 +7795,8 @@ public class Supervisor {
             if (null == robotName || robotName.length() < 1) {
                 continue;
             }
-            final Boolean enabledInMap 
-                    = Objects.requireNonNull(robotEnableMap.get(robotName),"robotEnableMap.get("+robotName+")");
+            final Boolean enabledInMap
+                    = Objects.requireNonNull(robotEnableMap.get(robotName), "robotEnableMap.get(" + robotName + ")");
             if (!enabledInMap) {
                 continue;
             }
@@ -7940,7 +7959,7 @@ public class Supervisor {
         return immediateAbortAll(comment, false);
     }
 
-    private volatile StackTraceElement lastImmediateAbortAllTrace @Nullable [] = null;
+    private volatile StackTraceElement lastImmediateAbortAllTrace @Nullable []  = null;
 
     synchronized XFutureVoid immediateAbortAll(String comment, boolean skipLog) {
         incrementAndGetAbortCount();
@@ -9497,7 +9516,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                         @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                          @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

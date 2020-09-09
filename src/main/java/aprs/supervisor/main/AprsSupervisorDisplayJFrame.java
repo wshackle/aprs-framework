@@ -701,9 +701,9 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
             throw new IllegalThreadStateException("call me from AWT event thread.");
         }
-        if (!ignoreRobotTableChanges && !resetting) {
-            throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
-        }
+//        if (!ignoreRobotTableChanges && !resetting) {
+//            throw new IllegalThreadStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+//        }
 //        jTableRobots.getModel().addTableModelListener(robotTableModelListener);
         ignoreRobotTableChanges = false;
     }
