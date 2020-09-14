@@ -3480,15 +3480,6 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     final PM_CARTESIAN draggedItemStartingPointLocal 
                             = Objects.requireNonNull(draggedItemStartingPoint,"draggedItemStartingPoint");
                     List<Action> actions = new ArrayList<>();
-//                    aprsSystem.immediateAbort()
-//                            .thenRun(() -> {
-//                                 aprsSystem.clearErrors();
-//                            })
-//                            .thenCompose(() -> aprsSystem.reset())
-//                            .thenCompose(() -> aprsSystem.startLookForParts())
-//        aprsSystem.reset();
-//        aprsSystem.resume();
-//        startLookForParts();
                     actions.add(Action.newDisableOptimization());
                     actions.add(Action.newTakePartByTypeAndPostion(draggedItemLocal.getName(), draggedItemStartingPointLocal.x, draggedItemStartingPointLocal.y));
                     actions.add(Action.newPlacePartByPosition(draggedItemLocal.x, draggedItemLocal.y, draggedItemLocal.getName()));

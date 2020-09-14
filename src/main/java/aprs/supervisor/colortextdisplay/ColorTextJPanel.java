@@ -253,7 +253,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         jPanelLeft.setBackground(new java.awt.Color(204, 204, 255));
         jPanelLeft.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabelRobotTextLeft.setFont(new java.awt.Font("DejaVu Sans", Font.PLAIN, 36)); // NOI18N
+        jLabelRobotTextLeft.setFont(new java.awt.Font("DejaVu Sans", 0, 24)); // NOI18N
         jLabelRobotTextLeft.setText("Motoman");
 
         jLabelRobotIconLeft.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/supervisor/screensplash/motoman_small.png"))); // NOI18N
@@ -263,29 +263,26 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         jPanelLeftLayout.setHorizontalGroup(
             jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelLeftLayout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelLeftLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabelRobotTextLeft))
-                    .addGroup(jPanelLeftLayout.createSequentialGroup()
-                        .addGap(34, 34, 34)
-                        .addComponent(jLabelRobotIconLeft)))
-                .addContainerGap(33, Short.MAX_VALUE))
+                    .addComponent(jLabelRobotTextLeft)
+                    .addComponent(jLabelRobotIconLeft))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanelLeftLayout.setVerticalGroup(
             jPanelLeftLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelLeftLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabelRobotTextLeft)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabelRobotIconLeft)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jPanelRight.setBackground(new java.awt.Color(204, 204, 255));
         jPanelRight.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        jLabelRobotTextRight.setFont(new java.awt.Font("DejaVu Sans", 0, 36)); // NOI18N
+        jLabelRobotTextRight.setFont(new java.awt.Font("DejaVu Sans", 0, 24)); // NOI18N
         jLabelRobotTextRight.setText("Fanuc");
 
         jLabelRobotIconRight.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aprs/supervisor/screensplash/fanuc_small.png"))); // NOI18N
@@ -299,7 +296,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
                 .addGroup(jPanelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabelRobotTextRight)
                     .addComponent(jLabelRobotIconRight))
-                .addContainerGap(74, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanelRightLayout.setVerticalGroup(
             jPanelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -322,9 +319,6 @@ public class ColorTextJPanel extends javax.swing.JPanel {
                 .addComponent(jPanelRight, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
-        jPanelBothLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jPanelLeft, jPanelRight});
-
         jPanelBothLayout.setVerticalGroup(
             jPanelBothLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelBothLayout.createSequentialGroup()
