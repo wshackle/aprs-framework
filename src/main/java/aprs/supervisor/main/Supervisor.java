@@ -1517,10 +1517,33 @@ public class Supervisor {
         return nextLFR;
     }
 
+    private boolean blockRobotTransfers = false;
+
+    /**
+     * Get the value of blockRobotTransfers
+     *
+     * @return the value of blockRobotTransfers
+     */
+    public boolean isBlockRobotTransfers() {
+        return blockRobotTransfers;
+    }
+
+    /**
+     * Set the value of blockRobotTransfers
+     *
+     * @param blockRobotTransfers new value of blockRobotTransfers
+     */
+    public void setBlockRobotTransfers(boolean blockRobotTransfers) {
+        this.blockRobotTransfers = blockRobotTransfers;
+    }
+
     private XFuture<?> startSetRobotEnabledFalse(String robotName, final int ecc) throws IllegalStateException, PositionMap.BadErrorMapFormatException, IOException {
         XFuture<?> nextLFR;
         Boolean enabled = false;
 
+        if(blockRobotTransfers) {
+            return disableRobotNoTransfer(robotName, ecc);
+        }
         final XFutureVoid stealRobotFuture = stealRobot(robotName, ecc);
         if (null == stealRobotFuture) {
             logEventErr(" stealRobot(" + robotName + ") returned null");
@@ -1648,6 +1671,36 @@ public class Supervisor {
         XFuture<T> ret = new XFuture<T>(name);
         ret.cancelAll(false);
         return ret;
+    }
+    
+    private XFutureVoid disableRobotNoTransfer(String robotName, int ecc) throws IOException, PositionMap.BadErrorMapFormatException {
+        Set<String> names = new HashSet<>();
+        for (int i = 0; i < aprsSystems.size() - 1; i++) {
+            AprsSystem sys = aprsSystems.get(i);
+            if (null != sys) {
+                String sysRobotName = sys.getRobotName();
+                if (null != sysRobotName) {
+                    names.add(sysRobotName);
+                    if (Objects.equals(sysRobotName, robotName)) {
+                        if (checkEcc(ecc)) {
+                            return cancelledEcc(ecc);
+                        }
+                        XFutureVoid f = aprsSystems.get(i).startSafeAbortAndDisconnect("disableRobotNoTransfer: robot="+robotName+", ecc="+ecc)
+                                    .thenRun(() -> {
+                                        robotTaskMapRemove(robotName);
+                                    });
+//                        addStealUnstealList(f);
+                        return f;
+                    }
+                }
+            }
+        }
+        String errMsg = "Robot " + robotName + " not found in " + names;
+        println("aprsSystems = " + aprsSystems);
+        logEventErr(errMsg);
+        showErrorSplash(errMsg);
+        throw new IllegalStateException(errMsg);
+//        return XFuture.completedFutureWithName("stealRobot(" + robotName + ").completedFuture", null);
     }
 
     private XFutureVoid stealRobot(String robotName, int ecc) throws IOException, PositionMap.BadErrorMapFormatException {
@@ -9732,7 +9785,7 @@ public class Supervisor {
         return XFutureVoid.runAsync("updateTasksTableOnSupervisorService", this::updateTasksTable, supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                                    @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                                     @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

@@ -1528,6 +1528,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemEnableConveyorControlView = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemKeepDisabled = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSkipDisabled = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemBlockTransfers = new javax.swing.JCheckBoxMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -2468,6 +2469,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemSkipDisabled);
+
+        jCheckBoxMenuItemBlockTransfers.setText("Block Robot Transfers");
+        jCheckBoxMenuItemBlockTransfers.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemBlockTransfersActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemBlockTransfers);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -4488,6 +4497,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setSkipDisabled(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemSkipDisabledActionPerformed
 
+    private void jCheckBoxMenuItemBlockTransfersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemBlockTransfersActionPerformed
+       final boolean selected = jCheckBoxMenuItemBlockTransfers.isSelected();
+        blockTransfers(selected);
+        supervisor.setBlockRobotTransfers(selected);
+    }//GEN-LAST:event_jCheckBoxMenuItemBlockTransfersActionPerformed
+
     public void keepDisabled(final boolean selected) {
         if (jCheckBoxMenuItemKeepDisabled.isSelected() != selected) {
             jCheckBoxMenuItemKeepDisabled.setSelected(selected);
@@ -4500,6 +4515,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
+     public void blockTransfers(final boolean selected) {
+        if (jCheckBoxMenuItemBlockTransfers.isSelected() != selected) {
+            jCheckBoxMenuItemBlockTransfers.setSelected(selected);
+        }
+    }
+     
     public void enableConveyor(final boolean selected) {
         if (selected) {
             if (null == conveyorVisJPanel1) {
@@ -6201,6 +6222,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSyncToolsFromRobots;
     private javax.swing.JButton jButtonSyncToolsToRobots;
     private javax.swing.JCheckBox jCheckBoxFutureLongForm;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemBlockTransfers;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContDemoReverseFirstOption;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemContinuousDemoRevFirst;
