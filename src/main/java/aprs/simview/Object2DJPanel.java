@@ -563,6 +563,7 @@ public class Object2DJPanel extends JPanel {
                 }
             }
         } catch(IOException ex) {
+            System.err.println("csvFile="+csvFile);
             throw new IOException("csvFile="+csvFile+", length="+csvFile.getCanonicalPath().length(),ex);
         }
     }

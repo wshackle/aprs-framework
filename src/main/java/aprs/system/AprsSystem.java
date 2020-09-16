@@ -10561,7 +10561,7 @@ public class AprsSystem implements SlotOffsetProvider {
     public File snapshotImageFile(String prefix, String suffix, File dir) throws IOException {
         String cleanedPrefix = cleanAndLimitFilePrefix(Utils.getTimeString() + "_" + prefix);
         try {
-            return new File(dir, prefix + String.format("%06d", SIF_INT.incrementAndGet()) + suffix);
+            return new File(dir, cleanedPrefix + String.format("%06d", SIF_INT.incrementAndGet()) + suffix);
         } catch (Exception exception) {
             String errInfo = "cleanedPrefix=" + cleanedPrefix + ",suffix=" + suffix + ",dir=" + dir;
             Logger.getLogger(AprsSystem.class

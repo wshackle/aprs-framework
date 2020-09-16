@@ -1,0 +1,5 @@
+name,slot_occupied,slot_id,sku_name,x,y,z
+kit_s2l2_1_slot_sg_2,"""false""","""2""",sku_part_small_gear,0.037,"""0.055000""","""0.000100"""
+kit_s2l2_1_slot_lg_2,"""false""","""4""",sku_part_large_gear,"""0.054000""","""-0.028000""","""0.000000"""
+kit_s2l2_1_slot_sg_1,"""false""","""1""",sku_part_small_gear,-0.037,"""0.055000""","""0.000000"""
+kit_s2l2_1_slot_lg_1,"""false""","""3""",sku_part_large_gear,"""-0.054000""","""-0.028000""","""0.000000"""

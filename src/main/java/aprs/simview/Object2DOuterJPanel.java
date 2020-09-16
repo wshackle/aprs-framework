@@ -263,6 +263,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         File csvFile = null;
         try {
+            StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
@@ -271,7 +272,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal);
+                updateSnapshotsTable(f, csvFileFinal,callerTrace);
             });
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
@@ -295,7 +296,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final AtomicInteger snapshotsCount = new AtomicInteger();
 
     @UIEffect
-    private void updateSnapshotsTable(File f, File csvFile) {
+    private void updateSnapshotsTable(File f, File csvFile, StackTraceElement callerTrace[]) {
         if (null != f && null != csvFile) {
             try {
                 DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
@@ -317,6 +318,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     Utils.autoResizeTableColWidths(jTableSnapshotFiles);
                 }
             } catch (IOException ex) {
+                System.err.println("updateSnapshotsTable("+f+","+csvFile+",...): callerTrace=\n"+Utils.traceToString(callerTrace));
                 LOGGER.log(Level.SEVERE, "f="+f+",csvFile="+csvFile, ex);
             }
         }
@@ -348,13 +350,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
         File csvFile = null;
         try {
+            StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
             csvFile = new File(csvDir, f.getName() + ".csv");
             this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal);
+                updateSnapshotsTable(f, csvFileFinal,callerTrace);
             });
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
@@ -5549,10 +5552,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
 
     @UIEffect
-    private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque) {
+    private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque, StackTraceElement callerTrace[]) {
         File fa[] = this.fileArrayDeque.pollFirst();
         while (null != fa) {
-            updateSnapshotsTable(fa[0], fa[1]);
+            updateSnapshotsTable(fa[0], fa[1],callerTrace);
             fa = this.fileArrayDeque.pollFirst();
         }
     }
@@ -5561,13 +5564,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     public @Nullable
     File[] takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
 
+        StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
             this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = imageFileToCsvFile(f);
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
-                aprsSystem.submitDisplayConsumer(this::fileArrayDequeConsumer, fileArrayDeque);
+                aprsSystem.submitDisplayConsumer(
+                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,callerTrace),
+                        fileArrayDeque);
             }
             return fileArray;
         } else {
@@ -5577,7 +5583,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
-                aprsSystem.submitDisplayConsumer(this::fileArrayDequeConsumer, fileArrayDeque);
+                aprsSystem.submitDisplayConsumer(
+                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,callerTrace),
+                        fileArrayDeque);
             }
             return fileArray;
         }
@@ -5597,10 +5605,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     public @Nullable
     File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+        StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
         File csvFile = imageFileToCsvFile(f);
         this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
         runOnDispatchThread(() -> {
-            updateSnapshotsTable(f, csvFile);
+            updateSnapshotsTable(f, csvFile,callerTrace);
         });
         return new File[]{f, csvFile};
     }
