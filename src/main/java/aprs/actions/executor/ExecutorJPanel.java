@@ -170,6 +170,7 @@ import static aprs.misc.Utils.readCsvFileToTable;
 import static aprs.misc.Utils.readCsvFileToTableAndMap;
 import crcl.base.CommandStatusType;
 import crcl.base.MoveToType;
+import crcl.base.PoseStatusType;
 import crcl.base.VectorType;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
@@ -4899,7 +4900,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordActionPerformed
         queryLogFileName();
+        System.out.println("jButtonRecordActionPerformed: recordCsvName = " + recordCsvName);
         String partName = manualObjectCachedComboBox.getSelectedItem();
+        System.out.println("jButtonRecordActionPerformed: partName = " + partName);
         if (null != partName && partName.length() > 0) {
             try {
                 PoseType poseFromDb = crclGenerator.getPose(partName);
@@ -4909,21 +4912,40 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             = poseFromDbPoint.getX()
                             + "," + poseFromDbPoint.getY()
                             + "," + poseFromDbPoint.getZ();
+                    System.out.println("jButtonRecordActionPerformed: poseFromDbString = " + poseFromDbString);
                     logDebug("poseFromDbString = " + poseFromDbString);
-                    PoseType curPose = requireNonNull(aprsSystem.getCurrentPose(), "aprsSystem.getCurrentPose()");
-                    PointType curPosePoint = requireNonNull(curPose.getPoint(), "curPose.getPoint()");
-                    String curPoseString
-                            = String.format("%.1f, %.1f, %.1f",
-                                    curPosePoint.getX(),
-                                    curPosePoint.getY(),
-                                    curPosePoint.getZ());
-                    String offsetString
-                            = (curPosePoint.getX() - poseFromDbPoint.getX())
-                            + "," + (curPosePoint.getY() - poseFromDbPoint.getY())
-                            + "," + (curPosePoint.getZ() - poseFromDbPoint.getZ());
-                    logDebug("offsetString = " + offsetString);
-                    writeCorrectionCsv(recordCsvName,
-                            System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString);
+                    XFuture<CRCLStatusType> newRobotStatusFuture = aprsSystem.getNewStatus();
+                    newRobotStatusFuture
+                            .thenAccept((CRCLStatusType newStatus) -> {
+                                try {
+                                    PoseStatusType poseStatus = requireNonNull(newStatus.getPoseStatus(), "aprsSystem.getPoseStatus()");
+                                    PoseType curPose = requireNonNull(poseStatus.getPose(), "poseStatus.getPose()");
+                                    PointType curPosePoint = requireNonNull(curPose.getPoint(), "curPose.getPoint()");
+                                    String curPoseString
+                                            = String.format("%.1f, %.1f, %.1f",
+                                                    curPosePoint.getX(),
+                                                    curPosePoint.getY(),
+                                                    curPosePoint.getZ());
+                                    System.out.println("jButtonRecordActionPerformed: curPoseString = " + curPoseString);
+                                    String offsetString
+                                            = (curPosePoint.getX() - poseFromDbPoint.getX())
+                                            + "," + (curPosePoint.getY() - poseFromDbPoint.getY())
+                                            + "," + (curPosePoint.getZ() - poseFromDbPoint.getZ());
+                                    logDebug("offsetString = " + offsetString);
+                                    System.out.println("jButtonRecordActionPerformed: offsetString = " + offsetString);
+                                    final String csvLine = System.currentTimeMillis() + ", " + partName + ", " + curPoseString + ", " + poseFromDbString + ", " + offsetString;
+                                    System.out.println("jButtonRecordActionPerformed: csvLine = " + csvLine);
+                                    writeCorrectionCsv(recordCsvName, csvLine);
+                                } catch (Exception ex) {
+                                    LOGGER.log(Level.SEVERE, "", ex);
+                                    if (ex instanceof RuntimeException) {
+                                        throw (RuntimeException) ex;
+                                    } else {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            });
+
                 }
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
@@ -7790,7 +7812,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private @Nullable
     String getConnnectionURL() throws SQLException {
-        if(this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+        if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
             return "UseCsvFilesInsteadOfDatabase";
         }
         Connection con = crclGenerator.getDbConnection();

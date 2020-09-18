@@ -1365,6 +1365,12 @@ public class AprsSystem implements SlotOffsetProvider {
         return null;
     }
 
+    public XFuture<CRCLStatusType> getNewStatus() {
+        if (null != crclClientJInternalFrame) {
+            return crclClientJInternalFrame.getNewStatus();
+        }
+        throw new NullPointerException("crclClientJInternalFrame");
+    }
     private volatile boolean enforceMinMaxLimits = true;
 
     /**

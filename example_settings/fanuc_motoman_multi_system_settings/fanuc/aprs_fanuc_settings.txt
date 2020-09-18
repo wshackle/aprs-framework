@@ -2,6 +2,7 @@
 LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
+UseCsvFilesInsteadOfDatabase=false
 alertLimits=true
 aprs.robotName=Fanuc
 aprs.taskName=Fanuc Cart
@@ -15,6 +16,7 @@ snapShotWidth=900
 startup.connectdatabase=true
 startup.connectvision=true
 startup.exploreGraphDb=false
+startup.forceTorqueSim=false
 startup.kitinspection=false
 startup.pddl.executor=true
 startup.pddl.objectsp=true
