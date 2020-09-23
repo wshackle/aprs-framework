@@ -112,7 +112,7 @@ public class DbSetupBuilder {
         for (DbQueryEnum q : DbQueryEnum.values()) {
             String resName = resDir + q.toString().toLowerCase() + ".txt";
             String txt = getStringResource(resName);
-            DbQueryInfo info = DbQueryInfo.parse(txt);
+            DbQueryInfo info = DbQueryInfo.parse(txt,resName);
             map.put(q, info);
         }
         return map;
@@ -133,7 +133,7 @@ public class DbSetupBuilder {
         for (DbQueryEnum q : DbQueryEnum.values()) {
             String resName = resDir + File.separator + q.toString().toLowerCase() + ".txt";
             String txt = getStringFromFile(resName);
-            DbQueryInfo info = DbQueryInfo.parse(txt);
+            DbQueryInfo info = DbQueryInfo.parse(txt,resName);
             map.put(q, info);
         }
         return map;
@@ -338,7 +338,7 @@ public class DbSetupBuilder {
      * @return new instance
      */
     public DbSetup build() {
-        if (connected && (type == null || type == DbType.NONE)) {
+        if (connected && type == null) {
             throw new IllegalArgumentException("type = " + type);
         }
         if (null == queriesDir) {

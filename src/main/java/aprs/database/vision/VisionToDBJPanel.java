@@ -28,6 +28,7 @@ import aprs.cachedcomponents.CachedTextField;
 import aprs.system.AprsSystem;
 import aprs.misc.Utils;
 import aprs.database.AcquireEnum;
+import aprs.database.CsvDbSetup;
 import aprs.database.DbSetup;
 import aprs.database.DbSetupBuilder;
 import aprs.database.DbSetupListener;
@@ -120,7 +121,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
      */
     @SafeEffect
     public List<PartsTray> getPartsTrayList() {
-        if(null == dpu)  {
+        if (null == dpu) {
             throw new RuntimeException("dpu == null");
         }
         return dpu.getPartsTrayList();
@@ -147,14 +148,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
-        if(null == dpu)  {
+        if (null == dpu) {
             throw new RuntimeException("dpu == null");
         }
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
-        if(null == dpu)  {
+        if (null == dpu) {
             throw new RuntimeException("dpu == null");
         }
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem, rotationOffset);
@@ -209,7 +210,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     public double getRotationOffset() {
-        if(null == dpu)  {
+        if (null == dpu) {
             throw new RuntimeException("dpu == null");
         }
         return dpu.getRotationOffset();
@@ -1419,7 +1420,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (null == dpu) {
                 return false;
             }
-            if(this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
                 return true;
             }
             Connection con = dpu.getSqlConnection();
@@ -2079,7 +2080,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             lastVisionClientUpdateLine = line;
             lastVisionClientUpdateList = visionList;
             lastVisionClientUpdateListCopy = new ArrayList<>(visionList);
-            if (null != dpu && (this.aprsSystem.isUseCsvFilesInsteadOfDatabase() ||   null != dpu.getSqlConnection())) {
+            if (null == dpu && this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                if (null == lastSetup) {
+                    lastSetup = new CsvDbSetup();
+                }
+                dpu = new DatabasePoseUpdater(null, DbType.NONE, lastSetDbConnectedVal, lastSetup, aprsSystem.getTaskName(), aprsSystem);
+                String rotationOffsetString = jTextFieldRotationOffset.getText();
+                if (null != rotationOffsetString && rotationOffsetString.length() > 0) {
+                    double ro = Double.parseDouble(rotationOffsetString);
+                    dpu.setRotationOffset(Math.toRadians(ro));
+                }
+            }
+            if (null != dpu && (this.aprsSystem.isUseCsvFilesInsteadOfDatabase() || null != dpu.getSqlConnection())) {
                 boolean addRepeatCounts = addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected();
                 boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
                 updating = true;
@@ -2096,7 +2108,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     lastRawVisItemsData = Collections.unmodifiableList(new ArrayList<>(transformedRawList));
                 }
                 final boolean doRequiredPartsCheck = !singleUpdateListeners.isEmpty() || (origEnableDbUpdates && dpu.isEnableDatabaseUpdates());
-
                 if (doRequiredPartsCheck) {
                     if (!checkRequiredParts("visionList", visionList)) {
                         boolean chkAgain = checkRequiredParts("visionList", visionList, true);
@@ -3195,13 +3206,18 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         try {
             closeDatabasePoseUpdater();
             dpu = new DatabasePoseUpdater(
-                    connection, 
-                    dbtype, 
+                    connection,
+                    dbtype,
                     true,
                     dbSetupPublisher.getDbSetup(),
                     aprsSystem.getTaskName(),
                     aprsSystem);
             dpu.setVerify(verifyUpdatesCachedCheckBox.isSelected());
+            String rotationOffsetString = rotationOffsetCachedTextField.getText();
+            if (null != rotationOffsetString && rotationOffsetString.length() > 0) {
+                double ro = Double.parseDouble(rotationOffsetString);
+                dpu.setRotationOffset(Math.toRadians(ro));
+            }
             dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).type(dbtype).build());
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);

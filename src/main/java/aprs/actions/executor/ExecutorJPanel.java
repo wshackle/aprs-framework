@@ -7803,10 +7803,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .getName()).log(Level.SEVERE, "", ex);
             }
         }
-        dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
+        if (!aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            dbSetupPublisher.setDbSetup(new DbSetupBuilder().setup(dbSetupPublisher.getDbSetup()).connected(true).build());
+        }
         checkDbSupplierPublisherFuturesList = dbSetupPublisher.notifyAllDbSetupListeners(null);
-        if (!crclGenerator.isConnected()) {
-            throw new IllegalStateException("Failed to connnect to database");
+        if (!aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            if (!crclGenerator.isConnected()) {
+                throw new IllegalStateException("Failed to connnect to database");
+            }
         }
     }
 

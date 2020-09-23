@@ -45,6 +45,7 @@ import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
+import aprs.database.CsvDbSetupPublisher;
 import aprs.database.Part;
 import aprs.database.TrayFillInfo;
 import aprs.database.TraySlotListItem;
@@ -2721,7 +2722,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2744,7 +2745,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile), CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile), CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
                 printer.printRecord(minMax.toObjArray());
@@ -2849,7 +2850,7 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             if (null != programString) {
                 programFile = Utils.createTempFile("CRCLProgram", ".xml");
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
             }
@@ -3733,7 +3734,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public XFuture<Boolean> startConnectDatabase() {
-        if (null == dbSetupJInternalFrame) {
+        if (!this.useCsvFilesInsteadOfDatabase && null == dbSetupJInternalFrame) {
             throw new IllegalStateException("DB Setup View must be open to use this function.");
         }
         XFuture<Boolean> f = waitDbConnected();
@@ -3741,11 +3742,24 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("Attempt to start connect database when already closing.");
         }
         println("Starting connect to database ...   : propertiesFile=" + dbSetupJInternalFrame.getPropertiesFile());
-        DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
-        DbSetup setup = dbSetupPublisher.getDbSetup();
-        if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
-            throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
+        DbSetupPublisher dbSetupPublisher;
+        if (!this.useCsvFilesInsteadOfDatabase && null != dbSetupJInternalFrame) {
+            dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+        } else {
+            try {
+                dbSetupPublisher = this.dbSetupPublisherSupplier.call();
+            } catch (Exception ex) {
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE,
+                                "startConnectDatabase failed for " + getTaskName(), ex);
+                if (ex instanceof RuntimeException) {
+                    throw ((RuntimeException) ex);
+                } else {
+                    throw new RuntimeException(ex);
+                }
+            }
         }
+        DbSetup setup = dbSetupPublisher.getDbSetup();
         connectDatabaseFuture = connectDatabase();
         //runProgramService.submit(this::connectDatabase);
         return f;
@@ -3759,28 +3773,32 @@ public class AprsSystem implements SlotOffsetProvider {
 //                xf.cancelAll(false);
 //                return xf;
 //            }
-            if (null == dbSetupJInternalFrame) {
-                throw new IllegalStateException("DB Setup View must be open to use this function.");
+
+            DbSetupPublisher dbSetupPublisher;
+            if (null != dbSetupJInternalFrame) {
+                dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
+                String startScript = dbSetupJInternalFrame.getStartScript();
+                if (null != startScript && startScript.length() > 0) {
+                    println();
+                    System.err.println();
+                    System.out.flush();
+                    System.err.flush();
+                    println("Excecuting Database startScript=\r\n\"" + startScript + "\"");
+                    println();
+                    System.err.println();
+                    System.out.flush();
+                    System.err.flush();
+                    ProcessBuilder pb = new ProcessBuilder(startScript.split("[ ]+"));
+                    pb.inheritIO().start().waitFor();
+                    println();
+                    System.err.println();
+                    System.out.flush();
+                    System.err.flush();
+                }
+            } else {
+                dbSetupPublisher = this.dbSetupPublisherSupplier.call();
             }
-            DbSetupPublisher dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();
-            String startScript = dbSetupJInternalFrame.getStartScript();
-            if (null != startScript && startScript.length() > 0) {
-                println();
-                System.err.println();
-                System.out.flush();
-                System.err.flush();
-                println("Excecuting Database startScript=\r\n\"" + startScript + "\"");
-                println();
-                System.err.println();
-                System.out.flush();
-                System.err.flush();
-                ProcessBuilder pb = new ProcessBuilder(startScript.split("[ ]+"));
-                pb.inheritIO().start().waitFor();
-                println();
-                System.err.println();
-                System.out.flush();
-                System.err.flush();
-            }
+
             DbSetup setup = dbSetupPublisher.getDbSetup();
             if (setup.getDbType() == null || setup.getDbType() == DbType.NONE) {
                 throw new IllegalStateException("Can not connect to database with setup.getDbType() = " + setup.getDbType());
@@ -4408,7 +4426,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     futures.add(startForceTorqueSimFuture);
                 }
             }
-            if (!skipCreateDbSetupFrame || isShowDatabaseSetupStartupSelected()) {
+            if (isShowDatabaseSetupStartupSelected() && (!skipCreateDbSetupFrame)) {
                 createDbSetupFrame();
             }
             if (isShowDatabaseSetupStartupSelected()) {
@@ -4461,7 +4479,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void loadCustomWindowsFile() {
         final File fileToLoad = customWindowsFile;
         if (null != fileToLoad) {
-            try ( BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
                 String line = br.readLine();
                 while (line != null) {
                     line = line.trim();
@@ -4483,7 +4501,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
-        try ( BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
             props.load(br);
         }
         String classnameString = props.getProperty("classname");
@@ -5321,10 +5339,20 @@ public class AprsSystem implements SlotOffsetProvider {
         return crclSimServerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
+    private @Nullable
+    CsvDbSetupPublisher csvDbSetupPublisher = null;
+
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
 
         @Override
-        public DbSetupPublisher call() {
+        public DbSetupPublisher call() throws IOException {
+
+            if (useCsvFilesInsteadOfDatabase) {
+                if (null == csvDbSetupPublisher) {
+                    csvDbSetupPublisher = new CsvDbSetupPublisher();
+                }
+                return csvDbSetupPublisher;
+            }
             createDbSetupFrame();
             if (null == dbSetupJInternalFrame) {
                 throw new IllegalStateException("DB Setup View must be open to use this function.");
@@ -6984,7 +7012,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
-        try ( PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -8029,7 +8057,7 @@ public class AprsSystem implements SlotOffsetProvider {
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
-                try ( PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
@@ -8568,7 +8596,7 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                     for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
@@ -9491,7 +9519,7 @@ public class AprsSystem implements SlotOffsetProvider {
             Properties props = new Properties();
             newPropertiesFile = false;
             println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-            try ( FileReader fr = new FileReader(propertiesFile)) {
+            try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
 
@@ -10305,7 +10333,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 File commandStatusLogFile = crclClientJInternalFrame.writeCommandStatusLogFile();
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 crclClientJInternalFrame.printPerfInfo(System.out, task);
-                try ( PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile(task + "crcLClientPerfInfo", ".txt")))) {
+                try (PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile(task + "crcLClientPerfInfo", ".txt")))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
             }
@@ -10480,7 +10508,7 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -10496,7 +10524,7 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {

@@ -334,12 +334,16 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         this.sharedConnection = sharedConnection;
         this.dbsetup = dbsetup;
         this.taskname = taskname;
-        Map<DbQueryEnum, DbQueryInfo> qm = dbsetup.getQueriesMap();
-        if (null == qm) {
-            throw new IllegalArgumentException("dbsetup has null queriesMap");
+        if (dbtype == DbType.NONE) {
+            this.queriesMap = Collections.emptyMap();
+        } else {
+            Map<DbQueryEnum, DbQueryInfo> qm = dbsetup.getQueriesMap();
+            if (null == qm) {
+                throw new IllegalArgumentException("dbsetup has null queriesMap");
+            }
+            this.queriesMap = qm;
+            setupStatements();
         }
-        this.queriesMap = qm;
-        setupStatements();
         this.aprsSystem = aprsSystem;
     }
 
@@ -466,7 +470,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 break;
 
             case NONE:
-                throw new IllegalStateException("dbtype = " + dbtype);
+            default:
+                break;
         }
         return DbSetupBuilder.setupConnection(dbtype, host, port, db, username, password, debug, DEFAULT_LOGIN_TIMEOUT)
                 .thenAccept(c -> con = c)
@@ -489,6 +494,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         DatabasePoseUpdater dpu;
         try {
             dpu = new DatabasePoseUpdater(host, port, db, username, password, dbtype, dbsetup, debug, taskname, aprsSystem);
+            if(dbtype == DbType.NONE) {
+                return XFuture.completedFuture(dpu);
+            }
             return dpu.
                     setupConnection(host, port, db, username, password, debug)
                     .thenRun(() -> {
@@ -931,21 +939,25 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
      */
     @Override
     public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
-        if (null == getTraySlotsParamTypes) {
-            throw new IllegalArgumentException("getTraySlotsParamTypes is null");
-        }
-        if (null == get_tray_slots_statement) {
-            throw new IllegalArgumentException("get_tray_slots_statement is null");
+        if (dbtype != DbType.NONE) {
+            if (null == getTraySlotsParamTypes) {
+                throw new IllegalArgumentException("getTraySlotsParamTypes is null");
+            }
+            if (null == get_tray_slots_statement) {
+                throw new IllegalArgumentException("get_tray_slots_statement is null");
+            }
         }
         return getSlotOffsets(new Tray(name), ignoreEmpty);
     }
 
     private List<Slot> getSlotOffsets(Tray tray, boolean ignoreEmpty) {
-        if (null == getTraySlotsParamTypes) {
-            throw new IllegalArgumentException("getTraySlotsParamTypes is null");
-        }
-        if (null == get_tray_slots_statement) {
-            throw new IllegalArgumentException("get_tray_slots_statement is null");
+        if (dbtype != DbType.NONE) {
+            if (null == getTraySlotsParamTypes) {
+                throw new IllegalArgumentException("getTraySlotsParamTypes is null");
+            }
+            if (null == get_tray_slots_statement) {
+                throw new IllegalArgumentException("get_tray_slots_statement is null");
+            }
         }
         String tray_name = tray.getName();
         if (tray_name.startsWith("sku_")) {
@@ -995,11 +1007,14 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         if (null == getTraySlotsParamTypes) {
             throw new IllegalStateException("getTraySlotsParamTypes is null");
         }
-        if (null == get_tray_slots_statement) {
-            throw new IllegalStateException("get_tray_slots_statement is null");
-        }
-        if (null == getTraySlotsQueryString) {
-            throw new IllegalStateException("getTraySlotsQueryString is null");
+
+        if (dbtype != DbType.NONE) {
+            if (null == getTraySlotsQueryString) {
+                throw new IllegalStateException("getTraySlotsQueryString is null");
+            }
+            if (null == get_tray_slots_statement) {
+                throw new IllegalStateException("get_tray_slots_statement is null");
+            }
         }
         Integer failuresI = failuresMap.get(tray.getName());
         if (failuresI != null && failuresI.compareTo(2) > 0) {
@@ -1017,101 +1032,99 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     tray.setFullName(trayFullName);
                 }
             }
-            synchronized (get_tray_slots_statement) {
-                List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
-                String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
-                try {
-                    PrintStream ps = dbQueryLogPrintStream;
-                    if (!enableDatabaseUpdates && ps != null) {
-                        ps.println();
-                        ps.println(getTraySlotsQueryStringFilled);
-                        ps.println();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+            List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
+            String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
+            try {
+                PrintStream ps = dbQueryLogPrintStream;
+                if (!enableDatabaseUpdates && ps != null) {
+                    ps.println();
+                    ps.println(getTraySlotsQueryStringFilled);
+                    ps.println();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 //                boolean exec_result = get_tray_slots_statement.execute();
 //                if (exec_result) {
-                try (ResultSet rs = executeQuery(get_tray_slots_statement, getTraySlotsQueryStringFilled, "getSlotOffsetsNew_" + trayFullName, taskname,this.aprsSystem.isUseCsvFilesInsteadOfDatabase())) {
-                    if (null != displayInterface && displayInterface.isDebug()) {
-                        displayInterface.addLogMessage("get_tray_slots_statement.getResultSet() = " + rs + "\r\n");
-                    }
-                    List<Map<String, String>> resultSetMapList = new ArrayList<>();
-                    while (rs.next()) {
-                        ResultSetMetaData meta = rs.getMetaData();
-                        CheckedStringMap<String> resultMap = new CheckedStringMap<>(new LinkedHashMap<>());
-                        if (null != displayInterface && displayInterface.isDebug()) {
-                            displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
-                        }
-                        for (int j = 1; j <= meta.getColumnCount(); j++) {
-                            String name = meta.getColumnName(j);
-                            // After upgrading to neo4j-jdbc 3.0  started getting 
-                            // java.lang.UnsupportedOperationException: Method getObject in class org.neo4j.jdbc.ResultSet is not yet implemented.
-//                                String value = rs.getObject(name, Object.class).toString();
-                            String value = rs.getString(name);
-                            resultMap.put(name, value);
-                        }
-                        if (null != displayInterface
-                                && displayInterface.isDebug()
-                                && resultMap.getMap().keySet().size() > 0) {
-                            displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
-                        }
-                        String name = resultMap.get("name");
-                        String sku_name = resultMap.get("sku_name");
-                        String prp_name = resultMap.get("prp_name");
-                        String tray_name = resultMap.get("tray_name");
-
-                        assert (tray_name != null) : "tray_name == null";
-                        assert (tray_name.equals(tray.getFullName())) :
-                                ("!tray_name.equals(tray.getName()) tray_name=" + tray_name + ", tray=" + tray);
-                        if (prp_name.startsWith("part_ref_and_pose_")) {
-                            prp_name = prp_name.substring("part_ref_and_pose_".length());
-                        }
-                        double x = fixDouble(rs, "x") * 1000.0;
-                        double y = fixDouble(rs, "y") * 1000.0;
-
-                        String short_sku_name = sku_name;
-                        if (short_sku_name.startsWith("sku_")) {
-                            short_sku_name = short_sku_name.substring(4);
-                        }
-
-                        if (short_sku_name.startsWith("part_")) {
-                            short_sku_name = short_sku_name.substring(5);
-                        }
-                        Slot offsetItem = new Slot(short_sku_name, 0, x, y);
-                        offsetItem.setX_OFFSET(x);
-                        offsetItem.setY_OFFSET(y);
-                        offsetItem.setPrpName(prp_name);
-                        offsetItem.setFullName(name);
-                        offsetItem.setSlotForSkuName(sku_name);
-                        offsetItem.setNewSlotQuery(getTraySlotsQueryStringFilled);
-                        offsetItem.setNewSlotOffsetResultMap(resultMap.getMap());
-                        offsetItem.setTray(tray);
-                        if (resultMap.getMap().containsKey("diameter")) {
-                            double diameter = fixDouble(rs, "diameter") * 1000.0;
-                            offsetItem.setDiameter(diameter);
-                        }
-                        ret.add(offsetItem);
-                    }
+            try (ResultSet rs = executeQuery(get_tray_slots_statement, getTraySlotsQueryStringFilled, "getSlotOffsetsNew_" + trayFullName, taskname, this.aprsSystem.isUseCsvFilesInsteadOfDatabase())) {
+                if (null != displayInterface && displayInterface.isDebug()) {
+                    displayInterface.addLogMessage("get_tray_slots_statement.getResultSet() = " + rs + "\r\n");
                 }
+                List<Map<String, String>> resultSetMapList = new ArrayList<>();
+                while (rs.next()) {
+                    ResultSetMetaData meta = rs.getMetaData();
+                    CheckedStringMap<String> resultMap = new CheckedStringMap<>(new LinkedHashMap<>());
+                    if (null != displayInterface && displayInterface.isDebug()) {
+                        displayInterface.addLogMessage("meta.getColumnCount() = " + meta.getColumnCount() + "\r\n");
+                    }
+                    for (int j = 1; j <= meta.getColumnCount(); j++) {
+                        String name = meta.getColumnName(j);
+                        // After upgrading to neo4j-jdbc 3.0  started getting 
+                        // java.lang.UnsupportedOperationException: Method getObject in class org.neo4j.jdbc.ResultSet is not yet implemented.
+//                                String value = rs.getObject(name, Object.class).toString();
+                        String value = rs.getString(name);
+                        resultMap.put(name, value);
+                    }
+                    if (null != displayInterface
+                            && displayInterface.isDebug()
+                            && resultMap.getMap().keySet().size() > 0) {
+                        displayInterface.addLogMessage("resultMap=" + resultMap.toString() + System.lineSeparator());
+                    }
+                    String name = resultMap.get("name");
+                    String sku_name = resultMap.get("sku_name");
+                    String prp_name = resultMap.get("prp_name");
+                    String tray_name = resultMap.get("tray_name");
+
+                    assert (tray_name != null) : "tray_name == null";
+                    assert (tray_name.equals(tray.getFullName())) :
+                            ("!tray_name.equals(tray.getName()) tray_name=" + tray_name + ", tray=" + tray);
+                    if (prp_name.startsWith("part_ref_and_pose_")) {
+                        prp_name = prp_name.substring("part_ref_and_pose_".length());
+                    }
+                    double x = fixDouble(rs, "x") * 1000.0;
+                    double y = fixDouble(rs, "y") * 1000.0;
+
+                    String short_sku_name = sku_name;
+                    if (short_sku_name.startsWith("sku_")) {
+                        short_sku_name = short_sku_name.substring(4);
+                    }
+
+                    if (short_sku_name.startsWith("part_")) {
+                        short_sku_name = short_sku_name.substring(5);
+                    }
+                    Slot offsetItem = new Slot(short_sku_name, 0, x, y);
+                    offsetItem.setX_OFFSET(x);
+                    offsetItem.setY_OFFSET(y);
+                    offsetItem.setPrpName(prp_name);
+                    offsetItem.setFullName(name);
+                    offsetItem.setSlotForSkuName(sku_name);
+                    offsetItem.setNewSlotQuery(getTraySlotsQueryStringFilled);
+                    offsetItem.setNewSlotOffsetResultMap(resultMap.getMap());
+                    offsetItem.setTray(tray);
+                    if (resultMap.getMap().containsKey("diameter")) {
+                        double diameter = fixDouble(rs, "diameter") * 1000.0;
+                        offsetItem.setDiameter(diameter);
+                    }
+                    ret.add(offsetItem);
+                }
+            }
 //                }
-                if (ret.isEmpty()) {
-                    if (ignoreEmpty) {
-                        return failedSlotOffsets;
-                    }
-                    System.err.println();
-                    System.err.println("Can't get items for tray " + tray);
-                    System.err.println("getTraySlotsQueryStringFilled=");
-                    System.err.println(getTraySlotsQueryStringFilled);
-                    System.err.println("Returned 0 items.");
-                    System.err.println("url=" + getURL());
-                    System.err.println();
-                    int failures = failuresMap.compute(tray.getName(), (name, count) -> (count == null) ? 1 : (count + 1));
-                    if (failures < 2) {
-                        throw new IllegalStateException("Can't get items for tray" + tray + " url=" + getURL() + " getTraySlotsQueryStringFilled=\n" + getTraySlotsQueryStringFilled);
-                    } else {
-                        return failedSlotOffsets;
-                    }
+            if (ret.isEmpty()) {
+                if (ignoreEmpty) {
+                    return failedSlotOffsets;
+                }
+                System.err.println();
+                System.err.println("Can't get items for tray " + tray);
+                System.err.println("getTraySlotsQueryStringFilled=");
+                System.err.println(getTraySlotsQueryStringFilled);
+                System.err.println("Returned 0 items.");
+                System.err.println("url=" + getURL());
+                System.err.println();
+                int failures = failuresMap.compute(tray.getName(), (name, count) -> (count == null) ? 1 : (count + 1));
+                if (failures < 2) {
+                    throw new IllegalStateException("Can't get items for tray" + tray + " url=" + getURL() + " getTraySlotsQueryStringFilled=\n" + getTraySlotsQueryStringFilled);
+                } else {
+                    return failedSlotOffsets;
                 }
             }
         } catch (Exception ex) {
@@ -1295,9 +1308,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         List<PhysicalItem> newPrevParts
                 = (prevParts == null) ? new ArrayList<>()
                         : prevParts.stream()
-                        .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
-                        .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
-                        .collect(Collectors.toCollection(ArrayList::new));
+                                .filter((PhysicalItem prevPart) -> timestamp - prevPart.getTimestamp() < 10000)
+                                .filter((PhysicalItem prevPart) -> closestDist(prevPart, parts) < 25.0)
+                                .collect(Collectors.toCollection(ArrayList::new));
         newPrevParts.addAll(parts);
         if (null != prevParts) {
             prevParts.clear();
@@ -1395,20 +1408,20 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
         List<Tray> kitTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<Tray> partTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<PhysicalItem> parts
                 = StreamSupport.stream(inputItems.spliterator(), false)
-                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
         List<Slot> bestKitTrayEmptySlots = findBestEmptyTraySlots(kitTrays, parts, sop, prevParts);
         List<Slot> bestPartTrayEmptySlots = findBestEmptyTraySlots(partTrays, parts, sop, prevParts);
@@ -1701,9 +1714,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         if (null == stmnt) {
                             throw new RuntimeException("stmt == null");
                         }
-                    }
-                    if (null == statementString) {
-                        throw new RuntimeException("stmt == statementString");
+                        if (null == statementString) {
+                            throw new RuntimeException("stmt == statementString");
+                        }
                     }
                     returnedList.add(ci);
                     List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
@@ -1850,16 +1863,16 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private static List<PhysicalItem> preProcessItemList(List<PhysicalItem> inputItems, boolean keepNames, boolean keepFullNames, boolean doPrefEmptySlotsFiltering, boolean addRepeatCountsToName, @Nullable List<PartsTray> partsTrayList) {
         List<Tray> partsTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "PT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "PT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         List<Tray> kitTrays
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "KT".equals(item.getType()))
-                .filter(Tray.class::isInstance)
-                .map(Tray.class::cast)
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "KT".equals(item.getType()))
+                        .filter(Tray.class::isInstance)
+                        .map(Tray.class::cast)
+                        .collect(Collectors.toList());
         normalizeNames(inputItems, kitTrays, keepNames, keepFullNames, partsTrays);
         List<PhysicalItem> outList = null;
         if (doPrefEmptySlotsFiltering) {
@@ -1954,12 +1967,12 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private static List<PhysicalItem> filterEmptySlots(List<PhysicalItem> inputItems, List<Tray> kitTrays, List<Tray> partsTrays, @Nullable List<PartsTray> partsTrayOutList) {
         List<PhysicalItem> parts
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "P".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "P".equals(item.getType()))
+                        .collect(Collectors.toList());
         List<PhysicalItem> emptySlots
                 = inputItems.stream()
-                .filter((PhysicalItem item) -> "ES".equals(item.getType()))
-                .collect(Collectors.toList());
+                        .filter((PhysicalItem item) -> "ES".equals(item.getType()))
+                        .collect(Collectors.toList());
         Comparator<PhysicalItem> kitComparator
                 = comparingLong((PhysicalItem kt) -> (kt.getEmptySlotsCount() < 1) ? Long.MAX_VALUE : kt.getEmptySlotsCount());
         kitTrays.sort(kitComparator);
@@ -1991,10 +2004,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
                 PhysicalItem bestSlotFiller
                         = firstSortParts.stream()
-                        .filter(PhysicalItem::isInsidePartsTray)
-                        .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
-                        .findFirst()
-                        .orElse(null);
+                                .filter(PhysicalItem::isInsidePartsTray)
+                                .filter((PhysicalItem p) -> Objects.equals(p.origName, slot.getSlotForSkuName()))
+                                .findFirst()
+                                .orElse(null);
                 if (null != bestSlotFiller) {
                     slotFillers.add(bestSlotFiller);
                     firstSortParts.remove(bestSlotFiller);
@@ -2294,8 +2307,10 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         if (null == paramTypes) {
             throw new IllegalArgumentException("paramTypes is null");
         }
-        if (null == stmnt) {
-            throw new IllegalArgumentException("stmnt is null");
+        if (dbtype != DbType.NONE) {
+            if (null == stmnt) {
+                throw new IllegalArgumentException("stmnt is null");
+            }
         }
         ArrayList<Object> params = new ArrayList<>();
         for (int i = 0; i < paramTypes.length; i++) {

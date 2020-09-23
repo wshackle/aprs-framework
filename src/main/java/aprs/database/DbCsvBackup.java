@@ -26,6 +26,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.PreparedStatement;
@@ -37,6 +38,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -46,15 +48,40 @@ public class DbCsvBackup {
 
     public static boolean debug = false;
 
-    static public ResultSet executeQuery(java.sql.PreparedStatement preparedStatement, String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
+    static public ResultSet executeQuery(@Nullable PreparedStatement preparedStatement, String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
         File homeDir = new File(System.getProperty("user.home"));
         File queriesDir = new File(homeDir, "aprsQueries");
         File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
         File dir = new File(sysQueriesDir, name);
         dir.mkdirs();
-        File resultsFile = new File(dir, simQuery.hashCode() + "_results.csv");
-        File queryFile = new File(dir, simQuery.hashCode() + "_query.txt");
-        File metaFile = new File(dir, simQuery.hashCode() + "_meta.csv");
+        final File resultsFile;
+        final File queryFile;
+        final File metaFile;
+        if (null == simQuery || simQuery.length() < 2) {
+            File fa[] = dir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.endsWith("_query.txt");
+                }
+            });
+            if (fa.length == 1 && fa[0].exists()) {
+                queryFile = fa[0];
+                String prefix = queryFile.getName().substring(0, queryFile.getName().length() - "_query.txt".length());
+                resultsFile = new File(dir, prefix + "_results.csv");
+                metaFile = new File(dir, prefix + "_meta.csv");
+            } else {
+                throw new RuntimeException("simQuery=" + simQuery + ",dir=" + dir);
+            }
+        } else {
+            final int simQueryHashCode = simQuery.hashCode();
+            resultsFile
+                    = new File(dir, simQueryHashCode + "_results.csv");
+            queryFile
+                    = new File(dir, simQueryHashCode + "_query.txt");
+            metaFile
+                    = new File(dir, simQueryHashCode + "_meta.csv");
+        }
+
         if (debug) {
             System.out.println("");
             System.out.flush();
@@ -69,12 +96,14 @@ public class DbCsvBackup {
             System.out.println("queryFile = " + queryFile + ", exists = " + queryFile.exists());
             System.out.println("metaFile = " + metaFile + ", exists = " + metaFile.exists());
         }
-//        if (resultsFile.exists()) {
-//            return readResultsSetCsv(resultsFile);
-//        }
         if (!resultsFile.exists() || !queryFile.exists() || !metaFile.exists()) {
             System.out.println("!resultsFile.exists() || !queryFile.exists() || !metaFile.exists()");
+            if (null == preparedStatement) {
+                throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",resultsFile.exists()=" + resultsFile.exists() + ",queryFile=" + queryFile + ",queryFile.exists()=" + queryFile.exists() + ",metaFile=" + metaFile + ",metaFile.exists()=" + metaFile.exists());
+            }
             return executeAndSaveQuery(preparedStatement, resultsFile, simQuery, queryFile, metaFile);
+        } else if (replace) {
+            return readResultsSetCsv(resultsFile, metaFile);
         } else {
             try (BufferedReader br = new BufferedReader(new FileReader(queryFile))) {
                 String line;
@@ -104,10 +133,14 @@ public class DbCsvBackup {
                         System.out.println("trimmedFileLine = " + trimmedFileLine);
                         System.out.println("trimmedSim = " + trimmedSim);
                     }
+                    if (null == preparedStatement) {
+                        throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",queryFile=" + queryFile + ",metaFile=" + metaFile + ",trimmedFileLine=" + trimmedFileLine + ",trimmedSim=" + trimmedSim);
+                    }
                     return executeAndSaveQuery(preparedStatement, resultsFile, simQuery, queryFile, metaFile);
-                } else if (replace) {
-                    return readResultsSetCsv(resultsFile, metaFile);
                 } else {
+                    if (null == preparedStatement) {
+                        throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",queryFile=" + queryFile + ",metaFile=" + metaFile + ",trimmedFileLine=" + trimmedFileLine + ",trimmedSim=" + trimmedSim);
+                    }
                     return preparedStatement.executeQuery();
                 }
             } finally {

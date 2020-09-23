@@ -1014,9 +1014,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != externalPoseProvider) {
             return true;
         }
-        if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
-            return true;
-        }
         try {
             if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
                 if (null == dbConnection) {
@@ -1085,7 +1082,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),true);
                 return;
             }
             if (null != this.dbConnection && dbConnection != this.dbConnection) {
@@ -1104,7 +1101,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this.dbConnection = dbConnection;
             }
             if (null != dbConnection && null != dbSetup) {
-                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
+                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),false);
             } else if (qs != null) {
                 qs.close();
             }
@@ -1149,9 +1146,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName());
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),this.aprsSystem.isUseCsvFilesInsteadOfDatabase());
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                System.err.println("dbSetup="+dbSetup);
+                System.err.println("dbSetup.getQueriesMap()="+dbSetup.getQueriesMap());
+                System.err.println("aprsSystem.getTaskName()="+aprsSystem.getTaskName());
+                throw new RuntimeException(
+                        "aprsSystem.getTaskName()="+aprsSystem.getTaskName()+",dbSetup.getQueriesMap()="+dbSetup.getQueriesMap()
+                        ,ex);
             }
             return XFutureVoid.completedFuture();
         }
@@ -7248,7 +7250,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     return Collections.emptyList();
                 }
                 if (timeoutMillis > 0 && t1 - startInfo.t0 > timeoutMillis) {
-                    handeWaitForVisionUpdatesTimeout(prefix, t1, startInfo, waitCycle, last_t1, timeoutMillis);
+                    handleWaitForVisionUpdatesTimeout(prefix, t1, startInfo, waitCycle, last_t1, timeoutMillis);
                 }
                 last_t1 = t1;
                 if (startInfo.xfl.isDone()) {
@@ -7347,7 +7349,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void handeWaitForVisionUpdatesTimeout(String prefix, long t1, WaitForCompleteVisionUpdatesStartInfo startInfo, int waitCycle, long last_t1, long timeoutMillis) throws RuntimeException {
+    private void handleWaitForVisionUpdatesTimeout(String prefix, long t1, WaitForCompleteVisionUpdatesStartInfo startInfo, int waitCycle, long last_t1, long timeoutMillis) throws RuntimeException {
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         System.err.println("waitForCompleteVisionUpdates " + prefix + " timed out");
         System.err.println("runName=" + getRunName());

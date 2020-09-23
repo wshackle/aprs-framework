@@ -1,15 +1,15 @@
 
 plj-timeout 90000
 
-if!connectOK localhost 7484
-plj-connectWaitFor host=localhost port=7484 delay=100 timeout=100 max_tries=100
-cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat&& echo done"
-endif
+#if!connectOK localhost 7484
+#plj-connectWaitFor host=localhost port=7484 delay=100 timeout=100 max_tries=100
+#cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-motoman\bin\Neo4j.bat&& echo done"
+#endif
 
-if!connectOK localhost 7474
-plj-connectWaitFor host=localhost port=7474 delay=100 timeout=100 max_tries=100
-cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat&& echo done"
-endif
+#if!connectOK localhost 7474
+#plj-connectWaitFor host=localhost port=7474 delay=100 timeout=100 max_tries=100
+#cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat&& echo done"
+#endif
 
 if!connectOK localhost 6001
 cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\

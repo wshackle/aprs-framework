@@ -88,6 +88,8 @@ public class QuerySet implements QuerySetInterface {
         return false;
     }
 
+    public final boolean useCsvFilesInsteadOfDatabase;
+    
     /**
      * Create a new QuerySet.
      *
@@ -100,10 +102,12 @@ public class QuerySet implements QuerySetInterface {
             DbType dbtype,
             java.sql.@Nullable Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap,
-            String taskName) throws SQLException {
+            String taskName,
+            boolean useCsvFilesInsteadOfDatabase) throws SQLException {
         this.dbtype = dbtype;
         this.dbConnection = con;
         this.taskName = taskName;
+        this.useCsvFilesInsteadOfDatabase = useCsvFilesInsteadOfDatabase;
 //        if (null == con) {
 //            throw new IllegalArgumentException("connection is null");
 //        }

@@ -1025,7 +1025,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 throw new IllegalStateException("Null queryObject in table on row " + i);
             }
             newMap.put((DbQueryEnum) keyObject,
-                    DbQueryInfo.parse(Objects.toString(queryObject)));
+                    DbQueryInfo.parse(Objects.toString(queryObject),"jTableQueries.getValueAt("+i+",1)"));
         }
         return newMap;
     }

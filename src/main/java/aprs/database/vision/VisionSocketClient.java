@@ -26,6 +26,7 @@ import aprs.database.PhysicalItem;
 import aprs.database.SocketLineReader;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PoseType;
+import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -311,6 +312,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (execSrv == null) {
                 throw new IllegalArgumentException("visionExecServ is null, already closed");
             }
+            StackTraceElement startTrace[] = Thread.currentThread().getStackTrace();
             final SocketLineReader.CallBack callBack = new SocketLineReader.CallBack() {
                 private volatile @Nullable
                 String lastSkippedLine = null;
@@ -332,29 +334,36 @@ public class VisionSocketClient implements AutoCloseable {
 
                             @Override
                             public void run() {
-                                String origName = Thread.currentThread().getName();
-                                Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
-                                //println("visioncycle="+visioncycle);
-                                if (line.startsWith("EXCEPTION")) {
-                                    final SocketLineReader thisVisionSlrLocal = VisionSocketClient.this.visionSlr;
-                                    final String errmsg;
-                                    if (null != thisVisionSlrLocal) {
-                                        errmsg = "EXCEPTION: VisionSocket host=" + thisVisionSlrLocal.getHost() + ",port=" + thisVisionSlrLocal.getPort() + line.substring("EXCEPTION".length());
-                                    } else {
-                                        errmsg = "EXCEPTION: VisionSocket " + line.substring("EXCEPTION".length());
+                                try {
+                                    String origName = Thread.currentThread().getName();
+                                    Thread.currentThread().setName("parsingVisionLine from " + hostf + ":" + portf);
+                                    //println("visioncycle="+visioncycle);
+                                    if (line.startsWith("EXCEPTION")) {
+                                        final SocketLineReader thisVisionSlrLocal = VisionSocketClient.this.visionSlr;
+                                        final String errmsg;
+                                        if (null != thisVisionSlrLocal) {
+                                            errmsg = "EXCEPTION: VisionSocket host=" + thisVisionSlrLocal.getHost() + ",port=" + thisVisionSlrLocal.getPort() + line.substring("EXCEPTION".length());
+                                        } else {
+                                            errmsg = "EXCEPTION: VisionSocket " + line.substring("EXCEPTION".length());
+                                        }
+                                        updateIgnoredLineListeners(Collections.emptyList(), errmsg);
+                                        updateListeners(Collections.emptyList(), errmsg, false);
+                                        throw new RuntimeException(line);
                                     }
-                                    updateIgnoredLineListeners(Collections.emptyList(), errmsg);
-                                    updateListeners(Collections.emptyList(), errmsg, false);
-                                    throw new RuntimeException(line);
+                                    parseVisionLine(line);
+                                    if (null != lastSkippedLine) {
+                                        String skippedLine = lastSkippedLine;
+                                        lastSkippedLine = null;
+                                        parseVisionLine(skippedLine);
+                                    }
+                                    parsing_line = null;
+                                    Thread.currentThread().setName(origName);
+                                } catch (Exception exception) {
+                                    System.err.println("Failure in vision client for "+hostf+":"+portf+" with startTrace="+XFuture.traceToString(startTrace));
+                                    Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
+                                    System.err.println("Connect to vision on host " + hostf + " with port " + portf + " failed with message " + exception);
+                                    throw new RuntimeException("Failed to run client to vision " + hostf + ":" + portf + " : " + exception.getMessage(), exception);
                                 }
-                                parseVisionLine(line);
-                                if (null != lastSkippedLine) {
-                                    String skippedLine = lastSkippedLine;
-                                    lastSkippedLine = null;
-                                    parseVisionLine(skippedLine);
-                                }
-                                parsing_line = null;
-                                Thread.currentThread().setName(origName);
                             }
                         });
                     } else {

@@ -210,6 +210,7 @@ public class DbCsvBackupResultSet implements ResultSet {
         try {
             return curRecord.get(columnLabel);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new SQLException(e);
         }
     }

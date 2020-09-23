@@ -4869,7 +4869,8 @@ public class Supervisor {
                 futures[i] = aprsSys.startLookForParts();
             }
         }
-        return XFuture.allOfWithName("lookForPartsAll", futures);
+        return XFuture.allOfWithName("lookForPartsAll", futures)
+                .peekException(this::handleXFutureException);
     }
 
     private void completeScanAllInternal() {

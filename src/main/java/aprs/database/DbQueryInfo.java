@@ -22,9 +22,11 @@
  */
 package aprs.database;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Class of database query information needed to make a particular query through
@@ -42,18 +44,22 @@ public class DbQueryInfo {
     private Map<DbParamTypeEnum, Integer> paramPosMap;
     private final String origText;
     
+    private final @Nullable
+    String resourceName;
+
     /**
      * Constructor to create instance from data taken from text resource file.
-     * 
+     *
      * @param query query template taken from resource file.
      * @param params parameter array info parsed from resource file
-     * @param results results map parsed from resource file 
+     * @param results results map parsed from resource file
      * @param origText complete original text from the file (for display only)
      */
     private DbQueryInfo(String query,
-                        DbParamTypeEnum[] params,
-                        Map<DbParamTypeEnum, String> results,
-                        String origText) {
+            DbParamTypeEnum[] params,
+            Map<DbParamTypeEnum, String> results,
+            String origText,
+            @Nullable String  resourceName) {
         this.query = query;
         this.params = params;
         this.results = results;
@@ -62,8 +68,8 @@ public class DbQueryInfo {
         for (int i = 0; i < params.length; i++) {
             paramPosMap.put(params[i], i + 1);
         }
+        this.resourceName = resourceName;
     }
-
 
     /**
      * Get the original text from the corresponding text resource file with the
@@ -105,9 +111,9 @@ public class DbQueryInfo {
 
     /**
      * Query template string with the query to be sent to the database.
-     * Parameter values are not filled in but use '?' or "{1}","{2}" etc 
+     * Parameter values are not filled in but use '?' or "{1}","{2}" etc
      * appropriate to the current database.
-     * 
+     *
      * @return query template string.
      */
     public String getQuery() {
@@ -116,7 +122,7 @@ public class DbQueryInfo {
 
     /**
      * Get array of parameter types needed for this query.
-     * 
+     *
      * @return array of parameter types.
      */
     public DbParamTypeEnum[] getParams() {
@@ -126,11 +132,11 @@ public class DbQueryInfo {
     /**
      * Parse a string taken from a text resource file and create a new
      * DbQueryInfo instance.
-     * 
+     *
      * @param s string from resource file.
      * @return new instance;
      */
-    public static DbQueryInfo parse(String s) {
+    public static DbQueryInfo parse(String s, @Nullable String  resourceName) {
         String lines[] = s.split("[\r\n]+");
         StringBuilder sb = new StringBuilder();
         DbParamTypeEnum[] ta = null;
@@ -153,7 +159,7 @@ public class DbQueryInfo {
         if (null == results) {
             results = Collections.emptyMap();
         }
-        return new DbQueryInfo(sb.toString(), ta, results, s);
+        return new DbQueryInfo(sb.toString(), ta, results, s, resourceName);
     }
     private static final String PARAMS_PREFIX = "#params=";
     private static final String RESULTS_PREFIX = "#results=";
@@ -211,4 +217,10 @@ public class DbQueryInfo {
         }
         return results;
     }
+
+    @Override
+    public String toString() {
+        return "\nDbQueryInfo{\n" + "\t\tquery=" + query + ",\n\t\tparams=" + Arrays.toString(params) + ",\n\t\tresults=" + results + ",\n\t\tparamPosMap=" + paramPosMap + ",\n\t\torigText=" + origText + ",\n\t\tresourceName=" + resourceName + "\n}\n";
+    }
+
 }
