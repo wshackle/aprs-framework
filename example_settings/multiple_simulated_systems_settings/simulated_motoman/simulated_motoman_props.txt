@@ -2,7 +2,7 @@
 LogCrclProgramsEnabled=true
 STARTUP_ACTIVE_WIN=SIMVIEW_WINDOW
 USETEACHTABLE=true
-UseCsvFilesInsteadOfDatabase=false
+UseCsvFilesInsteadOfDatabase=true
 alertLimits=true
 aprs.customWindowsFile=simmotoman_custom_windows.txt
 aprs.robotName=Sim_Motoman

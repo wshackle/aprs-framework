@@ -3,15 +3,15 @@
 
 plj-timeout 360000
 
-if!connectOK localhost 7496
-plj-connectWaitFor host=localhost port=7496 delay=400 timeout=400 max_tries=400
-${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-endif
+#if!connectOK localhost 7496
+#plj-connectWaitFor host=localhost port=7496 delay=400 timeout=400 max_tries=400
+#${HOME}/motoman-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+#endif
 
-if!connectOK localhost 7494
-plj-connectWaitFor host=localhost port=7494 delay=400 timeout=400 max_tries=400
-${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
-endif
+#if!connectOK localhost 7494
+#plj-connectWaitFor host=localhost port=7494 delay=400 timeout=400 max_tries=400
+#${HOME}/fanuc-neo4j-database/neo4j-community-2.3.12/bin/neo4j start
+#endif
 
 #if!connectOK localhost 6001
 #cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
