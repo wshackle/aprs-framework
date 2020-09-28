@@ -54,8 +54,9 @@ public class DbQueryInfo {
      * @param params parameter array info parsed from resource file
      * @param results results map parsed from resource file
      * @param origText complete original text from the file (for display only)
+     * @param resourceName resource name where info was read
      */
-    private DbQueryInfo(String query,
+    public DbQueryInfo(String query,
             DbParamTypeEnum[] params,
             Map<DbParamTypeEnum, String> results,
             String origText,
@@ -218,6 +219,11 @@ public class DbQueryInfo {
         return results;
     }
 
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    
     @Override
     public String toString() {
         return "\nDbQueryInfo{\n" + "\t\tquery=" + query + ",\n\t\tparams=" + Arrays.toString(params) + ",\n\t\tresults=" + results + ",\n\t\tparamPosMap=" + paramPosMap + ",\n\t\torigText=" + origText + ",\n\t\tresourceName=" + resourceName + "\n}\n";
