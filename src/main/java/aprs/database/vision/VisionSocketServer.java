@@ -199,7 +199,7 @@ public class VisionSocketServer implements AutoCloseable {
         return publishCount.get();
     }
 
-    public void publishList(String prefix , List<PhysicalItem> list) {
+    public void publishList(String prefix, List<PhysicalItem> list) {
         String line = prefix + listToLine(list);
         byte ba[] = line.getBytes();
         this.bytesToSend = ba;
@@ -229,12 +229,32 @@ public class VisionSocketServer implements AutoCloseable {
                         client.close();
                     } catch (IOException ex1) {
                         if (!closing) {
-                            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex1);
+                            InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
+                            if (null != remoteAddress) {
+                                println(String.format("Failure Sending %d bytes to %s:%d : %s",
+                                        ba.length,
+                                        remoteAddress.getHostString(),
+                                        remoteAddress.getPort(),
+                                        line));
+                            }
+                            Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE,
+                                    "port="+getPort()+", serverSocket="+serverSocket+", remoteAddress=" + remoteAddress,
+                                    ex1);
                         }
                     }
                     clients.remove(client);
                     if (!closing) {
-                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE, "", ex);
+                        InetSocketAddress remoteAddress = (InetSocketAddress) client.getRemoteSocketAddress();
+                        if (null != remoteAddress) {
+                            println(String.format("Failure Sending %d bytes to %s:%d : %s",
+                                    ba.length,
+                                    remoteAddress.getHostString(),
+                                    remoteAddress.getPort(),
+                                    line));
+                        }
+                        Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE,
+                                "port="+getPort()+", serverSocket="+serverSocket+", remoteAddress=" + remoteAddress,
+                                ex);
                     }
                 }
             }

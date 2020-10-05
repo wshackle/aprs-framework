@@ -1063,8 +1063,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 boolean enabledInMap = taskName != null;
                 boolean enabledInTable = getEnableFromRobotsTable(i);
                 if (enabledInMap != enabledInTable) {
-                    println("callerTrace = " + XFuture.traceToString(callerTrace));
-                    println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
+//                    println("callerTrace = " + XFuture.traceToString(callerTrace));
+//                    println("refreshRobotTable setValueAt(" + enabledInMap + "," + i + ",1) robotName=" + robotName);
                     disableRobotTableModelListener();
                     jTableRobotsSetValueAt(enabledInMap, i, 1);
                     enableRobotTableModelListener();
@@ -1073,7 +1073,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 int mapDisableCount = robotDisableCountMap.getOrDefault(robotName, 0);
                 int tableDisableCount = getDisableCountFromRobotsTable(i);
                 if (mapDisableCount != tableDisableCount) {
-                    println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
+//                    println("refreshRobotTable setValueAt(" + mapDisableCount + "," + i + ",4) robotName=" + robotName);
                     disableRobotTableModelListener();
                     jTableRobotsSetValueAt(mapDisableCount, i, 5);
                     enableRobotTableModelListener();
