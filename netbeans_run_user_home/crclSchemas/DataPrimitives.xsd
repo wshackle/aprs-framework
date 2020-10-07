@@ -737,10 +737,10 @@
                 SubField (optional)
                 LimitType
                 LimitValue
-                RecheckTimeMicroSeconds (optional).
-                CheckCount (optional) 
-                LastCheckTime (optional)
-                LastCheckValue (optional)
+                RecheckTimeMicroSeconds
+                CheckCount 
+                LastCheckTime 
+                LastCheckValue
                 
                 A GuardType can be added to any command to indicate the
                 command should be aborted if the value of the sensors subfield
@@ -775,16 +775,16 @@
                                 type="xs:double" />
                     <xs:element name="RecheckTimeMicroSeconds"
                                 type="xs:long"
-                                default="0" />
+                                minOccurs="0" />
                     <xs:element name="CheckCount"
                                 type="xs:long"
-                                default="0" />
+                                minOccurs="0" />
                     <xs:element name="LastCheckTime"
                                 type="xs:long"
-                                default="0" />
+                                minOccurs="0" />
                     <xs:element name="LastCheckValue"
                                 type="xs:double"
-                                default="0" />
+                                minOccurs="0" />
                 </xs:sequence>
             </xs:extension>
         </xs:complexContent>
