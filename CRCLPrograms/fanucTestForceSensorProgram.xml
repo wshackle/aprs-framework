@@ -123,7 +123,7 @@
             <SensorID>ATINetFT</SensorID>
             <SubField>Fz</SubField>
             <LimitType>DECREASE_BEYOND_LIMIT</LimitType>
-            <LimitValue>0.5</LimitValue>
+            <LimitValue>0.19</LimitValue>
             <RecheckTimeMicroSeconds>20</RecheckTimeMicroSeconds>
         </Guard>
         <MoveStraight>true</MoveStraight>
