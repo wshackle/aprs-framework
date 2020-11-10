@@ -2943,6 +2943,15 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    public XFutureVoid prepGuiCmd() {
+        return immediateAbort()
+                .thenRun(() -> {
+                    clearErrors();
+                    reset();
+                    resume();
+                });
+    }
+
     /**
      * Immediately abort the currently running CRCL program and PDDL action
      * list.

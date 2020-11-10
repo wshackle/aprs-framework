@@ -1082,7 +1082,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),true);
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), true);
                 return;
             }
             if (null != this.dbConnection && dbConnection != this.dbConnection) {
@@ -1101,7 +1101,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this.dbConnection = dbConnection;
             }
             if (null != dbConnection && null != dbSetup) {
-                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),false);
+                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), false);
             } else if (qs != null) {
                 qs.close();
             }
@@ -1146,14 +1146,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(),this.aprsSystem.isUseCsvFilesInsteadOfDatabase());
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), this.aprsSystem.isUseCsvFilesInsteadOfDatabase());
             } catch (Exception ex) {
-                System.err.println("dbSetup="+dbSetup);
-                System.err.println("dbSetup.getQueriesMap()="+dbSetup.getQueriesMap());
-                System.err.println("aprsSystem.getTaskName()="+aprsSystem.getTaskName());
+                System.err.println("dbSetup=" + dbSetup);
+                System.err.println("dbSetup.getQueriesMap()=" + dbSetup.getQueriesMap());
+                System.err.println("aprsSystem.getTaskName()=" + aprsSystem.getTaskName());
                 throw new RuntimeException(
-                        "aprsSystem.getTaskName()="+aprsSystem.getTaskName()+",dbSetup.getQueriesMap()="+dbSetup.getQueriesMap()
-                        ,ex);
+                        "aprsSystem.getTaskName()=" + aprsSystem.getTaskName() + ",dbSetup.getQueriesMap()=" + dbSetup.getQueriesMap(),
+                         ex);
             }
             return XFutureVoid.completedFuture();
         }
@@ -3938,7 +3938,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         ConcurrentHashMap<String, Integer> kitNameCountMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, List<PhysicalItem>> kitNameItemListMap = new ConcurrentHashMap<>();
         List<KitToCheck> kitsToChecksList = new ArrayList<>(kitsToCheck);
-        if(physicalItemsLocal.isEmpty() && !kitsToChecksList.isEmpty()) {
+        if (physicalItemsLocal.isEmpty() && !kitsToChecksList.isEmpty()) {
             throw new IllegalArgumentException("physicalItemsLocal.isEmpty()");
         }
         for (KitToCheck kit : kitsToChecksList) {
