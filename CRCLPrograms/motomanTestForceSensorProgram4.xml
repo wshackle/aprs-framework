@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CRCLProgram>
+    <Name>testForceSensorProgram</Name>
+    <InitCanon>
+        <Name>InitCanonType.452519</Name>
+        <CommandID>20078</CommandID>
+    </InitCanon>
+    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetEndEffectorType.452520</Name>
+        <CommandID>20079</CommandID>
+        <Setting>1.0</Setting>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetTransSpeedType.452521</Name>
+        <CommandID>20080</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Name>TransSpeedAbsoluteType.452522</Name>
+            <Setting>50.0</Setting>
+        </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452523</Name>
+        <CommandID>20081</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452524</Name>
+            <Point>
+                <Name>PointType.452525</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-80.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452526</Name>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452527</Name>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>DwellType.452528</Name>
+        <CommandID>20082</CommandID>
+        <DwellTime>1.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452529</Name>
+        <CommandID>20083</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452530</Name>
+            <Point>
+                <Name>PointType.452531</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-155.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452532</Name>
+                <I>0.9944363601402538</I>
+                <J>-0.10533903144368709</J>
+                <K>-1.1868238885699742E-4</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452533</Name>
+                <I>-1.5828550745791364E-4</I>
+                <J>-3.6759863857831556E-4</J>
+                <K>-0.9999999199084664</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>DwellType.452534</Name>
+        <CommandID>20084</CommandID>
+        <DwellTime>1.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetEndEffectorType.452535</Name>
+        <CommandID>20085</CommandID>
+        <Setting>0.0</Setting>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>DwellType.452536</Name>
+        <CommandID>20086</CommandID>
+        <DwellTime>1.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452537</Name>
+        <CommandID>20087</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452538</Name>
+            <Point>
+                <Name>PointType.452539</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-80.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452540</Name>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452541</Name>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="ConfigureStatusReportType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>ConfigureStatusReportType.452542</Name>
+        <CommandID>20088</CommandID>
+        <ReportJointStatuses>true</ReportJointStatuses>
+        <ReportPoseStatus>true</ReportPoseStatus>
+        <ReportGripperStatus>true</ReportGripperStatus>
+        <ReportSettingsStatus>true</ReportSettingsStatus>
+        <ReportSensorsStatus>true</ReportSensorsStatus>
+        <ReportGuardsStatus>true</ReportGuardsStatus>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetTransSpeedType.452543</Name>
+        <CommandID>20089</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Name>TransSpeedAbsoluteType.452544</Name>
+            <Setting>5.0</Setting>
+        </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="EnableSensorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>EnableSensorType.452545</Name>
+        <CommandID>20090</CommandID>
+        <SensorID>MotoFit</SensorID>
+        <SensorOption>
+            <Name>ParameterSettingType.452546</Name>
+            <ParameterName>host</ParameterName>
+            <ParameterValue>192.168.1.33</ParameterValue>
+        </SensorOption>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452547</Name>
+        <CommandID>20091</CommandID>
+        <Guard>
+            <Name>MotoFitFz</Name>
+            <SensorID>MotoFit</SensorID>
+            <SubField>Fz</SubField>
+            <LimitType>INCREASE_OVER_LIMIT</LimitType>
+            <LimitValue>10.0</LimitValue>
+            <RecheckTimeMicroSeconds>20</RecheckTimeMicroSeconds>
+        </Guard>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452549</Name>
+            <Point>
+                <Name>PointType.452550</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-170.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452551</Name>
+                <I>0.9944348945871246</I>
+                <J>-0.10535291695159923</J>
+                <K>-5.759586528396924E-5</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452552</Name>
+                <I>-9.441819065312437E-5</I>
+                <J>-3.4452659604056565E-4</J>
+                <K>-0.9999999361933128</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="DwellType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>DwellType.452553</Name>
+        <CommandID>20092</CommandID>
+        <DwellTime>5.0</DwellTime>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetEndEffectorType.452554</Name>
+        <CommandID>20093</CommandID>
+        <Setting>1.0</Setting>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452555</Name>
+        <CommandID>20094</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452556</Name>
+            <Point>
+                <Name>PointType.452557</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-135.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452558</Name>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452559</Name>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>SetTransSpeedType.452560</Name>
+        <CommandID>20095</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Name>TransSpeedAbsoluteType.452561</Name>
+            <Setting>50.0</Setting>
+        </TransSpeed>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <Name>MoveToType.452562</Name>
+        <CommandID>20096</CommandID>
+        <MoveStraight>true</MoveStraight>
+        <EndPosition>
+            <Name>PoseType.452563</Name>
+            <Point>
+                <Name>PointType.452564</Name>
+                <X>350.0</X>
+                <Y>340.0</Y>
+                <Z>-80.0</Z>
+            </Point>
+            <XAxis>
+                <Name>VectorType.452565</Name>
+                <I>0.99443397474753</I>
+                <J>-0.10536159498420825</J>
+                <K>-6.457718227890677E-5</K>
+            </XAxis>
+            <ZAxis>
+                <Name>VectorType.452566</Name>
+                <I>-1.0191532747072223E-4</I>
+                <J>-3.4899705323462844E-4</J>
+                <K>-0.9999999339071592</K>
+            </ZAxis>
+        </EndPosition>
+    </MiddleCommand>
+    <EndCanon>
+        <Name>EndCanonType.452567</Name>
+        <CommandID>20097</CommandID>
+    </EndCanon>
+</CRCLProgram>
+
