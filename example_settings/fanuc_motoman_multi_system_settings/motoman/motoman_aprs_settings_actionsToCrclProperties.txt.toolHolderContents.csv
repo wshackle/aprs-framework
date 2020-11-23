@@ -1,4 +1,4 @@
 Holder Position Name,Contents,Possible Contents,Comment
-big_gripper_holder,empty,big_gripper,
-big_vacuum_holder,big_vacuum,big_vacuum,
+big_gripper_holder,big_gripper,big_gripper,
 toolChangerPose9,empty,,
+smallvac_holder,empty,small_vacuum,

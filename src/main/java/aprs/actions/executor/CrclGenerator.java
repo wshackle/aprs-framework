@@ -1153,7 +1153,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.err.println("aprsSystem.getTaskName()=" + aprsSystem.getTaskName());
                 throw new RuntimeException(
                         "aprsSystem.getTaskName()=" + aprsSystem.getTaskName() + ",dbSetup.getQueriesMap()=" + dbSetup.getQueriesMap(),
-                         ex);
+                        ex);
             }
             return XFutureVoid.completedFuture();
         }
@@ -6374,7 +6374,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 && Math.abs(joint0diff) > joint0DiffTolerance) {
             double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
             jointValsCopy[0] = expectedJoint0Val;
-            addMessageCommand(out, "addJointPrepMove");
+            addMessageCommand(out, "addJointPrepMove:joint0=" + joint0 + ",expectedJoint0Val=" + expectedJoint0Val + ",joint0diff=" + joint0diff + ",joint0DiffTolerance=" + joint0DiffTolerance);
             addJointMove(out, jointValsCopy, 1.0);
         }
     }
@@ -7019,11 +7019,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void switchTool(Action action, List<MiddleCommandType> out) throws IllegalStateException, CRCLException, PmException {
         String toolInRobot = getExpectedToolName();
-        if (!isEmptyTool(toolInRobot)) {
+        final boolean emptyToolInRobot = isEmptyTool(toolInRobot);
+        addMessageCommand(out, "switchTool: toolInRobot=getExpectedToolName()=" + toolInRobot + ", emptyTool(toolInRobot)=" + emptyToolInRobot);
+        if (!emptyToolInRobot) {
             dropToolAny(action, out);
         }
         String desiredToolName = action.getArgs()[toolHolderNameArgIndex];
-        if (!isEmptyTool(desiredToolName)) {
+        final boolean emptyToolDesired = isEmptyTool(desiredToolName);
+        addMessageCommand(out, "switchTool: desiredToolName=" + desiredToolName + ", emptyToolDesired=" + emptyToolDesired);
+        if (!emptyToolDesired) {
             pickupToolByTool(action, out);
         }
     }

@@ -4984,6 +4984,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void updateLookForJoints(CRCLStatusType stat) {
         if (null != stat) {
             JointStatusesType jointStatuses = stat.getJointStatuses();
+            final PoseStatusType poseStatus = stat.getPoseStatus();
             if (null != jointStatuses) {
                 Iterable<JointStatusType> jointListIterable = CRCLUtils.getNonNullJointStatusIterable(jointStatuses);
                 String jointVals
@@ -4998,6 +4999,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
                 if (!keyFound) {
                     optionsCachedTable.addRow(new Object[]{"lookForJoints", jointVals});
+                }
+                crclGenerator.setOptions(getTableOptions());
+            }
+            if (null != poseStatus) {
+                PointType point = poseStatus.getPose().getPoint();
+                String xyzString = String.format("%.3f,%.3f,%.3f", point.getX(), point.getY(), point.getZ());
+                logDebug("xyzString = " + xyzString);
+                boolean keyFound = false;
+                for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+                    if (Objects.equals("lookForXYZ", optionsCachedTable.getValueAt(i, 0))) {
+                        optionsCachedTable.setValueAt(xyzString, i, 1);
+                        keyFound = true;
+                    }
+                }
+                if (!keyFound) {
+                    optionsCachedTable.addRow(new Object[]{"lookForXYZ", xyzString});
                 }
                 crclGenerator.setOptions(getTableOptions());
             }
@@ -5018,9 +5035,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
-        CRCLStatusType status = aprsSystem.getCurrentStatus();
-        if (null != status) {
-            this.updateLookForJoints(status);
+        try {
+            XFuture<CRCLStatusType> xfStat = aprsSystem.getNewStatus();
+            xfStat.thenCompose((CRCLStatusType newStatus) -> {
+                return Utils.runOnDispatchThread(() -> {
+                    try {
+                        this.updateLookForJoints(newStatus);
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                        aprsSystem.showException(exception);
+                        throw new RuntimeException(exception);
+                    }
+                });
+            });
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            aprsSystem.showException(exception);
         }
     }//GEN-LAST:event_jButtonRecordLookForJointsActionPerformed
 
@@ -5560,6 +5590,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             holderContentsCachedTable.addRow(new Object[]{
                 name,
                 "empty",
+                "",
                 ""
             });
         }
@@ -5571,6 +5602,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             setSelectedManualObjectName();
             setReplanFromIndex(0);
+            syncPanelToGeneratorToolDataOnDisplay();
             abortProgram();
             lookForCount++;
             clearAll();
@@ -7678,6 +7710,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    private volatile StackTraceElement lastExecuteActionsTrace[] = null;
+    private volatile long lastExecuteActionsTime = -1;
+
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
         this.loadActionsList(
                 actionsList, //Iterable<? extends Action> newActions, 
@@ -7685,9 +7720,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 false //  boolean forceNameChange
         );
         final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
-
+        final long startTime = System.currentTimeMillis();
+        final StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        this.lastExecuteActionsTrace = trace;
+        this.lastExecuteActionsTime = startTime;
         return checkDbSupplierPublisherAsync()
-                .thenComposeAsync("executeActions", x -> executeActionsInternal(actionsList, options), generateCrclService);
+                .thenComposeAsync("executeActions", x -> executeActionsInternal(actionsList, options), generateCrclService)
+                .peekException((Throwable t) -> {
+                    final long now = System.currentTimeMillis();
+                    System.out.println("lastExecuteActionsTime = " + lastExecuteActionsTime);
+                    System.out.println("now = " + now);
+                    final long timeSinceLastExecuteActionsStart = now - startTime;
+                    System.out.println("timeSinceLastExecuteActionsStart = " + timeSinceLastExecuteActionsStart);
+                    System.out.println("lastExecuteActionsTrace = " + Utils.traceToString(trace));
+                });
     }
 
     private void showException(Exception ex) {
@@ -7723,6 +7769,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
+            syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
             Action pickupToolByHolderAction
                     = Action.newSingleArgAction(
@@ -7746,6 +7793,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
+            syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
             Action pickupToolByToolAction
                     = Action.newSingleArgAction(PICKUP_TOOL_BY_TOOL,
@@ -7767,6 +7815,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         try {
             Map<String, String> options = getTableOptions();
             setReplanFromIndex(0);
+            syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
             Action switchToolAction
                     = Action.newSingleArgAction(

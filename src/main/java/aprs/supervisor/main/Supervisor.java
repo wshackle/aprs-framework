@@ -9601,18 +9601,38 @@ public class Supervisor {
 
     private volatile boolean clearingWayToHolders = false;
 
+    private volatile StackTraceElement [] clearWayToHoldersTrace = null;
+    
     public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
         clearingWayToHolders = true;
         requester.pause();
         List<XFutureVoid> l = new ArrayList<>();
-        String name = "clearWayToHolders." + holderName + "." + requester.getTaskName();
+        StackTraceElement [] trace = Thread.currentThread().getStackTrace();
+        this.clearWayToHoldersTrace = trace;
+        final String requesterTaskName = requester.getTaskName();
+        String name = "clearWayToHolders." + holderName + "." + requesterTaskName;
         for (AprsSystem sys : aprsSystems) {
-            if (sys != requester && !Objects.equals(sys.getTaskName(), requester.getTaskName())) {
+            final String sysTaskName = sys.getTaskName();
+            if (sys != requester && !Objects.equals(sysTaskName, requesterTaskName)) {
+                if(!sys.isConnected()) {
+                    final String errmsg = "clearWayToHolders \""+requesterTaskName+"\" task needs \""+sysTaskName+"\" task to be connected to clear the way to "+holderName;
+                    logEventErr(errmsg);
+                    throw new RuntimeException(errmsg);
+                }
                 l.add(sys.startSafeAbort(name));
             }
         }
         return XFutureVoid.allOfWithName("allof" + name, l.toArray(new XFutureVoid[0]))
-                .thenComposeToVoid(() -> clearWayToHoldersStep2(requester, holderName));
+                .thenComposeToVoid(() -> clearWayToHoldersStep2(requester, holderName))
+                .peekException((Throwable throwable) -> {
+                   if(null != throwable) {
+                       System.out.println("throwable = " + throwable);
+                       System.out.println("requester = " + requester);
+                       System.out.println("holderName = " + holderName);
+                       System.out.println("clearWayToHoldersTrace = " + Utils.traceToString(trace));
+                       logEventErr("failed to clearWayToHolders for requesterTaskName="+requesterTaskName+",holderName="+holderName);
+                   } 
+                });
     }
 
     private XFutureVoid clearWayToHoldersStep2(AprsSystem requester, String holderName) {

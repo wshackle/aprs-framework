@@ -2698,13 +2698,15 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new IllegalStateException("Must show CRCL client frame before starting CRCL program: crclClientJInternalFrame==null");
         }
         setStartRunTime();
-        startCrclProgramTrace = Thread.currentThread().getStackTrace();
+        StackTraceElement thisTrace[] = Thread.currentThread().getStackTrace();
+        startCrclProgramTrace = thisTrace;
         lastRunProgramFuture
                 = waitForPause()
                         .thenApplyAsync("startCRCLProgram(" + program.getName() + ").runProgram", x -> {
                             try {
                                 return runCRCLProgram(program);
                             } catch (Exception ex) {
+                                System.out.println("startCrclProgramTrace = " + Utils.traceToString(thisTrace));
                                 if (ex instanceof RuntimeException) {
                                     throw (RuntimeException) ex;
                                 } else {
@@ -5835,8 +5837,22 @@ public class AprsSystem implements SlotOffsetProvider {
                     = waitForPause()
                             .thenCompose("startLookForParts.checkDbConnected", x -> checkDBConnected())
                             .thenApplyAsync("startLookForParts.lookForPartsInternal",
-                                    x -> lookForPartsOnDisplay(),
+                                    (Boolean checkDbConnectedRet) -> {
+                                        try {
+                                            return lookForPartsOnDisplay();
+                                        } catch (Exception exception) {
+                                            System.out.println("exception = " + exception);
+                                            System.out.println("startLookForPartsTrace = " + Utils.traceToString(trace));
+                                            throw new RuntimeException(exception);
+                                        }
+                                    },
                                     runProgramService)
+                            .peekException((Throwable throwable) -> {
+                                if (null != throwable) {
+                                    System.out.println("throwable = " + throwable);
+                                    System.out.println("startLookForPartsTrace = " + Utils.traceToString(trace));
+                                }
+                            })
                             .alwaysRunAsync(() -> {
                                 synchronized (this) {
                                     setEndLogged(trace, "lookForParts");

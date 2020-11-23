@@ -15,7 +15,7 @@ hideNearMouse=false
 hideNearMouseDist=100.0 
 hideNearRobot=false
 hideNearRobotDist=100.0 
-items=sku_part_large_gear,-0.01,762.15,228.57,1.0,P,sku_part_large_gear,0.08,771.0,-20.53,0.98,P,sku_part_large_gear,-0.15,776.2,-384.39,0.98,P,sku_part_large_gear,-0.15,776.12,-134.78,0.78,P,sku_large_gear_vessel,0.01,760.25,173.85,0.91,PT,sku_large_gear_vessel,-0.01,589.55,76.99,0.66,PT,sku_kit_s2l2_vessel,3.12,744.18,-77.28,0.57,KT,
+items=sku_part_large_gear,0.0,596.47,132.67,1.0,P,sku_part_large_gear,0.15,774.07,-19.61,0.98,P,sku_part_large_gear,-0.1,777.25,-134.63,0.98,P,sku_part_large_gear,-0.15,780.6,-396.37,0.95,P,sku_part_small_gear,0.0,689.29,-119.24,0.99,P,sku_part_small_gear,0.0,688.88,-298.84,0.98,P,sku_part_small_gear,0.0,691.58,-381.14,0.97,P,sku_part_small_gear,0.0,568.56,-110.45,0.95,P,sku_small_gear_vessel,-0.02,600.86,-136.63,0.65,PT,sku_large_gear_vessel,0.01,761.36,174.9,0.95,PT,sku_large_gear_vessel,-0.08,594.35,78.31,0.76,PT,sku_kit_s2l2_vessel,3.12,745.32,-76.17,0.79,KT,sku_kit_s2l2_vessel,3.14,747.18,-336.23,0.78,KT,
 
 pickupDist=5.00
 posNoise=1.00
