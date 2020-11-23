@@ -1,1 +1,0 @@
-/home/shackle/aprs-framework/CRCLPrograms/fanucTestForceSensorProgram2.xml
