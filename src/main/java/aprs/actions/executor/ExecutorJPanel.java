@@ -5693,6 +5693,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //    }
     @UIEffect
     private void syncPanelToGeneratorToolDataOnDisplay() {
+        crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+        setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
         String toolName = jTextFieldCurrentToolName.getText();
         if (null == toolName || toolName.length() < 1) {
             warnDialog("Invalid toolName =" + toolName);
@@ -5759,6 +5761,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jTextFieldToolChangerApproachZOffsetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
         crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+        setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
     }//GEN-LAST:event_jTextFieldToolChangerApproachZOffsetActionPerformed
 
     @UIEffect
@@ -7584,6 +7587,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.putPoseCache(poseName, pose);
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
             return executeActions(gototToolChangerApproachActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -7680,6 +7684,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.clearPoseCache();
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -7701,6 +7706,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             crclGenerator.clearPoseCache();
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -7779,6 +7785,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             newActionsList.add(pickupToolByHolderAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -7801,6 +7808,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             newActionsList.add(pickupToolByToolAction);
             crclGenerator.clearLastRequiredPartsMap();
             crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
+            setOptionsTableEntry("approachToolChangerZOffset", jTextFieldToolChangerApproachZOffset.getText());
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -7824,7 +7832,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     );
             newActionsList.add(switchToolAction);
             crclGenerator.clearLastRequiredPartsMap();
-            crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
             return executeActions(newActionsList, options);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -8216,6 +8223,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         optionsCachedTable.addRow(new Object[]{name, props.getProperty(name)});
                     }
                 }
+            }
+
+            String approachToolChangerZOffsetString = props.getProperty("approachToolChangerZOffset");
+            if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 1) {
+                jTextFieldToolChangerApproachZOffset.setText(approachToolChangerZOffsetString);
             }
 
             String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");

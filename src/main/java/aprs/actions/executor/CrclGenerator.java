@@ -5789,6 +5789,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 LOGGER.log(Level.SEVERE, "", numberFormatException);
             }
         }
+        String approachToolChangerZOffsetString = optionsMap.get("approachToolChangerZOffset");
+        if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 0) {
+            try {
+                approachToolChangerZOffset= Double.parseDouble(approachToolChangerZOffsetString);
+            } catch (NumberFormatException numberFormatException) {
+                LOGGER.log(Level.SEVERE, "", numberFormatException);
+            }
+        }
         String placeZOffsetString = optionsMap.get("placeZOffset");
         if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
             try {

@@ -1,51 +1,51 @@
 classname=crcl.ui.client.CrclSwingClientJPanel
-boolean stepMode=false
 boolean preClosing=false
+boolean stepMode=false
 boolean ignoreTimeouts=false
+boolean validateXmlSchema=true
 boolean disableTextPopups=true
 boolean debugInterrupts=false
-boolean validateXmlSchema=true
-boolean debugShowProgram=false
 boolean toolChangerOpen=false
+boolean debugShowProgram=false
 int port=64445
-rcs.posemath.PmCartesian minLimit= { x=-276.891, y=-449.428, z=-990.000 } 
-rcs.posemath.PmCartesian maxLimit= { x=+842.232, y=+696.044, z=+1010.000 } 
+rcs.posemath.PmCartesian maxLimit= { x=+842.232, y=+891.233, z=+1010.000 } 
+rcs.posemath.PmCartesian minLimit= { x=-374.182, y=-449.428, z=-990.000 } 
 int maxRecordCommandsCount=1000
 double rpyJogIncrement=3.0
-boolean internal.stepMode=false
+boolean internal.holdingObjectExpected=false
 boolean internal.preClosing=false
+boolean internal.stepMode=false
+boolean internal.useReadSoTimeout=true
 boolean internal.ignoreTimeouts=false
-boolean internal.debugInterrupts=false
 boolean internal.quitOnTestCommandFailure=true
 boolean internal.validateXmlSchema=true
-boolean internal.holdingObjectExpected=false
-boolean internal.useReadSoTimeout=true
+boolean internal.debugInterrupts=false
 boolean internal.skipWrappedMessageCommands=true
-boolean internal.printDetailedCommandFailureInfo=false
 boolean internal.debugConnectDisconnect=false
 boolean internal.holdingErrorOccured=false
+boolean internal.printDetailedCommandFailureInfo=false
 crcl.base.CommandStateEnumType internal.commandState=CRCL_DONE
-java.lang.String internal.lastMessage=gotoToolChangerApproachByPose
-rcs.posemath.PmCartesian internal.minLimit= { x=-276.891, y=-449.428, z=-990.000 } 
-rcs.posemath.PmCartesian internal.maxLimit= { x=+842.232, y=+696.044, z=+1010.000 } 
-int internal.maxRecordCommandsCount=1000
-double internal.jogJointSpeed=10.0
-double internal.jogTransSpeed=20.0
-int internal.jogInterval=50
-int internal.poll_ms=50
-int internal.maxLogSize=500
+java.lang.String internal.lastMessage=addSlowLimitedMoveUpFromCurrent
 double internal.xyzJogIncrement=20.0
 long internal.waitForDoneDelay=50
-int internal.readStatusSoTimeout=3000
 double internal.jointJogIncrement=3.0
-# internal.getOutgoingProgramFile returned null or could not be invoked
-int internal.lastProgramIndex=14
+int internal.readStatusSoTimeout=3000
+java.lang.String internal.outgoingProgramFile=motomanStackMove.xml
+int internal.lastProgramIndex=21
+rcs.posemath.PmCartesian internal.maxLimit= { x=+842.232, y=+891.233, z=+1010.000 } 
+rcs.posemath.PmCartesian internal.minLimit= { x=-374.182, y=-449.428, z=-990.000 } 
+int internal.maxRecordCommandsCount=1000
+double internal.jogTransSpeed=20.0
+int internal.poll_ms=50
+double internal.jogJointSpeed=10.0
+int internal.jogInterval=50
+int internal.maxLogSize=500
 crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+java.lang.Integer internal.outgoingProgramLength=20
+java.lang.Integer internal.outgoingProgramIndex=-1
+int internal.maxPoseListLength=1000
+double internal.jointMoveSpeed=0.0
+double internal.jointMoveAccel=0.0
 double internal.jogRotSpeed=3.0
 double internal.jointTol=15.0
 crcl.base.AngleUnitEnumType internal.angleType=DEGREE
-java.lang.Integer internal.outgoingProgramLength=13
-java.lang.Integer internal.outgoingProgramIndex=-1
-int internal.maxPoseListLength=1000
-double internal.jointMoveAccel=0.0
-double internal.jointMoveSpeed=0.0
