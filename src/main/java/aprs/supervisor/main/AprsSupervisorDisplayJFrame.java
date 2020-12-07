@@ -799,38 +799,52 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 break;
 
             default:
-                System.err.println("bad selectedFutureString =" + selectedFutureString);
-                futureToDisplaySupplier = () -> new XFutureVoid("bad selectedFutureString =" + selectedFutureString);
+                List<AprsSystem> aprsSystems = sup2.getAprsSystems();
+                boolean taskFound = false;
+                int sindex = selectedFutureString.indexOf('/');
+                if (sindex > 0 && sindex < selectedFutureString.length()) {
+                    String selectedFutureStringBase = selectedFutureString.substring(0, sindex);
+                    String selectedFutureStringExt = selectedFutureString.substring(sindex + 1);
+                    for (AprsSystem sys : aprsSystems) {
+
+                        if (sys.getTaskName().equals(selectedFutureStringBase)) {
+                            taskFound = true;
+                            switch (selectedFutureStringExt) {
+                                case "actions":
+                                    futureToDisplaySupplier = () -> sys.getLastStartActionsFuture();
+                                    break;
+
+                                case "abort":
+                                    futureToDisplaySupplier = () -> sys.getSafeAbortFuture();
+                                    break;
+
+                                case "resume":
+                                    futureToDisplaySupplier = () -> sys.getLastResumeFuture();
+                                    break;
+
+                                case "program":
+                                    futureToDisplaySupplier = () -> sys.getLastRunProgramFuture();
+                                    break;
+
+                                default:
+                                    System.err.println("bad selectedFutureString =" + selectedFutureString);
+                                    futureToDisplaySupplier = () -> new XFutureVoid("bad selectedFutureString =" + selectedFutureString);
+                                    break;
+                            }
+                            return;
+                        }
+                    }
+                    if (taskFound) {
+                        break;
+                    }
+                }
+                if (!taskFound) {
+                    System.err.println("bad selectedFutureString =" + selectedFutureString);
+                    futureToDisplaySupplier = () -> new XFutureVoid("bad selectedFutureString =" + selectedFutureString);
+                }
                 break;
         }
-        List<AprsSystem> aprsSystems = sup2.getAprsSystems();
-        int sindex = selectedFutureString.indexOf('/');
-        if (sindex > 0 && sindex < selectedFutureString.length()) {
-            String selectedFutureStringBase = selectedFutureString.substring(0, sindex);
-            String selectedFutureStringExt = selectedFutureString.substring(sindex + 1);
-            for (AprsSystem sys : aprsSystems) {
-                if (sys.getTaskName().equals(selectedFutureStringBase)) {
-                    switch (selectedFutureStringExt) {
-                        case "actions":
-                            futureToDisplaySupplier = () -> sys.getLastStartActionsFuture();
-                            break;
 
-                        case "abort":
-                            futureToDisplaySupplier = () -> sys.getSafeAbortFuture();
-                            break;
-
-                        case "resume":
-                            futureToDisplaySupplier = () -> sys.getLastResumeFuture();
-                            break;
-
-                        case "program":
-                            futureToDisplaySupplier = () -> sys.getLastRunProgramFuture();
-                            break;
-                    }
-                    return;
-                }
-            }
-        }
         boolean showDoneFutures = false;
         if (jCheckBoxShowDoneFutures != null) {
             showDoneFutures = jCheckBoxShowDoneFutures.isSelected();
@@ -4498,7 +4512,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBoxMenuItemSkipDisabledActionPerformed
 
     private void jCheckBoxMenuItemBlockTransfersActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemBlockTransfersActionPerformed
-       final boolean selected = jCheckBoxMenuItemBlockTransfers.isSelected();
+        final boolean selected = jCheckBoxMenuItemBlockTransfers.isSelected();
         blockTransfers(selected);
         supervisor.setBlockRobotTransfers(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemBlockTransfersActionPerformed
@@ -4515,12 +4529,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-     public void blockTransfers(final boolean selected) {
+    public void blockTransfers(final boolean selected) {
         if (jCheckBoxMenuItemBlockTransfers.isSelected() != selected) {
             jCheckBoxMenuItemBlockTransfers.setSelected(selected);
         }
     }
-     
+
     public void enableConveyor(final boolean selected) {
         if (selected) {
             if (null == conveyorVisJPanel1) {
@@ -4570,7 +4584,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         setEventsDisplayMax(-1);
         long minTime = Long.MAX_VALUE;
         long maxTime = Long.MIN_VALUE;
-        try ( CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             for (CSVRecord record : parser) {
                 String timeString = getRecordString(record, headerMap, "timeString");
@@ -4907,7 +4921,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try ( PrintStream ps = new PrintStream(baos)) {
+                try (PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
