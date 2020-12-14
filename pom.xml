@@ -153,6 +153,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.wshackle</groupId>
+            <artifactId>rcslib</artifactId>
+            <version>2017.07.19</version>
+        </dependency>
+        <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.54</version>
