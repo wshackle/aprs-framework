@@ -4028,7 +4028,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return lastTakenPart;
     }
 
-    private double verySlowTransSpeed = 25.0;
+    private double verySlowTransSpeed = 20.0;
 
     /**
      * Get the value of verySlowTransSpeed
@@ -6048,7 +6048,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return name.trim().replace(' ', '_').replace('=', '_');
     }
 
-    private double toolChangerDwellTime = 0.25;
+    private double toolChangerDwellTime = 0.40;
 
     private void addOpenToolChanger(List<MiddleCommandType> cmds) {
         addSettleDwell(cmds);

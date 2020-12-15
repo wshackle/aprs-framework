@@ -176,6 +176,7 @@ import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
 import crcl.utils.CRCLUtils;
+import java.util.Date;
 import static java.util.Objects.requireNonNull;
 import java.util.Optional;
 import java.util.function.Function;
@@ -7644,6 +7645,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     String origToolName = (String) holderContentsCachedTable.getValueAt(i, 1);
                     if (!toolName.equals(origToolName)) {
                         holderContentsCachedTable.setValueAt(toolName, i, 1);
+                        holderContentsCachedTable.setValueAt("contents changed from "+origToolName+" on "+new Date(), i, 3);
                         for (BiConsumer<String, String> listener : updateToolHolderContentsListeners) {
                             listener.accept(toolChangerPosName, toolName);
                         }
@@ -7653,6 +7655,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             }
         } finally {
+            syncPanelToGeneratorToolDataOnDisplay();
+            Utils.autoResizeTableColWidthsOnDisplay(jTableHolderContents);
+            saveToolHolderContentsMap();
+            loadToolMenus();
             setToolHolderContentsTableModelListener();
         }
     }

@@ -3362,9 +3362,21 @@ public class AprsSystem implements SlotOffsetProvider {
                     fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
                     addInternalFrame(fanucCRCLServerJInternalFrame);
                 } else {
-                    System.err.println("serverJInternalFrameProviderFinders = " + serverJInternalFrameProviderFinders);
+                    System.out.println("");
+                    System.out.flush();
+                    System.err.println("");
+                    System.err.flush();
+                    System.err.println("startFanucCrclServer: serverJInternalFrameProviderFinders = " + serverJInternalFrameProviderFinders);
                     final String[] classpaths = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-                    System.out.println("classpaths = " + Arrays.toString(classpaths));
+                    System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
+                    for (int i = 0; i < classpaths.length; i++) {
+                        String classpath = classpaths[i];
+                        System.err.println("   \tstartFanucCrclServer: classpath["+i+" of "+classpaths.length+"] = " + classpath);
+                    }
+                    System.out.println("");
+                    System.out.flush();
+                    System.err.println("");
+                    System.err.flush();
                     try {
                         Class<?> clzz = Class.forName("com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrameProviderFinder");
                         System.out.println("clzz = " + clzz);
@@ -3374,8 +3386,10 @@ public class AprsSystem implements SlotOffsetProvider {
                         Logger.getLogger(CRCLServerSocket.class
                                 .getName()).log(Level.SEVERE, null, ex);
                     }
-                    setTitleErrorString("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
-                    throw new RuntimeException("no fanucServerProvider (Please add fanucCRCLServer classes/jar to classpath)");
+                    // cd C:\Users\shackle\Documents\NetBeansProjects\aprs-framework; JAVA_HOME=C:\\Users\\Public\\Documents\\Downloaded_Tools\\AdoptOpenJDK\\jdk-11.0.2+7 cmd /c "\"C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven\\bin\\mvn.cmd\" -Dproject.basedir=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework -Dexec.args=\"-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=aprs_heapdump.bin -Dlinux.crcl.user.home=linux_netbeans_run_user_home -Dlinux.aprs.user.home=linux_netbeans_run_user_home -Dcrcl.user.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home -Daprs.user.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home -Duser.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath aprs.launcher.LauncherAprsJFrame\" -Dexec.executable=C:\\Users\\Public\\Documents\\Downloaded_Tools\\AdoptOpenJDK\\jdk-11.0.2+7\\bin\\java.exe -Dexec.workingdir= -Dmaven.ext.class.path=C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven-nblib\\netbeans-eventspy.jar;C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven-nblib\\netbeans-cos.jar -Dfile.encoding=UTF-8 -Padd_run_deps org.codehaus.mojo:exec-maven-plugin:1.2.1:exec"
+                    final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
+                    setTitleErrorString(errMsg);
+                    throw new RuntimeException(errMsg);
                 }
             });
         } catch (Exception ex) {
@@ -3524,30 +3538,45 @@ public class AprsSystem implements SlotOffsetProvider {
                     newMotomanCrclServerJInternalFrame.setVisible(true);
                 } else {
                     noMotomanServerProviderErrorOccured = true;
-                    System.err.println("serverJInternalFrameProviderFinders = " + serverJInternalFrameProviderFinders);
+                    System.out.println("");
+                    System.out.flush();
+                    System.err.println("");
+                    System.err.flush();
+                    System.err.println("startMotomanCrclServerOnDisplay: serverJInternalFrameProviderFinders = " + serverJInternalFrameProviderFinders);
                     final String[] classpaths = System.getProperty("java.class.path").split(System.getProperty("path.separator"));
-                    System.out.println("classpaths = " + Arrays.toString(classpaths));
+                    System.err.println("startMotomanCrclServerOnDisplay: classpaths = " + Arrays.toString(classpaths));
+                    for (int i = 0; i < classpaths.length; i++) {
+                        String classpath = classpaths[i];
+                        System.err.println("   \tstartMotomanCrclServerOnDisplay: classpath["+i+" of "+classpaths.length+"] = " + classpath);
+                    }
+                    System.out.println("");
+                    System.out.flush();
+                    System.err.println("");
+                    System.err.flush();
+                    final String noClassErrMsg = "no motomanServerProvider (Please add -Padd_run_deps  to mvn command line or crcl4java-motoman classes/jar to classpath)";
                     try {
                         Class<?> clzz = Class.forName("com.github.wshackle.crcl4java.motoman.ui.MotomanCRCLServerJInternalFrameProviderFinder");
                         System.out.println("clzz = " + clzz);
                         ProtectionDomain protDom = clzz.getProtectionDomain();
                         System.out.println("protDom = " + protDom);
                     } catch (ClassNotFoundException ex) {
-                        setTitleErrorString(ex.getMessage());
+//                        setTitleErrorString(ex.getMessage());
                         Logger.getLogger(CRCLServerSocket.class
                                 .getName()).log(Level.SEVERE, null, ex);
-                        throw new RuntimeException(ex);
+                        setTitleErrorString(noClassErrMsg);
+                        throw new RuntimeException(noClassErrMsg);
                     }
-                    setTitleErrorString("no motomanServerProvider (Please add crcl4java-motoman classes/jar to classpath)");
-                    throw new RuntimeException("no motomanServerProvider (Please add crcl4java-motoman classes/jar to classpath)");
+                    setTitleErrorString(noClassErrMsg);
+                    throw new RuntimeException(noClassErrMsg);
                 }
             }
             addInternalFrame(motomanCrclServerJInternalFrame);
         } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
-            setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
-            if (null != motomanCrclServerJInternalFrame) {
+            if (!noMotomanServerProviderErrorOccured) {
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "", ex);
+                setTitleErrorString("Error starting motoman crcl server:" + ex.getMessage());
+            } else if (null != motomanCrclServerJInternalFrame) {
                 motomanCrclServerJInternalFrame.setVisible(true);
                 addInternalFrame(motomanCrclServerJInternalFrame);
             }
