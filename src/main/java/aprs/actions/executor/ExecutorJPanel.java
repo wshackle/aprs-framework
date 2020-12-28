@@ -271,6 +271,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private final Component parentComponent;
+    
+    public void setPaused(boolean paused) {
+        if(null != toolMenu) {
+            toolMenu.setEnabled(!paused);
+        }
+    }
 
     /**
      * Creates new form ActionsToCrclJPanel

@@ -56,6 +56,10 @@ import rcs.posemath.PmException;
 public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implements ExecutorDisplayInterface {
 
     
+    public void setPaused(boolean paused) {
+        executorJPanel1.setPaused(paused);
+    }
+    
     @UIEffect
     @SuppressWarnings("initialization")
     public ExecutorJInternalFrame(AprsSystem aprsSystem1) {
@@ -70,6 +74,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         super.pack();
     }
 
+    
     public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
         executorJPanel1.testPartPositionByPose(cmds, pose);
     }

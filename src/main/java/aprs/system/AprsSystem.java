@@ -1540,7 +1540,19 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile @Nullable
     XFutureVoid lastClearWayToHoldersFuture = null;
 
+     public boolean isStandAlone() { 
+         if(null != aprsSystemDisplayJFrame) {
+             return aprsSystemDisplayJFrame.isStandAlone();
+         } else {
+             return Boolean.getBoolean("aprs.standalone");
+         }
+    }
+     
+     
     public XFutureVoid clearWayToHolders(String holderName) {
+        if(isStandAlone()) {
+            return XFutureVoid.completedFutureWithName("standAlondeSkipClearWayToHolders("+holderName+")");
+        }
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
@@ -7141,6 +7153,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void setPauseCheckBoxSelected(boolean val) {
         pauseCheckBox.setSelected(val);
+        if(null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setPaused(val);
+        }
+        if(null != executorJInternalFrame1) {
+            executorJInternalFrame1.setPaused(val);
+        }
     }
 
     private boolean isCrclClientJInternalFramePaused() {
@@ -7785,6 +7803,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void privatInternalPause() {
         logEvent("pause");
+        if(null != aprsSystemDisplayJFrame) {
+            aprsSystemDisplayJFrame.setPaused(true);
+        }
+        if(null != executorJInternalFrame1) {
+            executorJInternalFrame1.setPaused(true);
+        }
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
         debugDumpStack();

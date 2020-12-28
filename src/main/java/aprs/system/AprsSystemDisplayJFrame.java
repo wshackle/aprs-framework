@@ -86,7 +86,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private volatile @MonotonicNonNull
     AprsSystem aprsSystem = null;
+    
+    public void setPaused(boolean paused) {
+        jMenuTests.setEnabled(!paused);
+        jMenuExecute.setEnabled(!paused);
+    }
 
+    public boolean isStandAlone() { 
+        return jCheckBoxMenuItemStandAloneMode.isSelected();
+    }
+    
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
@@ -687,6 +696,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemAddExistingCustomWindowStartup = new javax.swing.JMenuItem();
         jMenuItemNewCustomWindowStartup = new javax.swing.JMenuItem();
         jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemStandAloneMode = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
         jMenuItemImmediateAbort = new javax.swing.JMenuItem();
@@ -1042,6 +1052,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase);
+
+        jCheckBoxMenuItemStandAloneMode.setText("Stand-Alone mode (no supervisor required)");
+        jMenuOptions.add(jCheckBoxMenuItemStandAloneMode);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -2504,6 +2517,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemReverse;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowDatabaseSetupOnStartup;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSnapshotImageSize;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStandAloneMode;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupExecutor;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupFanucCRCLServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupMotomanCRCLServer;
