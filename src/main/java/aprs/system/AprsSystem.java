@@ -1540,18 +1540,17 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile @Nullable
     XFutureVoid lastClearWayToHoldersFuture = null;
 
-     public boolean isStandAlone() { 
-         if(null != aprsSystemDisplayJFrame) {
-             return aprsSystemDisplayJFrame.isStandAlone();
-         } else {
-             return Boolean.getBoolean("aprs.standalone");
-         }
+    public boolean isStandAlone() {
+        if (null != aprsSystemDisplayJFrame) {
+            return aprsSystemDisplayJFrame.isStandAlone();
+        } else {
+            return Boolean.getBoolean("aprs.standalone");
+        }
     }
-     
-     
+
     public XFutureVoid clearWayToHolders(String holderName) {
-        if(isStandAlone()) {
-            return XFutureVoid.completedFutureWithName("standAlondeSkipClearWayToHolders("+holderName+")");
+        if (isStandAlone()) {
+            return XFutureVoid.completedFutureWithName("standAlondeSkipClearWayToHolders(" + holderName + ")");
         }
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -3383,7 +3382,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
                     for (int i = 0; i < classpaths.length; i++) {
                         String classpath = classpaths[i];
-                        System.err.println("   \tstartFanucCrclServer: classpath["+i+" of "+classpaths.length+"] = " + classpath);
+                        System.err.println("   \tstartFanucCrclServer: classpath[" + i + " of " + classpaths.length + "] = " + classpath);
                     }
                     System.out.println("");
                     System.out.flush();
@@ -3559,7 +3558,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     System.err.println("startMotomanCrclServerOnDisplay: classpaths = " + Arrays.toString(classpaths));
                     for (int i = 0; i < classpaths.length; i++) {
                         String classpath = classpaths[i];
-                        System.err.println("   \tstartMotomanCrclServerOnDisplay: classpath["+i+" of "+classpaths.length+"] = " + classpath);
+                        System.err.println("   \tstartMotomanCrclServerOnDisplay: classpath[" + i + " of " + classpaths.length + "] = " + classpath);
                     }
                     System.out.println("");
                     System.out.flush();
@@ -5318,6 +5317,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != this.forceTorqueSimJInternalFrame) {
                 forceTorqueSimJInternalFrame.setCrclClientPanel(crclClientJInternalFrame.getPendantClientJPanel1());
             }
+            updateRobotLimits();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -7153,10 +7153,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void setPauseCheckBoxSelected(boolean val) {
         pauseCheckBox.setSelected(val);
-        if(null != aprsSystemDisplayJFrame) {
+        if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPaused(val);
         }
-        if(null != executorJInternalFrame1) {
+        if (null != executorJInternalFrame1) {
             executorJInternalFrame1.setPaused(val);
         }
     }
@@ -7803,10 +7803,10 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private void privatInternalPause() {
         logEvent("pause");
-        if(null != aprsSystemDisplayJFrame) {
+        if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPaused(true);
         }
-        if(null != executorJInternalFrame1) {
+        if (null != executorJInternalFrame1) {
             executorJInternalFrame1.setPaused(true);
         }
         pauseThread = Thread.currentThread();
@@ -9765,6 +9765,7 @@ public class AprsSystem implements SlotOffsetProvider {
             File limitsCsv = getCartLimitsCsvFile();
             if (limitsCsv.exists()) {
                 readLimitsFromCsv(limitsCsv);
+                updateRobotLimits();
             }
 
             String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
@@ -10037,7 +10038,10 @@ public class AprsSystem implements SlotOffsetProvider {
         return new File(propertiesDirectory, this.propertiesFileBaseString + "_force_torque_sim.txt");
     }
 
-    public boolean checkPose(PoseType goalPose, boolean ignoreCartTran, boolean reverseCorrectPoint) {
+    public boolean checkPose(
+            PoseType goalPose,
+            boolean ignoreCartTran,
+            boolean reverseCorrectPoint) {
         if (null == crclClientJInternalFrame) {
             throw new IllegalStateException("null == crclClientJInternalFrame");
         }
@@ -10056,11 +10060,11 @@ public class AprsSystem implements SlotOffsetProvider {
                 return false;
             }
         }
-        boolean firstCheckPoseRet = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran);
+        boolean firstCheckPoseRet = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran, true);
         if (!firstCheckPoseRet) {
-            boolean secondCheckPoseRet = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran);
+            boolean secondCheckPoseRet = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran, true);
             updateRobotLimits();
-            boolean thirdCheck = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran);
+            boolean thirdCheck = crclClientJInternalFrame.checkPose(goalPose, ignoreCartTran, true);
             return thirdCheck;
         }
         return true;
