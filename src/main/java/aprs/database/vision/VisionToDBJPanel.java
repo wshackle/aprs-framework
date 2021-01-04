@@ -1514,7 +1514,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @Override
     @SafeEffect
     public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
-        if (null == dpu) {
+         try {
+             initDpuIfUsingCsvFiles();
+         } catch(Exception ex) {
+              Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "getSlotOffsets("+name+","+ignoreEmpty+")", ex);
+         }
+         if (null == dpu) {
             return Collections.emptyList();
         }
         return dpu.getSlotOffsets(name, ignoreEmpty);
@@ -2080,17 +2085,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             lastVisionClientUpdateLine = line;
             lastVisionClientUpdateList = visionList;
             lastVisionClientUpdateListCopy = new ArrayList<>(visionList);
-            if (null == dpu && this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
-                if (null == lastSetup) {
-                    lastSetup = new CsvDbSetup();
-                }
-                dpu = new DatabasePoseUpdater(null, DbType.NONE, lastSetDbConnectedVal, lastSetup, aprsSystem.getTaskName(), aprsSystem);
-                String rotationOffsetString = jTextFieldRotationOffset.getText();
-                if (null != rotationOffsetString && rotationOffsetString.length() > 0) {
-                    double ro = Double.parseDouble(rotationOffsetString);
-                    dpu.setRotationOffset(Math.toRadians(ro));
-                }
-            }
+            initDpuIfUsingCsvFiles();
             if (null != dpu && (this.aprsSystem.isUseCsvFilesInsteadOfDatabase() || null != dpu.getSqlConnection())) {
                 boolean addRepeatCounts = addRepeatCountsToDatabaseNamesCachedCheckBox.isSelected();
                 boolean origEnableDbUpdates = dpu.isEnableDatabaseUpdates();
@@ -2189,6 +2184,20 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             updating = false;
         }
         return XFutureVoid.completedFuture();
+    }
+
+    private void initDpuIfUsingCsvFiles() throws SQLException, NumberFormatException, IOException {
+        if (null == dpu && this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            if (null == lastSetup) {
+                lastSetup = new CsvDbSetup();
+            }
+            dpu = new DatabasePoseUpdater(null, DbType.NONE, lastSetDbConnectedVal, lastSetup, aprsSystem.getTaskName(), aprsSystem);
+            String rotationOffsetString = jTextFieldRotationOffset.getText();
+            if (null != rotationOffsetString && rotationOffsetString.length() > 0) {
+                double ro = Double.parseDouble(rotationOffsetString);
+                dpu.setRotationOffset(Math.toRadians(ro));
+            }
+        }
     }
 
     private XFutureVoid startVisionInternal(Map<String, String> argsMap) {
