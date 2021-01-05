@@ -8672,6 +8672,7 @@ public class AprsSystem implements SlotOffsetProvider {
         List<Action> reloadedActions = null;
         boolean ret;
         try {
+            updateRobotLimits();
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
                 try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {

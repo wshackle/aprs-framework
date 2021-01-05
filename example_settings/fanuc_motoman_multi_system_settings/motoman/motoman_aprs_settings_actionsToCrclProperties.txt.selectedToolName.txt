@@ -1,1 +1,1 @@
-small_vacuum
+big_gripper
