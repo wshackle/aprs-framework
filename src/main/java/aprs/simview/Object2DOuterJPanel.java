@@ -85,6 +85,7 @@ import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.CurrentPoseListener;
+import crcl.ui.client.CurrentPoseListenerUpdateInfo;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.Desktop;
 import java.awt.Rectangle;
@@ -272,7 +273,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 //            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal,callerTrace);
+                updateSnapshotsTable(f, csvFileFinal, callerTrace);
             });
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
@@ -318,8 +319,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     Utils.autoResizeTableColWidths(jTableSnapshotFiles);
                 }
             } catch (IOException ex) {
-                System.err.println("updateSnapshotsTable("+f+","+csvFile+",...): callerTrace=\n"+Utils.traceToString(callerTrace));
-                LOGGER.log(Level.SEVERE, "f="+f+",csvFile="+csvFile, ex);
+                System.err.println("updateSnapshotsTable(" + f + "," + csvFile + ",...): callerTrace=\n" + Utils.traceToString(callerTrace));
+                LOGGER.log(Level.SEVERE, "f=" + f + ",csvFile=" + csvFile, ex);
             }
         }
     }
@@ -357,7 +358,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal,callerTrace);
+                updateSnapshotsTable(f, csvFileFinal, callerTrace);
             });
             File xmlDir = new File(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
@@ -3479,16 +3480,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 }
                 break;
 
-                case COMMAND_MOVE:  {
-                    final PM_CARTESIAN draggedItemStartingPointLocal 
-                            = Objects.requireNonNull(draggedItemStartingPoint,"draggedItemStartingPoint");
+                case COMMAND_MOVE: {
+                    final PM_CARTESIAN draggedItemStartingPointLocal
+                            = Objects.requireNonNull(draggedItemStartingPoint, "draggedItemStartingPoint");
                     List<Action> actions = new ArrayList<>();
                     actions.add(Action.newDisableOptimization());
                     actions.add(Action.newTakePartByTypeAndPostion(draggedItemLocal.getName(), draggedItemStartingPointLocal.x, draggedItemStartingPointLocal.y));
                     actions.add(Action.newPlacePartByPosition(draggedItemLocal.x, draggedItemLocal.y, draggedItemLocal.getName()));
                     actions.add(Action.newLookForParts(0));
-                    final AprsSystem aprsSystemLocal 
-                            = Objects.requireNonNull(aprsSystem,"aprsSystem");
+                    final AprsSystem aprsSystemLocal
+                            = Objects.requireNonNull(aprsSystem, "aprsSystem");
                     aprsSystemLocal.startActionsList("inteactive move part", actions, false);
                     draggedItemLocal.x = draggedItemStartingPointLocal.x;
                     draggedItemLocal.y = draggedItemStartingPointLocal.y;
@@ -3505,10 +3506,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         object2DJPanel1.setItems(itemsList);
                     }
                     draggedItem = null;
-                    draggedItemStartingPoint=null;
+                    draggedItemStartingPoint = null;
                 }
                 break;
-
 
                 case DO_NOTHING:
                     break;
@@ -3516,7 +3516,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         draggedItem = null;
-        draggedItemStartingPoint=null;
+        draggedItemStartingPoint = null;
         draggedItemsList = null;
         object2DJPanel1.setMouseDown(false);
     }//GEN-LAST:event_object2DJPanel1MouseReleased
@@ -5555,7 +5555,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque, StackTraceElement callerTrace[]) {
         File fa[] = this.fileArrayDeque.pollFirst();
         while (null != fa) {
-            updateSnapshotsTable(fa[0], fa[1],callerTrace);
+            updateSnapshotsTable(fa[0], fa[1], callerTrace);
             fa = this.fileArrayDeque.pollFirst();
         }
     }
@@ -5572,7 +5572,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
                 aprsSystem.submitDisplayConsumer(
-                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,callerTrace),
+                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque, callerTrace),
                         fileArrayDeque);
             }
             return fileArray;
@@ -5584,7 +5584,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             fileArrayDeque.add(fileArray);
             if (null != aprsSystem) {
                 aprsSystem.submitDisplayConsumer(
-                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,callerTrace),
+                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque, callerTrace),
                         fileArrayDeque);
             }
             return fileArray;
@@ -5609,7 +5609,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         File csvFile = imageFileToCsvFile(f);
         this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
         runOnDispatchThread(() -> {
-            updateSnapshotsTable(f, csvFile,callerTrace);
+            updateSnapshotsTable(f, csvFile, callerTrace);
         });
         return new File[]{f, csvFile};
     }
@@ -5984,8 +5984,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
 
         @Override
-        public void handlePoseUpdate(CrclSwingClientJPanel panel, CRCLStatusType stat, @Nullable CRCLCommandType cmd, boolean isHoldingObjectExpected, long statRecieveTime) {
-            object2DOuterJPanel.handlePoseUpdate(panel, stat, cmd, isHoldingObjectExpected, statRecieveTime);
+        public void handlePoseUpdate(CurrentPoseListenerUpdateInfo updateInfo) {
+            // CrclSwingClientJPanel panel, CRCLStatusType stat, @Nullable CRCLCommandType cmd, boolean isHoldingObjectExpected, long statRecieveTime
+            object2DOuterJPanel.handlePoseUpdate(updateInfo); //panel, stat, cmd, isHoldingObjectExpected, statRecieveTime);
         }
 
         public String getTaskName() {
@@ -6034,11 +6035,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private volatile StackTraceElement lastPoseUpdateTrace @Nullable []  = null;
 
     private void handlePoseUpdate(
-            CrclSwingClientJPanel panel,
-            CRCLStatusType stat,
-            @Nullable CRCLCommandType cmd,
-            boolean isHoldingObjectExpected,
-            long statRecievTime) {
+            CurrentPoseListenerUpdateInfo updateInfo
+    ) {
+        CrclSwingClientJPanel panel = updateInfo.getPanel();
+        CRCLStatusType stat = updateInfo.getStat();
+        CRCLCommandType cmd = updateInfo.getCmd();
+        boolean isHoldingObjectExpected = updateInfo.isIsHoldingObjectExpected();
+        long statRecievTime = updateInfo.getStatRecieveTime();
         try {
             if (object2DJPanel1.isMouseDown()) {
                 return;

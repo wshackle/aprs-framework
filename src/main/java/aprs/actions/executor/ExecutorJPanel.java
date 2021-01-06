@@ -271,9 +271,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private final Component parentComponent;
-    
+
     public void setPaused(boolean paused) {
-        if(null != toolMenu) {
+        if (null != toolMenu) {
             toolMenu.setEnabled(!paused);
         }
     }
@@ -4118,6 +4118,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private int lookForCount = 0;
 
     @UIEffect
+    @SuppressWarnings({"unused"})
+
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             if (isDoingActions()) {
@@ -7651,7 +7653,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     String origToolName = (String) holderContentsCachedTable.getValueAt(i, 1);
                     if (!toolName.equals(origToolName)) {
                         holderContentsCachedTable.setValueAt(toolName, i, 1);
-                        holderContentsCachedTable.setValueAt("contents changed from "+origToolName+" on "+new Date(), i, 3);
+                        holderContentsCachedTable.setValueAt("contents changed from " + origToolName + " on " + new Date(), i, 3);
                         for (BiConsumer<String, String> listener : updateToolHolderContentsListeners) {
                             listener.accept(toolChangerPosName, toolName);
                         }

@@ -225,7 +225,7 @@
         <CommandID>20091</CommandID>
         <Guard>
             <Name>GuardType.37865</Name>
-            <SensorID>MotoFit</SensorID>
+            <SensorID>RemoteCrclSensor</SensorID>
             <SubField>Fz</SubField>
             <LimitType>INCREASE_OVER_LIMIT</LimitType>
             <LimitValue>10.0</LimitValue>
