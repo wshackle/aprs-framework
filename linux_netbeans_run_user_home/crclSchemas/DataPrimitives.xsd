@@ -741,6 +741,8 @@
                 CheckCount 
                 LastCheckTime 
                 LastCheckValue
+                RequireTrigger
+                ErrorOnTrigger
                 
                 A GuardType can be added to any command to indicate the
                 command should be aborted if the value of the sensors subfield
@@ -759,6 +761,11 @@
                 inside a command. They may be optionaly set when included in status.
                 CheckCount is the number of times the guard has been checked. LastCheckTime is 
                 the time in milliseconds since 1970 (aka unix-time). 
+                
+                If RequireTrigger is specified and true, then if the command completes
+                without ever detecting a trigger the state will be set to CRCL_ERROR.
+                If ErrorOnTrigger is specified and true, then after the guard is triggered
+                the state will be set to CRCL_ERROR.
             </xs:documentation>
         </xs:annotation>
         <xs:complexContent>
@@ -784,6 +791,12 @@
                                 minOccurs="0" />
                     <xs:element name="LastCheckValue"
                                 type="xs:double"
+                                minOccurs="0" />
+                    <xs:element name="RequireTrigger"
+                                type="xs:boolean"
+                                minOccurs="0" />
+                    <xs:element name="ErrorOnTrigger"
+                                type="xs:boolean"
                                 minOccurs="0" />
                 </xs:sequence>
             </xs:extension>
