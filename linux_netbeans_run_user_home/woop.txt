@@ -1,0 +1,8 @@
+classname=crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJPanel
+int cRCLSensorOutPort=8887
+int poseCRCLPort=64445
+java.lang.String poseCRCLHost=localhost
+java.lang.String objectsFileName=/home/shackle/NetBeansProjects/aprs-framework/linux_netbeans_run_user_home/simMotomanStacks.csv
+double inOutJPanel1.heightViewAngle=30.0
+double inOutJPanel1.xoffset=-398.0
+double inOutJPanel1.yoffset=-422.0

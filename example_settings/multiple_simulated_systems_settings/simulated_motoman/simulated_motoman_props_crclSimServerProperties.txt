@@ -1,6 +1,6 @@
 #
-#Fri Sep 25 09:54:32 EDT 2020
-crcl.port=64445
-crcl.validateXML=false
-crcl.sim.initStatus=initSimulatedStatus.xml
+#Wed Jan 27 14:42:00 EST 2021
 crcl.sim.robotType=SIMPLE
+crcl.port=64445
+crcl.sim.initStatus=initSimulatedStatus.xml
+crcl.validateXML=false

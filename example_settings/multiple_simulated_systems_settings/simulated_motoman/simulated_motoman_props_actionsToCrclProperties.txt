@@ -1,5 +1,6 @@
 #  Automatically saved 
 afterMoveToLookForDwellTime=0.1
+approachToolChangerZOffset=150.0
 approachZOffset=50.0
 defaultDwellTime=0.5
 doInspectKit=true

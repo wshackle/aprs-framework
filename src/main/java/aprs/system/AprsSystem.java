@@ -5595,7 +5595,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (newPddlPlannerJInternalFrame == null) {
                 newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
             }
-            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropetiesFile());
+            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile());
             newPddlPlannerJInternalFrame.loadProperties();
             newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(executorJInternalFrame1);
             addInternalFrame(newPddlPlannerJInternalFrame);
@@ -5606,11 +5606,18 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private File pddlPlannerPropetiesFile() {
+    private File pddlPlannerPropertiesFile() {
         if (null == propertiesDirectory) {
             throw new NullPointerException("propertiesDirectory");
         }
-        return pddlPlannerPropetiesFile(propertiesDirectory, propertiesFileBaseString());
+        return pddlPlannerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+    }
+
+    private File forceTorqueSimPropertiesFile() {
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
+        return forceTorqueSimPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
     @UIEffect
@@ -8839,13 +8846,9 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null == this.forceTorqueSimJInternalFrame) {
                 ForceTorqueSimJInternalFrame newForceTorqueSimJInternalFrame
                         = new ForceTorqueSimJInternalFrame();
-                final File forceTorqueSimPropsFile = getForceTorqueSimPropsFile();
-                if (forceTorqueSimPropsFile.exists()) {
-                    AutomaticPropertyFileUtils.loadPropertyFile(forceTorqueSimPropsFile,
-                            Collections.emptyMap(),
-                            newForceTorqueSimJInternalFrame);
-                }
                 this.forceTorqueSimJInternalFrame = newForceTorqueSimJInternalFrame;
+                newForceTorqueSimJInternalFrame.setPropertiesFile(forceTorqueSimPropertiesFile());
+                newForceTorqueSimJInternalFrame.loadProperties();
                 this.addInternalFrame(newForceTorqueSimJInternalFrame);
                 if (null != this.crclClientJInternalFrame) {
                     newForceTorqueSimJInternalFrame.setCrclClientPanel(crclClientJInternalFrame.getPendantClientJPanel1());
@@ -9750,6 +9753,9 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != this.fanucServerProvider) {
                 fanucServerProvider.loadProperties();
             }
+            if (null != this.forceTorqueSimJInternalFrame) {
+                forceTorqueSimJInternalFrame.loadProperties();
+            }
             String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
             if (null != motomanCrclLocalPortString) {
                 this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
@@ -10018,9 +10024,7 @@ public class AprsSystem implements SlotOffsetProvider {
             fanucServerProvider.saveProperties();
         }
         if (null != this.forceTorqueSimJInternalFrame) {
-            AutomaticPropertyFileUtils.saveObjectProperties(
-                    getForceTorqueSimPropsFile(),
-                    forceTorqueSimJInternalFrame);
+            forceTorqueSimJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
             File dbPropsFile = new File(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
@@ -10035,10 +10039,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.allOf(futures);
     }
 
-    private File getForceTorqueSimPropsFile() {
-        return new File(propertiesDirectory, this.propertiesFileBaseString + "_force_torque_sim.txt");
-    }
-
+//    private File getForceTorqueSimPropsFile() {
+//        return new File(propertiesDirectory, this.propertiesFileBaseString + "_force_torque_sim.txt");
+//    }
     public boolean checkPose(
             PoseType goalPose,
             boolean ignoreCartTran,
@@ -10208,7 +10211,10 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         propertiesFileBaseString = base;
         if (null != this.pddlPlannerJInternalFrame) {
-            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropetiesFile(propertiesDirectory, base));
+            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile(propertiesDirectory, base));
+        }
+        if (null != this.forceTorqueSimJInternalFrame) {
+            this.forceTorqueSimJInternalFrame.setPropertiesFile(forceTorqueSimPropertiesFile(propertiesDirectory, base));
         }
         if (null != this.kitInspectionJInternalFrame) {
             this.kitInspectionJInternalFrame.setPropertiesFile(new File(propertiesDirectory, base + "_kitInspection.txt"));
@@ -10273,8 +10279,12 @@ public class AprsSystem implements SlotOffsetProvider {
         return new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt");
     }
 
-    private static File pddlPlannerPropetiesFile(File propertiesDirectory, String base) {
+    private static File pddlPlannerPropertiesFile(File propertiesDirectory, String base) {
         return new File(propertiesDirectory, base + "_pddlPlanner.txt");
+    }
+
+    private static File forceTorqueSimPropertiesFile(File propertiesDirectory, String base) {
+        return new File(propertiesDirectory, base + "_forceTorqueSim.txt");
     }
 
     private String propertiesFileBaseString() {
