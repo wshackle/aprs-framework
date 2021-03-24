@@ -3617,8 +3617,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null == currentPose) {
             throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
         }
-        final VectorType xAxisCopy = copy(requireNonNull(currentPose.getXAxis(), "xAxisCopy"));
-        final VectorType zAxisCopy = copy(requireNonNull(currentPose.getZAxis(), "zAxisCopy"));
+        final VectorType xAxisCopy = requireNonNull(copy(currentPose.getXAxis()), "xAxisCopy");
+        final VectorType zAxisCopy = requireNonNull(copy(currentPose.getZAxis()), "zAxisCopy");
         moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
         CRCLUtils.middleCommands(program).add(moveTo);
         startCrclProgram(program);
@@ -7730,7 +7730,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private volatile StackTraceElement lastExecuteActionsTrace[] = null;
+    private volatile StackTraceElement lastExecuteActionsTrace @Nullable[] = null;
     private volatile long lastExecuteActionsTime = -1;
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {

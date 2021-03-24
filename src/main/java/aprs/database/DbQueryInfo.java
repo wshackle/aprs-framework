@@ -219,7 +219,7 @@ public class DbQueryInfo {
         return results;
     }
 
-    public String getResourceName() {
+    public @Nullable String getResourceName() {
         return resourceName;
     }
 

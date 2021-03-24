@@ -3792,7 +3792,8 @@ public class AprsSystem implements SlotOffsetProvider {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect database when already closing.");
         }
-        println("Starting connect to database ...   : propertiesFile=" + dbSetupJInternalFrame.getPropertiesFile());
+        final File dbSetupPropertiesFile = (dbSetupJInternalFrame != null)?dbSetupJInternalFrame.getPropertiesFile():null;
+        println("Starting connect to database ...   : propertiesFile=" + dbSetupPropertiesFile);
         DbSetupPublisher dbSetupPublisher;
         if (!this.useCsvFilesInsteadOfDatabase && null != dbSetupJInternalFrame) {
             dbSetupPublisher = dbSetupJInternalFrame.getDbSetupPublisher();

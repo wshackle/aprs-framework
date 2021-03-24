@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -72,7 +73,7 @@ public class CsvDbSetupPublisher implements DbSetupPublisher {
     private DbSetup thisDbSetup;
 
     @Override
-    public List<XFutureVoid> notifyAllDbSetupListeners(ExecutorService notifyService) {
+    public List<XFutureVoid> notifyAllDbSetupListeners(@Nullable ExecutorService notifyService) {
         if (notifyService != null) {
             XFutureVoid future
                     = XFutureVoid.runAsync("broadcastDbSetup",

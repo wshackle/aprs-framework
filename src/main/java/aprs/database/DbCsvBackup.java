@@ -64,7 +64,7 @@ public class DbCsvBackup {
                     return name.endsWith("_query.txt");
                 }
             });
-            if (fa.length == 1 && fa[0].exists()) {
+            if (fa != null && fa.length == 1 && fa[0].exists()) {
                 queryFile = fa[0];
                 String prefix = queryFile.getName().substring(0, queryFile.getName().length() - "_query.txt".length());
                 resultsFile = new File(dir, prefix + "_results.csv");

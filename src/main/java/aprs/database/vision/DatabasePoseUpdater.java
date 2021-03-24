@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -323,7 +324,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
 
     @SuppressWarnings("initialization")
     public DatabasePoseUpdater(
-            Connection con,
+            @Nullable Connection con,
             DbType dbtype,
             boolean sharedConnection,
             DbSetup dbsetup,
@@ -494,7 +495,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         DatabasePoseUpdater dpu;
         try {
             dpu = new DatabasePoseUpdater(host, port, db, username, password, dbtype, dbsetup, debug, taskname, aprsSystem);
-            if(dbtype == DbType.NONE) {
+            if (dbtype == DbType.NONE) {
                 return XFuture.completedFuture(dpu);
             }
             return dpu.
@@ -1032,7 +1033,13 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     tray.setFullName(trayFullName);
                 }
             }
+            if (null == get_tray_slots_statement) {
+                throw new NullPointerException("get_tray_slots_statement");
+            }
             List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
+            if (null == getTraySlotsQueryString) {
+                throw new NullPointerException("getTraySlotsQueryString");
+            }
             String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             try {
                 PrintStream ps = dbQueryLogPrintStream;
@@ -1063,7 +1070,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         // java.lang.UnsupportedOperationException: Method getObject in class org.neo4j.jdbc.ResultSet is not yet implemented.
 //                                String value = rs.getObject(name, Object.class).toString();
                         String value = rs.getString(name);
-                        resultMap.put(name, value);
+                        if (null != name && null != value) {
+                            resultMap.put(name, value);
+                        }
                     }
                     if (null != displayInterface
                             && displayInterface.isDebug()
@@ -1627,6 +1636,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         }
         try {
             if (updateCount < 1 && !this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                if(null == pre_vision_clean_statement) {
+                    throw new NullPointerException("pre_vision_clean_statement");
+                }
                 pre_vision_clean_statement.execute();
             }
             updateCount++;
@@ -1719,8 +1731,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         }
                     }
                     returnedList.add(ci);
-                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
-                    String updateStringFilled = fillQueryString(statementString, paramsList);
+                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, requireNonNull(stmnt,"stmt"));
+                    String updateStringFilled = fillQueryString(requireNonNull(statementString,"statementString"), paramsList);
                     ci.setSetQuery(updateStringFilled);
                     UpdateResults ur = updateResultsMap.get(ci.getFullName());
 
@@ -1751,7 +1763,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                             if (null != displayInterface && displayInterface.isDebug()) {
                                 displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
                             }
-                            updates = internalDatabaseUpdate(stmnt, batchUrs, ur, updates, updatedCount);
+                            updates = internalDatabaseUpdate(requireNonNull(stmnt,"stmt"), batchUrs, ur, updates, updatedCount);
                             ur.setUpdateStringFilled(updateStringFilled);
                             ur.incrementStatementExecutionCount();
                         } else {
@@ -1770,6 +1782,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     displayInterface.addLogMessage("Skipped updates = " + skippedUpdates);
                 }
                 if (updates > 0 && useBatch && edu) {
+                    if(null == update_statement) {
+                        throw new NullPointerException("update_statement");
+                    }
                     int batchReturn[] = update_statement.executeBatch();
                     if (null != displayInterface && displayInterface.isDebug()) {
                         displayInterface.addLogMessage("Batch returns : " + Arrays.toString(batchReturn));
