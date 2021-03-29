@@ -1033,14 +1033,19 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     tray.setFullName(trayFullName);
                 }
             }
-            if (null == get_tray_slots_statement) {
-                throw new NullPointerException("get_tray_slots_statement");
+            String getTraySlotsQueryStringFilled = null;
+            List<Object> paramsList = null;
+            if (getTraySlotsParamTypes != null && getTraySlotsParamTypes.length > 0) {
+                if (null == get_tray_slots_statement) {
+//                System.out.println("null == get_tray_slots_statement");
+                    throw new NullPointerException("get_tray_slots_statement");
+                }
+                paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
+                if (null == getTraySlotsQueryString) {
+                    throw new NullPointerException("getTraySlotsQueryString");
+                }
+                getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             }
-            List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
-            if (null == getTraySlotsQueryString) {
-                throw new NullPointerException("getTraySlotsQueryString");
-            }
-            String getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             try {
                 PrintStream ps = dbQueryLogPrintStream;
                 if (!enableDatabaseUpdates && ps != null) {
@@ -1107,7 +1112,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     offsetItem.setPrpName(prp_name);
                     offsetItem.setFullName(name);
                     offsetItem.setSlotForSkuName(sku_name);
-                    offsetItem.setNewSlotQuery(getTraySlotsQueryStringFilled);
+                    if (null != getTraySlotsQueryStringFilled) {
+                        offsetItem.setNewSlotQuery(getTraySlotsQueryStringFilled);
+                    }
                     offsetItem.setNewSlotOffsetResultMap(resultMap.getMap());
                     offsetItem.setTray(tray);
                     if (resultMap.getMap().containsKey("diameter")) {
@@ -1602,8 +1609,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     public List<PhysicalItem> updateVisionList(List<PhysicalItem> inList,
             boolean addRepeatCountsToName,
             boolean keepFullNames) {
+        final boolean useCsv = this.aprsSystem.isUseCsvFilesInsteadOfDatabase();
 
-        if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+        if (!useCsv) {
             if (null == update_statement) {
                 throw new IllegalStateException("update_statement is null");
             }
@@ -1623,7 +1631,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         partsTrayList.clear();
         List<PhysicalItem> itemsToVerify = new ArrayList<>();
         List<PhysicalItem> returnedList = new ArrayList<>();
-        final boolean edu = this.enableDatabaseUpdates && !this.aprsSystem.isUseCsvFilesInsteadOfDatabase();
+        final boolean edu = this.enableDatabaseUpdates && !useCsv;
         try {
             PrintStream ps = dbQueryLogPrintStream;
             if (edu && null != ps) {
@@ -1635,8 +1643,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             e.printStackTrace();
         }
         try {
-            if (updateCount < 1 && !this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
-                if(null == pre_vision_clean_statement) {
+            if (updateCount < 1 && !useCsv) {
+                if (null == pre_vision_clean_statement) {
                     throw new NullPointerException("pre_vision_clean_statement");
                 }
                 pre_vision_clean_statement.execute();
@@ -1688,7 +1696,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             long t0_millis = System.currentTimeMillis();
             int updates = 0;
             synchronized (this) {
-                if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                if (!useCsv) {
                     assert (null != update_statement) :
                             ("update_statement == null");
                 }
@@ -1722,18 +1730,21 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                                 break;
                         }
                     }
-                    if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+                    final String updateStringFilled;
+                    if (!useCsv) {
                         if (null == stmnt) {
                             throw new RuntimeException("stmt == null");
                         }
                         if (null == statementString) {
                             throw new RuntimeException("stmt == statementString");
                         }
+                        List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
+                        updateStringFilled = fillQueryString(statementString, paramsList);
+                    } else {
+                        updateStringFilled="useCsv";
                     }
-                    returnedList.add(ci);
-                    List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, requireNonNull(stmnt,"stmt"));
-                    String updateStringFilled = fillQueryString(requireNonNull(statementString,"statementString"), paramsList);
                     ci.setSetQuery(updateStringFilled);
+                    returnedList.add(ci);
                     UpdateResults ur = updateResultsMap.get(ci.getFullName());
 
                     String ciFullName = ci.getFullName();
@@ -1763,7 +1774,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                             if (null != displayInterface && displayInterface.isDebug()) {
                                 displayInterface.addLogMessage("updateStringFilled = \r\n" + updateStringFilled + "\r\n");
                             }
-                            updates = internalDatabaseUpdate(requireNonNull(stmnt,"stmt"), batchUrs, ur, updates, updatedCount);
+                            updates = internalDatabaseUpdate(requireNonNull(stmnt, "stmt"), batchUrs, ur, updates, updatedCount);
                             ur.setUpdateStringFilled(updateStringFilled);
                             ur.incrementStatementExecutionCount();
                         } else {
@@ -1782,7 +1793,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                     displayInterface.addLogMessage("Skipped updates = " + skippedUpdates);
                 }
                 if (updates > 0 && useBatch && edu) {
-                    if(null == update_statement) {
+                    if (null == update_statement) {
                         throw new NullPointerException("update_statement");
                     }
                     int batchReturn[] = update_statement.executeBatch();
@@ -2121,7 +2132,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             throw new IllegalStateException("queryDeleteSinglePoseString is null");
         }
         try (PreparedStatement stmnt = getCheckedConnection().prepareStatement(queryDeleteSinglePoseString)) {
-            stmnt.setString(1, name);
+            if (null != stmnt) {
+                stmnt.setString(1, name);
+            }
             stmnt.execute();
         }
     }
@@ -2318,7 +2331,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return queryStringFilled;
     }
 
-    private List<Object> poseParamsToStatement(PhysicalItem item, DbParamTypeEnum paramTypes[], PreparedStatement stmnt) throws SQLException {
+    private List<Object> poseParamsToStatement(PhysicalItem item, DbParamTypeEnum paramTypes[], @Nullable PreparedStatement stmnt) throws SQLException {
         if (null == paramTypes) {
             throw new IllegalArgumentException("paramTypes is null");
         }
@@ -2334,70 +2347,96 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             switch (paramTypeEnum) {
                 case TYPE:
                     params.add("SolidObject");
-                    stmnt.setString(index, "SolidObject");
+                    if (null != stmnt) {
+                        stmnt.setString(index, "SolidObject");
+                    }
                     break;
 
                 case NAME:
                     String quotedName = "\"" + item.getFullName() + "\"";
                     params.add(quotedName);
-                    stmnt.setString(index, item.getFullName());
+                    if (null != stmnt) {
+                        stmnt.setString(index, item.getFullName());
+                    }
                     break;
 
                 case SKU_NAME:
                     String sku = toSku(item.getName());
                     String quotedSKU = "\"" + sku + "\"";
                     params.add(quotedSKU);
-                    stmnt.setString(index, sku);
+                    if (null != stmnt) {
+                        stmnt.setString(index, sku);
+                    }
                     break;
 
                 case X:
                     params.add(item.x);
-                    stmnt.setDouble(index, item.x);
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.x);
+                    }
                     break;
 
                 case Y:
                     params.add(item.y);
-                    stmnt.setDouble(index, item.y);
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.y);
+                    }
                     break;
 
                 case Z:
                     params.add(item.z);
-                    stmnt.setDouble(index, item.z);
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.z);
+                    }
                     break;
 
                 case VXI:
                     params.add(item.getVxi());
-                    stmnt.setDouble(index, item.getVxi());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVxi());
+                    }
                     break;
 
                 case VXJ:
                     params.add(item.getVxj());
-                    stmnt.setDouble(index, item.getVxj());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVxj());
+                    }
                     break;
 
                 case VXK:
                     params.add(item.getVxk());
-                    stmnt.setDouble(index, item.getVxk());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVxk());
+                    }
                     break;
 
                 case VZI:
                     params.add(item.getVzi());
-                    stmnt.setDouble(index, item.getVzi());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVzi());
+                    }
                     break;
 
                 case VZJ:
                     params.add(item.getVzj());
-                    stmnt.setDouble(index, item.getVzj());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVzj());
+                    }
                     break;
 
                 case VZK:
                     params.add(item.getVzk());
-                    stmnt.setDouble(index, item.getVzk());
+                    if (null != stmnt) {
+                        stmnt.setDouble(index, item.getVzk());
+                    }
                     break;
 
                 case VISIONCYCLE:
                     params.add(item.getVisioncycle());
-                    stmnt.setInt(index, item.getVisioncycle());
+                    if (null != stmnt) {
+                        stmnt.setInt(index, item.getVisioncycle());
+                    }
                     break;
 
                 default:
