@@ -1034,16 +1034,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 }
             }
             String getTraySlotsQueryStringFilled = null;
-            List<Object> paramsList = null;
             if (getTraySlotsParamTypes != null && getTraySlotsParamTypes.length > 0) {
                 if (null == get_tray_slots_statement) {
 //                System.out.println("null == get_tray_slots_statement");
                     throw new NullPointerException("get_tray_slots_statement");
                 }
-                paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
                 if (null == getTraySlotsQueryString) {
                     throw new NullPointerException("getTraySlotsQueryString");
                 }
+                List<Object> paramsList = poseParamsToStatement(tray, getTraySlotsParamTypes, get_tray_slots_statement);
                 getTraySlotsQueryStringFilled = fillQueryString(getTraySlotsQueryString, paramsList);
             }
             try {
@@ -2192,8 +2191,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         ci.setFullName(ciFullName);
                     }
                     List<Object> paramsList = poseParamsToStatement(ci, getSingleParamTypes, get_single_statement);
-                    UpdateResults ur = updateResultsMap.get(ci.getFullName());
                     String verifyQueryStringFilled = fillQueryString(querySingleString, paramsList);
+                    UpdateResults ur = updateResultsMap.get(ci.getFullName());
                     if (null == ur) {
                         ur = new UpdateResults(ciFullName);
                     }
