@@ -49,7 +49,7 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
      * Creates new form Object2DOuterDialogPanel
      */
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public Object2DOuterDialogPanel() {
         initComponents();
     }

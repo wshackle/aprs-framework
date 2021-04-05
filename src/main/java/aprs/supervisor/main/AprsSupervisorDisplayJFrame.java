@@ -327,7 +327,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     /**
      * Creates new form AprsMulitSupervisorJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public AprsSupervisorDisplayJFrame() {
         initComponents();
         graphicsDevice = getGraphicsConfiguration().getDevice();

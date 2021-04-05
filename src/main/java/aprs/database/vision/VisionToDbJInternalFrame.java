@@ -53,7 +53,7 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     /**
      * Creates new form VisionToDbJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public VisionToDbJInternalFrame(AprsSystem aprsSystem) {
         visionToDBJPanel = new aprs.database.vision.VisionToDBJPanel(aprsSystem);

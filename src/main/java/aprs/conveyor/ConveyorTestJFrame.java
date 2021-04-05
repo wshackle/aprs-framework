@@ -35,7 +35,7 @@ public class ConveyorTestJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ConveyorTestJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ConveyorTestJFrame() {
         initComponents();
     }

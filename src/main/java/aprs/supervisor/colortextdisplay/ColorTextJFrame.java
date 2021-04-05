@@ -36,7 +36,7 @@ public class ColorTextJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ColorTextJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ColorTextJFrame() {
         initComponents();

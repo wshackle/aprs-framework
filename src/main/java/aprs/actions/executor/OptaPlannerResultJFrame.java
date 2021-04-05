@@ -53,7 +53,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
     /**
      * Creates new form OptaPlannerResultJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public OptaPlannerResultJFrame() {
         initComponents();
     }

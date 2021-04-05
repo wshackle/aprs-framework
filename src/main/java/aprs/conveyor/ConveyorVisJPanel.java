@@ -66,7 +66,7 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
     /**
      * Creates new form ConveyorVisJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ConveyorVisJPanel() {
         initComponents();
         outerConveyorSpeedControlJPanel1.addConveyorPositionListener(object2DOuterJPanel1::handleConveyorPositionUpdate);

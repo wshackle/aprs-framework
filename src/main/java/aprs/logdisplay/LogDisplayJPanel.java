@@ -49,7 +49,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     /**
      * Creates new form LogDisplayJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public LogDisplayJPanel() {
         initComponents();

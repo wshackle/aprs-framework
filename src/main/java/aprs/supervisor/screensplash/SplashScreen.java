@@ -64,7 +64,7 @@ public class SplashScreen extends JFrame {
         private final Font font;
 
         @UIEffect
-        @SuppressWarnings("initialization")
+        @SuppressWarnings({"nullness","initialization"})
         SplashPanel(String message, float fontSize, @Nullable Image image) {
             this.messageLines = message.split("[\r\n]+");
             this.fontSize = fontSize;
@@ -102,7 +102,7 @@ public class SplashScreen extends JFrame {
     }
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private SplashScreen(String message, float fontSize, @Nullable Image image) {
         super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);

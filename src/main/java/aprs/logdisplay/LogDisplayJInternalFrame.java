@@ -34,7 +34,7 @@ public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form LodDisplayJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public LogDisplayJInternalFrame() {
         initComponents();

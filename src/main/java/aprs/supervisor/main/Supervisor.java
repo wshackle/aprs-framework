@@ -146,7 +146,7 @@ import crcl.base.CommandStatusType;
 import crcl.utils.CRCLUtils;
 import java.awt.Graphics;
 import java.awt.image.ImageObserver;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import org.checkerframework.checker.guieffect.qual.UI;
 
@@ -565,7 +565,7 @@ public class Supervisor {
     /**
      * Creates new form AprsMulitSupervisorJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private Supervisor(@Nullable AprsSupervisorDisplayJFrame displayJFrame) {
         this.startSupervisorTime = System.currentTimeMillis();
         this.displayJFrame = displayJFrame;

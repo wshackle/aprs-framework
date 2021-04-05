@@ -111,7 +111,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import org.checkerframework.checker.guieffect.qual.UI;
@@ -6025,7 +6025,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final Object2DOuterJPanelCurrentPoseListener currentPoseListener
             = new Object2DOuterJPanelCurrentPoseListener(this);
 

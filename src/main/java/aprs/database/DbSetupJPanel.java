@@ -94,7 +94,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     /**
      * Creates new form DbSetupJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public DbSetupJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
@@ -127,7 +127,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final TableModelListener queriesTableModelListener = this::handleQueriesTableEvent;
 
     @UIEffect

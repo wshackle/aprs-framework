@@ -77,7 +77,7 @@ public class TrayFillInfo {
                 .orElse(null);
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public TrayFillInfo(List<PhysicalItem> origItems,
             SlotOffsetProvider localSlotOffsetProvider,
             boolean overrideRotationOffset,

@@ -4588,7 +4588,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.completedFuture();
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final Consumer<String> loggerFrameStringConsumer
             = (String s) -> appendLogDisplay(s);
 
@@ -5426,7 +5426,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final DbSetupListener dbSetupListener = this::updateDbConnectedCheckBox;
 
     private void createDbSetupFrame() {

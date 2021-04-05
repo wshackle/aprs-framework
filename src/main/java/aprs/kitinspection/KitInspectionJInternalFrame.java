@@ -48,7 +48,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form Test
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public KitInspectionJInternalFrame() {
         initComponents();
         doc = (HTMLDocument) InspectionResultJTextPane.getDocument();

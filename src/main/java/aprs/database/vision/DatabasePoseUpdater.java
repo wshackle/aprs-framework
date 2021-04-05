@@ -65,7 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -322,7 +322,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final boolean sharedConnection;
     private final DbSetup dbsetup;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public DatabasePoseUpdater(
             @Nullable Connection con,
             DbType dbtype,

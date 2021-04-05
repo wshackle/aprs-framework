@@ -59,7 +59,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
     /**
      * Creates new form ConveyorSpeedControlJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public OuterConveyorSpeedControlJPanel() {
         initComponents();
         popupMenu = new JPopupMenu();

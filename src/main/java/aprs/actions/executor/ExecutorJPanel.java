@@ -177,7 +177,7 @@ import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
 import crcl.utils.CRCLUtils;
 import java.util.Date;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
@@ -288,7 +288,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * builder for display only.
      *
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExecutorJPanel(AprsSystem aprsSystem1, Component parentComponent) {
         this.aprsSystem = aprsSystem1;

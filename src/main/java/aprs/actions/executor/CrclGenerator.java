@@ -158,7 +158,7 @@ import java.io.FileWriter;
 import java.io.PrintStream;
 import java.util.Date;
 import java.util.Iterator;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import java.util.stream.StreamSupport;
 import javax.swing.Icon;

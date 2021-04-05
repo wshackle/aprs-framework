@@ -47,7 +47,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
     /**
      * Creates new form MultiFileDialogJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public MultiFileDialogJPanel() {
         initComponents();

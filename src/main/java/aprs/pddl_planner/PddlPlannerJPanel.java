@@ -72,7 +72,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
     /**
      * Creates new form PddlPlannerJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public PddlPlannerJPanel() {
         initComponents();
         jSpinnerMaxLines.setValue(250);

@@ -50,7 +50,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ProcessLauncherJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ProcessLauncherJFrame() {
         AprsCommonLogger.instance();

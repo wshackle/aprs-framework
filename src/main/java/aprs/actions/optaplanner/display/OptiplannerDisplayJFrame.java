@@ -65,7 +65,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     /**
      * Creates new form OptiplannerTestJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public OptiplannerDisplayJFrame() {
         initComponents();

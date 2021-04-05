@@ -43,7 +43,7 @@ public class DetectedItemJPanel extends javax.swing.JPanel {
     /**
      * Creates new form DetectedItemJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     private DetectedItemJPanel() {
         initComponents();

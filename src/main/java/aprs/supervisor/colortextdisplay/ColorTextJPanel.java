@@ -50,7 +50,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     /**
      * Creates new form ColorTextJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ColorTextJPanel() {
         try {
             initComponents();

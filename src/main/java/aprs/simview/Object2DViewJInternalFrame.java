@@ -57,7 +57,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     /**
      * Creates new form Object2DViewJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public Object2DViewJInternalFrame() {
         initComponents();

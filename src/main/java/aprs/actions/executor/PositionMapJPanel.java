@@ -58,7 +58,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     /**
      * Creates new form PositionMapJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public PositionMapJPanel() {
         initComponents();

@@ -39,13 +39,13 @@ class ImagePanel extends JPanel {
     private String label;
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ImagePanel(BufferedImage image) {
         this(image, "");
     }
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ImagePanel(BufferedImage image, String label) {
         this.image = image;
         this.label = label;

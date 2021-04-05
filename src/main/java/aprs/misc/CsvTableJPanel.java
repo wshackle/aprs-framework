@@ -38,7 +38,7 @@ public class CsvTableJPanel extends javax.swing.JPanel {
     /**
      * Creates new form CsvTableJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public CsvTableJPanel() {
         initComponents();

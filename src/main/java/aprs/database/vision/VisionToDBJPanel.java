@@ -176,7 +176,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this(null);
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public VisionToDBJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
@@ -1852,6 +1852,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return ret;
     }
 
+    @SuppressWarnings("keyfor")
     public boolean removeSingleUpdate(XFuture<?> future) {
         synchronized (singleUpdateListeners) {
             boolean removed = singleUpdateListeners.remove(future);

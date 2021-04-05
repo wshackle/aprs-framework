@@ -36,7 +36,7 @@ public class Object2DJFrame extends javax.swing.JFrame {
     /**
      * Creates new form Object2DJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public Object2DJFrame() {
         initComponents();

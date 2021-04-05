@@ -51,7 +51,7 @@ public class ConnectWaitFor {
     private volatile int tries;
     private final long startTime;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ConnectWaitFor(String host, int port, int max_tries, int timeout, long delay) {
         if (host == null) {
             throw new NullPointerException("host");

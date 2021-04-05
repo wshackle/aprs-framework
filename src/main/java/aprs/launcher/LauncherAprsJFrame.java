@@ -68,7 +68,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     /**
      * Creates new form LauncherJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public LauncherAprsJFrame() {
         AprsCommonLogger.instance();

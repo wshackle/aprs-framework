@@ -37,7 +37,7 @@ import static crcl.utils.CRCLPosemath.point;
 import diagapplet.plotter.plotterJFrame;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -47,7 +47,7 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     /**
      * Creates new form DbSetupJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public DbSetupJInternalFrame(AprsSystem aprsSystem) {
         dbSetupJPanel1 = new aprs.database.DbSetupJPanel(aprsSystem);

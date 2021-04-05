@@ -61,7 +61,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
     
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ExecutorJInternalFrame(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
         executorJPanel1 = new ExecutorJPanel(aprsSystem,this);

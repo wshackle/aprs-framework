@@ -57,7 +57,7 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
     /**
      * Creates new form MainJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public VisionToDbMainJFrame(final AprsSystem aprsSystem) {
         visionToDBJPanel = new aprs.database.vision.VisionToDBJPanel(aprsSystem);

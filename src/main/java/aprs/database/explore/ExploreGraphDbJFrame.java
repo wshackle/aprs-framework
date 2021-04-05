@@ -41,7 +41,7 @@ class ExploreGraphDbJFrame extends javax.swing.JFrame {
     /**
      * Creates new form ExplortGraphDbJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExploreGraphDbJFrame() {
         initComponents();

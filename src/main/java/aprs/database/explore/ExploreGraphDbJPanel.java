@@ -81,7 +81,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
     /**
      * Creates new form ExplorteGraphDbJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExploreGraphDbJPanel() {
         initComponents();

@@ -341,7 +341,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param opActionPlan plan to show
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
