@@ -52,6 +52,7 @@ import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class OuterOptiplannerJPanel extends javax.swing.JPanel {
 
     /**
@@ -358,6 +359,7 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
      * Set the value of opActionPlan
      *
      * @param opActionPlan new value of opActionPlan
+     * @return future for determining when action is complete
      */
     public XFutureVoid setOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         opDisplayJPanel1.setOpActionPlan(opActionPlan);

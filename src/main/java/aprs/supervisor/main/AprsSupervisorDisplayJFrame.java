@@ -156,7 +156,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings("serial")
 class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull
@@ -381,6 +381,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     };
 
+    @SuppressWarnings("serial")
     private static class LabelledImagePanelTableCellRenderer extends DefaultTableCellRenderer {
 
         private final List<ImagePanel> areas = new ArrayList<>();
@@ -414,6 +415,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private final LabelledImagePanelTableCellRenderer tasksTableRobotImageCellRenderer;
 
+    @SuppressWarnings("serial")
     private static class ImagePanelTableCellRenderer extends DefaultTableCellRenderer {
 
         private final List<ImagePanel> areas = new ArrayList<>();
@@ -440,6 +442,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private final ImagePanelTableCellRenderer tasksTableScanImageCellRenderer;
     private final ImagePanelTableCellRenderer tasksTableLiveImageCellRenderer;
 
+    @SuppressWarnings("serial")
     private static class TextAreaTableCellRenderer extends DefaultTableCellRenderer {
 
         private final List<JTextArea> areas = new ArrayList<>();

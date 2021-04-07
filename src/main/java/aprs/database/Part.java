@@ -28,6 +28,7 @@ import crcl.base.PoseType;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class Part extends PhysicalItem {
 
     public Part(String PartsTrayName) {

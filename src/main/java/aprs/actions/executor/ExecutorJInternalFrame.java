@@ -53,6 +53,7 @@ import rcs.posemath.PmException;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implements ExecutorDisplayInterface {
 
     

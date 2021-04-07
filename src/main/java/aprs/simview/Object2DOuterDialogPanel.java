@@ -41,6 +41,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class Object2DOuterDialogPanel extends javax.swing.JPanel {
 
     private volatile boolean cancelled = false;
@@ -134,6 +135,7 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
      * @param modal should the dialog be modal
      * @param props property settings
      * @param items list of items to show
+     * @return true if cancelled flag set
      *
      */
     @SuppressWarnings("nullness")
@@ -183,7 +185,9 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
      * @param title title string
      * @param modal should the dialog be modal
      * @param propsFile properties file to read
-     * @param itemsFile items file to load
+     * @param itemsFile optional items file to load
+     * @param visionLogFile optional log file to load
+     * @return true if cancelled flag is set
      *
      */
     @SuppressWarnings("nullness")
@@ -193,8 +197,8 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             String title,
             boolean modal,
             File propsFile,
-            File itemsFile,
-            File visionLogFile) {
+            @Nullable File itemsFile,
+            @Nullable File visionLogFile) {
         Object2DOuterDialogPanel panel = new Object2DOuterDialogPanel();
         try {
             panel.dialog = new JDialog(owner, title, modal);

@@ -25,7 +25,6 @@ package aprs.simview;
 import aprs.system.AprsSystem;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
-import aprs.database.vision.VisionSocketClient;
 import aprs.misc.Utils;
 import crcl.base.PointType;
 import crcl.base.PoseType;
@@ -34,12 +33,10 @@ import crcl.utils.XFutureVoid;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
@@ -48,6 +45,7 @@ import rcs.posemath.PmCartesian;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame implements Object2DJFrameInterface {
 
     public Object2DOuterJPanel getObjectViewPanel() {

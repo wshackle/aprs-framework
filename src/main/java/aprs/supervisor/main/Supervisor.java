@@ -626,6 +626,7 @@ public class Supervisor {
         return lastFutureReturned;
     }
 
+    @SuppressWarnings("serial")
     private static class PositionMappingTableModel extends DefaultTableModel {
 
         public PositionMappingTableModel() {
@@ -8062,7 +8063,7 @@ public class Supervisor {
             tasksNames.append(sys.getTaskName());
             tasksNames.append(",");
         }
-        lastStartAllActionsArray = futures.toArray(new XFuture[0]);
+        lastStartAllActionsArray = futures.toArray(new XFuture<?>[0]);
 //        allowToggles();
         return XFuture.allOfWithName("continueAllActions.allOf(" + tasksNames.toString() + ")", futures);
     }

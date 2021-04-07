@@ -30,6 +30,7 @@ import org.checkerframework.checker.guieffect.qual.UIType;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class ConveyorVisTestJFrame extends javax.swing.JFrame {
 
     /**
@@ -82,6 +83,7 @@ public class ConveyorVisTestJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new ConveyorVisTestJFrame().setVisible(true);
             }

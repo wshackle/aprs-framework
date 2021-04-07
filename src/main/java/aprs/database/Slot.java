@@ -31,6 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
+@SuppressWarnings("serial")
 public class Slot extends PhysicalItem {
 
     private int ID;

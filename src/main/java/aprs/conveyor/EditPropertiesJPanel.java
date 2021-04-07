@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class EditPropertiesJPanel extends javax.swing.JPanel {
 
     private final JDialog dialog;

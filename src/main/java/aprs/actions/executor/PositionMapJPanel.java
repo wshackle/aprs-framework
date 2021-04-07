@@ -52,7 +52,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("CanBeFinal")
+@SuppressWarnings("serial")
 public class PositionMapJPanel extends javax.swing.JPanel {
 
     /**
@@ -373,14 +373,15 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMapFile;
     }
 
+    @SuppressWarnings({"rawtypes","unchecked"})
     public @Nullable Object @Nullable [] getSelectedRowData() {
         TableModel model = jTablePosMap.getModel();
         if (model instanceof DefaultTableModel) {
             DefaultTableModel dtm = (DefaultTableModel) model;
             int selectedRow = jTablePosMap.getSelectedRow();
-            Vector vector = dtm.getDataVector();
+            Vector<Vector> vector = dtm.getDataVector();
             if (selectedRow >= 0 && selectedRow < vector.size()) {
-                Vector vdata = (Vector) vector.get(selectedRow);
+                Vector vdata = vector.get(selectedRow);
                 return vdata.toArray();
             }
         }

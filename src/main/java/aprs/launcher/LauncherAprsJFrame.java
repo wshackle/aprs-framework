@@ -51,7 +51,6 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
-import static aprs.misc.Utils.tryPlayAlert;
 import crcl.ui.misc.MultiLineStringJPanel;
 import java.awt.HeadlessException;
 import java.io.FileReader;
@@ -62,7 +61,7 @@ import javax.swing.JMenuItem;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "guieffect"})
+@SuppressWarnings({"unused", "guieffect","serial"})
 public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     /**
@@ -77,7 +76,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
         initComponents();
         try {
-            setIconImage(IconImages.BASE_IMAGE);
+            super.setIconImage(IconImages.BASE_IMAGE);
         } catch (Exception ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -509,12 +508,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private static void openMulti(String args @Nullable []) throws IOException {
-        File launcherFile = null;
         File setupFile = null;
         if (null != args && args.length > 0) {
             setupFile = new File(args[0]);
             if (args.length > 1) {
-                launcherFile = new File(args[1]);
+                File launcherFile = new File(args[1]);
                 openMultiWithLaunchFile(launcherFile, setupFile, null);
             } else {
                 openMultiWithoutLaunchFile(setupFile, null, null);
@@ -946,6 +944,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 PlayAlert();
                 if (null != args && args.length > 0) {

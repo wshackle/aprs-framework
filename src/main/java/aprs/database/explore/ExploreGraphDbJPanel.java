@@ -73,7 +73,7 @@ import static aprs.misc.Utils.autoResizeTableColWidths;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("guieffect")
+@SuppressWarnings({"guieffect","serial"})
 class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
 
     private final TableModelListener nodeTableModelListener;
@@ -193,8 +193,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 jTextFieldSelectedNodeId.setText(s);
             }
             String col0Head = this.jTableNodes.getColumnName(0);
-            PreparedStatement outStatement = null;
-            String name = jTextFieldSelectedNodeName.getText();
+            final PreparedStatement outStatement;
             if (col0Head.endsWith(".name")) {
                 String getRelationShipsOutQuery
                         = "MATCH (n {name:{1} }) - [relationship] -> (to) RETURN type(relationship),relationship,id(to),labels(to),to";
@@ -211,7 +210,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 if (jTableNodes.getColumnCount() > 1) {
                     String col1Head = this.jTableNodes.getColumnName(1);
                     if (col1Head.endsWith(".name")) {
-                        name = Objects.toString(this.jTableNodes.getValueAt(index, 1));
+                        String name = Objects.toString(this.jTableNodes.getValueAt(index, 1));
                         if (!jTextFieldSelectedNodeName.getText().equals(name)) {
                             jTextFieldSelectedNodeName.setText(name);
                         }
@@ -220,10 +219,10 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             }
             DefaultTableModel model = new DefaultTableModel();
             List<Object[]> resultList = new ArrayList<>();
-            int colCount = -1;
+            final int outStatementColCount;
             try (ResultSet rs = outStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
-                colCount = meta.getColumnCount();
+                outStatementColCount = meta.getColumnCount();
                 for (int i = 1; i < meta.getColumnCount(); i++) {
                     String colName = meta.getColumnName(i);
                     model.addColumn(colName);
@@ -256,7 +255,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             for (String key : keyList) {
                 model.addColumn("to." + key);
             }
-            final int outTableWidth = colCount - 1 + keyList.size();
+            final int outTableWidth = outStatementColCount - 1 + keyList.size();
             for (Object[] ao : resultList) {
                 Object newArray[] = new Object[outTableWidth];
                 System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
@@ -271,7 +270,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             }
             jTableRelationshipsOut.setModel(model);
             autoResizeTableColWidths(jTableRelationshipsOut);
-            PreparedStatement inStatement = null;
+            final PreparedStatement inStatement;
             if (col0Head.endsWith(".name")) {
                 inStatement = connection.prepareStatement("MATCH (from) - [relationship] -> (n {name:{1} })  RETURN type(relationship),relationship,id(from),labels(from),from");
                 inStatement.setString(1, s);
@@ -281,10 +280,10 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
 
             model = new DefaultTableModel();
             resultList = new ArrayList<>();
-            colCount = -1;
+            final int inStatementColCount;
             try (ResultSet rs = inStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
-                colCount = meta.getColumnCount();
+                inStatementColCount = meta.getColumnCount();
                 for (int i = 1; i <= meta.getColumnCount() - 1; i++) {
                     String colName = meta.getColumnName(i);
 //                    println("colName = " + colName);
@@ -323,7 +322,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             for (String key : keyList) {
                 model.addColumn("from." + key);
             }
-            final int inTableWidth = colCount - 1 + keyList.size();
+            final int inTableWidth = outStatementColCount - 1 + keyList.size();
             for (Object[] ao : resultList) {
                 Object newArray[] = new Object[inTableWidth];
                 System.arraycopy(ao, 0, newArray, 0, ao.length - 1);
@@ -727,7 +726,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 warn("Trying to follow entry with null in table  at (" + row + ",3)");
                 return;
             }
-            String label = null;
+            String label;
             if (tableObject instanceof List) {
                 label = ((List) tableObject).get(0).toString();
             } else {
@@ -1007,12 +1006,11 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
         StringBuilder sb = new StringBuilder();
         sb.append(ex.toString());
-        sb.append("\nCaused by: \n" + ex.getCause() + "\n");
+        sb.append("\nCaused by: \n").append(ex.getCause()).append("\n");
         if (null != ctx) {
             for (String string : ctx) {
                 System.err.println(string);
                 sb.append(string);
-                
             }
         }
         String sbString = sb.toString();
@@ -1071,7 +1069,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         List<List<String>> listOfLabelsLists = new ArrayList<>();
         List<List<Map<String, Object>>> listOfListOfMaps = new ArrayList<>();
         int neededRowSize = 0;
-        int metaColCount = 0;
+        final int metaColCount;
         try (ResultSet rs = stmtn.executeQuery()) {
             ResultSetMetaData meta = rs.getMetaData();
             metaColCount = meta.getColumnCount();

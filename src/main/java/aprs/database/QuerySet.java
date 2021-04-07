@@ -98,6 +98,8 @@ public class QuerySet implements QuerySetInterface {
      * @param dbtype database type
      * @param con database connection
      * @param queriesMap map of queries info
+     * @param taskName task name used in error/debug messages
+     * @param useCsvFilesInsteadOfDatabase queries will use flat csv files instead of database
      * @throws SQLException if query fails
      */
     public QuerySet(
@@ -424,6 +426,7 @@ public class QuerySet implements QuerySetInterface {
      * @param name name of kit tray
      * @return a list of all the parts that has "parts_in_kt" in their names
      * @throws java.sql.SQLException if query fails
+     * @throws java.io.IOException csv files do not exist
      */
     public List<String> getAllPartsInKt(String name) throws SQLException, IOException {
         ArrayList<String> partsInKtList = new ArrayList<>();
@@ -605,9 +608,9 @@ public class QuerySet implements QuerySetInterface {
 
         List<Slot> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getSlotsQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_SLOTS);
-        setQueryStringParam(getSlotsStatement, getSlotsQueryInfo, DbParamTypeEnum.NAME, name, map);
-        String simQuery = createExpectedQueryString(getSlotsQueryInfo, map);
+        DbQueryInfo getSlotsQueryInfoFromMap = queryMap(queriesMap, DbQueryEnum.GET_SLOTS);
+        setQueryStringParam(getSlotsStatement, getSlotsQueryInfoFromMap, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getSlotsQueryInfoFromMap, map);
 
         if (debug) {
             println("simQuery = " + simQuery);
@@ -864,6 +867,7 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
+    @SuppressWarnings("try")
     private static class QsResultSet implements AutoCloseable {
 
         private final ResultSet resultSet;

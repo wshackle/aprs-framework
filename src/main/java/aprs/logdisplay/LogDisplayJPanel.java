@@ -43,7 +43,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"initialization", "CanBeFinal"})
+@SuppressWarnings({"initialization", "serial"})
 public class LogDisplayJPanel extends javax.swing.JPanel {
 
     /**

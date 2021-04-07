@@ -36,6 +36,7 @@ import java.util.logging.Logger;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame implements DbSetupListener{
 
     /**

@@ -67,6 +67,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class Object2DJPanel extends JPanel {
 
     private DisplayAxis displayAxis = POS_X_POS_Y;

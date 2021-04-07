@@ -23,7 +23,6 @@
 package aprs.misc;
 
 import java.awt.Frame;
-import java.util.Vector;
 import javax.swing.JDialog;
 import javax.swing.table.DefaultTableModel;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
@@ -33,6 +32,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class CsvTableJPanel extends javax.swing.JPanel {
 
     /**

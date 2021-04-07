@@ -106,7 +106,7 @@ import javax.swing.JFileChooser;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "serial"})
 public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJFrameInterface, DbSetupListener, VisionSocketClient.VisionSocketClientListener {
 
     private DbSetupPublisher dbSetupPublisher;
@@ -147,6 +147,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return (null != visionClient) ? visionClient.getLineCount() : -1;
     }
 
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem) {
         if (null == dpu) {
             throw new RuntimeException("dpu == null");
@@ -154,6 +155,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return dpu.absSlotFromTrayAndOffset(tray, offsetItem);
     }
 
+    @Override
     public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
         if (null == dpu) {
             throw new RuntimeException("dpu == null");
@@ -176,7 +178,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this(null);
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public VisionToDBJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
@@ -1189,11 +1191,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         autoResizeTableColWidths(fromDatabaseCachedTable);
     }
 
+    @Override
     public boolean isDebug() {
         return debugCachedCheckBox.isSelected();
     }
 
-    private List<String> logLines = new LinkedList<>();
+    private final List<String> logLines = new LinkedList<>();
 
     private void appendLogDisplay(String txt) {
         aprsSystem.runOnDispatchThread(() -> appendLogDisplayOnDisplay(txt));
@@ -1269,6 +1272,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         autoResizeTableColWidths(jTableFromVision);
     }
 
+    @Override
     public void setVisionConnected(boolean _val) {
         aprsSystem.runOnDispatchThread(() -> setVisionConnectedOnDisplay(_val));
     }
@@ -1348,31 +1352,31 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void connectDB(DbSetup dbSetup) {
         try {
-            Map<String, String> argsMap = updateArgsMap();
+            Map<String, String> updatedArgsMap = updateArgsMap();
             closeDB();
-            String argsMapType = argsMap.get("--dbtype");
+            String argsMapType = updatedArgsMap.get("--dbtype");
             if (null == argsMapType) {
                 throw new IllegalStateException("argsMap.get(\"--dbtype\") returned null");
             }
             DbType type = DbType.valueOf(argsMapType);
             double ro = Math.toRadians(Double.parseDouble(rotationOffsetCachedTextField.getText()));
-            String argsMapHost = argsMap.get("--dbhost");
+            String argsMapHost = updatedArgsMap.get("--dbhost");
             if (null == argsMapHost) {
                 throw new IllegalStateException("argsMap.get(\"--dbhost\") returned null");
             }
-            String argsMapPort = argsMap.get("--dbport");
+            String argsMapPort = updatedArgsMap.get("--dbport");
             if (null == argsMapPort) {
                 throw new IllegalStateException("argsMap.get(\"--dbport\") returned null");
             }
-            String argsMapName = argsMap.get("--dbname");
+            String argsMapName = updatedArgsMap.get("--dbname");
             if (null == argsMapName) {
                 throw new IllegalStateException("argsMap.get(\"--dbname\") returned null");
             }
-            String argsMapUser = argsMap.get("--dbuser");
+            String argsMapUser = updatedArgsMap.get("--dbuser");
             if (null == argsMapUser) {
                 throw new IllegalStateException("argsMap.get(\"--dbuser\") returned null");
             }
-            String argsMapPasswd = argsMap.get("--dbpasswd");
+            String argsMapPasswd = updatedArgsMap.get("--dbpasswd");
             if (null == argsMapPasswd) {
                 throw new IllegalStateException("argsMap.get(\"--dbpasswd\") returned null");
             }
@@ -1514,12 +1518,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     @Override
     @SafeEffect
     public List<Slot> getSlotOffsets(String name, boolean ignoreEmpty) {
-         try {
-             initDpuIfUsingCsvFiles();
-         } catch(Exception ex) {
-              Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "getSlotOffsets("+name+","+ignoreEmpty+")", ex);
-         }
-         if (null == dpu) {
+        try {
+            initDpuIfUsingCsvFiles();
+        } catch (Exception ex) {
+            Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "getSlotOffsets(" + name + "," + ignoreEmpty + ")", ex);
+        }
+        if (null == dpu) {
             return Collections.emptyList();
         }
         return dpu.getSlotOffsets(name, ignoreEmpty);
@@ -2247,6 +2251,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
 
+    @Override
     public XFutureVoid connectVision() {
         String visionPortString = visionPortCachedTextField.getText();
         println("Starting connectVision ... (port = " + visionPortString + ") ");
@@ -2541,11 +2546,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private @MonotonicNonNull
     Callable<DbSetupPublisher> dbSetupSupplier = null;
 
+    @Override
     public @Nullable
     Callable<DbSetupPublisher> getDbSetupSupplier() {
         return dbSetupSupplier;
     }
 
+    @Override
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
         try {
@@ -3295,11 +3302,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void updateResultsMapInternal(Map<String, UpdateResults> _map) {
         updateResultsCachedTable.setRowCount(0);
         for (Entry<String, UpdateResults> entry : _map.entrySet()) {
+            final UpdateResults entryValue = entry.getValue();
             updateResultsCachedTable.addRow(new Object[]{
                 entry.getKey(),
-                entry.getValue().isVerified(),
-                ((entry.getValue().getException() != null) || (entry.getValue().getVerifyException() != null)),
-                entry.getValue().getTotalUpdateCount(),});
+                entryValue.isVerified(),
+                ((entryValue.getException() != null) || (entryValue.getVerifyException() != null)),
+                entryValue.getTotalUpdateCount(),});
         }
         resultsMap = _map;
         updatePerformanceLine();

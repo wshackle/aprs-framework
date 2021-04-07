@@ -33,6 +33,7 @@ import org.checkerframework.checker.guieffect.qual.UIType;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class ConveyorVisJPanel extends javax.swing.JPanel {
     
     private AprsSystem clonedSystem;

@@ -187,7 +187,7 @@ import javax.swing.SwingUtilities;
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused","serial"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, ProgramLineListener {
 
     private final JMenu toolMenu;
@@ -211,7 +211,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings({"guieffect", "nullness"})
+    @SuppressWarnings({"guieffect", "nullness","serial"})
     private class PddlOutputTableCellRendererer extends DefaultTableCellRenderer {
 
         @Override
@@ -400,14 +400,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return propertiesFile.getName() + ".selectedToolName.txt";
     }
 
-    private @Nullable
-    String readSelectedToolNameFile() throws IOException {
-        String filename = getSelectedToolNameFileName();
-        if (null == filename || filename.length() < 1) {
-            return null;
-        }
-        return readSelectedToolNameFile(filename);
-    }
 
     private @Nullable
     String readSelectedToolNameFile(String filename) throws IOException {
@@ -3358,7 +3350,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings("guieffect")
+    @SuppressWarnings({"guieffect","serial"})
     private class CrclTableCellRenderer extends DefaultTableCellRenderer {
 
         @Override

@@ -93,6 +93,7 @@ public class PositionMap {
         };
     }
 
+    @SuppressWarnings("serial")
     public static class BadErrorMapFormatException extends Exception {
 
         BadErrorMapFormatException(String message) {

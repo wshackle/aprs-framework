@@ -29,6 +29,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class LogDisplayJInternalFrame extends javax.swing.JInternalFrame {
 
     /**

@@ -66,13 +66,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "guieffect"})
+@SuppressWarnings({"unused", "guieffect", "serial"})
 class PddlPlannerJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form PddlPlannerJPanel
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public PddlPlannerJPanel() {
         initComponents();
         jSpinnerMaxLines.setValue(250);
@@ -732,7 +732,6 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
     }
 
     private void scp(Session session, String host, String rfile, String lfile) throws Exception {
-        FileInputStream fis = null;
         printMessage("Copying local file \"" + lfile + "\" to remote host " + host + " as remote file \"" + rfile + "\" ...");
         boolean ptimestamp = false;
         // exec 'scp -t rfile' remotely
@@ -772,8 +771,7 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
         if (checkAck(in) != 0) {
             System.exit(0);
         }
-        // send a content of lfile
-        fis = new FileInputStream(lfile);
+        FileInputStream fis = new FileInputStream(lfile);
         byte[] buf = new byte[1024];
         while (true) {
             int len = fis.read(buf, 0, buf.length);
@@ -835,15 +833,15 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
 
     private void runPddlPlannerOnceSsh() {
         try {
-            JSch jsch = this.jsch;
-            if (null == jsch) {
-                jsch = new JSch();
-                this.jsch = jsch;
+            JSch localJsch = this.jsch;
+            if (null == localJsch) {
+                localJsch = new JSch();
+                this.jsch = localJsch;
             }
             String host = jTextFieldHost.getText();
             Session currentSession = this.session;
             if (null == currentSession) {
-                currentSession = jsch.getSession(jTextFieldSshUser.getText(), jTextFieldHost.getText(), 22);
+                currentSession = localJsch.getSession(jTextFieldSshUser.getText(), jTextFieldHost.getText(), 22);
                 currentSession.setUserInfo(sshUserInfo);
                 currentSession.connect();
                 this.session = currentSession;
@@ -951,14 +949,12 @@ class PddlPlannerJPanel extends javax.swing.JPanel {
                     planFoundFound = true;
                 }
             }
-            ExecutorJInternalFrame executor = actionsToCrclJInternalFrame1;
-            if (null != executor) {
+            final ExecutorJInternalFrame localExecutorFrame = actionsToCrclJInternalFrame1;
+            if (null != localExecutorFrame) {
                 Utils.runOnDispatchThread(() -> {
-                    if (null != executor) {
-                        executor.autoResizeTableColWidthsPddlOutput();
-                    }
+                    localExecutorFrame.autoResizeTableColWidthsPddlOutput();
                 });
-                executor.autoResizeTableColWidthsPddlOutput();
+                localExecutorFrame.autoResizeTableColWidthsPddlOutput();
             }
             processActions();
         } catch (IOException ex) {

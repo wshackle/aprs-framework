@@ -33,7 +33,7 @@ import rcs.posemath.PmCartesian;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings("serial")
 public class Tray extends PhysicalItem {
 
     public Tray(String name) {

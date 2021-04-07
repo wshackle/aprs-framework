@@ -44,7 +44,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "guieffect"})
+@SuppressWarnings({"unused", "guieffect","serial"})
 public class ProcessLauncherJFrame extends javax.swing.JFrame {
 
     /**

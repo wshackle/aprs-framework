@@ -30,14 +30,13 @@ import java.util.Map;
 import javax.swing.JDialog;
 import javax.swing.table.DefaultTableModel;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "unused", "guieffect"})
+@SuppressWarnings({"CanBeFinal", "unused", "guieffect","serial"})
 public class DetectedItemJPanel extends javax.swing.JPanel {
 
     /**

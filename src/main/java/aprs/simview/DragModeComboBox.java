@@ -29,6 +29,7 @@ import javax.swing.JComboBox;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class DragModeComboBox extends JComboBox<Object2DViewDragMode> {
 
     public DragModeComboBox() {

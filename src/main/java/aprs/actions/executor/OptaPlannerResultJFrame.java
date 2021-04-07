@@ -48,6 +48,7 @@ import org.eclipse.collections.impl.block.factory.Comparators;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class OptaPlannerResultJFrame extends javax.swing.JFrame {
 
     /**

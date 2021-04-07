@@ -41,6 +41,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
 
 
@@ -63,18 +64,18 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
         visionToDBJPanel = new aprs.database.vision.VisionToDBJPanel(aprsSystem);
         jMenuBar1 = new javax.swing.JMenuBar();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Vision To Database");
-        setBackground(new java.awt.Color(210, 12, 12));
-        addWindowListener(new java.awt.event.WindowAdapter() {
+        super.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        super.setTitle("Vision To Database");
+        super.setBackground(new java.awt.Color(210, 12, 12));
+        super.addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
         });
         jMenuBar1.add(visionToDBJPanel.jMenuFile);
-        setJMenuBar(jMenuBar1);
-        add(visionToDBJPanel);
-        pack();
+        super.setJMenuBar(jMenuBar1);
+        super.add(visionToDBJPanel);
+        super.pack();
     }
 
     @Override
@@ -97,26 +98,32 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
     }//GEN-LAST:event_formWindowClosing
 
 
+    @Override
     public void setAquiring(String s) {
         this.visionToDBJPanel.setAquiring(s);
     }
 
+    @Override
     public void updataPoseQueryInfo(final List<PoseQueryElem> _list) {
         this.visionToDBJPanel.updataPoseQueryInfo(_list);
     }
 
+    @Override
     public boolean isDebug() {
         return this.visionToDBJPanel.isDebug();
     }
 
+    @Override
     public void addLogMessage(String stmnt) {
         this.visionToDBJPanel.addLogMessage(stmnt);
     }
 
+    @Override
     public void setVisionConnected(boolean _val) {
         this.visionToDBJPanel.setVisionConnected(_val);
     }
 
+    @Override
     public void setLastCommand(String c) {
         this.visionToDBJPanel.setLastCommand(c);
     }

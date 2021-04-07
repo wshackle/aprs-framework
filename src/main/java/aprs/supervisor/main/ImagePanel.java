@@ -32,6 +32,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 class ImagePanel extends JPanel {
 
     private BufferedImage image;

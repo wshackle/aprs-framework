@@ -60,12 +60,13 @@ import org.optaplanner.core.api.solver.SolverFactory;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form OptiplannerTestJFrame
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public OptiplannerDisplayJFrame() {
         initComponents();
@@ -872,6 +873,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new OptiplannerDisplayJFrame().setVisible(true);
             }
@@ -881,10 +883,16 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     /**
      * Show a window showing the
      *
-     * @param plan plan to show
+     * @param inputPlan input plan to show
+     * @param outputPlan output plan to show
      * @param title title of new window
+     * @param defaultCloseOperation default close operation for displayed frame
      */
-    public static void showPlan(OpActionPlan inputPlan, OpActionPlan outputPlan, String title, int defaultCloseOperation) {
+    public static void showPlan(
+            OpActionPlan inputPlan,
+            OpActionPlan outputPlan,
+            String title,
+            int defaultCloseOperation) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             OptiplannerDisplayJFrame frm = new OptiplannerDisplayJFrame();
             frm.setDefaultCloseOperation(defaultCloseOperation);
@@ -910,6 +918,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      * Set the value of opActionPlan
      *
      * @param opActionPlan new value of opActionPlan
+     * @return future for determining when operation is complete
      */
     public XFutureVoid setInputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         XFutureVoid part1Future = outerOptiplannerJPanelInput.setOpActionPlan(opActionPlan);
@@ -943,6 +952,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      * Set the value of opActionPlan
      *
      * @param opActionPlan new value of opActionPlan
+     * @return future for determining when operation is complete
      */
     public XFutureVoid setOutputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         XFutureVoid part1Future = outerOptiplannerJPanelOutput.setOpActionPlan(opActionPlan);

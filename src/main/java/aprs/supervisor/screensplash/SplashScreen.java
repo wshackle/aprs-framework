@@ -54,7 +54,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"SameReturnValue", "unused"})
+@SuppressWarnings({"SameReturnValue", "unused","serial"})
 public class SplashScreen extends JFrame {
 
     private final SplashPanel panel;
