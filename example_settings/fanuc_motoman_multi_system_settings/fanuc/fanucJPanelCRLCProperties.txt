@@ -1,5 +1,5 @@
 #
-#Tue Nov 10 09:17:46 EST 2020
+#Mon Apr 12 11:28:31 EDT 2021
 fingerSensorServerCmd=C\:\\Program Files\\nodejs\\node.exe sensorServer.js
 keepMoveToLog=false
 fingerSensorServerDirectory=C\:\\Users\\Public\\Documents\\FingerPressureSensorNodeJS

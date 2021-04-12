@@ -534,9 +534,43 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         settingItems = false;
     }
 
+    private double minimumScore = 0.0;
+
+    /**
+     * Get the value of minimumScore
+     *
+     * @return the value of minimumScore
+     */
+    public double getMinimumScore() {
+        return minimumScore;
+    }
+
+    /**
+     * Set the value of minimumScore
+     *
+     * @param minimumScore new value of minimumScore
+     */
+    public void setMinimumScore(double minimumScore) {
+        if (Math.abs(minimumScore - this.minimumScore) > 0.01) {
+            javax.swing.SwingUtilities.invokeLater(() -> this.jTextFieldMinimumScore.setText(String.format("%.3f", minimumScore)));
+        }
+        this.minimumScore = minimumScore;
+    }
+
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
+        final List<PhysicalItem> filteredItems;
+        if (!Double.isFinite(minimumScore) || minimumScore <= Double.MIN_NORMAL) {
+            filteredItems = items;
+        } else {
+            filteredItems = new ArrayList<>();
+            for (PhysicalItem item : items) {
+                if (item.getScore() >= minimumScore) {
+                    filteredItems.add(item);
+                }
+            }
+        }
         if (!this.isSimulated() || !object2DJPanel1.isShowOutputItems() || !this.isConnected()) {
-            notifySetItemsListeners(items);
+            notifySetItemsListeners(filteredItems);
         }
         long now = System.currentTimeMillis();
         XFutureVoid future = XFutureVoid.completedFuture();
@@ -545,7 +579,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 || (now - lastSetItemsInternalTime) > 500) {
             settingItems = true;
             lastSetItemsInternalTime = now;
-            future = submitDisplayConsumer(this::consumeItemList, items);
+            future = submitDisplayConsumer(this::consumeItemList, filteredItems);
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0) {
@@ -563,11 +597,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != srv) {
                     publishCurrentItems();
                 } else {
-                    List<PhysicalItem> newOutputItems = computeNewOutputList(items);
+                    List<PhysicalItem> newOutputItems = computeNewOutputList(filteredItems);
                     future
                             = future
                                     .thenComposeToVoid(() -> setOutputItems(newOutputItems));
-                    ;
                 }
             }
         }
@@ -1390,6 +1423,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jLabel4 = new javax.swing.JLabel();
         jCheckBoxShowOverlapping = new javax.swing.JCheckBox();
         jCheckBoxShowOnlyOverlapping = new javax.swing.JCheckBox();
+        jLabel17 = new javax.swing.JLabel();
+        jTextFieldMinimumScore = new javax.swing.JTextField();
         jPanelProperties = new javax.swing.JPanel();
         jScrollPaneProperties = new javax.swing.JScrollPane();
         jTableProperties = new javax.swing.JTable();
@@ -2250,50 +2285,66 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jLabel17.setText("Minimum Score: ");
+
+        jTextFieldMinimumScore.setText("0.0");
+        jTextFieldMinimumScore.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldMinimumScoreActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
         jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
         jPanelOptionsTabLayout.setHorizontalGroup(
             jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                .addGap(17, 17, 17)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxDetails)
-                        .addGap(3, 3, 3)
-                        .addComponent(jCheckBoxTools)
+                        .addGap(17, 17, 17)
+                        .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jCheckBoxDetails)
+                                .addGap(3, 3, 3)
+                                .addComponent(jCheckBoxTools)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxAddSlots)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxSeparateNames)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxShowOverlapping))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addGap(12, 12, 12)
+                                .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jCheckBoxShowCurrent)
+                                .addGap(6, 6, 6)
+                                .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addGap(49, 49, 49)
+                                .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel2)
+                                .addGap(46, 46, 46)
+                                .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jButtonOffsetAll)
+                                .addGap(6, 6, 6)
+                                .addComponent(jButtonReset))
+                            .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jCheckBoxShowRotations)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxAutoscale)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxShowOnlyOverlapping))))
+                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxAddSlots)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxSeparateNames)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxShowOverlapping))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addGap(12, 12, 12)
-                        .addComponent(jComboBoxDisplayAxis, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxShowCurrent)
-                        .addGap(6, 6, 6)
-                        .addComponent(jTextFieldCurrentXY, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addGap(49, 49, 49)
-                        .addComponent(jTextFieldMaxXMaxY, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addGap(46, 46, 46)
-                        .addComponent(jTextFieldMinXMinY, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jButtonOffsetAll)
-                        .addGap(6, 6, 6)
-                        .addComponent(jButtonReset))
-                    .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxShowRotations)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxAutoscale)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBoxShowOnlyOverlapping)))
-                .addContainerGap(43, Short.MAX_VALUE))
+                        .addComponent(jTextFieldMinimumScore, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(116, Short.MAX_VALUE))
         );
         jPanelOptionsTabLayout.setVerticalGroup(
             jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2338,7 +2389,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGap(6, 6, 6)
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jButtonOffsetAll)
-                    .addComponent(jButtonReset)))
+                    .addComponent(jButtonReset))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel17)
+                    .addComponent(jTextFieldMinimumScore, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Options", jPanelOptionsTab);
@@ -4329,6 +4385,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         object2DJPanel1.setDragMode(dragModeComboBox.getSelectedItem());
     }//GEN-LAST:event_dragModeComboBoxActionPerformed
 
+    private void jTextFieldMinimumScoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMinimumScoreActionPerformed
+        setMinimumScore(Double.parseDouble(jTextFieldMinimumScore.getText()));
+    }//GEN-LAST:event_jTextFieldMinimumScoreActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -4523,6 +4583,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -4567,6 +4628,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldHost;
     private javax.swing.JTextField jTextFieldMaxXMaxY;
     private javax.swing.JTextField jTextFieldMinXMinY;
+    private javax.swing.JTextField jTextFieldMinimumScore;
     private javax.swing.JTextField jTextFieldPickupDist;
     private javax.swing.JTextField jTextFieldPort;
     private javax.swing.JTextField jTextFieldPosNoise;
@@ -4701,6 +4763,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("senseMinY", Double.toString(getSenseMinY()));
         props.setProperty("senseMaxX", Double.toString(getSenseMaxX()));
         props.setProperty("senseMaxY", Double.toString(getSenseMaxY()));
+        props.setProperty("minimumScore", Double.toString(getMinimumScore()));
         props.setProperty("recordLines", Boolean.toString(jCheckBoxRecordLines.isSelected()));
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
         props.setProperty("prevListSizeDecrementInterval", Integer.toString(getPrevListSizeDecrementInterval()));
@@ -5021,6 +5084,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != senseMaxYString && senseMaxYString.length() > 0) {
             double senseMaxY = parseDouble(senseMaxYString);
             setSenseMaxY(senseMaxY);
+        }
+
+        String minimumScoreString = props.getProperty("minimumScore");
+        if (null != minimumScoreString && minimumScoreString.length() > 0) {
+            double mimimumScore = parseDouble(minimumScoreString);
+            setMinimumScore(mimimumScore);
         }
 
         String enforceSensorLimitsString = props.getProperty("enforceSensorLimits");
@@ -5449,7 +5518,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     @Override
     @SuppressWarnings("guieffect")
-    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> l, String line, boolean ignored) {
+    public XFutureVoid visionClientUpdateReceived(List<PhysicalItem> listReceived, String line, boolean ignored) {
         try {
             if (line.startsWith("EXCEPTION")) {
 
@@ -5503,7 +5572,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     max_time_diff = timediff;
                 }
                 detailsMessage
-                        = "size=" + l.size() + "\n"
+                        = "size=" + listReceived.size() + "\n"
                         + "count=" + visionSocketClient.getLineCount() + "\n"
                         + "skipped=" + visionSocketClient.getSkippedLineCount() + "\n"
                         + "ignored=" + visionSocketClient.getIgnoreCount() + "\n"
@@ -5515,8 +5584,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             final String finalDetailsMessage = detailsMessage;
             lastVisionUpdateTime = now;
 
-            setItems(l);
-            return runOnDispatchThread(() -> handleClientUpdateOnDisplay(l, finalDetailsMessage));
+            setItems(listReceived);
+            return runOnDispatchThread(() -> handleClientUpdateOnDisplay(listReceived, finalDetailsMessage));
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             showException(ex);
@@ -6026,7 +6095,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
 
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     private final Object2DOuterJPanelCurrentPoseListener currentPoseListener
             = new Object2DOuterJPanelCurrentPoseListener(this);
 
