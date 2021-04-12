@@ -30,13 +30,13 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  * 
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("guieffect")
+@SuppressWarnings({"guieffect","serial"})
 public class ColorTextJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form ColorTextJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ColorTextJFrame() {
         initComponents();
@@ -90,6 +90,7 @@ public class ColorTextJFrame extends javax.swing.JFrame {
         
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 ColorTextJFrame ctFrame = new ColorTextJFrame();
                 ctFrame.startColorTextReader();

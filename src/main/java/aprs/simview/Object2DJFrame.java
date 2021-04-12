@@ -24,19 +24,18 @@ package aprs.simview;
 
 import aprs.misc.Utils;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.guieffect.qual.UIType;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("guieffect")
+@SuppressWarnings({"guieffect","serial"})
 public class Object2DJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form Object2DJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public Object2DJFrame() {
         initComponents();
@@ -87,6 +86,7 @@ public class Object2DJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new Object2DJFrame().setVisible(true);
             }

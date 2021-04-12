@@ -92,7 +92,7 @@ public class AprsCommonLogger {
     
       private volatile @Nullable  PrintStream auxPrintStream= null;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final Consumer<String> auxConsumer
             = (String s) -> printToAux(s);
 

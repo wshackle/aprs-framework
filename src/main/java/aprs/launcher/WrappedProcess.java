@@ -265,7 +265,7 @@ public class WrappedProcess {
         }
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private WrappedProcess(ProcessBuilder pb, String cmdLine,
             OutputStream outputStream, OutputStream errorStream) {
         myNum = num.incrementAndGet();

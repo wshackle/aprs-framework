@@ -62,6 +62,7 @@ public class OptaplannerTest {
      * display the results.
      *
      * @param args not used
+     * @throws java.io.IOException can't create temporary files
      */
     public static void main(String[] args) throws IOException {
 
@@ -157,52 +158,7 @@ public class OptaplannerTest {
         List<AbstractMove<OpActionPlan>> moveList
                 = moveFactory
                         .createMoveList(ap);
-//        List<String> origActionList = new ArrayList<>(ap.getOrderedListNames());
-//        System.out.println("origActionList = " + origActionList);
-//        File origActionListFile = File.createTempFile("origActionList", ".csv");
-//        System.out.println("origActionListFile = " + origActionListFile);
-//        ap.saveActionList(origActionListFile);
-//        for (int i = 0; i < moveList.size(); i++) {
-//            AbstractMove<OpActionPlan> moveI = moveList.get(i);
-//            if (moveI instanceof OpActionFrontBackMove) {
-//                OpActionFrontBackMove moveIFB = (OpActionFrontBackMove) moveI;
-//                System.out.println("moveIFB = " + moveIFB);
-//                if (!moveIFB.isMoveDoable(scoreDirector)) {
-//                    continue;
-//                }
-//                OpActionFrontBackMove reverseMoveI = moveIFB.createUndoMove(scoreDirector);
-//
-//                moveIFB.doMove(scoreDirector);
-//                List<String> afterMove = new ArrayList<>(ap.getOrderedListNames());
-//                System.out.println("afterMove = " + afterMove);
-//                File afterMoveFile = File.createTempFile("afterMove", ".csv");
-//                System.out.println("afterMoveFile = " + afterMoveFile);
-//                ap.saveActionList(afterMoveFile);
-//                if (afterMove.size() != origActionList.size()) {
-//                    throw new RuntimeException("afterMove.size() != origActionList.size() : afterMove.size()=" + afterMove.size() + ", origActionList.size()=" + origActionList.size());
-//                }
-//                
-//                System.out.println("reverseMoveI = " + reverseMoveI);
-//                boolean canReverse = reverseMoveI.isMoveDoable(scoreDirector);
-//                reverseMoveI.doMove(scoreDirector);
-//                List<String> afterReverse = new ArrayList<>(ap.getOrderedListNames());
-//                System.out.println("afterReverse = " + afterReverse);
-//                File afterReverseFile = File.createTempFile("afterReverse", ".csv");
-//                System.out.println("afterReverseFile = " + afterReverseFile);
-//                ap.saveActionList(afterReverseFile);
-//                if (afterReverse.size() != origActionList.size()) {
-//                    throw new RuntimeException("afterReverse.size() != origActionList.size() : afterReverse.size()=" + afterReverse.size() + ", origActionList.size()=" + origActionList.size());
-//                }
-//                for (int j = 0; j < afterReverse.size(); j++) {
-//                    String actionAfterReverseJ = afterReverse.get(j);
-//                    String actionOrigJ = origActionList.get(j);
-//                    if (!actionAfterReverseJ.equals(actionOrigJ)) {
-//                        throw new RuntimeException("j=" + j + ",actioinAfterReverseJ=" + actionAfterReverseJ + ",actionOrigJ=" + actionOrigJ);
-//                    }
-//                }
-//            }
-//
-//        }
+        @SuppressWarnings("rawtypes")
         Score scoreFromDrl
                 = scoreDirector.calculateScore();
 

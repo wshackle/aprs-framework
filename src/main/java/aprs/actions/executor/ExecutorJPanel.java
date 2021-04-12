@@ -177,7 +177,7 @@ import crcl.ui.client.ProgramLineListener;
 import static crcl.utils.CRCLCopier.copy;
 import crcl.utils.CRCLUtils;
 import java.util.Date;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
@@ -187,7 +187,7 @@ import javax.swing.SwingUtilities;
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused","serial"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, ProgramLineListener {
 
     private final JMenu toolMenu;
@@ -211,7 +211,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings({"guieffect", "nullness"})
+    @SuppressWarnings({"guieffect", "nullness","serial"})
     private class PddlOutputTableCellRendererer extends DefaultTableCellRenderer {
 
         @Override
@@ -288,7 +288,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * builder for display only.
      *
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExecutorJPanel(AprsSystem aprsSystem1, Component parentComponent) {
         this.aprsSystem = aprsSystem1;
@@ -400,14 +400,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return propertiesFile.getName() + ".selectedToolName.txt";
     }
 
-    private @Nullable
-    String readSelectedToolNameFile() throws IOException {
-        String filename = getSelectedToolNameFileName();
-        if (null == filename || filename.length() < 1) {
-            return null;
-        }
-        return readSelectedToolNameFile(filename);
-    }
 
     private @Nullable
     String readSelectedToolNameFile(String filename) throws IOException {
@@ -3358,7 +3350,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings("guieffect")
+    @SuppressWarnings({"guieffect","serial"})
     private class CrclTableCellRenderer extends DefaultTableCellRenderer {
 
         @Override
@@ -3617,8 +3609,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null == currentPose) {
             throw new IllegalStateException("null == aprsSystem.getCurrentPose()");
         }
-        final VectorType xAxisCopy = copy(requireNonNull(currentPose.getXAxis(), "xAxisCopy"));
-        final VectorType zAxisCopy = copy(requireNonNull(currentPose.getZAxis(), "zAxisCopy"));
+        final VectorType xAxisCopy = requireNonNull(copy(currentPose.getXAxis()), "xAxisCopy");
+        final VectorType zAxisCopy = requireNonNull(copy(currentPose.getZAxis()), "zAxisCopy");
         moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
         CRCLUtils.middleCommands(program).add(moveTo);
         startCrclProgram(program);
@@ -7730,7 +7722,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private volatile StackTraceElement lastExecuteActionsTrace[] = null;
+    private volatile StackTraceElement lastExecuteActionsTrace @Nullable[] = null;
     private volatile long lastExecuteActionsTime = -1;
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {

@@ -35,13 +35,13 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("guieffect")
+@SuppressWarnings({"guieffect","serial"})
 class ExploreGraphDbJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form ExplortGraphDbJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExploreGraphDbJFrame() {
         initComponents();
@@ -93,6 +93,7 @@ class ExploreGraphDbJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 try {
                     ExploreGraphDbJFrame frm = new ExploreGraphDbJFrame();

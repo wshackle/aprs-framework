@@ -46,7 +46,7 @@ import rcs.posemath.PM_CARTESIAN;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings("serial")
 public class PhysicalItem extends PM_CARTESIAN {
 
     final public String origName;

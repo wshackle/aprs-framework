@@ -33,12 +33,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class PddlPlannerJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
      * Creates new form PddlPlannerJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public PddlPlannerJInternalFrame() {
         initComponents();

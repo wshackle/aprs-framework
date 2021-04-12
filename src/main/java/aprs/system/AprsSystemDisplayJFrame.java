@@ -82,6 +82,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private volatile @MonotonicNonNull

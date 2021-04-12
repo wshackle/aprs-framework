@@ -53,6 +53,7 @@ import rcs.posemath.PmException;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implements ExecutorDisplayInterface {
 
     
@@ -61,7 +62,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
     
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ExecutorJInternalFrame(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
         executorJPanel1 = new ExecutorJPanel(aprsSystem,this);

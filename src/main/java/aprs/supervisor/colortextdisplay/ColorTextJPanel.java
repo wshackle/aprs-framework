@@ -43,14 +43,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("MagicConstant")
+@SuppressWarnings({"MagicConstant","serial"})
 @UIType
 public class ColorTextJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form ColorTextJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ColorTextJPanel() {
         try {
             initComponents();
@@ -168,8 +168,8 @@ public class ColorTextJPanel extends javax.swing.JPanel {
      */
     public void startReader() {
         try {
-            SocketLineReader readerTmp = null;
-            readerTmp = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
+            SocketLineReader readerTmp 
+                    = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
             this.reader = readerTmp;
         } catch (Exception e) {
             Logger.getLogger(ColorTextJFrame.class.getName()).log(Level.SEVERE, "Failed to bind color text socket port: " + COLORTEXT_SOCKET_PORT, e);

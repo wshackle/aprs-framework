@@ -79,7 +79,7 @@ public class CachedComboBox<E> {
     }
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public CachedComboBox(Class<E> eClass, JComboBox<E> comboBox) {
         this.comboBox = comboBox;
         this.eClass = eClass;

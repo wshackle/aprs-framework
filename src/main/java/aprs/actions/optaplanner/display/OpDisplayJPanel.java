@@ -87,7 +87,7 @@ import org.optaplanner.core.api.solver.SolverFactory;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("guieffect")
+@SuppressWarnings({"guieffect", "serial"})
 public class OpDisplayJPanel extends JPanel {
 
     /**
@@ -95,8 +95,12 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param plan plan to show
      * @param title title of new window
+     * @param defaultCloseOperation default close operation for displayed frame
      */
-    public static void showPlan(OpActionPlan plan, String title, int defaultCloseOperation) {
+    public static void showPlan(
+            OpActionPlan plan,
+            String title,
+            int defaultCloseOperation) {
         javax.swing.SwingUtilities.invokeLater(() -> {
             JFrame frm = new JFrame();
             frm.setDefaultCloseOperation(defaultCloseOperation);
@@ -341,7 +345,7 @@ public class OpDisplayJPanel extends JPanel {
      *
      * @param opActionPlan plan to show
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
@@ -871,9 +875,6 @@ public class OpDisplayJPanel extends JPanel {
         g2d.setTransform(origTransform);
     }
 
-    private @Nullable
-    Font boldFont = null;
-
     private void paintActionSymbol(Graphics2D g2d, int x, int y, OpActionType type, boolean required) {
         String typeLetterString = type.name().substring(0, 1);
         paintActionSymbol(g2d, x, y, typeLetterString, required);
@@ -1037,7 +1038,7 @@ public class OpDisplayJPanel extends JPanel {
         if (null == actonsList) {
             return Collections.emptyList();
         }
-        List<OpAction> closeActions = new ArrayList<>();
+        List<OpAction> newCloseActionsList = new ArrayList<>();
         for (OpAction actionToCheck : actonsList) {
             if (!showFakeActionsMenuItem.isSelected()) {
                 if (actionToCheck.getOpActionType() == FAKE_DROPOFF || actionToCheck.getOpActionType() == FAKE_PICKUP) {
@@ -1048,10 +1049,10 @@ public class OpDisplayJPanel extends JPanel {
             int actionX = keyWidth + (int) ((0.9 * (location.x - minX) / xdiff) * w + 0.05 * w);
             int actionY = ly + (int) ((0.9 * (location.y - minY) / ydiff) * h + 0.05 * h);
             if (Math.abs(actionX - x) < 30 && Math.abs(actionY - y) < 30) {
-                closeActions.add(actionToCheck);
+                newCloseActionsList.add(actionToCheck);
             }
         }
-        return closeActions;
+        return newCloseActionsList;
     }
 
 //    private void mouseDragged(MouseEvent e) {

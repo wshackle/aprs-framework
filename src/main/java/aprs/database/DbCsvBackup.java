@@ -48,7 +48,7 @@ public class DbCsvBackup {
 
     public static boolean debug = false;
 
-    static public ResultSet executeQuery(@Nullable PreparedStatement preparedStatement, String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
+    static public ResultSet executeQuery(@Nullable PreparedStatement preparedStatement,@Nullable String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
         File homeDir = new File(System.getProperty("user.home"));
         File queriesDir = new File(homeDir, "aprsQueries");
         File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
@@ -64,7 +64,7 @@ public class DbCsvBackup {
                     return name.endsWith("_query.txt");
                 }
             });
-            if (fa.length == 1 && fa[0].exists()) {
+            if (fa != null && fa.length == 1 && fa[0].exists()) {
                 queryFile = fa[0];
                 String prefix = queryFile.getName().substring(0, queryFile.getName().length() - "_query.txt".length());
                 resultsFile = new File(dir, prefix + "_results.csv");
@@ -101,10 +101,18 @@ public class DbCsvBackup {
             if (null == preparedStatement) {
                 throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",resultsFile.exists()=" + resultsFile.exists() + ",queryFile=" + queryFile + ",queryFile.exists()=" + queryFile.exists() + ",metaFile=" + metaFile + ",metaFile.exists()=" + metaFile.exists());
             }
-            return executeAndSaveQuery(preparedStatement, resultsFile, simQuery, queryFile, metaFile);
+            final String simQuery2 = simQuery;
+            if(null == simQuery2) {
+                throw new NullPointerException("simQuery2 can only be null if resultsFile="+resultsFile+", queryFile="+queryFile+", and metaFile="+metaFile+" exist. : name="+name+", taskName="+taskName);
+            }
+            return executeAndSaveQuery(preparedStatement, resultsFile, simQuery2, queryFile, metaFile);
         } else if (replace) {
             return readResultsSetCsv(resultsFile, metaFile);
         } else {
+            final String simQuery3 = simQuery;
+            if(null == simQuery3) {
+                throw new NullPointerException("simQuery3 can only be null when replace is true : name="+name+", taskName="+taskName);
+            }
             try (BufferedReader br = new BufferedReader(new FileReader(queryFile))) {
                 String line;
                 StringBuilder fileBuf = new StringBuilder();
@@ -115,7 +123,7 @@ public class DbCsvBackup {
                     }
                 }
                 StringBuilder simBuf = new StringBuilder();
-                String simLines[] = simQuery.split("[\r\n]+");
+                String simLines[] = simQuery3.split("[\r\n]+");
                 for (int i = 0; i < simLines.length; i++) {
                     String simLine = simLines[i];
                     final String simLineTrim = simLine.trim();
@@ -129,14 +137,14 @@ public class DbCsvBackup {
                     if (debug) {
                         System.out.println("!trimmedFileLine.equals(trimmedSim)");
                         System.out.println("line = " + line);
-                        System.out.println("simQuery = " + simQuery);
+                        System.out.println("simQuery = " + simQuery3);
                         System.out.println("trimmedFileLine = " + trimmedFileLine);
                         System.out.println("trimmedSim = " + trimmedSim);
                     }
                     if (null == preparedStatement) {
                         throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",queryFile=" + queryFile + ",metaFile=" + metaFile + ",trimmedFileLine=" + trimmedFileLine + ",trimmedSim=" + trimmedSim);
                     }
-                    return executeAndSaveQuery(preparedStatement, resultsFile, simQuery, queryFile, metaFile);
+                    return executeAndSaveQuery(preparedStatement, resultsFile, simQuery3, queryFile, metaFile);
                 } else {
                     if (null == preparedStatement) {
                         throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",queryFile=" + queryFile + ",metaFile=" + metaFile + ",trimmedFileLine=" + trimmedFileLine + ",trimmedSim=" + trimmedSim);

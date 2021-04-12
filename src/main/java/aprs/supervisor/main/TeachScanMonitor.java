@@ -110,7 +110,7 @@ public class TeachScanMonitor {
 
     private final Map<String, List<String>> origStartingStringsMap = new HashMap<>();
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public TeachScanMonitor(List<AprsSystem> aprsSystems,
             AtomicInteger abortCount,
             boolean continuousDemoSelected,

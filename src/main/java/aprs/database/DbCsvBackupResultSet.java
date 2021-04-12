@@ -45,6 +45,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -53,7 +54,8 @@ import org.apache.commons.csv.CSVRecord;
 public class DbCsvBackupResultSet implements ResultSet {
 
     private int index = 0;
-    private CSVRecord curRecord;
+    private @Nullable
+    CSVRecord curRecord = null;
     final List<CSVRecord> records;
     final ResultSetMetaData metaData;
 
@@ -85,6 +87,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public String getString(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return curRecord.get(columnIndex - 1);
         } catch (Exception e) {
@@ -94,6 +99,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Boolean.parseBoolean(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -103,6 +111,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Byte.parseByte(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -112,6 +123,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Short.parseShort(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -121,6 +135,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Integer.parseInt(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -130,6 +147,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Long.parseLong(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -139,6 +159,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Float.parseFloat(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -148,6 +171,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Float.parseFloat(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -158,6 +184,9 @@ public class DbCsvBackupResultSet implements ResultSet {
     @Override
     @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return new BigDecimal(curRecord.get(columnIndex - 1));
         } catch (Exception e) {
@@ -167,6 +196,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return curRecord.get(columnIndex - 1).getBytes();
         } catch (Exception e) {
@@ -207,6 +239,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public String getString(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return curRecord.get(columnLabel);
         } catch (Exception e) {
@@ -217,6 +252,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public boolean getBoolean(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Boolean.parseBoolean(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -226,6 +264,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public byte getByte(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Byte.parseByte(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -235,6 +276,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public short getShort(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Short.parseShort(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -244,6 +288,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public int getInt(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Integer.parseInt(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -253,6 +300,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public long getLong(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Long.parseLong(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -262,6 +312,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public float getFloat(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Float.parseFloat(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -271,6 +324,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public double getDouble(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return Double.parseDouble(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -281,6 +337,9 @@ public class DbCsvBackupResultSet implements ResultSet {
     @Override
     @SuppressWarnings("deprecation")
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return new BigDecimal(curRecord.get(columnLabel));
         } catch (Exception e) {
@@ -346,6 +405,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public Object getObject(int columnIndex) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return curRecord.get(columnIndex - 1);
         } catch (Exception e) {
@@ -355,6 +417,9 @@ public class DbCsvBackupResultSet implements ResultSet {
 
     @Override
     public Object getObject(String columnLabel) throws SQLException {
+        if (null == curRecord) {
+            throw new SQLException("curRecord==null");
+        }
         try {
             return curRecord.get(columnLabel);
         } catch (Exception e) {

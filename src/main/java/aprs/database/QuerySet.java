@@ -39,7 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,7 +54,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class QuerySet implements QuerySetInterface {
 
-    private final java.sql.Connection dbConnection;
+    private final @Nullable
+    Connection dbConnection;
     private String expectQueryItemFormat = "\'%s\'";
 
     public String getExpectQueryItemFormat() {
@@ -70,7 +71,8 @@ public class QuerySet implements QuerySetInterface {
      *
      * @return database connection
      */
-    public Connection getDbConnection() {
+    public @Nullable
+    Connection getDbConnection() {
         return dbConnection;
     }
 
@@ -89,18 +91,20 @@ public class QuerySet implements QuerySetInterface {
     }
 
     public final boolean useCsvFilesInsteadOfDatabase;
-    
+
     /**
      * Create a new QuerySet.
      *
      * @param dbtype database type
      * @param con database connection
      * @param queriesMap map of queries info
+     * @param taskName task name used in error/debug messages
+     * @param useCsvFilesInsteadOfDatabase queries will use flat csv files instead of database
      * @throws SQLException if query fails
      */
     public QuerySet(
             DbType dbtype,
-            java.sql.@Nullable Connection con,
+            @Nullable Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap,
             String taskName,
             boolean useCsvFilesInsteadOfDatabase) throws SQLException {
@@ -422,6 +426,7 @@ public class QuerySet implements QuerySetInterface {
      * @param name name of kit tray
      * @return a list of all the parts that has "parts_in_kt" in their names
      * @throws java.sql.SQLException if query fails
+     * @throws java.io.IOException csv files do not exist
      */
     public List<String> getAllPartsInKt(String name) throws SQLException, IOException {
         ArrayList<String> partsInKtList = new ArrayList<>();
@@ -436,7 +441,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName, this.dbConnection == null)) {
             //int c = 0;
             while (rs.next()) {
                 //c++;
@@ -464,7 +469,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName, this.dbConnection == null)) {
             //int c = 0;
             while (rs.next()) {
                 //c++;
@@ -491,7 +496,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null)) {
             if (rs.next()) {
                 count = rs.getInt(1);
             } else {
@@ -516,7 +521,7 @@ public class QuerySet implements QuerySetInterface {
             println("name=" + name + ", simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getPartsTraysStatement, simQuery, "getPartsTrays_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getPartsTraysStatement, simQuery, "getPartsTrays_" + name, taskName, this.dbConnection == null)) {
             while (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -603,15 +608,15 @@ public class QuerySet implements QuerySetInterface {
 
         List<Slot> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getSlotsQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_SLOTS);
-        setQueryStringParam(getSlotsStatement, getSlotsQueryInfo, DbParamTypeEnum.NAME, name, map);
-        String simQuery = createExpectedQueryString(getSlotsQueryInfo, map);
+        DbQueryInfo getSlotsQueryInfoFromMap = queryMap(queriesMap, DbQueryEnum.GET_SLOTS);
+        setQueryStringParam(getSlotsStatement, getSlotsQueryInfoFromMap, DbParamTypeEnum.NAME, name, map);
+        String simQuery = createExpectedQueryString(getSlotsQueryInfoFromMap, map);
 
         if (debug) {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getSlotsStatement, simQuery, "getSlots_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getSlotsStatement, simQuery, "getSlots_" + name, taskName, this.dbConnection == null)) {
             while (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -715,11 +720,13 @@ public class QuerySet implements QuerySetInterface {
         if (debug) {
             println("Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
             println("simQuery = \"\n" + simQuery + "\n\"\n");
-            String connectionUrl = dbConnection.getMetaData().getURL();
-            println("connectionUrl = " + connectionUrl);
+            if (null != dbConnection) {
+                String connectionUrl = dbConnection.getMetaData().getURL();
+                println("connectionUrl = " + connectionUrl);
+            }
             println("");
         }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName, this.dbConnection == null)) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -860,6 +867,7 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
+    @SuppressWarnings("try")
     private static class QsResultSet implements AutoCloseable {
 
         private final ResultSet resultSet;
@@ -897,7 +905,7 @@ public class QuerySet implements QuerySetInterface {
         if (debug) {
             println("simQuery = " + simQuery);
         }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName,this.dbConnection==null)) {
+        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName, this.dbConnection == null)) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -1115,7 +1123,11 @@ public class QuerySet implements QuerySetInterface {
         if (null == pose || null == pose.getPoint() || null == pose.getXAxis() || null == pose.getZAxis()) {
             throw new IllegalArgumentException("pose must not be null and must not have null point,xaxis or zaxis");
         }
-        setPoseStatement.setString(1, name);
+        final PreparedStatement setPoseStatement1 = setPoseStatement;
+        if(null == setPoseStatement1) {
+            throw new NullPointerException("setPoseStatement");
+        }
+        setPoseStatement1.setString(1, name);
 
         Map<Integer, Object> map = new TreeMap<>();
         setPoseQueryStringParam(DbParamTypeEnum.NAME, name, map);
@@ -1137,7 +1149,7 @@ public class QuerySet implements QuerySetInterface {
             println("setPose(" + name + "," + pose + "): simQuery = " + simQuery);
         }
 
-        int update_count = setPoseStatement.executeUpdate();
+        int update_count = setPoseStatement1.executeUpdate();
         if (debug) {
             println("update_count = " + update_count);
         }

@@ -28,6 +28,7 @@ import crcl.base.PoseType;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class KitTray extends Tray {
 
     public static KitTray newKitTrayFromSkuIdRotXY(String sku,int id,double rotation, double x, double y) {

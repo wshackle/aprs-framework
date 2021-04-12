@@ -158,7 +158,7 @@ import java.io.FileWriter;
 import java.io.PrintStream;
 import java.util.Date;
 import java.util.Iterator;
-import static java.util.Objects.requireNonNull;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import java.util.stream.StreamSupport;
 import javax.swing.Icon;
@@ -1015,6 +1015,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return true;
         }
         try {
+            if (null == aprsSystem) {
+                return false;
+            }
             if (!this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
                 if (null == dbConnection) {
                     return false;
@@ -1078,11 +1081,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private synchronized void setDbConnection(java.sql.@Nullable Connection dbConnection) {
 
         try {
-            if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
+            final AprsSystem aprsSystem1 = aprsSystem;
+            if (null == aprsSystem1) {
+                throw new NullPointerException("aprsSystem");
+            }
+            final DbSetup dbSetup1 = dbSetup;
+            if(null == dbSetup1) {
+                throw new NullPointerException("dbSetup");
+            }
+            if (aprsSystem1.isUseCsvFilesInsteadOfDatabase()) {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), true);
+                qs = new QuerySet(DbType.NONE, null, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), true);
                 return;
             }
             if (null != this.dbConnection && dbConnection != this.dbConnection) {
@@ -1100,8 +1111,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null != dbConnection) {
                 this.dbConnection = dbConnection;
             }
-            if (null != dbConnection && null != dbSetup) {
-                qs = new QuerySet(dbSetup.getDbType(), dbConnection, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), false);
+            if (null != dbConnection && null != dbSetup1) {
+                qs = new QuerySet(dbSetup1.getDbType(), dbConnection, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), false);
             } else if (qs != null) {
                 qs.close();
             }
@@ -1122,6 +1133,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private boolean dbConnectionIsClosedOrNull() {
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
             return false;
         }
@@ -1141,6 +1155,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public XFutureVoid setDbSetup(DbSetup dbSetup) {
 
+        if (null == aprsSystem) {
+            throw new NullPointerException("aprsSystem");
+        }
         if (this.aprsSystem.isUseCsvFilesInsteadOfDatabase()) {
             try {
                 if (qs != null) {
@@ -5792,7 +5809,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String approachToolChangerZOffsetString = optionsMap.get("approachToolChangerZOffset");
         if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 0) {
             try {
-                approachToolChangerZOffset= Double.parseDouble(approachToolChangerZOffsetString);
+                approachToolChangerZOffset = Double.parseDouble(approachToolChangerZOffsetString);
             } catch (NumberFormatException numberFormatException) {
                 LOGGER.log(Level.SEVERE, "", numberFormatException);
             }

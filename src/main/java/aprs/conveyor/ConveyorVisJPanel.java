@@ -33,6 +33,7 @@ import org.checkerframework.checker.guieffect.qual.UIType;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class ConveyorVisJPanel extends javax.swing.JPanel {
     
     private AprsSystem clonedSystem;
@@ -66,7 +67,7 @@ public class ConveyorVisJPanel extends javax.swing.JPanel {
     /**
      * Creates new form ConveyorVisJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ConveyorVisJPanel() {
         initComponents();
         outerConveyorSpeedControlJPanel1.addConveyorPositionListener(object2DOuterJPanel1::handleConveyorPositionUpdate);

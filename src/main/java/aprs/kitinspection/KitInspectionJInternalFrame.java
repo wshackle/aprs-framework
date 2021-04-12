@@ -42,13 +42,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings("serial")
 public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
      * Creates new form Test
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public KitInspectionJInternalFrame() {
         initComponents();
         doc = (HTMLDocument) InspectionResultJTextPane.getDocument();
@@ -171,6 +171,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 new KitInspectionJInternalFrame().setVisible(true);
             }

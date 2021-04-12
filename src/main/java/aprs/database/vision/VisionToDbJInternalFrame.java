@@ -47,23 +47,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame implements VisionToDBJFrameInterface {
     
     
     /**
      * Creates new form VisionToDbJInternalFrame
+     * @param aprsSystem system this frame will be connected to
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public VisionToDbJInternalFrame(AprsSystem aprsSystem) {
         visionToDBJPanel = new aprs.database.vision.VisionToDBJPanel(aprsSystem);
 
-        setIconifiable(true);
-        setMaximizable(true);
-        setResizable(true);
-        setTitle("[Object SP] Vision To Database");
-        add(visionToDBJPanel);
-        pack();
+        super.setIconifiable(true);
+        super.setMaximizable(true);
+        super.setResizable(true);
+        super.setTitle("[Object SP] Vision To Database");
+        super.add(visionToDBJPanel);
+        super.pack();
     }
 
     public void addLineCountListener(Consumer<Integer> l) {

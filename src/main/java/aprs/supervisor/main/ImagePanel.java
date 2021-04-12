@@ -32,6 +32,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 class ImagePanel extends JPanel {
 
     private BufferedImage image;
@@ -39,13 +40,13 @@ class ImagePanel extends JPanel {
     private String label;
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ImagePanel(BufferedImage image) {
         this(image, "");
     }
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public ImagePanel(BufferedImage image, String label) {
         this.image = image;
         this.label = label;

@@ -146,7 +146,7 @@ import crcl.base.CommandStatusType;
 import crcl.utils.CRCLUtils;
 import java.awt.Graphics;
 import java.awt.image.ImageObserver;
-import java.util.Map.Entry;
+import static crcl.utils.CRCLUtils.requireNonNull;
 import java.util.TreeMap;
 import org.checkerframework.checker.guieffect.qual.UI;
 
@@ -565,7 +565,7 @@ public class Supervisor {
     /**
      * Creates new form AprsMulitSupervisorJFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private Supervisor(@Nullable AprsSupervisorDisplayJFrame displayJFrame) {
         this.startSupervisorTime = System.currentTimeMillis();
         this.displayJFrame = displayJFrame;
@@ -626,6 +626,7 @@ public class Supervisor {
         return lastFutureReturned;
     }
 
+    @SuppressWarnings("serial")
     private static class PositionMappingTableModel extends DefaultTableModel {
 
         public PositionMappingTableModel() {
@@ -2652,7 +2653,13 @@ public class Supervisor {
         try {
 
             String stealForRobotName = stealFor.getRobotName();
+            if(null == stealForRobotName) {
+                throw new NullPointerException("stealForRobotName");
+            }
             String stealFromRobotName = stealFrom.getRobotName();
+            if(null == stealFromRobotName) {
+                throw new NullPointerException("stealFromRobotName");
+            }
             File f = getPosMapFile(stealForRobotName, stealFromRobotName);
             PositionMap pm = (f != null && !f.getName().equals("null")) ? new PositionMap(f) : PositionMap.emptyPositionMap();
 
@@ -2688,7 +2695,10 @@ public class Supervisor {
                                 if (stealFor.isConnected()) {
                                     throw new RuntimeException("stealFor.isConnected() : stealFor=" + stealFor);
                                 }
-                                final String stealForRobotNameTask = robotTaskMap.get(stealForRobotName);
+                                final String stealForRobotNameTask 
+                                        = requireNonNull(
+                                                robotTaskMap.get(stealForRobotName),
+                                                "robotTaskMap.get("+stealForRobotName+")");
                                 if (!stealForRobotNameTask.equals(stealFor.getTaskName())) {
                                     throw new RuntimeException("stealForRobotName=" + stealForRobotName + ",stealForRobotNameTask=" + stealForRobotNameTask + ",stealFor=" + stealFor);
                                 }
@@ -7869,7 +7879,10 @@ public class Supervisor {
                     futures[i] = XFuture.completedFuture(true);
                     continue;
                 } else {
-                    final String sysRobotNameTask = robotTaskMap.get(sysRobotName);
+                    final String sysRobotNameTask 
+                            = requireNonNull(
+                                    robotTaskMap.get(sysRobotName),
+                                    "robotTaskMap.get("+sysRobotName+")");
                     if (!sysRobotNameTask.equals(sys.getTaskName())) {
                         futures[i] = XFuture.completedFuture(true);
                         continue;
@@ -8050,7 +8063,7 @@ public class Supervisor {
             tasksNames.append(sys.getTaskName());
             tasksNames.append(",");
         }
-        lastStartAllActionsArray = futures.toArray(new XFuture[0]);
+        lastStartAllActionsArray = futures.toArray(new XFuture<?>[0]);
 //        allowToggles();
         return XFuture.allOfWithName("continueAllActions.allOf(" + tasksNames.toString() + ")", futures);
     }
@@ -8414,8 +8427,14 @@ public class Supervisor {
         for (AprsSystem aprsSys : aprsSystems) {
             final String taskName = aprsSys.getTaskName();
             wasConnectedMap.put(taskName, aprsSys.isConnected());
-            final String robotName = aprsSys.getRobotName();
-            final String robotTaskName = robotTaskMap.get(aprsSys.getRobotName());
+            final String robotName 
+                    = requireNonNull(
+                            aprsSys.getRobotName(),
+                            "aprsSys.getRobotName()");
+            final String robotTaskName 
+                    = requireNonNull(
+                            robotTaskMap.get(aprsSys.getRobotName()), 
+                            "robotTaskMap.get("+aprsSys.getRobotName()+")");
             sysRobotMap.put(taskName, robotName);
             wasEnabledMap.put(taskName, robotTaskName != null);
             sysRobotPortMap.put(taskName, aprsSys.getRobotCrclPort());
@@ -9601,7 +9620,7 @@ public class Supervisor {
 
     private volatile boolean clearingWayToHolders = false;
 
-    private volatile StackTraceElement [] clearWayToHoldersTrace = null;
+    private volatile StackTraceElement clearWayToHoldersTrace @Nullable [] = null;
     
     public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
         clearingWayToHolders = true;

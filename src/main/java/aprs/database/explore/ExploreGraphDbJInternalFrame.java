@@ -36,12 +36,13 @@ import java.util.logging.Logger;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class ExploreGraphDbJInternalFrame extends javax.swing.JInternalFrame implements DbSetupListener{
 
     /**
      * Creates new form ExploreGraphDbJInternalFrame
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public ExploreGraphDbJInternalFrame() {
         initComponents();

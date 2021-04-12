@@ -32,6 +32,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
@@ -46,17 +47,18 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
     
     /**
      * Creates new form DbSetupJInternalFrame
+     * @param aprsSystem system panel will be connected to
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public DbSetupJInternalFrame(AprsSystem aprsSystem) {
         dbSetupJPanel1 = new aprs.database.DbSetupJPanel(aprsSystem);
-        setIconifiable(true);
-        setMaximizable(true);
-        setResizable(true);
-        setTitle("Database Setup");
-        add(dbSetupJPanel1);
-        pack();
+        super.setIconifiable(true);
+        super.setMaximizable(true);
+        super.setResizable(true);
+        super.setTitle("Database Setup");
+        super.add(dbSetupJPanel1);
+        super.pack();
     }
 
     /**

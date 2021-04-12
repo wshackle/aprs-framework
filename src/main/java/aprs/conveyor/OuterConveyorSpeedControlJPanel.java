@@ -54,12 +54,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
 
     /**
      * Creates new form ConveyorSpeedControlJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public OuterConveyorSpeedControlJPanel() {
         initComponents();
         popupMenu = new JPopupMenu();
@@ -79,7 +80,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         cancelMenuItem.addActionListener(e -> popupMenu.setVisible(false));
         popupMenu.add(cancelMenuItem);
 
-        positionUpdateTimer = new Timer(getUpdateTimerPeriod(), e -> {
+        positionUpdateTimer = new Timer(updateTimerPeriod, e -> {
             handlePostionUpateTimerEvent();
         });
     }

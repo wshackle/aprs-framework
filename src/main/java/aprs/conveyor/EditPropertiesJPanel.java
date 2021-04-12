@@ -36,11 +36,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class EditPropertiesJPanel extends javax.swing.JPanel {
 
     private final JDialog dialog;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public EditPropertiesJPanel(JDialog dialog, Map<String, String> mapIn) {
         initComponents();
         loadMap(mapIn);
@@ -85,7 +86,7 @@ public class EditPropertiesJPanel extends javax.swing.JPanel {
     /**
      * Creates new form EditPropertiesJPanel
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     public EditPropertiesJPanel() {
         initComponents();
         this.dialog = new JDialog();

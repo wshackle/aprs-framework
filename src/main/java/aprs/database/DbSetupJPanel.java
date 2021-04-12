@@ -81,6 +81,7 @@ import static aprs.misc.Utils.autoResizeTableColWidths;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
+@SuppressWarnings("serial")
 public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublisher {
 
      /**
@@ -93,8 +94,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
     /**
      * Creates new form DbSetupJPanel
+     * @param aprsSystem1 system panel will be connected to
      */
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public DbSetupJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
@@ -105,7 +107,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jTextFieldDBLoginTimeout.setText(Integer.toString(DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT));
         jTableQueries.getModel().addTableModelListener(queriesTableModelListener);
         debugCachedCheckBox = new CachedCheckBox(jCheckBoxDebug);
-        dbTypeCachedComboBox = new CachedComboBox<aprs.database.DbType>(aprs.database.DbType.class, jComboBoxDbType);
+        dbTypeCachedComboBox = new CachedComboBox<>(aprs.database.DbType.class, jComboBoxDbType);
         dbHostCachedTextField = new CachedTextField(jTextFieldDBHost);
         queriesDirectoryCachedTextField = new CachedTextField(jTextFieldQueriesDirectory);
         queriesMap = getQueriesMapInternal();
@@ -127,7 +129,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     }
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private final TableModelListener queriesTableModelListener = this::handleQueriesTableEvent;
 
     @UIEffect
@@ -710,11 +712,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      * Display options according to the given setup object.
      *
      * @param setup object to read properties from
+     * @return future for determining when setup is complete
      */
     @SuppressWarnings("WeakerAccess")
     @Override
     public XFutureVoid setDbSetup(DbSetup setup) {
-        List<XFutureVoid> futures = new ArrayList<>();
+        List<XFutureVoid> localFutures = new ArrayList<>();
         try {
             if (null == setup) {
                 throw new IllegalArgumentException("setup == null");
@@ -723,54 +726,54 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 this.connected = false;
                 throw new IllegalArgumentException("setup.getDbType() == " + setup.getDbType());
             }
-            futures.add(debugCachedCheckBox.setSelected(setup.isDebug()));
+            localFutures.add(debugCachedCheckBox.setSelected(setup.isDebug()));
             updatingFromDbSetup = true;
             DbType dbtype = setup.getDbType();
             if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
-                futures.add(dbTypeCachedComboBox.setSelectedItem(dbtype));
+                localFutures.add(dbTypeCachedComboBox.setSelectedItem(dbtype));
             }
             String host = setup.getHost();
             if (!Objects.equals(host, dbHostCachedTextField.getText())) {
-                futures.add(dbHostCachedTextField.setText(setup.getHost()));
+                localFutures.add(dbHostCachedTextField.setText(setup.getHost()));
             }
             int port = setup.getPort();
-            futures.add(dbPortCachedTextField.setText(Integer.toString(port)));
+            localFutures.add(dbPortCachedTextField.setText(Integer.toString(port)));
             int loginTimeout = setup.getLoginTimeout();
-            futures.add(setLoginTimeout(loginTimeout));
+            localFutures.add(setLoginTimeout(loginTimeout));
             char newpasswd[] = setup.getDbPassword();
-            futures.add(setDbPassword(newpasswd));
+            localFutures.add(setDbPassword(newpasswd));
             String user = setup.getDbUser();
-            futures.add(dbUserCachedTextField.setText(user));
+            localFutures.add(dbUserCachedTextField.setText(user));
             String dbname = setup.getDbName();
-            futures.add(dbNameCachedTextField.setText(dbname));
+            localFutures.add(dbNameCachedTextField.setText(dbname));
             boolean newConnectedState = setup.isConnected();
             this.connected = newConnectedState;
 
-            futures.add(setDbConnectedState(newConnectedState));
+            localFutures.add(setDbConnectedState(newConnectedState));
             boolean internal = setup.isInternalQueriesResourceDir();
-            futures.add(setInternalQueriesDir(internal));
+            localFutures.add(setInternalQueriesDir(internal));
             String queryDir = setup.getQueriesDir();
             boolean queriesMapReloaded = false;
             if (null != queryDir) {
                 if (internal) {
                     lastResourceDirSet = queryDir;
-                    futures.add(resourceDirCachedComboBox.setSelectedItem(queryDir));
+                    localFutures.add(resourceDirCachedComboBox.setSelectedItem(queryDir));
                     updateResDirSuffix(queryDir);
-                    futures.add(updateQueriesDir());
+                    localFutures.add(updateQueriesDir());
                     queriesMapReloaded = true;
                 } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
-                    futures.add(loadExternalQueriesDirectory(new File(queryDir)));
+                    localFutures.add(loadExternalQueriesDirectory(new File(queryDir)));
                     queriesMapReloaded = true;
                 }
             }
             String startScript = setup.getStartScript();
             if (startScript != null && startScript.length() > 0) {
-                futures.add(startScriptCachedTextField.setText(startScript));
+                localFutures.add(startScriptCachedTextField.setText(startScript));
             }
             if (!queriesMapReloaded) {
-                Map<DbQueryEnum, DbQueryInfo> queriesMap = setup.getQueriesMap();
-                if (null != queriesMap) {
-                    futures.add(loadQueriesMap(queriesMap, false, ""));
+                Map<DbQueryEnum, DbQueryInfo> localQueriesMap = setup.getQueriesMap();
+                if (null != localQueriesMap) {
+                    localFutures.add(loadQueriesMap(localQueriesMap, false, ""));
                 }
             }
         } catch (IOException ex) {
@@ -779,7 +782,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         } finally {
             updatingFromDbSetup = false;
         }
-        return XFutureVoid.allOf(futures);
+        return XFutureVoid.allOf(localFutures);
     }
 
     @SafeEffect
@@ -815,7 +818,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
 
     @SafeEffect
-    private XFutureVoid setDbPassword(char[] newpasswd) {
+    private synchronized XFutureVoid setDbPassword(char[] newpasswd) {
         passwd = newpasswd;
         return aprsSystem.runOnDispatchThread(() -> setDbPasswordOnDisplay(newpasswd));
     }
@@ -1112,12 +1115,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     private volatile @Nullable List<XFutureVoid> futures = null;
 
     /**
-     * Call the accept method of all registered listeners with the current setup
-     * object.
+     * Notify all dbSetupListeners of the new setup.
      *
-     * Typically forcing multiple modules to reconnect to the database with new
-     * options.
-     *
+     * @param notifyService optional service where listeners are called.
      * @return list of futures for determining when all the listeners have been
      * notified.
      */
@@ -1152,9 +1152,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         this.futures = newFutures;
         final DbSetup thisDbSetup = DbSetupJPanel.this.getDbSetup();
         if (notifyService != null) {
-
-//            println("thisDbSetup = " + thisDbSetup);
-//            println("thisDbSetup.getQueriesMap() = " + thisDbSetup.getQueriesMap());
             XFutureVoid future
                     = XFutureVoid.runAsync("broadcastDbSetup",
                             () -> {

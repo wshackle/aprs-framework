@@ -54,7 +54,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"SameReturnValue", "unused"})
+@SuppressWarnings({"SameReturnValue", "unused","serial"})
 public class SplashScreen extends JFrame {
 
     private final SplashPanel panel;
@@ -64,7 +64,7 @@ public class SplashScreen extends JFrame {
         private final Font font;
 
         @UIEffect
-        @SuppressWarnings("initialization")
+        @SuppressWarnings({"nullness","initialization"})
         SplashPanel(String message, float fontSize, @Nullable Image image) {
             this.messageLines = message.split("[\r\n]+");
             this.fontSize = fontSize;
@@ -102,7 +102,7 @@ public class SplashScreen extends JFrame {
     }
 
     @UIEffect
-    @SuppressWarnings("initialization")
+    @SuppressWarnings({"nullness","initialization"})
     private SplashScreen(String message, float fontSize, @Nullable Image image) {
         super.setUndecorated(true);
         this.panel = new SplashPanel(message, fontSize, image);

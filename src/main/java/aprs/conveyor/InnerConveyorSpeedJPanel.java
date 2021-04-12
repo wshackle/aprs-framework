@@ -39,6 +39,7 @@ import org.checkerframework.checker.guieffect.qual.UIType;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @UIType
+@SuppressWarnings("serial")
 public class InnerConveyorSpeedJPanel extends JPanel {
 
     private double goalPosition = 450.0;

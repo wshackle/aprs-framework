@@ -26,7 +26,6 @@ import aprs.cachedcomponents.CachedTable;
 import aprs.launcher.LauncherAprsJFrame;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.system.AprsSystem;
-import com.google.common.base.Objects;
 import crcl.base.CRCLCommandType;
 import crcl.utils.XFuture;
 import crcl.utils.XFuture.PrintedException;
@@ -60,6 +59,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -115,8 +115,8 @@ public class Utils {
             if (dirFile.isDirectory() && dirFile.canWrite() && dirFile.exists()) {
                 try {
                     final String dirFileCanonicalPath = dirFile.getCanonicalPath();
-                    if (!Objects.equal(dir, origHomeProperty)
-                            && !Objects.equal(dirFileCanonicalPath, origHomeProperty)) {
+                    if (!Objects.equals(dir, origHomeProperty)
+                            && !Objects.equals(dirFileCanonicalPath, origHomeProperty)) {
                         System.setProperty("user.home", dirFileCanonicalPath);
                     }
                 } catch (IOException ex) {
@@ -124,13 +124,6 @@ public class Utils {
                 }
             }
         }
-//        if(!dir.endsWith("netbeans_run_user_home")) {
-//            println("System.getProperty(\"user.home\") = " + System.getProperty("user.home"));
-//            println("System.getProperty(\"aprs.user.home\") = " + System.getProperty("aprs.user.home"));
-//            println("dir = " + dir);
-//            Properties props = System.getProperties();
-//            props.list(System.out);
-//        }
         return dir;
     }
 
