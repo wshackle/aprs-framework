@@ -46,7 +46,7 @@ public class OpActionFrontBackMove extends AbstractMove<OpActionPlan> {
     private final OpAction origEndPrev;
     private final OpAction splitter;
     private final OpAction origSplitterPrev;
-    private final StackTraceElement[] createTrace;
+//    private final StackTraceElement[] createTrace;
     private @Nullable
     OpActionPlan undoOrigPlanCopy = null;
     private @Nullable
@@ -73,7 +73,7 @@ public class OpActionFrontBackMove extends AbstractMove<OpActionPlan> {
             throw new RuntimeException("null == splitter.getPrevious() : splitter=" + splitter);
         }
         this.origSplitterPrev = splitterPrevious;
-        this.createTrace = Thread.currentThread().getStackTrace();
+//        this.createTrace = Thread.currentThread().getStackTrace();
     }
 
     @Override
@@ -92,7 +92,7 @@ public class OpActionFrontBackMove extends AbstractMove<OpActionPlan> {
     @Override
     protected void doMoveOnGenuineVariables(ScoreDirector<OpActionPlan> scoreDirector) {
         scoreDirector.getWorkingSolution().addMove(this);
-        boolean moveable = isMoveDoable(scoreDirector);
+//        boolean moveable = isMoveDoable(scoreDirector);
 
         OpActionInterface currentStartNext = start.getNext();
         OpAction currentEndPrev = end.getPrevious();

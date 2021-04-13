@@ -11,25 +11,25 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.END;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.optaplanner.core.impl.score.director.easy.EasyScoreCalculator;
 import aprs.actions.optaplanner.actionmodel.OpActionInterface;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
+import org.optaplanner.core.api.score.calculator.EasyScoreCalculator;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings("unused")
-public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan> {
+public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpActionPlan,HardSoftLongScore> {
 
-    private int lastScoreEnds = 0;
-    private int lastScoreNulls = 0;
-    private int lastScoreBadNexts = 0;
-    private int lastStartLength = 0;
-    private int lastScoreRepeats = 0;
+//    private int lastScoreEnds = 0;
+//    private int lastScoreNulls = 0;
+//    private int lastScoreBadNexts = 0;
+//    private int lastStartLength = 0;
+//    private int lastScoreRepeats = 0;
     
     final private Map<Integer,Double> costMap = new TreeMap<>();
 
@@ -43,14 +43,14 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
         long costTotal = 0;
         int ends = 0;
         int nulls = 0;
-        int starts = 0;
-        int startlength = 0;
+//        int starts = 0;
+//        int startlength = 0;
         int badNexts = 0;
-        int skippedKitTrayAction = 0;
+//        int skippedKitTrayAction = 0;
         int repeats = 0;
         final List<OpAction> solutionActions = solution.getActions();
-        double accelleration = solution.getAccelleration();
-        double maxSpeed = solution.getMaxSpeed();
+//        double accelleration = solution.getAccelleration();
+//        double maxSpeed = solution.getMaxSpeed();
         costMap.clear();
         if (null != solutionActions) {
             for (OpAction action : solutionActions) {
@@ -88,11 +88,11 @@ public class EasyOpActionPlanScoreCalculator implements EasyScoreCalculator<OpAc
                 costMap.put(solutionActions.indexOf(act), costInc);
                 costTotal +=  (long) (-1000.0 * costInc);
             }
-            lastScoreEnds = ends;
-            lastScoreNulls = nulls;
-            lastScoreBadNexts = badNexts;
-            lastStartLength = startlength;
-            lastScoreRepeats = repeats;
+//            lastScoreEnds = ends;
+//            lastScoreNulls = nulls;
+//            lastScoreBadNexts = badNexts;
+//            lastStartLength = startlength;
+//            lastScoreRepeats = repeats;
 //            assert (startlength == actionsList.size()) :"startLength != actionsList.size()";
             long hardScoreLong = -Math.abs(orderedActionsList.size() - solutionActions.size()) - Math.abs(1 - ends) - 2 * nulls - badNexts - repeats;
 //            long softScoreLong = (long) (-1000.0 * costTotal);

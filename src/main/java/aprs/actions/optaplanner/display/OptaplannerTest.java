@@ -41,11 +41,11 @@ import java.util.List;
 import java.util.Random;
 import javax.swing.JFrame;
 import org.optaplanner.core.api.score.Score;
+import org.optaplanner.core.api.score.ScoreManager;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
 import org.optaplanner.core.impl.heuristic.move.AbstractMove;
-import org.optaplanner.core.impl.score.director.ScoreDirector;
 
 /**
  * Class for Demonstrating/Testing the use of OptaPlanner to optimize a plan for
@@ -150,9 +150,13 @@ public class OptaplannerTest {
 
         ap.saveActionList(File.createTempFile("Optaplanner_Test_input_" + seed + "_" + Utils.runTimeToString(System.currentTimeMillis()), ".csv"));
 //        OpActionPlan apOut = solver.solve(ap);
-        final ScoreDirector<OpActionPlan> scoreDirector
-                = solver.getScoreDirectorFactory().buildScoreDirector();
-        scoreDirector.setWorkingSolution(ap);
+
+        ScoreManager<OpActionPlan> scoreManager = ScoreManager.create(solverFactory);
+        
+//Score score = guiScoreDirector.updateScore(solution);
+//        final ScoreDirector<OpActionPlan> scoreDirector
+//                = solver.getScoreDirectorFactory().buildScoreDirector();
+//        scoreDirector.setWorkingSolution(ap);
 
         OpActionMoveListFactory moveFactory = new OpActionMoveListFactory();
         List<AbstractMove<OpActionPlan>> moveList
@@ -160,7 +164,7 @@ public class OptaplannerTest {
                         .createMoveList(ap);
         @SuppressWarnings("rawtypes")
         Score scoreFromDrl
-                = scoreDirector.calculateScore();
+                = scoreManager.updateScore(ap);
 
         System.out.println("scoreFromDrl = " + scoreFromDrl);
         long total = 0;
@@ -173,10 +177,10 @@ public class OptaplannerTest {
             if (apI instanceof OpAction) {
                 OpAction act = (OpAction) apI;
                 final OpActionInterface actNext = act.getNext();
-                if (!act.isFake() 
-                        && actNext != null 
+                if (!act.isFake()
+                        && actNext != null
                         && !actNext.isFake()
-                        && act.getLocation() != null 
+                        && act.getLocation() != null
                         && actNext.getLocation() != null) {
                     final long distToNextLong = act.getDistToNextLong();
                     total += distToNextLong;
@@ -194,6 +198,8 @@ public class OptaplannerTest {
         OpActionPlan solvedActionPlan = solver.solve(ap);
 
         long t1 = System.currentTimeMillis();
+        long solveTime = t1-t0;
+        System.out.println("solveTime = " + solveTime);
         HardSoftLongScore solvedActionPlanScore = calculator.calculateScore(solvedActionPlan);
 
         ap.saveActionList(File.createTempFile("Optaplanner_Test_solvedActionPlan_" + seed + "_" + Utils.runTimeToString(System.currentTimeMillis()), ".csv"));

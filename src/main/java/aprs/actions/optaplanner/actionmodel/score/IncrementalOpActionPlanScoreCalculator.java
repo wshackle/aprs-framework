@@ -39,13 +39,13 @@ import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
-import org.optaplanner.core.impl.score.director.incremental.IncrementalScoreCalculator;
+import org.optaplanner.core.api.score.calculator.IncrementalScoreCalculator;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreCalculator<OpActionPlan> {
+public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreCalculator<OpActionPlan,HardSoftLongScore> {
 
     private volatile HardSoftLongScore score;
     private final EasyOpActionPlanScoreCalculator easyOpActionPlanScoreCalculator;
