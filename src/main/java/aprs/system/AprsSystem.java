@@ -49,7 +49,6 @@ import aprs.database.CsvDbSetupPublisher;
 import aprs.database.Part;
 import aprs.database.TrayFillInfo;
 import aprs.database.TraySlotListItem;
-import aprs.pddl_planner.PddlPlannerJInternalFrame;
 import aprs.simview.Object2DJPanel;
 import aprs.simview.Object2DViewJInternalFrame;
 import aprs.database.vision.UpdateResults;
@@ -506,8 +505,8 @@ public class AprsSystem implements SlotOffsetProvider {
     ExecutorJInternalFrame executorJInternalFrame1 = null;
     private @MonotonicNonNull
     Object2DViewJInternalFrame object2DViewJInternalFrame = null;
-    private @MonotonicNonNull
-    PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
+//    private @MonotonicNonNull
+//    PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
     private @MonotonicNonNull
     DbSetupJInternalFrame dbSetupJInternalFrame = null;
     private @MonotonicNonNull
@@ -5541,9 +5540,9 @@ public class AprsSystem implements SlotOffsetProvider {
 
             newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
             newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-            if (null != pddlPlannerJInternalFrame) {
-                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(newExecFrame);
-            }
+//            if (null != pddlPlannerJInternalFrame) {
+//                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(newExecFrame);
+//            }
             this.executorJInternalFrame1 = newExecFrame;
             ExecutorJInternalFrame newExecFrameCopy = newExecFrame;
             XFutureVoid loadPropertiesFuture
@@ -5585,27 +5584,27 @@ public class AprsSystem implements SlotOffsetProvider {
         return actionsToCrclPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
-    public XFutureVoid startPddlPlanner() {
-        return runOnDispatchThread(this::startPddlPlannerOnDisplay);
-    }
+//    public XFutureVoid startPddlPlanner() {
+//        return runOnDispatchThread(this::startPddlPlannerOnDisplay);
+//    }
 
-    @UIEffect
-    private void startPddlPlannerOnDisplay() {
-        try {
-            PddlPlannerJInternalFrame newPddlPlannerJInternalFrame = this.pddlPlannerJInternalFrame;
-            if (newPddlPlannerJInternalFrame == null) {
-                newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
-            }
-            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile());
-            newPddlPlannerJInternalFrame.loadProperties();
-            newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(executorJInternalFrame1);
-            addInternalFrame(newPddlPlannerJInternalFrame);
-            this.pddlPlannerJInternalFrame = newPddlPlannerJInternalFrame;
-        } catch (IOException ex) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
-        }
-    }
+//    @UIEffect
+//    private void startPddlPlannerOnDisplay() {
+//        try {
+//            PddlPlannerJInternalFrame newPddlPlannerJInternalFrame = this.pddlPlannerJInternalFrame;
+//            if (newPddlPlannerJInternalFrame == null) {
+//                newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
+//            }
+//            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile());
+//            newPddlPlannerJInternalFrame.loadProperties();
+//            newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(executorJInternalFrame1);
+//            addInternalFrame(newPddlPlannerJInternalFrame);
+//            this.pddlPlannerJInternalFrame = newPddlPlannerJInternalFrame;
+//        } catch (IOException ex) {
+//            Logger.getLogger(AprsSystem.class
+//                    .getName()).log(Level.SEVERE, "", ex);
+//        }
+//    }
 
     private File pddlPlannerPropertiesFile() {
         if (null == propertiesDirectory) {
@@ -9699,9 +9698,9 @@ public class AprsSystem implements SlotOffsetProvider {
                 this.setUseCsvFilesInsteadOfDatabase(Boolean.valueOf(useCsvFilesInsteadOfDatabaseString));
             }
             this.updateSubPropertiesFiles();
-            if (null != this.pddlPlannerJInternalFrame) {
-                this.pddlPlannerJInternalFrame.loadProperties();
-            }
+//            if (null != this.pddlPlannerJInternalFrame) {
+//                this.pddlPlannerJInternalFrame.loadProperties();
+//            }
             if (null != this.executorJInternalFrame1) {
                 XFutureVoid loadPropertiesFuture
                         = XFuture.runAsync("loadProperties",
@@ -9882,11 +9881,11 @@ public class AprsSystem implements SlotOffsetProvider {
                 }
                 break;
 
-            case PDDL_PLANNER_WINDOW:
-                if (null != pddlPlannerJInternalFrame) {
-                    activateFrame(pddlPlannerJInternalFrame);
-                }
-                break;
+//            case PDDL_PLANNER_WINDOW:
+//                if (null != pddlPlannerJInternalFrame) {
+//                    activateFrame(pddlPlannerJInternalFrame);
+//                }
+//                break;
 
             case VISION_TO_DB_WINDOW:
                 if (null != visionToDbJInternalFrame) {
@@ -10000,9 +9999,9 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != this.kitInspectionJInternalFrame) {
             this.kitInspectionJInternalFrame.saveProperties();
         }
-        if (null != this.pddlPlannerJInternalFrame) {
-            this.pddlPlannerJInternalFrame.saveProperties();
-        }
+//        if (null != this.pddlPlannerJInternalFrame) {
+//            this.pddlPlannerJInternalFrame.saveProperties();
+//        }
         if (null != this.executorJInternalFrame1) {
             this.executorJInternalFrame1.saveProperties();
         }
@@ -10211,9 +10210,9 @@ public class AprsSystem implements SlotOffsetProvider {
             throw new NullPointerException("propertiesFile");
         }
         propertiesFileBaseString = base;
-        if (null != this.pddlPlannerJInternalFrame) {
-            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile(propertiesDirectory, base));
-        }
+//        if (null != this.pddlPlannerJInternalFrame) {
+//            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile(propertiesDirectory, base));
+//        }
         if (null != this.forceTorqueSimJInternalFrame) {
             this.forceTorqueSimJInternalFrame.setPropertiesFile(forceTorqueSimPropertiesFile(propertiesDirectory, base));
         }
@@ -10458,17 +10457,17 @@ public class AprsSystem implements SlotOffsetProvider {
     public void closeActionsListExcecutor() {
         if (null != executorJInternalFrame1) {
             executorJInternalFrame1.close();
-            if (null != pddlPlannerJInternalFrame) {
-                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(null);
-            }
+//            if (null != pddlPlannerJInternalFrame) {
+//                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(null);
+//            }
         }
     }
 
-    public void closePddlPlanner() {
-        if (null != pddlPlannerJInternalFrame) {
-            pddlPlannerJInternalFrame.close();
-        }
-    }
+//    public void closePddlPlanner() {
+//        if (null != pddlPlannerJInternalFrame) {
+//            pddlPlannerJInternalFrame.close();
+//        }
+//    }
 
     private final boolean lastContinueCrclProgramResult = false;
 

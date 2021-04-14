@@ -98,11 +98,6 @@
     
     <dependencies>
         <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-jdbc-driver</artifactId>
-            <version>3.0.3</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
             <version>9.0.0</version>
@@ -110,6 +105,7 @@
 
         
         <dependency>
+            <!-- Needed for modbus for conveyor control. -->
             <groupId>com.ghgande</groupId>
             <artifactId>j2mod</artifactId>
             <version>2.5.0</version>
@@ -156,11 +152,6 @@
             <artifactId>rcslib</artifactId>
             <version>2017.07.19</version>
         </dependency>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.54</version>
-        </dependency>
         
         <dependency>
             <groupId>junit</groupId>
@@ -168,12 +159,7 @@
             <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
+      
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
@@ -185,11 +171,6 @@
             <version>${optiplanner.version}</version>
         </dependency>
         
-        <dependency>
-            <groupId>org.optaplanner</groupId>
-            <artifactId>optaplanner-benchmark</artifactId>
-            <version>${optiplanner.version}</version>
-        </dependency>
 
 
         <!-- Annotations from the Checker Framework: nullness, interning, locking, ... -->
@@ -199,22 +180,6 @@
             <!-- Use checker-qual7 if targeting Java 7 -->
             <!-- <artifactId>checker-qual7</artifactId> -->
             <version>${checker-framework.version}</version>
-        </dependency>
-                
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>1.2.3</version>
         </dependency>
         
     </dependencies>
@@ -876,10 +841,14 @@
               https://www.ati-ia.com/Library/software/net_ft/src.zip
               
               
-              On Windows PC OPTIMUS install with this command(Paths will differ on other computers)
+              On Windows PC OPTIMUS install with this command(Paths will differ on other computers):
         
         SET  JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk-11.0.2+7
         C:\Users\Public\Documents\Downloaded_Tools\ApacheNetbeans10.0\netbeans\java\maven\bin\mvn.cmd install:install-file -Dfile=C:\Users\Public\Documents\Downloaded_Tools\ATINetFT.jar -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar
+                  
+                  On linux run the script in this directory:
+                    getATINetFT.sh
+                    
                   
                     -->
            
@@ -906,6 +875,68 @@
                     <scope>runtime</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile> 
+            <id>release</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+            <build>
+                
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.3</version>
+                        <configuration>
+                            <pushChanges>false</pushChanges>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <useReleaseProfile>false</useReleaseProfile>
+                            <releaseProfiles>release</releaseProfiles>
+                            <goals>deploy</goals>
+                            <localCheckout>true</localCheckout>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>2.9</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <inherited>true</inherited>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

@@ -50,8 +50,6 @@ import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.optaplanner.benchmark.api.PlannerBenchmark;
-import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -117,7 +115,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         jMenuRecentFiles = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
         jMenuItemSolve = new javax.swing.JMenuItem();
-        jMenuItemProfileSolve = new javax.swing.JMenuItem();
         jMenuItemShuffleInputList = new javax.swing.JMenuItem();
         jMenuItemRepeatedShuffleTest = new javax.swing.JMenuItem();
         jMenuItemGenerate = new javax.swing.JMenuItem();
@@ -232,14 +229,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenu2.add(jMenuItemSolve);
-
-        jMenuItemProfileSolve.setText("Benchmark");
-        jMenuItemProfileSolve.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemProfileSolveActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItemProfileSolve);
 
         jMenuItemShuffleInputList.setText("Shuffle Input List");
         jMenuItemShuffleInputList.addActionListener(new java.awt.event.ActionListener() {
@@ -395,38 +384,38 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         return timeDiff;
     }
 
-    private long doBenchmark() {
-        long t1 = System.currentTimeMillis();
-        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
-        if (null == inPlan) {
-            throw new NullPointerException("outerOptiplannerJPanelInput.getOpActionPlan() returned null");
-        }
-        inPlan.checkActionList();
-        PlannerBenchmarkFactory benchmarkFactory = OpActionPlan.createBenchmarkFactory();
-        GenerateActionConfig gac = new GenerateActionConfig();
-        gac.partInfoList.add(new GenerateActionPartInfo("A", 5, 6, 7));
-        gac.partInfoList.add(new GenerateActionPartInfo("B", 7, 6, 5));
-        gac.partInfoList.add(new GenerateActionPartInfo("C", 3, 3, 3));
-        Random rand = new Random();
-        OpActionPlan genPlan1 = generateRandomProblem(gac, rand);
-        OpActionPlan genPlan2 = generateRandomProblem(gac, rand);
-        PlannerBenchmark plannerBenchmark
-                = benchmarkFactory.buildPlannerBenchmark(
-                        inPlan,
-                        inPlan.cloneAndShufflePlan(),
-                        inPlan.cloneAndShufflePlan(),
-                        inPlan.cloneAndShufflePlan(),
-                        inPlan.cloneAndShufflePlan(),
-                        inPlan.cloneAndShufflePlan(),
-                        genPlan1,
-                        genPlan1.cloneAndShufflePlan(),
-                        genPlan2,
-                        genPlan1.cloneAndShufflePlan());
-        plannerBenchmark.benchmarkAndShowReportInBrowser();
-        long t2 = System.currentTimeMillis();
-        long timeDiff = (t2 - t1);
-        return timeDiff;
-    }
+//    private long doBenchmark() {
+//        long t1 = System.currentTimeMillis();
+//        OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
+//        if (null == inPlan) {
+//            throw new NullPointerException("outerOptiplannerJPanelInput.getOpActionPlan() returned null");
+//        }
+//        inPlan.checkActionList();
+//        PlannerBenchmarkFactory benchmarkFactory = OpActionPlan.createBenchmarkFactory();
+//        GenerateActionConfig gac = new GenerateActionConfig();
+//        gac.partInfoList.add(new GenerateActionPartInfo("A", 5, 6, 7));
+//        gac.partInfoList.add(new GenerateActionPartInfo("B", 7, 6, 5));
+//        gac.partInfoList.add(new GenerateActionPartInfo("C", 3, 3, 3));
+//        Random rand = new Random();
+//        OpActionPlan genPlan1 = generateRandomProblem(gac, rand);
+//        OpActionPlan genPlan2 = generateRandomProblem(gac, rand);
+//        PlannerBenchmark plannerBenchmark
+//                = benchmarkFactory.buildPlannerBenchmark(
+//                        inPlan,
+//                        inPlan.cloneAndShufflePlan(),
+//                        inPlan.cloneAndShufflePlan(),
+//                        inPlan.cloneAndShufflePlan(),
+//                        inPlan.cloneAndShufflePlan(),
+//                        inPlan.cloneAndShufflePlan(),
+//                        genPlan1,
+//                        genPlan1.cloneAndShufflePlan(),
+//                        genPlan2,
+//                        genPlan1.cloneAndShufflePlan());
+//        plannerBenchmark.benchmarkAndShowReportInBrowser();
+//        long t2 = System.currentTimeMillis();
+//        long timeDiff = (t2 - t1);
+//        return timeDiff;
+//    }
 
     @UIEffect
     private void jMenuItemLoadOutputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadOutputListActionPerformed
@@ -746,11 +735,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         System.out.println("time to combo solve = " + timeDiff);
     }//GEN-LAST:event_jMenuItemComboSolveActionPerformed
 
-    private void jMenuItemProfileSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemProfileSolveActionPerformed
-        long timeDiff = doBenchmark();
-        System.out.println("time to solve = " + timeDiff);
-    }//GEN-LAST:event_jMenuItemProfileSolveActionPerformed
-
     private long doExhaustiveSolve() {
         long t1 = System.currentTimeMillis();
         OpActionPlan inPlan = outerOptiplannerJPanelInput.getOpActionPlan();
@@ -983,7 +967,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemGreedySolve;
     private javax.swing.JMenuItem jMenuItemLoadInputList;
     private javax.swing.JMenuItem jMenuItemLoadOutputList;
-    private javax.swing.JMenuItem jMenuItemProfileSolve;
     private javax.swing.JMenuItem jMenuItemRepeatedShuffleTest;
     private javax.swing.JMenuItem jMenuItemSaveInputList;
     private javax.swing.JMenuItem jMenuItemSaveOutputList;

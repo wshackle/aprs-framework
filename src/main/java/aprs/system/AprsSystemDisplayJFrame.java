@@ -1223,12 +1223,12 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    @SafeEffect
-    private void startPddlPlanner() {
-        if (null != aprsSystem) {
-            aprsSystem.startPddlPlanner();
-        }
-    }
+//    @SafeEffect
+//    private void startPddlPlanner() {
+//        if (null != aprsSystem) {
+//            aprsSystem.startPddlPlanner();
+//        }
+//    }
 
     @SafeEffect
     private void saveProperties() throws IOException {
@@ -1239,14 +1239,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    @SafeEffect
-    private void closePddlPlanner() {
-        if (null != aprsSystem) {
-            aprsSystem.closePddlPlanner();
-        } else {
-            throw new IllegalStateException("aprsSystem ==null, this=" + this);
-        }
-    }
+//    @SafeEffect
+//    private void closePddlPlanner() {
+//        if (null != aprsSystem) {
+//            aprsSystem.closePddlPlanner();
+//        } else {
+//            throw new IllegalStateException("aprsSystem ==null, this=" + this);
+//        }
+//    }
 
     private void startActionListExecutor() {
         if (null != aprsSystem) {

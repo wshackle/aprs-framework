@@ -48,7 +48,6 @@ import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
-import org.optaplanner.benchmark.api.PlannerBenchmarkFactory;
 import org.optaplanner.core.api.domain.solution.PlanningEntityCollectionProperty;
 import org.optaplanner.core.api.domain.solution.PlanningScore;
 import org.optaplanner.core.api.domain.solution.PlanningSolution;
@@ -79,10 +78,10 @@ public class OpActionPlan {
                 "aprs/actions/optaplanner/actionmodel/actionModelSolverConfig.xml");
     }
 
-    static public PlannerBenchmarkFactory createBenchmarkFactory() {
-        return PlannerBenchmarkFactory.createFromXmlResource(
-                "aprs/actions/optaplanner/actionmodel/benchmark.xml");
-    }
+//    static public PlannerBenchmarkFactory createBenchmarkFactory() {
+//        return PlannerBenchmarkFactory.createFromXmlResource(
+//                "aprs/actions/optaplanner/actionmodel/benchmark.xml");
+//    }
 
     @ProblemFactProperty
     private final OpEndAction endAction = new OpEndAction();
