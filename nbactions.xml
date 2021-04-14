@@ -65,7 +65,7 @@
             <goal>deploy</goal>
         </goals>
         <activatedProfiles>
-            <activatedProfile>release,jar-with-depends</activatedProfile>
+            <activatedProfile>release,add_run_deps,jar-with-depends</activatedProfile>
         </activatedProfiles>
         <properties>
             <profile.release>true</profile.release>
