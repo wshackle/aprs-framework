@@ -36,6 +36,7 @@ import aprs.database.Tray;
 
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.PLACE_PART;
+import static aprs.actions.executor.ActionType.SWITCH_TOOL;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 
 import aprs.kitinspection.KitInspectionJInternalFrame;
@@ -592,11 +593,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private @Nullable
-    PoseType getPose(List<PhysicalItem> items, String partName) {
-        return (items == null) ? null : items.stream().filter((PhysicalItem item) -> item.getFullName().equals(partName)).map(PhysicalItem::getPose).findFirst().orElse(null);
-    }
-
     private java.sql.@MonotonicNonNull Connection dbConnection;
     private @MonotonicNonNull
     DbSetup dbSetup;
@@ -1086,7 +1082,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new NullPointerException("aprsSystem");
             }
             final DbSetup dbSetup1 = dbSetup;
-            if(null == dbSetup1) {
+            if (null == dbSetup1) {
                 throw new NullPointerException("dbSetup");
             }
             if (aprsSystem1.isUseCsvFilesInsteadOfDatabase()) {
@@ -4977,6 +4973,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
 
+        final String partTool;
+        if (partToolMap.containsKey(partName)) {
+            partTool = partToolMap.get(partName);
+        } else {
+            String partTypeName = partNameToPartType(partName);
+            if (partToolMap.containsKey(partTypeName)) {
+                partTool = partToolMap.get(partTypeName);
+            } else {
+                partTool = null;
+            }
+        }
+        if (null != partTool && !Objects.equals(partTool, currentToolName)) {
+            switchTool(Action.newSingleArgAction(
+                    SWITCH_TOOL,
+                    partTool
+            ), out);
+        }
         if (null != kitInspectionJInternalFrame && null != aprsSystem) {
             aprsSystem.runOnDispatchThread(() -> updateKitImageLabel("init", "Building kit"));
         }
@@ -5573,6 +5586,26 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public void setToolHolderPoseMap(Map<String, PoseType> toolHolderPoseMap) {
         this.toolHolderPoseMap = toolHolderPoseMap;
+    }
+
+    private Map<String, String> partToolMap = new ConcurrentHashMap<>();
+
+    /**
+     * Get the value of partToolMap
+     *
+     * @return the value of partToolMap
+     */
+    public Map<String, String> getPartToolMap() {
+        return partToolMap;
+    }
+
+    /**
+     * Set the value of partToolMap
+     *
+     * @param partToolMap new value of partToolMap
+     */
+    public void setPartToolMap(Map<String, String> partToolMap) {
+        this.partToolMap = partToolMap;
     }
 
     /**
@@ -7025,7 +7058,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             break;
         }
         if (null == toolHolderName) {
-            throw new IllegalStateException("null == toolHolderName,toolInRobot=" + toolInRobot + ",expectedContents=" + getExpectedToolHolderContentsMap());
+            throw new IllegalStateException("No tool holder is empty. null == toolHolderName,toolInRobot=" + toolInRobot + ",expectedContents=" + getExpectedToolHolderContentsMap());
         }
         dropToolByHolderName(toolHolderName, out);
     }

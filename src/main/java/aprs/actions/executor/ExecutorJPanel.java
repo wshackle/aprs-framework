@@ -187,7 +187,7 @@ import javax.swing.SwingUtilities;
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused","serial"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused", "serial"})
 public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface, ProgramLineListener {
 
     private final JMenu toolMenu;
@@ -211,7 +211,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings({"guieffect", "nullness","serial"})
+    @SuppressWarnings({"guieffect", "nullness", "serial"})
     private class PddlOutputTableCellRendererer extends DefaultTableCellRenderer {
 
         @Override
@@ -288,7 +288,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * builder for display only.
      *
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public ExecutorJPanel(AprsSystem aprsSystem1, Component parentComponent) {
         this.aprsSystem = aprsSystem1;
@@ -317,6 +317,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 crclGenerator.setOptions(getTableOptions());
             }
         });
+        jTableRequiredTools.getModel().addTableModelListener((TableModelEvent e) -> {
+            if (e.getType() == TableModelEvent.UPDATE) {
+                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
+                    for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
+                        Object partObject = jTableRequiredTools.getValueAt(i, 0);
+                        if (partObject instanceof String) {
+                            Object toolObject = jTableRequiredTools.getValueAt(i, 1);
+                            if (toolObject instanceof String && ((String) toolObject).length() > 0) {
+                                crclGenerator.getPartToolMap().put((String) partObject, (String) toolObject);
+                            } 
+                        }
+                    }
+                    savePartToolMap();
+                }
+            }
+        });
         optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
         enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
         pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);
@@ -327,6 +343,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         manualObjectCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualObjectName);
         manualSlotCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualSlotName);
         toolHolderPositionsCachedTable = new CachedTable(jTableToolHolderPositions);
+        partToolCachedTable = new CachedTable(jTableRequiredTools);
         holderContentsCachedTable = new CachedTable(jTableHolderContents);
         toolOffsetsCachedTable = new CachedTable(jTableToolOffsets);
         trayAttachOffsetsCachedTable = new CachedTable(jTableTrayAttachOffsets);
@@ -399,7 +416,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private String getDefaultSelectedToolNameFile() {
         return propertiesFile.getName() + ".selectedToolName.txt";
     }
-
 
     private @Nullable
     String readSelectedToolNameFile(String filename) throws IOException {
@@ -918,14 +934,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTabbedPaneToolChangeInner = new javax.swing.JTabbedPane();
         jScrollPaneHolderContents = new javax.swing.JScrollPane();
         jTableHolderContents = new javax.swing.JTable();
-        jPanelToolHolderPositions = new javax.swing.JPanel();
-        jScrollPaneToolHolderPositions = new javax.swing.JScrollPane();
-        jTableToolHolderPositions = new javax.swing.JTable();
-        jButtonRecordToolHolderPose = new javax.swing.JButton();
-        jButtonRecordToolHolderApproach = new javax.swing.JButton();
-        jButtonDeleteToolHolderPose = new javax.swing.JButton();
-        jButtonAddToolHolderPose = new javax.swing.JButton();
-        jButtonRenameToolHolderPose = new javax.swing.JButton();
         jPanelToolOffsets = new javax.swing.JPanel();
         jButtonAddToolOffset = new javax.swing.JButton();
         jButtonDeleteToolOffset = new javax.swing.JButton();
@@ -936,6 +944,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jButtonDeleteTrayAttach = new javax.swing.JButton();
         jScrollPaneToolOffsets1 = new javax.swing.JScrollPane();
         jTableTrayAttachOffsets = new javax.swing.JTable();
+        jPanelToolHolderPositions = new javax.swing.JPanel();
+        jScrollPaneToolHolderPositions = new javax.swing.JScrollPane();
+        jTableToolHolderPositions = new javax.swing.JTable();
+        jButtonRecordToolHolderPose = new javax.swing.JButton();
+        jButtonRecordToolHolderApproach = new javax.swing.JButton();
+        jButtonDeleteToolHolderPose = new javax.swing.JButton();
+        jButtonAddToolHolderPose = new javax.swing.JButton();
+        jButtonRenameToolHolderPose = new javax.swing.JButton();
+        jLabel18 = new javax.swing.JLabel();
+        jTextFieldToolChangerPoseFile = new javax.swing.JTextField();
+        jPanelPartToolMap = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        jTableRequiredTools = new javax.swing.JTable();
+        jLabel16 = new javax.swing.JLabel();
+        jTextFieldPartToolFile = new javax.swing.JTextField();
+        jButtonAddPartToToolEntry = new javax.swing.JButton();
+        jButtonDeletePartToToolEntry = new javax.swing.JButton();
         jLabel7 = new javax.swing.JLabel();
         jTextFieldCurrentToolName = new javax.swing.JTextField();
         jButtonSetCurrentTool = new javax.swing.JButton();
@@ -1100,7 +1125,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 {"endPoseZPointTolerance", "10.0"},
                 {"endPoseXAxisTolerance", "10.0"},
                 {"endPoseXAxisTolerance", "10.0"},
-                {"useMessageCommands", "false"}
+                {"useMessageCommands", "false"},
+                {"toolChangerPoseFile", null},
+                {"requiredToolFile", ""}
             },
             new String [] {
                 "Name", "Value"
@@ -1421,7 +1448,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addComponent(jButtonUpdatePoseCacheFromManual)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonQuickCalib)))
-                .addContainerGap(239, Short.MAX_VALUE))
+                .addContainerGap(299, Short.MAX_VALUE))
         );
 
         jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
@@ -1489,7 +1516,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonGridTest)
                     .addComponent(jButtonUpdatePoseCacheFromManual)
                     .addComponent(jButtonQuickCalib))
-                .addContainerGap(110, Short.MAX_VALUE))
+                .addContainerGap(264, Short.MAX_VALUE))
         );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
@@ -1500,14 +1527,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanelOuterManualControlLayout.setVerticalGroup(
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1571,6 +1598,129 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
         jTabbedPaneToolChangeInner.addTab("Holder Contents", jScrollPaneHolderContents);
 
+        jButtonAddToolOffset.setText("Add Tool");
+        jButtonAddToolOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddToolOffsetActionPerformed(evt);
+            }
+        });
+
+        jButtonDeleteToolOffset.setText("Delete Tool");
+        jButtonDeleteToolOffset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteToolOffsetActionPerformed(evt);
+            }
+        });
+
+        jTableToolOffsets.setAutoCreateRowSorter(true);
+        jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPaneToolOffsets.setViewportView(jTableToolOffsets);
+
+        javax.swing.GroupLayout jPanelToolOffsetsLayout = new javax.swing.GroupLayout(jPanelToolOffsets);
+        jPanelToolOffsets.setLayout(jPanelToolOffsetsLayout);
+        jPanelToolOffsetsLayout.setHorizontalGroup(
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonAddToolOffset)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDeleteToolOffset)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanelToolOffsetsLayout.setVerticalGroup(
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddToolOffset)
+                    .addComponent(jButtonDeleteToolOffset))
+                .addContainerGap())
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addGap(42, 42, 42)
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+
+        jTabbedPaneToolChangeInner.addTab("Tool Offsets", jPanelToolOffsets);
+
+        jButtonAddTrayAttach.setText("Add");
+        jButtonAddTrayAttach.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddTrayAttachActionPerformed(evt);
+            }
+        });
+
+        jButtonDeleteTrayAttach.setText("Delete");
+
+        jTableTrayAttachOffsets.setAutoCreateRowSorter(true);
+        jTableTrayAttachOffsets.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPaneToolOffsets1.setViewportView(jTableTrayAttachOffsets);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButtonAddTrayAttach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDeleteTrayAttach)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddTrayAttach)
+                    .addComponent(jButtonDeleteTrayAttach))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanel1);
+
         jTableToolHolderPositions.setAutoCreateRowSorter(true);
         jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1625,27 +1775,34 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
+        jLabel18.setText("FileName: ");
+
         javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(jPanelToolHolderPositions);
         jPanelToolHolderPositions.setLayout(jPanelToolHolderPositionsLayout);
         jPanelToolHolderPositionsLayout.setHorizontalGroup(
             jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButtonRecordToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRecordToolHolderApproach)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonAddToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonDeleteToolHolderPose)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonRenameToolHolderPose)
-                .addContainerGap(461, Short.MAX_VALUE))
-            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addContainerGap()))
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                        .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addComponent(jButtonRecordToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRecordToolHolderApproach)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonAddToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonDeleteToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRenameToolHolderPose))
+                            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addComponent(jLabel18)
+                                .addGap(18, 18, 18)
+                                .addComponent(jTextFieldToolChangerPoseFile, javax.swing.GroupLayout.PREFERRED_SIZE, 575, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneToolHolderPositions))
+                .addContainerGap())
         );
         jPanelToolHolderPositionsLayout.setVerticalGroup(
             jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1657,138 +1814,90 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonDeleteToolHolderPose)
                     .addComponent(jButtonAddToolHolderPose)
                     .addComponent(jButtonRenameToolHolderPose))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel18)
+                    .addComponent(jTextFieldToolChangerPoseFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
-            .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderPositionsLayout.createSequentialGroup()
-                    .addGap(40, 40, 40)
-                    .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
-                    .addContainerGap()))
         );
 
         jTabbedPaneToolChangeInner.addTab("Holder Positions", jPanelToolHolderPositions);
 
-        jButtonAddToolOffset.setText("Add Tool");
-        jButtonAddToolOffset.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddToolOffsetActionPerformed(evt);
-            }
-        });
-
-        jButtonDeleteToolOffset.setText("Delete Tool");
-        jButtonDeleteToolOffset.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDeleteToolOffsetActionPerformed(evt);
-            }
-        });
-
-        jTableToolOffsets.setAutoCreateRowSorter(true);
-        jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
+        jTableRequiredTools.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-
+                {null, null},
+                {null, null},
+                {null, null},
+                {null, null}
             },
             new String [] {
-                "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+                "Part", "Tool"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
         });
-        jScrollPaneToolOffsets.setViewportView(jTableToolOffsets);
+        jScrollPane3.setViewportView(jTableRequiredTools);
 
-        javax.swing.GroupLayout jPanelToolOffsetsLayout = new javax.swing.GroupLayout(jPanelToolOffsets);
-        jPanelToolOffsets.setLayout(jPanelToolOffsetsLayout);
-        jPanelToolOffsetsLayout.setHorizontalGroup(
-            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jButtonAddToolOffset)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonDeleteToolOffset)
-                .addContainerGap(1059, Short.MAX_VALUE))
-            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addContainerGap()))
-        );
-        jPanelToolOffsetsLayout.setVerticalGroup(
-            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonAddToolOffset)
-                    .addComponent(jButtonDeleteToolOffset))
-                .addContainerGap())
-            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
-                    .addGap(42, 42, 42)
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
-                    .addContainerGap()))
-        );
+        jLabel16.setText("File Name: ");
 
-        jTabbedPaneToolChangeInner.addTab("Tool Offsets", jPanelToolOffsets);
-
-        jButtonAddTrayAttach.setText("Add");
-        jButtonAddTrayAttach.addActionListener(new java.awt.event.ActionListener() {
+        jButtonAddPartToToolEntry.setText("Add");
+        jButtonAddPartToToolEntry.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddTrayAttachActionPerformed(evt);
+                jButtonAddPartToToolEntryActionPerformed(evt);
             }
         });
 
-        jButtonDeleteTrayAttach.setText("Delete");
-
-        jTableTrayAttachOffsets.setAutoCreateRowSorter(true);
-        jTableTrayAttachOffsets.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+        jButtonDeletePartToToolEntry.setText("Delete");
+        jButtonDeletePartToToolEntry.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeletePartToToolEntryActionPerformed(evt);
             }
         });
-        jScrollPaneToolOffsets1.setViewportView(jTableTrayAttachOffsets);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelPartToolMapLayout = new javax.swing.GroupLayout(jPanelPartToolMap);
+        jPanelPartToolMap.setLayout(jPanelPartToolMapLayout);
+        jPanelPartToolMapLayout.setHorizontalGroup(
+            jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 1226, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jButtonAddTrayAttach)
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
+                        .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButtonDeleteTrayAttach)
+                        .addComponent(jTextFieldPartToolFile))
+                    .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
+                        .addComponent(jButtonAddPartToToolEntry)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDeletePartToToolEntry)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanelPartToolMapLayout.setVerticalGroup(
+            jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPartToolMapLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonAddTrayAttach)
-                    .addComponent(jButtonDeleteTrayAttach))
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddPartToToolEntry)
+                    .addComponent(jButtonDeletePartToToolEntry))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 135, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 217, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(jTextFieldPartToolFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
-        jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanel1);
+        jTabbedPaneToolChangeInner.addTab("Part To Tool Map", jPanelPartToolMap);
 
         jLabel7.setText("Current Tool Name: ");
 
@@ -1858,7 +1967,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jLabel21)
                     .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1909,19 +2018,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrMapSetInputFromCachedVisionDb)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE)
+                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.DEFAULT_SIZE, 17, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrMapSetInputFromCurrent)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonErrMapGoOut)
-                        .addGap(0, 426, Short.MAX_VALUE)))
+                        .addGap(0, 181, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 221, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 363, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonErrMapGoIn)
@@ -1992,7 +2101,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelCrclLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 272, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2047,17 +2156,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 .addComponent(jButtonClearPoseCache)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonUpdatePoseCache)
-                .addContainerGap(1034, Short.MAX_VALUE))
+                .addContainerGap(571, Short.MAX_VALUE))
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 1238, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
                     .addContainerGap()))
         );
         jPanelContainerPoseCacheLayout.setVerticalGroup(
             jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(260, Short.MAX_VALUE)
+                .addContainerGap(405, Short.MAX_VALUE)
                 .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonClearPoseCache)
                     .addComponent(jButtonUpdatePoseCache))
@@ -2065,7 +2174,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 245, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
                     .addGap(38, 38, 38)))
         );
 
@@ -2079,7 +2188,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         opDisplayJPanelInput.setLayout(opDisplayJPanelInputLayout);
         opDisplayJPanelInputLayout.setHorizontalGroup(
             opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 578, Short.MAX_VALUE)
+            .addGap(0, 364, Short.MAX_VALUE)
         );
         opDisplayJPanelInputLayout.setVerticalGroup(
             opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2094,11 +2203,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         opDisplayJPanelSolution.setLayout(opDisplayJPanelSolutionLayout);
         opDisplayJPanelSolutionLayout.setHorizontalGroup(
             opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 578, Short.MAX_VALUE)
+            .addGap(0, 364, Short.MAX_VALUE)
         );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
             opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 272, Short.MAX_VALUE)
+            .addGap(0, 424, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
@@ -2349,10 +2458,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 512, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxNeedLookFor)
                     .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3350,7 +3459,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @UIType
-    @SuppressWarnings({"guieffect","serial"})
+    @SuppressWarnings({"guieffect", "serial"})
     private class CrclTableCellRenderer extends DefaultTableCellRenderer {
 
         @Override
@@ -4111,7 +4220,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     @SuppressWarnings({"unused"})
-
     private void jButtonLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLookForActionPerformed
         try {
             if (isDoingActions()) {
@@ -4150,6 +4258,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonLookForActionPerformedPart2(final ExecutorService serviceFinal) {
         try {
+            syncPanelToGeneratorToolDataOnDisplay();
             aprsSystem.resume();
             lookForCount++;
             clearAll();
@@ -5065,17 +5174,62 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         setForceFakeTakeFlag(jCheckBoxForceFakeTake.isSelected());
     }//GEN-LAST:event_jCheckBoxForceFakeTakeActionPerformed
 
-    private @Nullable
-    String toolChangerPoseMapFileName = null;
+    private final CachedTable partToolCachedTable;
 
-    private final CachedTable toolHolderPositionsCachedTable;
-
-    private void loadToolChangerPoseMap() {
+    private void loadPartToolMap() throws IOException {
         if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
-        toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-        File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
+        File f = getPartToolFile();
+        if (!f.exists()) {
+            return;
+        }
+        int lineNumber = 0;
+        final Map<String, String> partToolMap = crclGenerator.getPartToolMap();
+        partToolMap.clear();
+        partToolCachedTable.setRowCount(0);
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+            Map<String, Integer> headerMap = parser.getHeaderMap();
+            if (null == headerMap) {
+                throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
+            }
+            List<CSVRecord> records = parser.getRecords();
+            int skipRows = 0;
+            for (CSVRecord rec : records) {
+                String colName = partToolCachedTable.getColumnName(0);
+                Integer colIndex = headerMap.get(colName);
+                if (null == colIndex) {
+                    throw new IllegalArgumentException(f.getCanonicalPath() + " does not have field :" + colName);
+                }
+                String val0 = rec.get(colIndex);
+                if (!val0.equals(colName) && val0.length() > 0) {
+                    break;
+                }
+                skipRows++;
+            }
+            partToolCachedTable.setRowCount(records.size() - skipRows);
+            ROW_LOOP:
+            for (int i = skipRows; i < records.size(); i++) {
+                CSVRecord rec = records.get(i);
+                String part = rec.get(0);
+                String tool = rec.get(1);
+                partToolCachedTable.setValueAt(part, i - skipRows, 0);
+                partToolCachedTable.setValueAt(tool, i - skipRows, 1);
+                partToolMap.put(part, tool);
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+        }
+        clearEmptyToolChangerPoseRows();
+    }
+
+    private final CachedTable toolHolderPositionsCachedTable;
+
+    private void loadToolChangerPoseMap() throws IOException {
+        if (null == propertiesFile || !propertiesFile.exists()) {
+            return;
+        }
+        File f = getToolChangerPoseFile();
         if (!f.exists()) {
             return;
         }
@@ -5165,6 +5319,75 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             LOGGER.log(Level.SEVERE, "", ex);
         }
         clearEmptyToolChangerPoseRows();
+    }
+
+    public File getToolChangerPoseFile() throws IOException {
+        String textFieldPath = jTextFieldToolChangerPoseFile.getText();
+        if (textFieldPath != null && textFieldPath.trim().length() > 0) {
+            File f = new File(textFieldPath);
+            if (f.exists() && f.canRead()) {
+                final String canonicalPath = f.getCanonicalPath();
+                setToolChangePoseFileCanonicalPath(canonicalPath);
+                return f;
+            }
+        }
+        String optionPath = crclGenerator.getOptions().get("toolChangerPoseFile");
+        if (optionPath != null && optionPath.trim().length() > 0) {
+            File f = new File(optionPath);
+            if (f.exists() && f.canRead()) {
+                final String canonicalPath = f.getCanonicalPath();
+                setToolChangePoseFileCanonicalPath(canonicalPath);
+                return f;
+            }
+        }
+        String toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
+        File f = new File(propertiesFile.getParent(), toolChangerPoseMapFileName);
+        if (f.exists()) {
+            final String canonicalPath = f.getCanonicalPath();
+            setToolChangePoseFileCanonicalPath(canonicalPath);
+        }
+        return f;
+    }
+
+    public void setToolChangePoseFileCanonicalPath(final String canonicalPath) {
+
+        setOptionsTableValue("toolChangerPoseFile", canonicalPath);
+        jTextFieldToolChangerPoseFile.setText(canonicalPath);
+        crclGenerator.setOptions(getTableOptions());
+    }
+
+    public File getPartToolFile() throws IOException {
+        String textFieldPath = jTextFieldPartToolFile.getText();
+        if (textFieldPath != null && textFieldPath.length() > 0) {
+            File f = new File(textFieldPath);
+            if (f.exists() && f.canRead()) {
+                final String canonicalPath = f.getCanonicalPath();
+                setPartToolFileCanonnicalPath(canonicalPath);
+                return f;
+            }
+        }
+        String optionPath = crclGenerator.getOptions().get("partToolFile");
+        if (optionPath != null && optionPath.length() > 0) {
+            File f = new File(optionPath);
+            if (f.exists() && f.canRead()) {
+                final String canonicalPath = f.getCanonicalPath();
+                setPartToolFileCanonnicalPath(canonicalPath);
+                return f;
+            }
+        }
+        String partToolFileName = propertiesFile.getName() + ".partTool.csv";
+        File f = new File(propertiesFile.getParent(), partToolFileName);
+        if (f.exists()) {
+            final String canonicalPath = f.getCanonicalPath();
+            setPartToolFileCanonnicalPath(canonicalPath);
+        }
+        return f;
+    }
+
+    public void setPartToolFileCanonnicalPath(final String canonicalPath) {
+        setOptionsTableValue("partToolFile", canonicalPath);
+        jTextFieldPartToolFile.setText(canonicalPath);
+        crclGenerator.setOptions(getTableOptions());
     }
 
     private final CachedTable holderContentsCachedTable;
@@ -5258,17 +5481,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
             Map<String, PoseType> toolHolderPoseMap
                     = crclGenerator.getToolHolderPoseMap();
-            if (null == propertiesFile || !propertiesFile.exists()) {
-                return;
-            }
-            toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-            Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
-            File properitesParent = propertiesFile.getParentFile();
-            if (null != properitesParent && null != toolChangerPoseMapFileName) {
-                Utils.saveCachedTable(new File(propertiesFile.getParentFile(), toolChangerPoseMapFileName), toolHolderPositionsCachedTable);
-            } else {
-                throw new IllegalStateException("properitesParent=" + properitesParent + ", toolChangerPoseMapFileName=" + toolChangerPoseMapFileName);
-            }
+            final File file = getToolChangerPoseFile();
+            Utils.saveCachedTable(file, toolHolderPositionsCachedTable);
+
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+        }
+    }
+
+    private void savePartToolMap() {
+        try {
+            clearEmptyPartToolRows();
+            Map<String, String> partToolMap
+                    = crclGenerator.getPartToolMap();
+            Utils.autoResizeTableColWidths(partToolCachedTable);
+            final File file = getPartToolFile();
+            Utils.saveCachedTable(file, partToolCachedTable);
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -5501,6 +5729,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void clearEmptyToolOffsetPoseRows() {
         clearEmptyRows(toolOffsetsCachedTable);
+    }
+
+    private void clearEmptyPartToolRows() {
+        clearEmptyRows(partToolCachedTable);
+        Utils.autoResizeTableColWidths(partToolCachedTable);
     }
 
     private void clearEmptyToolChangerPoseRows() {
@@ -6074,18 +6307,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != newToolName && newToolName.length() > 0) {
                 crclGenerator.setCurrentToolName(newToolName);
                 syncPanelToGeneratorToolDataOnDisplay();
-//                jTextFieldCurrentToolName.setText(newToolName);
-//                PoseType newPose = crclGenerator.getToolOffsetMap().get(newToolName);
-//                if (null != newPose) {
-//                    PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
-//                    PmCartesian tran = CRCLPosemath.toPmCartesian(newPose.getPoint());
-//                    String offsetText
-//                            = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
-//                                    tran.x, tran.y, tran.z,
-//                                    Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
-//                    jTextFieldCurrentToolOffset.setText(offsetText);
-//                    crclGenerator.setToolOffsetPose(newPose);
-//                }
             }
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
@@ -6228,6 +6449,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
         this.positionMapJPanel1.setSelectedRowData(data);
     }//GEN-LAST:event_jButtonErrMapSetInputFromCachedVisionDbActionPerformed
+
+    private void jButtonAddPartToToolEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddPartToToolEntryActionPerformed
+        ((DefaultTableModel) jTableRequiredTools.getModel()).addRow(new Object[]{"", ""});
+    }//GEN-LAST:event_jButtonAddPartToToolEntryActionPerformed
+
+    private void jButtonDeletePartToToolEntryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeletePartToToolEntryActionPerformed
+        final int selectedRow = jTableRequiredTools.getSelectedRow();
+        if (selectedRow >= 0 && selectedRow < jTableRequiredTools.getRowCount()) {
+            ((DefaultTableModel) jTableRequiredTools.getModel()).removeRow(selectedRow);
+        }
+    }//GEN-LAST:event_jButtonDeletePartToToolEntryActionPerformed
 
     private volatile @Nullable
     PointType lastSelectedPoseCachePoint = null;
@@ -7722,7 +7954,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private volatile StackTraceElement lastExecuteActionsTrace @Nullable[] = null;
+    private volatile StackTraceElement lastExecuteActionsTrace @Nullable []  = null;
     private volatile long lastExecuteActionsTime = -1;
 
     private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
@@ -7965,6 +8197,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonAbort;
+    private javax.swing.JButton jButtonAddPartToToolEntry;
     private javax.swing.JButton jButtonAddToolHolderPose;
     private javax.swing.JButton jButtonAddToolOffset;
     private javax.swing.JButton jButtonAddTrayAttach;
@@ -7972,6 +8205,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonClearPoseCache;
     private javax.swing.JButton jButtonContRandomTest;
     private javax.swing.JButton jButtonContinue;
+    private javax.swing.JButton jButtonDeletePartToToolEntry;
     private javax.swing.JButton jButtonDeleteToolHolderPose;
     private javax.swing.JButton jButtonDeleteToolOffset;
     private javax.swing.JButton jButtonDeleteTrayAttach;
@@ -8026,7 +8260,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
@@ -8045,11 +8281,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JPanel jPanelInnerManualControl;
     private javax.swing.JPanel jPanelOpOuter;
     private javax.swing.JPanel jPanelOuterManualControl;
+    private javax.swing.JPanel jPanelPartToolMap;
     private javax.swing.JPanel jPanelToolChange;
     private javax.swing.JPanel jPanelToolHolderPositions;
     private javax.swing.JPanel jPanelToolOffsets;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPaneCorrectiveActionsTable;
     private javax.swing.JScrollPane jScrollPaneHolderContents;
@@ -8072,6 +8310,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTable jTableOptions;
     private javax.swing.JTable jTablePddlOutput;
     private javax.swing.JTable jTablePositionCache;
+    private javax.swing.JTable jTableRequiredTools;
     private javax.swing.JTable jTableToolHolderPositions;
     private javax.swing.JTable jTableToolOffsets;
     private javax.swing.JTable jTableTrayAttachOffsets;
@@ -8084,6 +8323,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTextField jTextFieldIndex;
     private javax.swing.JTextField jTextFieldLogFilename;
     private javax.swing.JTextField jTextFieldOffset;
+    private javax.swing.JTextField jTextFieldPartToolFile;
     private javax.swing.JTextField jTextFieldPddlOutputActions;
     private javax.swing.JTextField jTextFieldRandomDropoffCount;
     private javax.swing.JTextField jTextFieldRandomPickupCount;
@@ -8096,6 +8336,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JTextField jTextFieldTestYMin;
     private javax.swing.JTextField jTextFieldTestZ;
     private javax.swing.JTextField jTextFieldToolChangerApproachZOffset;
+    private javax.swing.JTextField jTextFieldToolChangerPoseFile;
     private aprs.actions.optaplanner.display.OpDisplayJPanel opDisplayJPanelInput;
     private aprs.actions.optaplanner.display.OpDisplayJPanel opDisplayJPanelSolution;
     private aprs.actions.executor.PositionMapJPanel positionMapJPanel1;
@@ -8212,22 +8453,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         && !name.equals(PDDLOUTPUT)
                         && !name.equals(MANUAL_PART_NAMES)
                         && !name.equals(MANUAL_SLOT_NAMES)) {
-                    boolean foundit = false;
-                    for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
-                        Object tableValue = optionsCachedTable.getValueAt(i, 0);
-                        if (tableValue == null) {
-                            continue;
-                        }
-                        String nameFromTable = tableValue.toString();
-                        if (nameFromTable.equals(name)) {
-                            optionsCachedTable.setValueAt(props.getProperty(name), i, 1);
-                            foundit = true;
-                            break;
-                        }
-                    }
-                    if (!foundit) {
-                        optionsCachedTable.addRow(new Object[]{name, props.getProperty(name)});
-                    }
+                    final String propertyValue = props.getProperty(name);
+                    setOptionsTableValue(name, propertyValue);
                 }
             }
 
@@ -8241,7 +8468,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 loadErrorMapFiles(errorMapFiles);
             }
             loadHolderContentsMap();
-            loadToolChangerPoseMap();
+            try {
+                loadToolChangerPoseMap();
+            } catch (IOException iOException) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(
+                        Level.SEVERE,
+                        aprsSystem.getTaskName() + " failed to loadToolChangerPoseMap",
+                        iOException);
+            }
             loadToolOffsetMap();
             loadTrayAttachOffsetMap();
             String filename = getSelectedToolNameFileName();
@@ -8254,6 +8488,28 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             initGenerateAbortLogFile();
 
             aprsSystem.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
+        }
+    }
+
+    public void setOptionsTableValue(String name, final String propertyValue) {
+        boolean foundit = false;
+        for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+            Object tableValue0 = optionsCachedTable.getValueAt(i, 0);
+            if (tableValue0 == null) {
+                continue;
+            }
+            String nameFromTable = tableValue0.toString();
+            if (nameFromTable.equals(name)) {
+                Object tableValue1 = optionsCachedTable.getValueAt(i, 1);
+                if (!Objects.equals(tableValue1, propertyValue)) {
+                    optionsCachedTable.setValueAt(propertyValue, i, 1);
+                }
+                foundit = true;
+                break;
+            }
+        }
+        if (!foundit) {
+            optionsCachedTable.addRow(new Object[]{name, propertyValue});
         }
     }
 
