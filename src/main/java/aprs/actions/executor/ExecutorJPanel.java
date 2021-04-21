@@ -326,7 +326,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             Object toolObject = jTableRequiredTools.getValueAt(i, 1);
                             if (toolObject instanceof String && ((String) toolObject).length() > 0) {
                                 crclGenerator.getPartToolMap().put((String) partObject, (String) toolObject);
-                            } 
+                            }
                         }
                     }
                     savePartToolMap();
@@ -8474,6 +8474,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 Logger.getLogger(ExecutorJPanel.class.getName()).log(
                         Level.SEVERE,
                         aprsSystem.getTaskName() + " failed to loadToolChangerPoseMap",
+                        iOException);
+            }
+            try {
+                loadPartToolMap();
+            } catch (IOException iOException) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(
+                        Level.SEVERE,
+                        aprsSystem.getTaskName() + " failed to loadPartToolMap",
                         iOException);
             }
             loadToolOffsetMap();

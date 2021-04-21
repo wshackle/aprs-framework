@@ -4972,24 +4972,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         checkDbReady();
         checkSettings();
         String partName = action.getArgs()[takePartArgIndex];
-
-        final String partTool;
-        if (partToolMap.containsKey(partName)) {
-            partTool = partToolMap.get(partName);
-        } else {
-            String partTypeName = partNameToPartType(partName);
-            if (partToolMap.containsKey(partTypeName)) {
-                partTool = partToolMap.get(partTypeName);
-            } else {
-                partTool = null;
-            }
-        }
-        if (null != partTool && !Objects.equals(partTool, currentToolName)) {
-            switchTool(Action.newSingleArgAction(
-                    SWITCH_TOOL,
-                    partTool
-            ), out);
-        }
         if (null != kitInspectionJInternalFrame && null != aprsSystem) {
             aprsSystem.runOnDispatchThread(() -> updateKitImageLabel("init", "Building kit"));
         }
@@ -5031,6 +5013,31 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             } else {
                 throw new IllegalStateException("getPose(" + partName + ") returned null");
             }
+        }
+        final String partTool;
+        if (partToolMap.containsKey(partName)) {
+            partTool = partToolMap.get(partName);
+        } else {
+            String partTypeName = partNameToPartType(partName);
+            if (partToolMap.containsKey(partTypeName)) {
+                partTool = partToolMap.get(partTypeName);
+            } else if (partTypeName.length() > 6 && (partTypeName.endsWith("_in_pt") || partTypeName.endsWith("_in_kt"))) {
+                String trimmedPartTypeName = partTypeName.substring(0, partTypeName.length() - 6);
+                if (partToolMap.containsKey(trimmedPartTypeName)) {
+                    partTool = partToolMap.get(trimmedPartTypeName);
+                } else {
+                    partTool = null;
+                }
+            } else {
+                partTool = null;
+            }
+        }
+        if (null != partTool && !Objects.equals(partTool, getExpectedToolName())) {
+            switchTool(Action.newSingleArgAction(
+                    SWITCH_TOOL,
+                    partTool
+            ), out);
+            addMoveToLookForPosition(out, true);
         }
         if (skipMissingParts) {
             if (null != nextPlacePartAction) {
@@ -5617,10 +5624,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String oldCurrentToolName = this.currentToolName;
         this.currentToolName = currentToolName;
         if (null != currentToolName && currentToolName.length() > 0) {
-            PoseType newPose = toolOffsetMap.get(currentToolName);
-            if (null != newPose) {
-                setToolOffsetPose(newPose);
-            }
             if (Objects.equals(currentToolName, oldCurrentToolName)) {
                 return;
             }
@@ -6302,10 +6305,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             addMoveTo(out, pose, false, "addMoveToLookForPosition");
         } else {
             assert (null != lookForJointsString) : "@AssumeAssertion(nullness)";
-            double jointVals[] = jointValStringToArray(lookForJointsString);
+            double lookForJointVals[] = jointValStringToArray(lookForJointsString);
             checkJointToleranceSetting(out);
-            addPrepJointMove(jointVals, out);
-            addJointMove(out, jointVals, 1.0);
+//            addPrepJointMove(lookForJointVals, out);
+            addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
+            addJointMove(out, lookForJointVals, 1.0, 0, 1);
         }
         addMarkerCommand(out, "set atLookForPosition true", x -> {
             atLookForPosition = true;
@@ -6616,11 +6620,21 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale) {
+        addJointMove(out, jointVals, speedScale, 0, jointVals.length);
+    }
+
+    private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale, int start, int end) {
         checkJointToleranceSetting(out);
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
+        if (start < 0 || start > jointVals.length || start >= end) {
+            throw new IllegalArgumentException("start=" + start + ", jointVals.length=" + jointVals.length + ",end=" + end);
+        }
+        if (end < 0 || end > jointVals.length || start >= end) {
+            throw new IllegalArgumentException("jointVals.length=" + jointVals.length + ",end=" + end);
+        }
         List<ActuateJointType> newActuateJointsList = new ArrayList<>();
-        for (int i = 0; i < jointVals.length; i++) {
+        for (int i = start; i < end && i < jointVals.length; i++) {
             ActuateJointType aj = new ActuateJointType();
             JointSpeedAccelType jsa = new JointSpeedAccelType();
             jsa.setJointAccel(jointAccel * speedScale);
@@ -6909,22 +6923,28 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
             String lookForJointsString = options.get("lookForJoints");
             double jointVals[] = jointValStringToArray(jointValsString);
-            double joint0Diff = expectedJoint0Val - jointVals[0];
-            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
-            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
-            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
-            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
-            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
-                if (null != lookForJointsString && lookForJointsString.length() > 0) {
-                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-                    addPrepJointMove(lookForJointVals, out);
-                    lookForJointVals[0] = jointVals[0];
-                    addMessageCommand(out,
-                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
-                    addJointMove(out, lookForJointVals, 1.0);
-                }
+//            double joint0Diff = expectedJoint0Val - jointVals[0];
+//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
+//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
+//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
+//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
+//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
+//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
+//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
+//                    addPrepJointMove(lookForJointVals, out);
+//                    lookForJointVals[0] = jointVals[0];
+//                    addMessageCommand(out,
+//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
+//
+//                }
+//            }
+//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+            if (null != lookForJointsString && lookForJointsString.length() > 0) {
+                double lookForJointVals[] = jointValStringToArray(lookForJointsString);
+                addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
             }
-            addJointMove(out, jointVals, 1.0);
+            addJointMove(out, jointVals, 1.0, 0, 1);
+            addJointMove(out, jointVals, 1.0, 1, jointVals.length);
         } else {
             PoseType pose = getToolHolderPose(toolChangerPosName);
             if (null == pose) {
@@ -6964,6 +6984,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public void setExpectedToolName(String expectedToolName) {
         this.expectedToolName = expectedToolName;
+        PoseType newPose = toolOffsetMap.get(expectedToolName);
+        if (null != newPose) {
+            setToolOffsetPose(newPose);
+        }
     }
 
     private PoseType getToolHolderPose(String holderName) {
