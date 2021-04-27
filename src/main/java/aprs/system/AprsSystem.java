@@ -135,7 +135,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLCommandWrapper;
-import crcl.utils.CRCLCopier;
+import crcl.copier.CRCLCopier;
 import crcl.utils.CRCLUtils;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;

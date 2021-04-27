@@ -1,2 +1,2 @@
-crclXmlSchemas/CRCLStatus.xsd
-crclXmlSchemas/DataPrimitives.xsd
+crclSchemas/CRCLStatus.xsd
+crclSchemas/DataPrimitives.xsd
