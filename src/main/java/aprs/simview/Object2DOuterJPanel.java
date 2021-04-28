@@ -112,6 +112,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import java.awt.AWTEvent;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import org.checkerframework.checker.guieffect.qual.UI;
@@ -664,6 +665,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }
 
+    
     private void showException(Exception ex) {
         if (null != aprsSystem) {
             aprsSystem.showException(ex);
@@ -4386,7 +4388,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     }//GEN-LAST:event_dragModeComboBoxActionPerformed
 
     private void jTextFieldMinimumScoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldMinimumScoreActionPerformed
-        setMinimumScore(Double.parseDouble(jTextFieldMinimumScore.getText()));
+        try {
+            setMinimumScore(Double.parseDouble(jTextFieldMinimumScore.getText()));
+        } catch(Exception ex) {
+            showException(ex);
+            jTextFieldMinimumScore.setText(String.format("%.3f", getMinimumScore()));
+        }
     }//GEN-LAST:event_jTextFieldMinimumScoreActionPerformed
 
     private javax.swing.@Nullable Timer simUpdateTimer = null;

@@ -1328,5 +1328,57 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+    
+    <xs:complexType name="LoopBlockStartType">
+        <xs:annotation>
+            <xs:documentation>
+                LoopBlockStartType is derived from MiddleCommandType.
+                An instance of LoopBlockStartType has the following elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                LoopName.
+
+                This starts a simple loop to repeat a set of commands. It must be
+                followed with a LoopBlockEndType with the same LoopName. 
+                LoopName values should be unique in a program. 
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="LoopName"
+                                type="xs:ID"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="LoopBlockEndType">
+        <xs:annotation>
+            <xs:documentation>
+                LoopBlockEndType is derived from MiddleCommandType.
+                An instance of LoopBlockStartType has the following elements:
+                Name (inherited, optional)
+                CommandID (inherited)
+                LoopName
+                MaxCount.
+
+                This starts a simple loop to repeat a set of commands. It must be
+                followed with a LoopBlockEndType with the same LoopName. 
+                LoopName values should be unique in a program. MaxCount provides
+                the number of times the loop will be repeated.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:complexContent>
+            <xs:extension base="MiddleCommandType">
+                <xs:sequence>
+                    <xs:element name="LoopName"
+                                type="xs:ID"/>
+                    <xs:element name="MaxCount"
+                                type="xs:int"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
   
 </xs:schema>

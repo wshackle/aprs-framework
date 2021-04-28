@@ -1,5 +1,5 @@
-crclXmlSchemas/CRCLCommands.xsd
-crclXmlSchemas/CRCLProgramInstance.xsd
-crclXmlSchemas/CRCLCommandInstance.xsd
-crclXmlSchemas/CRCLStatus.xsd
-crclXmlSchemas/DataPrimitives.xsd
+crclSchemas/CRCLCommands.xsd
+crclSchemas/CRCLProgramInstance.xsd
+crclSchemas/CRCLCommandInstance.xsd
+crclSchemas/CRCLStatus.xsd
+crclSchemas/DataPrimitives.xsd

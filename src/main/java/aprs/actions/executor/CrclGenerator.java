@@ -106,7 +106,7 @@ import java.util.Arrays;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import rcs.posemath.PmCartesian;
 import rcs.posemath.PmRpy;
-import static crcl.utils.CRCLCopier.copy;
+import static crcl.copier.CRCLCopier.copy;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;

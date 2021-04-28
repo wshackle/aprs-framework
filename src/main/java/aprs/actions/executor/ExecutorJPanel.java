@@ -174,7 +174,7 @@ import crcl.base.PoseStatusType;
 import crcl.base.VectorType;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.ProgramLineListener;
-import static crcl.utils.CRCLCopier.copy;
+import static crcl.copier.CRCLCopier.copy;
 import crcl.utils.CRCLUtils;
 import java.util.Date;
 import static crcl.utils.CRCLUtils.requireNonNull;
