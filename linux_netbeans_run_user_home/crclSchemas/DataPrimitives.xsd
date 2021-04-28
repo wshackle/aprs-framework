@@ -4,7 +4,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    version="2019Sep24">
+    version="2021April28">
 
     <xs:annotation>
         <xs:documentation>
@@ -55,7 +55,7 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element name="Name"
-                        type="xs:ID"
+                        type="xs:string"
                         minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
