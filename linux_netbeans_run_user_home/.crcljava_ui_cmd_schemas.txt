@@ -1,3 +1,0 @@
-crclSchemas/CRCLCommandInstance.xsd
-crclSchemas/CRCLCommands.xsd
-crclSchemas/DataPrimitives.xsd

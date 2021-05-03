@@ -41,8 +41,19 @@ run*.err
 /nbproject/
 linux_netbeans_run_user_home/.crcl_pendant_client_recent_files
 netbeans_run_user_home/.crcl_pendant_client_recent_files
+linux_netbeans_run_user_home/crclSchemas
+linux_netbeans_run_user_home/crclSchemas/*
+linux_netbeans_run_user_home/crclXmlSchemas/*
+netbeans_run_user_home/crclSchemas
+netbeans_run_user_home/crclSchemas/*
+netbeans_run_user_home/crclXmlSchemas/*
+netbeans_run_user_home/.crcljava_ui_cmd_schemas.txt
+netbeans_run_user_home/.crcljava_ui_program_schemas.txt
+netbeans_run_user_home/.crcljava_ui_stat_schemas.txt
+linux_netbeans_run_user_home/.crcljava_ui_cmd_schemas.txt
+linux_netbeans_run_user_home/.crcljava_ui_program_schemas.txt
+linux_netbeans_run_user_home/.crcljava_ui_stat_schemas.txt
 
-*.out
 *.o.d
 *.VC.opendb
 *.exe
