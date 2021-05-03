@@ -5,10 +5,6 @@
         <Name>InitCanonType.37822</Name>
         <CommandID>20140</CommandID>
     </InitCanon>
-    <MiddleCommand xsi:type="LoopBlockStartType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <CommandID>0</CommandID>
-        <LoopName>MainLoop</LoopName>
-    </MiddleCommand>
     <MiddleCommand xsi:type="SetEndEffectorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <Name>SetEndEffectorType.37823</Name>
         <CommandID>20162</CommandID>
@@ -19,7 +15,7 @@
         <CommandID>20163</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.37825</Name>
-            <Setting>50.0</Setting>
+            <Setting>150.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -31,7 +27,7 @@
             <Point>
                 <Name>PointType.37828</Name>
                 <X>-180.0</X>
-                <Y>700.0</Y>
+                <Y>750.0</Y>
                 <Z>50.0</Z>
             </Point>
             <XAxis>
@@ -47,6 +43,16 @@
                 <K>-1.0</K>
             </ZAxis>
         </EndPosition>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="LoopBlockStartType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>0</CommandID>
+        <LoopName>MainLoop</LoopName>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>20163</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Setting>150.0</Setting>
+        </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <Name>MoveToType.37831</Name>
@@ -89,7 +95,7 @@
         <CommandID>20167</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.452544</Name>
-            <Setting>10.0</Setting>
+            <Setting>40.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="EnableSensorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -121,7 +127,7 @@
                 <Name>PointType.37844</Name>
                 <X>-180.0</X>
                 <Y>810.0</Y>
-                <Z>-375.0</Z>
+                <Z>-381.0</Z>
             </Point>
             <XAxis>
                 <Name>VectorType.37845</Name>
@@ -157,7 +163,7 @@
         <CommandID>20152</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.37851</Name>
-            <Setting>50.0</Setting>
+            <Setting>150.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -217,7 +223,7 @@
         <CommandID>20155</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.37863</Name>
-            <Setting>10.0</Setting>
+            <Setting>40.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -238,7 +244,7 @@
                 <Name>PointType.37867</Name>
                 <X>-300.0</X>
                 <Y>810.0</Y>
-                <Z>-350.0</Z>
+                <Z>-370.0</Z>
             </Point>
             <XAxis>
                 <Name>VectorType.37868</Name>
@@ -269,12 +275,13 @@
         <CommandID>20159</CommandID>
         <DwellTime>0.4</DwellTime>
     </MiddleCommand>
+    
     <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <Name>SetTransSpeedType.37873</Name>
         <CommandID>20160</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.37874</Name>
-            <Setting>50.0</Setting>
+            <Setting>150.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -303,10 +310,17 @@
             </ZAxis>
         </EndPosition>
     </MiddleCommand>
+    
     <MiddleCommand xsi:type="LoopBlockEndType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <CommandID>0</CommandID>
         <LoopName>MainLoop</LoopName>
-        <MaxCount>3</MaxCount>
+        <MaxCount>20</MaxCount>
+    </MiddleCommand>
+    <MiddleCommand xsi:type="SetTransSpeedType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <CommandID>20160</CommandID>
+        <TransSpeed xsi:type="TransSpeedAbsoluteType">
+            <Setting>150.0</Setting>
+        </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="MoveToType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <Name>MoveToType.37880</Name>
