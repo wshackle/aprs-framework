@@ -148,7 +148,7 @@ public class DbSetupBuilder {
                     throw new IllegalArgumentException("No resource found for name=" + name);
                 }
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
-                    String line = null;
+                    String line;
                     while (null != (line = br.readLine())) {
                         sb.append(line);
                         sb.append(System.lineSeparator());
@@ -162,7 +162,7 @@ public class DbSetupBuilder {
     private static String getStringFromFile(String name) throws IOException {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(name))) {
-            String line = null;
+            String line;
             while (null != (line = br.readLine())) {
                 sb.append(line);
                 sb.append(System.lineSeparator());
@@ -516,35 +516,28 @@ public class DbSetupBuilder {
 
     private DbSetupBuilder updateFromArgs(Map<String, String> _argsMap) {
 
-        DbSetupBuilder builder = this;
-
         String argsMapDbTypeString = _argsMap.get("--dbtype");
-        DbType dbtype = builder.type;
+        DbType dbtype = this.type;
         if (argsMapDbTypeString != null && argsMapDbTypeString.length() > 0) {
             dbtype = DbType.valueOf(argsMapDbTypeString);
-            builder = builder.type(dbtype);
         }
         String dbSpecificHost = _argsMap.get(dbtype + ".host");
         if (null != dbSpecificHost) {
-            builder = builder.host(dbSpecificHost);
             host = dbSpecificHost;
         } else {
             String h = _argsMap.get("--dbhost");
             if (null != h && h.length() > 0) {
                 host = h;
-                builder = builder.host(h);
             }
         }
         String dbSpecificPort = _argsMap.get(dbtype + "." + host + ".port");
         if (null != dbSpecificPort) {
             port = Integer.parseInt(dbSpecificPort);
-            builder = builder.port(port);
         } else {
             String argsMapPortString = _argsMap.get("--dbport");
             if (null != argsMapPortString && argsMapPortString.length() > 0) {
                 try {
                     int port = Integer.parseInt(argsMapPortString);
-                    builder = builder.port(port);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -599,12 +592,12 @@ public class DbSetupBuilder {
         String dbSpecificInternalQueriesResourceDirString
                 = _argsMap.get(dbHostPort + ".internalQueriesResourceDir");
         if (null != dbSpecificQueriesDir) {
-            builder = builder.internalQueriesResourceDir(Boolean.valueOf(dbSpecificInternalQueriesResourceDirString));
+            builder = builder.internalQueriesResourceDir(Boolean.parseBoolean(dbSpecificInternalQueriesResourceDirString));
         } else {
             String internalQueriesResourceDiriesDirString
                     = _argsMap.get("--internalQueriesResourceDir");
             if (null != internalQueriesResourceDiriesDirString) {
-                builder = builder.internalQueriesResourceDir(Boolean.valueOf(internalQueriesResourceDiriesDirString));
+                builder = builder.internalQueriesResourceDir(Boolean.parseBoolean(internalQueriesResourceDiriesDirString));
             }
         }
         String startScript = _argsMap.get("startScript");
@@ -799,9 +792,8 @@ public class DbSetupBuilder {
                     return DriverManager.getConnection(mysql_url, username, password);
 
                 case NEO4J:
-                    @SuppressWarnings("unused") Class<?> neo4jDriverClass;
                     try {
-                        neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                        Class<?> neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
                         //println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
                     } catch (ClassNotFoundException ex) {
                         LOGGER.log(Level.SEVERE, "", ex);

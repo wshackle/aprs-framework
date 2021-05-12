@@ -121,6 +121,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 }
                 String label = olabel.toString();
                 if (olabel instanceof List) {
+                    //noinspection rawtypes
                     label = ((List) olabel).get(0).toString();
                 }
                 if (label.startsWith("[")) {
@@ -283,7 +284,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             final int inStatementColCount;
             try (ResultSet rs = inStatement.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
-                inStatementColCount = meta.getColumnCount();
+//                inStatementColCount = meta.getColumnCount();
                 for (int i = 1; i <= meta.getColumnCount() - 1; i++) {
                     String colName = meta.getColumnName(i);
 //                    println("colName = " + colName);
@@ -422,7 +423,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         jCheckBoxDebug = new javax.swing.JCheckBox();
 
         jListNodeLabels.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            final String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
@@ -728,6 +729,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             }
             String label;
             if (tableObject instanceof List) {
+                //noinspection rawtypes
                 label = ((List) tableObject).get(0).toString();
             } else {
                 label = tableObject.toString();
@@ -923,14 +925,16 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             throw new IllegalStateException("connection is null");
         }
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line = null;
+            String line;
             while (null != (line = br.readLine())) {
                 PreparedStatement stmtn
                         = connection.prepareStatement(line);
-                String nextline = null;
-                while (!line.trim().endsWith(")") && (null != (nextline = br.readLine()))) {
-                    line += nextline;
+                String nextline;
+                StringBuilder lineBuilder = new StringBuilder(line);
+                while (!lineBuilder.toString().trim().endsWith(")") && (null != (nextline = br.readLine()))) {
+                    lineBuilder.append(nextline);
                 }
+                line = lineBuilder.toString();
                 println("Executing line:" + line);
                 boolean returnedResultSet = stmtn.execute();
                 if (!returnedResultSet) {

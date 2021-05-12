@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <addNotNullAssertions enabled="false" />
+    <annotationProcessing>
+      <profile name="Annotation profile for aprs-framework">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/checkerframework/checker/3.1.1/checker-3.1.1.jar" />
+        </processorPath>
+        <module name="aprs-framework" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="aprs-framework" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="aprs-framework" options="-Xmaxerrs 10000 -Xmaxwarns 10000 -parameters" />
+    </option>
+  </component>
+</project>

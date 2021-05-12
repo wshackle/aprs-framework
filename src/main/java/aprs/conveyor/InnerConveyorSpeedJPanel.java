@@ -58,6 +58,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
      *
      * @param goalPosition new value of goalPosition
      */
+    @SuppressWarnings("ManualMinMaxCalculation")
     public void setGoalPosition(double goalPosition) {
         if(goalPosition < minPosition) {
             this.goalPosition = minPosition;
@@ -191,7 +192,7 @@ public class InnerConveyorSpeedJPanel extends JPanel {
                 newSortedTrays.add(item);
             }
         }
-        Collections.sort(newSortedTrays, Comparator.comparingDouble(this::positionOfItem));
+        newSortedTrays.sort(Comparator.comparingDouble(this::positionOfItem));
         this.sortedKitTrays = newSortedTrays;
         this.repaint();
     }

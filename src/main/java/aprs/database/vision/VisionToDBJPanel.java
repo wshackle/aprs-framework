@@ -106,7 +106,7 @@ import javax.swing.JFileChooser;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "serial"})
+@SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "serial", "UnnecessaryBoxing"})
 public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJFrameInterface, DbSetupListener, VisionSocketClient.VisionSocketClientListener {
 
     private DbSetupPublisher dbSetupPublisher;
@@ -430,11 +430,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         });
 
         jTextFieldVisionHost.setText("localhost");
-        jTextFieldVisionHost.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldVisionHostActionPerformed(evt);
-            }
-        });
 
         jTextFieldVisionPort.setText("4000");
 
@@ -2111,7 +2106,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 if (doRequiredPartsCheck) {
                     if (!checkRequiredParts("visionList", visionList)) {
                         boolean chkAgain = checkRequiredParts("visionList", visionList, true);
-                        chkAgain = checkRequiredParts("visionList", visionList, true);
+                        boolean chkAgain2 = checkRequiredParts("visionList", visionList, true);
+                        System.err.println("checkRequiredPart(" + visionList + ") false");
+                        System.err.println("checkAgain="+chkAgain);
+                        System.err.println("checkAgain2="+chkAgain2);
                         System.err.println("checkRequiredPart(" + visionList + ") false");
                         visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                         return XFutureVoid.completedFuture();
@@ -2327,11 +2325,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             addLogMessage(ex);
         }
     }
-
-    @UIEffect
-    private void jTextFieldVisionHostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldVisionHostActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldVisionHostActionPerformed
 
     private @MonotonicNonNull
     SocketLineReader commandSlr = null;

@@ -206,8 +206,7 @@ public class OpActionFrontBackMove extends AbstractMove<OpActionPlan> {
 
     @Override
     public List<OpAction> getPlanningEntities() {
-        List<OpAction> entities = new ArrayList<>();
-        entities.addAll(start.previousScoreList());
+        List<OpAction> entities = new ArrayList<>(start.previousScoreList());
         final OpAction splitterPrevious = splitter.getPrevious();
         if (null != splitterPrevious) {
             entities.addAll(splitterPrevious.previousScoreList());

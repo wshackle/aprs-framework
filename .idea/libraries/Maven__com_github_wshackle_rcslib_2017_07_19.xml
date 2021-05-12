@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.wshackle:rcslib:2017.07.19">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/rcslib/2017.07.19/rcslib-2017.07.19.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/rcslib/2017.07.19/rcslib-2017.07.19-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/rcslib/2017.07.19/rcslib-2017.07.19-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

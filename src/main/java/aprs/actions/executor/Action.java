@@ -405,13 +405,13 @@ public class Action {
             throw new IllegalArgumentException(" \"" + s + "\".indexOf('(') returned  " + p1index);
         }
         int p2index = s.indexOf(')');
-        double cost = 0.0;
+        final double cost ;
         if (p2index > 0 && p2index < s.length()) {
             final String costString = s.substring(p2index + 1).trim();
             if (costString.length() > 0) {
                 cost = Double.parseDouble(costString);
             } else {
-                cost = 0;
+                cost = 0.0;
             }
             s = s.substring(0, p2index);
         } else {

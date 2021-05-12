@@ -77,7 +77,7 @@ import java.util.function.ToLongFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -650,6 +650,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         File queriesDir = new File(homeDir, "aprsQueries");
         File sysQueriesDir = new File(queriesDir, taskname);
         File dir = new File(sysQueriesDir, name.toString());
+        //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         File resultsFile = File.createTempFile("results", ".csv", dir);
         System.out.println("resultsFile = " + resultsFile);
@@ -834,6 +835,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private volatile boolean closed = false;
 
     @Override
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void close() {
 
         if (!closed) {
@@ -1353,7 +1355,6 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
             trayFullName = trayFullName + "_" + count;
             tray.setFullName(trayFullName);
-            count++;
             List<Slot> slots = getSlots(tray, sop);
             if (null != slots) {
                 emptySlots.addAll(findEmptySlots(slots, parts, prevParts));
@@ -1434,7 +1435,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         .map(Tray.class::cast)
                         .collect(Collectors.toList());
         List<PhysicalItem> parts
-                = StreamSupport.stream(inputItems.spliterator(), false)
+                = inputItems.stream()
                         .filter((PhysicalItem item) -> "P".equals(item.getType()))
                         .collect(Collectors.toList());
         List<PhysicalItem> fullList = new ArrayList<>();
@@ -1649,8 +1650,8 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 pre_vision_clean_statement.execute();
             }
             updateCount++;
-            List<PhysicalItem> list = inList;
-            list = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, addRepeatCountsToName, partsTrayList);
+            List<PhysicalItem> list
+                    = preProcessItemList(inList, false, keepFullNames, doPrefEmptySlotsFiltering, addRepeatCountsToName, partsTrayList);
             for (PhysicalItem item : inList) {
                 if ("P".equals(item.getType()) && !item.isInsideKitTray() && !item.isInsidePartsTray()) {
                     item.z += noTrayOffsetZ;
@@ -1904,10 +1905,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             outList = filterEmptySlots(inputItems, kitTrays, partsTrays, partsTrayList);
         }
         if (null == outList) {
-            outList = new ArrayList<>();
-            for (PhysicalItem item : inputItems) {
-                outList.add(item);
-            }
+            outList = new ArrayList<>(inputItems);
         }
 
         Map<String, Integer> repeatsMap = new HashMap<>();

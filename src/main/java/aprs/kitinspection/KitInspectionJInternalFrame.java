@@ -42,7 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author zeid
  */
-@SuppressWarnings("serial")
+@SuppressWarnings("ALL")
 public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**
@@ -220,7 +220,7 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
      *
      * @return the value of propertiesFile
      */
-    public File getPropertiesFile() {
+    public @Nullable File getPropertiesFile() {
         return propertiesFile;
     }
 
@@ -258,6 +258,9 @@ public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
         Properties props = new Properties();
         props.put(IMAGE_KIT_PATH, kitinspectionImageKitPath);
         props.put(IMAGE_EMPTY_KIT, "123.png");
+        if (null == propertiesFile) {
+            throw new IllegalStateException("propertiesFile not set");
+        }
         Utils.saveProperties(propertiesFile, props);
     }
 

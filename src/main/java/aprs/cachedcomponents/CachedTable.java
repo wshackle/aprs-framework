@@ -78,10 +78,6 @@ public class CachedTable extends CachedComponentBase {
 
     public void setSelectionInterval(int first, int last) {
         this.selectedRow = first;
-        int newSelectedRows[] = new int[last - first];
-        for (int i = 0; i < newSelectedRows.length; i++) {
-            newSelectedRows[i] = i + first;
-        }
         runOnDispatchThread(() -> setJTableSelectedInterval(first, last));
     }
 

@@ -46,13 +46,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class DbCsvBackup {
 
-    public static boolean debug = false;
+    public static final boolean debug = false;
 
     static public ResultSet executeQuery(@Nullable PreparedStatement preparedStatement,@Nullable String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
         File homeDir = new File(System.getProperty("user.home"));
         File queriesDir = new File(homeDir, "aprsQueries");
         File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
         File dir = new File(sysQueriesDir, name);
+        //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         final File resultsFile;
         final File queryFile;

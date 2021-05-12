@@ -148,9 +148,8 @@ public class CachedComboBox<E> {
                 newItems[i] = items[i];
             }
             newItems[index] = element;
-            for (int i = index + 1; i < newItems.length; i++) {
-                newItems[i] = items[i - 1];
-            }
+            if (newItems.length - (index + 1) >= 0)
+                System.arraycopy(items, index + 1 - 1, newItems, index + 1, newItems.length - (index + 1));
             if (selectedIndex > index) {
                 selectedIndex++;
             }
@@ -163,9 +162,7 @@ public class CachedComboBox<E> {
     public void addElement(E element) {
         synchronized (this) {
             E newItems[] = (E[]) Array.newInstance(eClass, items.length + 1);
-            for (int i = 0; i < items.length; i++) {
-                newItems[i] = items[i];
-            }
+            System.arraycopy(items, 0, newItems, 0, items.length);
             newItems[items.length] = element;
             this.items = newItems;
         }

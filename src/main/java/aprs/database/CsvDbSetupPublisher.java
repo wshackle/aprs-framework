@@ -24,7 +24,6 @@ package aprs.database;
 
 import crcl.utils.XFutureVoid;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +80,7 @@ public class CsvDbSetupPublisher implements DbSetupPublisher {
                                 broadcastDbSetup(thisDbSetup);
                             },
                             notifyService);
-            return Arrays.asList(future);
+            return Collections.singletonList(future);
         } else {
             broadcastDbSetup(thisDbSetup);
             return Collections.emptyList();

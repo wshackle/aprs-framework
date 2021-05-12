@@ -254,7 +254,7 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             }
             boolean single;
             if (args.length > 1) {
-                single = Boolean.valueOf(args[1]);
+                single = Boolean.parseBoolean(args[1]);
             } else {
                 String fileTypeInputString
                         = (String) JOptionPane.showInputDialog(

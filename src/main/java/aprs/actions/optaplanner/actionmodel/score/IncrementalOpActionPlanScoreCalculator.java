@@ -138,7 +138,9 @@ public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreC
         }
         OpAction act = (OpAction) entity;
         final HardSoftLongScore actScore = ofAction(act, checkPlan);
-        score = score.add(actScore);
+        synchronized (this) {
+            score = score.add(actScore);
+        }
         if (DO_SCORE_CHECKS) {
             checkScore();
             callInfoLog.add("afterEntityAdded : act=" + act + ",score=" + score);
@@ -204,7 +206,7 @@ public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreC
     }
 
     private void printErrorsAndThrowRuntimeException(final HardSoftLongScore sumActionsScore) throws RuntimeException {
-        synchronized (this.getClass()) {
+        synchronized (IncrementalOpActionPlanScoreCalculator.class) {
             long diffSoftScoreSumActionsScore = score.getSoftScore() - sumActionsScore.getSoftScore();
             if (null != lastCheckedScore) {
                 final long lastCheckedSoftScore = lastCheckedScore.getSoftScore();
@@ -373,8 +375,10 @@ public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreC
                 processedActions.add(actToScoreIndex);
                 processedActionsOldScoreMap.put(actToScoreIndex, oldScore);
                 processedActionsNewScoreMap.put(actToScoreIndex, actScore);
-                score = score.subtract(oldScore);
-                score = score.add(actScore);
+                synchronized (this) {
+                    score = score.subtract(oldScore);
+                    score = score.add(actScore);
+                }
                 if (DO_SCORE_CHECKS) {
                     callInfoLog.add("afterVariableChanged actIndex=" + actIndex + ", actToScoreIndex=" + actToScoreIndex + ",oldScore=" + oldScore + ",actScore=" + actScore + ",score=" + score + ",act=" + act.getName());
                 }
@@ -422,7 +426,9 @@ public class IncrementalOpActionPlanScoreCalculator implements IncrementalScoreC
             throw new RuntimeException("null == checkPlan");
         }
         final HardSoftLongScore actScore = ofAction(act, checkPlan);
-        score = score.subtract(actScore);
+        synchronized (this) {
+            score = score.subtract(actScore);
+        }
         checkScore();
     }
 

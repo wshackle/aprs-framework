@@ -28,7 +28,7 @@ import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PoseType;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
-import java.io.IOException;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -292,7 +292,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (argsMapPort == null) {
                 throw new IllegalArgumentException("argsMap does not contain a value for --visionport");
             }
-            port = Short.valueOf(argsMapPort);
+            port = Short.parseShort(argsMapPort);
             int connectTimeout = 0;
             String argsMapConnectTimeout = argsMap.get("connectTimeout");
             if (argsMapConnectTimeout != null) {
@@ -303,7 +303,7 @@ public class VisionSocketClient implements AutoCloseable {
             if (argsMapReadSoTimeout != null) {
                 readSoTimeout = Integer.parseInt(argsMapReadSoTimeout.trim());
             }
-            port = Short.valueOf(argsMapPort);
+            port = Short.parseShort(argsMapPort);
             final short portf = port;
             final String hostf = host;
             final int connectTimeoutF = connectTimeout;
@@ -320,6 +320,7 @@ public class VisionSocketClient implements AutoCloseable {
                 @Override
                 public void call(final String line, @Nullable PrintStream os) {
                     if (line.length() < 1 || line.trim().length() < 1) {
+                        //noinspection NonAtomicOperationOnVolatileField
                         emptyLines++;
                         return;
                     }

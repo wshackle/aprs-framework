@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "guieffect","serial"})
+@SuppressWarnings({"unused", "guieffect","serial","initialization","nullness"})
 @UIType
 public class ColorTextOptionsJPanel extends javax.swing.JPanel {
 

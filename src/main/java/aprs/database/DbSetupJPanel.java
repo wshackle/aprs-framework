@@ -220,11 +220,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jLabel3.setText("Database Name: ");
 
         jTextFieldDBName.setText("neo4j");
-        jTextFieldDBName.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldDBNameActionPerformed(evt);
-            }
-        });
 
         jLabel1.setText("Database Host: ");
 
@@ -235,11 +230,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         jLabel5.setText("Database Password: ");
 
         jTextFieldDBUser.setText("neo4j");
-        jTextFieldDBUser.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jTextFieldDBUserActionPerformed(evt);
-            }
-        });
 
         jTextFieldDBHost.setText("localhost");
 
@@ -276,10 +266,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 "Type", "Text"
             }
         ) {
-            Class[] types = new Class [] {
+            final Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            final boolean[] canEdit = new boolean [] {
                 false, true
             };
 
@@ -553,16 +543,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     });
                 });
     }//GEN-LAST:event_jButtonDisconnectDBActionPerformed
-
-    @UIEffect
-    private void jTextFieldDBNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDBNameActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldDBNameActionPerformed
-
-    @UIEffect
-    private void jTextFieldDBUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldDBUserActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jTextFieldDBUserActionPerformed
 
     @UIEffect
     private void jButtonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSaveActionPerformed

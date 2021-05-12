@@ -115,7 +115,7 @@ public class OpActionSwapMove extends AbstractMove<OpActionPlan> {
         final HardSoftLongScore undoOrigSdScoreLocalFinal = undoOrigSdScore;
         final OpActionPlan undoOrigPlanCopyLocalFinal = undoOrigPlanCopy;
         if (null != undoOrigSdScoreLocalFinal && null != undoOrigPlanCopyLocalFinal) {
-            synchronized (this.getClass()) {
+            synchronized (OpActionSwapMove.class) {
                 HardSoftLongScore newSdScore;
                 try {
                     newSdScore = IncrementalOpActionPlanScoreCalculator.computeInitScore(scoreDirector.getWorkingSolution());

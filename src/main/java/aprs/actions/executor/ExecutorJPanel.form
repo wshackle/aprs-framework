@@ -452,9 +452,7 @@
                                       <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jTextFieldTestZ" min="-2" pref="47" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jButtonContRandomTest" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="-2" pref="90" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="249" max="-2" attributes="0"/>
                                       <Component id="jButtonStopRandomTest" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButtonRecordLookForJoints" min="-2" max="-2" attributes="0"/>
@@ -505,7 +503,6 @@
                                   </Group>
                                   <Group type="103" alignment="0" groupAlignment="3" attributes="0">
                                       <Component id="jTextFieldTestZ" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      <Component id="jButtonContRandomTest" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jButtonStopRandomTest" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="jButtonRecordLookForJoints" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -685,14 +682,6 @@
                         <Property name="editable" type="boolean" value="false"/>
                         <Property name="text" type="java.lang.String" value="0,0,0"/>
                       </Properties>
-                    </Component>
-                    <Component class="javax.swing.JButton" name="jButtonContRandomTest">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="Continuous Random Test"/>
-                      </Properties>
-                      <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonContRandomTestActionPerformed"/>
-                      </Events>
                     </Component>
                     <Component class="javax.swing.JButton" name="jButtonStopRandomTest">
                       <Properties>

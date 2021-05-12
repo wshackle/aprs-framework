@@ -440,11 +440,10 @@ public class Object2DJPanel extends JPanel {
     }
 
     public static File imageFileToCsvFile(File f) {
-        File csvFile = null;
         try {
             File csvDir = new File(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            csvFile = new File(csvDir, f.getName() + ".csv");
+            File csvFile = new File(csvDir, f.getName() + ".csv");
             return csvFile;
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -737,9 +736,9 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private static AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
-    private static AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
-    private static AtomicInteger imageIOWriterServiceSkipCount = new AtomicInteger();
+    private static final AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
+    private static final AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
+    private static final AtomicInteger imageIOWriterServiceSkipCount = new AtomicInteger();
 
     private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile, Collection<? extends PhysicalItem> items) {
         writeImageFile(opts, type, f, csvFile, items, null, null);
@@ -778,7 +777,8 @@ public class Object2DJPanel extends JPanel {
             System.err.println("writeImageFile: skipping " + f);
             return;
         }
-        submitCount = imageIOWriterServiceSubmittedCount.incrementAndGet();
+        //noinspection UnusedAssignment
+        int newSubmitCount = imageIOWriterServiceSubmittedCount.incrementAndGet();
         List<PhysicalItem> itemsCopy = new ArrayList<>(items);
         imageIOWriterService.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
     }
@@ -869,8 +869,8 @@ public class Object2DJPanel extends JPanel {
                 throw new IllegalArgumentException("Limits must be finite: (" + optsMinmaxLocal.min.x + "," + optsMinmaxLocal.min.y + "," + optsMinmaxLocal.max.x + "," + optsMinmaxLocal.max.y + ")");
             }
         }
-        int w = (opts.w >= 100) ? opts.w : 100;
-        int h = (opts.h >= 100) ? opts.h : 100;
+        int w = Math.max(opts.w, 100);
+        int h = Math.max(opts.h, 100);
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = img.createGraphics();
         if (null != opts.backgroundColor) {
@@ -912,8 +912,8 @@ public class Object2DJPanel extends JPanel {
             if (null == opts || opts.w < 1 || opts.h < 1) {
                 throw new IllegalArgumentException("opts=" + opts);
             }
-            int w = (opts.w >= 100) ? opts.w : 100;
-            int h = (opts.h >= 100) ? opts.h : 100;
+            int w = Math.max(opts.w, 100);
+            int h = Math.max(opts.h, 100);
 
             Point2DMinMax tempMinMax = computeAutoscaleMinMax(opts, itemsToPaint);
 //            if ( opts.paintingComponent) {
@@ -923,7 +923,7 @@ public class Object2DJPanel extends JPanel {
             paintItems(g2d, itemsToPaint, selectedItem, tempMinMax, opts);
         } catch (Exception e) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", e);
-            g2d.drawString(e.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
+            g2d.drawString(e.toString(), TO_SCREEN_X_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
 
@@ -1190,7 +1190,7 @@ public class Object2DJPanel extends JPanel {
 //    public Point2D.Double getMinCorner() {
 //        return minCorner;
 //    }
-    private Point2DMinMax minmax = new Point2DMinMax();
+    private final Point2DMinMax minmax = new Point2DMinMax();
 
     public Point2DMinMax getMinmax(boolean autoscale) {
         if (autoscale && null != autoScaledMinMax) {
@@ -2283,10 +2283,10 @@ public class Object2DJPanel extends JPanel {
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
                 } else {
                     g2d.setColor(Color.white);
-                    g2d.drawArc(-10, -10, TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET, 0, 360);
+                    g2d.drawArc(-10, -10, 10, 10, 0, 360);
                 }
                 g2d.setColor(Color.red);
-                g2d.drawLine(-20, 0, TO_SCREEN_Y_OFFSET, 0);
+                g2d.drawLine(-20, 0, TO_SCREEN_X_OFFSET, 0);
                 g2d.drawLine(0, -20, 0, TO_SCREEN_Y_OFFSET);
                 g2d.setColor(origColor);
                 g2d.setTransform(origTransform);
@@ -2301,7 +2301,7 @@ public class Object2DJPanel extends JPanel {
             }
         } catch (Exception exception) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", exception);
-            g2d.drawString(exception.toString(), TO_SCREEN_Y_OFFSET, TO_SCREEN_Y_OFFSET);
+            g2d.drawString(exception.toString(), TO_SCREEN_X_OFFSET, TO_SCREEN_Y_OFFSET);
         }
     }
 
@@ -2486,15 +2486,13 @@ public class Object2DJPanel extends JPanel {
             int img_h = info.getScaledImageHeight();
             double infoXOffset = info.xoffset;
             double infoYOffset = info.yoffset;
-            double xo = infoXOffset;
-            double yo = infoYOffset;
+            final double xo = infoXOffset;
+            final double yo = infoYOffset;
             if (info.ignoreRotations) {
                 double cs = Math.cos(opts.alternativeRotation);
                 double sn = Math.sin(opts.alternativeRotation);
                 infoXOffset = xo * cs + yo * sn;
                 infoYOffset = -xo * sn + yo * cs;
-                xo = infoXOffset;
-                yo = infoYOffset;
             }
 
             translateThenRotate(opts, g2d, item.x - infoXOffset, item.y - infoYOffset, tempMinMax, currentScale, info.ignoreRotations, -rotationOffsetParam - item.getRotation());
@@ -2553,6 +2551,7 @@ public class Object2DJPanel extends JPanel {
             int w = info.getScaledImageWidth();
             int h = info.getScaledImageHeight();
             if (w > 0 && h > 0) {
+                //noinspection IntegerDivisionInFloatingPointContext
                 Rectangle2D.Double itemDisplayRect
                         = new Rectangle2D.Double(
                                 -w / 2, -h / 2, // x,y

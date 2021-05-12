@@ -53,8 +53,8 @@ public class TeachScanMonitor {
 
     final int startingAbortCount;
     boolean anyChanged = false;
-    int cycles = 0;
-    long start_time = System.currentTimeMillis();
+    final int cycles = 0;
+    final long start_time = System.currentTimeMillis();
     long last_time = start_time;
     long max_time_diff = 0;
     long maxHandleTime = 0;
@@ -157,6 +157,7 @@ public class TeachScanMonitor {
     private volatile int submitTeachItemsCount = 0;
 
     private void submitTeachItems(@Nullable List<PhysicalItem> teachItems) {
+        //noinspection NonAtomicOperationOnVolatileField
         submitTeachItemsCount++;
         if (futureCompleted || stopFlag) {
             object2DOuterJPanel1.removeSetItemsListener(teachItemsConsumer);
@@ -195,6 +196,7 @@ public class TeachScanMonitor {
     }
 
     private void handleTeachItems(List<PhysicalItem> teachItems) {
+        //noinspection NonAtomicOperationOnVolatileField
         handleTeachItemsCount++;
         long handleTeachItemsStartTime = System.currentTimeMillis();
         if (futureCompleted) {

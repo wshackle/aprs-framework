@@ -405,9 +405,6 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="6000"/>
                   </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldReadTimeoutActionPerformed"/>
-                  </Events>
                 </Component>
                 <Component class="aprs.simview.DragModeComboBox" name="dragModeComboBox">
                   <Events>
@@ -1153,9 +1150,6 @@
                   <Properties>
                     <Property name="text" type="java.lang.String" value="0.0,0.0"/>
                   </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jTextFieldCurrentXYActionPerformed"/>
-                  </Events>
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel2">
                   <Properties>

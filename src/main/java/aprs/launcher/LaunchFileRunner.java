@@ -132,7 +132,6 @@ public class LaunchFileRunner {
         }
         List<LineConsumer> lineConsumers = getLineConsumers();
         OutputStream errPrintStream = new LogDisplayPanelOutputStream(logPanel, lineConsumers);
-        lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
         wrappedProcess.setDisplayComponent(logPanel);
         List<WrappedProcess> processes = getProcesses();
@@ -603,33 +602,34 @@ public class LaunchFileRunner {
                 return null;
             }
             String firstWord = words[0];
-            if (firstWord.equals("if!connectOK")) {
+            switch (firstWord) {
+                case "if!connectOK":
 
-                String parts[] = Arrays.copyOfRange(words, 1, words.length);
-                if (parts.length >= 2) {
-                    try {
-                        Socket s = new Socket(parts[0], Integer.parseInt(parts[1]));
-                        ifStack.push(false);
-                    } catch (Exception e) {
+                    String parts[] = Arrays.copyOfRange(words, 1, words.length);
+                    if (parts.length >= 2) {
+                        try {
+                            Socket s = new Socket(parts[0], Integer.parseInt(parts[1]));
+                            ifStack.push(false);
+                        } catch (Exception e) {
 //                         Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", e);
-                        ifStack.push(true);
+                            ifStack.push(true);
+                        }
+                        newTabs = tabs + "    ";
                     }
-                    newTabs = tabs + "    ";
-                }
-                return null;
-            } else if (firstWord.equals("else")) {
-                ifStack.push(!ifStack.pop());
-                return null;
-            } else if (firstWord.equals("endif")) {
-                if (tabs.length() > 4) {
-                    newTabs = tabs.substring(4);
-                    tabs = newTabs;
-                } else if (tabs.length() == 4) {
-                    newTabs = "";
-                    tabs = newTabs;
-                }
-                ifStack.pop();
-                return null;
+                    return null;
+                case "else":
+                    ifStack.push(!ifStack.pop());
+                    return null;
+                case "endif":
+                    if (tabs.length() > 4) {
+                        newTabs = tabs.substring(4);
+                        tabs = newTabs;
+                    } else if (tabs.length() == 4) {
+                        newTabs = "";
+                        tabs = newTabs;
+                    }
+                    ifStack.pop();
+                    return null;
             }
             cmdsProcessed = true;
 
@@ -826,11 +826,11 @@ public class LaunchFileRunner {
             frm.setProcessLaunchDirectory(parentFile);
         }
 
-        StringBuilder stringBuilder = new StringBuilder();
         ifStack.clear();
         ifStack.push(true);
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+            StringBuilder stringBuilder = new StringBuilder();
             while (null != (line = br.readLine())) {
                 WrappedProcess p = parseLaunchFileLine(line, futures, stringBuilder);
                 if (null != p) {
@@ -840,7 +840,6 @@ public class LaunchFileRunner {
             if (null != frm) {
                 frm.getjTextAreaLauncherFile().setText(stringBuilder.toString());
             }
-            stringBuilder = null;
         }
         XFutureVoid allOfXFuture = XFuture.allOfWithName("LaunchFileRunner.allOf_f=" + f, futures);
         this.lastRunAllOfFuture = allOfXFuture;

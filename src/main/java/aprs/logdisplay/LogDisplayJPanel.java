@@ -199,7 +199,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jButtonToExternalActionPerformed
 
-    private JPopupMenu popMenu = createPopupMenu();
+    private final JPopupMenu popMenu = createPopupMenu();
 
     @UIEffect
     private JPopupMenu createPopupMenu() {
@@ -252,7 +252,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         jTextArea1.setCaretPosition(jTextArea1.getText().length()-1);
     }//GEN-LAST:event_jButtonProcessInfoActionPerformed
 
-    private List<String> logLines = new ArrayList<>();
+    private final List<String> logLines = new ArrayList<>();
 
     @UIEffect
     private void appendLine(String l) {

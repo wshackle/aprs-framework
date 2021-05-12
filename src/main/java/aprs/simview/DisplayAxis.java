@@ -22,8 +22,6 @@
  */
 package aprs.simview;
 
-import java.util.Objects;
-
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}

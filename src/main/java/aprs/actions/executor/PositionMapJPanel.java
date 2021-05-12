@@ -146,7 +146,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                 "Input_X", "Input_Y", "Input_Z", "Output_X", "Output_Y", "Output_Z", "Offset_X", "Offset_Y", "Offset_Z", "Label"
             }
         ) {
-            Class[] types = new Class [] {
+            final Class[] types = new Class [] {
                 java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 

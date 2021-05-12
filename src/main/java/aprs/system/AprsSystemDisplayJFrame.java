@@ -333,7 +333,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         prevFrameCount = jDesktopPane1.getAllFrames().length;
     }
 
-    private class LocationSize {
+    private static class LocationSize {
 
         final Point location;
         final Dimension size;
@@ -421,7 +421,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     boolean checkInternalFrame(JInternalFrame frm) {
         try {
-            if (iconifiedFramesMap.keySet().contains(frm)) {
+            if (iconifiedFramesMap.containsKey(frm)) {
                 return true;
             }
             if (frm == null) {
@@ -566,7 +566,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         }
 //        System.out.println("framesChanged = " + framesChanged);
-        int menuItemCount = jMenuWindow.getItemCount();
+//        int menuItemCount = jMenuWindow.getItemCount();
 //        System.out.println("menuItemCount = " + menuItemCount);
         if (!framesChanged) {
             return;
@@ -592,7 +592,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         assert (framesListSize == menuItems.size()) :
                 ("menuItems = " + menuItems + " does not match framesList = " + framesList);
 
-        menuItemCount = jMenuWindow.getItemCount();
+        int menuItemCount = jMenuWindow.getItemCount();
 //        System.out.println("menuItemCount = " + menuItemCount);
         assert (framesListSize == menuItemCount) :
                 ("framesListSize = " + framesListSize + " does not match menuItemCount = " + menuItemCount

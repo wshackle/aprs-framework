@@ -41,7 +41,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("serial")
+@SuppressWarnings("ALL")
 class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
 
 

@@ -271,6 +271,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return false;
     }
 
+    @SuppressWarnings("UnusedAssignment")
     private boolean checkTrayOverlap(Tray trayA, PhysicalItem itemB) {
         List<Slot> slotsA = trayA.getAbsSlotList();
         if (null == slotsA || slotsA.isEmpty()) {
@@ -2848,9 +2849,9 @@ public class AprsSystem implements SlotOffsetProvider {
      * @return whether the program completed successfully
      */
     public boolean runCRCLProgram(CRCLProgramType program) {
-        boolean ret = false;
+        boolean ret;
         runCRCLProgramTrace = Thread.currentThread().getStackTrace();
-        String programString = null;
+        String programString;
         try {
             programString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
         } catch (CRCLException ex) {
@@ -3328,20 +3329,24 @@ public class AprsSystem implements SlotOffsetProvider {
             if (cl instanceof URLClassLoader) {
                 URLClassLoader ucl = (URLClassLoader) cl;
                 URL[] urls = ucl.getURLs();
+                StringBuilder msgBuilder = new StringBuilder(msg);
                 for (int i = 0; i < urls.length; i++) {
                     URL url = urls[i];
-                    msg = msg + "\nurl[" + i + "]=" + urls[i];
+                    msgBuilder.append("\nurl[").append(i).append("]=").append(urls[i]);
                 }
+                msg = msgBuilder.toString();
             }
             ClassLoader sysCl = ClassLoader.getSystemClassLoader();
             if (sysCl != cl) {
                 if (sysCl instanceof URLClassLoader) {
                     URLClassLoader ucl = (URLClassLoader) sysCl;
                     URL[] urls = ucl.getURLs();
+                    StringBuilder msgBuilder = new StringBuilder(msg);
                     for (int i = 0; i < urls.length; i++) {
                         URL url = urls[i];
-                        msg = msg + "\nurl[" + i + "]=" + urls[i];
+                        msgBuilder.append("\nurl[").append(i).append("]=").append(urls[i]);
                     }
+                    msg = msgBuilder.toString();
                 }
             }
             Logger.getLogger(AprsSystem.class
@@ -4257,10 +4262,6 @@ public class AprsSystem implements SlotOffsetProvider {
         return false; // pddlPlannerStartupCheckBox.isSelected();
     }
 
-    private void setPddlPlannerStartupSelected(boolean selected) {
-//        pddlPlannerStartupCheckBox.setSelected(selected);
-    }
-
     private boolean isExecutorStartupSelected() {
         return executorStartupCheckBox.isSelected();
     }
@@ -4969,7 +4970,7 @@ public class AprsSystem implements SlotOffsetProvider {
     /**
      * Make the Object 2D view visible and create underlying components.
      *
-     * @return
+     * @return used to determine when the frame is started.
      */
     public XFutureVoid startObject2DJinternalFrame() {
         XFutureVoid ret = Utils.composeToVoidOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
@@ -5344,7 +5345,7 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private static final boolean DEBUG_START_CRCL_SERVER
-            = Boolean.valueOf("aprs.debugStartServer");
+            = Boolean.parseBoolean("aprs.debugStartServer");
 
     /**
      * Create and display the simulation server window and start the simulation
@@ -5779,6 +5780,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void windowClosing() {
         setCrclClientPreClosing(true);
         closing = true;
@@ -6980,10 +6982,10 @@ public class AprsSystem implements SlotOffsetProvider {
      * positions
      * @param newRotationOffsetParam offset to tray rotations in determining
      * absolute slot positions
-     * @param newReverseFlag
-     * @param allowEmptyKits
-     * @param alwaysLoad
-     * @param checkLimits
+     * @param newReverseFlag should the list move parts from kits to parts trays
+     * @param allowEmptyKits allow  empty kits tray list even though it generally indicates bad vision
+     * @param alwaysLoad load even when no change is detected
+     * @param checkLimits check that positions are not outside of cartesian limits
      * @return the file created or null if an error occured
      */
     public @Nullable
@@ -7033,6 +7035,7 @@ public class AprsSystem implements SlotOffsetProvider {
 //            takeSimViewSnapshot("createActionListFromVision:teachItems", teachItems);
             goalLearnerLocal.setAprsSystem(this);
             List<Action> actions = goalLearnerLocal.createActionListFromVision(requiredItems, teachItems, allEmptyA, overrideRotation, newRotationOffsetParam);
+            //noinspection UnusedAssignment
             t1 = System.currentTimeMillis();
             boolean allEmpty = allEmptyA[0];
             if (!goalLearnerLocal.isCorrectionMode() && !allowEmptyKits) {
@@ -7071,9 +7074,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (!equal || !"createActionListFromVision".equals(lastLogEvent)) {
                 logEvent("createActionListFromVision",
                         equal + "\n"
-                        + endingList
-                                .stream()
-                                .collect(Collectors.joining("\n")));
+                        + String.join("\n", endingList));
             }
         } catch (IOException ex) {
             Logger.getLogger(AprsSystem.class
@@ -8290,7 +8291,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private volatile StackTraceElement startActionsTrace  @Nullable []  = null;
     private volatile @Nullable
     String startActionsComment = null;
-    private AtomicInteger startActionsCount = new AtomicInteger();
+    private final AtomicInteger startActionsCount = new AtomicInteger();
 
     private volatile boolean endLogged = false;
 
@@ -9608,45 +9609,42 @@ public class AprsSystem implements SlotOffsetProvider {
             if (null != this.executorJInternalFrame1) {
                 String alertLimitsString = props.getProperty(ALERT_LIMITS);
                 if (null != alertLimitsString) {
-                    setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+                    setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
                 }
             }
             String useTeachTableString = props.getProperty(USETEACHTABLE);
             if (null != useTeachTableString) {
-                setUseTeachTable(Boolean.valueOf(useTeachTableString));
+                setUseTeachTable(Boolean.parseBoolean(useTeachTableString));
             }
-            String startPddlPlannerString = props.getProperty(STARTUPPDDLPLANNER);
-            if (null != startPddlPlannerString) {
-                setPddlPlannerStartupSelected(Boolean.valueOf(startPddlPlannerString));
-            }
+
             String startExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
             if (null != startExecutorString) {
-                setExecutorStartupSelected(Boolean.valueOf(startExecutorString));
+                setExecutorStartupSelected(Boolean.parseBoolean(startExecutorString));
             }
             String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
             if (null != startObjectSpString) {
-                setObjectSpStartupSelected(Boolean.valueOf(startObjectSpString));
+                setObjectSpStartupSelected(Boolean.parseBoolean(startObjectSpString));
             }
 
             String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
             if (null != startObjectViewString) {
-                setObject2DViewStartupSelected(Boolean.valueOf(startObjectViewString));
+                setObject2DViewStartupSelected(Boolean.parseBoolean(startObjectViewString));
             }
             String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
             if (null != startCRCLClientString) {
-                setRobotCrclGUIStartupSelected(Boolean.valueOf(startCRCLClientString));
+                setRobotCrclGUIStartupSelected(Boolean.parseBoolean(startCRCLClientString));
             }
             String startForceTorqueSimString = props.getProperty(STARTUPFORCETORQUESIM);
             if (null != startForceTorqueSimString) {
-                setForceTorqueSimStartupSelected(Boolean.valueOf(startForceTorqueSimString));
+                setForceTorqueSimStartupSelected(Boolean.parseBoolean(startForceTorqueSimString));
             }
             String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
             if (null != startCRCLSimServerString) {
-                setRobotCrclSimServerStartupSelected(Boolean.valueOf(startCRCLSimServerString));
+                setRobotCrclSimServerStartupSelected(Boolean.parseBoolean(startCRCLSimServerString));
             }
             String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
             if (null != startCRCLFanucServerString) {
-                setRobotCrclFanucServerStartupSelected(Boolean.valueOf(startCRCLFanucServerString));
+                setRobotCrclFanucServerStartupSelected(Boolean.parseBoolean(startCRCLFanucServerString));
             }
             String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
             if (null != fanucCrclLocalPortString) {
@@ -9659,25 +9657,25 @@ public class AprsSystem implements SlotOffsetProvider {
 
             String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
             if (null != startCRCLMotomanServerString) {
-                setRobotCrclMotomanServerStartupSelected(Boolean.valueOf(startCRCLMotomanServerString));
+                setRobotCrclMotomanServerStartupSelected(Boolean.parseBoolean(startCRCLMotomanServerString));
             }
             String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
             if (null != startConnectDBString) {
-                setConnectDatabaseOnStartupSelected(Boolean.valueOf(startConnectDBString));
+                setConnectDatabaseOnStartupSelected(Boolean.parseBoolean(startConnectDBString));
                 if (isConnectDatabaseOnSetupStartupSelected()) {
                     setShowDatabaseSetupStartupSelected(true);
                 }
             }
             String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
             if (null != startConnectVisionString) {
-                setConnectVisionOnStartupSelected(Boolean.valueOf(startConnectVisionString));
+                setConnectVisionOnStartupSelected(Boolean.parseBoolean(startConnectVisionString));
                 if (isConnectVisionOnStartupSelected()) {
                     setObjectSpStartupSelected(true);
                 }
             }
             String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
             if (null != startExploreGraphDbString) {
-                setExploreGraphDBStartupSelected(Boolean.valueOf(startExploreGraphDbString));
+                setExploreGraphDBStartupSelected(Boolean.parseBoolean(startExploreGraphDbString));
             }
 
             String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
@@ -9691,11 +9689,11 @@ public class AprsSystem implements SlotOffsetProvider {
 
             String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
             if (null != startKitInspetion) {
-                setKitInspectionStartupSelected(Boolean.valueOf(startKitInspetion));
+                setKitInspectionStartupSelected(Boolean.parseBoolean(startKitInspetion));
             }
             String useCsvFilesInsteadOfDatabaseString = props.getProperty(USE_CSV_FILES_INSTEAD_OF_DATABASE);
             if (null != useCsvFilesInsteadOfDatabaseString) {
-                this.setUseCsvFilesInsteadOfDatabase(Boolean.valueOf(useCsvFilesInsteadOfDatabaseString));
+                this.setUseCsvFilesInsteadOfDatabase(Boolean.parseBoolean(useCsvFilesInsteadOfDatabaseString));
             }
             this.updateSubPropertiesFiles();
 //            if (null != this.pddlPlannerJInternalFrame) {
@@ -9717,7 +9715,7 @@ public class AprsSystem implements SlotOffsetProvider {
                                 .thenComposeToVoid(() -> {
                                     String alertLimitsString = props.getProperty(ALERT_LIMITS);
                                     if (null != alertLimitsString) {
-                                        setAlertLimitsCheckBoxSelected(Boolean.valueOf(alertLimitsString));
+                                        setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
                                     }
                                     return syncPauseRecoverCheckbox();
                                 });
@@ -9777,11 +9775,11 @@ public class AprsSystem implements SlotOffsetProvider {
 
             String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
             if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
-                setReloadSimFilesOnReverseCheckBoxSelected(Boolean.valueOf(reloadSimFilesOnReverseString));
+                setReloadSimFilesOnReverseCheckBoxSelected(Boolean.parseBoolean(reloadSimFilesOnReverseString));
             }
             String logCrclProgramsEnabledString = props.getProperty(LOG_CRCL_PROGRAMS_ENABLED);
             if (null != logCrclProgramsEnabledString && logCrclProgramsEnabledString.trim().length() > 0) {
-                setLogCrclProgramsSelected(Boolean.valueOf(logCrclProgramsEnabledString));
+                setLogCrclProgramsSelected(Boolean.parseBoolean(logCrclProgramsEnabledString));
             }
             propertyToCheckBox(props, SNAP_SHOT_ENABLE_PROP, snapshotsCheckBox);
             String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);

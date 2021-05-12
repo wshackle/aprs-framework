@@ -269,7 +269,7 @@ public class Utils {
         }
     }
 
-    private static boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
+    private static final boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
 
     static public boolean arePlayAlertsEnabled() {
         return playAlerts;
@@ -290,14 +290,11 @@ public class Utils {
     }
 
     public static URL getAprsIconUrl() {
-        URL url = null;
+        final URL url;
         try {
             url = Utils.class.getResource("aprs.png");
         } catch (Exception e) {
             throw new RuntimeException("Utils.class.getResource(\"aprs.png\") threw " + e.getMessage(), e);
-        }
-        if (null == url) {
-            throw new IllegalStateException("Utils.class.getResource(\"aprs.png\") returned null");
         }
         return url;
     }
@@ -770,9 +767,8 @@ public class Utils {
     }
 
     /**
-     * Call a method that returns a future of a value on the dispatch thread.
+     * Call a method that returns a future of a void on the dispatch thread.
      *
-     * @param <R> type of return of the caller
      * @param s supplier object with get method to be called.
      * @return future that will make the return value accessible when the call
      * is complete.
@@ -794,8 +790,10 @@ public class Utils {
      *
      * @param table table to be resized
      */
-    public static void autoResizeTableColWidths(JTable table) {
-        Utils.runOnDispatchThread(() -> autoResizeTableColWidthsOnDisplay(table));
+    public static void autoResizeTableColWidths(@Nullable JTable table) {
+        if(null != table) {
+            Utils.runOnDispatchThread(() -> autoResizeTableColWidthsOnDisplay(table));
+        }
     }
 
     /**
@@ -819,8 +817,11 @@ public class Utils {
      * @param table table to be resized
      */
     @UIEffect
-    public static void autoResizeTableColWidthsOnDisplay(JTable table) {
+    public static void autoResizeTableColWidthsOnDisplay(@Nullable JTable table) {
 
+        if(null == table) {
+            return;
+        }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         int fullsize = 0;

@@ -23,13 +23,10 @@
 package aprs.actions.optaplanner.actionmodel;
 
 import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_PICKUP;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
+
 import org.optaplanner.core.impl.heuristic.move.AbstractMove;
-import org.optaplanner.core.impl.heuristic.move.Move;
 import org.optaplanner.core.impl.heuristic.selector.move.factory.MoveListFactory;
 
 /**
@@ -52,7 +49,7 @@ public class OpActionMoveListFactory implements MoveListFactory<OpActionPlan> {
                         pickupsByPartType.compute(actionI.getPartType(),
                                 (String key, List<OpAction> l) -> {
                                     if (l == null) {
-                                        return new ArrayList<>(Arrays.asList(actionI));
+                                        return new ArrayList<>(Collections.singletonList(actionI));
                                     } else {
                                         l.add(actionI);
                                         return l;
@@ -65,7 +62,7 @@ public class OpActionMoveListFactory implements MoveListFactory<OpActionPlan> {
                         dropoffsByPartType.compute(actionI.getPartType(),
                                 (String key, List<OpAction> l) -> {
                                     if (l == null) {
-                                        return new ArrayList<>(Arrays.asList(actionI));
+                                        return new ArrayList<>(Collections.singletonList(actionI));
                                     } else {
                                         l.add(actionI);
                                         return l;

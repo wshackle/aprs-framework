@@ -42,6 +42,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -386,6 +387,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private static void loadLaunchProperties() {
         launchPropertiesLoaded = true;
         try {
+            System.out.println("LAUNCH_PROPERTIES_FILE = " + LAUNCH_PROPERTIES_FILE);
+            System.out.println("LAUNCH_PROPERTIES_FILE.getCanonicalPath() = " + LAUNCH_PROPERTIES_FILE.getCanonicalPath());
             if (LAUNCH_PROPERTIES_FILE.exists() && LAUNCH_PROPERTIES_FILE.canRead()) {
                 Properties props = new Properties();
                 props.load(new FileReader(LAUNCH_PROPERTIES_FILE));
@@ -939,6 +942,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
 
+    	for(Map.Entry<Object,Object> prop : System.getProperties().entrySet()) {
+    		System.out.println(prop.getKey()+" = "+prop.getValue());
+    	}
         loadLaunchProperties();
         Utils.setToAprsLookAndFeel();
 

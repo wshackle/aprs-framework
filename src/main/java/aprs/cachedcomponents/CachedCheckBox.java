@@ -31,7 +31,6 @@ import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

@@ -130,10 +130,10 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
                 "Index", "Id", "Name", "Type", "PartType", "X", "Y", "Cost", "Required", "Skipped", "NextId", "ExecType", "Args", "PossibleNexts"
             }
         ) {
-            Class[] types = new Class [] {
+            final Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            final boolean[] canEdit = new boolean [] {
                 false, false, true, true, true, true, true, true, false, false, false, true, true, true
             };
 

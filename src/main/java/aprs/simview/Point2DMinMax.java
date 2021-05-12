@@ -30,8 +30,8 @@ import java.awt.geom.Point2D;
  */
 public class Point2DMinMax {
 
-    Point2D.Double min;
-    Point2D.Double max;
+    final Point2D.Double min;
+    final Point2D.Double max;
 
     Point2DMinMax() {
         min = new Point2D.Double(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);

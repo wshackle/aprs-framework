@@ -98,12 +98,12 @@ public class PositionMapEntry {
     /**
      * Create a new entry given and input and offset with empty label.
      *
-     * @param inputX
-     * @param inputY
-     * @param inputZ
-     * @param offsetX
-     * @param offsetY
-     * @param offsetZ
+     * @param inputX input x
+     * @param inputY input y
+     * @param inputZ input z
+     * @param offsetX offset x
+     * @param offsetY offset y
+     * @param offsetZ offset z
      * @return newly created entry
      */
     public static PositionMapEntry pointOffsetEntry(
@@ -115,14 +115,14 @@ public class PositionMapEntry {
     /**
      * Create a new entry given and input and offset with provided label.
      * 
-     * @param inputX
-     * @param inputY
-     * @param inputZ
-     * @param offsetX
-     * @param offsetY
-     * @param offsetZ
+     * @param inputX input x
+     * @param inputY input y
+     * @param inputZ input z
+     * @param offsetX offset x
+     * @param offsetY offset y
+     * @param offsetZ offset z
      * @param label label used for display and debug logging
-     * @return
+     * @return a new entry created from the given inputs, offsets and label.
      */
     public static PositionMapEntry pointOffsetLabelEntry(
                 double inputX, double inputY, double inputZ,
@@ -131,16 +131,16 @@ public class PositionMapEntry {
     }
 
     /**
-     * Create a new entry given and input and offset with empty label.
-     * @param inputX
-     * @param inputY
-     * @param inputZ
-     * @param offsetX
-     * @param offsetY
-     * @param offsetZ
-     * @param pme1
-     * @param pme2
-     * @return
+     * Create a new entry given and input and offset min and max of the two entries.
+     * @param inputX input x
+     * @param inputY input y
+     * @param inputZ input z
+     * @param offsetX offset x
+     * @param offsetY offset y
+     * @param offsetZ offset z
+     * @param pme1 first entry to combine
+     * @param pme2 second entry to combine
+     * @return a new entry created with the given inputs, offsets, and min and max taken from the pme1 and pme1.
      */
     public static PositionMapEntry pointOffsetEntryCombining(
             double inputX, double inputY, double inputZ, 

@@ -25,7 +25,6 @@ package aprs.database.vision;
 import aprs.misc.SlotOffsetProvider;
 import aprs.database.DbSetupPublisher;
 import aprs.database.DbType;
-import aprs.database.PhysicalItem;
 import aprs.database.PoseQueryElem;
 import crcl.utils.XFutureVoid;
 import java.util.List;

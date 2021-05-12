@@ -142,6 +142,7 @@ public class OpActionPlan {
 //            System.out.println("orderedList = " + orderedList);
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 HardSoftLongScore newscore = calculator.calculateScore(this);
+                //noinspection NonAtomicOperationOnVolatileField
                 exhaustiveSearchScored++;
                 System.out.println("exhaustiveSearchScored = " + exhaustiveSearchScored + ", needed=" + needed);
                 if (newscore.compareTo(score) > 0) {
@@ -214,6 +215,7 @@ public class OpActionPlan {
 //            System.out.println("orderedList = " + orderedList);
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 HardSoftLongScore newscore = calculator.calculateScore(this);
+                //noinspection NonAtomicOperationOnVolatileField
                 exhaustiveSearchScored++;
                 System.out.println("exhaustiveSearchScored = " + exhaustiveSearchScored + ", needed=" + needed);
                 if (newscore.compareTo(score) > 0) {
@@ -253,10 +255,9 @@ public class OpActionPlan {
         try {
             List<OpAction> possiblesNotInSet = findPossiblesNotInSet(action, set);
 
-            Collections.sort(possiblesNotInSet,
-                    Comparators.chain(
-                            Comparators.byBooleanFunction((OpAction a) -> !a.isRequired()),
-                            Comparators.byDoubleFunction((OpAction a) -> action.costOfNext(a, this))));
+            possiblesNotInSet.sort(Comparators.chain(
+                    Comparators.byBooleanFunction((OpAction a) -> !a.isRequired()),
+                    Comparators.byDoubleFunction((OpAction a) -> action.costOfNext(a, this))));
             final double expectedCost = -1000.0 * (costSoFar + minRemainingCost);
             final long expectedCostLong = (long) expectedCost;
             if (!possiblesNotInSet.isEmpty()) {
@@ -280,6 +281,7 @@ public class OpActionPlan {
                 long diffScore = score.getSoftScore() - expectedCostLong;
                 double ratio = diffScore / expectedCost;
                 if (diffScore > 0 || ratio < 0.05) {
+                    //noinspection NonAtomicOperationOnVolatileField
                     comboSearchSkipped++;
                     return bestPlan;
                 }
@@ -310,6 +312,7 @@ public class OpActionPlan {
 //            System.out.println("orderedList = " + orderedList);
                 EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
                 HardSoftLongScore newscore = calculator.calculateScore(this);
+                //noinspection NonAtomicOperationOnVolatileField
                 comboSearchScored++;
 //                System.out.println("comboSearchScored = " + comboSearchScored);
 //                System.out.println("costSoFar = " + costSoFar);
@@ -338,11 +341,11 @@ public class OpActionPlan {
         OpActionPlan clone = new OpActionPlanCloner().cloneSolution(startPlan);
         clone.checkActionList();
         startPlan.checkActionList();
-//        List<OpAction> actions = startPlan.actions;
-        if (null == actions) {
+        List<OpAction> actionsLocal = this.actions;
+        if (null == actionsLocal) {
             throw new NullPointerException("startPlan.actions == null : startPlan =" + startPlan);
         }
-        if (actions.isEmpty()) {
+        if (actionsLocal.isEmpty()) {
             throw new RuntimeException("startPlan.actions.isEmpty() : startPlan=" + startPlan);
         }
         OpAction start = startPlan.findStartAction();
@@ -352,7 +355,7 @@ public class OpActionPlan {
         double minRemainingCost = 0;
         double totalCost = 0;
         int requiredPickups = 0, availPickups = 0, requiredDrops = 0, availDrops = 0;
-        for (OpAction act : actions) {
+        for (OpAction act : actionsLocal) {
             double minActCost = findMinActCost(act, startPlan);
             double cost = act.cost(startPlan);
             totalCost += cost;
@@ -543,16 +546,16 @@ public class OpActionPlan {
     }
 
     public OpActionPlan cloneAndShufflePlan() {
-//        List<OpAction> actions = this.getActions();
-        if (null == actions) {
+        List<OpAction> actionsLocal = this.getActions();
+        if (null == actionsLocal) {
             throw new RuntimeException("inPlan.getActions() returned null : this=" + this);
         }
-        if (actions.isEmpty()) {
+        if (actionsLocal.isEmpty()) {
             throw new RuntimeException("inPlan.getActions().isEmpty() : this=" + this);
         }
         List<OpAction> newActionsList = new ArrayList<>();
-        for (int i = 0; i < actions.size(); i++) {
-            OpAction origAction = actions.get(i);
+        for (int i = 0; i < actionsLocal.size(); i++) {
+            OpAction origAction = actionsLocal.get(i);
             if (origAction.getOpActionType() != OpActionType.FAKE_DROPOFF && origAction.getOpActionType() != OpActionType.FAKE_PICKUP) {
                 OpAction newAction = new OpAction(
                         origAction.getName(),
@@ -776,7 +779,7 @@ public class OpActionPlan {
                         line = br.readLine();
                     }
                 }
-                Collections.sort(newRecentActionListFiles, Comparators.byLongFunction(File::lastModified));
+                newRecentActionListFiles.sort(Comparators.byLongFunction(File::lastModified));
                 if (newRecentActionListFiles.size() > 12) {
                     while (newRecentActionListFiles.size() > 12) {
                         newRecentActionListFiles.remove(0);
@@ -906,7 +909,6 @@ public class OpActionPlan {
                                 fileScore = vval;
                                 break;
                         }
-                        continue;
                     } else if (!type.equals("END")) {
                         // String name, double x, double y, OpActionType opActionType, String partType, boolean required
                         String name = record.get("Name");
@@ -1323,6 +1325,7 @@ public class OpActionPlan {
                     visited.add(actionTmp.getName());
                     if (actionTmp.getNext() == null) {
                         sb.append(" -> ");
+                        //noinspection UnusedAssignment
                         tmp = null;
                         break;
                     }

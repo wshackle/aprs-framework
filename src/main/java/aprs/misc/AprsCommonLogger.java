@@ -2,23 +2,23 @@
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
  * Software Copyright/Warranty Disclaimer
- * 
+ *
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
  * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
- * 
- * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
- * We would appreciate acknowledgement if the software is used. 
- * This software can be redistributed and/or modified freely provided 
- * that any derivative works bear some notice that they are derived from it, 
+ *
+ * This software is experimental. NIST assumes no responsibility whatsoever
+ * for its use by other parties, and makes no guarantees, expressed or
+ * implied, about its quality, reliability, or any other characteristic.
+ * We would appreciate acknowledgement if the software is used.
+ * This software can be redistributed and/or modified freely provided
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.misc;
 
@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- *
- *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class AprsCommonLogger {
 
@@ -49,28 +49,28 @@ public class AprsCommonLogger {
     public static PrintStream out() {
         return instance().outStream;
     }
-    
+
     public static PrintStream err() {
         return instance().errStream;
     }
-    
+
     public static class System {
-        public static final PrintStream out =out();
-        public static final PrintStream err =err();
+        public static final PrintStream out = out();
+        public static final PrintStream err = err();
     }
-    
+
     public static void println(String string) {
         instance().outStream.println(string);
     }
-    
+
     public static void println() {
         instance().outStream.println();
     }
-    
+
     public static void printErrln(String string) {
         instance().outStream.println(string);
     }
-    
+
     private final AprsCommonPrintStream outStream;
     private final AprsCommonPrintStream errStream;
 
@@ -81,18 +81,18 @@ public class AprsCommonLogger {
     public PrintStream getOrigSystemErr() {
         return origSystemErr;
     }
-    
+
     private final PrintStream origSystemOut;
     private final PrintStream origSystemErr;
-    
+
     private final ConcurrentLinkedDeque<Consumer<String>> stringConsumers
             = new ConcurrentLinkedDeque<>();
-    
-     private  @Nullable  File logFile = null;
-    
-      private volatile @Nullable  PrintStream auxPrintStream= null;
 
-    @SuppressWarnings({"nullness","initialization"})
+    private @Nullable File logFile;
+
+    private volatile @Nullable PrintStream auxPrintStream;
+
+    @SuppressWarnings({"nullness", "initialization"})
     private final Consumer<String> auxConsumer
             = (String s) -> printToAux(s);
 

@@ -25,7 +25,6 @@ package aprs.misc;
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 /**
  *

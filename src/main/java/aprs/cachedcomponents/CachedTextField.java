@@ -1,7 +1,5 @@
 package aprs.cachedcomponents;
 
-import aprs.misc.Utils;
-import static aprs.misc.Utils.isEventDispatchThread;
 import crcl.utils.XFutureVoid;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
@@ -9,11 +7,8 @@ import org.checkerframework.checker.guieffect.qual.UIType;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.guieffect.qual.UI;
 
 public class CachedTextField extends CachedComponentBase {
 

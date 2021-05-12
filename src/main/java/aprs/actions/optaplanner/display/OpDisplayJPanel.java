@@ -387,6 +387,7 @@ public class OpDisplayJPanel extends JPanel {
     }
 
     static private OpActionPlan createEmptyInitPlan() {
+        //noinspection ArraysAsListWithZeroOrOneArgument
         List<OpAction> initList = Arrays.asList(
                 new OpAction("Start", 0, 0, START, "START", true)
         );

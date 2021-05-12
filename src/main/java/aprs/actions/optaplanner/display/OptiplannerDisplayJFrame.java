@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -495,7 +494,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 bestInScore = inSoftScore;
             }
             if (inSoftScore > bestInScore) {
-                bestScoreIsInput = true;
+//                bestScoreIsInput = true;
                 bestScore = inSoftScore;
                 bestPlan = inPlan;
             }
@@ -519,7 +518,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             }
             final long outSoftScore = outPlanScore.getSoftScore();
             if (outSoftScore > bestScore) {
-                bestScoreIsInput = false;
+//                bestScoreIsInput = false;
                 bestScore = outSoftScore;
                 bestPlan = outPlan;
             }
@@ -604,7 +603,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         double maxX;
         double minY;
         double maxY;
-        List<GenerateActionPartInfo> partInfoList;
+        final List<GenerateActionPartInfo> partInfoList;
 
         public GenerateActionConfig(double minDist, double minX, double maxX, double minY, double maxY, List<GenerateActionPartInfo> partInfoList) {
             this.minDist = minDist;

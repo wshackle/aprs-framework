@@ -66,7 +66,7 @@ public class ConnectWaitFor {
         this.timeout = timeout;
         this.endpoint = new InetSocketAddress(host, port);
         this.delay = delay;
-        socketFuture = new XFuture<Socket>("ConnectWaitFor(" + host + "," + port + "," + max_tries + "," + timeout + "," + delay + ")");
+        socketFuture = new XFuture<>("ConnectWaitFor(" + host + "," + port + "," + max_tries + "," + timeout + "," + delay + ")");
         thread = new Thread(this::run, socketFuture.getName());
         thread.start();
     }
@@ -75,6 +75,7 @@ public class ConnectWaitFor {
         try {
             tryConnect();
             while (!socketFuture.isDone()) {
+                //noinspection BusyWait
                 Thread.sleep(delay);
                 if (max_tries > 0 && tries >= max_tries) {
                     throw new IllegalStateException("max_tries exceeded host=" + host + ",port=" + port + ",tries=" + tries + ", max_tries=" + max_tries);
@@ -101,6 +102,7 @@ public class ConnectWaitFor {
 
     private void tryConnect() {
         try {
+            //noinspection NonAtomicOperationOnVolatileField
             tries++;
             if (!socketFuture.isDone()) {
                 Socket socket = new Socket();

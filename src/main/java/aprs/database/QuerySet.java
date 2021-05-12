@@ -56,7 +56,7 @@ public class QuerySet implements QuerySetInterface {
 
     private final @Nullable
     Connection dbConnection;
-    private String expectQueryItemFormat = "\'%s\'";
+    private String expectQueryItemFormat = "'%s'";
 
     public String getExpectQueryItemFormat() {
         return expectQueryItemFormat;
@@ -487,7 +487,6 @@ public class QuerySet implements QuerySetInterface {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
-        int count = 0;
         Map<Integer, Object> map = new TreeMap<>();
         DbQueryInfo getCountQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
         setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
@@ -498,12 +497,11 @@ public class QuerySet implements QuerySetInterface {
 
         try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null)) {
             if (rs.next()) {
-                count = rs.getInt(1);
+                return rs.getInt(1);
             } else {
                 throw new IllegalStateException("Database returned empty ResultSet for query to getPartDesignPartCount for name=" + name + ",\n   simQuery=" + simQuery);
             }
         }
-        return count;
     }
 
     public List<PartsTray> getPartsTrays(String name) throws SQLException, IOException {

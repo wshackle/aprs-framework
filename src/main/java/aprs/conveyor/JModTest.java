@@ -37,7 +37,7 @@ public class JModTest {
 
     protected static ModbusTCPMaster master;
 
-    private static Logger logger = Logger.getLogger(JModTest.class);
+    private static final Logger logger = Logger.getLogger(JModTest.class);
 
     public static void main(String[] args) {
         try {

@@ -25,7 +25,7 @@ package aprs.launcher;
 import aprs.logdisplay.LogDisplayJPanel;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.utils.XFuture;
-import java.awt.Component;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -148,7 +149,7 @@ public class WrappedProcess {
             }
             System.out.println("readCount = " + readCount);
             System.out.println("readRet = " + readRet);
-            System.out.println("readOutputDebugBuff = " + readOutputDebugBuff);
+            System.out.println("readOutputDebugBuff = " + Arrays.toString(readOutputDebugBuff));
             System.out.println("sb = " + sb);
         } catch (IOException ex) {
             if (!closed) {
@@ -190,7 +191,7 @@ public class WrappedProcess {
             }
             System.out.println("readCount = " + readCount);
             System.out.println("readRet = " + readRet);
-            System.out.println("readErrorDebugBuff = " + readErrorDebugBuff);
+            System.out.println("readErrorDebugBuff = " + Arrays.toString(readErrorDebugBuff));
             System.out.println("sb = " + sb);
         } catch (IOException ex) {
             if (!closed) {
@@ -292,7 +293,7 @@ public class WrappedProcess {
 
     public WrappedProcess(OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) {
         this(new ProcessBuilder(command),
-                command.stream().collect(Collectors.joining(" ")),
+                String.join(" ", command),
                 outputPrintStream,
                 errorPrintStream);
     }
@@ -313,7 +314,7 @@ public class WrappedProcess {
 
     public WrappedProcess(File directory, OutputStream outputPrintStream, OutputStream errorPrintStream, List<String> command) {
         this(new ProcessBuilder(command).directory(directory),
-                command.stream().collect(Collectors.joining(" ")),
+                String.join(" ", command),
                 outputPrintStream,
                 errorPrintStream);
     }

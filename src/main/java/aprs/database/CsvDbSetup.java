@@ -68,11 +68,8 @@ import static aprs.database.DbQueryEnum.SET_SINGLE_KT_POSE;
 import static aprs.database.DbQueryEnum.SET_SINGLE_POSE;
 import static aprs.database.DbQueryEnum.SET_SINGLE_PT_POSE;
 import static aprs.database.DbQueryEnum.SET_SINGLE_TRAY_SLOT_DESIGN;
-import java.io.File;
-import java.io.FileOutputStream;
+
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -397,11 +394,9 @@ public class CsvDbSetup implements DbSetup {
         return "".toCharArray();
     }
 
-    private boolean connected = false;
-
     @Override
     public boolean isConnected() {
-        return connected;
+        return false;
     }
 
     private final Map<DbQueryEnum, DbQueryInfo> queriesMap;

@@ -147,13 +147,14 @@ import crcl.utils.CRCLUtils;
 import java.awt.Graphics;
 import java.awt.image.ImageObserver;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import java.awt.GraphicsConfiguration;
 import java.util.TreeMap;
 import org.checkerframework.checker.guieffect.qual.UI;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("SameReturnValue")
+@SuppressWarnings("keyfor")
 public class Supervisor {
 
     private final @MonotonicNonNull
@@ -614,7 +615,7 @@ public class Supervisor {
     }
 
     public @Nullable
-    XFuture<?> getLFR(AprsSupervisorDisplayJFrame frame) {
+    XFuture<?> getLFR() {
         return lastFutureReturned;
     }
 
@@ -869,7 +870,7 @@ public class Supervisor {
     /**
      * Get the location of the last CSV Setup file used.
      *
-     * @param dirName
+     * @param dirName optional directory name to look for file in
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
@@ -1137,8 +1138,9 @@ public class Supervisor {
     private final AtomicReference<@Nullable XFutureVoid> cancelStealRobotFuture = new AtomicReference<>(null);
     private final AtomicReference<@Nullable XFutureVoid> cancelUnStealRobotFuture = new AtomicReference<>(null);
 
-    private AtomicInteger checkLastReturnedFutureCount = new AtomicInteger();
+    private final AtomicInteger checkLastReturnedFutureCount = new AtomicInteger();
 
+    @SuppressWarnings("keyfor")
     synchronized private XFuture<?> checkLastReturnedFuture(@Nullable XFuture<?> inFuture, @Nullable String blockerName) {
         if (this.supervisorThread != Thread.currentThread()) {
             throw new RuntimeException("called from wrong thread =" + Thread.currentThread());
@@ -1206,7 +1208,7 @@ public class Supervisor {
         } else {
             nextLFR = newLFR;
         }
-        this.lastFutureReturned = newLFR;
+        this.lastFutureReturned = nextLFR;
     }
 
     private final List<XFuture<?>> oldLfrs = new ArrayList<>();
@@ -1288,7 +1290,7 @@ public class Supervisor {
 
     private final AtomicInteger skippedRobotEnabledCount = new AtomicInteger();
 
-    synchronized void setRobotEnabled(String robotName, Boolean enabled, XFutureVoid futureToComplete) {
+    synchronized void setRobotEnabled(String robotName, Boolean enabled, @Nullable XFutureVoid futureToComplete) {
         try {
             if (closing) {
                 return;
@@ -1465,7 +1467,7 @@ public class Supervisor {
     }
 
     private XFuture<?> startSetRobotEnabledTrue(String robotName, final int ecc) throws IllegalStateException {
-        Boolean enabled = true;
+        boolean enabled = true;
         XFuture<?> nextLFR;
 
         final XFutureVoid beginUnstealFuture = unStealRobots(ecc);
@@ -1540,7 +1542,7 @@ public class Supervisor {
 
     private XFuture<?> startSetRobotEnabledFalse(String robotName, final int ecc) throws IllegalStateException, PositionMap.BadErrorMapFormatException, IOException {
         XFuture<?> nextLFR;
-        Boolean enabled = false;
+        boolean enabled = false;
 
         if(blockRobotTransfers) {
             return disableRobotNoTransfer(robotName, ecc);
@@ -1653,7 +1655,7 @@ public class Supervisor {
     private <T> XFuture<T> cancelledEcc(Integer ecc, Class<T> clazz) {
         final String name = "cancelledEcc(" + ecc + ") enableChangeCount=" + enableChangeCount.get();
         logEvent(name);
-        XFuture<T> ret = new XFuture<T>(name);
+        XFuture<T> ret = new XFuture<>(name);
         ret.cancelAll(false);
         return ret;
     }
@@ -1669,7 +1671,7 @@ public class Supervisor {
     private <T> XFuture<T> cancelledSrn(int srn, Class<T> clazz) {
         final String name = "cancelledSrn(" + srn + ") stealRobotNumber=" + stealRobotNumber.get();
         logEvent(name);
-        XFuture<T> ret = new XFuture<T>(name);
+        XFuture<T> ret = new XFuture<>(name);
         ret.cancelAll(false);
         return ret;
     }
@@ -1869,7 +1871,7 @@ public class Supervisor {
         }
     }
 
-    private volatile StackTraceElement returnRobotsStackTrace @Nullable []  = null;
+    private final StackTraceElement @Nullable [] returnRobotsStackTrace = null;
     private volatile @Nullable
     Thread returnRobotsThread = null;
     private volatile long returnRobotsTime = -1;
@@ -1880,8 +1882,8 @@ public class Supervisor {
         println("returnRobotsTime = " + (returnRobotsTime - System.currentTimeMillis()));
     }
 
-    private AtomicInteger returnRobotsCount = new AtomicInteger();
-    private AtomicLong returnRobotsTotalTime = new AtomicLong();
+    private final AtomicInteger returnRobotsCount = new AtomicInteger();
+    private final AtomicLong returnRobotsTotalTime = new AtomicLong();
 
     private volatile @Nullable
     String lastReturnRobots1Comment = null;
@@ -2070,7 +2072,7 @@ public class Supervisor {
 
     private final AtomicReference< @Nullable Function<Integer, XFutureVoid>> unStealRobotsFunction = new AtomicReference<>(null);
 
-    private AtomicInteger unstealRobotsCount = new AtomicInteger();
+    private final AtomicInteger unstealRobotsCount = new AtomicInteger();
 
     private XFutureVoid unStealRobots(int ecc) {
         int usrc = unstealRobotsCount.incrementAndGet();
@@ -2404,7 +2406,7 @@ public class Supervisor {
     private volatile @Nullable
     XFutureVoid lastStealRobotsInternalPart8 = null;
 
-    private volatile boolean blockConveyorMoves = false;
+    private final boolean blockConveyorMoves = false;
 
     private XFutureVoid stealRobotsInternal(AprsSystem stealFrom, AprsSystem stealFor, String stealFromOrigCrclHost, int ecc) throws IOException, PositionMap.BadErrorMapFormatException {
 
@@ -2508,7 +2510,9 @@ public class Supervisor {
             return part1
                     .thenRunAsync("stealRobot :  Checking systemContinueMap " + " : srn=" + srn,
                             () -> {
-                                final String stealForRobotName = stealFor.getRobotName();
+                                final String stealForRobotName 
+                                        = requireNonNull( stealFor.getRobotName(),
+                                                "stealFor.getRobotname() : stealFor="+stealFor);
                                 final String stealForRobotNameTask = robotTaskMap.get(stealForRobotName);
                                 logEvent("completing stealRobot: stealingRobots=" + stealingRobots + ", stealFor=" + stealFor + ",srn=" + srn + ",ecc=" + ecc + ", stealRobotNumber=" + stealRobotNumber.get() + "robotEnableMap.get(" + stealForRobotName + ")=" + stealForRobotNameTask);
                                 if (checkEcc(ecc)) {
@@ -2569,7 +2573,7 @@ public class Supervisor {
                     int curAbortCount = abortCount.get();
                     if (curAbortCount != startingStealRobotsInternalAbortCount) {
                         logEvent("curAbortCount=" + curAbortCount + ", startingStealRobotsInternalAbortCount=" + startingStealRobotsInternalAbortCount);
-                        XFuture<Boolean> xfv = new XFuture<Boolean>("abortedSteal");
+                        XFuture<Boolean> xfv = new XFuture<>("abortedSteal");
                         xfv.cancelAll(false);
                         return xfv;
                     }
@@ -2618,6 +2622,7 @@ public class Supervisor {
         return part8;
     }
 
+    @SuppressWarnings("EmptyMethod")
     private void clearBlockConveryorMoves() {
 //        boolean oldValue = blockConveyorMoves;
 //        logEvent("clearBlockConveyorMoves,oldValue=" + oldValue);
@@ -2626,6 +2631,7 @@ public class Supervisor {
 //    private volatile String setBlockConveyorMovesComment = null;
 //    private volatile StackTraceElement setBlockConveyorMovesTrace[] = null;
 
+    @SuppressWarnings("EmptyMethod")
     private void setBlockConveyorMoves(String comment) {
 //        boolean oldValue = blockConveyorMoves;
 //        logEvent("setBlockConveyorMoves:" + comment + ",oldValue=" + oldValue);
@@ -2948,7 +2954,7 @@ public class Supervisor {
             println("allowTogglesCount = " + allowTogglesCount);
             println("togglesAllowed = " + togglesAllowed);
             println("lastDisallowTogglesFuture = " + lastDisallowTogglesFuture);
-            println("lastDisallowTogglesTrace = " + lastDisallowTogglesTrace);
+            println("lastDisallowTogglesTrace = " + Arrays.toString(lastDisallowTogglesTrace));
             println("");
 
             System.err.println("");
@@ -2958,7 +2964,7 @@ public class Supervisor {
             System.err.println("allowTogglesCount = " + allowTogglesCount);
             System.err.println("togglesAllowed = " + togglesAllowed);
             System.err.println("lastDisallowTogglesFuture = " + lastDisallowTogglesFuture);
-            System.err.println("lastDisallowTogglesTrace = " + lastDisallowTogglesTrace);
+            System.err.println("lastDisallowTogglesTrace = " + Arrays.toString(lastDisallowTogglesTrace));
             System.err.println("");
 
             throw new IllegalStateException(msg);
@@ -3082,7 +3088,7 @@ public class Supervisor {
         return ret;
     }
 
-    private AtomicInteger completeExecuteUnstealRobotsCount = new AtomicInteger();
+    private final AtomicInteger completeExecuteUnstealRobotsCount = new AtomicInteger();
 
     private synchronized XFutureVoid completeExecuteUnstealRobots(String revBlocker, final int srn, AprsSystem stealFor, AprsSystem stealFrom, String stealForRobotName, @Nullable GraphicsDevice gd, int ecc) {
         clearStealingRobotsFlag();
@@ -3536,7 +3542,9 @@ public class Supervisor {
                     chooser.setDialogTitle("Choose APRS Multi Supervisor Base Directory.");
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                     if (chooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
-                        dirName = chooser.getSelectedFile().getCanonicalPath();
+                        final File selectedFile 
+                                = requireNonNull(chooser.getSelectedFile(),"chooser.getSelectedFile()");
+                        dirName = selectedFile.getCanonicalPath();
                     }
                 }
             }
@@ -5505,7 +5513,11 @@ public class Supervisor {
                     = Utils.composeOnDispatchThread(() -> {
                         if (null != displayJFrame) {
                             if (displayJFrame.isShowSplashMessagesSelected()) {
-                                final GraphicsDevice gd = displayJFrame.getGraphicsConfiguration().getDevice();
+                                final GraphicsConfiguration graphicsConfiguration 
+                                        = requireNonNull(
+                                                displayJFrame.getGraphicsConfiguration(),
+                                                "displayJFrame.getGraphicsConfiguration()");
+                                final GraphicsDevice gd = graphicsConfiguration.getDevice();
                                 return displayJFrame.showMessageFullScreen("ConveyorTest finished", 80.0f,
                                         null,
                                         SplashScreen.getBlueWhiteGreenColorList(), gd)
@@ -6180,7 +6192,7 @@ public class Supervisor {
         if (this.supervisorThread != Thread.currentThread()) {
             throw new RuntimeException("disallowTogglesPart1 called from wrong thread =" + Thread.currentThread());
         }
-        if (blockerName == null || blockerName.length() < 1 || toggleBlockerMap.keySet().contains(blockerName)) {
+        if (blockerName == null || blockerName.length() < 1 || toggleBlockerMap.containsKey(blockerName)) {
             throw new IllegalArgumentException("blockrName=" + blockerName + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
         }
         int dtc = disallowTogglesCount.incrementAndGet();
@@ -6222,7 +6234,7 @@ public class Supervisor {
     private static final Set<String> robotsThatCanBeDisabled
             = new HashSet<>(Arrays.asList(MOTOMAN_NAME, SIM_MOTOMAN_NAME));
 
-    private AtomicInteger togglesCount = new AtomicInteger();
+    private final AtomicInteger togglesCount = new AtomicInteger();
 
     private XFuture<Boolean> toggleRobotEnabled(String robotName, boolean wasEnabled) {
         if (closing) {
@@ -7149,7 +7161,7 @@ public class Supervisor {
                 });
     }
 
-    private static final boolean DEBUG_CHECK_MAX_CYCLES = Boolean.valueOf("aprs.debugCheckMaxCycles");
+    private static final boolean DEBUG_CHECK_MAX_CYCLES = Boolean.parseBoolean("aprs.debugCheckMaxCycles");
 
     boolean checkMaxCycles() {
         if (max_cycles < 1) {
@@ -7604,8 +7616,15 @@ public class Supervisor {
         XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem sys = aprsSystems.get(i);
-            final String robotTaskName = robotTaskMap.get(sys.getRobotName());
-            if (keepDisabled && (robotTaskName == null || !sys.getTaskName().equals(robotTaskName))) {
+            final String robotName 
+                    = requireNonNull(
+                            sys.getRobotName(),
+                            "sys.getRobotName()");
+            final String robotTaskName 
+                    = requireNonNull(
+                            robotTaskMap.get(robotName),
+                            "robotTaskMap.get(sys.getRobotName()) : sys.getRobotName()="+robotName+", robotTaskMap="+robotTaskMap);
+            if (keepDisabled && (!sys.getTaskName().equals(robotTaskName))) {
                 futures[i] = XFutureVoid.completedFuture(skipDisabled);
                 continue;
             }
@@ -7614,7 +7633,7 @@ public class Supervisor {
             }
             futures[i] = sys.startCheckEnabled()
                     .thenApplyAsync(x -> {
-                        logEvent(sys.getRobotName() + " checkEnabled returned " + x);
+                        logEvent(robotName + " checkEnabled returned " + x);
                         return x;
                     }, supervisorExecutorService);
         }
@@ -8433,15 +8452,19 @@ public class Supervisor {
                             "aprsSys.getRobotName()");
             final String robotTaskName 
                     = requireNonNull(
-                            robotTaskMap.get(aprsSys.getRobotName()), 
-                            "robotTaskMap.get("+aprsSys.getRobotName()+")");
+                            robotTaskMap.get(robotName), 
+                            "robotTaskMap.get("+robotName+")");
             sysRobotMap.put(taskName, robotName);
             wasEnabledMap.put(taskName, robotTaskName != null);
             sysRobotPortMap.put(taskName, aprsSys.getRobotCrclPort());
         }
         logEvent("connectAll: robotTaskMap=" + robotTaskMap + ", wasConnectedMap=" + wasConnectedMap + ", sysRobotPortMap=" + sysRobotPortMap);
         for (AprsSystem aprsSys : aprsSystems) {
-            final String robotTaskName = robotTaskMap.get(aprsSys.getRobotName());
+            final String robotName 
+                    = requireNonNull(
+                            aprsSys.getRobotName(),
+                            "aprsSys.getRobotName()");
+            final String robotTaskName = robotTaskMap.get(robotName);
             final boolean canConnect = (!keepDisabled) || (robotTaskName != null && robotTaskName.equals(aprsSys.getTaskName()));
             if (!aprsSys.isConnected()) {
                 if (canConnect) {
@@ -9157,7 +9180,7 @@ public class Supervisor {
         return XFutureVoid.anyOf(timeoutFuture, allOfXf);
     }
 
-    void performSafeAbortAllAction(Integer ecc) {
+    void performSafeAbortAllAction() {
         lastPerformSafeAbortAllActionTrace = Thread.currentThread().getStackTrace();
         incrementAndGetAbortCount();
         safeAbortReturnRobot = getReturnRobotNamedCallable();
@@ -9331,11 +9354,6 @@ public class Supervisor {
         return propertiesFile;
     }
 
-    /**
-     * Set the value of propertiesFile
-     *
-     * @param propertiesFile new value of propertiesFile
-     */
     public final XFutureVoid loadProperties() {
         return loadPropertiesFile(this.propertiesFile);
     }

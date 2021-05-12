@@ -1,6 +1,4 @@
-.classpath
-.project
-.settings
+
 .nbprofiler/*
 /linux_netbeans_run_user_home/.nbprofiler/*
 
@@ -21,12 +19,6 @@ C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_us
 *.war
 *.ear
 .~lock.*
-
-# Intellij Idea Files
-.idea
-out
-
-*.iml
 
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
@@ -75,3 +67,4 @@ release.properties
 
 
 
+/bin/

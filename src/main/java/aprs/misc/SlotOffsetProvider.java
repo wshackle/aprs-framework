@@ -25,7 +25,6 @@ package aprs.misc;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Interface for classes that can provide slot offset information. Each

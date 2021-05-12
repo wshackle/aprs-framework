@@ -63,7 +63,7 @@ public class SocketLineReader {
         }
     }
 
-    private class Clnt {
+    private static class Clnt {
 
         volatile @Nullable
         Socket socket;
@@ -155,7 +155,7 @@ public class SocketLineReader {
                             public void run() {
                                 try (BufferedReader lcbr = new BufferedReader(new InputStreamReader(lcs.getInputStream()));
                                         PrintStream lcps = new PrintStream(lcs.getOutputStream())) {
-                                    String line = null;
+                                    String line;
                                     while (null != (line = lcbr.readLine()) && !Thread.currentThread().isInterrupted() && !closing) {
                                         _cb.call(line, lcps);
                                     }
@@ -236,7 +236,7 @@ public class SocketLineReader {
                 String lastLine = null;
                 try (BufferedReader brl = new BufferedReader(new InputStreamReader(finalSocket.getInputStream()));
                         PrintStream psl = new PrintStream(finalSocket.getOutputStream())) {
-                    String line = null;
+                    String line;
                     t1 = System.currentTimeMillis();
                     while (null != (line = brl.readLine()) && !Thread.currentThread().isInterrupted()) {
                         _cb.call(line, psl);
@@ -363,6 +363,7 @@ public class SocketLineReader {
         } catch (Exception ignored) {
         }
 
+        //noinspection CatchMayIgnoreException
         try {
             if (null != serverSocket) {
                 serverSocket.close();
@@ -370,6 +371,7 @@ public class SocketLineReader {
         } catch (Exception e) {
         }
 
+        //noinspection CatchMayIgnoreException
         try {
             List<Clnt> lals = als;
             if (null != lals) {

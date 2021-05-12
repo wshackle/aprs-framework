@@ -113,6 +113,7 @@
             <LimitType>INCREASE_OVER_LIMIT</LimitType>
             <LimitValue>10.0</LimitValue>
             <RecheckTimeMicroSeconds>20</RecheckTimeMicroSeconds>
+            <RequireTrigger>true</RequireTrigger>
         </Guard>
         <MoveStraight>true</MoveStraight>
         <EndPosition>

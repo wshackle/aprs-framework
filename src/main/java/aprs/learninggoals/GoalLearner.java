@@ -224,8 +224,8 @@ public class GoalLearner {
      * when complete.
      * @param allEmptyA optional array to pass where value of whether all trays
      * were empty will be stored.
-     * @param overrideRotationOffset
-     * @param newRotationOffset
+     * @param overrideRotationOffset use newRotationOffset rather than previous
+     * @param newRotationOffset new rotation offset to use if overrideRotationOffset is true
      *
      * @return a list of actions than can be run to move parts from trays to
      * recreate the same configuration

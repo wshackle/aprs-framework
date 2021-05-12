@@ -2,23 +2,23 @@
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
  * Software Copyright/Warranty Disclaimer
- * 
+ *
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
  * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
- * 
- * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
- * We would appreciate acknowledgement if the software is used. 
- * This software can be redistributed and/or modified freely provided 
- * that any derivative works bear some notice that they are derived from it, 
+ *
+ * This software is experimental. NIST assumes no responsibility whatsoever
+ * for its use by other parties, and makes no guarantees, expressed or
+ * implied, about its quality, reliability, or any other characteristic.
+ * We would appreciate acknowledgement if the software is used.
+ * This software can be redistributed and/or modified freely provided
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.actions.optaplanner.display;
 
@@ -27,8 +27,10 @@ import aprs.actions.optaplanner.actionmodel.OpActionInterface;
 import aprs.actions.optaplanner.actionmodel.OpActionMoveListFactory;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.OpActionType;
+
 import static aprs.actions.optaplanner.actionmodel.OpActionType.DROPOFF;
 import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
+
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.misc.Utils;
 
@@ -40,6 +42,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import javax.swing.JFrame;
+
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.score.ScoreManager;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
@@ -50,7 +53,6 @@ import org.optaplanner.core.impl.heuristic.move.AbstractMove;
 /**
  * Class for Demonstrating/Testing the use of OptaPlanner to optimize a plan for
  * picking up a set of parts to put in slots in a kit.
- *
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -152,7 +154,7 @@ public class OptaplannerTest {
 //        OpActionPlan apOut = solver.solve(ap);
 
         ScoreManager<OpActionPlan> scoreManager = ScoreManager.create(solverFactory);
-        
+
 //Score score = guiScoreDirector.updateScore(solution);
 //        final ScoreDirector<OpActionPlan> scoreDirector
 //                = solver.getScoreDirectorFactory().buildScoreDirector();
@@ -161,7 +163,7 @@ public class OptaplannerTest {
         OpActionMoveListFactory moveFactory = new OpActionMoveListFactory();
         List<AbstractMove<OpActionPlan>> moveList
                 = moveFactory
-                        .createMoveList(ap);
+                .createMoveList(ap);
         @SuppressWarnings("rawtypes")
         Score scoreFromDrl
                 = scoreManager.updateScore(ap);
@@ -173,18 +175,15 @@ public class OptaplannerTest {
             throw new NullPointerException("ap.getActions() returned null");
         }
         for (int i = 0; i < apActions.size(); i++) {
-            OpActionInterface apI = apActions.get(i);
-            if (apI instanceof OpAction) {
-                OpAction act = (OpAction) apI;
-                final OpActionInterface actNext = act.getNext();
-                if (!act.isFake()
-                        && actNext != null
-                        && !actNext.isFake()
-                        && act.getLocation() != null
-                        && actNext.getLocation() != null) {
-                    final long distToNextLong = act.getDistToNextLong();
-                    total += distToNextLong;
-                }
+            OpAction act = apActions.get(i);
+            final OpActionInterface actNext = act.getNext();
+            if (!act.isFake()
+                    && actNext != null
+                    && !actNext.isFake()
+                    && act.getLocation() != null
+                    && actNext.getLocation() != null) {
+                final long distToNextLong = act.getDistToNextLong();
+                total += distToNextLong;
             }
         }
         System.out.println("total = " + total);
@@ -198,7 +197,7 @@ public class OptaplannerTest {
         OpActionPlan solvedActionPlan = solver.solve(ap);
 
         long t1 = System.currentTimeMillis();
-        long solveTime = t1-t0;
+        long solveTime = t1 - t0;
         System.out.println("solveTime = " + solveTime);
         HardSoftLongScore solvedActionPlanScore = calculator.calculateScore(solvedActionPlan);
 

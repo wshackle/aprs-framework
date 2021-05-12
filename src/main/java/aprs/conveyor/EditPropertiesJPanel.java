@@ -129,10 +129,10 @@ public class EditPropertiesJPanel extends javax.swing.JPanel {
                 "Key", "Value"
             }
         ) {
-            Class[] types = new Class [] {
+            final Class[] types = new Class [] {
                 java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            final boolean[] canEdit = new boolean [] {
                 false, true
             };
 
