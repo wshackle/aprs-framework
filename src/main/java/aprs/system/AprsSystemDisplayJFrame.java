@@ -2362,9 +2362,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         selectCustomWindowsFile();
     }//GEN-LAST:event_jMenuItemAddExistingCustomWindowStartupActionPerformed
 
-    private void selectCustomWindowsFile() throws RuntimeException, HeadlessException {
+    private void selectCustomWindowsFile() throws  HeadlessException {
         if (null == aprsSystem) {
-            throw new RuntimeException("null==aprsSystem");
+            throw new NullPointerException("null==aprsSystem");
         }
         final File dir = aprsSystem.getPropertiesDirectory();
         JFileChooser chooser;

@@ -2807,7 +2807,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
-    private <T> T logAndRethrowException(Throwable ex) {
+    private void logAndRethrowException(Throwable ex) {
         Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         setTitleErrorString(ex.getMessage());
         showException(ex);
@@ -3978,6 +3978,7 @@ public class AprsSystem implements SlotOffsetProvider {
         setTitleOnDisplay(newTitle);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private XFutureVoid setTitle(String newTitle) {
         this.title = newTitle;
         if (null != aprsSystemDisplayJFrame) {
@@ -4041,15 +4042,20 @@ public class AprsSystem implements SlotOffsetProvider {
         return GraphicsEnvironment.isHeadless();
     }
 
-    public static XFuture<AprsSystem> createSystem(File propertiesFile) {
+    public static XFuture<AprsSystem> createSystem(File propertiesFile)  {
         if (isHeadless()) {
-            return createAprsSystemHeadless(propertiesFile);
+            try {
+                return createAprsSystemHeadless(propertiesFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
         } else {
             return createAprsSystemWithSwingDisplay(propertiesFile);
         }
     }
 
-    public static XFuture<AprsSystem> createPrevSystem() {
+    public static XFuture<AprsSystem> createPrevSystem() throws IOException {
         if (isHeadless()) {
             return createPrevAprsSystemHeadless();
         } else {
@@ -4103,16 +4109,21 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
+    private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2()  {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
-        return system
-                .loadProperties()
-                .thenComposeToVoid(() -> system.defaultInit())
-                .thenApply(x -> {
-                    aprsSystemDisplayJFrame1.setAprsSystem(system);
-                    return system;
-                });
+        try {
+            return system
+                    .loadProperties()
+                    .thenComposeToVoid(() -> system.defaultInit())
+                    .thenApply(x -> {
+                        aprsSystemDisplayJFrame1.setAprsSystem(system);
+                        return system;
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     private static XFuture<AprsSystem> createAprsSystemWithSwingDisplay2(File propertiesFile) {
@@ -4155,7 +4166,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return new AprsSystem(true);
     }
 
-    private static XFuture<AprsSystem> createPrevAprsSystemHeadless() {
+    private static XFuture<AprsSystem> createPrevAprsSystemHeadless() throws IOException {
         AprsSystem system = new AprsSystem();
         return system.loadProperties()
                 .thenComposeToVoid(() -> system.defaultInit())
@@ -4164,7 +4175,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 });
     }
 
-    private static XFuture<AprsSystem> createAprsSystemHeadless(File propertiesFile) {
+    private static XFuture<AprsSystem> createAprsSystemHeadless(File propertiesFile) throws IOException {
         AprsSystem system = new AprsSystem(null, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
         if (null != propertiesFile) {
             system.setPropertiesFile(propertiesFile);
@@ -5751,17 +5762,20 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     @UIEffect
-    private void browseSavePropertiesFileAsOnDisplay() {
+    private XFutureVoid browseSavePropertiesFileAsOnDisplay() {
         if (null != aprsSystemDisplayJFrame) {
             File selectedFile = aprsSystemDisplayJFrame.choosePropertiesFileToOpen();
             if (null != selectedFile) {
                 try {
                     setPropertiesFile(selectedFile);
-                    this.saveProperties();
+                    return this.saveProperties();
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, "", ex);
+                    throw new RuntimeException(ex);
                 }
+            } else {
+                return  XFutureVoid.completedFuture();
             }
         } else {
             throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
@@ -9520,7 +9534,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private @MonotonicNonNull
     DbSetup dbSetup = null;
 
-    public final XFutureVoid loadProperties() {
+    public final XFutureVoid loadProperties() throws IOException {
         if (null == propertiesFile) {
             throw new NullPointerException("propertiesFile");
         }
@@ -9529,12 +9543,24 @@ public class AprsSystem implements SlotOffsetProvider {
         }
         newPropertiesFile = false;
         IOException exA[] = new IOException[1];
+        Properties props = new Properties();
+        newPropertiesFile = false;
+        println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
+        try (FileReader fr = new FileReader(propertiesFile)) {
+            props.load(fr);
+        }
         try {
             Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
                     () -> {
-                        return loadPropertiesOnDisplay(exA);
+                        return loadPropertiesOnDisplay(exA,props);
                     });
+            if(null != exA[0]) {
+                throw  new IOException(exA[0]);
+            }
             return ret.thenComposeToVoid(x -> {
+                if(null != exA[0]) {
+                    throw  new RuntimeException(exA[0]);
+                }
                 if (null != object2DViewJInternalFrame) {
                     object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
                 }
@@ -9592,19 +9618,14 @@ public class AprsSystem implements SlotOffsetProvider {
         this.customWindowsFile = customWindowsFile;
     }
 
-    private XFutureVoid loadPropertiesOnDisplay(IOException exA[]) {
+    private XFutureVoid loadPropertiesOnDisplay(IOException exA[],Properties props) {
 
         try {
             if (null == propertiesFile) {
                 throw new NullPointerException("propertiesFile");
             }
             List<XFuture<?>> futures = new ArrayList<>();
-            Properties props = new Properties();
-            newPropertiesFile = false;
-            println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-            try (FileReader fr = new FileReader(propertiesFile)) {
-                props.load(fr);
-            }
+
 
             if (null != this.executorJInternalFrame1) {
                 String alertLimitsString = props.getProperty(ALERT_LIMITS);

@@ -132,7 +132,7 @@ public class SocketLineReader {
             int portParam,
             final String threadname,
             CallBack _cb)
-            throws SocketException, IOException {
+            throws IOException {
         this.cb = _cb;
         this.port = portParam;
         ServerSocket lss = new ServerSocket(portParam);

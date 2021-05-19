@@ -571,7 +571,13 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             throw new IllegalStateException("null == propertiesFile");
         }
         this.setPropertiesFile(new File(jComboBoxPropertiesFiles.getSelectedItem().toString()));
-        DbSetup newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
+        DbSetup newSetup = null;
+        try {
+            newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
         this.setDbSetup(newSetup);
         this.notifyAllDbSetupListeners(null);
     }//GEN-LAST:event_jButtonLoadActionPerformed

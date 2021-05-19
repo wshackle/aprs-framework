@@ -150,8 +150,8 @@ public class GoalLearnerTest {
 
         javax.swing.SwingUtilities.invokeLater(() -> {
             createSimpleSimViewer(sop, testData)
-                    .thenAccept((AprsSystem aprsSystem) -> {
-                        aprsSystem.startActionsList("goalLearnerTest", actions, false);
+                    .thenCompose((AprsSystem aprsSystem) -> {
+                        return aprsSystem.startActionsList("goalLearnerTest", actions, false);
                     });
         });
     }

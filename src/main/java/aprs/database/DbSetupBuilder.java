@@ -26,12 +26,8 @@ import aprs.misc.Utils;
 import aprs.database.vision.VisionToDBJPanel;
 import static aprs.misc.AprsCommonLogger.println;
 import crcl.utils.XFuture;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -635,14 +631,11 @@ public class DbSetupBuilder {
      * @param propertiesFile properties file
      * @return builder with loaded settings
      */
-    public static DbSetupBuilder loadFromPropertiesFile(File propertiesFile) {
-        DbSetupBuilder builder = new DbSetupBuilder();
+    public static DbSetupBuilder loadFromPropertiesFile(File propertiesFile) throws IOException {
         if (null != propertiesFile && propertiesFile.exists()) {
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
-            } catch (IOException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
             Map<String, String> argsMap = getDefaultArgsMap();
             for (String propName : props.stringPropertyNames()) {
@@ -651,9 +644,11 @@ public class DbSetupBuilder {
                     argsMap.put(propName, propValue);
                 }
             }
+            DbSetupBuilder builder = new DbSetupBuilder();
             return builder.updateFromArgs(argsMap);
+        } else {
+            throw  new IllegalArgumentException("propertiesFile="+propertiesFile);
         }
-        return builder;
     }
 
     /**

@@ -4222,9 +4222,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
             aprsSystem.immediateAbort()
+                    .thenCompose(() -> {
+                                aprsSystem.clearErrors();
+                                return aprsSystem.reset();
+                            })
                     .thenRun(() -> {
-                        aprsSystem.clearErrors();
-                        aprsSystem.reset();
                         aprsSystem.resume();
                         if (!aprsSystem.isConnected()) {
                             aprsSystem.queryConnect()

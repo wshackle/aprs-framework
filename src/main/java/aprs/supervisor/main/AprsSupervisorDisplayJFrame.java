@@ -4492,7 +4492,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
                         interactivStartRunnable(() -> lookForPartsAll(), null)
-                                .thenRun(() -> posMapOutSys.gotoPose(newPose));
+                                .thenCompose(() -> posMapOutSys.gotoPose(newPose));
                     }
                 }
             }
@@ -4520,7 +4520,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double otherz = (double) otherZObject;
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
                         interactivStartRunnable(() -> lookForPartsAll(), null)
-                                .thenRun(() -> posMapInSys.gotoPose(newPose));
+                                .thenCompose(() -> posMapInSys.gotoPose(newPose));
                     }
                 }
             }

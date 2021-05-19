@@ -1695,20 +1695,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private List<MiddleCommandType> privateGenerateNoReplan(
             GenerateParams gparams,
-            @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException, RuntimeException, IllegalStateException, IllegalArgumentException {
+            @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException,  IllegalStateException, IllegalArgumentException {
         final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
-            throw new RuntimeException("null == gparams.options");
+            throw new NullPointerException("null == gparams.options");
         }
         final int startingIndex = gparams.startingIndex;
         final List<Action> gParamsActions = gparams.actions;
         if (null == gParamsActions) {
-            throw new RuntimeException("null == gparams.actions");
+            throw new NullPointerException("null == gparams.actions");
         }
 
         AprsSystem localAprsSystem = this.aprsSystem;
         if (null == localAprsSystem) {
-            throw new IllegalStateException("aprsJframe is null");
+            throw new NullPointerException("aprsJframe is null");
         }
         if (gParamsActions.isEmpty()) {
             throw new IllegalArgumentException("gparams.actions.isEmpty()");
@@ -4413,15 +4413,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return Collections.unmodifiableList(l);
     }
 
-    /**
-     * Take a snapshot of the view of objects positions and save it in the
-     * specified file, optionally highlighting a pose with a label.
-     *
-     * @param f file to save snapshot image to
-     */
-    private void takeDatabaseViewSnapshot(File f) {
+    private XFutureVoid takeDatabaseViewSnapshot(File f) {
         if (null != aprsSystem) {
-            aprsSystem.startVisionToDbNewItemsImageSave(f);
+            return aprsSystem.startVisionToDbNewItemsImageSave(f);
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
@@ -4473,10 +4469,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             try {
                 String fullTitle = title + "_crclNumber-" + String.format("%03d", crclNumber.get()) + "_action-" + String.format("%03d", getLastIndex());
                 takeSimViewSnapshot(createImageTempFile(prefix + "_" + fullTitle), pose, label);
+                File imageTempFile = createImageTempFile(prefix + "_pc_" + fullTitle);
                 if (null == externalPoseProvider) {
-                    takeDatabaseViewSnapshot(createImageTempFile(prefix + "_db_" + fullTitle));
+                    takeDatabaseViewSnapshot(createImageTempFile(prefix + "_db_" + fullTitle))
+                            .thenRun(() -> {
+                                takeSimViewSnapshot(imageTempFile, poseCacheToDetectedItemList());
+                            });
+                }  else {
+                    takeSimViewSnapshot(imageTempFile, poseCacheToDetectedItemList());
                 }
-                takeSimViewSnapshot(createImageTempFile(prefix + "_pc_" + fullTitle), poseCacheToDetectedItemList());
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }

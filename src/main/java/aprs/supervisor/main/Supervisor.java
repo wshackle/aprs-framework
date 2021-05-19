@@ -2,23 +2,23 @@
  * This software is public domain software, however it is preferred
  * that the following disclaimers be attached.
  * Software Copyright/Warranty Disclaimer
- * 
+ *
  * This software was developed at the National Institute of Standards and
  * Technology by employees of the Federal Government in the course of their
  * official duties. Pursuant to title 17 Section 105 of the United States
  * Code this software is not subject to copyright protection and is in the
  * public domain.
- * 
- * This software is experimental. NIST assumes no responsibility whatsoever 
- * for its use by other parties, and makes no guarantees, expressed or 
- * implied, about its quality, reliability, or any other characteristic. 
- * We would appreciate acknowledgement if the software is used. 
+ *
+ * This software is experimental. NIST assumes no responsibility whatsoever
+ * for its use by other parties, and makes no guarantees, expressed or
+ * implied, about its quality, reliability, or any other characteristic.
+ * We would appreciate acknowledgement if the software is used.
  * This software can be redistributed and/or modified freely provided show
- * that any derivative works bear some notice that they are derived from it, 
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.supervisor.main;
 
@@ -1675,7 +1675,7 @@ public class Supervisor {
         ret.cancelAll(false);
         return ret;
     }
-    
+
     private XFutureVoid disableRobotNoTransfer(String robotName, int ecc) throws IOException, PositionMap.BadErrorMapFormatException {
         Set<String> names = new HashSet<>();
         for (int i = 0; i < aprsSystems.size() - 1; i++) {
@@ -2510,7 +2510,7 @@ public class Supervisor {
             return part1
                     .thenRunAsync("stealRobot :  Checking systemContinueMap " + " : srn=" + srn,
                             () -> {
-                                final String stealForRobotName 
+                                final String stealForRobotName
                                         = requireNonNull( stealFor.getRobotName(),
                                                 "stealFor.getRobotname() : stealFor="+stealFor);
                                 final String stealForRobotNameTask = robotTaskMap.get(stealForRobotName);
@@ -2701,7 +2701,7 @@ public class Supervisor {
                                 if (stealFor.isConnected()) {
                                     throw new RuntimeException("stealFor.isConnected() : stealFor=" + stealFor);
                                 }
-                                final String stealForRobotNameTask 
+                                final String stealForRobotNameTask
                                         = requireNonNull(
                                                 robotTaskMap.get(stealForRobotName),
                                                 "robotTaskMap.get("+stealForRobotName+")");
@@ -3542,7 +3542,7 @@ public class Supervisor {
                     chooser.setDialogTitle("Choose APRS Multi Supervisor Base Directory.");
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                     if (chooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
-                        final File selectedFile 
+                        final File selectedFile
                                 = requireNonNull(chooser.getSelectedFile(),"chooser.getSelectedFile()");
                         dirName = selectedFile.getCanonicalPath();
                     }
@@ -5513,7 +5513,7 @@ public class Supervisor {
                     = Utils.composeOnDispatchThread(() -> {
                         if (null != displayJFrame) {
                             if (displayJFrame.isShowSplashMessagesSelected()) {
-                                final GraphicsConfiguration graphicsConfiguration 
+                                final GraphicsConfiguration graphicsConfiguration
                                         = requireNonNull(
                                                 displayJFrame.getGraphicsConfiguration(),
                                                 "displayJFrame.getGraphicsConfiguration()");
@@ -7616,11 +7616,11 @@ public class Supervisor {
         XFuture<Boolean> futures[] = (XFuture<Boolean>[]) new XFuture<?>[aprsSystems.size()];
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem sys = aprsSystems.get(i);
-            final String robotName 
+            final String robotName
                     = requireNonNull(
                             sys.getRobotName(),
                             "sys.getRobotName()");
-            final String robotTaskName 
+            final String robotTaskName
                     = requireNonNull(
                             robotTaskMap.get(robotName),
                             "robotTaskMap.get(sys.getRobotName()) : sys.getRobotName()="+robotName+", robotTaskMap="+robotTaskMap);
@@ -7898,7 +7898,7 @@ public class Supervisor {
                     futures[i] = XFuture.completedFuture(true);
                     continue;
                 } else {
-                    final String sysRobotNameTask 
+                    final String sysRobotNameTask
                             = requireNonNull(
                                     robotTaskMap.get(sysRobotName),
                                     "robotTaskMap.get("+sysRobotName+")");
@@ -8446,13 +8446,13 @@ public class Supervisor {
         for (AprsSystem aprsSys : aprsSystems) {
             final String taskName = aprsSys.getTaskName();
             wasConnectedMap.put(taskName, aprsSys.isConnected());
-            final String robotName 
+            final String robotName
                     = requireNonNull(
                             aprsSys.getRobotName(),
                             "aprsSys.getRobotName()");
-            final String robotTaskName 
+            final String robotTaskName
                     = requireNonNull(
-                            robotTaskMap.get(robotName), 
+                            robotTaskMap.get(robotName),
                             "robotTaskMap.get("+robotName+")");
             sysRobotMap.put(taskName, robotName);
             wasEnabledMap.put(taskName, robotTaskName != null);
@@ -8460,7 +8460,7 @@ public class Supervisor {
         }
         logEvent("connectAll: robotTaskMap=" + robotTaskMap + ", wasConnectedMap=" + wasConnectedMap + ", sysRobotPortMap=" + sysRobotPortMap);
         for (AprsSystem aprsSys : aprsSystems) {
-            final String robotName 
+            final String robotName
                     = requireNonNull(
                             aprsSys.getRobotName(),
                             "aprsSys.getRobotName()");
@@ -9481,9 +9481,8 @@ public class Supervisor {
             try ( FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            XFutureVoid displayLoadPropertiesFuture = null;
             if (null != displayJFrame) {
-                displayLoadPropertiesFuture = displayJFrame.loadProperties(props);
+                XFutureVoid displayLoadPropertiesFuture = displayJFrame.loadProperties(props);
                 futures.add(displayLoadPropertiesFuture);
             }
             String correctionModeString = props.getProperty("correctionMode");
@@ -9517,6 +9516,13 @@ public class Supervisor {
         }
     }
 
+    private  static class SysSetupFileEntry {
+        int priority;
+        String taskName;
+        String robotName;
+        File propertiesFile;
+    };
+
     /**
      * Load the given setup file.
      *
@@ -9528,6 +9534,8 @@ public class Supervisor {
         closeAllAprsSystems();
         println("Loading setup file :" + f.getCanonicalPath());
         List<XFuture<?>> sysFutures = new ArrayList<>();
+        File supervisorProperyFile = null;
+        List<SysSetupFileEntry> sysEntries = new ArrayList<>();
         try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
             tasksCachedTable.setRowCount(0);
             int linecount = 0;
@@ -9552,34 +9560,44 @@ public class Supervisor {
                 }
 
                 println("propertiesFile = " + propertiesFile);
-
                 final String taskName = csvRecord.get(1);
                 final String robotName = csvRecord.get(2);
-                XFutureVoid loadPropertiesFileFuture = null;
-                if (priority == -99 || taskName.equalsIgnoreCase("supervisor") || robotName.equalsIgnoreCase("supervisor")) {
-                    loadPropertiesFileFuture = loadPropertiesFile(propertiesFile);
-                    continue;
-                }
                 XFuture<AprsSystem> futureSys;
-                if (null == loadPropertiesFileFuture) {
-                    futureSys = AprsSystem.createSystem(propertiesFile);
+                if (priority == -99
+                        || taskName.equalsIgnoreCase("supervisor")
+                        || robotName.equalsIgnoreCase("supervisor")) {
+                    if(null != supervisorProperyFile) {
+                        throw new RuntimeException("supervisorProperyFile already set to "+supervisorProperyFile+",propertiesFile="+propertiesFile);
+                    }
+                    supervisorProperyFile = propertiesFile;
                 } else {
-                    final File sysPropertiesFile = propertiesFile;
-                    futureSys = loadPropertiesFileFuture
-                            .thenCompose(() -> AprsSystem.createSystem(sysPropertiesFile));
+                    SysSetupFileEntry sysSetupFileEntry = new SysSetupFileEntry();
+                    sysSetupFileEntry.priority  = priority;
+                    sysSetupFileEntry.taskName = taskName;
+                    sysSetupFileEntry.propertiesFile = propertiesFile;
+                    sysSetupFileEntry.robotName = robotName;
+                    sysEntries.add(sysSetupFileEntry);
                 }
-                XFuture<?> futureToAdd = futureSys.
-                        thenAcceptAsync((AprsSystem aprsSys) -> completeLoadSys(aprsSys, priority, taskName, robotName), supervisorExecutorService);
-                sysFutures.add(futureToAdd);
             }
         }
-        if (sysFutures.isEmpty()) {
-            throw new IllegalStateException("sysFutures.isEmpty() after reading f=" + f);
+        if(null == supervisorProperyFile) {
+            throw new RuntimeException("Entry for supervisorPropertyFile was not found.");
         }
-        XFuture sysFuturesArray[] = sysFutures.toArray(new XFuture[0]);
-        XFutureVoid allSysFuture = XFutureVoid.allOfWithName("loadSetupFile " + f, sysFuturesArray);
-        return allSysFuture
-                .thenComposeToVoid(() -> completeLoadSetupFile(f));
+        if (sysEntries.isEmpty()) {
+            throw new IllegalStateException("sysEntries.isEmpty() after reading f=" + f);
+        }
+        XFutureVoid loadPropertiesFileFuture = loadPropertiesFile(supervisorProperyFile);
+        XFutureVoid lastFuture = loadPropertiesFileFuture;
+        for(SysSetupFileEntry sysSetupFileEntry : sysEntries) {
+            XFutureVoid prevFuture = lastFuture;
+            lastFuture = prevFuture
+                    .thenCompose("create."+sysSetupFileEntry.taskName,()-> AprsSystem.createSystem(sysSetupFileEntry.propertiesFile))
+                    .thenAcceptAsync(
+                            (AprsSystem aprsSys) -> completeLoadSys(aprsSys, sysSetupFileEntry.priority, sysSetupFileEntry.taskName, sysSetupFileEntry.robotName)
+                            , supervisorExecutorService);
+        }
+        return lastFuture
+                .thenComposeToVoid("completeLoadSetup("+f+")",() -> completeLoadSetupFile(f));
     }
 
     private XFutureVoid completeLoadSetupFile(File f) {
@@ -9639,7 +9657,7 @@ public class Supervisor {
     private volatile boolean clearingWayToHolders = false;
 
     private volatile StackTraceElement clearWayToHoldersTrace @Nullable [] = null;
-    
+
     public XFutureVoid clearWayToHolders(AprsSystem requester, String holderName) {
         clearingWayToHolders = true;
         requester.pause();
@@ -9668,7 +9686,7 @@ public class Supervisor {
                        System.out.println("holderName = " + holderName);
                        System.out.println("clearWayToHoldersTrace = " + Utils.traceToString(trace));
                        logEventErr("failed to clearWayToHolders for requesterTaskName="+requesterTaskName+",holderName="+holderName);
-                   } 
+                   }
                 });
     }
 

@@ -3539,23 +3539,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                     actions.add(Action.newLookForParts(0));
                     final AprsSystem aprsSystemLocal
                             = Objects.requireNonNull(aprsSystem, "aprsSystem");
-                    aprsSystemLocal.startActionsList("inteactive move part", actions, false);
                     draggedItemLocal.x = draggedItemStartingPointLocal.x;
                     draggedItemLocal.y = draggedItemStartingPointLocal.y;
-                    List<PhysicalItem> itemsList = getItems();
-                    this.updateItemsTable(itemsList);
-                    if (!setItemsListeners.isEmpty()) {
-                        if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
-                            notifySetItemsListeners(itemsList);
-                        } else {
-                            notifySetItemsListeners(getOutputItems());
-                        }
-                    }
-                    if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
-                        object2DJPanel1.setItems(itemsList);
-                    }
-                    draggedItem = null;
-                    draggedItemStartingPoint = null;
+                    aprsSystemLocal.startActionsList("inteactive move part", actions, false)
+                            .thenRun( () -> {
+                                List<PhysicalItem> itemsList = getItems();
+                                this.updateItemsTable(itemsList);
+                                if (!setItemsListeners.isEmpty()) {
+                                    if (!isSimulated() || !object2DJPanel1.isShowOutputItems() || !isConnected()) {
+                                        notifySetItemsListeners(itemsList);
+                                    } else {
+                                        notifySetItemsListeners(getOutputItems());
+                                    }
+                                }
+                                if (jCheckBoxDetails.isSelected() || jCheckBoxAddSlots.isSelected()) {
+                                    object2DJPanel1.setItems(itemsList);
+                                }
+                                draggedItem = null;
+                                draggedItemStartingPoint = null;
+                            });
+
                 }
                 break;
 
@@ -6325,9 +6328,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         private final int y;
         private final boolean includeTrays;
 
-        private @Nullable
-        final
-        PhysicalItem closestItem;
+        private final @Nullable PhysicalItem closestItem;
         private int minIndex;
 
         ClosestItemInfo(int x, int y, int minIndex, boolean includeTrays) {

@@ -592,7 +592,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
-            prevSingle();
+            try {
+                prevSingle();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         this.setVisible(false);
         this.dispose();
@@ -610,14 +614,19 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static XFutureVoid prevSingleWithLaunchFile(File launchFile) {
+    private static XFutureVoid prevSingleWithLaunchFile(File launchFile) throws IOException {
         if (null != launchFile) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
                 return processLauncher.run(launchFile)
                         .thenComposeToVoid(() -> {
-                            return prevSingle();
+                            try {
+                                return prevSingle();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                throw  new RuntimeException(e);
+                            }
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
@@ -628,7 +637,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static XFutureVoid prevSingle() {
+    private static XFutureVoid prevSingle() throws IOException {
         return AprsSystem.createPrevSystem()
                 .thenAccept((AprsSystem sys) -> sys.setVisible(true));
     }

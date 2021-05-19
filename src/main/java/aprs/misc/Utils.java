@@ -32,6 +32,7 @@ import crcl.utils.XFuture.PrintedException;
 import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLSocket;
+import crcl.utils.CRCLUtils;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -290,13 +291,11 @@ public class Utils {
     }
 
     public static URL getAprsIconUrl() {
-        final URL url;
         try {
-            url = Utils.class.getResource("aprs.png");
+            return CRCLUtils.requireNonNull(Utils.class.getResource("aprs.png"));
         } catch (Exception e) {
             throw new RuntimeException("Utils.class.getResource(\"aprs.png\") threw " + e.getMessage(), e);
         }
-        return url;
     }
 
     /**
