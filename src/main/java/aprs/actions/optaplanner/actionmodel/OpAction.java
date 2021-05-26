@@ -407,9 +407,9 @@ public class OpAction implements OpActionInterface {
         setNextInfoPair = null;
     }
 
-    private boolean actionRequired() {
-        return required; // Objects.equals(trayType, "KT");
-    }
+//    private boolean actionRequired() {
+//        return required; // Objects.equals(trayType, "KT");
+//    }
 
     static class CheckNextInfo {
 

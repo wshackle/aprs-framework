@@ -6096,20 +6096,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
-        double joint0 = jointVals[0];
-        double joint0diff = joint0 - expectedJoint0Val;
-        checkJointToleranceSetting(out);
-        if (toolHolderOperationEnabled
-                && Double.isFinite(expectedJoint0Val)
-                && joint0DiffTolerance > 0
-                && Math.abs(joint0diff) > joint0DiffTolerance) {
-            double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
-            jointValsCopy[0] = expectedJoint0Val;
-            addMessageCommand(out, "addJointPrepMove:joint0=" + joint0 + ",expectedJoint0Val=" + expectedJoint0Val + ",joint0diff=" + joint0diff + ",joint0DiffTolerance=" + joint0DiffTolerance);
-            addJointMove(out, jointValsCopy, 1.0);
-        }
-    }
+//    private void addPrepJointMove(double[] jointVals, List<MiddleCommandType> out) {
+//        double joint0 = jointVals[0];
+//        double joint0diff = joint0 - expectedJoint0Val;
+//        checkJointToleranceSetting(out);
+//        if (toolHolderOperationEnabled
+//                && Double.isFinite(expectedJoint0Val)
+//                && joint0DiffTolerance > 0
+//                && Math.abs(joint0diff) > joint0DiffTolerance) {
+//            double jointValsCopy[] = Arrays.copyOf(jointVals, jointVals.length);
+//            jointValsCopy[0] = expectedJoint0Val;
+//            addMessageCommand(out, "addJointPrepMove:joint0=" + joint0 + ",expectedJoint0Val=" + expectedJoint0Val + ",joint0diff=" + joint0diff + ",joint0DiffTolerance=" + joint0DiffTolerance);
+//            addJointMove(out, jointValsCopy, 1.0);
+//        }
+//    }
 
     private double jointSpeed = 5.0;
 

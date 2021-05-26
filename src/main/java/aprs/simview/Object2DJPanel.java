@@ -2464,12 +2464,12 @@ public class Object2DJPanel extends JPanel {
         return new_scale;
     }
 
-    private boolean checkImageShown(PhysicalItem item) {
-        return viewRotationsAndImages
-                && null != partImageMap
-                && !partImageMap.isEmpty()
-                && null != getPartImageInfo(item);
-    }
+//    private boolean checkImageShown(PhysicalItem item) {
+//        return viewRotationsAndImages
+//                && null != partImageMap
+//                && !partImageMap.isEmpty()
+//                && null != getPartImageInfo(item);
+//    }
 
     @SuppressWarnings("guieffect")
     private static void paintPartImage(ViewOptions opts, Graphics2D g2d, Point2DMinMax tempMinMax, PhysicalItem item, double rotationOffsetParam, double currentScale) {

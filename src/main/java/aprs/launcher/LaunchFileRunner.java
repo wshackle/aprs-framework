@@ -607,8 +607,7 @@ public class LaunchFileRunner {
 
                     String parts[] = Arrays.copyOfRange(words, 1, words.length);
                     if (parts.length >= 2) {
-                        try {
-                            Socket s = new Socket(parts[0], Integer.parseInt(parts[1]));
+                        try (Socket s = new Socket(parts[0], Integer.parseInt(parts[1]))) {
                             ifStack.push(false);
                         } catch (Exception e) {
 //                         Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", e);

@@ -3327,7 +3327,8 @@ public class AprsSystem implements SlotOffsetProvider {
 //            ProtectionDomain protDom = clzz.getProtectionDomain();
 //            System.out.println("protDom = " + protDom);
             if (cl instanceof URLClassLoader) {
-                URLClassLoader ucl = (URLClassLoader) cl;
+                @SuppressWarnings("resource")
+				URLClassLoader ucl = (URLClassLoader) cl;
                 URL[] urls = ucl.getURLs();
                 StringBuilder msgBuilder = new StringBuilder(msg);
                 for (int i = 0; i < urls.length; i++) {
@@ -3339,7 +3340,8 @@ public class AprsSystem implements SlotOffsetProvider {
             ClassLoader sysCl = ClassLoader.getSystemClassLoader();
             if (sysCl != cl) {
                 if (sysCl instanceof URLClassLoader) {
-                    URLClassLoader ucl = (URLClassLoader) sysCl;
+                    @SuppressWarnings("resource")
+					URLClassLoader ucl = (URLClassLoader) sysCl;
                     URL[] urls = ucl.getURLs();
                     StringBuilder msgBuilder = new StringBuilder(msg);
                     for (int i = 0; i < urls.length; i++) {
@@ -5546,9 +5548,7 @@ public class AprsSystem implements SlotOffsetProvider {
                 addInternalFrame(newExecFrame);
             }
 
-            if (null == newExecFrame) {
-                throw new IllegalStateException("PDDL Executor View must be open to use this function. newExecFrame=null");
-            }
+            assert (null != newExecFrame) : "@AssumeAssertion(nullness)";
 
             newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
             newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);

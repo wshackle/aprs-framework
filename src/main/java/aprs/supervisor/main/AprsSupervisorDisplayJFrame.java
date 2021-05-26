@@ -4962,8 +4962,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 urls[urls.length - 1] = grandParentFile.toURI().toURL();
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
                 println("urls = " + Arrays.toString(urls));
-                ClassLoader loader = new URLClassLoader(urls);
-                Class<?> clss = loader.loadClass("custom.Custom");
+                Class<?> clss;
+                try(URLClassLoader loader = new URLClassLoader(urls)) {
+                	clss = loader.loadClass("custom.Custom");
+                }
                 @SuppressWarnings("deprecation")
                 Object obj = clss.newInstance();
                 Method acceptMethod = clss.getMethod("accept", AprsSupervisorDisplayJFrame.class);
@@ -6121,31 +6123,31 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private static class SetTableRobotEnabledEvent {
-
-        private final boolean enable;
-        private final String robotName;
-        private final XFuture<Boolean> future;
-
-        public SetTableRobotEnabledEvent(boolean enable, String robotName, XFuture<Boolean> future) {
-            this.enable = enable;
-            this.robotName = robotName;
-            this.future = future;
-        }
-
-        public boolean isEnable() {
-            return enable;
-        }
-
-        public String getRobotName() {
-            return robotName;
-        }
-
-        public XFuture<Boolean> getFuture() {
-            return future;
-        }
-
-    };
+//    private static class SetTableRobotEnabledEvent {
+//
+//        private final boolean enable;
+//        private final String robotName;
+//        private final XFuture<Boolean> future;
+//
+//        public SetTableRobotEnabledEvent(boolean enable, String robotName, XFuture<Boolean> future) {
+//            this.enable = enable;
+//            this.robotName = robotName;
+//            this.future = future;
+//        }
+//
+//        public boolean isEnable() {
+//            return enable;
+//        }
+//
+//        public String getRobotName() {
+//            return robotName;
+//        }
+//
+//        public XFuture<Boolean> getFuture() {
+//            return future;
+//        }
+//
+//    };
 
 //    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
 //    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {
