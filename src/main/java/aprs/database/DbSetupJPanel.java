@@ -25,56 +25,37 @@ package aprs.database;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedComboBox;
 import aprs.cachedcomponents.CachedTextField;
-import aprs.system.AprsSystem;
 import aprs.database.vision.VisionToDBJPanel;
-import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import aprs.system.AprsSystem;
+import crcl.utils.XFutureVoid;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.io.*;
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.EventObject;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFileChooser;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 
-import crcl.utils.XFutureVoid;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 
 /**
@@ -571,7 +552,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             throw new IllegalStateException("null == propertiesFile");
         }
         this.setPropertiesFile(new File(jComboBoxPropertiesFiles.getSelectedItem().toString()));
-        DbSetup newSetup = null;
+        DbSetup newSetup;
         try {
             newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
         } catch (IOException e) {

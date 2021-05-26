@@ -23,25 +23,21 @@
 package aprs.database;
 
 import aprs.misc.Utils;
-import aprs.database.vision.VisionToDBJPanel;
-import static aprs.misc.AprsCommonLogger.println;
 import crcl.utils.XFuture;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.*;
 import java.security.ProtectionDomain;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static aprs.misc.AprsCommonLogger.println;
 
 /**
  * Builder to create DbSetup instances from data queried from the user and/or

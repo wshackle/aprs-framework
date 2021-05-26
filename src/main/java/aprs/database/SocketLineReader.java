@@ -24,11 +24,9 @@ package aprs.database;
 
 import com.sun.istack.logging.Logger;
 import crcl.utils.CRCLUtils;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,7 +34,6 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
@@ -202,7 +199,7 @@ public class SocketLineReader {
             CallBack _cb,
             int connectTimeOut,
             int readSoTimeOut)
-            throws IllegalArgumentException, IOException, SocketException {
+            throws IllegalArgumentException, IOException {
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         this.cb = _cb;
         this.port = portParam;
