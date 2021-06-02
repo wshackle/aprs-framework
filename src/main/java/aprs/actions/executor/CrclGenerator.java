@@ -21,126 +21,23 @@
  */
 package aprs.actions.executor;
 
-import static aprs.actions.executor.ActionType.CLEAR_KITS_TO_CHECK;
-import aprs.database.Slot;
-import aprs.database.PartsTray;
-import aprs.system.AprsSystem;
-import aprs.misc.Utils;
-import aprs.database.DbSetup;
-import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupListener;
-import aprs.database.DbType;
-import aprs.database.PhysicalItem;
-import aprs.database.QuerySet;
-import aprs.database.Tray;
-
-import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
-import static aprs.actions.executor.ActionType.PLACE_PART;
-import static aprs.actions.executor.ActionType.SWITCH_TOOL;
-import static aprs.actions.executor.ActionType.TAKE_PART;
-
-import aprs.kitinspection.KitInspectionJInternalFrame;
-import aprs.actions.optaplanner.display.OpDisplayJPanel;
 import aprs.actions.optaplanner.actionmodel.OpAction;
-import static aprs.actions.optaplanner.actionmodel.OpAction.allowedPartTypes;
 import aprs.actions.optaplanner.actionmodel.OpActionPlan;
 import aprs.actions.optaplanner.actionmodel.OpActionType;
-
-import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
-import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
-import static aprs.actions.optaplanner.actionmodel.OpActionType.START;
-
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
-import static aprs.misc.AprsCommonLogger.println;
-import crcl.base.ActuateJointType;
-import crcl.base.ActuateJointsType;
-import crcl.base.AngleUnitEnumType;
-import crcl.base.CRCLCommandType;
-import crcl.base.CRCLProgramType;
-import crcl.base.CRCLStatusType;
-import crcl.base.CloseToolChangerType;
-import crcl.base.DwellType;
-import crcl.base.EndCanonType;
-import crcl.base.InitCanonType;
-import crcl.base.JointPositionToleranceSettingType;
-import crcl.base.JointPositionsTolerancesType;
-import crcl.base.JointSpeedAccelType;
-import crcl.base.JointStatusType;
-import crcl.base.JointStatusesType;
-import crcl.base.LengthUnitEnumType;
-import crcl.base.MessageType;
-import crcl.base.MiddleCommandType;
-import crcl.base.MoveToType;
-import crcl.base.OpenToolChangerType;
-import crcl.base.PointType;
-import crcl.base.PoseToleranceType;
-import crcl.base.PoseType;
-import crcl.base.RotSpeedAbsoluteType;
-import crcl.base.SetAngleUnitsType;
-import crcl.base.SetDefaultJointPositonsTolerancesType;
-import crcl.base.SetEndEffectorType;
-import crcl.base.SetEndPoseToleranceType;
-import crcl.base.SetLengthUnitsType;
-import crcl.base.SetRotSpeedType;
-import crcl.base.SetTransSpeedType;
-import crcl.base.TransSpeedAbsoluteType;
-import crcl.base.VectorType;
+import aprs.actions.optaplanner.display.OpDisplayJPanel;
+import aprs.database.*;
+import aprs.kitinspection.KitInspectionJInternalFrame;
+import aprs.misc.Utils;
+import aprs.system.AprsSystem;
+import crcl.base.*;
 import crcl.ui.ConcurrentBlockProgramsException;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
-import crcl.utils.CRCLException;
-import crcl.utils.CRCLCommandWrapper;
-import crcl.utils.CRCLCommandWrapperConsumer;
-import crcl.utils.CRCLPosemath;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.Arrays;
-
+import crcl.utils.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import rcs.posemath.PmCartesian;
-import rcs.posemath.PmRpy;
-import static crcl.copier.CRCLCopier.copy;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.vector;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Set;
-import java.awt.Color;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
-
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
-import java.util.Collection;
-
-import crcl.utils.CRCLSocket;
-import crcl.utils.CRCLUtils;
-
-import java.awt.geom.Point2D;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Comparator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.eclipse.collections.api.collection.MutableCollection;
@@ -149,25 +46,39 @@ import org.eclipse.collections.impl.block.factory.Comparators;
 import org.eclipse.collections.impl.factory.Lists;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
-import rcs.posemath.PmException;
+import rcs.posemath.*;
 
-import java.io.PrintWriter;
-import java.util.function.Predicate;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.PrintStream;
-import java.util.Date;
-import java.util.Iterator;
-import static crcl.utils.CRCLUtils.requireNonNull;
-import java.util.TreeMap;
-import java.util.stream.StreamSupport;
-import javax.swing.Icon;
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import rcs.posemath.PmPose;
-import rcs.posemath.Posemath;
+import java.awt.*;
+import java.awt.geom.Point2D;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import static aprs.actions.executor.ActionType.*;
+import static aprs.actions.optaplanner.actionmodel.OpAction.allowedPartTypes;
+import static aprs.actions.optaplanner.actionmodel.OpActionType.FAKE_DROPOFF;
+import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
+import static aprs.misc.AprsCommonLogger.println;
+import static crcl.copier.CRCLCopier.copy;
+import static crcl.utils.CRCLPosemath.*;
+import static crcl.utils.CRCLUtils.requireNonNull;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -327,17 +238,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final AtomicInteger skippedActions = new AtomicInteger();
 
-    private boolean getReverseFlag() {
-        if (aprsSystem != null) {
-            return aprsSystem.isReverseFlag();
-        }
-        return false;
-    }
+//    private boolean getReverseFlag() {
+//        if (aprsSystem != null) {
+//            return aprsSystem.isReverseFlag();
+//        }
+//        return false;
+//    }
 
     private List<OpAction> pddlActionsToOpActions(
             List<? extends Action> listIn,
             int start,
-            int endl@Nullable [],
+            int endl@Nullable[],
             @Nullable List<OpAction> skippedOpActionsList,
             @Nullable List<Action> skippedPddlActionsList
     ) throws SQLException {
@@ -358,11 +269,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         setLastTakenPartTrace = Thread.currentThread().getStackTrace();
     }
 
-    private interface GetPoseFunction {
-
-        @Nullable
-        PoseType apply(String name, boolean ignoreNull) throws SQLException;
-    }
+//    private interface GetPoseFunction {
+//
+//        @Nullable
+//        PoseType apply(String name, boolean ignoreNull) throws SQLException;
+//    }
 
     private boolean inKitTrayByName(String name) {
         return !name.endsWith("_in_pt") && !name.contains("_in_pt_")
@@ -372,7 +283,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<OpAction> pddlActionsToOpActions(
             List<? extends Action> listIn,
             int start,
-            int endl@Nullable [],
+            int endl@Nullable[],
             @Nullable List<OpAction> skippedOpActionsList,
             @Nullable List<Action> skippedPddlActionsList,
             @Nullable PointType lookForPt,
@@ -2340,22 +2251,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return newPhysicalItems;
         }
     }
+
     public static final long WAIT_FOR_VISION_TIMEOUT
             = getLongProperty("aprs.waitForVisionTimeout", 15_000);
 
-    private static double getDoubleProperty(String propName, double defaultValue) {
-        try {
-            String propValueString = System.getProperty(propName);
-            if (null != propValueString && propValueString.length() > 0) {
-                return Double.parseDouble(propValueString);
-            } else {
-                return defaultValue;
-            }
-        } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "", exception);
-            return defaultValue;
-        }
-    }
+//    private static double getDoubleProperty(String propName, double defaultValue) {
+//        try {
+//            String propValueString = System.getProperty(propName);
+//            if (null != propValueString && propValueString.length() > 0) {
+//                return Double.parseDouble(propValueString);
+//            } else {
+//                return defaultValue;
+//            }
+//        } catch (Exception exception) {
+//            LOGGER.log(Level.SEVERE, "", exception);
+//            return defaultValue;
+//        }
+//    }
 
     private static long getLongProperty(String propName, long defaultValue) {
         try {
@@ -4400,18 +4312,18 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return Collections.unmodifiableList(l);
     }
 
-    private List<PhysicalItem> posesToDetectedItemList(@Nullable Collection<PoseType> poses) {
-        List<PhysicalItem> l = new ArrayList<>();
-        int i = 0;
-        if (null != poses) {
-            for (PoseType pose : poses) {
-                i++;
-                l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle("pose_" + i, pose, 0));
-            }
-        }
-        l.addAll(poseCacheToDetectedItemList());
-        return Collections.unmodifiableList(l);
-    }
+//    private List<PhysicalItem> posesToDetectedItemList(@Nullable Collection<PoseType> poses) {
+//        List<PhysicalItem> l = new ArrayList<>();
+//        int i = 0;
+//        if (null != poses) {
+//            for (PoseType pose : poses) {
+//                i++;
+//                l.add(PhysicalItem.newPhysicalItemNamePoseVisionCycle("pose_" + i, pose, 0));
+//            }
+//        }
+//        l.addAll(poseCacheToDetectedItemList());
+//        return Collections.unmodifiableList(l);
+//    }
 
     private XFutureVoid takeDatabaseViewSnapshot(File f) {
         if (null != aprsSystem) {
@@ -4591,23 +4503,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private double getVisionToDBRotationOffset() {
-        assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
-        return this.aprsSystem.getVisionToDBRotationOffset();
-    }
+//    private double getVisionToDBRotationOffset() {
+//        assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
+//        return this.aprsSystem.getVisionToDBRotationOffset();
+//    }
 
 
-    private double normAngle(double angleIn) {
-        double angleOut = angleIn;
-        if (angleOut > Math.PI) {
-            angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
-        } else if (angleOut < -Math.PI) {
-            angleOut += 2 * Math.PI * ((int) (-1.0 * angleIn / Math.PI));
-        }
-        return angleOut;
-    }
+//    private double normAngle(double angleIn) {
+//        double angleOut = angleIn;
+//        if (angleOut > Math.PI) {
+//            angleOut -= 2 * Math.PI * ((int) (angleIn / Math.PI));
+//        } else if (angleOut < -Math.PI) {
+//            angleOut += 2 * Math.PI * ((int) (-1.0 * angleIn / Math.PI));
+//        }
+//        return angleOut;
+//    }
 
-//    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, IOException {
+    //    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, IOException {
 //        int nbOfOccupiedSlots = 0;
 //        List<String> allPartsInKt = new ArrayList<>();
 //        //-- queries the database 10 times to make sure we are not missing some part_in_kt
@@ -4756,12 +4668,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return false;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private void setFakeTakePart(boolean _newValue) {
-        if (null != parentExecutorJPanel) {
-            this.parentExecutorJPanel.setForceFakeTakeFlag(_newValue);
-        }
-    }
+//    @SuppressWarnings("SameParameterValue")
+//    private void setFakeTakePart(boolean _newValue) {
+//        if (null != parentExecutorJPanel) {
+//            this.parentExecutorJPanel.setForceFakeTakeFlag(_newValue);
+//        }
+//    }
 
     /**
      * Add commands to the list that will take a given part.
@@ -4931,59 +4843,59 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-    private void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException {
-        checkDbReady();
-
-        if (partName.indexOf('_') < 0) {
-            throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
-        }
-        checkSettings();
-        addMessageCommand(out, "take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-
-        PoseType pose = getPose(partName);
-        if (takeSnapshots) {
-            takeSnapshots("plan", "take-part-recovery-" + partName + "", pose, partName);
-        }
-        if (null == pose) {
-            if (skipMissingParts) {
-                setLastTakenPart(null);
-                return;
-            } else {
-                throw new IllegalStateException("getPose(" + partName + ") returned null");
-            }
-        }
-
-        pose = visionToRobotPose(pose);
-        returnPosesByName.put(partName, pose);
-        pose.setXAxis(xAxis);
-        pose.setZAxis(zAxis);
-        takePartByPose(out, pose, partName);
-
-        String markerMsg = "took part " + partName;
-        addMarkerCommand(out, markerMsg, x -> {
-            logDebug(markerMsg + " at " + new Date());
-            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-        });
-        setLastTakenPart(partName);
-        if (partName.indexOf('_') > 0) {
-            TakenPartList.add(partName);
-        }
-    }
+//    private void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException {
+//        checkDbReady();
+//
+//        if (partName.indexOf('_') < 0) {
+//            throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
+//        }
+//        checkSettings();
+//        addMessageCommand(out, "take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
+//
+//        PoseType pose = getPose(partName);
+//        if (takeSnapshots) {
+//            takeSnapshots("plan", "take-part-recovery-" + partName + "", pose, partName);
+//        }
+//        if (null == pose) {
+//            if (skipMissingParts) {
+//                setLastTakenPart(null);
+//                return;
+//            } else {
+//                throw new IllegalStateException("getPose(" + partName + ") returned null");
+//            }
+//        }
+//
+//        pose = visionToRobotPose(pose);
+//        returnPosesByName.put(partName, pose);
+//        pose.setXAxis(xAxis);
+//        pose.setZAxis(zAxis);
+//        takePartByPose(out, pose, partName);
+//
+//        String markerMsg = "took part " + partName;
+//        addMarkerCommand(out, markerMsg, x -> {
+//            logDebug(markerMsg + " at " + new Date());
+//            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
+//        });
+//        setLastTakenPart(partName);
+//        if (partName.indexOf('_') > 0) {
+//            TakenPartList.add(partName);
+//        }
+//    }
 
     private volatile boolean getPoseFailedOnce = false;
 
 
-    private List<String> getAllPartsInKt(String name) throws SQLException, IOException {
-
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-
-        if (null == qs) {
-            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-        }
-        List<String> partsInKtList = new ArrayList<>(qs.getAllPartsInKt(name));
-
-        return partsInKtList;
-    }
+//    private List<String> getAllPartsInKt(String name) throws SQLException, IOException {
+//
+//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+//
+//        if (null == qs) {
+//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
+//        }
+//        List<String> partsInKtList = new ArrayList<>(qs.getAllPartsInKt(name));
+//
+//        return partsInKtList;
+//    }
 
     private volatile @Nullable
     PoseType lastTestApproachPose = null;
@@ -6289,9 +6201,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return ret;
     }
 
-    private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale) {
-        addJointMove(out, jointVals, speedScale, 0, jointVals.length);
-    }
+//    private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale) {
+//        addJointMove(out, jointVals, speedScale, 0, jointVals.length);
+//    }
 
     private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale, int start, int end) {
         checkJointToleranceSetting(out);
@@ -7241,14 +7153,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         wrappedActionConsumers.remove(consumer);
     }
 
-    /**
-     * Notify all consumers that a place-part action has been executed.
-     *
-     * @param wai info to be passed to consumers
-     */
-    private void notifyWrappedActionConsumers(WrappedActionInfo wai) {
-        wrappedActionConsumers.forEach(consumer -> consumer.accept(wai));
-    }
+//    /**
+//     * Notify all consumers that a place-part action has been executed.
+//     *
+//     * @param wai info to be passed to consumers
+//     */
+//    private void notifyWrappedActionConsumers(WrappedActionInfo wai) {
+//        wrappedActionConsumers.forEach(consumer -> consumer.accept(wai));
+//    }
 
     private int placePartSlotArgIndex;
 

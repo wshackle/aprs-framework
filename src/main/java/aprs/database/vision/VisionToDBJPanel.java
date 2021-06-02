@@ -25,82 +25,43 @@ package aprs.database.vision;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedTable;
 import aprs.cachedcomponents.CachedTextField;
-import aprs.system.AprsSystem;
+import aprs.database.*;
 import aprs.misc.Utils;
-import aprs.database.AcquireEnum;
-import aprs.database.CsvDbSetup;
-import aprs.database.DbSetup;
-import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupListener;
-import aprs.database.DbSetupPublisher;
-import aprs.database.DbType;
-import aprs.database.PhysicalItem;
-import aprs.database.DetectedItemJPanel;
-import aprs.database.PoseQueryElem;
-import aprs.database.SocketLineReader;
-import aprs.database.PartsTray;
+import aprs.system.AprsSystem;
 import crcl.base.PoseType;
-import crcl.utils.XFuture;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dialog;
-import java.awt.Toolkit;
-import java.awt.Window;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JTextField;
-import javax.swing.TransferHandler;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.awt.Desktop;
-import javax.swing.JTable;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicInteger;
-import aprs.database.Slot;
-import aprs.database.Tray;
-import static aprs.misc.AprsCommonLogger.println;
-import static aprs.misc.Utils.traceToString;
+import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.swing.JTextArea;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
+
+import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.io.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import javax.swing.JFileChooser;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.autoResizeTableColWidths;
+import static aprs.misc.Utils.traceToString;
+import static crcl.utils.CRCLPosemath.*;
 
 /**
  *
@@ -1155,11 +1116,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private void setText(Map<String, String> argsMap, JTextField fld, String key) {
-        if (argsMap.containsKey(key)) {
-            fld.setText(argsMap.get(key));
-        }
-    }
+//    private void setText(Map<String, String> argsMap, JTextField fld, String key) {
+//        if (argsMap.containsKey(key)) {
+//            fld.setText(argsMap.get(key));
+//        }
+//    }
 
     private int update_info_count = 0;
 

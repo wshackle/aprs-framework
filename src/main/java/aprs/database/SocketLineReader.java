@@ -86,7 +86,6 @@ public class SocketLineReader {
             thread = null;
         }
 
-        @SuppressWarnings("deprecation")
         @Override
         protected void finalize() {
             close();
@@ -383,7 +382,6 @@ public class SocketLineReader {
         als = null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected void finalize() {
         close();

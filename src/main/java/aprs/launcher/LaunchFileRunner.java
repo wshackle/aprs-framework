@@ -23,32 +23,27 @@
 package aprs.launcher;
 
 import aprs.logdisplay.LogDisplayJPanel;
-import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
+import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
-import crcl.ui.misc.MultiLineStringJPanel;
-import java.awt.GraphicsEnvironment;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import javax.swing.Timer;
+import java.awt.*;
+import java.io.*;
 import java.net.Socket;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Deque;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Timer;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static aprs.misc.AprsCommonLogger.println;
 
 /**
  *
@@ -116,7 +111,11 @@ public class LaunchFileRunner {
         WrappedProcess wrappedProcess = new WrappedProcess(errPrintStream, errPrintStream, command);
         wrappedProcess.setDisplayComponent(logPanel);
         processes.add(wrappedProcess);
-        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> {
+            System.out.println("p = " + p);
+            logPanel.setProcess(p);
+            return p;
+        });
         return wrappedProcess;
     }
 
@@ -136,7 +135,11 @@ public class LaunchFileRunner {
         wrappedProcess.setDisplayComponent(logPanel);
         List<WrappedProcess> processes = getProcesses();
         processes.add(wrappedProcess);
-        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> {
+            System.out.println("p = " + p);
+            logPanel.setProcess(p);
+            return p;
+        });
         return wrappedProcess;
     }
 
@@ -155,7 +158,11 @@ public class LaunchFileRunner {
         lineConsumers = new ArrayList<>();
         WrappedProcess wrappedProcess = new WrappedProcess(directory, errPrintStream, errPrintStream, command2);
         wrappedProcess.setDisplayComponent(logPanel);
-        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> { System.out.println("p = " + p); logPanel.setProcess(p); return p;});
+        wrappedProcess.getProcessStartXFuture().thenApply((Process p) -> {
+            System.out.println("p = " + p);
+            logPanel.setProcess(p);
+            return p;
+        });
         processes.add(wrappedProcess);
         return wrappedProcess;
     }
@@ -172,8 +179,7 @@ public class LaunchFileRunner {
     private volatile @MonotonicNonNull
     ScheduledThreadPoolExecutor timeoutScheduledThreadPoolExecutor = null;
 
-    private volatile @Nullable
-    XFutureVoid lastNewTimeoutFuture = null;
+    private volatile @Nullable XFutureVoid lastNewTimeoutFuture = null;
 
     private volatile javax.swing.@Nullable Timer lastTimeoutSwingTimer = null;
 
@@ -553,7 +559,7 @@ public class LaunchFileRunner {
         return defaultValue;
     }
 
-    @SuppressWarnings("nullness")
+    @SuppressWarnings({"nullness", "try"})
     private @Nullable
     WrappedProcess parseLaunchFileLine(String line, List<? super XFuture<?>> futures, @Nullable StringBuilder stringBuilder) throws IOException {
         if (line.length() < 1) {
@@ -607,6 +613,7 @@ public class LaunchFileRunner {
 
                     String parts[] = Arrays.copyOfRange(words, 1, words.length);
                     if (parts.length >= 2) {
+
                         try (Socket s = new Socket(parts[0], Integer.parseInt(parts[1]))) {
                             ifStack.push(false);
                         } catch (Exception e) {

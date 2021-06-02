@@ -22,46 +22,42 @@
  */
 package aprs.simview;
 
-import aprs.system.AprsSystem;
-import aprs.misc.SlotOffsetProvider;
 import aprs.database.PhysicalItem;
 import aprs.database.Slot;
-import static aprs.simview.DisplayAxis.POS_X_POS_Y;
+import aprs.misc.PmCartesianMinMaxLimit;
+import aprs.misc.SlotOffsetProvider;
+import aprs.system.AprsSystem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
-
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Arc2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.*;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
-import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
-import static aprs.misc.AprsCommonLogger.println;
-import aprs.misc.PmCartesianMinMaxLimit;
-import static aprs.simview.Object2DViewDragMode.DO_NOTHING;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.*;
+import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.simview.DisplayAxis.POS_X_POS_Y;
+import static aprs.simview.Object2DViewDragMode.DO_NOTHING;
 
 /**
  *
@@ -1212,16 +1208,16 @@ public class Object2DJPanel extends JPanel {
 //        }
 //        return getScale();
 //    }
-    @SuppressWarnings("guieffect")
-    private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
-
-        Point2DMinMax tempMinMax = new Point2DMinMax();
-        tempMinMax.min.x = minX;
-        tempMinMax.max.x = maxX;
-        tempMinMax.min.y = minY;
-        tempMinMax.max.y = maxY;
-        translate(this.displayAxis, g2d, itemx, itemy, tempMinMax, width, height, currentScale);
-    }
+//    @SuppressWarnings("guieffect")
+//    private void translate(Graphics2D g2d, double itemx, double itemy, double minX, double minY, double maxX, double maxY, int width, int height, double currentScale) {
+//
+//        Point2DMinMax tempMinMax = new Point2DMinMax();
+//        tempMinMax.min.x = minX;
+//        tempMinMax.max.x = maxX;
+//        tempMinMax.min.y = minY;
+//        tempMinMax.max.y = maxY;
+//        translate(this.displayAxis, g2d, itemx, itemy, tempMinMax, width, height, currentScale);
+//    }
 
     @SuppressWarnings("guieffect")
     private static void translate(DisplayAxis displayAxis, Graphics2D g2d, double itemx, double itemy, Point2DMinMax tempMinMax, int width, int height, double currentScale) throws IllegalArgumentException {

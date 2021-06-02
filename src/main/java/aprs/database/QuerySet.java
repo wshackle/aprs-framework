@@ -22,29 +22,20 @@
  */
 package aprs.database;
 
-import static aprs.database.DbCsvBackup.executeQuery;
-import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import static crcl.utils.CRCLUtils.requireNonNull;
-import java.util.TreeMap;
+import java.sql.*;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.csv.CSVPrinter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static aprs.database.DbCsvBackup.executeQuery;
+import static aprs.misc.AprsCommonLogger.println;
+import static crcl.utils.CRCLUtils.requireNonNull;
 
 /**
  * The query set class implements methods to make various common database
@@ -358,18 +349,18 @@ public class QuerySet implements QuerySetInterface {
         return rs.getInt(qname);
     }
 
-    private double getQueryResultDouble(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
-        Map<DbParamTypeEnum, String> map = queryInfo.getResults();
-        String qname = map.get(type);
-        if (null == qname) {
-            throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
-        }
-        if (Character.isDigit(qname.charAt(0))) {
-            int index = Integer.parseInt(qname);
-            return rs.getDouble(index);
-        }
-        return rs.getDouble(qname);
-    }
+//    private double getQueryResultDouble(ResultSet rs, DbQueryInfo queryInfo, DbParamTypeEnum type) throws SQLException {
+//        Map<DbParamTypeEnum, String> map = queryInfo.getResults();
+//        String qname = map.get(type);
+//        if (null == qname) {
+//            throw new IllegalArgumentException("No entry for type " + type + " in map =" + map);
+//        }
+//        if (Character.isDigit(qname.charAt(0))) {
+//            int index = Integer.parseInt(qname);
+//            return rs.getDouble(index);
+//        }
+//        return rs.getDouble(qname);
+//    }
 
     private @Nullable
     String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
@@ -865,31 +856,31 @@ public class QuerySet implements QuerySetInterface {
         return pose;
     }
 
-    @SuppressWarnings("try")
-    private static class QsResultSet implements AutoCloseable {
-
-        private final ResultSet resultSet;
-        private final CSVPrinter printer;
-
-        public QsResultSet(ResultSet resultSet, CSVPrinter printer) {
-            this.resultSet = resultSet;
-            this.printer = printer;
-        }
-
-        public ResultSet getResultSet() {
-            return resultSet;
-        }
-
-        public CSVPrinter getPrinter() {
-            return printer;
-        }
-
-        @Override
-        public void close() throws Exception {
-            resultSet.close();
-            printer.close();
-        }
-    }
+//    @SuppressWarnings("try")
+//    private static class QsResultSet implements AutoCloseable {
+//
+//        private final ResultSet resultSet;
+//        private final CSVPrinter printer;
+//
+//        public QsResultSet(ResultSet resultSet, CSVPrinter printer) {
+//            this.resultSet = resultSet;
+//            this.printer = printer;
+//        }
+//
+//        public ResultSet getResultSet() {
+//            return resultSet;
+//        }
+//
+//        public CSVPrinter getPrinter() {
+//            return printer;
+//        }
+//
+//        @Override
+//        public void close() throws Exception {
+//            resultSet.close();
+//            printer.close();
+//        }
+//    }
 
     public List<PhysicalItem> getAllNewParts(int visionCycleNewDiffThreshold) throws SQLException, IOException {
         if (closed) {
@@ -1071,7 +1062,6 @@ public class QuerySet implements QuerySetInterface {
     }
 
     @Override
-    @SuppressWarnings({"FinalizeDeclaration", "deprecation"})
     protected void finalize() throws Throwable {
         try {
             this.close();
@@ -1097,9 +1087,9 @@ public class QuerySet implements QuerySetInterface {
 //    private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
 //        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);
 //    }
-    private void setPoseQueryDoubleParam(DbParamTypeEnum type, BigDecimal value, Map<Integer, Object> map) throws SQLException {
-        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
-    }
+//    private void setPoseQueryDoubleParam(DbParamTypeEnum type, BigDecimal value, Map<Integer, Object> map) throws SQLException {
+//        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
+//    }
 
     private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);

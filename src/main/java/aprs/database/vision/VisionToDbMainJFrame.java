@@ -22,26 +22,23 @@
  */
 package aprs.database.vision;
 
-import aprs.database.DbSetupPublisher;
-import aprs.database.DbType;
-import aprs.database.PhysicalItem;
-import aprs.database.PoseQueryElem;
-import aprs.database.Slot;
+import aprs.database.*;
 import aprs.system.AprsSystem;
 import crcl.utils.XFutureVoid;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.File;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFrameInterface {
 
 

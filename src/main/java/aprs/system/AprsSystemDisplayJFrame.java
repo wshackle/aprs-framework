@@ -23,54 +23,32 @@
 package aprs.system;
 
 import aprs.cachedcomponents.CachedCheckBox;
-import aprs.misc.ActiveWinEnum;
-import static aprs.misc.AprsCommonLogger.println;
-import aprs.misc.CsvTableJPanel;
-import aprs.misc.IconImages;
-import aprs.misc.JFrameInternalHolder;
-import aprs.misc.PmCartesianMinMaxLimit;
-import aprs.misc.Utils;
+import aprs.misc.*;
 import crcl.ui.AutomaticPropertyFileUtils;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JFileChooser;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenuItem;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.ui.misc.ObjTableJPanel;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.HeadlessException;
-import java.awt.Point;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.swing.JLayeredPane;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import rcs.posemath.PmCartesian;
-import javax.swing.DesktopManager;
-import javax.swing.JMenu;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static aprs.misc.AprsCommonLogger.println;
 
 /**
  * AprsSystemInterface is the container for one robotic system in the APRS
@@ -2464,13 +2442,13 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return new CachedCheckBox(jCheckBoxMenuItemReloadSimFilesOnReverse);
     }
 
-    private void logEvent(String string, Object o) {
-        if (null != aprsSystem) {
-            aprsSystem.logEvent(string, o);
-        } else {
-            throw new IllegalStateException("aprsSystem ==null, this=" + this);
-        }
-    }
+//    private void logEvent(String string, Object o) {
+//        if (null != aprsSystem) {
+//            aprsSystem.logEvent(string, o);
+//        } else {
+//            throw new IllegalStateException("aprsSystem ==null, this=" + this);
+//        }
+//    }
 
     /**
      * Get the state of the reverse flag. It is set to indicate that an

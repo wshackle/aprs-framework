@@ -969,9 +969,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //        }
 //        return ret;
 //    }
-    private XFutureVoid updateQueriesMap() {
-        return aprsSystem.runOnDispatchThread(this::updateQueriesMapInternal);
-    }
+//    private XFutureVoid updateQueriesMap() {
+//        return aprsSystem.runOnDispatchThread(this::updateQueriesMapInternal);
+//    }
 
     @UIEffect
     private void updateQueriesMapInternal() {

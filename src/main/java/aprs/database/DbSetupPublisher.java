@@ -14,25 +14,24 @@
  * implied, about its quality, reliability, or any other characteristic. 
  * We would appreciate acknowledgement if the software is used. 
  * This software can be redistributed and/or modified freely provided 
- * that any derivative works bear some notice that they are derived from it, 
+ * that any derivative works bear some notice that they are derived from it,
  * and any modified versions bear some notice that they have been modified.
- * 
+ *
  *  See http://www.copyright.gov/title17/92chap1.html#105
- * 
+ *
  */
 package aprs.database;
-
-import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import crcl.utils.XFutureVoid;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
 /**
- *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 public interface DbSetupPublisher {
 
     public XFutureVoid setDbSetup(DbSetup setup);

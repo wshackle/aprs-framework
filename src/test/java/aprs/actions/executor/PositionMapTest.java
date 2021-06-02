@@ -23,28 +23,25 @@
 package aprs.actions.executor;
 
 //import static aprs.actions.executor.PositionMap.combine;
+
 import crcl.base.PointType;
 import crcl.utils.CRCLPosemath;
-import static crcl.utils.CRCLPosemath.point;
-import java.util.Random;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import static org.junit.Assert.*;
+import rcs.posemath.*;
 
-import rcs.posemath.PmCartesian;
-import rcs.posemath.PmException;
-import rcs.posemath.PmPose;
-import rcs.posemath.PmQuaternion;
-import rcs.posemath.PmRotationVector;
-import rcs.posemath.Posemath;
+import java.util.Random;
+
+import static crcl.utils.CRCLPosemath.point;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 public class PositionMapTest {
 
     public PositionMapTest() {
@@ -286,29 +283,29 @@ public class PositionMapTest {
         }
     }
 
-    private void testPoseRandomMap8(PmPose pose, Random random) throws PmException {
-        PositionMap pm = new PositionMap(
-                poseCartEntry(pose, 0 + 0.5 * random.nextDouble(), 0 + 0.5 * random.nextDouble(), 0),
-                poseCartEntry(pose, 0 + 0.5 * random.nextDouble(), 1 + 0.5 * random.nextDouble(), 0),
-                poseCartEntry(pose, 1 + 0.5 * random.nextDouble(), 0, 0),
-                poseCartEntry(pose, 1 + 0.5 * random.nextDouble(), 1 + 0.5 * random.nextDouble(), 0),
-                poseCartEntry(pose, 2 + 0.5 * random.nextDouble(), 2 + 0.5 * random.nextDouble(), 0),
-                poseCartEntry(pose, 2 + 0.5 * random.nextDouble(), 2 + 0.5 * random.nextDouble(), 0),
-                poseCartEntry(pose, -1 + 0.5 * random.nextDouble(), 0, 0),
-                poseCartEntry(pose, -1 + 0.5 * random.nextDouble(), -1 + 0.5 * random.nextDouble(), 0)
-        );
-
-        for (double x = -2; x < 2.5; x += 0.25 * random.nextDouble()) {
-            for (double y = -2; y < 2.5; y += 0.25 * random.nextDouble()) {
-                checkMapPosePoint(pm, new PmCartesian(x, y, 0), pose);
-            }
-        }
-        for (double x = -2; x < 2.5; x += 0.1) {
-            for (double y = -2; y < 2.5; y += 0.1) {
-                checkMapPosePoint(pm, new PmCartesian(x, y, 0), pose);
-            }
-        }
-    }
+//    private void testPoseRandomMap8(PmPose pose, Random random) throws PmException {
+//        PositionMap pm = new PositionMap(
+//                poseCartEntry(pose, 0 + 0.5 * random.nextDouble(), 0 + 0.5 * random.nextDouble(), 0),
+//                poseCartEntry(pose, 0 + 0.5 * random.nextDouble(), 1 + 0.5 * random.nextDouble(), 0),
+//                poseCartEntry(pose, 1 + 0.5 * random.nextDouble(), 0, 0),
+//                poseCartEntry(pose, 1 + 0.5 * random.nextDouble(), 1 + 0.5 * random.nextDouble(), 0),
+//                poseCartEntry(pose, 2 + 0.5 * random.nextDouble(), 2 + 0.5 * random.nextDouble(), 0),
+//                poseCartEntry(pose, 2 + 0.5 * random.nextDouble(), 2 + 0.5 * random.nextDouble(), 0),
+//                poseCartEntry(pose, -1 + 0.5 * random.nextDouble(), 0, 0),
+//                poseCartEntry(pose, -1 + 0.5 * random.nextDouble(), -1 + 0.5 * random.nextDouble(), 0)
+//        );
+//
+//        for (double x = -2; x < 2.5; x += 0.25 * random.nextDouble()) {
+//            for (double y = -2; y < 2.5; y += 0.25 * random.nextDouble()) {
+//                checkMapPosePoint(pm, new PmCartesian(x, y, 0), pose);
+//            }
+//        }
+//        for (double x = -2; x < 2.5; x += 0.1) {
+//            for (double y = -2; y < 2.5; y += 0.1) {
+//                checkMapPosePoint(pm, new PmCartesian(x, y, 0), pose);
+//            }
+//        }
+//    }
 
     private void testPoseRandomMap3(PmPose pose, Random random) throws PmException {
         PositionMap pm = new PositionMap(

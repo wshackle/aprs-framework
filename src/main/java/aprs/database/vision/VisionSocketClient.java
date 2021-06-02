@@ -24,17 +24,13 @@ package aprs.database.vision;
 
 import aprs.database.PhysicalItem;
 import aprs.database.SocketLineReader;
-import static aprs.misc.AprsCommonLogger.println;
 import crcl.base.PoseType;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,7 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static aprs.misc.AprsCommonLogger.println;
 
 /**
  *
@@ -786,7 +783,6 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     protected void finalize() throws Throwable {
         close();
         super.finalize();

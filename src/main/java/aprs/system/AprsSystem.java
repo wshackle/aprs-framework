@@ -22,153 +22,72 @@
  */
 package aprs.system;
 
-import aprs.misc.SlotOffsetProvider;
-import aprs.misc.Utils;
-import aprs.misc.ActiveWinEnum;
 import aprs.actions.executor.Action;
-import aprs.database.DbSetup;
-import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupJInternalFrame;
-import aprs.database.DbSetupListener;
-import aprs.database.DbSetupPublisher;
-import aprs.database.DbType;
-import aprs.database.PhysicalItem;
-import aprs.database.explore.ExploreGraphDbJInternalFrame;
-import aprs.kitinspection.KitInspectionJInternalFrame;
-import aprs.logdisplay.LogDisplayJInternalFrame;
-import aprs.database.PartsTray;
-import aprs.database.Slot;
-import aprs.database.Tray;
-import aprs.learninggoals.GoalLearner;
 import aprs.actions.executor.CrclGenerator;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
-import aprs.database.CsvDbSetupPublisher;
-import aprs.database.Part;
-import aprs.database.TrayFillInfo;
-import aprs.database.TraySlotListItem;
-import aprs.simview.Object2DJPanel;
-import aprs.simview.Object2DViewJInternalFrame;
+import aprs.database.*;
+import aprs.database.explore.ExploreGraphDbJInternalFrame;
 import aprs.database.vision.UpdateResults;
 import aprs.database.vision.VisionToDbJInternalFrame;
-import aprs.misc.AprsCommonLogger;
-import static aprs.misc.AprsCommonLogger.println;
-import aprs.misc.IconImages;
-import aprs.misc.PmCartesianMinMaxLimit;
-import static aprs.misc.Utils.shortenItemPartName;
-import aprs.simview.Object2DOuterDialogPanel;
-import aprs.simview.Object2DOuterJPanel;
-import aprs.simview.ViewOptions;
+import aprs.kitinspection.KitInspectionJInternalFrame;
+import aprs.learninggoals.GoalLearner;
+import aprs.logdisplay.LogDisplayJInternalFrame;
+import aprs.misc.*;
+import aprs.simview.*;
 import aprs.supervisor.main.Supervisor;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.swing.JInternalFrame;
-
-import crcl.base.ActuateJointsType;
-import crcl.base.CRCLCommandType;
-import crcl.base.CRCLProgramType;
-import crcl.base.CRCLStatusType;
-import crcl.base.CommandStateEnumType;
-import crcl.base.CommandStatusType;
-import crcl.base.EndCanonType;
-import crcl.base.InitCanonType;
-import crcl.base.MiddleCommandType;
-import crcl.base.MoveThroughToType;
-import crcl.base.MoveToType;
-import crcl.base.PointType;
-import crcl.base.PoseType;
-import crcl.base.SetEndEffectorType;
+import crcl.base.*;
+import crcl.copier.CRCLCopier;
 import crcl.ui.AutomaticPropertyFileUtils;
 import crcl.ui.ConcurrentBlockProgramsException;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
 import crcl.ui.client.CrclSwingClientJInternalFrame;
 import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.client.ProgramLineListener;
 import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame;
-import crcl.ui.server.SimServerJInternalFrame;
-import crcl.utils.CRCLException;
-import crcl.utils.CRCLPosemath;
-import crcl.utils.CRCLSocket;
-import crcl.utils.outer.interfaces.ProgramRunData;
-
-import java.awt.Container;
-import java.awt.Image;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-import javax.swing.JOptionPane;
-import javax.xml.bind.JAXBException;
-
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import rcs.posemath.PmCartesian;
 import crcl.ui.misc.MultiLineStringJPanel;
-import crcl.utils.CRCLCommandWrapper;
-import crcl.copier.CRCLCopier;
-import crcl.utils.CRCLUtils;
+import crcl.ui.server.SimServerJInternalFrame;
+import crcl.utils.*;
+import crcl.utils.outer.interfaces.ProgramRunData;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
-
-import java.awt.GraphicsEnvironment;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
-import java.net.URLClassLoader;
-import java.security.ProtectionDomain;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import javax.swing.DesktopManager;
-import javax.swing.JDesktopPane;
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UI;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import rcs.posemath.PmCartesian;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.xml.bind.JAXBException;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.security.ProtectionDomain;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.shortenItemPartName;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -518,15 +437,13 @@ public class AprsSystem implements SlotOffsetProvider {
     SimServerJInternalFrame simServerJInternalFrame = null;
     private volatile @MonotonicNonNull
     LogDisplayJInternalFrame logDisplayJInternalFrame = null;
-    private @Nullable
-    ServerJInternalFrameProviderInterface fanucServerProvider = null;
+    private @Nullable ServerJInternalFrameProviderInterface fanucServerProvider = null;
     private @MonotonicNonNull
     JInternalFrame fanucCRCLServerJInternalFrame = null;
     private @MonotonicNonNull
     ExploreGraphDbJInternalFrame exploreGraphDbJInternalFrame = null;
 
-    private @Nullable
-    ServerJInternalFrameProviderInterface motomanServerProvider = null;
+    private @Nullable ServerJInternalFrameProviderInterface motomanServerProvider = null;
     private @MonotonicNonNull
     JInternalFrame motomanCrclServerJInternalFrame = null;
     private @MonotonicNonNull
@@ -590,8 +507,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return origRobotName;
     }
 
-    private volatile @Nullable
-    Image scanImage = null;
+    private volatile @Nullable Image scanImage = null;
 
     /**
      * Get the most recent image created when scanning for desired part
@@ -978,8 +894,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return object2DViewJInternalFrame.getPublishCount();
     }
 
-    private @Nullable
-    SlotOffsetProvider externalSlotOffsetProvider = null;
+    private @Nullable SlotOffsetProvider externalSlotOffsetProvider = null;
 
     /**
      * Get the value of externalSlotOffsetProvider
@@ -1146,8 +1061,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return debug;
     }
 
-    private volatile @Nullable
-    String runName = null;
+    private volatile @Nullable String runName = null;
 
     /**
      * Creates a run name useful for identifying a run in log files or the names
@@ -1537,8 +1451,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return safeAbortFuture;
     }
 
-    private volatile @Nullable
-    XFutureVoid lastClearWayToHoldersFuture = null;
+    private volatile @Nullable XFutureVoid lastClearWayToHoldersFuture = null;
 
     public boolean isStandAlone() {
         if (null != aprsSystemDisplayJFrame) {
@@ -1582,23 +1495,17 @@ public class AprsSystem implements SlotOffsetProvider {
         return lastResumeFuture;
     }
 
-    private volatile @Nullable
-    XFutureVoid safeAbortFuture = null;
+    private volatile @Nullable XFutureVoid safeAbortFuture = null;
 
-    private volatile @Nullable
-    XFutureVoid safeAbortAndDisconnectFuture = null;
+    private volatile @Nullable XFutureVoid safeAbortAndDisconnectFuture = null;
 
-    private volatile @Nullable
-    XFutureVoid safeAbortAndDisconnectFutureWaitAll1 = null;
+    private volatile @Nullable XFutureVoid safeAbortAndDisconnectFutureWaitAll1 = null;
 
-    private volatile @Nullable
-    XFutureVoid safeAbortAndDisconnectFutureWaitAll2 = null;
+    private volatile @Nullable XFutureVoid safeAbortAndDisconnectFutureWaitAll2 = null;
 
-    private volatile @Nullable
-    XFutureVoid safeAbortAndDisconnectFutureDisconnect2 = null;
+    private volatile @Nullable XFutureVoid safeAbortAndDisconnectFutureDisconnect2 = null;
 
-    private volatile @Nullable
-    String startSafeAbortComment = null;
+    private volatile @Nullable String startSafeAbortComment = null;
 
     /**
      * Attempt to safely abort the current CRCL program in a way that does not
@@ -1647,20 +1554,17 @@ public class AprsSystem implements SlotOffsetProvider {
         return safeAbortFuture;
     }
 
-    private volatile @Nullable
-    Thread startSafeAbortAndDisconnectThread = null;
+    private volatile @Nullable Thread startSafeAbortAndDisconnectThread = null;
     private volatile long startSafeAbortAndDisconnectTime = -1;
     private volatile StackTraceElement startSafeAbortAndDisconnectStackTrace@Nullable []  = null;
 
-    private volatile @Nullable
-    Thread startSafeAbortThread = null;
+    private volatile @Nullable Thread startSafeAbortThread = null;
 
     private volatile long startSafeAbortTime = -1;
 
     private volatile StackTraceElement startSafeAbortStackTrace @Nullable []  = null;
 
-    private volatile @Nullable
-    String startSafeAbortAndDisconnectComment = null;
+    private volatile @Nullable String startSafeAbortAndDisconnectComment = null;
     private final AtomicInteger startSafeAbortAndDisconnectCount = new AtomicInteger();
 
     /**
@@ -1788,8 +1692,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    XFutureVoid lastWaitAllFuturesRet = null;
+    private volatile @Nullable XFutureVoid lastWaitAllFuturesRet = null;
 
     private synchronized XFutureVoid waitAllLastFutures() {
         XFutureVoid ret
@@ -1865,8 +1768,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return visionToDbJInternalFrame.getVisionClientUpdateSingleUpdateListenersEmptyCount();
     }
 
-    private volatile @Nullable
-    XFutureVoid disconnectRobotFuture = null;
+    private volatile @Nullable XFutureVoid disconnectRobotFuture = null;
 
     private volatile boolean debug = false;
 
@@ -2145,8 +2047,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    XFutureVoid lastPauseFuture = null;
+    private volatile @Nullable XFutureVoid lastPauseFuture = null;
 
     private XFutureVoid waitForPause() {
         boolean paused = isPaused();
@@ -2161,21 +2062,17 @@ public class AprsSystem implements SlotOffsetProvider {
         return pauseFuture;
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> lastContinueActionListFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastContinueActionListFuture = null;
 
-    private volatile @Nullable
-    XFuture<Boolean> lastPrivateContinueActionListFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastPrivateContinueActionListFuture = null;
 
-    private volatile @Nullable
-    String lastContinueActionListFutureComment = null;
+    private volatile @Nullable String lastContinueActionListFutureComment = null;
 
     private volatile int lastContinueStartAbortCount = -1;
 
     private volatile StackTraceElement continueActionListTrace @Nullable []  = null;
-    private volatile StackTraceElement privateContinueActionListTrace @Nullable []  = null;
-    private volatile @Nullable
-    String continueActionsComment = null;
+    private volatile StackTraceElement privateContinueActionListTrace@Nullable[] = null;
+    private volatile @Nullable String continueActionsComment = null;
     private final AtomicInteger continueActionsListCount = new AtomicInteger();
 
     /**
@@ -2278,12 +2175,10 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile StackTraceElement setEndLogCallerTrace @Nullable []  = null;
-    private volatile @Nullable
-    String setEndLogCallerComment = null;
-    private volatile StackTraceElement setEndLogTrace  @Nullable []  = null;
-    private volatile @Nullable
-    Thread setEndLogThread = null;
+    private volatile StackTraceElement setEndLogCallerTrace@Nullable[] = null;
+    private volatile @Nullable String setEndLogCallerComment = null;
+    private volatile StackTraceElement setEndLogTrace@Nullable[] = null;
+    private volatile @Nullable Thread setEndLogThread = null;
 
     private void setEndLogged(StackTraceElement callerTrace[], String comment) {
         setEndLogTrace = Thread.currentThread().getStackTrace();
@@ -2449,8 +2344,7 @@ public class AprsSystem implements SlotOffsetProvider {
         this.logImageDir = null;
     }
 
-    private @Nullable
-    String robotName = null;
+    private @Nullable String robotName = null;
 
     /**
      * Get the value of robotName
@@ -2462,13 +2356,11 @@ public class AprsSystem implements SlotOffsetProvider {
         return robotName;
     }
 
-    private volatile @Nullable
-    Thread setRobotNameNullThread = null;
-    private volatile StackTraceElement setRobotNameNullStackTrace@Nullable []  = null;
+    private volatile @Nullable Thread setRobotNameNullThread = null;
+    private volatile StackTraceElement setRobotNameNullStackTrace@Nullable[] = null;
     private volatile long setRobotNameNullThreadTime = -1;
-    private volatile @Nullable
-    Thread setRobotNameNonNullThread = null;
-    private volatile StackTraceElement setRobotNameNonNullStackTrace@Nullable []  = null;
+    private volatile @Nullable Thread setRobotNameNonNullThread = null;
+    private volatile StackTraceElement setRobotNameNonNullStackTrace@Nullable[] = null;
     private volatile long setRobotNameNonNullThreadTime = -1;
 
     public void printRobotNameActivy(PrintStream ps) {
@@ -2686,8 +2578,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> lastRunProgramFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastRunProgramFuture = null;
 
     private volatile StackTraceElement startCrclProgramTrace  @Nullable []  = null;
 
@@ -3191,10 +3082,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private @Nullable
-    PrintStream origOut = null;
-    private @Nullable
-    PrintStream origErr = null;
+    private @Nullable PrintStream origOut = null;
+    private @Nullable PrintStream origErr = null;
 
     public void setVisible(boolean visible) {
         if (null != aprsSystemDisplayJFrame) {
@@ -3328,7 +3217,7 @@ public class AprsSystem implements SlotOffsetProvider {
 //            System.out.println("protDom = " + protDom);
             if (cl instanceof URLClassLoader) {
                 @SuppressWarnings("resource")
-				URLClassLoader ucl = (URLClassLoader) cl;
+                URLClassLoader ucl = (URLClassLoader) cl;
                 URL[] urls = ucl.getURLs();
                 StringBuilder msgBuilder = new StringBuilder(msg);
                 for (int i = 0; i < urls.length; i++) {
@@ -3341,7 +3230,7 @@ public class AprsSystem implements SlotOffsetProvider {
             if (sysCl != cl) {
                 if (sysCl instanceof URLClassLoader) {
                     @SuppressWarnings("resource")
-					URLClassLoader ucl = (URLClassLoader) sysCl;
+                    URLClassLoader ucl = (URLClassLoader) sysCl;
                     URL[] urls = ucl.getURLs();
                     StringBuilder msgBuilder = new StringBuilder(msg);
                     for (int i = 0; i < urls.length; i++) {
@@ -3417,8 +3306,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private @Nullable
-    String titleErrorString = null;
+    private @Nullable String titleErrorString = null;
 
     /**
      * Get the title error string, which should be a short string identifying
@@ -3432,11 +3320,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return titleErrorString;
     }
 
-    private volatile @Nullable
-    CommandStatusType titleErrorStringCommandStatus = null;
+    private volatile @Nullable CommandStatusType titleErrorStringCommandStatus = null;
 
-    private volatile @Nullable
-    String lastNewTitleErrorString = null;
+    private volatile @Nullable String lastNewTitleErrorString = null;
 
     private volatile StackTraceElement setTitleErrorStringTrace@Nullable []  = null;
 
@@ -3641,14 +3527,12 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private final int myThreadId = RUN_PROGRAM_THREAD_COUNT.incrementAndGet();
 
-    private volatile @Nullable
-    CSVPrinter eventLogPrinter = null;
+    private volatile @Nullable CSVPrinter eventLogPrinter = null;
 
     private volatile long lastTime = -1;
     private final AtomicInteger logNumber = new AtomicInteger();
 
-    private volatile @Nullable
-    String lastLogEvent = null;
+    private volatile @Nullable String lastLogEvent = null;
 
     public long logEvent(String s, Object... args) {
         if (closing) {
@@ -3718,18 +3602,18 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private String programToString(CRCLProgramType prog) {
-        StringBuilder sb = new StringBuilder();
-        List<MiddleCommandType> midCmds
-                = CRCLUtils.middleCommands(prog);
-        for (int i = 0; i < midCmds.size(); i++) {
-            sb.append(String.format("%03d", i));
-            sb.append(" \t");
-            sb.append(CRCLSocket.commandToSimpleString(midCmds.get(i)));
-            sb.append("\r\n");
-        }
-        return sb.toString();
-    }
+//    private String programToString(CRCLProgramType prog) {
+//        StringBuilder sb = new StringBuilder();
+//        List<MiddleCommandType> midCmds
+//                = CRCLUtils.middleCommands(prog);
+//        for (int i = 0; i < midCmds.size(); i++) {
+//            sb.append(String.format("%03d", i));
+//            sb.append(" \t");
+//            sb.append(CRCLSocket.commandToSimpleString(midCmds.get(i)));
+//            sb.append("\r\n");
+//        }
+//        return sb.toString();
+//    }
 
     /**
      * Get the unique thread id number for this system. It is set only when this
@@ -3751,8 +3635,8 @@ public class AprsSystem implements SlotOffsetProvider {
             Thread.currentThread().setName(getThreadName());
         }
     }
-    private volatile @Nullable
-    Thread runProgramServiceThread = null;
+
+    private volatile @Nullable Thread runProgramServiceThread = null;
 
     private final ExecutorService runProgramService
             = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -3778,8 +3662,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private @Nullable
-    XFutureVoid connectDatabaseFuture = null;
+    private @Nullable XFutureVoid connectDatabaseFuture = null;
 
     /**
      * Get the ExecutorService used for running CRCL programs.
@@ -3798,7 +3681,7 @@ public class AprsSystem implements SlotOffsetProvider {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect database when already closing.");
         }
-        final File dbSetupPropertiesFile = (dbSetupJInternalFrame != null)?dbSetupJInternalFrame.getPropertiesFile():null;
+        final File dbSetupPropertiesFile = (dbSetupJInternalFrame != null) ? dbSetupJInternalFrame.getPropertiesFile() : null;
         println("Starting connect to database ...   : propertiesFile=" + dbSetupPropertiesFile);
         DbSetupPublisher dbSetupPublisher;
         if (!this.useCsvFilesInsteadOfDatabase && null != dbSetupJInternalFrame) {
@@ -4044,7 +3927,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return GraphicsEnvironment.isHeadless();
     }
 
-    public static XFuture<AprsSystem> createSystem(File propertiesFile)  {
+    public static XFuture<AprsSystem> createSystem(File propertiesFile) {
         if (isHeadless()) {
             try {
                 return createAprsSystemHeadless(propertiesFile);
@@ -4111,7 +3994,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2()  {
+    private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
         try {
@@ -4362,37 +4245,35 @@ public class AprsSystem implements SlotOffsetProvider {
         public R get();
     }
 
-    @SuppressWarnings("guieffect")
-    private static boolean isEventDispatchThread() {
-        return SwingUtilities.isEventDispatchThread();
-    }
-
-    /**
-     * Call a method that returns a value on the dispatch thread.
-     *
-     * @param <R> type of return of the caller
-     * @param s supplier object with get method to be called.
-     * @return future that will make the return value accessible when the call
-     * is complete.
-     */
-    @SuppressWarnings("guieffect")
-    private static <R> R supplyAndWaitOnDispatchThread(final UISupplier<R> s) {
-
-        try {
-            if (isEventDispatchThread()) {
-                return s.get();
-            } else {
-                AtomicReference<R> ret = new AtomicReference<>();
-                javax.swing.SwingUtilities.invokeAndWait(() -> ret.set(s.get()));
-                return ret.get();
-            }
-        } catch (InterruptedException | InvocationTargetException ex) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
-        }
-    }
-
+    //    @SuppressWarnings("guieffect")
+//    private static boolean isEventDispatchThread() {
+//        return SwingUtilities.isEventDispatchThread();
+//    }
+//    /**
+//     * Call a method that returns a value on the dispatch thread.
+//     *
+//     * @param <R> type of return of the caller
+//     * @param s supplier object with get method to be called.
+//     * @return future that will make the return value accessible when the call
+//     * is complete.
+//     */
+//    @SuppressWarnings("guieffect")
+//    private static <R> R supplyAndWaitOnDispatchThread(final UISupplier<R> s) {
+//
+//        try {
+//            if (isEventDispatchThread()) {
+//                return s.get();
+//            } else {
+//                AtomicReference<R> ret = new AtomicReference<>();
+//                javax.swing.SwingUtilities.invokeAndWait(() -> ret.set(s.get()));
+//                return ret.get();
+//            }
+//        } catch (InterruptedException | InvocationTargetException ex) {
+//            Logger.getLogger(AprsSystem.class
+//                    .getName()).log(Level.SEVERE, "", ex);
+//            throw new RuntimeException(ex);
+//        }
+//    }
     private boolean isConnectDatabaseOnSetupStartupSelected() {
         return onStartupConnectDatabaseCheckBox.isSelected();
     }
@@ -4601,7 +4482,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return XFutureVoid.completedFuture();
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     private final Consumer<String> loggerFrameStringConsumer
             = (String s) -> appendLogDisplay(s);
 
@@ -4977,8 +4858,7 @@ public class AprsSystem implements SlotOffsetProvider {
 
     private final AtomicInteger so2dCount = new AtomicInteger();
 
-    private volatile @Nullable
-    XFutureVoid startObject2DJinternalFrameFuture = null;
+    private volatile @Nullable XFutureVoid startObject2DJinternalFrameFuture = null;
 
     /**
      * Make the Object 2D view visible and create underlying components.
@@ -4991,8 +4871,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return ret;
     }
 
-    private volatile @Nullable
-    XFutureVoid startObject2DJinternalFrameOnDisplayFuture = null;
+    private volatile @Nullable XFutureVoid startObject2DJinternalFrameOnDisplayFuture = null;
 
     @UIEffect
     private XFutureVoid startObject2DJinternalFrameOnDisplay() {
@@ -5198,20 +5077,20 @@ public class AprsSystem implements SlotOffsetProvider {
         lastRunAllUpdateRunnableTime = System.currentTimeMillis();
     }
 
-    private String pddlActionString() {
-        if (null == executorJInternalFrame1) {
-            return "";
-        }
-        List<Action> actionList = executorJInternalFrame1.getActionsList();
-        if (null == actionList || actionList.isEmpty()) {
-            return "";
-        }
-        int curActionIndex = executorJInternalFrame1.getCurrentActionIndex();
-        if (curActionIndex < 0 || curActionIndex >= actionList.size()) {
-            return " : (" + curActionIndex + "/" + actionList.size() + ")";
-        }
-        return " : (" + curActionIndex + "/" + actionList.size() + "):" + actionList.get(curActionIndex) + " : ";
-    }
+//    private String pddlActionString() {
+//        if (null == executorJInternalFrame1) {
+//            return "";
+//        }
+//        List<Action> actionList = executorJInternalFrame1.getActionsList();
+//        if (null == actionList || actionList.isEmpty()) {
+//            return "";
+//        }
+//        int curActionIndex = executorJInternalFrame1.getCurrentActionIndex();
+//        if (curActionIndex < 0 || curActionIndex >= actionList.size()) {
+//            return " : (" + curActionIndex + "/" + actionList.size() + ")";
+//        }
+//        return " : (" + curActionIndex + "/" + actionList.size() + "):" + actionList.get(curActionIndex) + " : ";
+//    }
 
     /**
      * Get the current status if available
@@ -5405,8 +5284,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return crclSimServerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
-    private @Nullable
-    CsvDbSetupPublisher csvDbSetupPublisher = null;
+    private @Nullable CsvDbSetupPublisher csvDbSetupPublisher = null;
 
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
 
@@ -5439,7 +5317,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     private final DbSetupListener dbSetupListener = this::updateDbConnectedCheckBox;
 
     private void createDbSetupFrame() {
@@ -5511,10 +5389,8 @@ public class AprsSystem implements SlotOffsetProvider {
         return visionToDbPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
-    private volatile @Nullable
-    XFutureVoid xf1 = null;
-    private volatile @Nullable
-    XFutureVoid xf2 = null;
+    private volatile @Nullable XFutureVoid xf1 = null;
+    private volatile @Nullable XFutureVoid xf2 = null;
 
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
@@ -5599,7 +5475,6 @@ public class AprsSystem implements SlotOffsetProvider {
 //    public XFutureVoid startPddlPlanner() {
 //        return runOnDispatchThread(this::startPddlPlannerOnDisplay);
 //    }
-
 //    @UIEffect
 //    private void startPddlPlannerOnDisplay() {
 //        try {
@@ -5617,20 +5492,18 @@ public class AprsSystem implements SlotOffsetProvider {
 //                    .getName()).log(Level.SEVERE, "", ex);
 //        }
 //    }
-
-    private File pddlPlannerPropertiesFile() {
-        if (null == propertiesDirectory) {
-            throw new NullPointerException("propertiesDirectory");
-        }
-        return pddlPlannerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+//    private File pddlPlannerPropertiesFile() {
+//        if (null == propertiesDirectory) {
+//            throw new NullPointerException("propertiesDirectory");
+//        }
+//        return pddlPlannerPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+//    }
+private File forceTorqueSimPropertiesFile() {
+    if (null == propertiesDirectory) {
+        throw new NullPointerException("propertiesDirectory");
     }
-
-    private File forceTorqueSimPropertiesFile() {
-        if (null == propertiesDirectory) {
-            throw new NullPointerException("propertiesDirectory");
-        }
-        return forceTorqueSimPropertiesFile(propertiesDirectory, propertiesFileBaseString());
-    }
+    return forceTorqueSimPropertiesFile(propertiesDirectory, propertiesFileBaseString());
+}
 
     @UIEffect
     private void maximizeJInteralFrame(JInternalFrame internalFrame) {
@@ -5775,7 +5648,7 @@ public class AprsSystem implements SlotOffsetProvider {
                     throw new RuntimeException(ex);
                 }
             } else {
-                return  XFutureVoid.completedFuture();
+                return XFutureVoid.completedFuture();
             }
         } else {
             throw new IllegalStateException("can't browse for files when aprsSystemDisplayJFrame == null");
@@ -5866,9 +5739,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> startLookForPartsFuture = null;
-    private volatile StackTraceElement startLookForPartsTrace @Nullable []  = null;
+    private volatile @Nullable XFuture<Boolean> startLookForPartsFuture = null;
+    private volatile StackTraceElement startLookForPartsTrace@Nullable[] = null;
 
     private volatile boolean doingLookForParts = false;
     private final AtomicInteger lookForPartsCount = new AtomicInteger();
@@ -6887,8 +6759,7 @@ public class AprsSystem implements SlotOffsetProvider {
         scanImage = object2DViewJInternalFrame.createSnapshotImage(opts, requiredItems);
     }
 
-    private volatile @Nullable
-    GoalLearner goalLearner = null;
+    private volatile @Nullable GoalLearner goalLearner = null;
 
     /**
      * Get the value of goalLearner
@@ -6997,9 +6868,11 @@ public class AprsSystem implements SlotOffsetProvider {
      * @param newRotationOffsetParam offset to tray rotations in determining
      * absolute slot positions
      * @param newReverseFlag should the list move parts from kits to parts trays
-     * @param allowEmptyKits allow  empty kits tray list even though it generally indicates bad vision
+     * @param allowEmptyKits allow empty kits tray list even though it generally
+     * indicates bad vision
      * @param alwaysLoad load even when no change is detected
-     * @param checkLimits check that positions are not outside of cartesian limits
+     * @param checkLimits check that positions are not outside of cartesian
+     * limits
      * @return the file created or null if an error occured
      */
     public @Nullable
@@ -7161,12 +7034,10 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> lastResumeFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastResumeFuture = null;
 
-    private volatile @Nullable
-    Thread resumingThread = null;
-    private volatile StackTraceElement resumingTrace@Nullable []  = null;
+    private volatile @Nullable Thread resumingThread = null;
+    private volatile StackTraceElement resumingTrace@Nullable[] = null;
     private volatile boolean resuming = false;
 
     private boolean isPauseCheckBoxSelected() {
@@ -7388,8 +7259,7 @@ public class AprsSystem implements SlotOffsetProvider {
         println("startSafeAbortAndDisconnectTime = " + (curTime - startSafeAbortAndDisconnectTime));
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> continuousDemoFuture = null;
+    private volatile @Nullable XFuture<Boolean> continuousDemoFuture = null;
 
     private final AtomicInteger cdStart = new AtomicInteger();
 
@@ -7485,8 +7355,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return false;
     }
 
-    private volatile @Nullable
-    Consumer<String> supervisorEventLogger = null;
+    private volatile @Nullable Consumer<String> supervisorEventLogger = null;
 
     /**
      * Get the value of supervisorEventLogger
@@ -7819,9 +7688,8 @@ public class AprsSystem implements SlotOffsetProvider {
     }
 
     private volatile boolean pausing = false;
-    private volatile @Nullable
-    Thread pauseThread = null;
-    private volatile StackTraceElement pauseTrace@Nullable []  = null;
+    private volatile @Nullable Thread pauseThread = null;
+    private volatile StackTraceElement pauseTrace@Nullable[] = null;
 
     private void privatInternalPause() {
         logEvent("pause");
@@ -8003,12 +7871,10 @@ public class AprsSystem implements SlotOffsetProvider {
         return enableCheckedAlready;
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> lastStartCheckEnabledFuture1 = null;
-    private volatile @Nullable
-    XFuture<Boolean> lastStartCheckEnabledFuture2 = null;
+    private volatile @Nullable XFuture<Boolean> lastStartCheckEnabledFuture1 = null;
+    private volatile @Nullable XFuture<Boolean> lastStartCheckEnabledFuture2 = null;
     private volatile boolean startingCheckEnabled = false;
-    private volatile StackTraceElement startingCheckEnabledTrace @Nullable []  = null;
+    private volatile StackTraceElement startingCheckEnabledTrace@Nullable[] = null;
 
     /**
      * Test that the robot can be connected by running an empty program.
@@ -8175,11 +8041,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return f;
     }
 
-    private volatile @Nullable
-    XFuture<Boolean> lastStartActionsFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastStartActionsFuture = null;
 
-    private volatile @Nullable
-    XFuture<Boolean> lastPrivateStartActionsFuture = null;
+    private volatile @Nullable XFuture<Boolean> lastPrivateStartActionsFuture = null;
 
     /**
      * Get the last future created from a startActions request. Only used for
@@ -8254,11 +8118,9 @@ public class AprsSystem implements SlotOffsetProvider {
         public XFuture<T> doActions();
     }
 
-    private volatile @Nullable
-    AlternativeActionsInterface<Boolean> alternativeForwardStartActions = null;
+    private volatile @Nullable AlternativeActionsInterface<Boolean> alternativeForwardStartActions = null;
 
-    private volatile @Nullable
-    AlternativeActionsInterface<Boolean> alternativeReverseStartActions = null;
+    private volatile @Nullable AlternativeActionsInterface<Boolean> alternativeReverseStartActions = null;
 
     public @Nullable
     AlternativeActionsInterface<Boolean> getAlternativeForwardStartActions() {
@@ -8278,11 +8140,9 @@ public class AprsSystem implements SlotOffsetProvider {
         this.alternativeReverseStartActions = alternativeReverseStartActions;
     }
 
-    private volatile @Nullable
-    AlternativeActionsInterface<Boolean> alternativeForwardContinueActions = null;
+    private volatile @Nullable AlternativeActionsInterface<Boolean> alternativeForwardContinueActions = null;
 
-    private volatile @Nullable
-    AlternativeActionsInterface<Boolean> alternativeReverseContinueActions = null;
+    private volatile @Nullable AlternativeActionsInterface<Boolean> alternativeReverseContinueActions = null;
 
     public @Nullable
     AlternativeActionsInterface<Boolean> getAlternativeForwardContinueActions() {
@@ -8302,9 +8162,8 @@ public class AprsSystem implements SlotOffsetProvider {
         this.alternativeReverseContinueActions = alternativeReverseContinueActions;
     }
 
-    private volatile StackTraceElement startActionsTrace  @Nullable []  = null;
-    private volatile @Nullable
-    String startActionsComment = null;
+    private volatile StackTraceElement startActionsTrace@Nullable[] = null;
+    private volatile @Nullable String startActionsComment = null;
     private final AtomicInteger startActionsCount = new AtomicInteger();
 
     private volatile boolean endLogged = false;
@@ -8559,9 +8418,8 @@ public class AprsSystem implements SlotOffsetProvider {
         startSafeAbortAndDisconnectThread = null;
     }
 
-    private volatile StackTraceElement privateStartActionsTrace  @Nullable []  = null;
-    private volatile @Nullable
-    String privateStartActionsComment = null;
+    private volatile StackTraceElement privateStartActionsTrace@Nullable[] = null;
+    private volatile @Nullable String privateStartActionsComment = null;
     private final AtomicInteger privateStartActionsCount = new AtomicInteger();
 
     public String getPrivateStartActionsTraceString() {
@@ -8984,52 +8842,50 @@ public class AprsSystem implements SlotOffsetProvider {
         private final File propFile;
         private final File lastAprsPropertiesFileFile;
 
-        private int screenDownX = 0;
-        private int screenDownY = 0;
-        private int screenDragX = 0;
-        private int screenDragY = 0;
-        private boolean mouseDown = false;
-
-        public boolean isMouseDown() {
-            return mouseDown;
-        }
-
-        public void setMouseDown(boolean mouseDown) {
-            this.mouseDown = mouseDown;
-        }
-
-        public int getScreenDownX() {
-            return screenDownX;
-        }
-
-        public void setScreenDownX(int screenDownX) {
-            this.screenDownX = screenDownX;
-        }
-
-        public int getScreenDownY() {
-            return screenDownY;
-        }
-
-        public void setScreenDownY(int screenDownY) {
-            this.screenDownY = screenDownY;
-        }
-
-        public int getScreenDragX() {
-            return screenDragX;
-        }
-
-        public void setScreenDragX(int screenDragX) {
-            this.screenDragX = screenDragX;
-        }
-
-        public int getScreenDragY() {
-            return screenDragY;
-        }
-
-        public void setScreenDragY(int screenDragY) {
-            this.screenDragY = screenDragY;
-        }
-
+        //        private int screenDownX = 0;
+//        private int screenDownY = 0;
+//        private int screenDragX = 0;
+//        private int screenDragY = 0;
+//        private boolean mouseDown = false;
+//        public boolean isMouseDown() {
+//            return mouseDown;
+//        }
+//
+//        public void setMouseDown(boolean mouseDown) {
+//            this.mouseDown = mouseDown;
+//        }
+//
+//        public int getScreenDownX() {
+//            return screenDownX;
+//        }
+//
+//        public void setScreenDownX(int screenDownX) {
+//            this.screenDownX = screenDownX;
+//        }
+//
+//        public int getScreenDownY() {
+//            return screenDownY;
+//        }
+//
+//        public void setScreenDownY(int screenDownY) {
+//            this.screenDownY = screenDownY;
+//        }
+//
+//        public int getScreenDragX() {
+//            return screenDragX;
+//        }
+//
+//        public void setScreenDragX(int screenDragX) {
+//            this.screenDragX = screenDragX;
+//        }
+//
+//        public int getScreenDragY() {
+//            return screenDragY;
+//        }
+//
+//        public void setScreenDragY(int screenDragY) {
+//            this.screenDragY = screenDragY;
+//        }
         private static final AprsSystemPropDefaults SINGLE_PROPERTY_DEFAULTS
                 = new AprsSystemPropDefaults();
 
@@ -9476,11 +9332,14 @@ public class AprsSystem implements SlotOffsetProvider {
 
     /**
      * * Take a snapshot of the view of objects positions passed in the list.
+     * NOTE: Files may not be created if the Object View is not initialized or
+     * the IO thread is busy.
      *
-     * @param f file to save snapshot image to
+     * @param f            file to save snapshot image to
      * @param itemsToPaint list of items to paint
-     * @param w width of snapshot image
-     * @param h height of snapshot image
+     * @param w            width of snapshot image
+     * @param h            height of snapshot image
+     * @return array of files if they were created.
      */
     public @Nullable
     File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
@@ -9552,14 +9411,14 @@ public class AprsSystem implements SlotOffsetProvider {
         try {
             Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
                     () -> {
-                        return loadPropertiesOnDisplay(exA,props);
+                        return loadPropertiesOnDisplay(exA, props);
                     });
-            if(null != exA[0]) {
-                throw  new IOException(exA[0]);
+            if (null != exA[0]) {
+                throw new IOException(exA[0]);
             }
             return ret.thenComposeToVoid(x -> {
-                if(null != exA[0]) {
-                    throw  new RuntimeException(exA[0]);
+                if (null != exA[0]) {
+                    throw new RuntimeException(exA[0]);
                 }
                 if (null != object2DViewJInternalFrame) {
                     object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
@@ -9606,8 +9465,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private @Nullable
-    File customWindowsFile = null;
+    private @Nullable File customWindowsFile = null;
 
     public @Nullable
     File getCustomWindowsFile() {
@@ -9618,14 +9476,13 @@ public class AprsSystem implements SlotOffsetProvider {
         this.customWindowsFile = customWindowsFile;
     }
 
-    private XFutureVoid loadPropertiesOnDisplay(IOException exA[],Properties props) {
+    private XFutureVoid loadPropertiesOnDisplay(IOException exA[], Properties props) {
 
         try {
             if (null == propertiesFile) {
                 throw new NullPointerException("propertiesFile");
             }
             List<XFuture<?>> futures = new ArrayList<>();
-
 
             if (null != this.executorJInternalFrame1) {
                 String alertLimitsString = props.getProperty(ALERT_LIMITS);
@@ -9905,7 +9762,6 @@ public class AprsSystem implements SlotOffsetProvider {
 //                    activateFrame(pddlPlannerJInternalFrame);
 //                }
 //                break;
-
             case VISION_TO_DB_WINDOW:
                 if (null != visionToDbJInternalFrame) {
                     activateFrame(visionToDbJInternalFrame);
@@ -10298,10 +10154,9 @@ public class AprsSystem implements SlotOffsetProvider {
         return new File(propertiesDirectory, base + "_motomanCrclServerProperties.txt");
     }
 
-    private static File pddlPlannerPropertiesFile(File propertiesDirectory, String base) {
-        return new File(propertiesDirectory, base + "_pddlPlanner.txt");
-    }
-
+    //    private static File pddlPlannerPropertiesFile(File propertiesDirectory, String base) {
+//        return new File(propertiesDirectory, base + "_pddlPlanner.txt");
+//    }
     private static File forceTorqueSimPropertiesFile(File propertiesDirectory, String base) {
         return new File(propertiesDirectory, base + "_forceTorqueSim.txt");
     }
@@ -10329,8 +10184,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return new File(propertiesDirectory, base + "_cartLimits.csv");
     }
 
-    private volatile @Nullable
-    XFuture<?> disconnectDatabaseFuture = null;
+    private volatile @Nullable XFuture<?> disconnectDatabaseFuture = null;
 
     public XFuture<?> startDisconnectDatabase() {
         setConnectDatabaseCheckBoxEnabled(false);
@@ -10487,7 +10341,6 @@ public class AprsSystem implements SlotOffsetProvider {
 //            pddlPlannerJInternalFrame.close();
 //        }
 //    }
-
     private final boolean lastContinueCrclProgramResult = false;
 
     /**
@@ -10537,8 +10390,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
-    private volatile @Nullable
-    File logDir = null;
+    private volatile @Nullable File logDir = null;
 
     /**
      * Get the current directory for saving log files
@@ -10558,8 +10410,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return f;
     }
 
-    private volatile @Nullable
-    File logImageDir = null;
+    private volatile @Nullable File logImageDir = null;
 
     public File getLogImageDir() throws IOException {
         File f = logImageDir;
@@ -10572,8 +10423,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return f;
     }
 
-    private volatile @Nullable
-    File logCrclProgramDir = null;
+    private volatile @Nullable File logCrclProgramDir = null;
 
     public File getLogCrclProgramDir() throws IOException {
         File f = logCrclProgramDir;
@@ -10586,8 +10436,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return f;
     }
 
-    private volatile @Nullable
-    File logCrclStatusDir = null;
+    private volatile @Nullable File logCrclStatusDir = null;
 
     public File getLogCrclStatusDir() throws IOException {
         File f = logCrclStatusDir;
@@ -10600,8 +10449,7 @@ public class AprsSystem implements SlotOffsetProvider {
         return f;
     }
 
-    private volatile @Nullable
-    File logCrclCommandDir = null;
+    private volatile @Nullable File logCrclCommandDir = null;
 
     public File getLogCrclCommandDir() throws IOException {
         File f = logCrclCommandDir;

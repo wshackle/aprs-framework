@@ -23,15 +23,17 @@
 package aprs.conveyor;
 
 import aprs.database.PhysicalItem;
-import static aprs.misc.AprsCommonLogger.println;
 import aprs.misc.Utils;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
-import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
-import java.awt.Component;
-import java.awt.HeadlessException;
+import crcl.utils.XFutureVoid;
+import org.checkerframework.checker.guieffect.qual.UIType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +42,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.Timer;
-import org.checkerframework.checker.guieffect.qual.UIType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static aprs.misc.AprsCommonLogger.println;
 
 /**
  *
@@ -265,12 +261,12 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
         return Double.parseDouble(txt);
     }
 
-    private static long parseLong(@Nullable String txt, long defaultVal) {
-        if (txt == null || txt.length() < 1) {
-            return defaultVal;
-        }
-        return Long.parseLong(txt);
-    }
+//    private static long parseLong(@Nullable String txt, long defaultVal) {
+//        if (txt == null || txt.length() < 1) {
+//            return defaultVal;
+//        }
+//        return Long.parseLong(txt);
+//    }
 
     private static int parseInt(@Nullable String txt, int defaultVal) {
         if (txt == null || txt.length() < 1) {

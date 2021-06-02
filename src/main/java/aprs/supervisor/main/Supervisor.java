@@ -30,7 +30,6 @@ import aprs.database.PhysicalItem;
 import aprs.database.Slot;
 import aprs.launcher.ProcessLauncherJFrame;
 import aprs.misc.*;
-import aprs.misc.Utils.*;
 import aprs.simview.Object2DOuterJPanel;
 import aprs.supervisor.screensplash.SplashScreen;
 import aprs.system.AprsSystem;
@@ -59,18 +58,12 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.tools.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
@@ -995,20 +988,20 @@ public class Supervisor {
 
 	private final List<List<PositionMapJPanel>> positionMapJPanels = new ArrayList<>();
 
-	private List<PositionMapJPanel> getPositionMapRow(int row) {
-		while (positionMapJPanels.size() <= row) {
-			positionMapJPanels.add(new ArrayList<>());
-		}
-		return positionMapJPanels.get(row);
-	}
+//	private List<PositionMapJPanel> getPositionMapRow(int row) {
+//		while (positionMapJPanels.size() <= row) {
+//			positionMapJPanels.add(new ArrayList<>());
+//		}
+//		return positionMapJPanels.get(row);
+//	}
 
-	private PositionMapJPanel getPositionMap(int row, int col) {
-		List<PositionMapJPanel> lrow = getPositionMapRow(row);
-		while (lrow.size() <= col) {
-			lrow.add(new PositionMapJPanel());
-		}
-		return lrow.get(col);
-	}
+//	private PositionMapJPanel getPositionMap(int row, int col) {
+//		List<PositionMapJPanel> lrow = getPositionMapRow(row);
+//		while (lrow.size() <= col) {
+//			lrow.add(new PositionMapJPanel());
+//		}
+//		return lrow.get(col);
+//	}
 
 	private final AtomicReference<@Nullable XFutureVoid> stealRobotFuture = new AtomicReference<>(null);
 	private final AtomicReference<@Nullable XFutureVoid> unStealRobotFuture = new AtomicReference<>(null);
@@ -3696,23 +3689,23 @@ public class Supervisor {
 //                });
 	}
 
-	@SuppressWarnings("UnusedReturnValue")
-	private XFutureVoid prepAndFinishOnDispatch(Runnable r) {
+//	@SuppressWarnings("UnusedReturnValue")
+//	private XFutureVoid prepAndFinishOnDispatch(Runnable r) {
+//
+//		return prepActions().thenComposeToVoid("prepAndFinishOnDispatch", () -> {
+//			return runOnDispatchThread(() -> {
+//				try {
+//					r.run();
+//				} catch (Exception e) {
+//					log(Level.SEVERE, "", e);
+//				}
+//			});
+//		});
+//	}
 
-		return prepActions().thenComposeToVoid("prepAndFinishOnDispatch", () -> {
-			return runOnDispatchThread(() -> {
-				try {
-					r.run();
-				} catch (Exception e) {
-					log(Level.SEVERE, "", e);
-				}
-			});
-		});
-	}
-
-	private <T> XFuture<T> prepAndFinishOnDispatch(UiSupplier<XFuture<T>> supplier) {
-		return prepActions().thenCompose(x -> Utils.supplyOnDispatchThread(supplier)).thenCompose(x -> x);
-	}
+//	private <T> XFuture<T> prepAndFinishOnDispatch(UiSupplier<XFuture<T>> supplier) {
+//		return prepActions().thenCompose(x -> Utils.supplyOnDispatchThread(supplier)).thenCompose(x -> x);
+//	}
 
 	private XFutureVoid prepAndFinishToXFutureVoidOnDispatch(UiSupplier<XFutureVoid> supplier) {
 		return prepActions().thenCompose(x -> Utils.supplyXVoidOnDispatchThread(supplier)).thenComposeToVoid(x -> x);
@@ -4542,109 +4535,109 @@ public class Supervisor {
 		}
 	}
 
-	@SuppressWarnings("nullness")
-	private void runCustomCode() {
-		try {
-
-			customCode = MultiLineStringJPanel.editText(customCode);
-			File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
-			customDir.delete();
-			customDir.mkdirs();
-			File tmpFile = new File(customDir, "Custom.java");
-			println("tmpFile = " + tmpFile.getCanonicalPath());
-			File[] files1 = { tmpFile };
-
-			Files.write(tmpFile.toPath(), customCode.getBytes());
-			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-			if (null != compiler) {
-				ClassLoader cl = ClassLoader.getSystemClassLoader();
-
-				URL[] origUrls = ((URLClassLoader) cl).getURLs();
-
-				StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-
-				Iterable<? extends JavaFileObject> compilationUnits1 = fileManager
-						.getJavaFileObjectsFromFiles(Arrays.asList(files1));
-				String classPath = Arrays.stream(origUrls).map(Objects::toString)
-						.map(s -> s.startsWith("file:") ? s.substring(4) : s)
-						.collect(Collectors.joining(File.pathSeparator));
-				println("classPath = " + classPath);
-				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-				compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null,
-						compilationUnits1).call();
-				StringBuilder errBuilder = new StringBuilder();
-				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-					String err = String.format("%s:%d %s %n", diagnostic.getSource().toUri(),
-							diagnostic.getLineNumber(), diagnostic.getMessage(Locale.US));
-					errBuilder.append(err);
-				}
-				String fullErr = errBuilder.toString();
-				boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
-				if (fullErr.length() > 0) {
-					crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-					MultiLineStringJPanel.showText(fullErr)
-							.thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
-					if (!customCode.contains("class Custom")) {
-						customCode = INIT_CUSTOM_CODE;
-					}
-					return;
-				}
-				URL[] urls = new URL[origUrls.length + 1];
-				System.arraycopy(origUrls, 0, urls, 0, origUrls.length);
-				File parentFile = tmpFile.getAbsoluteFile().getParentFile();
-				if (null == parentFile) {
-					logEventErr("Temporary file " + tmpFile + " does not have parent.");
-					return;
-				}
-				File grandParentFile = parentFile.getParentFile();
-				if (null == grandParentFile) {
-					logEventErr("Temporary file " + tmpFile + " does not have grandparent.");
-					return;
-				}
-				urls[urls.length - 1] = grandParentFile.toURI().toURL();
-				// tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
-				println("urls = " + Arrays.toString(urls));
-				Class<?> clss;
-				try (URLClassLoader loader = new URLClassLoader(urls)) {
-					clss = loader.loadClass("custom.Custom");
-				}
-				@SuppressWarnings("deprecation")
-				Object obj = clss.newInstance();
-				Method acceptMethod = clss.getMethod("accept", Supervisor.class);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				PrintStream origOut = System.out;
-
-				try (PrintStream ps = new PrintStream(baos)) {
-					System.setOut(ps);
-					acceptMethod.invoke(obj, this);
-					String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
-					System.setOut(origOut);
-					println("content = " + content);
-					if (content.length() > 0) {
-						crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-						MultiLineStringJPanel.showText(content).thenRun(
-								() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
-
-					}
-				} finally {
-					crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText;
-					System.setOut(origOut);
-				}
-			}
-		} catch (Exception exception) {
-			Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
-			StringWriter sw = new StringWriter();
-			exception.printStackTrace(new PrintWriter(sw));
-			String trace = sw.toString();
-			boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
-			crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-			MultiLineStringJPanel.showText(trace)
-					.thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
-			if (!customCode.contains("class Custom")) {
-				customCode = INIT_CUSTOM_CODE;
-			}
-		}
-	}
+//	@SuppressWarnings("nullness")
+//	private void runCustomCode() {
+//		try {
+//
+//			customCode = MultiLineStringJPanel.editText(customCode);
+//			File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
+//			customDir.delete();
+//			customDir.mkdirs();
+//			File tmpFile = new File(customDir, "Custom.java");
+//			println("tmpFile = " + tmpFile.getCanonicalPath());
+//			File[] files1 = { tmpFile };
+//
+//			Files.write(tmpFile.toPath(), customCode.getBytes());
+//			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+//			if (null != compiler) {
+//				ClassLoader cl = ClassLoader.getSystemClassLoader();
+//
+//				URL[] origUrls = ((URLClassLoader) cl).getURLs();
+//
+//				StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+//
+//				Iterable<? extends JavaFileObject> compilationUnits1 = fileManager
+//						.getJavaFileObjectsFromFiles(Arrays.asList(files1));
+//				String classPath = Arrays.stream(origUrls).map(Objects::toString)
+//						.map(s -> s.startsWith("file:") ? s.substring(4) : s)
+//						.collect(Collectors.joining(File.pathSeparator));
+//				println("classPath = " + classPath);
+//				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+//				compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null,
+//						compilationUnits1).call();
+//				StringBuilder errBuilder = new StringBuilder();
+//				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+//					String err = String.format("%s:%d %s %n", diagnostic.getSource().toUri(),
+//							diagnostic.getLineNumber(), diagnostic.getMessage(Locale.US));
+//					errBuilder.append(err);
+//				}
+//				String fullErr = errBuilder.toString();
+//				boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
+//				if (fullErr.length() > 0) {
+//					crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+//					MultiLineStringJPanel.showText(fullErr)
+//							.thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+//					if (!customCode.contains("class Custom")) {
+//						customCode = INIT_CUSTOM_CODE;
+//					}
+//					return;
+//				}
+//				URL[] urls = new URL[origUrls.length + 1];
+//				System.arraycopy(origUrls, 0, urls, 0, origUrls.length);
+//				File parentFile = tmpFile.getAbsoluteFile().getParentFile();
+//				if (null == parentFile) {
+//					logEventErr("Temporary file " + tmpFile + " does not have parent.");
+//					return;
+//				}
+//				File grandParentFile = parentFile.getParentFile();
+//				if (null == grandParentFile) {
+//					logEventErr("Temporary file " + tmpFile + " does not have grandparent.");
+//					return;
+//				}
+//				urls[urls.length - 1] = grandParentFile.toURI().toURL();
+//				// tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
+//				println("urls = " + Arrays.toString(urls));
+//				Class<?> clss;
+//				try (URLClassLoader loader = new URLClassLoader(urls)) {
+//					clss = loader.loadClass("custom.Custom");
+//				}
+//				@SuppressWarnings("deprecation")
+//				Object obj = clss.newInstance();
+//				Method acceptMethod = clss.getMethod("accept", Supervisor.class);
+//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//				PrintStream origOut = System.out;
+//
+//				try (PrintStream ps = new PrintStream(baos)) {
+//					System.setOut(ps);
+//					acceptMethod.invoke(obj, this);
+//					String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+//					System.setOut(origOut);
+//					println("content = " + content);
+//					if (content.length() > 0) {
+//						crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+//						MultiLineStringJPanel.showText(content).thenRun(
+//								() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+//
+//					}
+//				} finally {
+//					crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText;
+//					System.setOut(origOut);
+//				}
+//			}
+//		} catch (Exception exception) {
+//			Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
+//			StringWriter sw = new StringWriter();
+//			exception.printStackTrace(new PrintWriter(sw));
+//			String trace = sw.toString();
+//			boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
+//			crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
+//			MultiLineStringJPanel.showText(trace)
+//					.thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+//			if (!customCode.contains("class Custom")) {
+//				customCode = INIT_CUSTOM_CODE;
+//			}
+//		}
+//	}
 
 	// private XFutureVoid setTeachSystemFilter(@Nullable AprsSystem sys) {
 //        if (null == sys) {
@@ -6171,24 +6164,24 @@ public class Supervisor {
 
 	private final AtomicInteger logEventErrCount = new AtomicInteger();
 
-	private static String splitLongMessage(String inString, int maxlen) {
-		String lines[] = inString.split("[\r\n]+");
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < lines.length; i++) {
-			String line = lines[i];
-			if (line.length() > maxlen) {
-				StringBuilder sbi = new StringBuilder();
-				for (int j = 0; j < line.length() / maxlen; j++) {
-					String line1 = line.substring(j * maxlen, Math.min(line.length(), (j + 1) * maxlen));
-					sbi.append(line1);
-					sbi.append("\r\n");
-				}
-				line = sbi.toString();
-			}
-			sb.append(line);
-		}
-		return sb.toString();
-	}
+//	private static String splitLongMessage(String inString, int maxlen) {
+//		String lines[] = inString.split("[\r\n]+");
+//		StringBuilder sb = new StringBuilder();
+//		for (int i = 0; i < lines.length; i++) {
+//			String line = lines[i];
+//			if (line.length() > maxlen) {
+//				StringBuilder sbi = new StringBuilder();
+//				for (int j = 0; j < line.length() / maxlen; j++) {
+//					String line1 = line.substring(j * maxlen, Math.min(line.length(), (j + 1) * maxlen));
+//					sbi.append(line1);
+//					sbi.append("\r\n");
+//				}
+//				line = sbi.toString();
+//			}
+//			sb.append(line);
+//		}
+//		return sb.toString();
+//	}
 
 	private boolean pauseOnError = true;
 

@@ -698,9 +698,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
-    private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
-        return minDist(sx, sy, items) < 20.0;
-    }
+//    private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
+//        return minDist(sx, sy, items) < 20.0;
+//    }
 
     private final DefaultTableModel nonEditableTraySlotsTableModel;
     private final DefaultTableModel origTraySlotsTableModel;
@@ -3233,14 +3233,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setOutputItems(newOutputList);
     }
 
-    private boolean isOutputFilteringNeeded() {
-        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
-        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
-        boolean needOutputFiltering = shuffleSimulatedUpdates
-                || isEnforceSensorLimits()
-                || simulatedDropRate > 0.01 || addPosNoise;
-        return needOutputFiltering;
-    }
+//    private boolean isOutputFilteringNeeded() {
+//        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
+//        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
+//        boolean needOutputFiltering = shuffleSimulatedUpdates
+//                || isEnforceSensorLimits()
+//                || simulatedDropRate > 0.01 || addPosNoise;
+//        return needOutputFiltering;
+//    }
 
     private List<PhysicalItem> computeNewOutputList(List<PhysicalItem> origList) {
         List<PhysicalItem> newOutputList = new ArrayList<>(origList);
