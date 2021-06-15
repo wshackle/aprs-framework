@@ -3704,7 +3704,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         boolean takeSnapshots = isSnapshotsEnabled();
         if (takeSnapshots) {
             try {
-                takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+                takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -3718,7 +3718,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
             try {
-                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -6173,10 +6173,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 if (takeSnapshots) {
                                     final String captureMsg = "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_";
                                     if (isSimulated()) {
-                                        takeSnapshot(createTempFile("input_" + captureMsg, ".PNG"), l);
-                                        takeSnapshot(createTempFile("output_" + captureMsg, ".PNG"), getOutputItems());
+                                        takeSnapshot(createTempFile("input_" + captureMsg, ".PNG",aprsSystem.getLogImageDir()), l);
+                                        takeSnapshot(createTempFile("output_" + captureMsg, ".PNG",aprsSystem.getLogImageDir()), getOutputItems());
                                     } else {
-                                        takeSnapshot(createTempFile(captureMsg, ".PNG"), l);
+                                        takeSnapshot(createTempFile(captureMsg, ".PNG",aprsSystem.getLogImageDir()), l);
                                     }
                                     printHandlePoseInfo(captureMsg, stat, pose, cmd);
                                 }
@@ -6208,10 +6208,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             boolean takeSnapshots = isSnapshotsEnabled();
                             if (takeSnapshots) {
                                 if (isSimulated()) {
-                                    takeSnapshot(createTempFile("input_" + err, ".PNG"), l);
-                                    takeSnapshot(createTempFile("output_" + err, ".PNG"), getOutputItems());
+                                    takeSnapshot(createTempFile("input_" + err, ".PNG",aprsSystem.getLogImageDir()), l);
+                                    takeSnapshot(createTempFile("output_" + err, ".PNG",aprsSystem.getLogImageDir()), getOutputItems());
                                 } else {
-                                    takeSnapshot(createTempFile(err, ".PNG"), l);
+                                    takeSnapshot(createTempFile(err, ".PNG",aprsSystem.getLogImageDir()), l);
                                 }
                             }
                             System.err.println("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
@@ -6227,7 +6227,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         boolean takeSnapshots = isSnapshotsEnabled();
                         if (takeSnapshots) {
                             try {
-                                takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                                takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
                             } catch (IOException ex) {
                                 LOGGER.log(Level.SEVERE, "", ex);
                             }
@@ -6275,6 +6275,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } finally {
             lastIsHoldingObjectExpected = isHoldingObjectExpected;
         }
+    }
+
+    private File imageLogDir() throws IOException {
+	if(null == aprsSystem) {
+	    File imgDir =  new File(Utils.getlogFileDir(),"images");
+	    imgDir.mkdirs();
+	    return imgDir;
+	}
+	return aprsSystem.getLogImageDir();
     }
 
     private void printHandlePoseInfo(String infoMsg, CRCLStatusType stat, PoseType pose, @Nullable CRCLCommandType cmd) throws IOException {

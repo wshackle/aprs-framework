@@ -4367,13 +4367,22 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean snapshotsEnabled() {
         return takeSnapshots && aprsSystem != null && aprsSystem.snapshotsEnabled();
     }
+    
+    private File imageLogDir() throws IOException {
+	if(null == aprsSystem) {
+	    File imgDir =  new File(Utils.getlogFileDir(),"images");
+	    imgDir.mkdirs();
+	    return imgDir;
+	}
+	return aprsSystem.getLogImageDir();
+    }
 
     @SuppressWarnings("SameParameterValue")
     private File createImageTempFile(String prefix) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.createTempFile(prefix, ".PNG", aprsSystem.getLogImageDir());
         }
-        return Utils.createTempFile(prefix, ".PNG");
+        return Utils.createTempFile(prefix, ".PNG",imageLogDir());
     }
 
     public void takeSnapshots(String prefix, String title, @Nullable PoseType pose, @Nullable String label) {

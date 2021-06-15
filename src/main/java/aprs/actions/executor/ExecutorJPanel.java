@@ -3949,7 +3949,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (!cancelSafeAbortFutures) {
             try {
                 if (crclGenerator.isTakeSnapshots() && aprsSystem.snapshotsEnabled()) {
-                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG"), null, "");
+                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG",aprsSystem.getLogImageDir()), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();

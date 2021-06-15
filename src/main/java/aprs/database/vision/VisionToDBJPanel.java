@@ -1642,7 +1642,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_ : list.siz()=" + list.size() + ", namesList=" + namesList;
                     if (null != aprsSystem && aprsSystem.snapshotsEnabled()) {
                         try {
-                            takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG"), list);
+                            takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG",aprsSystem.getLogImageDir()), list);
                         } catch (IOException ex) {
                             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
@@ -2683,7 +2683,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void showDatabaseTableImage() {
         try {
-            File f = createTempFile("newDataBaseItems_", ".png");
+            File f = createTempFile("newDataBaseItems_", ".png",aprsSystem.getLogImageDir());
             takeSnapshot(f);
             Desktop.getDesktop().open(f);
         } catch (IOException ex) {
