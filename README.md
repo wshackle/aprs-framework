@@ -227,6 +227,30 @@ with
 18. You will be asked to change the password. Change it to "password"
 19. When done, one can stop both databases by running "bin/neo4j stop" from the each directory in Linux or just closing the command window(s) in Windows.
 
+For the Windows System in the APRS lab the ATINetFT.jar may need to be downloaded and installed.
+
+Download jar from 
+      
+      https://www.ati-ia.com/Library/software/net_ft/ATINetFT.jar
+      
+      or from the webpage on the device itself.
+
+      Or get the source and compile from
+
+      https://www.ati-ia.com/Library/software/net_ft/src.zip
+      
+      
+      On Windows PC OPTIMUS install with this command(Paths will differ on other computers)
+
+SET  JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk-11.0.2+7
+C:\Users\Public\Documents\Downloaded_Tools\ApacheNetbeans10.0\netbeans\java\maven\bin\mvn.cmd install:install-file -Dfile=C:\Users\Public\Documents\Downloaded_Tools\ATINetFT.jar -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar
+          
+          
+   Or on productrule
+   
+          SET JAVA_HOME=C:\Program Files\AdoptOpenJDK\jdk-8.0.292.10-hotspot
+          "C:\Program Files\NetBeans-12.3\netbeans\java\maven\bin\mvn.cmd" install:install-file -Dfile=C:\Users\Public\Documents\ATINetFT.jar -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar
+          
 
 
 Run

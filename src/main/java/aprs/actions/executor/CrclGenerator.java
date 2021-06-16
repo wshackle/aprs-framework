@@ -6514,7 +6514,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     waitForCompleteVisionUpdates("lookForParts", immutableRequiredPartsMap, WAIT_FOR_VISION_TIMEOUT, startAbortCount);
                 } catch (Exception ex) {
                     LOGGER.log(Level.SEVERE, "", ex);
-                    throw new RuntimeException(ex);
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.out.flush();
+                    if(ex instanceof RuntimeException) {
+                        throw (RuntimeException) ex;
+                    } else {
+                         throw new RuntimeException(ex);
+                    }
                 }
             });
         }
