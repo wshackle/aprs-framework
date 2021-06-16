@@ -23,7 +23,13 @@
 package aprs.kitinspection;
 
 import aprs.misc.Utils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
 import java.io.File;
 import java.io.FileReader;
@@ -31,18 +37,12 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.ImageIcon;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
-import javax.swing.text.html.HTMLDocument;
-import javax.swing.text.html.HTMLEditorKit;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
  * @author zeid
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 public class KitInspectionJInternalFrame extends javax.swing.JInternalFrame {
 
     /**

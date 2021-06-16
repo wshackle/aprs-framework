@@ -26,95 +26,64 @@ import aprs.actions.executor.Action;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedTextField;
 import aprs.conveyor.ConveyorPosition;
-import aprs.system.AprsSystem;
-import aprs.misc.SlotOffsetProvider;
-import aprs.misc.Utils;
-import aprs.database.PhysicalItem;
-import aprs.database.DbSetupBuilder;
-import aprs.database.Part;
-import aprs.database.Slot;
-import aprs.database.Tray;
+import aprs.database.*;
 import aprs.database.vision.VisionSocketClient;
 import aprs.database.vision.VisionSocketServer;
-import crcl.base.CRCLCommandType;
-import crcl.base.CRCLStatusType;
-import crcl.base.PointType;
-import crcl.base.PoseType;
+import aprs.misc.SlotOffsetProvider;
+import aprs.misc.Utils;
+import aprs.system.AprsSystem;
+import crcl.base.*;
+import crcl.ui.client.CrclSwingClientJPanel;
+import crcl.ui.client.CurrentPoseListener;
+import crcl.ui.client.CurrentPoseListenerUpdateInfo;
+import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
-import java.awt.event.ActionEvent;
-import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListSelectionModel;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowSorter;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.checkerframework.checker.guieffect.qual.UI;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import rcs.posemath.PM_CARTESIAN;
+import rcs.posemath.PmCartesian;
+
+import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
-import rcs.posemath.PmCartesian;
-import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
-import static aprs.misc.AprsCommonLogger.println;
-import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
-import crcl.base.CommandStateEnumType;
-import crcl.base.CommandStatusType;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
-import crcl.ui.client.CrclSwingClientJPanel;
-import crcl.ui.client.CurrentPoseListener;
-import crcl.ui.client.CurrentPoseListenerUpdateInfo;
-import crcl.ui.misc.MultiLineStringJPanel;
-import java.awt.Desktop;
-import java.awt.Rectangle;
+import javax.swing.table.TableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import static java.lang.Double.parseDouble;
-import static java.lang.Math.toDegrees;
-import static java.lang.Math.toRadians;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.EventListener;
-import java.util.Vector;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-import javax.swing.JDialog;
-import javax.swing.table.TableModel;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import static crcl.utils.CRCLUtils.requireNonNull;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import org.checkerframework.checker.guieffect.qual.UI;
-import rcs.posemath.PM_CARTESIAN;
+import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
+import static crcl.utils.CRCLUtils.requireNonNull;
+import static java.lang.Double.parseDouble;
+import static java.lang.Math.toDegrees;
+import static java.lang.Math.toRadians;
 
 /**
  *
@@ -729,9 +698,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
-    private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
-        return minDist(sx, sy, items) < 20.0;
-    }
+//    private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
+//        return minDist(sx, sy, items) < 20.0;
+//    }
 
     private final DefaultTableModel nonEditableTraySlotsTableModel;
     private final DefaultTableModel origTraySlotsTableModel;
@@ -1191,7 +1160,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         } else if (!(valueAtI4 instanceof Double)) {
                             throw new IllegalStateException("bad value in table at(" + i + ",4) :" + valueAtI4);
                         }
-                        Double rotationValue = (Double) valueAtI4;
+                        double rotationValue = (Double) valueAtI4;
                         Object valueAtI5 = jTableItems.getValueAt(i, 5);
                         if (null == valueAtI5) {
                             throw new IllegalStateException("bad value in table at(" + i + ",5) :" + valueAtI5);
@@ -3264,14 +3233,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         setOutputItems(newOutputList);
     }
 
-    private boolean isOutputFilteringNeeded() {
-        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
-        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
-        boolean needOutputFiltering = shuffleSimulatedUpdates
-                || isEnforceSensorLimits()
-                || simulatedDropRate > 0.01 || addPosNoise;
-        return needOutputFiltering;
-    }
+//    private boolean isOutputFilteringNeeded() {
+//        boolean addPosNoise = addPosNoiseCachedCheckBox.isSelected();
+//        boolean shuffleSimulatedUpdates = shuffleSimulatedUpdatesCachedCheckBox.isSelected();
+//        boolean needOutputFiltering = shuffleSimulatedUpdates
+//                || isEnforceSensorLimits()
+//                || simulatedDropRate > 0.01 || addPosNoise;
+//        return needOutputFiltering;
+//    }
 
     private List<PhysicalItem> computeNewOutputList(List<PhysicalItem> origList) {
         List<PhysicalItem> newOutputList = new ArrayList<>(origList);
@@ -3735,7 +3704,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         boolean takeSnapshots = isSnapshotsEnabled();
         if (takeSnapshots) {
             try {
-                takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+                takeSnapshot(createTempFile("before_loadFile_" + f.getName() + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -3749,7 +3718,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         filenameCachedTextField.setText(f.getCanonicalPath());
         if (takeSnapshots) {
             try {
-                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG"), (PmCartesian) null, "");
+                takeSnapshot(createTempFile("loadFile_" + f.getName() + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, "", ex);
             }
@@ -6204,10 +6173,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 if (takeSnapshots) {
                                     final String captureMsg = "capture_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_";
                                     if (isSimulated()) {
-                                        takeSnapshot(createTempFile("input_" + captureMsg, ".PNG"), l);
-                                        takeSnapshot(createTempFile("output_" + captureMsg, ".PNG"), getOutputItems());
+                                        takeSnapshot(createTempFile("input_" + captureMsg, ".PNG",aprsSystem.getLogImageDir()), l);
+                                        takeSnapshot(createTempFile("output_" + captureMsg, ".PNG",aprsSystem.getLogImageDir()), getOutputItems());
                                     } else {
-                                        takeSnapshot(createTempFile(captureMsg, ".PNG"), l);
+                                        takeSnapshot(createTempFile(captureMsg, ".PNG",aprsSystem.getLogImageDir()), l);
                                     }
                                     printHandlePoseInfo(captureMsg, stat, pose, cmd);
                                 }
@@ -6239,10 +6208,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                             boolean takeSnapshots = isSnapshotsEnabled();
                             if (takeSnapshots) {
                                 if (isSimulated()) {
-                                    takeSnapshot(createTempFile("input_" + err, ".PNG"), l);
-                                    takeSnapshot(createTempFile("output_" + err, ".PNG"), getOutputItems());
+                                    takeSnapshot(createTempFile("input_" + err, ".PNG",aprsSystem.getLogImageDir()), l);
+                                    takeSnapshot(createTempFile("output_" + err, ".PNG",aprsSystem.getLogImageDir()), getOutputItems());
                                 } else {
-                                    takeSnapshot(createTempFile(err, ".PNG"), l);
+                                    takeSnapshot(createTempFile(err, ".PNG",aprsSystem.getLogImageDir()), l);
                                 }
                             }
                             System.err.println("handlePoseUpdate: Tried to capture item but min_dist=" + min_dist + ", min_dist_index=" + min_dist_index);
@@ -6258,7 +6227,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                         boolean takeSnapshots = isSnapshotsEnabled();
                         if (takeSnapshots) {
                             try {
-                                takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG"), (PmCartesian) null, "");
+                                takeSnapshot(createTempFile("dropping_" + captured_item_index + "_at_" + currentX + "_" + currentY + "_", ".PNG",imageLogDir()), (PmCartesian) null, "");
                             } catch (IOException ex) {
                                 LOGGER.log(Level.SEVERE, "", ex);
                             }
@@ -6306,6 +6275,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         } finally {
             lastIsHoldingObjectExpected = isHoldingObjectExpected;
         }
+    }
+
+    private File imageLogDir() throws IOException {
+	if(null == aprsSystem) {
+	    File imgDir =  new File(Utils.getlogFileDir(),"images");
+	    imgDir.mkdirs();
+	    return imgDir;
+	}
+	return aprsSystem.getLogImageDir();
     }
 
     private void printHandlePoseInfo(String infoMsg, CRCLStatusType stat, PoseType pose, @Nullable CRCLCommandType cmd) throws IOException {

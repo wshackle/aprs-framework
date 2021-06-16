@@ -70,13 +70,13 @@ public class VisionSocketServer implements AutoCloseable {
     }
     private static final DaemonThreadFactory daemonThreadFactory = new DaemonThreadFactory();
 
-    @SuppressWarnings({"nullness","initialization"})
-    private VisionSocketServer(ServerSocket serverSocket, ExecutorService executorService, boolean shutdownServiceOnClose) {
-        this.serverSocket = serverSocket;
-        this.executorService = executorService;
-        this.shutdownServiceOnClose = shutdownServiceOnClose;
-        start();
-    }
+//    @SuppressWarnings({"nullness","initialization"})
+//    private VisionSocketServer(ServerSocket serverSocket, ExecutorService executorService, boolean shutdownServiceOnClose) {
+//        this.serverSocket = serverSocket;
+//        this.executorService = executorService;
+//        this.shutdownServiceOnClose = shutdownServiceOnClose;
+//        start();
+//    }
 
     @SuppressWarnings({"nullness","initialization"})
     public VisionSocketServer(int port, int backlog, InetAddress bindAddr) throws IOException {

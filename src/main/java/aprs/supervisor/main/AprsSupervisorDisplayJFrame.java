@@ -22,54 +22,54 @@
  */
 package aprs.supervisor.main;
 
-import aprs.misc.Utils;
-import aprs.misc.MultiFileDialogJPanel;
-import static aprs.misc.Utils.runTimeToString;
-
-import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel;
-import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
-import aprs.supervisor.colortextdisplay.ColorTextJFrame;
-import aprs.supervisor.colortextdisplay.ColorTextJPanel;
-import aprs.database.PhysicalItem;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapEntry;
 import aprs.conveyor.ConveyorVisJPanel;
-import static aprs.misc.AprsCommonLogger.println;
+import aprs.database.PhysicalItem;
 import aprs.misc.IconImages;
 import aprs.misc.MultiFileDialogInputFileInfo;
+import aprs.misc.MultiFileDialogJPanel;
+import aprs.misc.Utils;
 import aprs.misc.Utils.UiSupplier;
-import static aprs.misc.Utils.getAprsIconUrl;
-import aprs.supervisor.screensplash.SplashScreen;
 import aprs.simview.Object2DOuterJPanel;
+import aprs.supervisor.colortextdisplay.ColorTextJFrame;
+import aprs.supervisor.colortextdisplay.ColorTextJPanel;
+import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel;
+import aprs.supervisor.colortextdisplay.ColorTextOptionsJPanel.ColorTextOptions;
+import aprs.supervisor.screensplash.SplashScreen;
 import aprs.system.AprsSystem;
 import crcl.base.PointType;
-
 import crcl.base.PoseType;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
-import static crcl.utils.CRCLUtils.requireNonNull;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.HeadlessException;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.tools.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -81,85 +81,28 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EventObject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.imageio.ImageIO;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JList;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTree;
-import javax.swing.Timer;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableModel;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.getAprsIconUrl;
+import static aprs.misc.Utils.runTimeToString;
+import static crcl.utils.CRCLUtils.requireNonNull;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull
@@ -1151,14 +1094,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setAbortTimeCurrent();
     }
 
-    private void printReturnRobotTraceInfo() {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.printReturnRobotTraceInfo();
-    }
+//    private void printReturnRobotTraceInfo() {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.printReturnRobotTraceInfo();
+//    }
 
-//    private XFuture<@Nullable Void> returnRobots(String comment) {
+    //    private XFuture<@Nullable Void> returnRobots(String comment) {
 //        if (null == supervisor) {
 //            throw new IllegalStateException("null == supervisor");
 //        }
@@ -1292,12 +1235,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.getFirstEventTime();
     }
 
-    private void setFirstEventTime(long firstEventTime) {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.setFirstEventTime(firstEventTime);
-    }
+//    private void setFirstEventTime(long firstEventTime) {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.setFirstEventTime(firstEventTime);
+//    }
 
     private long getAbortEventTime() {
         if (null == supervisor) {
@@ -1306,7 +1249,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.getFirstEventTime();
     }
 
-//    private void setAbortEventTime(long abortEventTime) {
+    //    private void setAbortEventTime(long abortEventTime) {
 //        if (null == supervisor) {
 //            throw new IllegalStateException("null == supervisor");
 //        }
@@ -1374,15 +1317,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void startUpdateRunningTimeTimer() {
-        if (closing) {
-            return;
-        }
-        if (runTimeTimer == null) {
-            runTimeTimer = new Timer(2000, x -> updateRunningTime());
-            runTimeTimer.start();
-        }
-    }
+//    private void startUpdateRunningTimeTimer() {
+//        if (closing) {
+//            return;
+//        }
+//        if (runTimeTimer == null) {
+//            runTimeTimer = new Timer(2000, x -> updateRunningTime());
+//            runTimeTimer.start();
+//        }
+//    }
 
     public void updateRunningTime() {
         try {
@@ -3168,12 +3111,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         debugAction();
     }//GEN-LAST:event_jMenuItemDbgActionActionPerformed
 
-    private static void printStatus(AtomicReference<@Nullable XFutureVoid> ref, PrintStream ps) {
-        if (null != ref) {
-            XFuture<?> xf = ref.get();
-            printStatus(xf, ps);
-        }
-    }
+//    private static void printStatus(AtomicReference<@Nullable XFutureVoid> ref, PrintStream ps) {
+//        if (null != ref) {
+//            XFuture<?> xf = ref.get();
+//            printStatus(xf, ps);
+//        }
+//    }
 
     private static void printStatus(@Nullable XFuture<?> xf, PrintStream ps) {
         if (null != xf) {
@@ -3849,12 +3792,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private Random getRandom() {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.getRandom();
-    }
+//    private Random getRandom() {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        return supervisor.getRandom();
+//    }
 
     private void setRandom(Random random) {
         if (null == supervisor) {
@@ -3936,15 +3879,15 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         updateCurrentFutureDisplay(jCheckBoxShowDoneFutures.isSelected(), jCheckBoxShowUnnamedFutures.isSelected());
     }//GEN-LAST:event_jCheckBoxFutureLongFormActionPerformed
 
-    private static String getDirNameOrHome(@Nullable File f) throws IOException {
-        if (f != null) {
-            File parentFile = f.getParentFile();
-            if (null != parentFile) {
-                return parentFile.getCanonicalPath();
-            }
-        }
-        return Utils.getAprsUserHomeDir();
-    }
+//    private static String getDirNameOrHome(@Nullable File f) throws IOException {
+//        if (f != null) {
+//            File parentFile = f.getParentFile();
+//            if (null != parentFile) {
+//                return parentFile.getCanonicalPath();
+//            }
+//        }
+//        return Utils.getAprsUserHomeDir();
+//    }
 
     @UIEffect
     private void jMenuItemSaveAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAllActionPerformed
@@ -4962,8 +4905,10 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 urls[urls.length - 1] = grandParentFile.toURI().toURL();
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
                 println("urls = " + Arrays.toString(urls));
-                ClassLoader loader = new URLClassLoader(urls);
-                Class<?> clss = loader.loadClass("custom.Custom");
+                Class<?> clss;
+                try(URLClassLoader loader = new URLClassLoader(urls)) {
+                	clss = loader.loadClass("custom.Custom");
+                }
                 @SuppressWarnings("deprecation")
                 Object obj = clss.newInstance();
                 Method acceptMethod = clss.getMethod("accept", AprsSupervisorDisplayJFrame.class);
@@ -5251,19 +5196,19 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setMax_cycles(max_cycles);
     }
 
-    /**
-     * Start actions in reverse mode where kit trays will be emptied rather than
-     * filled.
-     *
-     * @return future that can be used to attach additional actions after this
-     * is complete
-     */
-    private XFutureVoid startReverseActions(int startingAbortCount) {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.startReverseActions(null, startingAbortCount);
-    }
+//    /**
+//     * Start actions in reverse mode where kit trays will be emptied rather than
+//     * filled.
+//     *
+//     * @return future that can be used to attach additional actions after this
+//     * is complete
+//     */
+//    private XFutureVoid startReverseActions(int startingAbortCount) {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        return supervisor.startReverseActions(null, startingAbortCount);
+//    }
 
     private void savePosFile(File f) throws IOException {
         if (null == supervisor) {
@@ -5391,13 +5336,13 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.continueAllActions();
     }
 
-    private <T> XFuture<T> checkOkElse(Boolean ok, Supplier<XFuture<T>> okSupplier, Supplier<XFuture<T>> notOkSupplier) {
-        if (ok) {
-            return okSupplier.get();
-        } else {
-            return notOkSupplier.get();
-        }
-    }
+//    private <T> XFuture<T> checkOkElse(Boolean ok, Supplier<XFuture<T>> okSupplier, Supplier<XFuture<T>> notOkSupplier) {
+//        if (ok) {
+//            return okSupplier.get();
+//        } else {
+//            return notOkSupplier.get();
+//        }
+//    }
 
     /**
      * Clear all previously set errors /error states.
@@ -5504,18 +5449,18 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    /**
-     * Set the value of setupFile
-     *
-     * @param f new value of setupFile
-     * @throws java.io.IOException can not save last setup file
-     */
-    private void setSetupFile(File f) throws IOException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.setSetupFile(f);
-    }
+//    /**
+//     * Set the value of setupFile
+//     *
+//     * @param f new value of setupFile
+//     * @throws java.io.IOException can not save last setup file
+//     */
+//    private void setSetupFile(File f) throws IOException {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.setSetupFile(f);
+//    }
 
     public JTable getSharedToolsTable() {
         return this.jTableSharedTools;
@@ -5611,19 +5556,19 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.saveSimTeach(f);
     }
 
-    private void loadSimTeach(File f) throws IOException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.loadSimTeach(f);
-    }
+//    private void loadSimTeach(File f) throws IOException {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.loadSimTeach(f);
+//    }
 
-    private void saveLastPosMapFile(File f) throws IOException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.saveLastPositionMappingsFilesFile(f);
-    }
+//    private void saveLastPosMapFile(File f) throws IOException {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.saveLastPositionMappingsFilesFile(f);
+//    }
 
     private XFutureVoid saveTeachProps(File f) throws IOException {
         if (null == supervisor) {
@@ -5632,12 +5577,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.saveTeachProps(f);
     }
 
-    private XFutureVoid loadTeachProps(File f) throws IOException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        return supervisor.loadTeachProps(f);
-    }
+//    private XFutureVoid loadTeachProps(File f) throws IOException {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        return supervisor.loadTeachProps(f);
+//    }
 
     private void saveSharedTools(File f) throws IOException {
         if (null == supervisor) {
@@ -5646,12 +5591,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.saveSharedTools(f);
     }
 
-    private void loadSharedTools(File f) throws IOException {
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
-        }
-        supervisor.loadSharedTools(f);
-    }
+//    private void loadSharedTools(File f) throws IOException {
+//        if (null == supervisor) {
+//            throw new IllegalStateException("null == supervisor");
+//        }
+//        supervisor.loadSharedTools(f);
+//    }
 
     /**
      * Load the given setup file.
@@ -6121,31 +6066,31 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 });
     }
 
-    private static class SetTableRobotEnabledEvent {
-
-        private final boolean enable;
-        private final String robotName;
-        private final XFuture<Boolean> future;
-
-        public SetTableRobotEnabledEvent(boolean enable, String robotName, XFuture<Boolean> future) {
-            this.enable = enable;
-            this.robotName = robotName;
-            this.future = future;
-        }
-
-        public boolean isEnable() {
-            return enable;
-        }
-
-        public String getRobotName() {
-            return robotName;
-        }
-
-        public XFuture<Boolean> getFuture() {
-            return future;
-        }
-
-    };
+//    private static class SetTableRobotEnabledEvent {
+//
+//        private final boolean enable;
+//        private final String robotName;
+//        private final XFuture<Boolean> future;
+//
+//        public SetTableRobotEnabledEvent(boolean enable, String robotName, XFuture<Boolean> future) {
+//            this.enable = enable;
+//            this.robotName = robotName;
+//            this.future = future;
+//        }
+//
+//        public boolean isEnable() {
+//            return enable;
+//        }
+//
+//        public String getRobotName() {
+//            return robotName;
+//        }
+//
+//        public XFuture<Boolean> getFuture() {
+//            return future;
+//        }
+//
+//    };
 
 //    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
 //    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {

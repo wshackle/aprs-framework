@@ -22,66 +22,33 @@
  */
 package aprs.database.vision;
 
-import static aprs.database.DbCsvBackup.executeQuery;
+import aprs.database.*;
 import aprs.misc.SlotOffsetProvider;
 import aprs.misc.Utils;
-import aprs.database.DbParamTypeEnum;
-import aprs.database.DbQueryEnum;
-import aprs.database.DbQueryInfo;
-import aprs.database.DbSetup;
-import aprs.database.DbSetupBuilder;
-import static aprs.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
-import aprs.database.DbType;
-import aprs.database.PhysicalItem;
-import aprs.database.PoseQueryElem;
-import aprs.database.PartsTray;
-import aprs.database.Slot;
-import aprs.database.Tray;
-import static aprs.misc.AprsCommonLogger.println;
 import aprs.system.AprsSystem;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import static java.util.Comparator.comparingDouble;
-import static java.util.Comparator.comparingInt;
-import static java.util.Comparator.comparingLong;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import static crcl.utils.CRCLUtils.requireNonNull;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToLongFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.database.DbCsvBackup.executeQuery;
+import static aprs.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
+import static aprs.misc.AprsCommonLogger.println;
+import static crcl.utils.CRCLUtils.requireNonNull;
+import static java.util.Comparator.*;
 
 /**
  *
@@ -883,7 +850,6 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     protected void finalize() {
         close();
         try {

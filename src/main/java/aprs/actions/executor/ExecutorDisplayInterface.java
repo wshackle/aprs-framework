@@ -23,13 +23,14 @@
 package aprs.actions.executor;
 
 import aprs.system.AprsSystem;
+
 import java.util.List;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings({"all", "serial"})
 interface ExecutorDisplayInterface {
 
     /**

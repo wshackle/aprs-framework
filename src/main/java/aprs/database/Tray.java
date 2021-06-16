@@ -23,11 +23,12 @@
 package aprs.database;
 
 import crcl.base.PoseType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import rcs.posemath.PmCartesian;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import rcs.posemath.PmCartesian;
 
 /**
  *
@@ -68,7 +69,6 @@ public class Tray extends PhysicalItem {
         if (null != ret
                 && !ret.isEmpty()) {
             if (!java.lang.Double.isFinite(setAbsSlotListX)
-                    || !java.lang.Double.isFinite(setAbsSlotListY)
                     || !java.lang.Double.isFinite(setAbsSlotListY)
                     || Math.abs(x - setAbsSlotListX) > ABS_SLOT_LIST_CHANGE_TOLERANCE
                     || Math.abs(y - setAbsSlotListY) > ABS_SLOT_LIST_CHANGE_TOLERANCE

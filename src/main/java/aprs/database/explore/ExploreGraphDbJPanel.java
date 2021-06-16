@@ -92,7 +92,8 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             }
         });
         nodeTableModelListener = new TableModelListener() {
-            @Override
+            @SuppressWarnings("rawtypes")
+			@Override
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() != TableModelEvent.UPDATE) {
                     return;
@@ -719,6 +720,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         Logger.getLogger(ExploreGraphDbJFrame.class.getName()).warning(warning);
     }
 
+    @SuppressWarnings({"rawtypes"})
     private void followTableEntry(JTable jTable) {
         int row = jTable.getSelectedRow();
         if (row >= 0) {

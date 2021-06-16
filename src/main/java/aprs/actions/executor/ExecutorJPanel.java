@@ -22,110 +22,25 @@
  */
 package aprs.actions.executor;
 
-import static aprs.actions.executor.ActionType.CHECK_KITS;
-import static aprs.actions.executor.ActionType.DROP_TOOL_ANY;
-
+import aprs.actions.optaplanner.actionmodel.OpAction;
+import aprs.actions.optaplanner.actionmodel.OpActionPlan;
+import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.actions.optaplanner.display.OpDisplayJPanel;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.cachedcomponents.CachedComboBox;
 import aprs.cachedcomponents.CachedTable;
 import aprs.cachedcomponents.CachedTextField;
-import aprs.misc.Utils;
-import aprs.misc.Utils.RunnableWithThrow;
-
-import aprs.database.DbSetup;
-import aprs.database.DbSetupBuilder;
-import aprs.database.DbSetupListener;
-import aprs.database.DbSetupPublisher;
-import aprs.database.PhysicalItem;
-import aprs.database.ToolHolder;
-
-import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_APPROACH;
-import static aprs.actions.executor.ActionType.GOTO_TOOL_CHANGER_POSE;
-import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
-import static aprs.actions.executor.ActionType.PLACE_PART;
-import static aprs.actions.executor.ActionType.TAKE_PART;
-import static aprs.actions.executor.ActionType.TEST_PART_POSITION;
-
-import aprs.actions.optaplanner.display.OpDisplayJPanel;
-import aprs.actions.optaplanner.actionmodel.OpAction;
-import aprs.actions.optaplanner.actionmodel.OpActionPlan;
-import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
+import aprs.database.*;
 import aprs.database.vision.VisionToDBJPanel;
+import aprs.misc.Utils;
 import aprs.system.AprsSystem;
-import crcl.base.CRCLCommandInstanceType;
-import crcl.base.CRCLCommandType;
-import crcl.base.CRCLProgramType;
-import crcl.base.CRCLStatusType;
-import crcl.base.CommandStateEnumType;
-import crcl.base.EndCanonType;
-import crcl.base.InitCanonType;
-import crcl.base.JointStatusType;
-import crcl.base.MessageType;
-import crcl.base.MiddleCommandType;
-import crcl.base.PointType;
-import crcl.base.PoseType;
-import crcl.utils.CRCLCommandWrapper;
-import crcl.utils.XFuture;
-import crcl.utils.XFutureVoid;
-import crcl.utils.CRCLException;
-import crcl.utils.CRCLPosemath;
-import crcl.utils.CRCLSocket;
-
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import static java.lang.Integer.max;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EventObject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFileChooser;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import java.awt.event.ActionEvent;
-import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import java.awt.geom.Point2D;
-import java.sql.Connection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutorService;
-import javax.swing.JOptionPane;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-
+import crcl.base.*;
+import crcl.ui.client.CrclSwingClientJPanel;
+import crcl.ui.client.ProgramLineListener;
+import crcl.utils.*;
+import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
@@ -138,51 +53,49 @@ import rcs.posemath.PmCartesian;
 import rcs.posemath.PmException;
 import rcs.posemath.PmRpy;
 
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.geom.Point2D;
+import java.io.*;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import javax.swing.JMenu;
-
-import static aprs.actions.executor.ActionType.DROP_TOOL_BY_HOLDER;
-import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_HOLDER;
-import static aprs.actions.executor.ActionType.PICKUP_TOOL_BY_TOOL;
-import static aprs.actions.executor.ActionType.SWITCH_TOOL;
-
-import aprs.database.Tool;
-import static aprs.misc.AprsCommonLogger.println;
-
-import javax.swing.JRadioButtonMenuItem;
-
-import crcl.base.JointStatusesType;
-
-import java.util.HashSet;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-import static aprs.misc.Utils.autoResizeTableColWidths;
-import static aprs.misc.Utils.autoResizeTableRowHeights;
-import static crcl.utils.CRCLPosemath.pose;
-import static crcl.utils.CRCLPosemath.point;
-import static crcl.utils.CRCLPosemath.vector;
-import static aprs.misc.Utils.readCsvFileToTable;
-import static aprs.misc.Utils.readCsvFileToTableAndMap;
-import crcl.base.CommandStatusType;
-import crcl.base.MoveToType;
-import crcl.base.PoseStatusType;
-import crcl.base.VectorType;
-import crcl.ui.client.CrclSwingClientJPanel;
-import crcl.ui.client.ProgramLineListener;
-import static crcl.copier.CRCLCopier.copy;
-import crcl.utils.CRCLUtils;
-import java.util.Date;
-import static crcl.utils.CRCLUtils.requireNonNull;
-import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.swing.Icon;
-import javax.swing.SwingUtilities;
+
+import static aprs.actions.executor.ActionType.*;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.*;
+import static crcl.copier.CRCLCopier.copy;
+import static crcl.utils.CRCLPosemath.*;
+import static crcl.utils.CRCLUtils.requireNonNull;
+import static java.lang.Integer.max;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -855,7 +768,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "deprecation", "UnnecessaryBoxing"})
+    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "UnnecessaryBoxing"})
     @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -1414,17 +1327,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(249, 249, 249)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jLabel8)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jLabel9)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStopRandomTest)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonRecordLookForJoints))
@@ -2050,15 +1963,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTabbedPane1.addTab("Error Map", jPanelContainerPositionMap);
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                { new Integer(1), null},
-                { new Integer(2), null},
-                { new Integer(3), null},
-                { new Integer(4), null}
-            },
-            new String [] {
-                "ID", "Text"
-            }
+                new Object[][]{
+                        {new Integer(1), null},
+                        {new Integer(2), null},
+                        {new Integer(3), null},
+                        {new Integer(4), null}
+                },
+                new String[]{
+                        "ID", "Text"
+                }
         ) {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class
@@ -4036,7 +3949,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (!cancelSafeAbortFutures) {
             try {
                 if (crclGenerator.isTakeSnapshots() && aprsSystem.snapshotsEnabled()) {
-                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG"), null, "");
+                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG",aprsSystem.getLogImageDir()), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();

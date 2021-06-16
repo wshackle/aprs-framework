@@ -815,12 +815,12 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void addActionForEachPartType(Set<String> partTypesSet, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, boolean required) {
-        for (String partType : partTypesSet) {
-            OpAction newAction = generateNewAction(0, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
-            startingList.add(newAction);
-        }
-    }
+//    private void addActionForEachPartType(Set<String> partTypesSet, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, boolean required) {
+//        for (String partType : partTypesSet) {
+//            OpAction newAction = generateNewAction(0, minX, maxX, minY, maxY, rand, startingList, minDist, actionType, partType, required);
+//            startingList.add(newAction);
+//        }
+//    }
 
     private OpAction generateNewAction(int index, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, String partType, boolean required) {
         double x = minX + (maxX - minX) * rand.nextDouble();
