@@ -34,6 +34,7 @@ and any modified versions bear some notice that they have been modified.
             <outputDirectory>aprs-framework</outputDirectory>
             <includes>
                 <include>README*</include>
+                <include>*.bat</include>
             </includes>
             <lineEnding>dos</lineEnding>
         </fileSet>
@@ -43,6 +44,33 @@ and any modified versions bear some notice that they have been modified.
             <includes>
                 <include>**/*.txt</include>
                 <include>**/*.xml</include>
+                <include>**/*.csv</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>example_pddl</directory>
+            <outputDirectory>aprs-framework/example_pddl</outputDirectory>
+            <includes>
+                <include>**/*.txt</include>
+                <include>**/*.pddl</include>
+                <include>**/*.csv</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>netbeans_run_user_home</directory>
+            <outputDirectory>aprs-framework/netbeans_run_user_home</outputDirectory>
+            <includes>
+                <include>**/*.txt</include>
+                <include>**/*.pddl</include>
+                <include>**/*.csv</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>linux_netbeans_run_user_home</directory>
+            <outputDirectory>aprs-framework/linux_netbeans_run_user_home</outputDirectory>
+            <includes>
+                <include>**/*.txt</include>
+                <include>**/*.pddl</include>
                 <include>**/*.csv</include>
             </includes>
         </fileSet>

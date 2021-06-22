@@ -1887,7 +1887,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (item instanceof Tray) {
                 Tray tray = (Tray) item;
                 if (tray.getAbsSlotList().isEmpty()) {
-                    throw new IllegalStateException("tray.getAbsSlotList().isEmpty()");
+                    System.err.println("tray.getName()="+tray.getName());
+                    System.err.println("tray ="+tray);
+                    throw new IllegalStateException("tray.getAbsSlotList().isEmpty() tray="+tray);
                 }
             }
         }

@@ -503,6 +503,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         settingItems = false;
     }
 
+    private String excludedObjectNames = "";
+
+    public String getExcludedObjectNames() {
+        return excludedObjectNames;
+    }
+
+    public void setExcludedObjectNames(String excludedObjectNames) {
+        if (null != excludedObjectNames && !excludedObjectNames.equals(this.excludedObjectNames)) {
+            javax.swing.SwingUtilities.invokeLater(() -> this.jTextFieldExludedObjectNames.setText(excludedObjectNames));
+        }
+        this.excludedObjectNames = excludedObjectNames;
+    }
+    
+    
     private double minimumScore = 0.0;
 
     /**
@@ -525,21 +539,46 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
         this.minimumScore = minimumScore;
     }
+    
 
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
-        final List<PhysicalItem> filteredItems;
+        final List<PhysicalItem> filteredItems1;
         if (!Double.isFinite(minimumScore) || minimumScore <= Double.MIN_NORMAL) {
-            filteredItems = items;
+            filteredItems1 = items;
         } else {
-            filteredItems = new ArrayList<>();
+            filteredItems1 = new ArrayList<>();
             for (PhysicalItem item : items) {
                 if (item.getScore() >= minimumScore) {
-                    filteredItems.add(item);
+                    filteredItems1.add(item);
+                }
+            }
+        }
+        final List<PhysicalItem> filteredItems2;
+        if (null == excludedObjectNames || excludedObjectNames.isEmpty()) {
+            filteredItems2 = filteredItems1;
+        } else {
+            filteredItems2 = new ArrayList<>();
+            for (PhysicalItem item : filteredItems1) {
+                String name = item.getName();
+//                System.out.println("name = " + name);
+                if(name.startsWith("sku_")) {
+                    name = name.substring(4);
+//                    System.out.println("name = " + name);
+                }
+                if(name.startsWith("part_")) {
+                    name = name.substring(5);
+//                    System.out.println("name = " + name);
+                }
+//                System.out.println("excludedObjectNames = " + excludedObjectNames);
+                final boolean contains = excludedObjectNames.contains(name);
+//                System.out.println("contains = " + contains);
+                if (!contains) {
+                    filteredItems2.add(item);
                 }
             }
         }
         if (!this.isSimulated() || !object2DJPanel1.isShowOutputItems() || !this.isConnected()) {
-            notifySetItemsListeners(filteredItems);
+            notifySetItemsListeners(filteredItems2);
         }
         long now = System.currentTimeMillis();
         XFutureVoid future = XFutureVoid.completedFuture();
@@ -548,7 +587,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 || (now - lastSetItemsInternalTime) > 500) {
             settingItems = true;
             lastSetItemsInternalTime = now;
-            future = submitDisplayConsumer(this::consumeItemList, filteredItems);
+            future = submitDisplayConsumer(this::consumeItemList, filteredItems2);
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0) {
@@ -566,7 +605,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 if (null != srv) {
                     publishCurrentItems();
                 } else {
-                    List<PhysicalItem> newOutputItems = computeNewOutputList(filteredItems);
+                    List<PhysicalItem> newOutputItems = computeNewOutputList(filteredItems2);
                     future
                             = future
                                     .thenComposeToVoid(() -> setOutputItems(newOutputItems));
@@ -1395,6 +1434,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         jCheckBoxShowOnlyOverlapping = new javax.swing.JCheckBox();
         jLabel17 = new javax.swing.JLabel();
         jTextFieldMinimumScore = new javax.swing.JTextField();
+        jLabel18 = new javax.swing.JLabel();
+        jTextFieldExludedObjectNames = new javax.swing.JTextField();
         jPanelProperties = new javax.swing.JPanel();
         jScrollPaneProperties = new javax.swing.JScrollPane();
         jTableProperties = new javax.swing.JTable();
@@ -2254,6 +2295,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         });
 
+        jLabel18.setText("Excluded Object Names: ");
+
+        jTextFieldExludedObjectNames.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jTextFieldExludedObjectNamesActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelOptionsTabLayout = new javax.swing.GroupLayout(jPanelOptionsTab);
         jPanelOptionsTab.setLayout(jPanelOptionsTabLayout);
         jPanelOptionsTabLayout.setHorizontalGroup(
@@ -2301,9 +2350,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                                 .addComponent(jCheckBoxShowOnlyOverlapping))))
                     .addGroup(jPanelOptionsTabLayout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jLabel17)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldMinimumScore, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel18)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldExludedObjectNames))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanelOptionsTabLayout.createSequentialGroup()
+                                .addComponent(jLabel17)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldMinimumScore, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap(116, Short.MAX_VALUE))
         );
         jPanelOptionsTabLayout.setVerticalGroup(
@@ -2354,6 +2409,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
                 .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel17)
                     .addComponent(jTextFieldMinimumScore, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelOptionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel18)
+                    .addComponent(jTextFieldExludedObjectNames, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -4349,6 +4408,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         }
     }//GEN-LAST:event_jTextFieldMinimumScoreActionPerformed
 
+    private void jTextFieldExludedObjectNamesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldExludedObjectNamesActionPerformed
+            setExcludedObjectNames(jTextFieldExludedObjectNames.getText());
+    }//GEN-LAST:event_jTextFieldExludedObjectNamesActionPerformed
+
     private javax.swing.@Nullable Timer simUpdateTimer = null;
 
     private int simRefreshMillis = 50;
@@ -4544,6 +4607,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -4582,6 +4646,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     private javax.swing.JTextField jTextFieldConnectTimeout;
     private javax.swing.JTextField jTextFieldCurrentXY;
     private javax.swing.JTextField jTextFieldDropOffThreshold;
+    private javax.swing.JTextField jTextFieldExludedObjectNames;
     private javax.swing.JTextField jTextFieldFilename;
     private javax.swing.JTextField jTextFieldHideNearMouseDist;
     private javax.swing.JTextField jTextFieldHideNearRobotDist;
@@ -4724,6 +4789,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         props.setProperty("senseMaxX", Double.toString(getSenseMaxX()));
         props.setProperty("senseMaxY", Double.toString(getSenseMaxY()));
         props.setProperty("minimumScore", Double.toString(getMinimumScore()));
+        props.setProperty("excludedObjectNames", getExcludedObjectNames());
         props.setProperty("recordLines", Boolean.toString(jCheckBoxRecordLines.isSelected()));
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
         props.setProperty("prevListSizeDecrementInterval", Integer.toString(getPrevListSizeDecrementInterval()));
@@ -5050,6 +5116,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
         if (null != minimumScoreString && minimumScoreString.length() > 0) {
             double mimimumScore = parseDouble(minimumScoreString);
             setMinimumScore(mimimumScore);
+        }
+        
+        String excludedObjectNames = props.getProperty("excludedObjectNames");
+        if (null != excludedObjectNames && excludedObjectNames.length() > 0) {
+            setExcludedObjectNames(excludedObjectNames);
         }
 
         String enforceSensorLimitsString = props.getProperty("enforceSensorLimits");
