@@ -48,5 +48,5 @@ useEndPoseTolerance=false
 useJointLookFor=true
 useJointMovesForToolHolderApproach=true
 useMessageCommands=true
-verySlowTransSpeed=20
+verySlowTransSpeed=10
 visionCycleNewDiffThreshold=5

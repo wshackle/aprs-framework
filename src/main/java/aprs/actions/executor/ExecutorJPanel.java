@@ -5793,6 +5793,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonDropToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDropToolActionPerformed
         try {
+            if(notReadyForToolOperation()) return;
             setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
@@ -5857,6 +5858,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonPickupToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPickupToolActionPerformed
         try {
+            if(notReadyForToolOperation()) return;
             if (null != currentPart) {
                 manualObjectCachedComboBox.setSelectedItem(currentPart);
             }
@@ -8462,7 +8464,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             toolDropByHolderMenu.setEnabled(true);
             for (String holderName : emptyToolChangerNames) {
                 JMenuItem mi = new JMenuItem(holderName);
-                mi.addActionListener(e -> dropToolByHolder(holderName));
+                mi.addActionListener(e -> {
+                    handleDropByHolderMenuItem(holderName);
+                });
                 toolDropByHolderMenu.add(mi);
             }
             toolDropCurrentToolMenuItem.setEnabled(true);
@@ -8478,12 +8482,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             toolPickupByToolMenu.setEnabled(true);
             for (String holderName : fullToolChangerNames) {
                 JMenuItem holderMi = new JMenuItem(holderName);
-                holderMi.addActionListener(e -> pickupToolByHolder(holderName));
+                holderMi.addActionListener(e -> { 
+            handlePickupToolByHolderMenuItem(holderName);
+                        });
                 toolPickupByHolderMenu.add(holderMi);
                 String toolName = crclGenerator.getExpectedToolHolderContentsMap().get(holderName);
                 if (null != toolName) {
                     JMenuItem toolMi = new JMenuItem(toolName);
-                    toolMi.addActionListener(e -> pickupToolByTool(toolName));
+                    toolMi.addActionListener(e -> {
+                        handlePickupToolByToolMenuItem(toolName);
+                            });
                     toolPickupByToolMenu.add(toolMi);
                 }
             }
@@ -8505,10 +8513,48 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             } else {
                 toolMi.addActionListener(e -> crclGenerator.setCurrentToolName(toolName));
                 JMenuItem switchToolMi = new JMenuItem(toolName);
-                switchToolMi.addActionListener(e -> switchTool(toolName));
+                switchToolMi.addActionListener(e -> {
+                    handleSwitchToolMenuItem(toolName);
+                        });
                 toolSwitchToolMenu.add(switchToolMi);
             }
         }
+    }
+
+    private void handlePickupToolByHolderMenuItem(String holderName) throws HeadlessException {
+        if(notReadyForToolOperation()) return;
+        pickupToolByHolder(holderName);
+    }
+
+    private boolean notReadyForToolOperation() throws HeadlessException {
+        if (!aprsSystem.isConnected()) {
+            JOptionPane.showMessageDialog(parentComponent, "Connect to robot first.");
+            return true;
+        }
+        if (!aprsSystem.isStandAlone()) {
+            JOptionPane.showMessageDialog(parentComponent, "Set to Stand-Alone mode first.");
+            return true;
+        }
+        if (aprsSystem.isPaused()) {
+            JOptionPane.showMessageDialog(parentComponent, "Check E-STOPs, errors, and unpause system first.");
+            return true;
+        }
+        return false;
+    }
+
+    private void handleSwitchToolMenuItem(String toolName) throws HeadlessException {
+        if(notReadyForToolOperation()) return;
+        switchTool(toolName);
+    }
+
+    private void handlePickupToolByToolMenuItem(String toolName) throws HeadlessException {
+        if(notReadyForToolOperation()) return;
+        pickupToolByTool(toolName);
+    }
+
+    private void handleDropByHolderMenuItem(String holderName) throws HeadlessException {
+        if(notReadyForToolOperation()) return;
+        dropToolByHolder(holderName);
     }
 
     private volatile String errorMapFilesArray @Nullable []  = null;

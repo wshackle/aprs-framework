@@ -6551,7 +6551,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             gotoToolChangerApproachByPose(pose, out);
         }
-        addDwell(out, 0.1);
+        addDwell(out, 1.5);
     }
 
     private void gotoToolChangerApproachByPose(PoseType pose, List<MiddleCommandType> out) throws CRCLException, PmException {
@@ -6613,8 +6613,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new IllegalStateException("no pose for " + toolHolderName);
             }
             addGotoToolChangerApproachByName(out, toolHolderName);
-            PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.2);
+            PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.3);
             addMoveTo(out, prepPose, false, "dropToolByHolderName.prepPose.toolHolderName=" + toolHolderName);
+            addSettleDwell(out);
             addSetSlowSpeed(out);
             addMoveTo(out, pose, false, "dropToolByHolderName.pose.toolHolderName=" + toolHolderName);
             addOpenToolChanger(out);
@@ -6751,8 +6752,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new IllegalStateException("no pose for " + toolHolderName);
             }
             addGotoToolChangerApproachByName(out, toolHolderName);
-            PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.2);
+            PoseType prepPose = addZToPose(pose, approachToolChangerZOffset * 0.3);
             addMoveTo(out, prepPose, false, "pickupToolByHolderName.prepPose.toolHolderName=" + toolHolderName);
+            addSettleDwell(out);
             addSetVerySlowSpeed(out);
             addMoveTo(out, pose, false, "pickupToolByHolderName.pose.toolHolderName=" + toolHolderName);
             String toolInRobot = getExpectedToolName();

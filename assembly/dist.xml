@@ -57,6 +57,13 @@ and any modified versions bear some notice that they have been modified.
             </includes>
         </fileSet>
         <fileSet>
+            <directory>CRCLPrograms</directory>
+            <outputDirectory>aprs-framework/CRCLPrograms</outputDirectory>
+            <includes>
+                <include>**/*.xml</include>
+             </includes>
+        </fileSet>
+        <fileSet>
             <directory>netbeans_run_user_home</directory>
             <outputDirectory>aprs-framework/netbeans_run_user_home</outputDirectory>
             <includes>
