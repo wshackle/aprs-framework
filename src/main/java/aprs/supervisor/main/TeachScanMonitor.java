@@ -181,7 +181,7 @@ public class TeachScanMonitor {
                                 "handleTeachItems",
                                 () -> handleTeachItems(nonNullTeachItems),
                                 supervisorExecutorService
-                        );
+                        ).peekNoCancelException(supervisor::handleXFutureException);
             }
         }
     }

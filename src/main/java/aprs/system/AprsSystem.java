@@ -6758,7 +6758,7 @@ public class AprsSystem implements SlotOffsetProvider {
 		    .getName()).log(Level.SEVERE, "", ex);
 	}
     }
-
+    
     public BufferedImage createSnapshotImage(ViewOptions opts, Collection<? extends PhysicalItem> itemsToPaint) {
 	if (null == object2DViewJInternalFrame) {
 	    throw new IllegalStateException("Object 2D View must be open to use this function");

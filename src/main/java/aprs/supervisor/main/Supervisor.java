@@ -1810,7 +1810,7 @@ public class Supervisor {
 	}
     }
 
-    private void handleXFutureException(Throwable throwable) {
+    void handleXFutureException(Throwable throwable) {
 	if (null != throwable) {
 	    if (throwable != lastLoggedException && !closing && !preClosing) {
 		logException(throwable);
@@ -4735,25 +4735,30 @@ public class Supervisor {
 	}
     }
 
-    @Nullable
     File completeScanOneInternal(AprsSystem aprsSys, List<PhysicalItem> teachItems) throws RuntimeException {
 	logEvent("completeScanOneInternal aprsSys=" + aprsSys + ",teachItems=" + teachItems);
 	aprsSys.setCorrectionMode(correctionMode);
 	File actionListFile;
-	if (isUseTeachCameraSelected() && aprsSys.getUseTeachTable()) {
+	final File tempImageFile;
+        final boolean useTeachTableLocal = isUseTeachCameraSelected() && aprsSys.getUseTeachTable();
+        if (useTeachTableLocal) {
 	    final List<PhysicalItem> filteredTeachItems = filterForSystem(aprsSys, teachItems);
+            if(filteredTeachItems.isEmpty()) {
+                throw new RuntimeException("no teach items for "+aprsSys.getTaskName());
+            }
 	    try {
 		File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
 		supervisorDir.mkdirs();
 		File subDir = new File(supervisorDir, aprsSys.getTaskName());
 		subDir.mkdirs();
-		aprsSys.saveScanStyleImage(
-			Utils.createTempFile("filteredTeachItems_completeScanOneInternal_" + aprsSys.toString(),
-				".PNG",
-				subDir),
+                tempImageFile = Utils.createTempFile("filteredTeachItems_completeScanOneInternal_" + aprsSys.toString(),
+                        ".PNG",
+                        subDir);
+		aprsSys.saveScanStyleImage(tempImageFile,
 			filteredTeachItems);
 	    } catch (IOException ex) {
 		Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
 	    }
 	    actionListFile = aprsSys.createActionListFromVision(aprsSys.getObjectViewItems(), filteredTeachItems, true,
 		    0, false, false, true, false);
@@ -4763,11 +4768,13 @@ public class Supervisor {
 		supervisorDir.mkdirs();
 		File subDir = new File(supervisorDir, aprsSys.getTaskName());
 		subDir.mkdirs();
+                tempImageFile = Utils.createTempFile("completeScanOneInternal_" + aprsSys.toString(), ".PNG", subDir);
 		aprsSys.saveScanStyleImage(
-			Utils.createTempFile("completeScanOneInternal_" + aprsSys.toString(), ".PNG", subDir),
+			tempImageFile,
 			aprsSys.getLastVisItemsData());
 	    } catch (IOException ex) {
 		Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                 throw new RuntimeException(ex);
 	    }
 	    actionListFile = aprsSys.createActionListFromVision();
 	}
@@ -4782,7 +4789,17 @@ public class Supervisor {
 		Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
 		throw new RuntimeException(ex);
 	    }
-	}
+	} 
+//        else {
+//            System.out.println("useTeachTableLocal = " + useTeachTableLocal);
+//            try {
+//                System.out.println("tempImageFile = " + tempImageFile.getCanonicalPath());
+//            } catch (IOException ex) {
+//                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//            System.out.println("teachItems = " + teachItems);
+//            throw new RuntimeException("actionListFile==null: aprsSys.getTaskName()="+aprsSys.getTaskName());
+//        }
 	return actionListFile;
     }
 
