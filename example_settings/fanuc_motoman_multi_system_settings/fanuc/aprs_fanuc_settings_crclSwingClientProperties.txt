@@ -1,51 +1,51 @@
 classname=crcl.ui.client.CrclSwingClientJPanel
-boolean stepMode=false
 boolean preClosing=false
-boolean validateXmlSchema=true
+boolean stepMode=false
 boolean debugInterrupts=false
+boolean validateXmlSchema=true
 boolean disableTextPopups=true
 boolean ignoreTimeouts=false
-boolean toolChangerOpen=false
 boolean debugShowProgram=false
-int maxRecordCommandsCount=1000
-rcs.posemath.PmCartesian minLimit= { x=+107.145, y=-282.153, z=-1000.000 } 
-rcs.posemath.PmCartesian maxLimit= { x=+708.303, y=+267.723, z=+1000.000 } 
-double rpyJogIncrement=3.0
+boolean toolChangerOpen=false
 int port=64444
-boolean internal.stepMode=false
+int maxRecordCommandsCount=1000
+rcs.posemath.PmCartesian maxLimit= { x=+10000.000, y=+10000.000, z=+10000.000 } 
+rcs.posemath.PmCartesian minLimit= { x=-10000.000, y=-10000.000, z=-10000.000 } 
+double rpyJogIncrement=3.0
+boolean internal.holdingErrorOccured=false
+boolean internal.skipWrappedMessageCommands=true
 boolean internal.preClosing=false
-boolean internal.validateXmlSchema=true
+boolean internal.stepMode=false
 boolean internal.debugInterrupts=false
+boolean internal.validateXmlSchema=true
 boolean internal.ignoreTimeouts=false
 boolean internal.holdingObjectExpected=false
-boolean internal.useReadSoTimeout=true
-boolean internal.skipWrappedMessageCommands=true
-boolean internal.holdingErrorOccured=false
 boolean internal.quitOnTestCommandFailure=true
 boolean internal.debugConnectDisconnect=false
+boolean internal.useReadSoTimeout=true
 boolean internal.printDetailedCommandFailureInfo=false
+int internal.maxPoseListLength=1000
 java.lang.String internal.lastMessage=placePartByPose.approachPose.return
-crcl.base.CommandStateEnumType internal.commandState=CRCL_ERROR
+crcl.base.CommandStateEnumType internal.commandState=CRCL_DONE
 int internal.maxRecordCommandsCount=1000
-rcs.posemath.PmCartesian internal.minLimit= { x=+107.145, y=-282.153, z=-1000.000 } 
-rcs.posemath.PmCartesian internal.maxLimit= { x=+708.303, y=+267.723, z=+1000.000 } 
-double internal.jointTol=15.0
-crcl.base.AngleUnitEnumType internal.angleType=DEGREE
-double internal.jogRotSpeed=3.0
-double internal.xyzJogIncrement=100.0
-int internal.readStatusSoTimeout=3000
-# internal.getOutgoingProgramFile returned null or could not be invoked
-long internal.waitForDoneDelay=50
-int internal.lastProgramIndex=2
-double internal.jointJogIncrement=3.0
-int internal.maxLogSize=500
+rcs.posemath.PmCartesian internal.maxLimit= { x=+10000.000, y=+10000.000, z=+10000.000 } 
+rcs.posemath.PmCartesian internal.minLimit= { x=-10000.000, y=-10000.000, z=-10000.000 } 
 double internal.jogTransSpeed=100.0
-double internal.jogJointSpeed=10.0
 int internal.jogInterval=50
 int internal.poll_ms=50
-int internal.maxPoseListLength=1000
-java.lang.Integer internal.outgoingProgramLength=1
-double internal.jointMoveAccel=0.0
-double internal.jointMoveSpeed=0.0
+double internal.jogJointSpeed=10.0
+int internal.maxLogSize=500
 java.lang.Integer internal.outgoingProgramIndex=-1
+java.lang.Integer internal.outgoingProgramLength=19
+int internal.lastProgramIndex=20
+double internal.jointJogIncrement=3.0
+# internal.getOutgoingProgramFile returned null or could not be invoked
+long internal.waitForDoneDelay=50
+double internal.xyzJogIncrement=100.0
+int internal.readStatusSoTimeout=3000
+double internal.jogRotSpeed=3.0
+crcl.base.AngleUnitEnumType internal.angleType=DEGREE
+double internal.jointTol=15.0
 crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+double internal.jointMoveSpeed=0.0
+double internal.jointMoveAccel=0.0

@@ -1,2 +1,4 @@
 Holder Position Name,Contents,Possible Contents,Comment
 shared_gripper,small_vacuum,"small_vacuum,pincher",
+toolChangerPose1,small_vacuum,"small_vacuum,pincher",contents changed from empty on Tue Jun 29 16:19:59 EDT 2021
+toolChangerPose2,empty,"small_vacuum,pincher",contents changed from pincher on Tue Jun 29 16:20:12 EDT 2021
