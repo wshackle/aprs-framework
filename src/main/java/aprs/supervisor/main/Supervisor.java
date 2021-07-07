@@ -4735,7 +4735,7 @@ public class Supervisor {
 	}
     }
 
-    File completeScanOneInternal(AprsSystem aprsSys, List<PhysicalItem> teachItems) throws RuntimeException {
+    @Nullable File completeScanOneInternal(AprsSystem aprsSys, List<PhysicalItem> teachItems) throws RuntimeException {
 	logEvent("completeScanOneInternal aprsSys=" + aprsSys + ",teachItems=" + teachItems);
 	aprsSys.setCorrectionMode(correctionMode);
 	File actionListFile;
