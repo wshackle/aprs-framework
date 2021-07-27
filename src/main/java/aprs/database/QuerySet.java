@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 import static aprs.database.DbCsvBackup.executeQuery;
 import static aprs.misc.AprsCommonLogger.println;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import java.io.File;
 
 /**
  * The query set class implements methods to make various common database
@@ -48,6 +49,7 @@ public class QuerySet implements QuerySetInterface {
     private final @Nullable
     Connection dbConnection;
     private String expectQueryItemFormat = "'%s'";
+    private final @Nullable File sysQueriesDir;
 
     public String getExpectQueryItemFormat() {
         return expectQueryItemFormat;
@@ -90,7 +92,8 @@ public class QuerySet implements QuerySetInterface {
      * @param con database connection
      * @param queriesMap map of queries info
      * @param taskName task name used in error/debug messages
-     * @param useCsvFilesInsteadOfDatabase queries will use flat csv files instead of database
+     * @param useCsvFilesInsteadOfDatabase queries will use flat csv files
+     * instead of database
      * @throws SQLException if query fails
      */
     public QuerySet(
@@ -98,11 +101,13 @@ public class QuerySet implements QuerySetInterface {
             @Nullable Connection con,
             Map<DbQueryEnum, DbQueryInfo> queriesMap,
             String taskName,
-            boolean useCsvFilesInsteadOfDatabase) throws SQLException {
+            boolean useCsvFilesInsteadOfDatabase,
+            @Nullable File sysQueriesDir) throws SQLException {
         this.dbtype = dbtype;
         this.dbConnection = con;
         this.taskName = taskName;
         this.useCsvFilesInsteadOfDatabase = useCsvFilesInsteadOfDatabase;
+        this.sysQueriesDir = sysQueriesDir;
 //        if (null == con) {
 //            throw new IllegalArgumentException("connection is null");
 //        }
@@ -361,7 +366,6 @@ public class QuerySet implements QuerySetInterface {
 //        }
 //        return rs.getDouble(qname);
 //    }
-
     private @Nullable
     String getPoseQueryResultString(ResultSet rs, DbParamTypeEnum type) throws SQLException {
         return getQueryResultString(rs, getQueryInfo, type);
@@ -432,7 +436,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             //int c = 0;
             while (rs.next()) {
                 //c++;
@@ -460,7 +464,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             //int c = 0;
             while (rs.next()) {
                 //c++;
@@ -486,7 +490,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             if (rs.next()) {
                 return rs.getInt(1);
             } else {
@@ -510,7 +514,7 @@ public class QuerySet implements QuerySetInterface {
             println("name=" + name + ", simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getPartsTraysStatement, simQuery, "getPartsTrays_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getPartsTraysStatement, simQuery, "getPartsTrays_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             while (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -605,7 +609,7 @@ public class QuerySet implements QuerySetInterface {
             println("simQuery = " + simQuery);
         }
 
-        try (ResultSet rs = executeQuery(getSlotsStatement, simQuery, "getSlots_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getSlotsStatement, simQuery, "getSlots_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             while (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -715,7 +719,7 @@ public class QuerySet implements QuerySetInterface {
             }
             println("");
         }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -881,7 +885,6 @@ public class QuerySet implements QuerySetInterface {
 //            printer.close();
 //        }
 //    }
-
     public List<PhysicalItem> getAllNewParts(int visionCycleNewDiffThreshold) throws SQLException, IOException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
@@ -894,7 +897,7 @@ public class QuerySet implements QuerySetInterface {
         if (debug) {
             println("simQuery = " + simQuery);
         }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName, this.dbConnection == null)) {
+        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             if (rs.next()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 for (int j = 1; j <= meta.getColumnCount(); j++) {
@@ -1090,7 +1093,6 @@ public class QuerySet implements QuerySetInterface {
 //    private void setPoseQueryDoubleParam(DbParamTypeEnum type, BigDecimal value, Map<Integer, Object> map) throws SQLException {
 //        setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value.doubleValue(), map);
 //    }
-
     private void setPoseQueryDoubleParam(DbParamTypeEnum type, double value, Map<Integer, Object> map) throws SQLException {
         setQueryDoubleParam(setPoseStatement, setQueryInfo, type, value, map);
     }
@@ -1112,7 +1114,7 @@ public class QuerySet implements QuerySetInterface {
             throw new IllegalArgumentException("pose must not be null and must not have null point,xaxis or zaxis");
         }
         final PreparedStatement setPoseStatement1 = setPoseStatement;
-        if(null == setPoseStatement1) {
+        if (null == setPoseStatement1) {
             throw new NullPointerException("setPoseStatement");
         }
         setPoseStatement1.setString(1, name);

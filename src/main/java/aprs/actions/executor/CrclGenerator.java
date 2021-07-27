@@ -1000,7 +1000,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), true);
+                qs = new QuerySet(DbType.NONE, null, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), true, aprsSystem1.getSysQueriesDir());
                 return;
             }
             if (null != this.dbConnection && dbConnection != this.dbConnection) {
@@ -1019,7 +1019,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this.dbConnection = dbConnection;
             }
             if (null != dbConnection && null != dbSetup1) {
-                qs = new QuerySet(dbSetup1.getDbType(), dbConnection, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), false);
+                qs = new QuerySet(dbSetup1.getDbType(), dbConnection, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), false, aprsSystem.getSysQueriesDir());
             } else if (qs != null) {
                 qs.close();
             }
@@ -1070,7 +1070,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 if (qs != null) {
                     qs.close();
                 }
-                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), this.aprsSystem.isUseCsvFilesInsteadOfDatabase());
+                qs = new QuerySet(DbType.NONE, null, dbSetup.getQueriesMap(), aprsSystem.getTaskName(), this.aprsSystem.isUseCsvFilesInsteadOfDatabase(), aprsSystem.getSysQueriesDir());
             } catch (Exception ex) {
                 System.err.println("dbSetup=" + dbSetup);
                 System.err.println("dbSetup.getQueriesMap()=" + dbSetup.getQueriesMap());

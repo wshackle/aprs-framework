@@ -3216,6 +3216,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (checkResetReverseActionsFile()) {
                 return;
             }
+            if(pddlOutputActionsCachedText.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(parentComponent, "pddlOutputActionsCachedText is empty or blank, enter filename in field or use browse button.");
+                return;
+            }
             loadActionsFile(
                     new File(pddlOutputActionsCachedText.getText()), // File f, 
                     true, //  boolean showInOptaPlanner,

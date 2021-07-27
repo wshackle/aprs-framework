@@ -635,9 +635,15 @@ public class Object2DJPanel extends JPanel {
         opts.currentY = this.currentY;
         opts.defaultRotationOffset = this.rotationOffset;
         if (opts.w < 1 || opts.h < 1) {
-            opts.w = this.getSize().width;
-            opts.h = this.getSize().height;
-        }
+            final Dimension thisSize = this.getSize();
+            if(null == thisSize || thisSize.width < 100 || thisSize.height < 100) {
+                opts.w = 560;
+                opts.h = 682;
+            } else {
+                opts.w = thisSize.width;
+                opts.h = thisSize.height;
+            }
+        } 
         if (null == opts.backgroundColor) {
             opts.backgroundColor = this.getBackground();
         }

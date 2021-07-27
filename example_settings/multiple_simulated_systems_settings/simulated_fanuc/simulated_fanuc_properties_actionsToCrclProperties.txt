@@ -1,5 +1,6 @@
 #  Automatically saved 
 afterMoveToLookForDwellTime=0.1
+approachToolChangerZOffset=150.0
 approachZOffset=50.0
 defaultDwellTime=0.1
 doInspectKit=true
@@ -27,6 +28,7 @@ placePartSlotArgIndex=0
 placeZOffset=5.0
 positionMapFileNames=[]
 requireNewPoses=true
+requiredToolFile=
 reverseFlag=false
 rotSpeed=30.0
 rpy=180.0,0.0,-135
@@ -40,6 +42,7 @@ takeSnapshots=false
 takeZOffset=0.0
 testTransSpeed=50.0
 toolChangerDwellTime=0.25
+toolChangerPoseFile=/home/shackle/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties_actionsToCrclProperties.txt.toolChangerPoses.csv
 useEndPoseTolerance=true
 useJointLookFor=true
 useJointMovesForToolHolderApproach=false

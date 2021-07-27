@@ -104,7 +104,7 @@ public class DbSetupBuilder {
         for (DbQueryEnum q : DbQueryEnum.values()) {
             String resName = resDir + q.toString().toLowerCase() + ".txt";
             String txt = getStringResource(resName);
-            DbQueryInfo info = DbQueryInfo.parse(txt,resName);
+            DbQueryInfo info = DbQueryInfo.parse(txt, resName);
             map.put(q, info);
         }
         return map;
@@ -125,7 +125,7 @@ public class DbSetupBuilder {
         for (DbQueryEnum q : DbQueryEnum.values()) {
             String resName = resDir + File.separator + q.toString().toLowerCase() + ".txt";
             String txt = getStringFromFile(resName);
-            DbQueryInfo info = DbQueryInfo.parse(txt,resName);
+            DbQueryInfo info = DbQueryInfo.parse(txt, resName);
             map.put(q, info);
         }
         return map;
@@ -135,16 +135,34 @@ public class DbSetupBuilder {
         StringBuilder sb = new StringBuilder();
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         if (null != cl) {
+            boolean clstreamok = false;
             try (InputStream stream = cl.getResourceAsStream(name)) {
-                if (null == stream) {
-                    throw new IllegalArgumentException("No resource found for name=" + name);
-                }
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
-                    String line;
-                    while (null != (line = br.readLine())) {
-                        sb.append(line);
-                        sb.append(System.lineSeparator());
+                if (null != stream) {
+                    clstreamok = true;
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(stream, "UTF-8"))) {
+                        String line;
+                        while (null != (line = br.readLine())) {
+                            sb.append(line);
+                            sb.append(System.lineSeparator());
+                        }
                     }
+                }
+            }
+            if(!clstreamok) {
+                File f = new File(name);
+                if(!f.exists()) {
+                    f = new File("src/main/resources/",name);
+                }
+                if(f.exists()) {
+                    try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                        String line;
+                        while (null != (line = br.readLine())) {
+                            sb.append(line);
+                            sb.append(System.lineSeparator());
+                        }
+                    }
+                } else {
+                    throw new RuntimeException("Couldn't get resourceAsStream for name="+name+" or find file f="+f);
                 }
             }
         }
@@ -643,7 +661,7 @@ public class DbSetupBuilder {
             DbSetupBuilder builder = new DbSetupBuilder();
             return builder.updateFromArgs(argsMap);
         } else {
-            throw  new IllegalArgumentException("propertiesFile="+propertiesFile);
+            throw new IllegalArgumentException("propertiesFile=" + propertiesFile);
         }
     }
 
@@ -784,38 +802,38 @@ public class DbSetupBuilder {
 
                 case NEO4J:
                     try {
-                        Class<?> neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                        //println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
-                    } catch (ClassNotFoundException ex) {
-                        LOGGER.log(Level.SEVERE, "", ex);
-                    }
+                    Class<?> neo4jDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                    //println(" dynamic neo4jDriverClass = " + neo4jDriverClass);
+                } catch (ClassNotFoundException ex) {
+                    LOGGER.log(Level.SEVERE, "", ex);
+                }
 
-                    Properties properties = new Properties();
-                    properties.put("user", username);
-                    properties.put("password", password);
-                    String neo4j_url = "jdbc:neo4j:http://" + host + ":" + port;
-                    if (debug) {
-                        LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
-                        LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
-                        try {
-                            Class<?> neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
-                            LOGGER.log(Level.INFO, "neo4JDriverClass = {0}", neo4JDriverClass);
-                            ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
-                            LOGGER.log(Level.INFO, "neo4jDriverClassProdectionDomain = {0}", neo4jDriverClassProtectionDomain);
-                        } catch (ClassNotFoundException classNotFoundException) {
-                            classNotFoundException.printStackTrace();
-                        }
-                    }
+                Properties properties = new Properties();
+                properties.put("user", username);
+                properties.put("password", password);
+                String neo4j_url = "jdbc:neo4j:http://" + host + ":" + port;
+                if (debug) {
+                    LOGGER.log(Level.INFO, "neo4j_url = {0}", neo4j_url);
+                    LOGGER.log(Level.INFO, "Connection url = {0}", neo4j_url);
                     try {
-                        if (loginTimeout > 0) {
-                            DriverManager.setLoginTimeout(loginTimeout);
-                        }
-                        return DriverManager.getConnection(neo4j_url, properties);
-                    } catch (Exception ex) {
-                        System.err.println("dbtype="+dbtype+",host="+host+",port="+port+",db="+db+",username="+username);
-                        Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
-                        throw new RuntimeException(ex);
+                        Class<?> neo4JDriverClass = Class.forName("org.neo4j.jdbc.Driver");
+                        LOGGER.log(Level.INFO, "neo4JDriverClass = {0}", neo4JDriverClass);
+                        ProtectionDomain neo4jDriverClassProtectionDomain = neo4JDriverClass.getProtectionDomain();
+                        LOGGER.log(Level.INFO, "neo4jDriverClassProdectionDomain = {0}", neo4jDriverClassProtectionDomain);
+                    } catch (ClassNotFoundException classNotFoundException) {
+                        classNotFoundException.printStackTrace();
                     }
+                }
+                try {
+                    if (loginTimeout > 0) {
+                        DriverManager.setLoginTimeout(loginTimeout);
+                    }
+                    return DriverManager.getConnection(neo4j_url, properties);
+                } catch (Exception ex) {
+                    System.err.println("dbtype=" + dbtype + ",host=" + host + ",port=" + port + ",db=" + db + ",username=" + username);
+                    Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
+                    throw new RuntimeException(ex);
+                }
 
                 case NEO4J_BOLT:
                     throw new RuntimeException("Neo4J BOLT driver not supported.");
@@ -824,7 +842,7 @@ public class DbSetupBuilder {
 
             }
 
-        } catch (ClassNotFoundException ex) { 
+        } catch (ClassNotFoundException ex) {
             Logger.getLogger(DbSetupBuilder.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
