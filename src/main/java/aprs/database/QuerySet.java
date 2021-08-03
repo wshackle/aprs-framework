@@ -415,129 +415,122 @@ public class QuerySet implements QuerySetInterface {
         this.debug = debug;
     }
 
-    /**
-     * Get all parts_in_kt from the database
-     *
-     * @param name name of kit tray
-     * @return a list of all the parts that has "parts_in_kt" in their names
-     * @throws java.sql.SQLException if query fails
-     * @throws java.io.IOException csv files do not exist
-     */
-    public List<String> getAllPartsInKt(String name) throws SQLException, IOException {
-        ArrayList<String> partsInKtList = new ArrayList<>();
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-
-        Map<Integer, Object> map = new TreeMap<>();
-        setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
-        String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
-        if (debug) {
-            println("simQuery = " + simQuery);
-        }
-
-        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
-            //int c = 0;
-            while (rs.next()) {
-                //c++;
-                String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
-                //println("nameCheckString = " + nameCheckString);
-                if (null != nameCheckString) {
-                    partsInKtList.add(nameCheckString);
-                }
-            }
-        }
-        return partsInKtList;
-    }
-
-    public ArrayList<String> getAllPartsInPt(String name) throws SQLException, IOException {
-        ArrayList<String> partsInPtList = new ArrayList<>();
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-
-        Map<Integer, Object> map = new TreeMap<>();
-        setQueryStringParam(getAllPartsInPtStatement, getAllPartsInPtQueryInfo, DbParamTypeEnum.NAME, name, map);
-        String simQuery = createExpectedQueryString(getAllPartsInPtQueryInfo, map);
-
-        if (debug) {
-            println("simQuery = " + simQuery);
-        }
-
-        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
-            //int c = 0;
-            while (rs.next()) {
-                //c++;
-                String nameCheckString = getAllPartsInPtQueryResultString(rs, DbParamTypeEnum.NAME);
-                //println("nameCheckString = " + nameCheckString);
-                if (null != nameCheckString) {
-                    partsInPtList.add(nameCheckString);
-                }
-            }
-        }
-        return partsInPtList;
-    }
-
-    public int getPartDesignPartCount(String name) throws SQLException, IOException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getCountQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
-        setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
-        String simQuery = createExpectedQueryString(getCountQueryInfo, map);
-        if (debug) {
-            println("simQuery = " + simQuery);
-        }
-
-        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                throw new IllegalStateException("Database returned empty ResultSet for query to getPartDesignPartCount for name=" + name + ",\n   simQuery=" + simQuery);
-            }
-        }
-    }
-
+//    /**
+//     * Get all parts_in_kt from the database
+//     *
+//     * @param name name of kit tray
+//     * @return a list of all the parts that has "parts_in_kt" in their names
+//     * @throws java.sql.SQLException if query fails
+//     * @throws java.io.IOException csv files do not exist
+//     */
+//    public List<String> getAllPartsInKt(String name) throws SQLException, IOException {
+//        ArrayList<String> partsInKtList = new ArrayList<>();
+//        if (closed) {
+//            throw new IllegalStateException("QuerySet already closed.");
+//        }
+//
+//        Map<Integer, Object> map = new TreeMap<>();
+//        setQueryStringParam(getAllPartsInKtStatement, getAllPartsInKtQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        String simQuery = createExpectedQueryString(getAllPartsInKtQueryInfo, map);
+//        if (debug) {
+//            println("simQuery = " + simQuery);
+//        }
+//
+//        try (ResultSet rs = executeQuery(getAllPartsInKtStatement, simQuery, "getAllPartsInKT_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
+//            //int c = 0;
+//            while (rs.next()) {
+//                //c++;
+//                String nameCheckString = getAllPartsInKtQueryResultString(rs, DbParamTypeEnum.NAME);
+//                //println("nameCheckString = " + nameCheckString);
+//                if (null != nameCheckString) {
+//                    partsInKtList.add(nameCheckString);
+//                }
+//            }
+//        }
+//        return partsInKtList;
+//    }
+//    public ArrayList<String> getAllPartsInPt(String name) throws SQLException, IOException {
+//        ArrayList<String> partsInPtList = new ArrayList<>();
+//        if (closed) {
+//            throw new IllegalStateException("QuerySet already closed.");
+//        }
+//
+//        Map<Integer, Object> map = new TreeMap<>();
+//        setQueryStringParam(getAllPartsInPtStatement, getAllPartsInPtQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        String simQuery = createExpectedQueryString(getAllPartsInPtQueryInfo, map);
+//
+//        if (debug) {
+//            println("simQuery = " + simQuery);
+//        }
+//
+//        try (ResultSet rs = executeQuery(getAllPartsInPtStatement, simQuery, "getAllPartsInPt_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
+//            //int c = 0;
+//            while (rs.next()) {
+//                //c++;
+//                String nameCheckString = getAllPartsInPtQueryResultString(rs, DbParamTypeEnum.NAME);
+//                //println("nameCheckString = " + nameCheckString);
+//                if (null != nameCheckString) {
+//                    partsInPtList.add(nameCheckString);
+//                }
+//            }
+//        }
+//        return partsInPtList;
+//    }
+//    public int getPartDesignPartCount(String name) throws SQLException, IOException {
+//        if (closed) {
+//            throw new IllegalStateException("QuerySet already closed.");
+//        }
+//        Map<Integer, Object> map = new TreeMap<>();
+//        DbQueryInfo getCountQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_PARTDESIGN_PART_COUNT);
+//        setQueryStringParam(getPartDesignPartCountStatement, getCountQueryInfo, DbParamTypeEnum.NAME, name, map);
+//        String simQuery = createExpectedQueryString(getCountQueryInfo, map);
+//        if (debug) {
+//            println("simQuery = " + simQuery);
+//        }
+//
+//        try (ResultSet rs = executeQuery(getPartDesignPartCountStatement, simQuery, "getPartDesignPartCount_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
+//            if (rs.next()) {
+//                return rs.getInt(1);
+//            } else {
+//                throw new IllegalStateException("Database returned empty ResultSet for query to getPartDesignPartCount for name=" + name + ",\n   simQuery=" + simQuery);
+//            }
+//        }
+//    }
     public List<PartsTray> getPartsTrays(String name) throws SQLException, IOException {
         if (closed) {
             throw new IllegalStateException("QuerySet already closed.");
         }
 
-        debug = true;
+//        debug = true;
         List<PartsTray> list = new ArrayList<>();
         Map<Integer, Object> map = new TreeMap<>();
         setQueryStringParam(getPartsTraysStatement, getPartsTraysQueryInfo, DbParamTypeEnum.NAME, name, map);
         String simQuery = createExpectedQueryString(getPartsTraysQueryInfo, map);
 
         if (debug) {
-            println("name=" + name + ", simQuery = " + simQuery);
+            println("getPartsTrays: name=" + name + ", simQuery = " + simQuery);
         }
 
         try (ResultSet rs = executeQuery(getPartsTraysStatement, simQuery, "getPartsTrays_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
             while (rs.next()) {
-                ResultSetMetaData meta = rs.getMetaData();
-                for (int j = 1; j <= meta.getColumnCount(); j++) {
+                if (list.isEmpty()) {
                     if (debug) {
-                        println("j = " + j);
-                    }
-                    String cname = meta.getColumnName(j);
-                    if (debug) {
-                        println("cname = " + cname);
-                    }
-                    String type = meta.getColumnTypeName(j);
-                    if (debug) {
-                        println("type = " + type);
-                    }
-                    Object o = rs.getObject(j);
-                    if (debug) {
-                        println("o = " + o);
+                        ResultSetMetaData meta = rs.getMetaData();
+                        for (int j = 1; j <= meta.getColumnCount(); j++) {
+                            println("getPartsTrays: meta: j = " + j);
+                            String cname = meta.getColumnName(j);
+                            println("getPartsTrays: meta: cname = " + cname);
+                            String type = meta.getColumnTypeName(j);
+                            println("getPartsTrays: meta: type = " + type);
+                            Object o = rs.getObject(j);
+                            println("getPartsTrays: meta: o = " + o);
+                        }
                     }
                 }
 
                 String partsTrayName = getPartsTraysQueryResultString(rs, DbParamTypeEnum.NAME);
                 if (debug) {
-                    println("partsTrayName = " + partsTrayName);
+                    println("getPartsTrays: partsTrayName = " + partsTrayName);
                 }
                 if (null == partsTrayName) {
                     throw new IllegalStateException("result is missing name for query :" + simQuery);
@@ -547,7 +540,7 @@ public class QuerySet implements QuerySetInterface {
                 int id = getQueryResultInt(rs, getPartsTraysQueryInfo, DbParamTypeEnum.NODE_ID);
                 partstray.setNodeID(id);
                 if (debug) {
-                    println("id = " + id);
+                    println("getPartsTrays: id = " + id);
                 }
                 //-- getting design
                 String design = getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_DESIGN_NAME);
@@ -556,7 +549,7 @@ public class QuerySet implements QuerySetInterface {
                 }
                 partstray.setPartsTrayDesign(design);
                 if (debug) {
-                    println("design = " + design);
+                    println("getPartsTrays: design = " + design);
                 }
 
                 String sku = getPartsTraysQueryResultString(rs, DbParamTypeEnum.SKU_NAME);
@@ -565,7 +558,7 @@ public class QuerySet implements QuerySetInterface {
                 }
                 partstray.setPartsTraySku(sku);
                 if (debug) {
-                    println("sku = " + sku);
+                    println("getPartsTrays: sku = " + sku);
                 }
                 //-- gettig complete
                 String complete = trimQuotes(getPartsTraysQueryResultString(rs, DbParamTypeEnum.TRAY_COMPLETE));
@@ -587,7 +580,7 @@ public class QuerySet implements QuerySetInterface {
             }
         }
         if (debug) {
-            System.out.println("list = " + list);
+            System.out.println("getPartsTrays: list = " + list);
         }
         return list;
     }
@@ -691,175 +684,173 @@ public class QuerySet implements QuerySetInterface {
         return list;
     }
 
-    @Override
-    public @Nullable
-    PoseType getPose(String name) throws SQLException, IOException {
-        return getPose(name, false, 0);
-    }
-
+//    @Override
+//    public @Nullable
+//    PoseType getPose(String name) throws SQLException, IOException {
+//        return getPose(name, false, 0);
+//    }
     private final String taskName;
 
-    public @Nullable
-    PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException, IOException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        PoseType pose = new PoseType();
-        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getPoseQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_SINGLE_POSE);
-        setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
-
-        String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
-        if (debug) {
-            println("Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-            println("simQuery = \"\n" + simQuery + "\n\"\n");
-            if (null != dbConnection) {
-                String connectionUrl = dbConnection.getMetaData().getURL();
-                println("connectionUrl = " + connectionUrl);
-            }
-            println("");
-        }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
-            if (rs.next()) {
-                ResultSetMetaData meta = rs.getMetaData();
-                for (int j = 1; j <= meta.getColumnCount(); j++) {
-                    if (debug) {
-                        println("j = " + j);
-                    }
-                    String cname = meta.getColumnName(j);
-                    if (debug) {
-                        println("cname = " + cname);
-                    }
-                    String type = meta.getColumnTypeName(j);
-                    if (debug) {
-                        println("type = " + type);
-                    }
-                    Object o = rs.getObject(j);
-                    if (debug) {
-                        println("o = " + o);
-                    }
-                }
-                String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
-                if (debug) {
-                    println("nameCheckString = " + nameCheckString);
-                }
-                assert (null != nameCheckString) : "nameCheckString == null : @AssumeAssertion(nullness)";
-                assert (nameCheckString.equals(name)) :
-                        ("returned name " + nameCheckString + " does not match requested name " + name);
-
-                String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
-                if (debug) {
-                    println("xString = " + xString);
-                }
-                PointType point = new PointType();
-                double x = Double.parseDouble(xString);
-                point.setX(x);
-                String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
-                if (debug) {
-                    println("yString = " + yString);
-                }
-                double y = Double.parseDouble(yString);
-                point.setY(y);
-                String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
-                if (debug) {
-                    println("zString = " + zString);
-                }
-                if (null != zString) {
-                    double z = Double.parseDouble(zString);
-                    point.setZ(z);
-                } else {
-                    point.setZ(0.0);
-                }
-                pose.setPoint(point);
-                VectorType xAxis = new VectorType();
-                String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
-                if (debug) {
-                    println("vxiString = " + vxiString);
-                }
-                double vxi = Double.parseDouble(vxiString);
-                xAxis.setI(vxi);
-                String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
-                if (debug) {
-                    println("vxjString = " + vxjString);
-                }
-                double vxj = Double.parseDouble(vxjString);
-                xAxis.setJ(vxj);
-                String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
-                if (debug) {
-                    println("vxkString = " + vxkString);
-                }
-                double vxk = Double.parseDouble(vxkString);
-                xAxis.setK(vxk);
-                pose.setXAxis(xAxis);
-                VectorType zAxis = new VectorType();
-                String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
-                if (debug) {
-                    println("vziString = " + vziString);
-                }
-                double vzi = Double.parseDouble(vziString);
-                zAxis.setI(vzi);
-                String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
-                if (debug) {
-                    println("vziString = " + vzjString);
-                }
-                double vzj = Double.parseDouble(vzjString);
-                zAxis.setJ(vzj);
-                String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
-                if (debug) {
-                    println("vzkString = " + vzkString);
-                }
-                double vzk = Double.parseDouble(vzkString);
-                zAxis.setK(vzk);
-                pose.setZAxis(zAxis);
-                String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
-                int visionCycle = -1;
-                if (null != visionCycleString) {
-                    visionCycle = Integer.parseInt(visionCycleString);
-                }
-                if (debug) {
-                    println("visionCycleString = " + visionCycleString);
-                }
-                String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
-                int maxVisionCycle = -1;
-                if (null != maxVisionCycleString) {
-                    maxVisionCycle = Integer.parseInt(maxVisionCycleString);
-                }
-                if (debug) {
-                    println("maxVisionCycleString = " + maxVisionCycleString);
-                }
-
-                if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
-//                    printDebugUpdateResultsMap(name);
-                    if (debug) {
-                        println("returning null from getPose because (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold)  where maxVisionCycle=" + maxVisionCycle + ",visionCycle=" + visionCycle + ",visionCycleNewDiffThreshold=" + visionCycleNewDiffThreshold);
-                        println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-                        println("");
-                        Thread.dumpStack();
-                    }
-                    return null;
-                }
-            } else {
-                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
-            }
-            if (debug) {
-                println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
-                println("");
-            }
-//            if (rs.next()) {
-//                String nameCheckString = rs.getString(1);
-//                println("nameCheckString = " + nameCheckString);
-//                int count =1;
-//                while(rs.next()) {
-//                    println("rs.getString(1) = " + rs.getString(1));
-//                    count++;
-//                    println("count = " + count);
-//                }
-//                throw new IllegalStateException("More than one result for name=" + name);
+//    public @Nullable
+//    PoseType getPose(String name, boolean requireNew, int visionCycleNewDiffThreshold) throws SQLException, IOException {
+//        if (closed) {
+//            throw new IllegalStateException("QuerySet already closed.");
+//        }
+//        PoseType pose = new PoseType();
+//        Map<Integer, Object> map = new TreeMap<>();
+//        DbQueryInfo getPoseQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_SINGLE_POSE);
+//        setQueryStringParam(getPoseStatement, getPoseQueryInfo, DbParamTypeEnum.NAME, name, map);
+//
+//        String simQuery = createExpectedQueryString(getPoseQueryInfo, map);
+//        if (debug) {
+//            println("Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+//            println("simQuery = \"\n" + simQuery + "\n\"\n");
+//            if (null != dbConnection) {
+//                String connectionUrl = dbConnection.getMetaData().getURL();
+//                println("connectionUrl = " + connectionUrl);
 //            }
-        }
-        return pose;
-    }
-
+//            println("");
+//        }
+//        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getPose_" + name, taskName, this.dbConnection == null, this.sysQueriesDir)) {
+//            if (rs.next()) {
+//                ResultSetMetaData meta = rs.getMetaData();
+//                for (int j = 1; j <= meta.getColumnCount(); j++) {
+//                    if (debug) {
+//                        println("j = " + j);
+//                    }
+//                    String cname = meta.getColumnName(j);
+//                    if (debug) {
+//                        println("cname = " + cname);
+//                    }
+//                    String type = meta.getColumnTypeName(j);
+//                    if (debug) {
+//                        println("type = " + type);
+//                    }
+//                    Object o = rs.getObject(j);
+//                    if (debug) {
+//                        println("o = " + o);
+//                    }
+//                }
+//                String nameCheckString = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
+//                if (debug) {
+//                    println("nameCheckString = " + nameCheckString);
+//                }
+//                assert (null != nameCheckString) : "nameCheckString == null : @AssumeAssertion(nullness)";
+//                assert (nameCheckString.equals(name)) :
+//                        ("returned name " + nameCheckString + " does not match requested name " + name);
+//
+//                String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
+//                if (debug) {
+//                    println("xString = " + xString);
+//                }
+//                PointType point = new PointType();
+//                double x = Double.parseDouble(xString);
+//                point.setX(x);
+//                String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
+//                if (debug) {
+//                    println("yString = " + yString);
+//                }
+//                double y = Double.parseDouble(yString);
+//                point.setY(y);
+//                String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
+//                if (debug) {
+//                    println("zString = " + zString);
+//                }
+//                if (null != zString) {
+//                    double z = Double.parseDouble(zString);
+//                    point.setZ(z);
+//                } else {
+//                    point.setZ(0.0);
+//                }
+//                pose.setPoint(point);
+//                VectorType xAxis = new VectorType();
+//                String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
+//                if (debug) {
+//                    println("vxiString = " + vxiString);
+//                }
+//                double vxi = Double.parseDouble(vxiString);
+//                xAxis.setI(vxi);
+//                String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
+//                if (debug) {
+//                    println("vxjString = " + vxjString);
+//                }
+//                double vxj = Double.parseDouble(vxjString);
+//                xAxis.setJ(vxj);
+//                String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
+//                if (debug) {
+//                    println("vxkString = " + vxkString);
+//                }
+//                double vxk = Double.parseDouble(vxkString);
+//                xAxis.setK(vxk);
+//                pose.setXAxis(xAxis);
+//                VectorType zAxis = new VectorType();
+//                String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
+//                if (debug) {
+//                    println("vziString = " + vziString);
+//                }
+//                double vzi = Double.parseDouble(vziString);
+//                zAxis.setI(vzi);
+//                String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
+//                if (debug) {
+//                    println("vziString = " + vzjString);
+//                }
+//                double vzj = Double.parseDouble(vzjString);
+//                zAxis.setJ(vzj);
+//                String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
+//                if (debug) {
+//                    println("vzkString = " + vzkString);
+//                }
+//                double vzk = Double.parseDouble(vzkString);
+//                zAxis.setK(vzk);
+//                pose.setZAxis(zAxis);
+//                String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
+//                int visionCycle = -1;
+//                if (null != visionCycleString) {
+//                    visionCycle = Integer.parseInt(visionCycleString);
+//                }
+//                if (debug) {
+//                    println("visionCycleString = " + visionCycleString);
+//                }
+//                String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
+//                int maxVisionCycle = -1;
+//                if (null != maxVisionCycleString) {
+//                    maxVisionCycle = Integer.parseInt(maxVisionCycleString);
+//                }
+//                if (debug) {
+//                    println("maxVisionCycleString = " + maxVisionCycleString);
+//                }
+//
+//                if (requireNew && maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
+////                    printDebugUpdateResultsMap(name);
+//                    if (debug) {
+//                        println("returning null from getPose because (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold)  where maxVisionCycle=" + maxVisionCycle + ",visionCycle=" + visionCycle + ",visionCycleNewDiffThreshold=" + visionCycleNewDiffThreshold);
+//                        println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+//                        println("");
+//                        Thread.dumpStack();
+//                    }
+//                    return null;
+//                }
+//            } else {
+//                throw new IllegalStateException("Database returned empty ResultSet for query to getPose for name=" + name + ", simQuery=" + simQuery);
+//            }
+//            if (debug) {
+//                println("End Debuging getPose(" + name + "," + requireNew + "," + visionCycleNewDiffThreshold + ")");
+//                println("");
+//            }
+////            if (rs.next()) {
+////                String nameCheckString = rs.getString(1);
+////                println("nameCheckString = " + nameCheckString);
+////                int count =1;
+////                while(rs.next()) {
+////                    println("rs.getString(1) = " + rs.getString(1));
+////                    count++;
+////                    println("count = " + count);
+////                }
+////                throw new IllegalStateException("More than one result for name=" + name);
+////            }
+//        }
+//        return pose;
+//    }
 //    @SuppressWarnings("try")
 //    private static class QsResultSet implements AutoCloseable {
 //
@@ -885,148 +876,147 @@ public class QuerySet implements QuerySetInterface {
 //            printer.close();
 //        }
 //    }
-    public List<PhysicalItem> getAllNewParts(int visionCycleNewDiffThreshold) throws SQLException, IOException {
-        if (closed) {
-            throw new IllegalStateException("QuerySet already closed.");
-        }
-        PoseType pose = new PoseType();
-        Map<Integer, Object> map = new TreeMap<>();
-        DbQueryInfo getAllNewPoseQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_ALL_NEW_POSE);
-        List<PhysicalItem> ret = new ArrayList<>();
-        String simQuery = createExpectedQueryString(getAllNewPoseQueryInfo, map);
-        if (debug) {
-            println("simQuery = " + simQuery);
-        }
-        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName, this.dbConnection == null, this.sysQueriesDir)) {
-            if (rs.next()) {
-                ResultSetMetaData meta = rs.getMetaData();
-                for (int j = 1; j <= meta.getColumnCount(); j++) {
-                    if (debug) {
-                        println("j = " + j);
-                    }
-                    String cname = meta.getColumnName(j);
-                    if (debug) {
-                        println("cname = " + cname);
-                    }
-                    String type = meta.getColumnTypeName(j);
-                    if (debug) {
-                        println("type = " + type);
-                    }
-                    Object o = rs.getObject(j);
-                    if (debug) {
-                        println("o = " + o);
-                    }
-                }
-                String name = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
-                if (debug) {
-                    println("nameCheckString = " + name);
-                }
-                if (name == null) {
-                    throw new IllegalStateException("Query result has null name");
-                }
-                String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
-                if (debug) {
-                    println("xString = " + xString);
-                }
-                PointType point = new PointType();
-                double x = Double.parseDouble(xString);
-                point.setX(x);
-                String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
-                if (debug) {
-                    println("yString = " + yString);
-                }
-                double y = Double.parseDouble(yString);
-                point.setY(y);
-                String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
-                if (debug) {
-                    println("zString = " + zString);
-                }
-                if (null != zString) {
-                    double z = Double.parseDouble(zString);
-                    point.setZ(z);
-                } else {
-                    point.setZ(0.0);
-                }
-                pose.setPoint(point);
-                VectorType xAxis = new VectorType();
-                String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
-                if (debug) {
-                    println("vxiString = " + vxiString);
-                }
-                double vxi = Double.parseDouble(vxiString);
-                xAxis.setI(vxi);
-                String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
-                if (debug) {
-                    println("vxjString = " + vxjString);
-                }
-                double vxj = Double.parseDouble(vxjString);
-                xAxis.setJ(vxj);
-                String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
-                if (debug) {
-                    println("vxkString = " + vxkString);
-                }
-                double vxk = Double.parseDouble(vxkString);
-                xAxis.setK(vxk);
-                pose.setXAxis(xAxis);
-                VectorType zAxis = new VectorType();
-                String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
-                if (debug) {
-                    println("vziString = " + vziString);
-                }
-                double vzi = Double.parseDouble(vziString);
-                zAxis.setI(vzi);
-                String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
-                if (debug) {
-                    println("vziString = " + vzjString);
-                }
-                double vzj = Double.parseDouble(vzjString);
-                zAxis.setJ(vzj);
-                String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
-                if (debug) {
-                    println("vzkString = " + vzkString);
-                }
-                double vzk = Double.parseDouble(vzkString);
-                zAxis.setK(vzk);
-                pose.setZAxis(zAxis);
-                String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
-                int visionCycle = -1;
-                if (null != visionCycleString) {
-                    visionCycle = Integer.parseInt(visionCycleString);
-                }
-                if (debug) {
-                    println("visionCycleString = " + visionCycleString);
-                }
-                String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
-                int maxVisionCycle = -1;
-                if (null != maxVisionCycleString) {
-                    maxVisionCycle = Integer.parseInt(maxVisionCycleString);
-                }
-                if (debug) {
-                    println("maxVisionCycleString = " + maxVisionCycleString);
-                }
-                if (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
-                    return Collections.emptyList();
-                }
-                PhysicalItem item = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, pose, visionCycle);
-                ret.add(item);
-            } else {
-                throw new IllegalStateException("Database returned empty ResultSet for query to getAllNewParts, simQuery=" + simQuery);
-            }
+//    public List<PhysicalItem> getAllNewParts(int visionCycleNewDiffThreshold) throws SQLException, IOException {
+//        if (closed) {
+//            throw new IllegalStateException("QuerySet already closed.");
+//        }
+//        PoseType pose = new PoseType();
+//        Map<Integer, Object> map = new TreeMap<>();
+//        DbQueryInfo getAllNewPoseQueryInfo = queryMap(queriesMap, DbQueryEnum.GET_ALL_NEW_POSE);
+//        List<PhysicalItem> ret = new ArrayList<>();
+//        String simQuery = createExpectedQueryString(getAllNewPoseQueryInfo, map);
+//        if (debug) {
+//            println("simQuery = " + simQuery);
+//        }
+//        try (ResultSet rs = executeQuery(getPoseStatement, simQuery, "getAllNewParts_" + visionCycleNewDiffThreshold, taskName, this.dbConnection == null, this.sysQueriesDir)) {
 //            if (rs.next()) {
-//                String nameCheckString = rs.getString(1);
-//                println("nameCheckString = " + nameCheckString);
-//                int count =1;
-//                while(rs.next()) {
-//                    println("rs.getString(1) = " + rs.getString(1));
-//                    count++;
-//                    println("count = " + count);
+//                ResultSetMetaData meta = rs.getMetaData();
+//                for (int j = 1; j <= meta.getColumnCount(); j++) {
+//                    if (debug) {
+//                        println("j = " + j);
+//                    }
+//                    String cname = meta.getColumnName(j);
+//                    if (debug) {
+//                        println("cname = " + cname);
+//                    }
+//                    String type = meta.getColumnTypeName(j);
+//                    if (debug) {
+//                        println("type = " + type);
+//                    }
+//                    Object o = rs.getObject(j);
+//                    if (debug) {
+//                        println("o = " + o);
+//                    }
 //                }
-//                throw new IllegalStateException("More than one result for name=" + name);
+//                String name = getPoseQueryResultString(rs, DbParamTypeEnum.NAME);
+//                if (debug) {
+//                    println("nameCheckString = " + name);
+//                }
+//                if (name == null) {
+//                    throw new IllegalStateException("Query result has null name");
+//                }
+//                String xString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.X));
+//                if (debug) {
+//                    println("xString = " + xString);
+//                }
+//                PointType point = new PointType();
+//                double x = Double.parseDouble(xString);
+//                point.setX(x);
+//                String yString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Y));
+//                if (debug) {
+//                    println("yString = " + yString);
+//                }
+//                double y = Double.parseDouble(yString);
+//                point.setY(y);
+//                String zString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.Z));
+//                if (debug) {
+//                    println("zString = " + zString);
+//                }
+//                if (null != zString) {
+//                    double z = Double.parseDouble(zString);
+//                    point.setZ(z);
+//                } else {
+//                    point.setZ(0.0);
+//                }
+//                pose.setPoint(point);
+//                VectorType xAxis = new VectorType();
+//                String vxiString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXI));
+//                if (debug) {
+//                    println("vxiString = " + vxiString);
+//                }
+//                double vxi = Double.parseDouble(vxiString);
+//                xAxis.setI(vxi);
+//                String vxjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXJ));
+//                if (debug) {
+//                    println("vxjString = " + vxjString);
+//                }
+//                double vxj = Double.parseDouble(vxjString);
+//                xAxis.setJ(vxj);
+//                String vxkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VXK));
+//                if (debug) {
+//                    println("vxkString = " + vxkString);
+//                }
+//                double vxk = Double.parseDouble(vxkString);
+//                xAxis.setK(vxk);
+//                pose.setXAxis(xAxis);
+//                VectorType zAxis = new VectorType();
+//                String vziString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZI));
+//                if (debug) {
+//                    println("vziString = " + vziString);
+//                }
+//                double vzi = Double.parseDouble(vziString);
+//                zAxis.setI(vzi);
+//                String vzjString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZJ));
+//                if (debug) {
+//                    println("vziString = " + vzjString);
+//                }
+//                double vzj = Double.parseDouble(vzjString);
+//                zAxis.setJ(vzj);
+//                String vzkString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VZK));
+//                if (debug) {
+//                    println("vzkString = " + vzkString);
+//                }
+//                double vzk = Double.parseDouble(vzkString);
+//                zAxis.setK(vzk);
+//                pose.setZAxis(zAxis);
+//                String visionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.VISIONCYCLE));
+//                int visionCycle = -1;
+//                if (null != visionCycleString) {
+//                    visionCycle = Integer.parseInt(visionCycleString);
+//                }
+//                if (debug) {
+//                    println("visionCycleString = " + visionCycleString);
+//                }
+//                String maxVisionCycleString = trimQuotes(getPoseQueryResultString(rs, DbParamTypeEnum.MAX_VISIONCYCLE));
+//                int maxVisionCycle = -1;
+//                if (null != maxVisionCycleString) {
+//                    maxVisionCycle = Integer.parseInt(maxVisionCycleString);
+//                }
+//                if (debug) {
+//                    println("maxVisionCycleString = " + maxVisionCycleString);
+//                }
+//                if (maxVisionCycle > visionCycle + visionCycleNewDiffThreshold) {
+//                    return Collections.emptyList();
+//                }
+//                PhysicalItem item = PhysicalItem.newPhysicalItemNamePoseVisionCycle(name, pose, visionCycle);
+//                ret.add(item);
+//            } else {
+//                throw new IllegalStateException("Database returned empty ResultSet for query to getAllNewParts, simQuery=" + simQuery);
 //            }
-        }
-        return ret;
-    }
-
+////            if (rs.next()) {
+////                String nameCheckString = rs.getString(1);
+////                println("nameCheckString = " + nameCheckString);
+////                int count =1;
+////                while(rs.next()) {
+////                    println("rs.getString(1) = " + rs.getString(1));
+////                    count++;
+////                    println("count = " + count);
+////                }
+////                throw new IllegalStateException("More than one result for name=" + name);
+////            }
+//        }
+//        return ret;
+//    }
     @Override
     public void close() {
         try {

@@ -32,7 +32,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @SuppressWarnings("RedundantThrows")
 interface QuerySetInterface extends AutoCloseable{
     
-    @Nullable PoseType getPose(String name) throws  Exception;
+//    @Nullable PoseType getPose(String name) throws  Exception;
     
     public void setPose(String name, PoseType pose) throws Exception;
     

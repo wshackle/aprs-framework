@@ -1327,17 +1327,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel5)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jLabel8)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jLabel9)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStopRandomTest)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonRecordLookForJoints))
@@ -1436,7 +1436,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1560,7 +1560,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
                     .addGap(42, 42, 42)
-                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
                     .addContainerGap()))
         );
 
@@ -1617,7 +1617,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonAddTrayAttach)
                     .addComponent(jButtonDeleteTrayAttach))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
+                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1716,7 +1716,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonDeleteToolHolderPose)
                     .addComponent(jButtonAddToolHolderPose)
                     .addComponent(jButtonRenameToolHolderPose))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 7, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1791,7 +1791,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonAddPartToToolEntry)
                     .addComponent(jButtonDeletePartToToolEntry))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 217, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel16)
@@ -1869,7 +1869,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jLabel21)
                     .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
+                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 349, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1932,7 +1932,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 363, Short.MAX_VALUE)
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonErrMapGoIn)
@@ -1963,15 +1963,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jTabbedPane1.addTab("Error Map", jPanelContainerPositionMap);
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {new Integer(1), null},
-                        {new Integer(2), null},
-                        {new Integer(3), null},
-                        {new Integer(4), null}
-                },
-                new String[]{
-                        "ID", "Text"
-                }
+            new Object [][] {
+                { new Integer(1), null},
+                { new Integer(2), null},
+                { new Integer(3), null},
+                { new Integer(4), null}
+            },
+            new String [] {
+                "ID", "Text"
+            }
         ) {
             Class[] types = new Class [] {
                 java.lang.Integer.class, java.lang.String.class
@@ -2003,7 +2003,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelCrclLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -2068,7 +2068,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jPanelContainerPoseCacheLayout.setVerticalGroup(
             jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
-                .addContainerGap(405, Short.MAX_VALUE)
+                .addContainerGap(274, Short.MAX_VALUE)
                 .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonClearPoseCache)
                     .addComponent(jButtonUpdatePoseCache))
@@ -2076,7 +2076,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
                     .addGap(38, 38, 38)))
         );
 
@@ -2109,7 +2109,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
             opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 424, Short.MAX_VALUE)
+            .addGap(0, 293, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
@@ -2296,12 +2296,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane4)
-                    .addGroup(layout.createSequentialGroup()
+                    .addComponent(jTabbedPane1)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jButtonPause)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonStep)
@@ -2320,7 +2320,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonAbort)
                         .addGap(11, 11, 11))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel6)
@@ -2360,9 +2360,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     .addComponent(jButtonPddlOutputViewEdit)
                     .addComponent(jButtonClear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 512, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 381, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxNeedLookFor)
@@ -3216,7 +3216,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (checkResetReverseActionsFile()) {
                 return;
             }
-            if(pddlOutputActionsCachedText.getText().isEmpty()) {
+            if (pddlOutputActionsCachedText.getText().isEmpty()) {
                 JOptionPane.showMessageDialog(parentComponent, "pddlOutputActionsCachedText is empty or blank, enter filename in field or use browse button.");
                 return;
             }
@@ -3953,7 +3953,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (!cancelSafeAbortFutures) {
             try {
                 if (crclGenerator.isTakeSnapshots() && aprsSystem.snapshotsEnabled()) {
-                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG",aprsSystem.getLogImageDir()), null, "");
+                    takeSimViewSnapshot(aprsSystem.createTempFile("-safe-abort-", ".PNG", aprsSystem.getLogImageDir()), null, "");
                 }
             } catch (IOException iOException) {
                 iOException.printStackTrace();
@@ -4140,9 +4140,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
             aprsSystem.immediateAbort()
                     .thenCompose(() -> {
-                                aprsSystem.clearErrors();
-                                return aprsSystem.reset();
-                            })
+                        aprsSystem.clearErrors();
+                        return aprsSystem.reset();
+                    })
                     .thenRun(() -> {
                         aprsSystem.resume();
                         if (!aprsSystem.isConnected()) {
@@ -4552,12 +4552,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonGenerateAndRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonGenerateAndRunActionPerformed
         try {
-            stepping = false;
-            setReplanFromIndex(0);
-            autoStart = true;
-            replanCachedCheckBox.setSelected(true);
+//            stepping = false;
+//            setReplanFromIndex(0);
+//            autoStart = true;
+//            replanCachedCheckBox.setSelected(true);
+//            cancelRunProgramFuture();
+//            setRunProgramFuture(generateCrclAsync());
             cancelRunProgramFuture();
-            setRunProgramFuture(generateCrclAsync());
+            incSafeAbortRequestCount();
+            aprsSystem.getRunProgramService().submit(() -> {
+                final int safeAbortRequestCount1 = getSafeAbortRequestCount();
+                doActions("runButtonPressed_" +safeAbortRequestCount1+"_" + jTextFieldPddlOutputActions.getText(), safeAbortRequestCount1, Thread.currentThread().getStackTrace());
+            });
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -5797,7 +5803,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonDropToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDropToolActionPerformed
         try {
-            if(notReadyForToolOperation()) return;
+            if (notReadyForToolOperation()) {
+                return;
+            }
             setSelectedManualObjectName();
             setReplanFromIndex(0);
             abortProgram();
@@ -5862,7 +5870,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonPickupToolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPickupToolActionPerformed
         try {
-            if(notReadyForToolOperation()) return;
+            if (notReadyForToolOperation()) {
+                return;
+            }
             if (null != currentPart) {
                 manualObjectCachedComboBox.setSelectedItem(currentPart);
             }
@@ -7434,6 +7444,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void syncCrclGeneratorPositionMaps() {
         if (isRunningProgram()) {
+            boolean origDebug = debug;
+            setDebug(true);
+            debugAction();
+            setDebug(origDebug);
             throw new IllegalStateException("Attempting to change position maps when program running. runningProgramFuture=" + runningProgramFuture);
         }
         crclGenerator.setPositionMaps(getPositionMaps());
@@ -8354,7 +8368,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         && !name.equals(MANUAL_PART_NAMES)
                         && !name.equals(MANUAL_SLOT_NAMES)) {
                     final String propertyValue = props.getProperty(name);
-                    if(null != propertyValue) {
+                    if (null != propertyValue) {
                         setOptionsTableValue(name, propertyValue);
                     } else {
                         setOptionsTableValue(name, "");
@@ -8486,16 +8500,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             toolPickupByToolMenu.setEnabled(true);
             for (String holderName : fullToolChangerNames) {
                 JMenuItem holderMi = new JMenuItem(holderName);
-                holderMi.addActionListener(e -> { 
-            handlePickupToolByHolderMenuItem(holderName);
-                        });
+                holderMi.addActionListener(e -> {
+                    handlePickupToolByHolderMenuItem(holderName);
+                });
                 toolPickupByHolderMenu.add(holderMi);
                 String toolName = crclGenerator.getExpectedToolHolderContentsMap().get(holderName);
                 if (null != toolName) {
                     JMenuItem toolMi = new JMenuItem(toolName);
                     toolMi.addActionListener(e -> {
                         handlePickupToolByToolMenuItem(toolName);
-                            });
+                    });
                     toolPickupByToolMenu.add(toolMi);
                 }
             }
@@ -8519,14 +8533,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 JMenuItem switchToolMi = new JMenuItem(toolName);
                 switchToolMi.addActionListener(e -> {
                     handleSwitchToolMenuItem(toolName);
-                        });
+                });
                 toolSwitchToolMenu.add(switchToolMi);
             }
         }
     }
 
     private void handlePickupToolByHolderMenuItem(String holderName) throws HeadlessException {
-        if(notReadyForToolOperation()) return;
+        if (notReadyForToolOperation()) {
+            return;
+        }
         pickupToolByHolder(holderName);
     }
 
@@ -8547,17 +8563,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private void handleSwitchToolMenuItem(String toolName) throws HeadlessException {
-        if(notReadyForToolOperation()) return;
+        if (notReadyForToolOperation()) {
+            return;
+        }
         switchTool(toolName);
     }
 
     private void handlePickupToolByToolMenuItem(String toolName) throws HeadlessException {
-        if(notReadyForToolOperation()) return;
+        if (notReadyForToolOperation()) {
+            return;
+        }
         pickupToolByTool(toolName);
     }
 
     private void handleDropByHolderMenuItem(String holderName) throws HeadlessException {
-        if(notReadyForToolOperation()) return;
+        if (notReadyForToolOperation()) {
+            return;
+        }
         dropToolByHolder(holderName);
     }
 

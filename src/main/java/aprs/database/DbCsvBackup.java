@@ -48,6 +48,8 @@ public class DbCsvBackup {
 
     public static final boolean debug = false;
 
+    private static volatile @Nullable File dirLogFile = null;
+    
     static public ResultSet executeQuery(
             @Nullable PreparedStatement preparedStatement,
             @Nullable String simQuery,
@@ -67,6 +69,12 @@ public class DbCsvBackup {
             return preparedStatement.executeQuery();
         } else {
             throw new IllegalArgumentException("Either sysQueriesDir or preparedStatement must not be null");
+        }
+        if(dirLogFile ==null) {
+            dirLogFile = File.createTempFile("aprs_db_dir_log_", ".txt");
+        }
+        try(PrintWriter pw =new PrintWriter( new FileWriter(dirLogFile,true))) {
+            pw.println(dir.getCanonicalPath());
         }
         final File resultsFile;
         final File queryFile;

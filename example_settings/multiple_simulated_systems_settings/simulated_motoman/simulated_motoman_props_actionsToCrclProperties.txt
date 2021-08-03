@@ -24,6 +24,7 @@ lookForJoints=502.544,66.405,19.167,180,-0.0,0.0
 lookForXYZ=240,435,-165
 partToolFile=/home/shackle/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_motoman/simulated_motoman_props_actionsToCrclProperties.txt.partTool.csv
 pauseInsteadOfRecover=true
+pddl.output=../../../example_pddl/motoman_move_one_large_gear.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_motoman_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0

@@ -23,6 +23,7 @@ lookDwellTime=0.1
 lookForJoints=282.955, 31.896, -39.505, -180, 0, -135.0 
 lookForXYZ=150,80,180
 pauseInsteadOfRecover=true
+pddl.output=../../../example_pddl/fanuc_move_one_large_gear.txt
 pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
