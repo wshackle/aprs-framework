@@ -13,19 +13,19 @@ public class Custom implements Consumer<AprsSupervisorDisplayJFrame> {
         // PUT YOUR CODE HERE:\n"
 
         // For example
-//        try {
-//            final AprsSystem fanucSys = supervisor.getSysByTask("Fanuc Cart");
-//            final AprsSystem motomanSys = supervisor.getSysByTask("Shared Table");
-//            System.out.println("fanucSys = " + fanucSys);
-//            System.out.println("motomanSys = " + motomanSys);
-//            fanucSys.loadActionsFile(new File("example_pddl/fanuc_move_one_large_gear.txt"), false, false, true);
-//            motomanSys.loadActionsFile(new File("example_pddl/motoman_move_one_large_gear.txt"), false, false, true);
-//            fanucSys.connectRobot()
-//                    .thenCompose(x -> fanucSys.startActions("firstStep", false))
-//                    .thenCompose(x -> motomanSys.connectRobot())
-//                    .thenCompose(x -> motomanSys.startActions("secondStep", false));
-//        } catch (IOException iOException) {
-//            iOException.printStackTrace();
-//        }
+        try {
+            final AprsSystem fanucSys = supervisor.getSysByTask("Fanuc Cart");
+            final AprsSystem motomanSys = supervisor.getSysByTask("Shared Table");
+            System.out.println("fanucSys = " + fanucSys);
+            System.out.println("motomanSys = " + motomanSys);
+            fanucSys.loadActionsFile(new File("example_pddl/fanuc_move_one_large_gear.txt"), false, false, true);
+            motomanSys.loadActionsFile(new File("example_pddl/motoman_move_one_large_gear.txt"), false, false, true);
+            fanucSys.connectRobot()
+                    .thenCompose(x -> fanucSys.startActions("firstStep", false))
+                    .thenCompose(x -> motomanSys.connectRobot())
+                    .thenCompose(x -> motomanSys.startActions("secondStep", false));
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        }
     }
 }
