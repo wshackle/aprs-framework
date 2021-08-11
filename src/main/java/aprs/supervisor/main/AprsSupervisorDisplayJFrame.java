@@ -103,7 +103,7 @@ import static crcl.utils.CRCLUtils.requireNonNull;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings({"all", "serial"})
-class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
+public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @MonotonicNonNull
     Supervisor supervisor = null;
@@ -1100,7 +1100,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        supervisor.printReturnRobotTraceInfo();
 //    }
-
     //    private XFuture<@Nullable Void> returnRobots(String comment) {
 //        if (null == supervisor) {
 //            throw new IllegalStateException("null == supervisor");
@@ -1241,7 +1240,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        supervisor.setFirstEventTime(firstEventTime);
 //    }
-
     private long getAbortEventTime() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -1326,7 +1324,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //            runTimeTimer.start();
 //        }
 //    }
-
     public void updateRunningTime() {
         try {
             if (getFirstEventTime() > 0 && !jCheckBoxMenuItemPause.isSelected()) {
@@ -1495,6 +1492,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemContinuousDemoRevFirst = new javax.swing.JCheckBoxMenuItem();
         jMenuItemScanAll = new javax.swing.JMenuItem();
         jMenuItemLookForPartsAll = new javax.swing.JMenuItem();
+        jMenuItemStep = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
         jCheckBoxMenuItemPause = new javax.swing.JCheckBoxMenuItem();
         jMenuOptions = new javax.swing.JMenu();
         jCheckBoxMenuItemDisableTextPopups = new javax.swing.JCheckBoxMenuItem();
@@ -1514,6 +1513,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemKeepDisabled = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSkipDisabled = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemBlockTransfers = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemSingleStep = new javax.swing.JCheckBoxMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -2335,6 +2335,16 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuActions.add(jMenuItemLookForPartsAll);
 
+        jMenuItemStep.setText("Step");
+        jMenuItemStep.setEnabled(false);
+        jMenuItemStep.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemStepActionPerformed(evt);
+            }
+        });
+        jMenuActions.add(jMenuItemStep);
+        jMenuActions.add(jSeparator3);
+
         jCheckBoxMenuItemPause.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PAUSE, 0));
         jCheckBoxMenuItemPause.setText("Pause");
         jCheckBoxMenuItemPause.addActionListener(new java.awt.event.ActionListener() {
@@ -2462,6 +2472,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemBlockTransfers);
+
+        jCheckBoxMenuItemSingleStep.setText("Single Step");
+        jCheckBoxMenuItemSingleStep.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemSingleStepActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemSingleStep);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -3117,7 +3135,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //            printStatus(xf, ps);
 //        }
 //    }
-
     private static void printStatus(@Nullable XFuture<?> xf, PrintStream ps) {
         if (null != xf) {
             xf.printStatus(ps);
@@ -3798,7 +3815,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        return supervisor.getRandom();
 //    }
-
     private void setRandom(Random random) {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -3888,7 +3904,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        return Utils.getAprsUserHomeDir();
 //    }
-
     @UIEffect
     private void jMenuItemSaveAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAllActionPerformed
         saveAll();
@@ -3957,16 +3972,45 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jComboBoxTeachSystemViewActionPerformed
 
-    private final String INIT_CUSTOM_CODE = "package custom;\n"
-            + "import aprs.framework.*; \n"
-            + "import java.util.function.Consumer;\n\n"
-            + "public class Custom\n\timplements Consumer<AprsSupervisorJFrame> {\n"
-            + "\tpublic void accept(AprsSupervisorJFrame sup) {\n"
-            + "\t\t// PUT YOUR CODE HERE:\n"
-            + "\t\tprintln(\"sys = \"+sup.getSysByTask(\"Fanuc Cart\"));"
-            + "\t}\n"
-            + "}\n";
+    private final static String INIT_CUSTOM_CODE = getCustomCodeInitDefault();
 
+    private static InputStream getResourceStream(String name) throws IOException {
+        InputStream systemResourceAsStream = ClassLoader.getSystemResourceAsStream(name);
+        if (null == systemResourceAsStream) {
+            systemResourceAsStream = new FileInputStream("src/main/resources/" + name);
+        }
+        return systemResourceAsStream;
+    }
+
+    private static String getCustomCodeInitDefault() {
+        StringBuilder sb = new StringBuilder();
+        try (InputStream systemResourceAsStream = getResourceStream("custom/Custom.java")) {
+            if (null != systemResourceAsStream) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(systemResourceAsStream))) {
+                    String line = null;
+                    while (null != (line = br.readLine())) {
+                        sb.append(line);
+                        sb.append("\n");
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return sb.toString();
+    }
+
+    //            = "package custom;\n"
+    //            + "import aprs.supervisor.main.*; \n"
+    //            + "import java.util.function.Consumer;\n\n"
+    //            + "public class Custom\n\timplements Consumer<AprsSupervisorDisplayJFrame> {\n"
+    //            + "\tpublic void accept(AprsSupervisorDisplayJFrame supDisplay) {\n"
+    //            + "\t\t// PUT YOUR CODE HERE:\n"
+    //            + "\t\tSystem.out.println(\"sys = \"+supDisplay.getSupervisor().getSysByTask(\"Fanuc Cart\"));"
+    //            + "\t}\n"
+    //            + "}\n";
     private String customCode = INIT_CUSTOM_CODE;
 
     @UIEffect
@@ -4075,7 +4119,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid prepInteractiveStart(String actionName, int isn, final String blockerName) {
-        final Supervisor supervisorLocal = requireNonNull(supervisor,"supervisor");
+        final Supervisor supervisorLocal = requireNonNull(supervisor, "supervisor");
         AprsSystem sysArray[] = supervisorLocal.getAprsSystems().toArray(new AprsSystem[0]);
         logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
         supervisorLocal.setResetting(true);
@@ -4172,7 +4216,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private <T> XFuture<@Nullable T> supplyActionFuture(String actionName, Supplier<XFuture<T>> supplier) throws HeadlessException {
-        final Supervisor supervisorLocal = requireNonNull(supervisor,"supervisor");
+        final Supervisor supervisorLocal = requireNonNull(supervisor, "supervisor");
         supervisorLocal.setResetting(true);
         disableRobotTableModelListener();
         if (!supervisorLocal.isKeepDisabled() && !jCheckBoxMenuItemKeepDisabled.isSelected()) {
@@ -4202,7 +4246,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid dispatchAction(String actionName, Runnable runnable) {
-        final Supervisor supervisorLocal = requireNonNull(supervisor,"supervisor");
+        final Supervisor supervisorLocal = requireNonNull(supervisor, "supervisor");
         return Utils.runOnDispatchThread(
                 "interactivStart(" + actionName + ")confirmContinue",
                 () -> {
@@ -4317,14 +4361,42 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jTreeSelectedFutureValueChanged
 
     private void jMenuItemSetConveyorViewCloneSystemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
-        Supervisor supervisorLocal = requireNonNull(this.supervisor,"supervisor");
-        String taskName = JOptionPane.showInputDialog("System View to clone for conveyor");
+        Supervisor supervisorLocal = requireNonNull(this.supervisor, "supervisor");
+        final String[] taskArray
+                = supervisorLocal.getTaskArray();
+        if (taskArray.length < 1) {
+            JOptionPane.showMessageDialog(this, "No tasks available");
+            return;
+        }
+        int taskIndex
+                = (taskArray.length == 1)
+                        ? 0
+                        : JOptionPane.showOptionDialog(
+                                this, // paparentComponent
+                                "System View to clone for conveyor", // message
+                                "", // title
+                                JOptionPane.DEFAULT_OPTION, // optionType
+                                JOptionPane.QUESTION_MESSAGE, // messageType
+                                null, //icon
+                                taskArray, // options);
+                                taskArray[0] // initialValue
+                        );
+        if (taskIndex < 0 || taskIndex >= taskArray.length) {
+            return;
+        }
+        String taskName = taskArray[taskIndex];
         supervisorLocal.setConveyorClonedViewSystemTaskName(taskName);
         setConveyorClonedViewSystemTaskName(taskName);
+        final AprsSystem conveyorCloneSys = supervisorLocal.getSysByTask(taskName);
+        if (conveyorCloneSys != null) {
+            if (JOptionPane.showConfirmDialog(this, "Do conveyor prep for " + taskName) == JOptionPane.YES_OPTION) {
+                conveyorTestPrep(conveyorCloneSys);
+            }
+        }
     }//GEN-LAST:event_jMenuItemSetConveyorViewCloneSystemActionPerformed
 
     private void jMenuItemSaveSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveSetupActionPerformed
-        Supervisor supervisorLocal = requireNonNull(this.supervisor,"supervisor");
+        Supervisor supervisorLocal = requireNonNull(this.supervisor, "supervisor");
         try {
             supervisorLocal.saveSetupFile(supervisor.getSetupFile());
         } catch (IOException ex) {
@@ -4354,7 +4426,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemReloadSimFilesActionPerformed
 
     private void jMenuItemMultiCycleTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemMultiCycleTestActionPerformed
-        Supervisor supervisorLocal = requireNonNull(this.supervisor,"supervisor");
+        Supervisor supervisorLocal = requireNonNull(this.supervisor, "supervisor");
         int numCycles
                 = Integer.parseInt(JOptionPane.showInputDialog(this, "Number of cycles?", 10));
         boolean useConveyor
@@ -4508,6 +4580,14 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         supervisor.setBlockRobotTransfers(selected);
     }//GEN-LAST:event_jCheckBoxMenuItemBlockTransfersActionPerformed
 
+    private void jCheckBoxMenuItemSingleStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemSingleStepActionPerformed
+        supervisor.setSingleStepping(jCheckBoxMenuItemSingleStep.isSelected());
+    }//GEN-LAST:event_jCheckBoxMenuItemSingleStepActionPerformed
+
+    private void jMenuItemStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStepActionPerformed
+//        supervisor.advanceSingleStep();
+    }//GEN-LAST:event_jMenuItemStepActionPerformed
+
     public void keepDisabled(final boolean selected) {
         if (jCheckBoxMenuItemKeepDisabled.isSelected() != selected) {
             jCheckBoxMenuItemKeepDisabled.setSelected(selected);
@@ -4616,7 +4696,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid conveyorTest() {
-        final Supervisor supervisorLocal = requireNonNull(supervisor,"supervisor");
+        final Supervisor supervisorLocal = requireNonNull(supervisor, "supervisor");
         AprsSystem sys = this.getConveyorVisClonedSystem();
         if (null == sys) {
             throw new NullPointerException("displayJFrame.getConveyorVisClonedSystem()");
@@ -4672,6 +4752,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public XFutureVoid conveyorTestPrep(AprsSystem sys) throws RuntimeException {
         List<XFutureVoid> futuresList = new ArrayList<>();
+        if (sys.isAlertLimitsCheckBoxSelected()) {
+            if (JOptionPane.showConfirmDialog(this, "Disable alert limits for " + sys) == JOptionPane.YES_OPTION) {
+                sys.setAlertLimitsCheckBoxSelected(false);
+            }
+        }
         if (sys.isObjectViewSimulated()) {
             try {
                 JFileChooser chooser = new JFileChooser();
@@ -4858,18 +4943,26 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (null != compiler) {
                 ClassLoader cl = ClassLoader.getSystemClassLoader();
-
-                URL[] origUrls = ((URLClassLoader) cl).getURLs();
-
+               
+                final URL[] origUrls;
+                if (cl instanceof URLClassLoader) {
+                    origUrls = ((URLClassLoader) cl).getURLs();
+                    
+                } else {
+                    origUrls = new URL[]{
+                        AprsSupervisorDisplayJFrame.class.getProtectionDomain().getCodeSource().getLocation(),
+                        crcl.utils.XFuture.class.getProtectionDomain().getCodeSource().getLocation()
+                    };
+                }
+                String classPath = Arrays.stream(origUrls)
+                            .map(Objects::toString)
+                            .map(s -> s.startsWith("file:") ? s.substring(4) : s)
+                            .collect(Collectors.joining(File.pathSeparator));
+                println("classPath = " + classPath);
                 StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 
                 Iterable<? extends JavaFileObject> compilationUnits1
                         = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(files1));
-                String classPath = Arrays.stream(origUrls)
-                        .map(Objects::toString)
-                        .map(s -> s.startsWith("file:") ? s.substring(4) : s)
-                        .collect(Collectors.joining(File.pathSeparator));
-                println("classPath = " + classPath);
                 DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
                 compiler.getTask(null, fileManager, diagnostics, Arrays.asList("-cp", classPath), null, compilationUnits1).call();
                 StringBuilder errBuilder = new StringBuilder();
@@ -4878,9 +4971,11 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             diagnostic.getSource().toUri(),
                             diagnostic.getLineNumber(),
                             diagnostic.getMessage(Locale.US));
+                    println("err = " + err);
                     errBuilder.append(err);
                 }
                 String fullErr = errBuilder.toString();
+                println("fullErr = " + fullErr);
                 boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
                 if (fullErr.length() > 0) {
                     crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
@@ -4906,8 +5001,8 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
                 println("urls = " + Arrays.toString(urls));
                 Class<?> clss;
-                try(URLClassLoader loader = new URLClassLoader(urls)) {
-                	clss = loader.loadClass("custom.Custom");
+                try (URLClassLoader loader = new URLClassLoader(urls)) {
+                    clss = loader.loadClass("custom.Custom");
                 }
                 @SuppressWarnings("deprecation")
                 Object obj = clss.newInstance();
@@ -5209,7 +5304,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        return supervisor.startReverseActions(null, startingAbortCount);
 //    }
-
     private void savePosFile(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -5343,7 +5437,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //            return notOkSupplier.get();
 //        }
 //    }
-
     /**
      * Clear all previously set errors /error states.
      */
@@ -5461,7 +5554,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        supervisor.setSetupFile(f);
 //    }
-
     public JTable getSharedToolsTable() {
         return this.jTableSharedTools;
     }
@@ -5562,14 +5654,12 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        supervisor.loadSimTeach(f);
 //    }
-
 //    private void saveLastPosMapFile(File f) throws IOException {
 //        if (null == supervisor) {
 //            throw new IllegalStateException("null == supervisor");
 //        }
 //        supervisor.saveLastPositionMappingsFilesFile(f);
 //    }
-
     private XFutureVoid saveTeachProps(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -5583,7 +5673,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        return supervisor.loadTeachProps(f);
 //    }
-
     private void saveSharedTools(File f) throws IOException {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
@@ -5597,7 +5686,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //        supervisor.loadSharedTools(f);
 //    }
-
     /**
      * Load the given setup file.
      *
@@ -6091,7 +6179,6 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        }
 //
 //    };
-
 //    private final ConcurrentLinkedDeque<SetTableRobotEnabledEvent> setTableRobotEnabledEventDeque = new ConcurrentLinkedDeque<>();
 //    public XFuture<Boolean> setTableRobotEnabled(String robotName, boolean enable) {
 //        XFuture<Boolean> f1 = new XFuture<>("setTableRobotEnabled");
@@ -6248,6 +6335,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemRandomTest;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemRecordLiveImageMovie;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemShowSplashMessages;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSingleStep;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemSkipDisabled;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseCorrectionModeByDefault;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachCamera;
@@ -6303,6 +6391,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemStartContinuousScanAndRun;
     private javax.swing.JMenuItem jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst;
     private javax.swing.JMenuItem jMenuItemStartScanAllThenContinuousDemoRevFirst;
+    private javax.swing.JMenuItem jMenuItemStep;
     private javax.swing.JMenu jMenuOptions;
     private javax.swing.JMenu jMenuSpecialTests;
     private javax.swing.JPanel jPanelEvents;
@@ -6328,6 +6417,7 @@ class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPaneTreeSelectedFuture;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JTabbedPane jTabbedPaneMain;
     private javax.swing.JTable jTableEvents;
     private javax.swing.JTable jTablePositionMappings;

@@ -1,5 +1,5 @@
 (look-for-parts 1)
 (take-part part_large_gear_in_pt_1)
-(place-part empty_slot_1_for_large_gear_in_kit_s2l2_vessel_1)
+(place-part empty_slot_1_for_large_gear_in_kit_m2l1_vessel_1)
 (look-for-parts 2)
 (end-program)

@@ -1025,7 +1025,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             }
 //                boolean exec_result = get_tray_slots_statement.execute();
 //                if (exec_result) {
-            try (ResultSet rs = executeQuery(get_tray_slots_statement, getTraySlotsQueryStringFilled, "getSlotOffsetsNew_" + trayFullName, taskname, this.aprsSystem.isUseCsvFilesInsteadOfDatabase())) {
+            try (ResultSet rs = executeQuery(get_tray_slots_statement, getTraySlotsQueryStringFilled, "getSlotOffsetsNew_" + trayFullName, taskname, this.aprsSystem.isUseCsvFilesInsteadOfDatabase(), this.aprsSystem.getSysQueriesDir())) {
                 if (null != displayInterface && displayInterface.isDebug()) {
                     displayInterface.addLogMessage("get_tray_slots_statement.getResultSet() = " + rs + "\r\n");
                 }

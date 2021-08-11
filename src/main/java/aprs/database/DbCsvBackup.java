@@ -48,17 +48,41 @@ public class DbCsvBackup {
 
     public static final boolean debug = false;
 
-    static public ResultSet executeQuery(@Nullable PreparedStatement preparedStatement,@Nullable String simQuery, String name, String taskName, boolean replace) throws SQLException, IOException {
-        File homeDir = new File(System.getProperty("user.home"));
-        File queriesDir = new File(homeDir, "aprsQueries");
-        File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
-        File dir = new File(sysQueriesDir, name);
-        //noinspection ResultOfMethodCallIgnored
-        dir.mkdirs();
+    private static volatile @Nullable File dirLogFile = null;
+    
+    static public ResultSet executeQuery(
+            @Nullable PreparedStatement preparedStatement,
+            @Nullable String simQuery,
+            String name,
+            String taskName,
+            boolean replace,
+            @Nullable File sysQueriesDir) throws SQLException, IOException {
+//        File homeDir = new File(System.getProperty("user.home"));
+//        File queriesDir = new File(homeDir, "aprsQueries");
+//        File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
+        File dir = null;
+        if (null != sysQueriesDir) {
+            dir = new File(sysQueriesDir, name);
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+        } else if(null != preparedStatement) {
+            return preparedStatement.executeQuery();
+        } else {
+            throw new IllegalArgumentException("Either sysQueriesDir or preparedStatement must not be null");
+        }
+        if(dirLogFile ==null) {
+            dirLogFile = File.createTempFile("aprs_db_dir_log_", ".txt");
+        }
+        try(PrintWriter pw =new PrintWriter( new FileWriter(dirLogFile,true))) {
+            pw.println(dir.getCanonicalPath());
+        }
         final File resultsFile;
         final File queryFile;
         final File metaFile;
         if (null == simQuery || simQuery.length() < 2) {
+            if(null == dir) {
+                throw new IllegalArgumentException("simQuery="+simQuery+", sysQueriesDir="+sysQueriesDir);
+            }
             File fa[] = dir.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
@@ -103,16 +127,16 @@ public class DbCsvBackup {
                 throw new RuntimeException("preparedStatement=" + preparedStatement + ",resultsFile=" + resultsFile + ",resultsFile.exists()=" + resultsFile.exists() + ",queryFile=" + queryFile + ",queryFile.exists()=" + queryFile.exists() + ",metaFile=" + metaFile + ",metaFile.exists()=" + metaFile.exists());
             }
             final String simQuery2 = simQuery;
-            if(null == simQuery2) {
-                throw new NullPointerException("simQuery2 can only be null if resultsFile="+resultsFile+", queryFile="+queryFile+", and metaFile="+metaFile+" exist. : name="+name+", taskName="+taskName);
+            if (null == simQuery2) {
+                throw new NullPointerException("simQuery2 can only be null if resultsFile=" + resultsFile + ", queryFile=" + queryFile + ", and metaFile=" + metaFile + " exist. : name=" + name + ", taskName=" + taskName);
             }
             return executeAndSaveQuery(preparedStatement, resultsFile, simQuery2, queryFile, metaFile);
         } else if (replace) {
             return readResultsSetCsv(resultsFile, metaFile);
         } else {
             final String simQuery3 = simQuery;
-            if(null == simQuery3) {
-                throw new NullPointerException("simQuery3 can only be null when replace is true : name="+name+", taskName="+taskName);
+            if (null == simQuery3) {
+                throw new NullPointerException("simQuery3 can only be null when replace is true : name=" + name + ", taskName=" + taskName);
             }
             try (BufferedReader br = new BufferedReader(new FileReader(queryFile))) {
                 String line;
