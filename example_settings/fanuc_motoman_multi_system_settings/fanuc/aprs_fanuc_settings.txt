@@ -26,3 +26,4 @@ startup.robotcrclclient=true
 startup.robotcrclfanucserver=true
 startup.robotcrclmotomanserver=false
 startup.robotcrclsimserver=false
+sysQueriesDir=..\\..\\..\\netbeans_run_user_home\\aprsQueries\\Fanuc_Cart
