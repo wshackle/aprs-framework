@@ -30,15 +30,18 @@ import aprs.conveyor.EditPropertiesJPanel;
 import aprs.misc.Utils;
 import crcl.utils.XFutureVoid;
 import java.awt.geom.Point2D;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +52,7 @@ import javax.swing.JOptionPane;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.eclipse.collections.impl.block.factory.Comparators;
 import org.optaplanner.core.api.score.buildin.hardsoftlong.HardSoftLongScore;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
@@ -71,10 +75,81 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         outerOptiplannerJPanelInput.addActionsModifiedListener(() -> doSolve());
         loadRecentFilesMenu();
     }
+    
+    
+    private static final File RECENT_ACTIONS_LIST_FILE
+            = new File(System.getProperty("user.home"), ".recentActionListsFile");
+
+    private static final List<File> recentActionListFiles = new ArrayList<>();
+
+    private static volatile boolean recentActionsFileListRead = false;
+
+    private static synchronized void readRecentActionListFile() throws IOException {
+        try {
+            if (RECENT_ACTIONS_LIST_FILE.exists()) {
+
+                List<File> newRecentActionListFiles = new ArrayList<>();
+                try (BufferedReader br = new BufferedReader(new FileReader(RECENT_ACTIONS_LIST_FILE))) {
+                    String line = br.readLine();
+                    while (line != null) {
+                        File f = new File(line);
+                        if (f.exists() && f.canRead()) {
+                            newRecentActionListFiles.add(f);
+                        }
+                        line = br.readLine();
+                    }
+                }
+                newRecentActionListFiles.sort(Comparators.byLongFunction(File::lastModified));
+                if (newRecentActionListFiles.size() > 12) {
+                    while (newRecentActionListFiles.size() > 12) {
+                        newRecentActionListFiles.remove(0);
+                    }
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(RECENT_ACTIONS_LIST_FILE))) {
+                        for (int i = 0; i < recentActionListFiles.size(); i++) {
+                            File f = recentActionListFiles.get(i);
+                            pw.println(f.getCanonicalPath());
+                        }
+                    }
+                }
+                recentActionListFiles.clear();
+                recentActionListFiles.addAll(newRecentActionListFiles);
+            }
+        } finally {
+            recentActionsFileListRead = true;
+        }
+    }
+
+    public static synchronized List<File> getRecentActionListFiles() {
+        if (!recentActionsFileListRead) {
+            try {
+                readRecentActionListFile();
+            } catch (IOException ex) {
+                Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                recentActionsFileListRead = true;
+            }
+        }
+        return java.util.Collections.unmodifiableList(new ArrayList<>(recentActionListFiles));
+        //recentActionListFiles;
+    }
+
+    private void addRecentActionListFile(File f) throws IOException {
+        if (!recentActionsFileListRead) {
+            try {
+                readRecentActionListFile();
+            } finally {
+                recentActionsFileListRead = true;
+            }
+        }
+        try (PrintWriter pw = new PrintWriter(new FileWriter(RECENT_ACTIONS_LIST_FILE, true))) {
+            pw.println(f.getCanonicalPath());
+        }
+        recentActionListFiles.add(f);
+    }
 
     private void loadRecentFilesMenu() {
         jMenuRecentFiles.removeAll();
-        List<File> recentFiles = OpActionPlan.getRecentActionListFiles();
+        List<File> recentFiles = getRecentActionListFiles();
         for (int i = 0; i < recentFiles.size(); i++) {
             File f = recentFiles.get(i);
             JMenuItem item = new JMenuItem(f.toString());
@@ -313,7 +388,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             try {
                 final OpActionPlan opActionPlan = outerOptiplannerJPanelInput.getOpActionPlan();
                 if (null != opActionPlan) {
-                    opActionPlan.saveActionList(chooser.getSelectedFile());
+                    final File selectedFile = chooser.getSelectedFile();
+                    opActionPlan.saveActionList(selectedFile);
+                    addRecentActionListFile(selectedFile);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -351,7 +428,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             try {
                 final OpActionPlan opActionPlan = outerOptiplannerJPanelOutput.getOpActionPlan();
                 if (null != opActionPlan) {
-                    opActionPlan.saveActionList(chooser.getSelectedFile());
+                    final File selectedFile = chooser.getSelectedFile();
+                    opActionPlan.saveActionList(selectedFile);
+                    addRecentActionListFile(selectedFile);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -669,7 +748,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         }
         OpActionPlan ap = generateRandomProblem(gac, rand);
         try {
-            ap.saveActionList(File.createTempFile("generatedActionsList", ".csv"));
+            final File tempFile = File.createTempFile("generatedActionsList", ".csv");
+            ap.saveActionList(tempFile);
+            addRecentActionListFile(tempFile);
         } catch (IOException ex) {
             Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
