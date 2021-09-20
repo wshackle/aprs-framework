@@ -2999,6 +2999,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return ret;
     }
 
+    /**
+     *
+     * @param f Text file to read list of actions from
+     * @param showInOptaPlanner
+     * @param newReverseFlag
+     * @param forceNameChange
+     * @return
+     * @throws IOException
+     */
     public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag, boolean forceNameChange) throws IOException {
 
         warnIfNewActionsNotReady();

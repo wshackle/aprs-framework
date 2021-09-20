@@ -121,19 +121,20 @@ public class Supervisor {
 
     @UIEffect
     @SuppressWarnings("guieffect")
-    public XFutureVoid completePrevMulti() {
+    public XFuture<Supervisor> completePrevMulti() {
         this.startColorTextReader();
-        return this.loadAllPrevFiles(null).thenRun(() -> {
+        return this.loadAllPrevFiles(null).thenSupply(() -> {
             Supervisor.this.setVisible(true);
             if (Utils.arePlayAlertsEnabled()) {
                 PlayAlert();
             }
+            return Supervisor.this;
         });
     }
 
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
-        XFutureVoid completePrevMultiFuture = completePrevMulti();
+        XFuture<?> completePrevMultiFuture = completePrevMulti();
 
         this.setShowFullScreenMessages(false);
         this.setMax_cycles(maxCycles);
@@ -155,7 +156,9 @@ public class Supervisor {
                 return displayJFrame.conveyorTestPrep(sys);
             }).thenComposeToVoid(this::startScanAll);
         } else {
-            startScanAllFuture = completePrevMultiFuture.thenComposeToVoid(this::startScanAll);
+            startScanAllFuture
+                    = completePrevMultiFuture
+                            .thenComposeToVoid((x) -> Supervisor.this.startScanAll());
         }
         XFuture<?> xf2 = startScanAllFuture.thenRun(() -> {
             if (!startScanAllFuture.isDone()) {
@@ -212,7 +215,7 @@ public class Supervisor {
         return xf4;
     }
 
-    private volatile @Nullable XFutureVoid lastCompletePrevMultiFuture = null;
+    private volatile @Nullable XFuture<?> lastCompletePrevMultiFuture = null;
 
     private volatile @Nullable XFuture<?> lastCompleteMultiCycleTestFuture = null;
 
@@ -224,7 +227,7 @@ public class Supervisor {
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTest(long startTime, int numCycles, boolean useConveyor) {
 
-        XFutureVoid completePrevMultiFuture = completePrevMulti();
+        XFuture<?> completePrevMultiFuture = completePrevMulti();
         lastCompletePrevMultiFuture = completePrevMultiFuture;
 
         XFuture<?> ret = completePrevMultiFuture
@@ -3301,8 +3304,14 @@ public class Supervisor {
 
     private final Map<String, String> robotTaskMap = new HashMap<>();
 
-    private final static File LAST_SETUP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSetupFile",
-            Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSetupFile.txt"));
+    private static File getLastSetupFileFile() {
+        final String aprsUserHomeDir = Utils.getAprsUserHomeDir();
+        final String property
+                = System.getProperty("aprsLastMultiSystemSetupFile",
+                        aprsUserHomeDir + File.separator + ".lastAprsSetupFile.txt");
+        return new File(property);
+    }
+    private final static File LAST_SETUP_FILE_FILE = getLastSetupFileFile();
     private final static File LAST_SHARED_TOOLS_FILE_FILE = new File(
             System.getProperty("aprsLastMultiSystemSharedToolsFile",
                     Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSharedToolsFile.txt"));
@@ -3877,7 +3886,7 @@ public class Supervisor {
         }
         clearAllToggleBlockers();
         clearAllErrors();
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         final String blockerName = "fullAbortAll";
         Supplier<XFuture<LockInfo>> sup = () -> disallowToggles(blockerName, sysArray);
         XFuture<XFuture<LockInfo>> disallowTogglesFutureFuture = XFuture.supplyAsync("fullAbortDisableToggles", sup,
@@ -3908,7 +3917,7 @@ public class Supervisor {
 
     public XFutureVoid publicReturnRobot() {
         final XFuture<?> lastFutureReturnedFinal = lastFutureReturned;
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         final String blockerName = "publicReturnRobot";
         Supplier<XFuture<LockInfo>> sup = () -> disallowToggles(blockerName, sysArray);
         XFuture<XFuture<LockInfo>> disallowTogglesFutureFuture = XFuture.supplyAsync(blockerName, sup,
@@ -4239,6 +4248,7 @@ public class Supervisor {
             runOnDispatchThread(() -> {
                 if (null != displayJFrame) {
                     displayJFrame.setVisible(false);
+                    displayJFrame.closeAprsRemoteConsoleService();
                     displayJFrame.removeAll();
                     displayJFrame.dispose();
                 }
@@ -4813,7 +4823,7 @@ public class Supervisor {
         }
         if (null != actionListFile) {
             try {
-                List<Action> loadedActions = aprsSys.loadActionsFile(actionListFile, // File f,
+                List<Action> loadedActions = aprsSys.loadActionsFileEx(actionListFile, // File f,
                         false, // boolean showInOptaPlanner,
                         false, // newReverseFlag
                         true // boolean forceNameChange
@@ -5721,6 +5731,11 @@ public class Supervisor {
 //            stepperFuture.getAndSet(new XFutureVoid("supervisorStepperFuture")).complete();
 //        }
 //    }
+    
+    public static  <T> T q(T t, T other) {
+        return (t != null)?t:other;
+    }
+    
     private XFutureVoid waitSingleStep(String info) {
         if (!singleStepping) {
             return STEPPER_COMPLETED_FUTURE;
@@ -5739,11 +5754,17 @@ public class Supervisor {
             System.out.flush();
             System.err.println();
             System.err.flush();
-            return Utils.runOnDispatchThread(() -> {
-                JOptionPane.showMessageDialog(displayJFrame, "Single Step: " + info);
-            })
+            String message = "Single Step: " + info;
+            return showMesssage(message)
                     .thenComposeAsyncToVoid(info, () -> logEvent("Single Step advancing " + info), supervisorExecutorService);
         }
+    }
+
+    @SuppressWarnings("nullness")
+    public XFutureVoid showMesssage(String message) {
+        return Utils.runOnDispatchThread(() -> {
+            JOptionPane.showMessageDialog(displayJFrame,message );
+        });
     }
 
     private static final XFutureVoid STEPPER_COMPLETED_FUTURE = XFutureVoid.completedFuture();
@@ -6184,10 +6205,10 @@ public class Supervisor {
         }
         String blockerList = toggleBlockerMap.keySet().toString();
 
-        XFuture<LockInfo> ret 
+        XFuture<LockInfo> ret
                 = completeDisallowToggles(blockerName, blockerList, lockInfo)
                         .peekNoCancelException(this::handleXFutureException)
-                        .thenCompose(x -> this.waitSingleStep("disallowToggles("+blockerName+")").thenSupply(() -> x));
+                        .thenCompose(x -> this.waitSingleStep("disallowToggles(" + blockerName + ")").thenSupply(() -> x));
         return ret;
     }
 
@@ -6755,7 +6776,7 @@ public class Supervisor {
         logEvent("Start Continuous demo " + cdcCount);
         connectAll();
         String blockerName = "startContinuousDemo" + cdcCount;
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFutureVoid ret = disallowToggles(blockerName, sysArray)
                 .thenCompose(x -> startCheckAndEnableAllRobots(startingAbortCount))
                 .thenComposeToVoid("startContinuousDemo" + cdcCount,
@@ -7091,7 +7112,7 @@ public class Supervisor {
         String part2BlockerName = "part2ContinueContinuousDemo" + cdcCount;
         String part3BlockerName = "part3ContinueContinuousDemo" + cdcCount;
         String part4BlockerName = "part4ContinueContinuousDemo" + cdcCount;
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(part1BlockerName, sysArray);
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         continueContinuousDemoTrace = trace;
@@ -7221,7 +7242,7 @@ public class Supervisor {
             continuousDemoSetupTrace = trace;
             int cdscount = continousDemoSetupCount.incrementAndGet();
             String blocker = "continuousDemoSetup" + cdscount + "_" + cdcCount;
-            AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+            AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
             XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blocker, sysArray);
             checkAllRunningOrDoingActions(-1, "continueDemoSetup");
             if (this.stealingRobots && !this.keepDisabled) {
@@ -7357,7 +7378,7 @@ public class Supervisor {
         logEvent("startReverseActions  startReverseActionsCount=" + sraCount + ", continousDemoCycleCount="
                 + continousDemoCycleCount);
         String blockerName = "START startReverseActions_" + sraCount + "_" + continousDemoCycleCount;
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
         checkFutures();
         checkAllRunningOrDoingActions(-1, "startReverseActions");
@@ -7448,7 +7469,7 @@ public class Supervisor {
             }
             logEvent("enableAllRobots() called.");
             clearStealingRobotsFlag();
-            AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+            AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
             String blockerName = "enableAllRobots";
             return disallowToggles(blockerName, sysArray).thenComposeToVoid(x -> {
                 try {
@@ -7498,7 +7519,7 @@ public class Supervisor {
         }
 
         String blockerName = "startCheckAndEnableAllRobots" + enableAndCheckAllRobotsCount.incrementAndGet();
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
         checkAllRunningOrDoingActions(-1, "startCheckAndEnableAllRobots");
         return disallowTogglesFuture.thenComposeAsync((LockInfo ignored) -> {
@@ -8446,7 +8467,7 @@ public class Supervisor {
     private XFutureVoid safeAbortAll() {
         int saaCount = safeAbortAllCount.incrementAndGet();
         String blocker = "safeAbortAll" + saaCount;
-        AprsSystem sysArray[] = getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blocker, sysArray);
         incrementAndGetAbortCount();
         logEvent("safeAbortAll");
@@ -8946,7 +8967,7 @@ public class Supervisor {
         savePathInLastFileFile(f, LAST_POSMAP_FILE_FILE, getSetupParent());
     }
 
-    File getLastPosMapParent() {
+    public File getLastPosMapParent() {
         if (null == lastPosMapFile) {
             throw new IllegalStateException("lastPosMapFile is null");
         }
@@ -8957,7 +8978,7 @@ public class Supervisor {
         return parentFile;
     }
 
-    XFutureVoid performStartAllAction() {
+    public XFutureVoid performStartAllAction() {
         immediateAbortAll("performStartAllAction");
         clearEventLog();
         return connectAll().thenComposeAsyncToVoid(this::enableAllRobots, getSupervisorExecutorService())
@@ -9191,7 +9212,7 @@ public class Supervisor {
      *
      * @return the value of aprsSystems
      */
-    List<AprsSystem> getAprsSystems() {
+    public List<AprsSystem> systems() {
         return Collections.unmodifiableList(aprsSystems);
     }
 
@@ -9772,7 +9793,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData               @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                 @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

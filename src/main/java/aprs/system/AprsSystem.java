@@ -6308,12 +6308,7 @@ public class AprsSystem implements SlotOffsetProvider {
             noWarnClearActionsList(false);
             int startAbortCount = getSafeAbortRequestCount();
             clearKitsToCheck(startAbortCount);
-            List<Action> loadedActions = loadActionsFile(
-                    actionFile, // File f,
-                    false, // boolean showInOptaPlanner,
-                    false, // newReverseFlag
-                    true // boolean forceNameChange
-            );
+            List<Action> loadedActions = loadActionsFile(actionFile);
             int fktic = fillKitTraysInternalCount.incrementAndGet();
             XFuture<Boolean> psaFuture = privateStartActions("fillKitTrays" + fktic, false, null);
             XFuture<Boolean> psaClearFuture = psaFuture
@@ -6362,6 +6357,7 @@ public class AprsSystem implements SlotOffsetProvider {
         }
 
     }
+
 
     private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo, boolean useUnassignedParts)
             throws IllegalStateException {
@@ -6579,12 +6575,7 @@ public class AprsSystem implements SlotOffsetProvider {
             noWarnClearActionsList(true);
             int startAbortCount = getSafeAbortRequestCount();
             clearKitsToCheck(startAbortCount);
-            List<Action> loadedActions = loadActionsFile(
-                    actionFile, // File f,
-                    false, // boolean showInOptaPlanner,
-                    true, // newReverseFlag
-                    true // boolean forceNameChange
-            );
+            List<Action> loadedActions = loadActionsFileReverse(actionFile);
 //            loadActionsFile(actionFile, true);
             int ektic = emptyKitTraysInternalCount.incrementAndGet();
             XFuture<Boolean> psaFuture = privateStartActions("emptyKitTrays" + ektic, true, null);
@@ -6618,6 +6609,8 @@ public class AprsSystem implements SlotOffsetProvider {
         }
 
     }
+
+    
 
     private List<PhysicalItem> createEmptiedKitsListFromFillInfo(TrayFillInfo trayFillInfo)
             throws IllegalStateException {
@@ -7049,8 +7042,38 @@ public class AprsSystem implements SlotOffsetProvider {
             }
         }
     }
+    
+    public List<Action> loadActionsFile(File actionFile) throws IOException {
+        return loadActionsFileEx(
+                actionFile, // File f,
+                false, // boolean showInOptaPlanner,
+                false, // newReverseFlag
+                true // boolean forceNameChange
+        );
+    }
 
-    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag,
+    public List<Action> loadActionsFileReverse(File actionFile) throws IOException {
+        return loadActionsFileEx(
+                actionFile, // File f,
+                false, // boolean showInOptaPlanner,
+                true, // newReverseFlag
+                true // boolean forceNameChange
+        );
+    }
+    
+    /**
+     * Load a text file containing actions to be displayed and be ready to execute it.
+     * 
+     * @param f File to load
+     * @param showInOptaPlanner
+     * @param newReverseFlag
+     * @param forceNameChange
+     * @return
+     * @throws IOException
+     */
+    public List<Action> loadActionsFileEx(File f,
+            boolean showInOptaPlanner,
+            boolean newReverseFlag,
             boolean forceNameChange) throws IOException {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Executor View must be open to use this function.");
@@ -8203,6 +8226,23 @@ public class AprsSystem implements SlotOffsetProvider {
         return privateStartActions(comment, newReverseFlag, actionsCopy);
     }
 
+    /**
+     * Load a text file of actions and start executing it from the beginning.
+     * 
+     * <p>
+     * The actions will be executed in another thread after this method returns.
+     * The returned future can be used to monitor, cancel or extend the
+     * underlying task. The boolean contained in the future will be true only if
+     * all actions appear to succeed.
+     *
+     * @param actionsFile File to read actions list from.
+     * @return future of the underlying task to execute the actions.
+     * @throws java.io.IOException actionsFile can not be loaded
+     */
+    public XFuture<Boolean> startActionsFile(File actionsFile) throws IOException {
+        return startActionsList("startActionsFile:"+actionsFile,loadActionsFile(actionsFile),false);
+    }
+    
     /**
      * Check to see if the executor is in a state where it could begin working
      * on a new list of actions.
@@ -10013,10 +10053,11 @@ public class AprsSystem implements SlotOffsetProvider {
             this.motomanCrclPort = motomanServerProvider.getCrclPort();
             propsMap.put(MOTOMAN_CRCL_LOCAL_PORT, Integer.toString(motomanCrclPort));
         }
+        final File sysQueriesDir1 = sysQueriesDir;
 
-        if (null != sysQueriesDir) {
+        if (null != sysQueriesDir1) {
             final Path propParentPath = Paths.get(propsParent.getCanonicalPath());
-            final Path sysQueriesPath = Paths.get(sysQueriesDir.getCanonicalPath());
+            final Path sysQueriesPath = Paths.get(sysQueriesDir1.getCanonicalPath());
             propsMap.put(SYS_QUERIES_DIR_PROP_NAME, propParentPath.relativize(sysQueriesPath).toString());
         }
 

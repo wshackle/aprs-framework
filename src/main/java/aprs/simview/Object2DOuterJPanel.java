@@ -5931,7 +5931,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         CRCLStatusType stat = item.stat;
-        PointType point = CRCLPosemath.getNullablePoint(stat);
+        PointType point = CRCLPosemath.point(stat);
         if (null == point) {
             return null;
         }
@@ -6163,7 +6163,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             if (!showCurrentCachedCheckBox.isSelected()) {
                 return;
             }
-            PoseType pose = CRCLPosemath.getNullablePose(stat);
+            PoseType pose = CRCLPosemath.pose(stat);
             if (null == pose) {
                 return;
             }

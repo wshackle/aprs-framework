@@ -52,23 +52,28 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDisplay;
 import static aprs.misc.Utils.PlayAlert;
+import aprs.remote.AprsRemoteConsoleServerSocket;
+import aprs.remote.Scriptable;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.utils.CRCLPosemath;
 import java.awt.HeadlessException;
 import java.io.FileReader;
 import java.util.Properties;
+import java.util.TreeMap;
 import javax.swing.JMenuItem;
+import static aprs.remote.Scriptable.scriptableOfStatic;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"unused", "guieffect","serial"})
+@SuppressWarnings({"unused", "guieffect", "serial"})
 public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     /**
      * Creates new form LauncherJFrame
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public LauncherAprsJFrame() {
         AprsCommonLogger.instance();
@@ -366,9 +371,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jButtonPrevMultiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPrevMultiActionPerformed
         try {
             if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
-                prevMulti(getLastLaunchFile());
+                prevMultiLastLaunch();
             } else {
-                prevMulti(null);
+                prevMultiNullLaunch();
             }
             this.setVisible(false);
             this.dispose();
@@ -377,6 +382,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             MultiLineStringJPanel.showText("Exception caught: " + e);
         }
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
+
+    public static XFuture<Supervisor> prevMultiNullLaunch() {
+        return prevMulti(null);
+    }
+
+    public static XFuture<Supervisor> prevMultiLastLaunch() throws IOException {
+        return prevMulti(getLastLaunchFile());
+    }
 
     private final static File LAST_LAUNCH_FILE_FILE = new File(System.getProperty("aprsLastLaunchFile", Utils.getAprsUserHomeDir() + File.separator + ".lastAprsLaunchFile.txt"));
 
@@ -413,7 +426,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      * @return setup file location
      * @throws IOException setup files location can not be read
      */
-    private static @Nullable
+    public static @Nullable
     File getLastLaunchFile() throws IOException {
         if (LAST_LAUNCH_FILE_FILE.exists()) {
             String firstLine = readFirstLine(LAST_LAUNCH_FILE_FILE);
@@ -435,16 +448,17 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     @UIEffect
-    private static XFutureVoid prevMulti(@Nullable File launchFile) {
+    public static XFuture<Supervisor> prevMulti(@Nullable File launchFile) {
         if (null != launchFile) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
-                return processLauncher.run(launchFile)
-                        .thenComposeToVoid(() -> {
+                return processLauncher
+                        .run(launchFile)
+                        .thenCompose((x) -> {
                             Supervisor supervisor = createAprsSupervisorWithSwingDisplay(false);
                             supervisor.setProcessLauncher(processLauncher);
-                            return Utils.composeToVoidOnDispatchThread(() -> supervisor.completePrevMulti());
+                            return Utils.composeOnDispatchThread(() -> supervisor.completePrevMulti());
                         });
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
@@ -463,11 +477,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButtonNewMultiActionPerformed
 
-    private static void newMulti() {
+    public static Supervisor newMulti() {
         Supervisor supervisor = createAprsSupervisorWithSwingDisplay(true);
         supervisor.startColorTextReader();
         supervisor.setVisible(true);
         supervisor.browseSaveSetupAs();
+        return supervisor;
     }
 
     @UIEffect
@@ -510,40 +525,52 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonOpenMultiActionPerformed
 
     @UIEffect
-    private static void openMulti(String args @Nullable []) throws IOException {
+    private static XFuture<Supervisor> openMulti(String args @Nullable []) throws IOException {
         File setupFile = null;
         if (null != args && args.length > 0) {
             setupFile = new File(args[0]);
             if (args.length > 1) {
                 File launcherFile = new File(args[1]);
-                openMultiWithLaunchFile(launcherFile, setupFile, null);
+                return openMultiWithLaunchFile(launcherFile, setupFile, null);
             } else {
-                openMultiWithoutLaunchFile(setupFile, null, null);
+                return openMultiWithoutLaunchFile(setupFile, null, null);
             }
         } else {
-            openMultiWithoutLaunchFile(setupFile, null, null);
+            return openMultiWithoutLaunchFile(setupFile, null, null);
         }
     }
 
     @UIEffect
-    private static void openMultiWithLaunchFile(File launcherFile, @Nullable File setupFile, @Nullable Frame parent) throws IOException {
+    public static XFuture<Supervisor> openMultiWithLaunchFile(File launcherFile, @Nullable File setupFile, @Nullable Frame parent) throws IOException {
 
         try {
             ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
             processLauncher.setVisible(true);
-            processLauncher.run(launcherFile)
-                    .thenRun(() -> {
+            return processLauncher.run(launcherFile)
+                    .thenCompose((Void voidparam) -> {
                         try {
                             XFuture<Supervisor> supervisorFuture = openMultiWithoutLaunchFile(setupFile, parent, launcherFile.getParent());
-                            supervisorFuture.thenAccept((Supervisor supervisor) -> {
-                                supervisor.setProcessLauncher(processLauncher);
-                            });
-                        } catch (Exception iOException) {
-                            iOException.printStackTrace();
+                            return supervisorFuture
+                                    .thenApply((Supervisor supervisor) -> {
+                                        supervisor.setProcessLauncher(processLauncher);
+                                        return supervisor;
+                                    });
+                        } catch (Exception ex) {
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            } else {
+                                ex.printStackTrace();
+                                throw new RuntimeException(ex);
+                            }
                         }
                     });
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -602,11 +629,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButtonPrevSingleActionPerformed
 
-    private static void goalLearningTest() {
+    public static void goalLearningTest() {
         GoalLearnerTest.main(new String[]{});
     }
 
-    private static void optaplannerTest() {
+    public static void optaplannerTest() {
         try {
             OptaplannerTest.main(new String[]{});
         } catch (Exception ex) {
@@ -614,7 +641,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    private static XFutureVoid prevSingleWithLaunchFile(File launchFile) throws IOException {
+    public static XFutureVoid prevSingleWithLaunchFile(File launchFile) throws IOException {
         if (null != launchFile) {
             try {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
@@ -625,7 +652,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 return prevSingle();
                             } catch (IOException e) {
                                 e.printStackTrace();
-                                throw  new RuntimeException(e);
+                                throw new RuntimeException(e);
                             }
                         });
             } catch (IOException ex) {
@@ -659,7 +686,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         try {
             if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
                 final File lastLaunchFileLocal = getLastLaunchFile();
-                if(null != lastLaunchFileLocal) {
+                if (null != lastLaunchFileLocal) {
                     openSingleWithLaunchFile(lastLaunchFileLocal, null);
                 } else {
                     JOptionPane.showMessageDialog(this, "Last launch file is null.");
@@ -951,11 +978,42 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
 
-    	for(Map.Entry<Object,Object> prop : System.getProperties().entrySet()) {
-    		System.out.println(prop.getKey()+" = "+prop.getValue());
-    	}
+        for (Map.Entry<Object, Object> prop : System.getProperties().entrySet()) {
+            System.out.println(prop.getKey() + " = " + prop.getValue());
+        }
         loadLaunchProperties();
         Utils.setToAprsLookAndFeel();
+
+        try {
+            if (args[0].equals("--listenRemoteConsolePort")) {
+                final int port = Integer.parseInt(args[1]);
+//                Map<String, ScriptableFunction<String>> functions = new TreeMap<>();
+//                functions.put("launch", (String ignore, String launchargs[], PrintWriter pw) -> {
+//                    try {
+//                        if(launchargs.length < 1) {
+//                            return Scriptable.of(prevMulti(null));
+//                        } else {
+//                            return Scriptable.of(openMultiWithLaunchFile(new File(launchargs[0]), null, null));
+//                        }
+//                    } catch (Exception ex) {
+//                        Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
+//                        if (ex instanceof RuntimeException) {
+//                            throw (RuntimeException) ex;
+//                        } else {
+//                            throw new RuntimeException(ex);
+//                        }
+//                    }
+//                });
+                Map<String, Scriptable<?>> scriptablesMap = new TreeMap<>();
+                scriptablesMap.put("launcher", scriptableOfStatic(LauncherAprsJFrame.class));
+                scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
+                scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
+                AprsRemoteConsoleServerSocket serverSocket = new AprsRemoteConsoleServerSocket(port, scriptablesMap);
+                serverSocket.run();
+            }
+        } catch (Exception exception) {
+
+        }
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -971,7 +1029,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 if (argsLeft.length > 0) {
                                     prevMulti(new File(argsLeft[0]));
                                 } else {
-                                    prevMulti(null);
+                                    prevMultiNullLaunch();
                                 }
                                 break;
 

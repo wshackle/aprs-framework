@@ -97,7 +97,11 @@ import java.util.stream.Collectors;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.getAprsIconUrl;
 import static aprs.misc.Utils.runTimeToString;
+import aprs.remote.AprsRemoteConsoleServerSocket;
+import aprs.remote.Scriptable;
+import static aprs.remote.Scriptable.scriptableOf;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import static aprs.remote.Scriptable.scriptableOfStatic;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -700,7 +704,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.getAprsSystems();
+        return supervisor.systems();
     }
 
     private void handleListFuturesSelectionEvent(@UnknownInitialization AprsSupervisorDisplayJFrame this,ListSelectionEvent e) {
@@ -766,7 +770,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 break;
 
             default:
-                List<AprsSystem> aprsSystems = sup2.getAprsSystems();
+                List<AprsSystem> aprsSystems = sup2.systems();
                 boolean taskFound = false;
                 int sindex = selectedFutureString.indexOf('/');
                 if (sindex > 0 && sindex < selectedFutureString.length()) {
@@ -1514,6 +1518,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemSkipDisabled = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemBlockTransfers = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSingleStep = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemEnableRemoteConsole = new javax.swing.JCheckBoxMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -2480,6 +2485,14 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemSingleStep);
+
+        jCheckBoxMenuItemEnableRemoteConsole.setText("Enable Remotely Accessible Console");
+        jCheckBoxMenuItemEnableRemoteConsole.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxMenuItemEnableRemoteConsoleActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jCheckBoxMenuItemEnableRemoteConsole);
 
         jMenuBar1.add(jMenuOptions);
 
@@ -4120,7 +4133,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private XFutureVoid prepInteractiveStart(String actionName, int isn, final String blockerName) {
         final Supervisor supervisorLocal = requireNonNull(supervisor, "supervisor");
-        AprsSystem sysArray[] = supervisorLocal.getAprsSystems().toArray(new AprsSystem[0]);
+        AprsSystem sysArray[] = supervisorLocal.systems().toArray(new AprsSystem[0]);
         logEvent("Staring interactiveStart." + actionName + ",isn=" + isn);
         supervisorLocal.setResetting(true);
         final XFutureVoid internalInteractiveResetAllFutureLocal = internalInteractiveResetAllFuture;
@@ -4164,7 +4177,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 .thenComposeAsyncToVoid("interactivStart(" + actionName + ",isn=" + isn + ")LookForParts",
                         x -> {
                             List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
-                            List<AprsSystem> aprsSystems = supervisorLocal.getAprsSystems();
+                            List<AprsSystem> aprsSystems = supervisorLocal.systems();
                             for (int i = 0; i < aprsSystems.size(); i++) {
                                 AprsSystem sys = aprsSystems.get(i);
                                 boolean limitsEnforced = sys.isEnforceMinMaxLimits();
@@ -4588,6 +4601,49 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        supervisor.advanceSingleStep();
     }//GEN-LAST:event_jMenuItemStepActionPerformed
 
+    private volatile AprsRemoteConsoleServerSocket aprsRemoteConsoleServerSocket = null;
+    private volatile Thread aprsRemoteConsoleServerSocketThread = null;
+
+    private void jCheckBoxMenuItemEnableRemoteConsoleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemEnableRemoteConsoleActionPerformed
+        try {
+            if (jCheckBoxMenuItemEnableRemoteConsole.isSelected()) {
+                String portString = JOptionPane.showInputDialog(this, "Port for console service?", 7000);
+                int port = Integer.parseInt(portString);
+                Map<String, Scriptable<?>> scriptablesMap = new TreeMap<>();
+                scriptablesMap.put("display", scriptableOf(AprsSupervisorDisplayJFrame.class,this));
+                scriptablesMap.put("sup", scriptableOf(Supervisor.class,this.supervisor));
+                scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
+                scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
+                aprsRemoteConsoleServerSocket = new AprsRemoteConsoleServerSocket(port, scriptablesMap);
+                aprsRemoteConsoleServerSocketThread = new Thread(aprsRemoteConsoleServerSocket, "AprsRemoteConsole:" + port);
+                aprsRemoteConsoleServerSocketThread.start();
+            } else {
+                closeAprsRemoteConsoleService();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
+            JOptionPane.showMessageDialog(this, "Excetption occurred:" + ex);
+        }
+    }//GEN-LAST:event_jCheckBoxMenuItemEnableRemoteConsoleActionPerformed
+
+    public void closeAprsRemoteConsoleService() {
+        try {
+            AprsRemoteConsoleServerSocket ss = this.aprsRemoteConsoleServerSocket;
+            Thread thread = this.aprsRemoteConsoleServerSocketThread;
+            this.aprsRemoteConsoleServerSocket = null;
+            this.aprsRemoteConsoleServerSocketThread = null;
+            if (null != ss) {
+                ss.close();
+            }
+            if (null != thread) {
+                thread.interrupt();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
+            JOptionPane.showMessageDialog(this, "Excetption occurred:" + ex);
+        }
+    }
+
     public void keepDisabled(final boolean selected) {
         if (jCheckBoxMenuItemKeepDisabled.isSelected() != selected) {
             jCheckBoxMenuItemKeepDisabled.setSelected(selected);
@@ -4943,11 +4999,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (null != compiler) {
                 ClassLoader cl = ClassLoader.getSystemClassLoader();
-               
+
                 final URL[] origUrls;
                 if (cl instanceof URLClassLoader) {
                     origUrls = ((URLClassLoader) cl).getURLs();
-                    
+
                 } else {
                     origUrls = new URL[]{
                         AprsSupervisorDisplayJFrame.class.getProtectionDomain().getCodeSource().getLocation(),
@@ -4955,9 +5011,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     };
                 }
                 String classPath = Arrays.stream(origUrls)
-                            .map(Objects::toString)
-                            .map(s -> s.startsWith("file:") ? s.substring(4) : s)
-                            .collect(Collectors.joining(File.pathSeparator));
+                        .map(Objects::toString)
+                        .map(s -> s.startsWith("file:") ? s.substring(4) : s)
+                        .collect(Collectors.joining(File.pathSeparator));
                 println("classPath = " + classPath);
                 StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
 
@@ -6324,6 +6380,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDebug;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemDisableTextPopups;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableConveyorControlView;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemEnableRemoteConsole;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemFixedRandomTestSeed;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndContinuousDemo;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemIndRandomToggleTest;

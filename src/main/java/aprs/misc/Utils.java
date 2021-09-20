@@ -106,10 +106,11 @@ public class Utils {
 
         String dir;
         final String origHomeProperty = System.getProperty("user.home");
+        final String aprsUserHomeProperty = System.getProperty("aprs.user.home", origHomeProperty);
         if (isWindows) {
-            dir = System.getProperty("windows.aprs.user.home", System.getProperty("aprs.user.home", origHomeProperty));
+            dir = System.getProperty("windows.aprs.user.home", aprsUserHomeProperty);
         } else {
-            dir = System.getProperty("linux.aprs.user.home", System.getProperty("aprs.user.home", origHomeProperty));
+            dir = System.getProperty("linux.aprs.user.home", aprsUserHomeProperty);
         }
         if (dir != null && dir.length() > 1) {
             File dirFile = new File(dir);
@@ -294,9 +295,15 @@ public class Utils {
         try {
             return CRCLUtils.requireNonNull(Utils.class.getResource("aprs.png"));
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "", e);
+            System.out.println("");
+            System.err.println("");
+            System.out.flush();
+            System.err.flush();
             throw new RuntimeException("Utils.class.getResource(\"aprs.png\") threw " + e.getMessage(), e);
         }
     }
+    
 
     /**
      * A Runnable that may throw a checked exception.

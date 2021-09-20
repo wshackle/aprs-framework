@@ -1019,7 +1019,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 this.dbConnection = dbConnection;
             }
             if (null != dbConnection && null != dbSetup1) {
-                qs = new QuerySet(dbSetup1.getDbType(), dbConnection, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), false, aprsSystem.getSysQueriesDir());
+                qs = new QuerySet(dbSetup1.getDbType(), dbConnection, dbSetup1.getQueriesMap(), aprsSystem1.getTaskName(), false, aprsSystem1.getSysQueriesDir());
             } else if (qs != null) {
                 qs.close();
             }
