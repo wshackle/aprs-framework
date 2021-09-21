@@ -42,9 +42,15 @@ netbeans_run_user_home/crclXmlSchemas/*
 netbeans_run_user_home/.crcljava_ui_cmd_schemas.txt
 netbeans_run_user_home/.crcljava_ui_program_schemas.txt
 netbeans_run_user_home/.crcljava_ui_stat_schemas.txt
+netbeans_run_user_home/.aprs/lastPropsFileName.txt
+netbeans_run_user_home/.crcljava/clientsettingsref
+netbeans_run_user_home/.dbsetup_recent.txt
 linux_netbeans_run_user_home/.crcljava_ui_cmd_schemas.txt
 linux_netbeans_run_user_home/.crcljava_ui_program_schemas.txt
 linux_netbeans_run_user_home/.crcljava_ui_stat_schemas.txt
+linux_netbeans_run_user_home/.aprs/lastPropsFileName.txt
+linux_netbeans_run_user_home/.crcljava/clientsettingsref
+linux_netbeans_run_user_home/.dbsetup_recent.txt
 
 *.o.d
 *.VC.opendb
