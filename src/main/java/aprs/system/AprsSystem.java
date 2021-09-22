@@ -5719,6 +5719,12 @@ public class AprsSystem implements SlotOffsetProvider {
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.stopSimUpdateTimer();
         }
+        if(null != motomanServerProvider) {
+            motomanServerProvider.disconnnectAllAndClose();
+        }
+        if(null != fanucServerProvider) {
+            fanucServerProvider.disconnnectAllAndClose();
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -10494,6 +10500,12 @@ public class AprsSystem implements SlotOffsetProvider {
                     .getName()).log(Level.SEVERE, "", iOException);
         }
         closeAllWindows();
+        if(null != motomanServerProvider) {
+            motomanServerProvider.disconnnectAllAndClose();
+        }
+        if(null != fanucServerProvider) {
+            fanucServerProvider.disconnnectAllAndClose();
+        }
         runProgramService.shutdownNow();
         if (null != aprsSystemDisplayJFrame) {
             runOnDispatchThread(this::closeAprsSystemDisplayJFrame);
@@ -10509,6 +10521,7 @@ public class AprsSystem implements SlotOffsetProvider {
     private void closeAprsSystemDisplayJFrame() {
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setVisible(false);
+            aprsSystemDisplayJFrame.closeAllInternalFrames();
             aprsSystemDisplayJFrame.dispose();
         }
     }

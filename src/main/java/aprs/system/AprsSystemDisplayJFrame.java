@@ -49,6 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
+import java.beans.PropertyVetoException;
 
 /**
  * AprsSystemInterface is the container for one robotic system in the APRS
@@ -65,16 +66,16 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     private volatile @MonotonicNonNull
     AprsSystem aprsSystem = null;
-    
+
     public void setPaused(boolean paused) {
         jMenuTests.setEnabled(!paused);
         jMenuExecute.setEnabled(!paused);
     }
 
-    public boolean isStandAlone() { 
+    public boolean isStandAlone() {
         return jCheckBoxMenuItemStandAloneMode.isSelected();
     }
-    
+
     @SafeEffect
     public void setAprsSystem(AprsSystem aprsSystem) {
         this.aprsSystem = aprsSystem;
@@ -107,7 +108,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     @UIEffect
     private XFutureVoid showExceptionInternal(Throwable ex) {
         StringWriter sw = new StringWriter();
-        try (PrintWriter pw = new PrintWriter(sw, true)) {
+        try ( PrintWriter pw = new PrintWriter(sw, true)) {
             ex.printStackTrace(pw);
         } catch (Exception ex1) {
             Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex1);
@@ -272,7 +273,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     CachedCheckBox exploreGraphDBStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemExploreGraphDbStartup);
     }
-    
+
     CachedCheckBox forceTorqueSimStartupCheckBox() {
         return new CachedCheckBox(jCheckBoxMenuItemForceTorqueSimStartup);
     }
@@ -306,6 +307,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         for (JInternalFrame f : frames) {
             jDesktopPane1.getDesktopManager().closeFrame(f);
             f.setVisible(false);
+            f.doDefaultCloseAction();
             jDesktopPane1.remove(f);
         }
         prevFrameCount = jDesktopPane1.getAllFrames().length;
@@ -1207,7 +1209,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 //            aprsSystem.startPddlPlanner();
 //        }
 //    }
-
     @SafeEffect
     private void saveProperties() throws IOException {
         if (null != aprsSystem) {
@@ -1225,7 +1226,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 //            throw new IllegalStateException("aprsSystem ==null, this=" + this);
 //        }
 //    }
-
     private void startActionListExecutor() {
         if (null != aprsSystem) {
             aprsSystem.startActionListExecutor();
@@ -1408,6 +1408,11 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         } else {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
+        JInternalFrame[] prevFrames = jDesktopPane1.getAllFramesInLayer(JLayeredPane.DEFAULT_LAYER);
+        for (JInternalFrame prevFrame : prevFrames) {
+            prevFrame.doDefaultCloseAction();
+            prevFrame.setVisible(false);
+        }
     }
 
     @UIEffect
@@ -1505,7 +1510,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-    
+
     private void startExploreGraphDb() {
         if (null != aprsSystem) {
             aprsSystem.startExploreGraphDb();
@@ -1521,7 +1526,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-    
+
     private void closeForceTorqueSim() {
         if (null != aprsSystem) {
             aprsSystem.closeForceTorqeSim();
@@ -1529,7 +1534,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("aprsSystem ==null, this=" + this);
         }
     }
-    
 
     @UIEffect
     private void jCheckBoxMenuItemExploreGraphDbStartupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItemExploreGraphDbStartupActionPerformed
@@ -2062,6 +2066,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         if (null != aprsSystem) {
             aprsSystem.stopSimUpdateTimer();
         }
+        this.close();
     }
 
     @UIEffect
@@ -2191,7 +2196,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             jCheckBoxMenuItemCorrectionMode.setSelected(selected);
         });
     }
-    
+
     void setCheckBoxMenuItemUseCsvFilesInsteadOfDatabase(boolean selected) {
         Utils.runOnDispatchThread(() -> {
             AprsSystemDisplayJFrame.this.jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase.setSelected(selected);
@@ -2340,7 +2345,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         selectCustomWindowsFile();
     }//GEN-LAST:event_jMenuItemAddExistingCustomWindowStartupActionPerformed
 
-    private void selectCustomWindowsFile() throws  HeadlessException {
+    private void selectCustomWindowsFile() throws HeadlessException {
         if (null == aprsSystem) {
             throw new NullPointerException("null==aprsSystem");
         }
@@ -2384,7 +2389,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             if (null == customWindowsFile) {
                 return;
             }
-            try (PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile, true))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(customWindowsFile, true))) {
                 pw.println(selectedFile);
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystemDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -2449,7 +2454,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 //            throw new IllegalStateException("aprsSystem ==null, this=" + this);
 //        }
 //    }
-
     /**
      * Get the state of the reverse flag. It is set to indicate that an
      * alternative set of actions that empty rather than fill the kit trays is
