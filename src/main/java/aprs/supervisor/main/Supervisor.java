@@ -132,6 +132,47 @@ public class Supervisor {
         });
     }
 
+    
+    public XFuture<?> runScript(BufferedReader br) throws IOException {
+        String line = null;
+        Map<String, XFuture<?>> sysFutureMap = new ConcurrentHashMap<>();
+        AprsSystem sys = null;
+        File actionsFileTmp = null;
+        XFuture<?> ret = null;
+        while (null != (line = br.readLine())) {
+            line = line.trim();
+            if (line.startsWith("sys=")) {
+                sys = getSysByTask(line.substring(4).trim());
+                continue;
+            } else if (line.startsWith("sync")) {
+                final File oldActionsFileTmp = actionsFileTmp;
+                actionsFileTmp = null;
+                final AprsSystem sysToSync = sys;
+                sys = null;
+                XFuture<?> xf = sysFutureMap.compute(sys.getTaskName(),
+                        (String key, XFuture<?> value) -> {
+                            try {
+                                if (value == null) {
+                                    return sysToSync.startActionsFile(oldActionsFileTmp);
+                                } else {
+                                    return value.thenComposeIO(x -> sysToSync.startActionsFile(oldActionsFileTmp));
+                                }
+                            } catch (Exception exception) {
+                                return XFuture.completedFuture(key);
+                            }
+                        });
+            } else {
+                if (null == actionsFileTmp) {
+                    actionsFileTmp = Utils.createTempFile("actions", ".txt");
+                }
+                try (PrintWriter pw = new PrintWriter(new FileOutputStream(actionsFileTmp, true/* append */))) {
+                    pw.println(line);
+                }
+            }
+        }
+        return ret;
+    }
+
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
         XFuture<?> completePrevMultiFuture = completePrevMulti();
@@ -5731,11 +5772,10 @@ public class Supervisor {
 //            stepperFuture.getAndSet(new XFutureVoid("supervisorStepperFuture")).complete();
 //        }
 //    }
-    
-    public static  <T> T q(T t, T other) {
-        return (t != null)?t:other;
+    public static <T> T q(T t, T other) {
+        return (t != null) ? t : other;
     }
-    
+
     private XFutureVoid waitSingleStep(String info) {
         if (!singleStepping) {
             return STEPPER_COMPLETED_FUTURE;
@@ -5763,7 +5803,7 @@ public class Supervisor {
     @SuppressWarnings("nullness")
     public XFutureVoid showMesssage(String message) {
         return Utils.runOnDispatchThread(() -> {
-            JOptionPane.showMessageDialog(displayJFrame,message );
+            JOptionPane.showMessageDialog(displayJFrame, message);
         });
     }
 
@@ -9793,7 +9833,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                 @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                  @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
