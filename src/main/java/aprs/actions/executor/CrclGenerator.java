@@ -4912,6 +4912,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private final ConcurrentMap<String, String> toolChangerJointValsMap
             = new ConcurrentHashMap<>();
 
+    
+
     public void putToolChangerJointVals(String key, String value) {
         toolChangerJointValsMap.put(key, value);
     }
@@ -4929,6 +4931,26 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         toolChangerJointValsMap.clear();
     }
 
+    private final ConcurrentMap<String, String> recordedPosesJointValsMap
+            = new ConcurrentHashMap<>();
+    
+    public void putRecordedPosesJointVals(String key, String value) {
+        recordedPosesJointValsMap.put(key, value);
+    }
+
+    private @Nullable
+    String getRecordedPosesJointVals(String key) {
+        return recordedPosesJointValsMap.get(key);
+    }
+
+    public void removeRecordedPosesJointVals(String key) {
+        recordedPosesJointValsMap.remove(key);
+    }
+
+    public void clearRecordedPosesJointVals() {
+        recordedPosesJointValsMap.clear();
+    }
+    
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
@@ -5166,7 +5188,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return trayAttachOffsetsMap;
     }
 
-    private Map<String, PoseType> toolHolderPoseMap = new ConcurrentHashMap<>();
+    private final Map<String, PoseType> recordedPoseMap = new ConcurrentHashMap<>();
+
+    public Map<String, PoseType> getRecordedPoseMap() {
+        return recordedPoseMap;
+    }
+
+    
+    private final Map<String, PoseType> toolHolderPoseMap = new ConcurrentHashMap<>();
 
     /**
      * Get the value of toolHolderPoseMap
@@ -5175,15 +5204,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public Map<String, PoseType> getToolHolderPoseMap() {
         return toolHolderPoseMap;
-    }
-
-    /**
-     * Set the value of toolHolderPoseMap
-     *
-     * @param toolHolderPoseMap new value of toolHolderPoseMap
-     */
-    public void setToolHolderPoseMap(Map<String, PoseType> toolHolderPoseMap) {
-        this.toolHolderPoseMap = toolHolderPoseMap;
     }
 
     private Map<String, String> partToolMap = new ConcurrentHashMap<>();
