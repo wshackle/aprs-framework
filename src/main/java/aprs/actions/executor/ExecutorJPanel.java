@@ -96,6 +96,7 @@ import static crcl.copier.CRCLCopier.copy;
 import static crcl.utils.CRCLPosemath.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Integer.max;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -910,9 +911,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         jScrollPaneRecordedPoses = new javax.swing.JScrollPane();
         jTableRecordedPoses = new javax.swing.JTable();
         jButtonRecordPose = new javax.swing.JButton();
-        jButtonRecordToolHolderApproach1 = new javax.swing.JButton();
-        jButtonDeleteToolHolderPose1 = new javax.swing.JButton();
-        jButtonAddToolHolderPose1 = new javax.swing.JButton();
+        jButtonMoveCartesianRecordedPose = new javax.swing.JButton();
+        jButtonDeleteRecordedPose = new javax.swing.JButton();
+        jButtonMoveRecordedJoints = new javax.swing.JButton();
         jButtonRenameToolHolderPose1 = new javax.swing.JButton();
         jLabel19 = new javax.swing.JLabel();
         jTextFieldRecordedPosesFile = new javax.swing.JTextField();
@@ -2266,27 +2267,24 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         });
 
-        jButtonRecordToolHolderApproach1.setText("Record Tool Holder Approach");
-        jButtonRecordToolHolderApproach1.setEnabled(false);
-        jButtonRecordToolHolderApproach1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonMoveCartesianRecordedPose.setText("Move Cartesian");
+        jButtonMoveCartesianRecordedPose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonRecordToolHolderApproach1ActionPerformed(evt);
+                jButtonMoveCartesianRecordedPoseActionPerformed(evt);
             }
         });
 
-        jButtonDeleteToolHolderPose1.setText("Delete Tool Holder Pose");
-        jButtonDeleteToolHolderPose1.setEnabled(false);
-        jButtonDeleteToolHolderPose1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonDeleteRecordedPose.setText("Delete  Pose");
+        jButtonDeleteRecordedPose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonDeleteToolHolderPose1ActionPerformed(evt);
+                jButtonDeleteRecordedPoseActionPerformed(evt);
             }
         });
 
-        jButtonAddToolHolderPose1.setText("Add Tool Holder Pose");
-        jButtonAddToolHolderPose1.setEnabled(false);
-        jButtonAddToolHolderPose1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonMoveRecordedJoints.setText("Move Joints");
+        jButtonMoveRecordedJoints.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonAddToolHolderPose1ActionPerformed(evt);
+                jButtonMoveRecordedJointsActionPerformed(evt);
             }
         });
 
@@ -2312,11 +2310,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
                                 .addComponent(jButtonRecordPose)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonRecordToolHolderApproach1)
+                                .addComponent(jButtonMoveCartesianRecordedPose)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonAddToolHolderPose1)
+                                .addComponent(jButtonMoveRecordedJoints)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonDeleteToolHolderPose1)
+                                .addComponent(jButtonDeleteRecordedPose)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButtonRenameToolHolderPose1))
                             .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
@@ -2333,9 +2331,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 .addContainerGap()
                 .addGroup(jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonRecordPose)
-                    .addComponent(jButtonRecordToolHolderApproach1)
-                    .addComponent(jButtonDeleteToolHolderPose1)
-                    .addComponent(jButtonAddToolHolderPose1)
+                    .addComponent(jButtonMoveCartesianRecordedPose)
+                    .addComponent(jButtonDeleteRecordedPose)
+                    .addComponent(jButtonMoveRecordedJoints)
                     .addComponent(jButtonRenameToolHolderPose1))
                 .addGap(11, 11, 11)
                 .addComponent(jScrollPaneRecordedPoses, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
@@ -5273,7 +5271,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final CachedTable table = toolHolderPositionsCachedTable;
         Map<String, PoseType> tablePoseMap
                 = crclGenerator.getToolHolderPoseMap();
-        loadPosesFileToTable(table, f, tablePoseMap,true);
+        final ConcurrentMap<String, String> jointsMap
+                = crclGenerator.getToolChangerJointValsMap();
+        loadPosesFileToTable(table, f, tablePoseMap, jointsMap, true);
     }
 
     private void loadRecordedPosesMap() throws IOException {
@@ -5285,14 +5285,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return;
         }
         int lineNumber = 0;
-        crclGenerator.clearToolChangerJointVals();
+        crclGenerator.getRecordedPosesJointValsMap().clear();
         final CachedTable table = recordedPositionsCachedTable;
         Map<String, PoseType> tablePoseMap
                 = crclGenerator.getRecordedPoseMap();
-        loadPosesFileToTable(table, f, tablePoseMap,false);
+        final ConcurrentMap<String, String> jointsMap 
+                = crclGenerator.getRecordedPosesJointValsMap();
+        loadPosesFileToTable(table, f, tablePoseMap, jointsMap, false);
     }
 
-    private void loadPosesFileToTable(final CachedTable table, File f, Map<String, PoseType> tablePoseMap, boolean updateHolderContents) {
+    private void loadPosesFileToTable(final CachedTable table, File f, Map<String, PoseType> tablePoseMap, Map<String, String> jointsMap, boolean toolHolderMode) {
         table.setRowCount(0);
 
         try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
@@ -5347,7 +5349,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
                 try {
                     String name = rec.get("Name");
-                    if (updateHolderContents) {
+                    if (toolHolderMode) {
                         addHolderContentsRowIfNameNotFound(name);
                     }
                     PoseType pose = CRCLPosemath.toPoseType(
@@ -5363,10 +5365,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             ));
                     boolean approach = Boolean.parseBoolean(rec.get(APPROACH_COLUMN_HEADER));
                     String jointVals = rec.get(JOINTS_COLUMN_HEADER);
-                    if (null != jointVals && jointVals.length() > 0 && approach) {
-                        crclGenerator.putToolChangerJointVals(name, jointVals);
+                    if (null != jointVals && jointVals.length() > 0 && (approach || !toolHolderMode)) {
+                        jointsMap.put(name, jointVals);
                     }
-                    if (!approach) {
+                    if (!approach || !toolHolderMode) {
                         tablePoseMap.put(name, pose);
                     }
                 } catch (Exception exception) {
@@ -5736,7 +5738,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     @SuppressWarnings("nullness")
-    private String queryUserForRecordedPosName(String qname) {
+    private String queryUserForNewRecordedPosName(String qname) {
         String queryResult = (String) JOptionPane.showInputDialog(
                 this, // parentComponent
                 "Recorded Pose Name?", // Object message
@@ -5750,11 +5752,25 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, queryResult + " already in table. Overwrite?")) {
                     return queryResult;
                 } else {
-                    return queryUserForRecordedPosName(qname);
+                    return queryUserForNewRecordedPosName(qname);
                 }
             }
         }
         return queryResult;
+    }
+
+    @UIEffect
+    @SuppressWarnings("nullness")
+    private String queryUserForExistingRecordedPosName(String qname) {
+        return (String) JOptionPane.showInputDialog(
+                this, // parentComponent
+                "Recorded Pose Name?", // Object message
+                aprsSystem.getTaskName() + " " + aprsSystem.getRobotName() + " " + qname + " choice", //  String title
+                JOptionPane.QUESTION_MESSAGE, // messageType
+                (Icon) null,// icon 
+                getRecordedPoseNames(), // selectionValues
+                "" // initialSelectionValue
+        );
     }
 
     @UIEffect
@@ -5883,7 +5899,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             toolHolderPoseMap.put(name, pose);
             PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
             updateToolChangePose(name, true, approachPose, rpy, null);
-            crclGenerator.removeToolChangerJointVals(name);
+            crclGenerator.getToolChangerJointValsMap().get(name);
             saveToolChangerPoseMap();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -6329,7 +6345,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String jointString = getJointValsString();
             updateToolChangePose(toolHolderPoseName, true, pose, rpy, jointString);
             if (null != jointString) {
-                crclGenerator.putToolChangerJointVals(toolHolderPoseName, jointString);
+                crclGenerator.getToolChangerJointValsMap().put(toolHolderPoseName, jointString);
             }
             saveToolChangerPoseMap();
         } catch (Exception ex) {
@@ -6667,7 +6683,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("Can not read current pose.");
                 return;
             }
-            String recordedPoseName = queryUserForRecordedPosName("Record Pose");
+            String recordedPoseName = queryUserForNewRecordedPosName("Record Pose");
             if (null == recordedPoseName
                     || recordedPoseName.length() < 1) {
                 recordedPoseName = "recordedPose" + (recordedPositionsCachedTable.getRowCount() + 1);
@@ -6678,24 +6694,103 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String jointString = getJointValsString();
             updateRecordedPose(name, pose, rpy, jointString);
             recordedPoseMap.put(name, pose);
-            crclGenerator.putRecordedPosesJointVals(name, jointString);
+            crclGenerator.getRecordedPosesJointValsMap().put(name, jointString);
             saveRecordedPosesMap();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordPoseActionPerformed
 
-    private void jButtonRecordToolHolderApproach1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderApproach1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButtonRecordToolHolderApproach1ActionPerformed
+    private void jButtonMoveCartesianRecordedPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonMoveCartesianRecordedPoseActionPerformed
+        try {
+            setReplanFromIndex(0);
+            abortProgram();
+            autoStart = true;
+            String recordedPoseName = queryUserForExistingRecordedPosName("Move Cartesian Recorded Pose");
+            if (null == recordedPoseName
+                    || recordedPoseName.length() < 1) {
+                warnDialog("recordedPoseName to take is " + recordedPoseName);
+                return;
+            }
+            final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        XFuture<Boolean> future
+                                = this.moveToRecordedPose(recordedPoseName);
+                        setRunProgramFuture(future);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                setRunProgramFuture(this.moveToRecordedPose(recordedPoseName));
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+            abortProgram();
+            showExceptionInProgram(ex);
+        }
+    }//GEN-LAST:event_jButtonMoveCartesianRecordedPoseActionPerformed
 
-    private void jButtonDeleteToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteToolHolderPose1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButtonDeleteToolHolderPose1ActionPerformed
+    private void jButtonDeleteRecordedPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteRecordedPoseActionPerformed
+        try {
+            Map<String, PoseType> recordedPoseMap
+                    = crclGenerator.getRecordedPoseMap();
+            String nameToDelete = queryUserForExistingRecordedPosName("Record Pose");
+            if (null == nameToDelete
+                    || nameToDelete.length() < 1) {
+                return;
+            }
+            if (!recordedPoseMap.keySet().contains(nameToDelete)) {
+                JOptionPane.showMessageDialog(this, "nameToDelete=" + nameToDelete + " is not in " + recordedPoseMap.keySet());
+                return;
+            }
+//            toolChangerPose = pose;
+            recordedPoseMap.remove(nameToDelete);
+            crclGenerator.getRecordedPosesJointValsMap().remove(nameToDelete);
+            deleteMatchingRowsFromTable(recordedPositionsCachedTable, nameToDelete);
+            saveRecordedPosesMap();
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+        }
+    }//GEN-LAST:event_jButtonDeleteRecordedPoseActionPerformed
 
-    private void jButtonAddToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPose1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButtonAddToolHolderPose1ActionPerformed
+    private void jButtonMoveRecordedJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonMoveRecordedJointsActionPerformed
+        try {
+            setReplanFromIndex(0);
+            abortProgram();
+            autoStart = true;
+            String recordedJointsName = queryUserForExistingRecordedPosName("Move Recorded Joints");
+            if (null == recordedJointsName
+                    || recordedJointsName.length() < 1) {
+                warnDialog("recordedPoseName to take is " + recordedJointsName);
+                return;
+            }
+            final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
+            if (null != generateCrclService) {
+                generateCrclService.submit(() -> {
+                    try {
+                        XFuture<Boolean> future
+                                = this.moveToRecordedJoints(recordedJointsName);
+                        setRunProgramFuture(future);
+                    } catch (Exception ex) {
+                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                        abortProgram();
+                        showExceptionInProgram(ex);
+                    }
+                });
+            } else {
+                setRunProgramFuture(this.moveToRecordedJoints(recordedJointsName));
+            }
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+            abortProgram();
+            showExceptionInProgram(ex);
+        }
+    }//GEN-LAST:event_jButtonMoveRecordedJointsActionPerformed
 
     private void jButtonRenameToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPose1ActionPerformed
         // TODO add your handling code here:
@@ -7673,6 +7768,82 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
+    private XFuture<Boolean> moveToRecordedPose(String recordedPoseName) throws Exception {
+        crclGenerator.partialReset();
+        Map<String, String> options = getTableOptions();
+        setReplanFromIndex(0);
+        List<Action> actionsList = new ArrayList<>();
+        Action moveRecordedPoseAction
+                = Action.newMoveRecordedPose(recordedPoseName);
+        actionsList.add(moveRecordedPoseAction);
+        syncCrclGeneratorPositionMaps();
+        CRCLProgramType program = createEmptyProgram();
+        Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
+        crclGenerator.setSolver(null);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        crclGenerator.setSolver(origSolver);
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
+        setEndCanonCmdId(program);
+
+        for (PositionMap positionMap : getPositionMaps()) {
+            if (null != positionMap) {
+                PointType offset = positionMap.getLastOffset();
+                if (null != offset) {
+                    jTextFieldOffset.setText(String.format("%.1f, %.1f, %.1f",
+                            offset.getX(),
+                            offset.getY(),
+                            offset.getZ()));
+                }
+                PointType testPoint = positionMap.getLastPointOut();
+                if (null != testPoint) {
+                    String testPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    testPoint.getX(),
+                                    testPoint.getY(),
+                                    testPoint.getZ());
+                    jTextFieldAdjPose.setText(testPoseString);
+                }
+                PointType origPoint = positionMap.getLastPointIn();
+                if (null != origPoint) {
+                    String origPoseString
+                            = String.format("%.1f, %.1f, %.1f",
+                                    origPoint.getX(),
+                                    origPoint.getY(),
+                                    origPoint.getZ());
+                    this.jTextFieldTestPose.setText(origPoseString);
+                }
+            }
+        }
+
+        replanStarted.set(false);
+        return startCrclProgram(program);
+    }
+
+    private XFuture<Boolean> moveToRecordedJoints(String recordedName) throws Exception {
+        crclGenerator.partialReset();
+        Map<String, String> options = getTableOptions();
+        setReplanFromIndex(0);
+        List<Action> actionsList = new ArrayList<>();
+        Action moveRecordedJointsAction
+                = Action.newMoveRecordedJoints(recordedName);
+        actionsList.add(moveRecordedJointsAction);
+        syncCrclGeneratorPositionMaps();
+        CRCLProgramType program = createEmptyProgram();
+        Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
+        crclGenerator.setSolver(null);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        crclGenerator.setSolver(origSolver);
+        indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
+        CRCLUtils.middleCommands(program).clear();
+        CRCLUtils.middleCommands(program).addAll(cmds);
+        setEndCanonCmdId(program);
+
+        replanStarted.set(false);
+        return startCrclProgram(program);
+    }
+
     private XFuture<Boolean> takePart(String part) throws Exception {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
@@ -8439,15 +8610,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonAbort;
     private javax.swing.JButton jButtonAddPartToToolEntry;
     private javax.swing.JButton jButtonAddToolHolderPose;
-    private javax.swing.JButton jButtonAddToolHolderPose1;
     private javax.swing.JButton jButtonAddToolOffset;
     private javax.swing.JButton jButtonAddTrayAttach;
     private javax.swing.JButton jButtonClear;
     private javax.swing.JButton jButtonClearPoseCache;
     private javax.swing.JButton jButtonContinue;
     private javax.swing.JButton jButtonDeletePartToToolEntry;
+    private javax.swing.JButton jButtonDeleteRecordedPose;
     private javax.swing.JButton jButtonDeleteToolHolderPose;
-    private javax.swing.JButton jButtonDeleteToolHolderPose1;
     private javax.swing.JButton jButtonDeleteToolOffset;
     private javax.swing.JButton jButtonDeleteTrayAttach;
     private javax.swing.JButton jButtonDropTool;
@@ -8463,6 +8633,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonLoad;
     private javax.swing.JButton jButtonLoadPddlActionsFromFile;
     private javax.swing.JButton jButtonLookFor;
+    private javax.swing.JButton jButtonMoveCartesianRecordedPose;
+    private javax.swing.JButton jButtonMoveRecordedJoints;
     private javax.swing.JButton jButtonNewLogFile;
     private javax.swing.JButton jButtonPause;
     private javax.swing.JButton jButtonPddlOutputViewEdit;
@@ -8476,7 +8648,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private javax.swing.JButton jButtonRecordPose;
     private javax.swing.JButton jButtonRecordSuccess;
     private javax.swing.JButton jButtonRecordToolHolderApproach;
-    private javax.swing.JButton jButtonRecordToolHolderApproach1;
     private javax.swing.JButton jButtonRecordToolHolderPose;
     private javax.swing.JButton jButtonRenameToolHolderPose;
     private javax.swing.JButton jButtonRenameToolHolderPose1;

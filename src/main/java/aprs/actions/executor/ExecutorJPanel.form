@@ -1947,11 +1947,11 @@
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="jButtonRecordPose" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jButtonRecordToolHolderApproach1" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonMoveCartesianRecordedPose" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jButtonAddToolHolderPose1" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonMoveRecordedJoints" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jButtonDeleteToolHolderPose1" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jButtonDeleteRecordedPose" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButtonRenameToolHolderPose1" min="-2" max="-2" attributes="0"/>
                                   </Group>
@@ -1975,9 +1975,9 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jButtonRecordPose" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jButtonRecordToolHolderApproach1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jButtonDeleteToolHolderPose1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jButtonAddToolHolderPose1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonMoveCartesianRecordedPose" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonDeleteRecordedPose" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonMoveRecordedJoints" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonRenameToolHolderPose1" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
@@ -2025,31 +2025,28 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordPoseActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JButton" name="jButtonRecordToolHolderApproach1">
+            <Component class="javax.swing.JButton" name="jButtonMoveCartesianRecordedPose">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Record Tool Holder Approach"/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Move Cartesian"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonRecordToolHolderApproach1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonMoveCartesianRecordedPoseActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JButton" name="jButtonDeleteToolHolderPose1">
+            <Component class="javax.swing.JButton" name="jButtonDeleteRecordedPose">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Delete Tool Holder Pose"/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Delete  Pose"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDeleteToolHolderPose1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonDeleteRecordedPoseActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JButton" name="jButtonAddToolHolderPose1">
+            <Component class="javax.swing.JButton" name="jButtonMoveRecordedJoints">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Add Tool Holder Pose"/>
-                <Property name="enabled" type="boolean" value="false"/>
+                <Property name="text" type="java.lang.String" value="Move Joints"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonAddToolHolderPose1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonMoveRecordedJointsActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JButton" name="jButtonRenameToolHolderPose1">

@@ -24,6 +24,8 @@ package aprs.actions.executor;
 
 import static aprs.actions.executor.ActionType.DISABLE_OPTIMIZATION;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
+import static aprs.actions.executor.ActionType.MOVE_RECORDED_JOINTS;
+import static aprs.actions.executor.ActionType.MOVE_RECORDED_POSE;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART_BY_TYPE_AND_POSITION;
@@ -57,6 +59,20 @@ public class Action {
         return new Action.ActionBuilder()
                 .type(DISABLE_OPTIMIZATION)
                 .args(new String[]{})
+                .build();
+    }
+    
+    public static Action newMoveRecordedPose(String posename) {
+        return new Action.ActionBuilder()
+                .type(MOVE_RECORDED_POSE)
+                .args(new String[]{posename})
+                .build();
+    }
+    
+    public static Action newMoveRecordedJoints(String name) {
+        return new Action.ActionBuilder()
+                .type(MOVE_RECORDED_JOINTS)
+                .args(new String[]{name})
                 .build();
     }
     

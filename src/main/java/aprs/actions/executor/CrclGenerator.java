@@ -244,11 +244,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        }
 //        return false;
 //    }
-
     private List<OpAction> pddlActionsToOpActions(
             List<? extends Action> listIn,
             int start,
-            int endl@Nullable[],
+            int endl@Nullable [],
             @Nullable List<OpAction> skippedOpActionsList,
             @Nullable List<Action> skippedPddlActionsList
     ) throws SQLException {
@@ -274,7 +273,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        @Nullable
 //        PoseType apply(String name, boolean ignoreNull) throws SQLException;
 //    }
-
     private boolean inKitTrayByName(String name) {
         return !name.endsWith("_in_pt") && !name.contains("_in_pt_")
                 && (name.contains("_in_kit_") || name.contains("_in_kt_") || name.endsWith("in_kt"));
@@ -283,7 +281,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<OpAction> pddlActionsToOpActions(
             List<? extends Action> listIn,
             int start,
-            int endl@Nullable[],
+            int endl@Nullable [],
             @Nullable List<OpAction> skippedOpActionsList,
             @Nullable List<Action> skippedPddlActionsList,
             @Nullable PointType lookForPt,
@@ -791,7 +789,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             = (PrintWriter pw, String prefix, KitToCheck kit) -> kit.print(pw, prefix);
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
-        final AprsSystem aprsSystem1 = requireNonNull(this.aprsSystem,"aprsSystem");
+        final AprsSystem aprsSystem1 = requireNonNull(this.aprsSystem, "aprsSystem");
         try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
@@ -1386,7 +1384,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
             throws Exception {
-        final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem,"aprsSystem");
+        final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem, "aprsSystem");
         GenerateParams gparams = new GenerateParams();
         gparams.actions = actions;
         gparams.startingIndex = startingIndex;
@@ -1606,7 +1604,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private List<MiddleCommandType> privateGenerateNoReplan(
             GenerateParams gparams,
-            @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException,  IllegalStateException, IllegalArgumentException {
+            @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException, IllegalStateException, IllegalArgumentException {
         final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
             throw new NullPointerException("null == gparams.options");
@@ -1860,6 +1858,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     case TEST_PART_POSITION:
                         testPartPosition(action, cmds);
                         break;
+
                     case LOOK_FOR_PARTS:
                         lookForParts(action, cmds, (idx < 2),
                                 doInspectKit ? (idx == gparamsActionsSize - 1) : (idx >= gparamsActionsSize - 2),
@@ -1886,6 +1885,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                     case GOTO_TOOL_CHANGER_POSE:
                         gotoToolChangerPose(action, cmds);
+                        break;
+
+                    case MOVE_RECORDED_POSE:
+                        moveRecordedPose(action, cmds);
+                        break;
+
+                    case MOVE_RECORDED_JOINTS:
+                        moveRecordedJoints(action, cmds);
                         break;
 
                     case DROP_TOOL_BY_HOLDER:
@@ -2268,7 +2275,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            return defaultValue;
 //        }
 //    }
-
     private static long getLongProperty(String propName, long defaultValue) {
         try {
             String propValueString = System.getProperty(propName);
@@ -2652,7 +2658,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             List<Action> actions,
             int startingIndex,
             List<PhysicalItem> physicalItemsLocal) {
-        final AprsSystem aprsSystemLocal = requireNonNull(this.aprsSystem,"aprsSystem");
+        final AprsSystem aprsSystemLocal = requireNonNull(this.aprsSystem, "aprsSystem");
         if (null == physicalItemsLocal) {
             throw new IllegalArgumentException("physicalItemsLocal=" + physicalItemsLocal);
         }
@@ -3592,7 +3598,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     List<MiddleCommandType> cmds
             ) throws IOException {
         StringBuilder errMsgSb = new StringBuilder();
-        final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem,"aprsSystem");
+        final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem, "aprsSystem");
         localAprsSystem.setSnapshotsSelected(true);
         takeSimViewSnapshot("checkKitsFailed", physicalItemsLocal);
         String errMsgStart = localAprsSystem.getRunName();
@@ -4324,7 +4330,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        l.addAll(poseCacheToDetectedItemList());
 //        return Collections.unmodifiableList(l);
 //    }
-
     private XFutureVoid takeDatabaseViewSnapshot(File f) {
         if (null != aprsSystem) {
             return aprsSystem.startVisionToDbNewItemsImageSave(f);
@@ -4367,14 +4372,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean snapshotsEnabled() {
         return takeSnapshots && aprsSystem != null && aprsSystem.snapshotsEnabled();
     }
-    
+
     private File imageLogDir() throws IOException {
-	if(null == aprsSystem) {
-	    File imgDir =  new File(Utils.getlogFileDir(),"images");
-	    imgDir.mkdirs();
-	    return imgDir;
-	}
-	return aprsSystem.getLogImageDir();
+        if (null == aprsSystem) {
+            File imgDir = new File(Utils.getlogFileDir(), "images");
+            imgDir.mkdirs();
+            return imgDir;
+        }
+        return aprsSystem.getLogImageDir();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -4382,7 +4387,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != aprsSystem) {
             return aprsSystem.createTempFile(prefix, ".PNG", aprsSystem.getLogImageDir());
         }
-        return Utils.createTempFile(prefix, ".PNG",imageLogDir());
+        return Utils.createTempFile(prefix, ".PNG", imageLogDir());
     }
 
     public void takeSnapshots(String prefix, String title, @Nullable PoseType pose, @Nullable String label) {
@@ -4396,7 +4401,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             .thenRun(() -> {
                                 takeSimViewSnapshot(imageTempFile, poseCacheToDetectedItemList());
                             });
-                }  else {
+                } else {
                     takeSimViewSnapshot(imageTempFile, poseCacheToDetectedItemList());
                 }
             } catch (IOException ex) {
@@ -4516,8 +4521,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        assert (null != this.aprsSystem) : "null == this.aprsSystemInterface: @AssumeAssertion(nullness)";
 //        return this.aprsSystem.getVisionToDBRotationOffset();
 //    }
-
-
 //    private double normAngle(double angleIn) {
 //        double angleOut = angleIn;
 //        if (angleOut > Math.PI) {
@@ -4527,7 +4530,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        }
 //        return angleOut;
 //    }
-
     //    private int checkPartTypeInSlot(String partInKt, Slot slot) throws SQLException, IOException {
 //        int nbOfOccupiedSlots = 0;
 //        List<String> allPartsInKt = new ArrayList<>();
@@ -4606,7 +4608,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //        }
 //        return isPartInSlot;
 //    }
-
     private int toolChangeToolNameArgIndex = 1;
 
     /**
@@ -4683,7 +4684,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            this.parentExecutorJPanel.setForceFakeTakeFlag(_newValue);
 //        }
 //    }
-
     /**
      * Add commands to the list that will take a given part.
      *
@@ -4890,9 +4890,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            TakenPartList.add(partName);
 //        }
 //    }
-
     private volatile boolean getPoseFailedOnce = false;
-
 
 //    private List<String> getAllPartsInKt(String name) throws SQLException, IOException {
 //
@@ -4905,51 +4903,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //
 //        return partsInKtList;
 //    }
-
     private volatile @Nullable
     PoseType lastTestApproachPose = null;
 
     private final ConcurrentMap<String, String> toolChangerJointValsMap
             = new ConcurrentHashMap<>();
 
-    
-
-    public void putToolChangerJointVals(String key, String value) {
-        toolChangerJointValsMap.put(key, value);
-    }
-
-    private @Nullable
-    String getToolChangerJointVals(String key) {
-        return toolChangerJointValsMap.get(key);
-    }
-
-    public void removeToolChangerJointVals(String key) {
-        toolChangerJointValsMap.remove(key);
-    }
-
-    public void clearToolChangerJointVals() {
-        toolChangerJointValsMap.clear();
-    }
 
     private final ConcurrentMap<String, String> recordedPosesJointValsMap
             = new ConcurrentHashMap<>();
-    
-    public void putRecordedPosesJointVals(String key, String value) {
-        recordedPosesJointValsMap.put(key, value);
+
+    public ConcurrentMap<String, String> getToolChangerJointValsMap() {
+        return toolChangerJointValsMap;
     }
 
-    private @Nullable
-    String getRecordedPosesJointVals(String key) {
-        return recordedPosesJointValsMap.get(key);
+    public ConcurrentMap<String, String> getRecordedPosesJointValsMap() {
+        return recordedPosesJointValsMap;
     }
 
-    public void removeRecordedPosesJointVals(String key) {
-        recordedPosesJointValsMap.remove(key);
-    }
 
-    public void clearRecordedPosesJointVals() {
-        recordedPosesJointValsMap.clear();
-    }
     
     /**
      * Add commands to the list that will test a given part position by opening
@@ -5194,7 +5166,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return recordedPoseMap;
     }
 
-    
     private final Map<String, PoseType> toolHolderPoseMap = new ConcurrentHashMap<>();
 
     /**
@@ -6051,7 +6022,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //            addJointMove(out, jointValsCopy, 1.0);
 //        }
 //    }
-
     private double jointSpeed = 5.0;
 
     /**
@@ -6233,7 +6203,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //    private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale) {
 //        addJointMove(out, jointVals, speedScale, 0, jointVals.length);
 //    }
-
     private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale, int start, int end) {
         checkJointToleranceSetting(out);
         ActuateJointsType ajCmd = new ActuateJointsType();
@@ -6459,10 +6428,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     System.err.println("");
                     System.out.flush();
                     System.out.flush();
-                    if(ex instanceof RuntimeException) {
+                    if (ex instanceof RuntimeException) {
                         throw (RuntimeException) ex;
                     } else {
-                         throw new RuntimeException(ex);
+                        throw new RuntimeException(ex);
                     }
                 }
             });
@@ -6538,7 +6507,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         clearWayToHolder(out, toolChangerPosName);
         addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName);
         addSlowLimitedMoveUpFromCurrent(out);
-        String jointValsString = getToolChangerJointVals(toolChangerPosName);
+        String jointValsString = toolChangerJointValsMap.get(toolChangerPosName);
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
             String lookForJointsString = options.get("lookForJoints");
             double jointVals[] = jointValStringToArray(jointValsString);
@@ -6854,6 +6823,57 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         addSetSlowSpeed(out);
         addMoveTo(out, pose, false, "gotoToolChangerPose.toolHolderName=" + toolHolderName);
+    }
+
+    private void moveRecordedPose(Action action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+
+        lastTestApproachPose = null;
+        String poseName = action.getArgs()[0];
+        checkSettings();
+        checkDbReady();
+        PoseType pose = recordedPoseMap.get(poseName);
+        if (null == pose) {
+            throw new IllegalStateException("no pose for " + poseName);
+        }
+        addSetSlowSpeed(out);
+        addMoveTo(out, pose, false, "moveRecordedPose.poseName=" + poseName);
+    }
+
+    private void moveRecordedJoints(Action action, List<MiddleCommandType> out) throws IllegalStateException, SQLException {
+
+        String recordName = action.getArgs()[0];
+        String jointValsString = recordedPosesJointValsMap.get(recordName);
+        if (null == jointValsString) {
+            throw new IllegalStateException("no joint vals for " + recordName+ " in "+recordedPosesJointValsMap.keySet());
+        }
+        checkSettings();
+        checkDbReady();
+        String lookForJointsString = options.get("lookForJoints");
+        double jointVals[] = jointValStringToArray(jointValsString);
+//            double joint0Diff = expectedJoint0Val - jointVals[0];
+//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
+//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
+//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
+//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
+//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
+//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
+//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
+//                    addPrepJointMove(lookForJointVals, out);
+//                    lookForJointVals[0] = jointVals[0];
+//                    addMessageCommand(out,
+//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
+//
+//                }
+//            }
+//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+        if (null != lookForJointsString && lookForJointsString.length() > 0) {
+            double lookForJointVals[] = jointValStringToArray(lookForJointsString);
+            checkJointToleranceSetting(out);
+//            addPrepJointMove(lookForJointVals, out);
+            addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
+        }
+        addJointMove(out, jointVals, 1.0, 0, 1);
+        addJointMove(out, jointVals, 1.0, 1, jointVals.length);
     }
 
     private void checkDbReady() throws IllegalStateException {
@@ -7200,7 +7220,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //    private void notifyWrappedActionConsumers(WrappedActionInfo wai) {
 //        wrappedActionConsumers.forEach(consumer -> consumer.accept(wai));
 //    }
-
     private int placePartSlotArgIndex;
 
     /**
