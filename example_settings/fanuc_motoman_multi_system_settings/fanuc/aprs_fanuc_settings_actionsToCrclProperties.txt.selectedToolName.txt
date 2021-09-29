@@ -1,1 +1,1 @@
-pincher
+small_vacuum
