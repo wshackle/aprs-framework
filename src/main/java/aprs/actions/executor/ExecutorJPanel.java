@@ -5289,7 +5289,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final CachedTable table = recordedPositionsCachedTable;
         Map<String, PoseType> tablePoseMap
                 = crclGenerator.getRecordedPoseMap();
-        final ConcurrentMap<String, String> jointsMap 
+        final ConcurrentMap<String, String> jointsMap
                 = crclGenerator.getRecordedPosesJointValsMap();
         loadPosesFileToTable(table, f, tablePoseMap, jointsMap, false);
     }
@@ -6676,8 +6676,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonRecordPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordPoseActionPerformed
         try {
-            Map<String, PoseType> recordedPoseMap
-                    = crclGenerator.getRecordedPoseMap();
             PoseType pose = aprsSystem.getCurrentPose();
             if (null == pose) {
                 warnDialog("Can not read current pose.");
@@ -6688,21 +6686,30 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     || recordedPoseName.length() < 1) {
                 recordedPoseName = "recordedPose" + (recordedPositionsCachedTable.getRowCount() + 1);
             }
-//            toolChangerPose = pose;
-            String name = recordedPoseName;
-            PmRpy rpy = CRCLPosemath.toPmRpy(pose);
             String jointString = getJointValsString();
-            updateRecordedPose(name, pose, rpy, jointString);
-            recordedPoseMap.put(name, pose);
-            crclGenerator.getRecordedPosesJointValsMap().put(name, jointString);
-            saveRecordedPosesMap();
+            storeNamedPoseAndJointString(recordedPoseName, pose, jointString);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
     }//GEN-LAST:event_jButtonRecordPoseActionPerformed
 
+    public void storeNamedPoseAndJointString(String recordedPoseName, PoseType pose, String jointString) throws PmException {
+        Map<String, PoseType> recordedPoseMap
+                = crclGenerator.getRecordedPoseMap();
+        String name = recordedPoseName;
+        PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+        updateRecordedPose(name, pose, rpy, jointString);
+        recordedPoseMap.put(name, pose);
+        crclGenerator.getRecordedPosesJointValsMap().put(name, jointString);
+        saveRecordedPosesMap();
+    }
+
     private void jButtonMoveCartesianRecordedPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonMoveCartesianRecordedPoseActionPerformed
         try {
+            if (!checkRobotConnected()) {
+                return;
+            }
+            checkDbSupplierPublisher();
             setReplanFromIndex(0);
             abortProgram();
             autoStart = true;
@@ -6712,28 +6719,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedPoseName);
                 return;
             }
-            final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
-            if (null != generateCrclService) {
-                generateCrclService.submit(() -> {
-                    try {
-                        XFuture<Boolean> future
-                                = this.moveToRecordedPose(recordedPoseName);
-                        setRunProgramFuture(future);
-                    } catch (Exception ex) {
-                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        abortProgram();
-                        showExceptionInProgram(ex);
-                    }
-                });
-            } else {
-                setRunProgramFuture(this.moveToRecordedPose(recordedPoseName));
-            }
+            cartesianMoveToRecordedPosition(recordedPoseName);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonMoveCartesianRecordedPoseActionPerformed
+
+    private boolean checkRobotConnected() throws HeadlessException {
+        if (null == aprsSystem || aprsSystem.isConnected()) {
+            JOptionPane.showMessageDialog(parentComponent, "Please connect to robot first.");
+            return false;
+        }
+        return true;
+    }
 
     private void jButtonDeleteRecordedPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteRecordedPoseActionPerformed
         try {
@@ -6760,6 +6760,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonMoveRecordedJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonMoveRecordedJointsActionPerformed
         try {
+            if (!checkRobotConnected()) {
+                return;
+            }
+            checkDbSupplierPublisher();
             setReplanFromIndex(0);
             abortProgram();
             autoStart = true;
@@ -6769,28 +6773,129 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedJointsName);
                 return;
             }
-            final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
-            if (null != generateCrclService) {
-                generateCrclService.submit(() -> {
-                    try {
-                        XFuture<Boolean> future
-                                = this.moveToRecordedJoints(recordedJointsName);
-                        setRunProgramFuture(future);
-                    } catch (Exception ex) {
-                        Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
-                        abortProgram();
-                        showExceptionInProgram(ex);
-                    }
-                });
-            } else {
-                setRunProgramFuture(this.moveToRecordedJoints(recordedJointsName));
-            }
+            jointMoveToNamedPosition(recordedJointsName);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonMoveRecordedJointsActionPerformed
+
+    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) throws Exception {
+        checkDbSupplierPublisher();
+        setReplanFromIndex(0);
+        abortProgram();
+        autoStart = true;
+        final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
+
+        if (null != generateCrclService) {
+            return XFuture.supplyAsync("cartesianMoveToRecordedPosition:" + recordedPoseName,
+                    () -> {
+                        try {
+                            XFuture<Boolean> future
+                            = this.moveToRecordedJoints(recordedPoseName);
+                            setRunProgramFuture(future);
+                            return future;
+                        } catch (Exception ex) {
+                            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            abortProgram();
+                            showExceptionInProgram(ex);
+                            if (ex instanceof RuntimeException) {
+                                RuntimeException rtex = (RuntimeException) ex;
+                                throw rtex;
+                            }
+                            throw new RuntimeException(ex);
+                        }
+                    },
+                    generateCrclService)
+                    .thenCompose((x) -> x);
+
+//            generateCrclService.submit(() -> {
+//                try {
+//                    XFuture<Boolean> future
+//                            = this.moveToRecordedJoints(recordedJointsName);
+//                    setRunProgramFuture(future);
+//                } catch (Exception ex) {
+//                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//                    abortProgram();
+//                    showExceptionInProgram(ex);
+//                }
+//            });
+        } else {
+            try {
+                XFuture<Boolean> future
+                        = this.moveToRecordedJoints(recordedPoseName);
+                setRunProgramFuture(future);
+                return future;
+            } catch (Exception exception) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, exception);
+                return XFuture.completedExceptionally(Boolean.class, exception);
+            }
+        }
+//        if (null != generateCrclService) {
+//            generateCrclService.submit(() -> {
+//                try {
+//                    XFuture<Boolean> future
+//                            = this.moveToRecordedPose(recordedPoseName);
+//                    setRunProgramFuture(future);
+//                } catch (Exception ex) {
+//                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//                    abortProgram();
+//                    showExceptionInProgram(ex);
+//                }
+//            });
+//        } else {
+//            setRunProgramFuture(this.moveToRecordedPose(recordedPoseName));
+//        }
+    }
+
+    public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
+        final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
+        if (null != generateCrclService) {
+            return XFuture.supplyAsync("jointMoveToNamedPosition:" + recordedJointsName,
+                    () -> {
+                        try {
+                            XFuture<Boolean> future
+                            = this.moveToRecordedJoints(recordedJointsName);
+                            setRunProgramFuture(future);
+                            return future;
+                        } catch (Exception ex) {
+                            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            abortProgram();
+                            showExceptionInProgram(ex);
+                            if (ex instanceof RuntimeException) {
+                                RuntimeException rtex = (RuntimeException) ex;
+                                throw rtex;
+                            }
+                            throw new RuntimeException(ex);
+                        }
+                    },
+                    generateCrclService)
+                    .thenCompose((x) -> x);
+
+//            generateCrclService.submit(() -> {
+//                try {
+//                    XFuture<Boolean> future
+//                            = this.moveToRecordedJoints(recordedJointsName);
+//                    setRunProgramFuture(future);
+//                } catch (Exception ex) {
+//                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//                    abortProgram();
+//                    showExceptionInProgram(ex);
+//                }
+//            });
+        } else {
+            try {
+                XFuture<Boolean> future
+                        = this.moveToRecordedJoints(recordedJointsName);
+                setRunProgramFuture(future);
+                return future;
+            } catch (Exception exception) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, exception);
+                return XFuture.completedExceptionally(Boolean.class, exception);
+            }
+        }
+    }
 
     private void jButtonRenameToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPose1ActionPerformed
         // TODO add your handling code here:

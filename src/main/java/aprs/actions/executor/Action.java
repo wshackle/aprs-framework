@@ -22,10 +22,12 @@
  */
 package aprs.actions.executor;
 
+import static aprs.actions.executor.ActionType.CLOSE_GRIPPER;
 import static aprs.actions.executor.ActionType.DISABLE_OPTIMIZATION;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.MOVE_RECORDED_JOINTS;
 import static aprs.actions.executor.ActionType.MOVE_RECORDED_POSE;
+import static aprs.actions.executor.ActionType.OPEN_GRIPPER;
 import static aprs.actions.executor.ActionType.PLACE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART_BY_TYPE_AND_POSITION;
@@ -58,6 +60,20 @@ public class Action {
     public static Action newDisableOptimization() {
         return new Action.ActionBuilder()
                 .type(DISABLE_OPTIMIZATION)
+                .args(new String[]{})
+                .build();
+    }
+    
+    public static Action newOpenGripper() {
+        return new Action.ActionBuilder()
+                .type(OPEN_GRIPPER)
+                .args(new String[]{})
+                .build();
+    }
+    
+    public static Action newCloseGripper() {
+        return new Action.ActionBuilder()
+                .type(CLOSE_GRIPPER)
                 .args(new String[]{})
                 .build();
     }

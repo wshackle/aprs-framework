@@ -1788,6 +1788,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 needSkip = false;
                             }
                             break;
+                            
+                        case OPEN_GRIPPER:
+                            addOpenGripper(cmds);
+                            break;
+                            
+                        case CLOSE_GRIPPER:
+                            addCloseGripper(cmds);
+                            break;
 
                         case PLACE_PART:
                             if (poseCache.isEmpty()) {
@@ -5632,6 +5640,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         openGripperCmd.setSetting(1.0);
         cmds.add(openGripperCmd);
 
+    }
+    
+    private void addCloseGripper(List<MiddleCommandType> cmds) {
+        SetEndEffectorType closeGripperCmd = new SetEndEffectorType();
+        setCommandId(closeGripperCmd);
+        closeGripperCmd.setSetting(0.0);
+        cmds.add(closeGripperCmd);
     }
 
     private void addOptionalOpenGripper(List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
