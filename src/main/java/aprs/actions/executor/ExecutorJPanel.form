@@ -1954,6 +1954,10 @@
                                       <Component id="jButtonDeleteRecordedPose" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButtonRenameToolHolderPose1" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonOpenGripper" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jButtonCloseGripper" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
@@ -1979,6 +1983,8 @@
                           <Component id="jButtonDeleteRecordedPose" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonMoveRecordedJoints" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jButtonRenameToolHolderPose1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonOpenGripper" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jButtonCloseGripper" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                       <Component id="jScrollPaneRecordedPoses" pref="216" max="32767" attributes="0"/>
@@ -2064,6 +2070,22 @@
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="jTextFieldRecordedPosesFile">
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonOpenGripper">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Open Gripper"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonOpenGripperActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="jButtonCloseGripper">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Close Gripper"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCloseGripperActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

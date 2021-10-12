@@ -23,15 +23,19 @@
 package aprs.actions.executor;
 
 import aprs.system.AprsSystem;
+import crcl.utils.XFuture;
+import crcl.utils.XFutureVoid;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings({"all", "serial"})
-interface ExecutorDisplayInterface {
+public interface ExecutorDisplayInterface {
 
     /**
      * Get the current list of actions.
@@ -50,15 +54,94 @@ interface ExecutorDisplayInterface {
      */
     public void addAction(Action action);
 
+//    /**
+//     * Process the current list of actions.
+//     */
+//    public void processActions();
+
+//    /**
+//     * Get the current aprsSystemInterface
+//     * @return aprsSystemInterface
+//     */
+//    public AprsSystem getAprsSystem();
+
+    
     /**
-     * Process the current list of actions.
+     * Add a position map.
+     *
+     * The position map is similar to a transform in that it may offset
+     * positions output by the executor but may also be used to change scaling
+     * or correct for non uniform distortions from the sensor system or
+     * imperfect kinematic functions in the robot. Multiple position maps may be
+     * stacked to account for different sources of error or transformation.
+     *
+     * @param pm position map to be added
      */
-    public void processActions();
+    public void addPositionMap(PositionMap pm);
+    
+    
+    /**
+     * Add a listener to be called from setSelectedToolName.
+     * 
+     * @param listener listener to be stored in collection
+     */
+    public void addSelectedToolNameListener(Consumer<String> listener);
 
     /**
-     * Get the current aprsSystemInterface
-     * @return aprsSystemInterface
+     * Add a listener to be no longer called from setSelectedToolName.
+     * 
+     * @param listener listener to be removed from collection
      */
-    public AprsSystem getAprsSystem();
+    public void removeSelectedToolNameListener(Consumer<String> listener);
+    
+    /**
+     * Sets the current tool that is assumed to be attached to the robot. The
+     * robot will not move to get the tool. This may change the tool offset pose.
+     * 
+     * @param newToolName new tool to be associated with the robot and key for tool offset map
+     */
+    public void setSelectedToolName(String newToolName);
+    
+    /**
+     * Abort the currently running CRCL program.
+     *
+     * @return future to determine when the abort completes etc.
+     */
+    public XFutureVoid abortProgram();
+    
+    
+    /**
+     * Add a listener to be called from updateCurrentToolHolderContentsMap
+     * 
+     * @param listener a listener to be added to a collection to be notified with new info on what holder holds which tool
+     */
+    public void addToolHolderContentsListener(BiConsumer<String, String> listener);
 
+    /**
+     * Remove a listener to be called from updateCurrentToolHolderContentsMap
+     * 
+     * @param listener a listener to be removed a collection to be notified with new info on what holder holds which tool
+     */
+    public void removeToolHolderContentsListener(BiConsumer<String, String> listener);
+    
+    /**
+     * Perform a cartesian move to a previously recorded and named position.
+     * The move may be executed asynchronously in another thread.
+     * Any actions currently in progress will be aborted first.
+     * 
+     * @param recordedPoseName name of previously recorded pose
+     * @return future indicating if/when the move is completed.
+     */
+    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName);
+    
+    
+    /**
+     * Perform a joint move to a previously recorded and named set of joint positions.
+     * The move may be executed asynchronously in another thread.
+     * Any actions currently in progress will be aborted first.
+     * 
+     * @param recordedJointsName name of previously recorded set of joint positions
+     * @return future indicating if/when the move is completed.
+     */
+    public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName);
 }

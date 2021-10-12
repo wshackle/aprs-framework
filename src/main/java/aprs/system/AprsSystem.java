@@ -25,6 +25,7 @@ package aprs.system;
 import aprs.actions.executor.Action;
 import aprs.actions.executor.CrclGenerator;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
+import aprs.actions.executor.ExecutorDisplayInterface;
 import aprs.actions.executor.ExecutorJInternalFrame;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
@@ -101,7 +102,7 @@ import java.nio.file.Paths;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-public class AprsSystem implements SlotOffsetProvider {
+public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface {
 
     /**
      * Creates new AprsSystem using a default properties file.
@@ -4294,6 +4295,86 @@ public class AprsSystem implements SlotOffsetProvider {
 
     }
 
+    /**
+     * Get the current list of actions.
+     * @return list of actions
+     */
+    @Override
+    public List<Action> getActionsList() {
+        return executorJInternalFrame1.getActionsList();
+    }
+
+    /**
+     * Add the action to the list of actions.
+     * @param action action to add.
+     */
+    @Override
+    public void addAction(Action action) {
+        executorJInternalFrame1.addAction(action);
+    }
+
+//    /**
+//     * Process the current list of actions.
+//     */
+//    @Override
+//    public void processActions() {
+//        executorJInternalFrame1.processActions();
+//    }
+
+//    @Override
+//    public AprsSystem getAprsSystem() {
+//        return this;
+//    }
+
+    
+    /**
+     * Sets the current tool that is assumed to be attached to the robot. The
+     * robot will not move to get the tool. This may change the tool offset pose.
+     * 
+     * @param newToolName new tool to be associated with the robot and key for tool offset map
+     */
+    @Override
+    public void setSelectedToolName(String newToolName) {
+        executorJInternalFrame1.setSelectedToolName(newToolName);
+    }
+
+    
+    /**
+     * Abort the currently running CRCL program.
+     *
+     * @return future to determine when the abort completes etc.
+     */
+    @Override
+    public XFutureVoid abortProgram() {
+        return this.executorJInternalFrame1.abortProgram();
+    }
+
+    /**
+     * Perform a cartesian move to a previously recorded and named position.
+     * The move may be executed asynchronously in another thread.
+     * Any actions currently in progress will be aborted first.
+     * 
+     * @param recordedPoseName name of previously recorded pose
+     * @return future indicating if/when the move is completed.
+     */
+    @Override
+    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
+        return this.executorJInternalFrame1.cartesianMoveToRecordedPosition(recordedPoseName);
+    }
+
+    /**
+     * Perform a joint move to a previously recorded and named set of joint positions.
+     * The move may be executed asynchronously in another thread.
+     * Any actions currently in progress will be aborted first.
+     * 
+     * @param recordedJointsName name of previously recorded set of joint positions
+     * @return future indicating if/when the move is completed.
+     */
+    @Override
+    public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
+        return this.executorJInternalFrame1.jointMoveToNamedPosition(recordedJointsName);
+    }
+
     @UI
     private static interface UISupplier<R> {
 
@@ -7933,6 +8014,9 @@ public class AprsSystem implements SlotOffsetProvider {
         }
     }
 
+    /**
+     * Clear the actions list.
+     */
     public void clearActionsList() {
         if (null != executorJInternalFrame1) {
             executorJInternalFrame1.clearActionsList();

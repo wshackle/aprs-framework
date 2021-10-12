@@ -56,16 +56,15 @@ import rcs.posemath.PmException;
 @SuppressWarnings("serial")
 public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implements ExecutorDisplayInterface {
 
-    
     public void setPaused(boolean paused) {
         executorJPanel1.setPaused(paused);
     }
-    
+
     @UIEffect
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public ExecutorJInternalFrame(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
-        executorJPanel1 = new ExecutorJPanel(aprsSystem,this);
+        executorJPanel1 = new ExecutorJPanel(aprsSystem, this);
 
         super.setIconifiable(true);
         super.setMaximizable(true);
@@ -75,7 +74,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         super.pack();
     }
 
-    
     public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
         executorJPanel1.testPartPositionByPose(cmds, pose);
     }
@@ -92,7 +90,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     String getActionsFileString(boolean newReverseFlag) {
         return executorJPanel1.getActionsFileString(newReverseFlag);
     }
-
 
     public void setForceFakeTakeFlag(boolean val) {
         this.executorJPanel1.setForceFakeTakeFlag(val);
@@ -213,10 +210,38 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return this.executorJPanel1.getActionsList();
     }
 
-    public boolean atLastAction() {
-        return executorJPanel1.atLastAction();
+    /**
+     * Perform a cartesian move to a previously recorded and named position. The
+     * move may be executed asynchronously in another thread. Any actions
+     * currently in progress will be aborted first.
+     *
+     * @param recordedPoseName name of previously recorded pose
+     * @return future indicating if/when the move is completed.
+     */
+    @Override
+    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
+        return this.executorJPanel1.cartesianMoveToRecordedPosition(recordedPoseName);
     }
 
+    /**
+     * Perform a joint move to a previously recorded and named set of joint
+     * positions. The move may be executed asynchronously in another thread. Any
+     * actions currently in progress will be aborted first.
+     *
+     * @param recordedJointsName name of previously recorded set of joint
+     * positions
+     * @return future indicating if/when the move is completed.
+     */
+    @Override
+    public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
+        return this.executorJPanel1.jointMoveToNamedPosition(recordedJointsName);
+    }
+
+//    public boolean atLastAction() {
+//        return executorJPanel1.atLastAction();
+//    }
+    
+    
     public boolean completeActionList(String comment, int startAbortCount, StackTraceElement[] callerTrace) {
         return this.executorJPanel1.completeActionList(comment, startAbortCount, callerTrace);
     }
@@ -229,6 +254,15 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         this.executorJPanel1.debugAction();
     }
 
+    /**
+     * Sets the current tool that is assumed to be attached to the robot. The
+     * robot will not move to get the tool. This may change the tool offset
+     * pose.
+     *
+     * @param newToolName new tool to be associated with the robot and key for
+     * tool offset map
+     */
+    @Override
     public void setSelectedToolName(String newToolName) {
         this.executorJPanel1.setSelectedToolName(newToolName);
     }
@@ -260,6 +294,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
      *
      * @param pm position map to be added
      */
+    @Override
     public void addPositionMap(PositionMap pm) {
         executorJPanel1.addPositionMap(pm);
     }
@@ -289,10 +324,22 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.isToolHolderOperationEnabled();
     }
 
+    /**
+     * Add a listener to be called from setSelectedToolName.
+     *
+     * @param listener listener to be stored in collection
+     */
+    @Override
     public void addSelectedToolNameListener(Consumer<String> listener) {
         executorJPanel1.addSelectedToolNameListener(listener);
     }
 
+    /**
+     * Add a listener to be no longer called from setSelectedToolName.
+     *
+     * @param listener listener to be removed from collection
+     */
+    @Override
     public void removeSelectedToolNameListener(Consumer<String> listener) {
         executorJPanel1.removeSelectedToolNameListener(listener);
     }
@@ -306,22 +353,21 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     private final AprsSystem aprsSystem;
-    
+
     public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag, boolean forceNameChange) throws IOException {
 
         return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange);
     }
-
 
     @Override
     public void addAction(Action action) {
         this.executorJPanel1.addAction(action);
     }
 
-    @Override
-    public void processActions() {
-        this.executorJPanel1.processActions();
-    }
+//    @Override
+//    public void processActions() {
+//        this.executorJPanel1.processActions();
+//    }
 
     public File getPropertiesFile() {
         return this.executorJPanel1.getPropertiesFile();
@@ -361,7 +407,6 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.doActions(comment, safeAbortCount, callerTrace);
     }
 
-
     private final aprs.actions.executor.ExecutorJPanel executorJPanel1;
 
     public void loadProperties() throws IOException {
@@ -384,10 +429,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.setDbSetupSupplier(dbSetupSupplier);
     }
 
-    @Override
-    public AprsSystem getAprsSystem() {
-        return executorJPanel1.getAprsSystem();
-    }
+//    @Override
+//    public AprsSystem getAprsSystem() {
+//        return executorJPanel1.getAprsSystem();
+//    }
 
     public boolean readyForNewActionsList() {
         return executorJPanel1.readyForNewActionsList();
@@ -401,6 +446,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.warnIfNewActionsNotReady();
     }
 
+    /**
+     * Clear the actions list.
+     */
     @Override
     public void clearActionsList() {
         executorJPanel1.clearActionsList();
