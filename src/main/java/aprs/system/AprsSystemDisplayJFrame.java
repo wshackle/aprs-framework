@@ -2139,7 +2139,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return aprsSystemFinal.connectRobot(name, host, port)
                 .thenCompose(x -> startCheckEnabled())
                 .thenApply((Boolean success) -> {
-                    if (!success) {
+                    if (!success || !aprsSystem.isConnected()) {
                         clearRobotConnectedCheckBox();
                     }
                     return success;

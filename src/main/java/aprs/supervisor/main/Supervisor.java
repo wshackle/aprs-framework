@@ -4971,6 +4971,13 @@ public class Supervisor {
                 .thenComposeToVoid(x -> x);
     }
 
+    public XFuture<Boolean> startFlipOnSupervisorService() {
+        return XFuture
+                .supplyAsync("startFlipOnSupervisorService",
+                        this::startFlip, supervisorExecutorService)
+                .thenCompose(x -> x);
+    }
+    
     private XFutureVoid startScanAllThenContinuousDemoRevFirst() {
         logEvent("startScanAllThenContinuousDemoRevFirst starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
@@ -4985,6 +4992,93 @@ public class Supervisor {
         return xf3;
     }
 
+    public XFutureVoid lookForPartsAll(final boolean keepDisabled) {
+        List<AprsSystem> aprsSystems = systems();
+        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
+        for (int i = 0; i < aprsSystems.size(); i++) {
+            AprsSystem aprsSys = aprsSystems.get(i);
+            if (!aprsSys.isConnected() && keepDisabled) {
+                futures[i] = XFuture.completedFuture(false);
+            } else {
+                futures[i] = aprsSys.startLookForParts();
+            }
+        }
+        return XFuture.allOfWithName("lookForPartsAll", futures);
+    }
+    
+    public XFuture<Boolean> startFlip() {
+        logEvent("startFlip starting ...");
+        XFutureVoid xf1 = this.safeAbortAll();
+        AprsSystem fanucCartSys = getSysByTask("Fanuc Cart");
+        logEvent("fanucCartSys = " + fanucCartSys);
+        AprsSystem sharedTableSys = getSysByTask("Shared Table");
+        logEvent("sharedTableSys = " + sharedTableSys);
+        XFutureVoid xf2 = xf1.thenComposeToVoid("startFlip.step2", x -> {
+            logEvent("startFlip.step2 : xf1=" + xf1);
+            return lookForPartsAll(false);
+        });
+        XFuture<Boolean> xf3 = xf2.thenCompose("startFlip.step3", x -> {
+            logEvent("startFlip.step2 : xf2=" + xf2);
+            return fanucCartSys.startActionsList("flip2", 
+                    Arrays.asList(new Action[]{
+                        Action.newTakePartAction("part_black_gear_in_pt_1"),
+                        Action.newMoveRecordedJoints("present_gear")
+                    }),false);
+        });
+        XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
+            logEvent("startFlip.step3 : xf3=" + xf3);
+            return sharedTableSys.startActionsList("flip3", 
+                    Arrays.asList(new Action[]{
+                        Action.newMoveRecordedPose("p1"),
+                        Action.newMoveRecordedPose("p2"),
+                        Action.newCloseGripper()
+                    }),false);
+        });
+        XFuture<Boolean> xf5 = xf4.thenCompose("startFlip.step4", x -> {
+            logEvent("startFlip.step4 : xf4=" + xf4);
+            return fanucCartSys.startActionsList("flip4", 
+                    Arrays.asList(new Action[]{
+                        Action.newOpenGripper()
+                    }),false);
+        });
+        XFuture<Boolean> xf6 = xf5.thenCompose("startFlip.step5", x -> {
+            logEvent("startFlip.step5 : xf5=" + xf5);
+            return sharedTableSys.startActionsList("flip5", 
+                    Arrays.asList(new Action[]{
+                        Action.newMoveRecordedPose("p3"),
+                        Action.newMoveRecordedPose("p4"),
+                        Action.newMoveRecordedPose("p5")
+                    }),false);
+        });
+        XFuture<Boolean> xf7 = xf6.thenCompose("startFlip.step6", x -> {
+            logEvent("startFlip.step6 : xf6=" + xf6);
+            return fanucCartSys.startActionsList("flip6", 
+                    Arrays.asList(new Action[]{
+                        Action.newCloseGripper()
+                    }),false);
+        });
+        XFuture<Boolean> xf8 = xf7.thenCompose("startFlip.step7", x -> {
+            logEvent("startFlip.step7 : xf7=" + xf7);
+            return sharedTableSys.startActionsList("flip7", 
+                    Arrays.asList(new Action[]{
+                        Action.newOpenGripper(),
+                        Action.newMoveRecordedPose("p6"),
+                        Action.newLookForParts(0)
+                    }),false);
+        });
+        
+        XFuture<Boolean> xf9 = xf8.thenCompose("startFlip.step8", x -> {
+            logEvent("startFlip.step8 : xf8=" + xf7);
+            return fanucCartSys.startActionsList("flip8", 
+                    Arrays.asList(new Action[]{
+                        Action.newMoveRecordedJoints("returning"),
+                        Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
+                        Action.newLookForParts(0)
+                    }),false);
+        });
+        return xf9;
+    }
+    
     /**
      * Have each system scan the parts area to create an action list to fill
      * kits in a way similar to the current configuration. This may require

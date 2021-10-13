@@ -196,7 +196,8 @@ public class OpAction implements OpActionInterface {
     public static final HashSet<String> allowedPartTypes = new HashSet<>(Arrays.asList(
             "small_gear",
             "medium_gear",
-            "large_gear"
+            "large_gear",
+            "black_gear"
     ));
 
     public static void setAllowedPartTypes(Collection<String> newPartTypes) {

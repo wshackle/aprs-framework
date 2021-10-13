@@ -6780,7 +6780,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }//GEN-LAST:event_jButtonMoveCartesianRecordedPoseActionPerformed
 
     private boolean checkRobotConnected() throws HeadlessException {
-        if (null == aprsSystem || aprsSystem.isConnected()) {
+        if (null == aprsSystem) {
+            JOptionPane.showMessageDialog(parentComponent, "null == aprsSystem");
+            return false;
+        }
+        if (null == aprsSystem || !aprsSystem.isConnected()) {
             JOptionPane.showMessageDialog(parentComponent, "Please connect to robot first.");
             return false;
         }
@@ -7023,6 +7027,62 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
     
+    
+    /**
+     * Perform an Open Gripper action. 
+     * The move may be executed asynchronously in another thread.
+     * Any actions currently in progress will be aborted first.
+     * 
+     * @return future indicating if/when the action is completed.
+     */
+    public XFuture<Boolean> closeGripper() {
+        final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
+        if (null != generateCrclService) {
+            return XFuture.supplyAsync("closeGripper",
+                    () -> {
+                        try {
+                            XFuture<Boolean> future
+                            = this.closeGripperInternal();
+                            setRunProgramFuture(future);
+                            return future;
+                        } catch (Exception ex) {
+                            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+                            abortProgram();
+                            showExceptionInProgram(ex);
+                            if (ex instanceof RuntimeException) {
+                                RuntimeException rtex = (RuntimeException) ex;
+                                throw rtex;
+                            }
+                            throw new RuntimeException(ex);
+                        }
+                    },
+                    generateCrclService)
+                    .thenCompose((x) -> x);
+
+//            generateCrclService.submit(() -> {
+//                try {
+//                    XFuture<Boolean> future
+//                            = this.moveToRecordedJoints(recordedJointsName);
+//                    setRunProgramFuture(future);
+//                } catch (Exception ex) {
+//                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+//                    abortProgram();
+//                    showExceptionInProgram(ex);
+//                }
+//            });
+        } else {
+            try {
+                XFuture<Boolean> future
+                        = this.closeGripperInternal();
+                setRunProgramFuture(future);
+                return future;
+            } catch (Exception exception) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, exception);
+                return XFuture.completedExceptionally(Boolean.class, exception);
+            }
+        }
+    }
+    
     private void jButtonRenameToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPose1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButtonRenameToolHolderPose1ActionPerformed
@@ -7036,7 +7096,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             abortProgram();
             autoStart = true;
-            openGripperInternal();
+            openGripper();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();
@@ -7053,7 +7113,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             setReplanFromIndex(0);
             abortProgram();
             autoStart = true;
-            closeGripperInternal();
+            closeGripper();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             abortProgram();

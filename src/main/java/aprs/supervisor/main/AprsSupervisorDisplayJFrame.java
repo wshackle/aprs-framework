@@ -1535,6 +1535,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemReloadSimFiles = new javax.swing.JMenuItem();
         jMenuItemRestoreOrigRobotInfo = new javax.swing.JMenuItem();
         jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst = new javax.swing.JMenuItem();
+        jMenuItemSpecialTestFlip = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -1626,7 +1627,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 435, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
                     .addGroup(jPanelRobotsLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1696,7 +1697,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 828, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 863, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
@@ -1919,7 +1920,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 127, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 202, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
@@ -2015,7 +2016,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 316, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelEventsLayout.setVerticalGroup(
@@ -2053,7 +2054,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 820, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2117,7 +2118,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 820, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2617,6 +2618,14 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuSpecialTests.add(jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst);
+
+        jMenuItemSpecialTestFlip.setText("Flip");
+        jMenuItemSpecialTestFlip.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSpecialTestFlipActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemSpecialTestFlip);
 
         jMenuBar1.add(jMenuSpecialTests);
 
@@ -4626,6 +4635,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemEnableRemoteConsoleActionPerformed
 
+    private void jMenuItemSpecialTestFlipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSpecialTestFlipActionPerformed
+        interactivStartRunnable(() -> setMainFuture(startFlip()),
+                jMenuItemSpecialTestFlip.getText());
+    }//GEN-LAST:event_jMenuItemSpecialTestFlipActionPerformed
+
     public void closeAprsRemoteConsoleService() {
         try {
             AprsRemoteConsoleServerSocket ss = this.aprsRemoteConsoleServerSocket;
@@ -5125,18 +5139,11 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid lookForPartsAll() {
-        List<AprsSystem> aprsSystems = getAprsSystems();
-        XFuture<?> futures[] = new XFuture<?>[aprsSystems.size()];
-        for (int i = 0; i < aprsSystems.size(); i++) {
-            AprsSystem aprsSys = aprsSystems.get(i);
-            if (!aprsSys.isConnected() && (supervisor.isKeepDisabled() || jCheckBoxMenuItemKeepDisabled.isSelected())) {
-                futures[i] = XFuture.completedFuture(false);
-            } else {
-                futures[i] = aprsSys.startLookForParts();
-            }
-        }
-        return XFuture.allOfWithName("lookForPartsAll", futures);
+        final boolean keepDisabled = supervisor.isKeepDisabled() || jCheckBoxMenuItemKeepDisabled.isSelected();
+        return supervisor.lookForPartsAll(keepDisabled);
     }
+
+    
 
     public XFutureVoid showScanCompleteDisplay() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
@@ -5167,6 +5174,13 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.startScanAllThenContinuousDemoRevFirstOnSupervisorService();
     }
 
+    private XFuture<?> startFlip() {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.startFlipOnSupervisorService();
+    }
+    
     /**
      * Have each system scan the parts area to create an action list to fill
      * kits in a way similar to the current configuration. This may require
@@ -6442,6 +6456,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemScanAll;
     private javax.swing.JMenuItem jMenuItemSetConveyorViewCloneSystem;
     private javax.swing.JMenuItem jMenuItemSetMaxCycles;
+    private javax.swing.JMenuItem jMenuItemSpecialTestFlip;
     private javax.swing.JMenuItem jMenuItemStartAll;
     private javax.swing.JMenuItem jMenuItemStartAllReverse;
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;

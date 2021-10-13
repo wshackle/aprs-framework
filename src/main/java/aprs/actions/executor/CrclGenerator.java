@@ -1313,7 +1313,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      */
     public void reset() {
         partialReset();
-        setLastTakenPart(null);
+//        setLastTakenPart(null);
         clearPoseCache();
     }
 
@@ -1696,9 +1696,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 actionToCrclTakenPartsNames = new String[gparamsActionsSize];
             }
             if (startingIndex == 0) {
-                if (!manualAction) {
-                    setLastTakenPart(null);
-                }
+//                if (!manualAction) {
+//                    setLastTakenPart(null);
+//                }
                 takePlaceActions = new ArrayList<>();
             }
             List<Action> newTakePlaceList = new ArrayList<>();
@@ -1789,13 +1789,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             }
                             break;
                             
-                        case OPEN_GRIPPER:
-                            addOpenGripper(cmds);
-                            break;
-                            
-                        case CLOSE_GRIPPER:
-                            addCloseGripper(cmds);
-                            break;
+                        
 
                         case PLACE_PART:
                             if (poseCache.isEmpty()) {
@@ -1803,6 +1797,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                             }
                             String slotName = action.getArgs()[placePartSlotArgIndex];
                             if (null == lastTakenPart) {
+                                System.out.println("lastTakenPart = " + lastTakenPart);
+                                System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
+                                System.err.println("");
                                 PoseType slotPose = getPose(slotName);//getPose(slotName, getReverseFlag());
                                 recordSkipPlacePart(slotName, slotPose);
                                 if (skipStartIndex < 0) {
@@ -1851,9 +1848,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         PointType partBtapPoint = requireNonNull(getClosestPoint(partBtapName, x, y), "partBtapPoint");
                         final PhysicalItem closestItem = getClosestItem(partBtapName, x, y);
                         if (null != closestItem) {
-                            lastTakenPart = closestItem.getFullName();
+                            setLastTakenPart(closestItem.getFullName());
                         } else {
-                            lastTakenPart = partBtapName;
+                            setLastTakenPart(partBtapName);
                         }
                         takePartByPose(cmds, visionToRobotPose(pose(partBtapPoint, xAxis, zAxis)), partBtapName);
                     }
@@ -2025,6 +2022,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     case DISABLE_OPTIMIZATION:
                         break;
 
+                    case OPEN_GRIPPER:
+                        addOpenGripper(cmds);
+                        break;
+                    
+                    case CLOSE_GRIPPER:
+                        addCloseGripper(cmds);
+                        break;
+                            
                     default:
                         throw new IllegalArgumentException("unrecognized action " + action + " at index " + idx);
                 }
@@ -4741,6 +4746,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PoseType pose = getPose(partName);
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
+        }
+        if(null != lastTakenPart) {
+            System.out.println("lastTakenPart = " + lastTakenPart);
+            System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
+            System.err.println("");
+            throw new IllegalStateException("lastTakenPart already is "+lastTakenPart);
         }
 
         if (null == pose) {
