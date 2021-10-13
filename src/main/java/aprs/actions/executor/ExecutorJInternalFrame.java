@@ -99,6 +99,12 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.getForceFakeTakeFlag();
     }
 
+    /**
+     * Clear the collection of kits to check at the next check kits action.
+     * 
+     * @param startAbortCount unused except for debugging
+     */
+    @Override
     public void clearKitsToCheck(int startAbortCount) {
         executorJPanel1.clearKitsToCheck(startAbortCount);
     }

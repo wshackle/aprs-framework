@@ -2240,7 +2240,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                                             "PDDL Exectutor View must be open to use this function.");
                                 }
                                 if (getSafeAbortRequestCount() == startAbortCount) {
-                                    boolean completActionListRet = executorJInternalFrame1
+                                    boolean completActionListRet
+                                    = executorJInternalFrame1
                                             .completeActionList("continueActionList" + comment, startAbortCount, trace);
                                     logEvent("completeActionListRet", completActionListRet);
                                     takeSnapshots("after continueActionList" + ((comment != null) ? comment : "") + " "
@@ -4297,6 +4298,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     /**
      * Get the current list of actions.
+     *
      * @return list of actions
      */
     @Override
@@ -4306,6 +4308,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     /**
      * Add the action to the list of actions.
+     *
      * @param action action to add.
      */
     @Override
@@ -4320,25 +4323,23 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //    public void processActions() {
 //        executorJInternalFrame1.processActions();
 //    }
-
 //    @Override
 //    public AprsSystem getAprsSystem() {
 //        return this;
 //    }
-
-    
     /**
      * Sets the current tool that is assumed to be attached to the robot. The
-     * robot will not move to get the tool. This may change the tool offset pose.
-     * 
-     * @param newToolName new tool to be associated with the robot and key for tool offset map
+     * robot will not move to get the tool. This may change the tool offset
+     * pose.
+     *
+     * @param newToolName new tool to be associated with the robot and key for
+     * tool offset map
      */
     @Override
     public void setSelectedToolName(String newToolName) {
         executorJInternalFrame1.setSelectedToolName(newToolName);
     }
 
-    
     /**
      * Abort the currently running CRCL program.
      *
@@ -4350,10 +4351,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     /**
-     * Perform a cartesian move to a previously recorded and named position.
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
+     * Perform a cartesian move to a previously recorded and named position. The
+     * move may be executed asynchronously in another thread. Any actions
+     * currently in progress will be aborted first.
+     *
      * @param recordedPoseName name of previously recorded pose
      * @return future indicating if/when the move is completed.
      */
@@ -4363,11 +4364,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     /**
-     * Perform a joint move to a previously recorded and named set of joint positions.
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
-     * @param recordedJointsName name of previously recorded set of joint positions
+     * Perform a joint move to a previously recorded and named set of joint
+     * positions. The move may be executed asynchronously in another thread. Any
+     * actions currently in progress will be aborted first.
+     *
+     * @param recordedJointsName name of previously recorded set of joint
+     * positions
      * @return future indicating if/when the move is completed.
      */
     @Override
@@ -5800,10 +5802,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != object2DViewJInternalFrame) {
             object2DViewJInternalFrame.stopSimUpdateTimer();
         }
-        if(null != motomanServerProvider) {
+        if (null != motomanServerProvider) {
             motomanServerProvider.disconnnectAllAndClose();
         }
-        if(null != fanucServerProvider) {
+        if (null != fanucServerProvider) {
             fanucServerProvider.disconnnectAllAndClose();
         }
     }
@@ -6445,7 +6447,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     }
 
-
     private List<PhysicalItem> createFilledKitsListFromFillInfo(TrayFillInfo fillInfo, boolean useUnassignedParts)
             throws IllegalStateException {
         List<PhysicalItem> outputList = new ArrayList<>();
@@ -6696,8 +6697,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
 
     }
-
-    
 
     private List<PhysicalItem> createEmptiedKitsListFromFillInfo(TrayFillInfo trayFillInfo)
             throws IllegalStateException {
@@ -7129,7 +7128,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             }
         }
     }
-    
+
     public List<Action> loadActionsFile(File actionFile) throws IOException {
         return loadActionsFileEx(
                 actionFile, // File f,
@@ -7147,10 +7146,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 true // boolean forceNameChange
         );
     }
-    
+
     /**
-     * Load a text file containing actions to be displayed and be ready to execute it.
-     * 
+     * Load a text file containing actions to be displayed and be ready to
+     * execute it.
+     *
      * @param f File to load
      * @param showInOptaPlanner
      * @param newReverseFlag
@@ -8008,6 +8008,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         clearErrors();
     }
 
+    /**
+     * Clear the collection of kits to check at the next check kits action.
+     *
+     * @param startAbortCount unused except for debugging
+     */
+    @Override
     public void clearKitsToCheck(int startAbortCount) {
         if (null != executorJInternalFrame1) {
             executorJInternalFrame1.clearKitsToCheck(startAbortCount);
@@ -8318,7 +8324,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     /**
      * Load a text file of actions and start executing it from the beginning.
-     * 
+     *
      * <p>
      * The actions will be executed in another thread after this method returns.
      * The returned future can be used to monitor, cancel or extend the
@@ -8330,9 +8336,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws java.io.IOException actionsFile can not be loaded
      */
     public XFuture<Boolean> startActionsFile(File actionsFile) throws IOException {
-        return startActionsList("startActionsFile:"+actionsFile,loadActionsFile(actionsFile),false);
+        return startActionsList("startActionsFile:" + actionsFile, loadActionsFile(actionsFile), false);
     }
-    
+
     /**
      * Check to see if the executor is in a state where it could begin working
      * on a new list of actions.
@@ -10584,10 +10590,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     .getName()).log(Level.SEVERE, "", iOException);
         }
         closeAllWindows();
-        if(null != motomanServerProvider) {
+        if (null != motomanServerProvider) {
             motomanServerProvider.disconnnectAllAndClose();
         }
-        if(null != fanucServerProvider) {
+        if (null != fanucServerProvider) {
             fanucServerProvider.disconnnectAllAndClose();
         }
         runProgramService.shutdownNow();

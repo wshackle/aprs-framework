@@ -144,4 +144,12 @@ public interface ExecutorDisplayInterface {
      * @return future indicating if/when the move is completed.
      */
     public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName);
+    
+    
+    /**
+     * Clear the collection of kits to check at the next check kits action.
+     * 
+     * @param startAbortCount unused except for debugging
+     */
+    public void clearKitsToCheck(int startAbortCount);
 }

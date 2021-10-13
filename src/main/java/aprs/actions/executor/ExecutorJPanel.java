@@ -2653,6 +2653,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile @Nullable
     String dasIncrementComment = null;
 
+    /**
+     * Clear the collection of kits to check at the next check kits action.
+     * 
+     * @param startAbortCount unused except for debugging
+     */
+    @Override
     public void clearKitsToCheck(int startAbortCount) {
         try {
             crclGenerator.clearKitsToCheckExternal(false, crclGenerator.newGenerateParams());
@@ -4925,7 +4931,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return actionSetsStarted.get();
     }
 
-    public boolean completeActionList(String comment, int startSafeAbortRequestCount, StackTraceElement[] callerTrace) {
+    /**
+     * This should only be called internally by AprsSystem via ExecutorJInternalFrame
+     */
+     boolean completeActionList(String comment, int startSafeAbortRequestCount, StackTraceElement[] callerTrace) {
         try {
             checkReverse();
             boolean rev = isReverseFlag();
@@ -4963,15 +4972,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public XFutureVoid continueActionList() {
-        XFutureVoid ret = new XFutureVoid("pddlExecutorContinueActionList");
-        lastContinueActionFuture = ret;
-        addProgramCompleteRunnable(() -> {
-            ret.complete(null);
-        });
-        continueActionListPrivate();
-        return ret;
-    }
+//    public XFutureVoid continueActionList() {
+//        XFutureVoid ret = new XFutureVoid("pddlExecutorContinueActionList");
+//        lastContinueActionFuture = ret;
+//        addProgramCompleteRunnable(() -> {
+//            ret.complete(null);
+//        });
+//        continueActionListPrivate();
+//        return ret;
+//    }
 
     private final AtomicInteger continueActionsCount = new AtomicInteger(0);
     private volatile long continueActionsListTime = 0;
