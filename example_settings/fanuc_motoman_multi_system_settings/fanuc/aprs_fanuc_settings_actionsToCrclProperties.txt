@@ -28,6 +28,7 @@ pddl.reverse_output=..\\..\\..\\example_pddl\\reverse_fanuc_demo_actions.txt
 placePartSlotArgIndex=0
 placeZOffset=5.0
 positionMapFileNames=[fanuc_2020_09_18.csv]
+recordedPoses=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_settings\\fanuc_motoman_multi_system_settings\\fanuc\\aprs_fanuc_settings_actionsToCrclProperties.txt.recoredPoses.csv
 requireNewPoses=true
 requiredToolFile=
 reverseFlag=false

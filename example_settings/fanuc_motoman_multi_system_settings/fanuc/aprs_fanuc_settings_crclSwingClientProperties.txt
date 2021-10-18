@@ -1,51 +1,51 @@
 classname=crcl.ui.client.CrclSwingClientJPanel
-boolean stepMode=false
 boolean preClosing=false
+boolean stepMode=false
+boolean ignoreTimeouts=false
 boolean validateXmlSchema=true
 boolean debugInterrupts=false
 boolean disableTextPopups=true
-boolean ignoreTimeouts=false
-boolean toolChangerOpen=false
 boolean debugShowProgram=false
+boolean toolChangerOpen=false
 int port=64444
-int maxRecordCommandsCount=1000
-rcs.posemath.PmCartesian minLimit= { x=-495.554, y=-282.153, z=-1000.000 } 
 rcs.posemath.PmCartesian maxLimit= { x=+708.303, y=+453.623, z=+1000.000 } 
+rcs.posemath.PmCartesian minLimit= { x=-495.554, y=-282.153, z=-1000.000 } 
+int maxRecordCommandsCount=1000
 double rpyJogIncrement=3.0
-boolean internal.stepMode=false
+boolean internal.printDetailedCommandFailureInfo=false
 boolean internal.preClosing=false
 boolean internal.holdingObjectExpected=false
+boolean internal.stepMode=false
+boolean internal.ignoreTimeouts=false
 boolean internal.validateXmlSchema=true
 boolean internal.debugInterrupts=false
-boolean internal.ignoreTimeouts=false
+boolean internal.useReadSoTimeout=true
 boolean internal.skipWrappedMessageCommands=true
-boolean internal.debugConnectDisconnect=false
 boolean internal.holdingErrorOccured=false
 boolean internal.quitOnTestCommandFailure=true
-boolean internal.useReadSoTimeout=true
-boolean internal.printDetailedCommandFailureInfo=false
+boolean internal.debugConnectDisconnect=false
+crcl.base.CommandStateEnumType internal.commandState=CRCL_WORKING
 java.lang.String internal.lastMessage=placePartByPose.approachPose.return
-crcl.base.CommandStateEnumType internal.commandState=CRCL_ERROR
-int internal.maxRecordCommandsCount=1000
-rcs.posemath.PmCartesian internal.minLimit= { x=-495.554, y=-282.153, z=-1000.000 } 
 rcs.posemath.PmCartesian internal.maxLimit= { x=+708.303, y=+453.623, z=+1000.000 } 
-int internal.maxPoseListLength=1000
-java.lang.Integer internal.outgoingProgramIndex=-1
-double internal.jointMoveAccel=0.0
-double internal.jointMoveSpeed=0.0
-java.lang.Integer internal.outgoingProgramLength=59
-double internal.xyzJogIncrement=100.0
-int internal.readStatusSoTimeout=3000
-java.lang.String internal.outgoingProgramFile=fanucStackMoveRepeat3.xml
-double internal.jointJogIncrement=3.0
+rcs.posemath.PmCartesian internal.minLimit= { x=-495.554, y=-282.153, z=-1000.000 } 
+int internal.maxRecordCommandsCount=1000
+double internal.jogRotSpeed=3.0
+double internal.jointTol=15.0
+crcl.base.AngleUnitEnumType internal.angleType=DEGREE
+int internal.lastProgramIndex=18
 long internal.waitForDoneDelay=50
-int internal.lastProgramIndex=17
-crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+double internal.xyzJogIncrement=100.0
+# internal.getOutgoingProgramFile returned null or could not be invoked
+double internal.jointJogIncrement=3.0
+int internal.readStatusSoTimeout=3000
 double internal.jogJointSpeed=10.0
+int internal.jogInterval=50
 int internal.poll_ms=50
 double internal.jogTransSpeed=100.0
-int internal.jogInterval=50
 int internal.maxLogSize=500
-double internal.jogRotSpeed=3.0
-crcl.base.AngleUnitEnumType internal.angleType=DEGREE
-double internal.jointTol=15.0
+crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+java.lang.Integer internal.outgoingProgramIndex=-1
+java.lang.Integer internal.outgoingProgramLength=19
+int internal.maxPoseListLength=1000
+double internal.jointMoveAccel=0.0
+double internal.jointMoveSpeed=0.0
