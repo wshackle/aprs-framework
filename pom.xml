@@ -16,6 +16,7 @@
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <crcl.project.groupId>com.github.wshackle</crcl.project.groupId>
     </properties>
     <name>aprs-framework</name>
     <url>
@@ -132,17 +133,17 @@
         </dependency>
         
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${crcl.project.groupId}</groupId>
             <artifactId>crcl4java-base</artifactId>
             <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${crcl.project.groupId}</groupId>
             <artifactId>crcl4java-utils</artifactId>
             <version>${crcl4java.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${crcl.project.groupId}</groupId>
             <artifactId>crcl4java-ui</artifactId>
             <version>${crcl4java.version}</version>
         </dependency>

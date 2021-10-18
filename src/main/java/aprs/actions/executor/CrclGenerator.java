@@ -4747,12 +4747,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
         }
-        if(null != lastTakenPart) {
-            System.out.println("lastTakenPart = " + lastTakenPart);
-            System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
-            System.err.println("");
-            throw new IllegalStateException("lastTakenPart already is "+lastTakenPart);
-        }
+//        if(null != lastTakenPart) {
+//            System.out.println("lastTakenPart = " + lastTakenPart);
+//            System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
+//            System.err.println("");
+//            throw new IllegalStateException("lastTakenPart already is "+lastTakenPart);
+//        }
 
         if (null == pose) {
             if (skipMissingParts) {
