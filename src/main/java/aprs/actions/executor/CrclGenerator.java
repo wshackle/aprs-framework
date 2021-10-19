@@ -261,11 +261,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 skipMissingParts);
     }
 
-    private volatile StackTraceElement @Nullable [] setLastTakenPartTrace = null;
+    private volatile StackTraceElement @Nullable [] setPlannedHeldPartTrace = null;
+    private volatile StackTraceElement @Nullable [] setPlannedFromCurrentHeldPartTrace = null;
+    private volatile StackTraceElement @Nullable [] setCurrentHeldPartTrace = null;
 
-    public void setLastTakenPart(@Nullable String lastTakenPart) {
-        this.lastTakenPart = lastTakenPart;
-        setLastTakenPartTrace = Thread.currentThread().getStackTrace();
+    public void setPlannedHeldPart(@Nullable String plannedHeldPart) {
+        this.plannedHeldPart = plannedHeldPart;
+        setPlannedHeldPartTrace = Thread.currentThread().getStackTrace();
     }
 
 //    private interface GetPoseFunction {
@@ -1696,9 +1698,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 actionToCrclTakenPartsNames = new String[gparamsActionsSize];
             }
             if (startingIndex == 0) {
-//                if (!manualAction) {
-//                    setLastTakenPart(null);
-//                }
+                if (!manualAction) {
+                    if(null != currentHeldPart) {
+                        System.out.println("setCurrentHeldPartTrace = " + Utils.traceToString(setCurrentHeldPartTrace));
+                        throw new RuntimeException("currentHeldPart="+currentHeldPart);
+                    }
+                    setPlannedFromCurrentHeldPartTrace = setCurrentHeldPartTrace;
+                    setPlannedHeldPart(currentHeldPart);
+                }
                 takePlaceActions = new ArrayList<>();
             }
             List<Action> newTakePlaceList = new ArrayList<>();
@@ -1788,17 +1795,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 needSkip = false;
                             }
                             break;
-                            
-                        
 
                         case PLACE_PART:
                             if (poseCache.isEmpty()) {
                                 LOGGER.log(Level.WARNING, "newItems.isEmpty() on place-part for run {0}", getRunName());
                             }
                             String slotName = action.getArgs()[placePartSlotArgIndex];
-                            if (null == lastTakenPart) {
-                                System.out.println("lastTakenPart = " + lastTakenPart);
-                                System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
+                            if (null == plannedHeldPart) {
+                                System.out.println("plannedHeldPart = " + plannedHeldPart);
+                                System.out.println("setPlannedHeldPartTrace = " + Utils.traceToString(setPlannedHeldPartTrace));
                                 System.err.println("");
                                 PoseType slotPose = getPose(slotName);//getPose(slotName, getReverseFlag());
                                 recordSkipPlacePart(slotName, slotPose);
@@ -1848,9 +1853,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         PointType partBtapPoint = requireNonNull(getClosestPoint(partBtapName, x, y), "partBtapPoint");
                         final PhysicalItem closestItem = getClosestItem(partBtapName, x, y);
                         if (null != closestItem) {
-                            setLastTakenPart(closestItem.getFullName());
+                            setPlannedHeldPart(closestItem.getFullName());
                         } else {
-                            setLastTakenPart(partBtapName);
+                            setPlannedHeldPart(partBtapName);
                         }
                         takePartByPose(cmds, visionToRobotPose(pose(partBtapPoint, xAxis, zAxis)), partBtapName);
                     }
@@ -1939,7 +1944,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                         if (poseCache.isEmpty()) {
                             throw new IllegalStateException("poseCache.isEmpty() on place-part for run " + getRunName());
                         }
-                        if (null == lastTakenPart) {
+                        if (null == plannedHeldPart) {
                             System.err.println("newTakePlaceList = " + newTakePlaceList);
                             throw new IllegalStateException("null == lastTakenPart when PLACE_PART encountered: idx=" + idx + ",gparams.startingIndex=" + startingIndex + ",lastAction=" + lastAction);
                         }
@@ -2025,11 +2030,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     case OPEN_GRIPPER:
                         addOpenGripper(cmds);
                         break;
-                    
+
                     case CLOSE_GRIPPER:
                         addCloseGripper(cmds);
                         break;
-                            
+
                     default:
                         throw new IllegalArgumentException("unrecognized action " + action + " at index " + idx);
                 }
@@ -2074,6 +2079,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new IllegalStateException(ex);
             }
         } finally {
+            final StackTraceElement[] checkCallerTrace = Thread.currentThread().getStackTrace();
+            addMarkerCommand(cmds, "check currentHeldPart", new CRCLCommandWrapperConsumer() {
+                @Override
+                public void accept(CRCLCommandWrapper t) {
+                    if(null != currentHeldPart) {
+                        System.err.println("checkCallerTrace="+Utils.traceToString(checkCallerTrace));
+                        throw new RuntimeException("currentHeldPart="+currentHeldPart);
+                    }
+                }
+            });
+            if(null != plannedHeldPart) {
+                throw new RuntimeException("plannedHeldPart="+plannedHeldPart);
+            }
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);
         }
         return cmds;
@@ -2197,7 +2215,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             actionToCrclLabels[idx] = "";
         }
         if (null != actionToCrclTakenPartsNames) {
-            actionToCrclTakenPartsNames[idx] = this.lastTakenPart;
+            actionToCrclTakenPartsNames[idx] = this.plannedHeldPart;
         }
     }
 
@@ -3387,7 +3405,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 String slotPrefix = "empty_slot_for_" + shortNowInSlotSkuName + "_in_" + shortNowInSlotSkuName + "_vessel";
                                                 int count = prefixCountMap.compute(slotPrefix,
                                                         (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
-                                                lastTakenPart = closestItem.getName();
+//                                                setPlannedHeldPart( closestItem.getName());
                                                 correctivedItems.add(closestItem);
                                                 correctiveActions.add(Action.newTakePartAction(closestItem.getFullName()));
                                                 correctivedItems.add(absSlot);
@@ -3964,14 +3982,23 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    private @Nullable
-    String lastTakenPart = null;
+    private @Nullable String plannedHeldPart = null;
 
-    private @Nullable
-    String getLastTakenPart() {
-        return lastTakenPart;
+    public @Nullable
+    String getPlannedHeldPart() {
+        return plannedHeldPart;
     }
 
+    private @Nullable String currentHeldPart = null;
+
+    public void setCurrentHeldPart(String part) {
+        this.currentHeldPart = part;
+        this.setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
+    }
+    
+    public  @Nullable String getCurrentHeldPart() {
+        return currentHeldPart;
+    }
     private double verySlowTransSpeed = 20.0;
 
     /**
@@ -4472,7 +4499,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
         testPartPositionByPose(out, pose);
-        setLastTakenPart(partName);
+//        setPlannedHeldPart(partName);
     }
 
     private void setCommandId(CRCLCommandType cmd) {
@@ -4747,12 +4774,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (takeSnapshots) {
             takeSnapshots("plan", "take-part-" + partName + "", pose, partName);
         }
-//        if(null != lastTakenPart) {
-//            System.out.println("lastTakenPart = " + lastTakenPart);
-//            System.out.println("setLastTakenPartTrace = " + Utils.traceToString(setLastTakenPartTrace));
-//            System.err.println("");
-//            throw new IllegalStateException("lastTakenPart already is "+lastTakenPart);
-//        }
+        if (null != plannedHeldPart) {
+            System.out.println("plannedHeldPart = " + plannedHeldPart);
+            System.out.println("setPlannedHeldPartTrace = " + Utils.traceToString(setPlannedHeldPartTrace));
+            System.out.println("currentHeldPart = " + currentHeldPart);
+            System.out.println("setCurrentHeldPartTrace = " + Utils.traceToString(setCurrentHeldPartTrace));
+            System.out.println("setPlannedFromCurrentHeldPartTrace = " + Utils.traceToString(setPlannedFromCurrentHeldPartTrace));
+            System.err.println("");
+            throw new IllegalStateException("lastTakenPart already is " + plannedHeldPart);
+        }
 
         if (null == pose) {
             if (skipMissingParts) {
@@ -4792,7 +4822,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 String slot = nextPlacePartAction.getArgs()[0];
                 PoseType slotPose = getPose(slot);
                 if (null == slotPose) {
-                    setLastTakenPart(null);
+                    setPlannedHeldPart(null);
                     takeSnapshots("plan", "skipping-take-part-next-slot-not-available-" + slot + "-for-part-" + partName + "", pose, partName);
                     return;
                 }
@@ -4816,7 +4846,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logDebug(markerMsg + " at " + new Date());
             addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
-        setLastTakenPart(partName);
+        setPlannedHeldPart(partName);
         //inspectionList.add(partName);
         if (partName.indexOf('_') > 0) {
             TakenPartList.add(partName);
@@ -4824,7 +4854,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void recordSkipTakePart(String partName, @Nullable PoseType pose) throws IllegalStateException {
-        setLastTakenPart(null);
+        setPlannedHeldPart(null);
         takeSnapshots("plan", "skipping-take-part-" + partName + "", pose, partName);
     }
 
@@ -4865,7 +4895,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             logDebug(markerMsg + " at " + new Date());
             addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
         });
-        setLastTakenPart(partName);
+        setPlannedHeldPart(partName);
         if (partName.indexOf('_') > 0) {
             TakenPartList.add(partName);
         }
@@ -4928,7 +4958,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private final ConcurrentMap<String, String> toolChangerJointValsMap
             = new ConcurrentHashMap<>();
 
-
     private final ConcurrentMap<String, String> recordedPosesJointValsMap
             = new ConcurrentHashMap<>();
 
@@ -4940,8 +4969,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return recordedPosesJointValsMap;
     }
 
-
-    
     /**
      * Add commands to the list that will test a given part position by opening
      * the gripper and moving to that position but not actually taking the part.
@@ -5014,7 +5041,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
 
-        final String addCheckedOpenGripperLastPartTaken = getLastTakenPart();
+        final String addCheckedOpenGripperLastPartTaken = getPlannedHeldPart();
         int addCheckedOpenGripperLastIndex = getLastIndex();
 
         String imgLabel;
@@ -5302,6 +5329,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     SetEndEffectorType seeCmd = (SetEndEffectorType) ccw.getWrappedCommand();
                     seeCmd.setSetting(1.0);
 //                setFakeTakePart(false);
+                } else {
+                    setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
+                    currentHeldPart = plannedHeldPart;
                 }
             }, "takePartByPose." + name);
 
@@ -5650,20 +5680,43 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         setCommandId(openGripperCmd);
         openGripperCmd.setSetting(1.0);
         cmds.add(openGripperCmd);
-
+        addMarkerCommand(cmds, "currentHeldPart is no longer " + currentHeldPart, new CRCLCommandWrapperConsumer() {
+            @Override
+            public void accept(CRCLCommandWrapper t) {
+                setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
+                currentHeldPart = null;
+            }
+        });
+        setPlannedHeldPart(null);
     }
-    
+
     private void addCloseGripper(List<MiddleCommandType> cmds) {
         SetEndEffectorType closeGripperCmd = new SetEndEffectorType();
         setCommandId(closeGripperCmd);
         closeGripperCmd.setSetting(0.0);
         cmds.add(closeGripperCmd);
+        final String closingPlannedHeldPart = this.plannedHeldPart;
+        addMarkerCommand(cmds, "currentHeldPart is now plannedHeldPart=" + closingPlannedHeldPart, new CRCLCommandWrapperConsumer() {
+            @Override
+            public void accept(CRCLCommandWrapper t) {
+                setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
+                currentHeldPart = closingPlannedHeldPart;
+            }
+        });
     }
 
     private void addOptionalOpenGripper(List<MiddleCommandType> cmds, CRCLCommandWrapperConsumer cb) {
         SetEndEffectorType openGripperCmd = new SetEndEffectorType();
         openGripperCmd.setSetting(1.0);
         addOptionalCommand(openGripperCmd, cmds, cb);
+        setPlannedHeldPart(null);
+        addMarkerCommand(cmds, "addOptionalOpenGripper: currentHeldPart is no longer = " + currentHeldPart, new CRCLCommandWrapperConsumer() {
+            @Override
+            public void accept(CRCLCommandWrapper t) {
+                setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
+                currentHeldPart = null;
+            }
+        });
     }
 
     private PoseType copyAndAddZ(PoseType poseIn, double offset, double limit) {
@@ -6870,7 +6923,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         String recordName = action.getArgs()[0];
         String jointValsString = recordedPosesJointValsMap.get(recordName);
         if (null == jointValsString) {
-            throw new IllegalStateException("no joint vals for " + recordName+ " in "+recordedPosesJointValsMap.keySet());
+            throw new IllegalStateException("no joint vals for " + recordName + " in " + recordedPosesJointValsMap.keySet());
         }
         checkSettings();
         checkDbReady();
@@ -7295,7 +7348,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null != pose) {
             PlacePartSlotPoseList.add(pose);
         }
-        String lastTakenPartLocal = lastTakenPart;
+        String lastTakenPartLocal = plannedHeldPart;
 
         if (skipMissingParts && lastTakenPartLocal == null) {
             recordSkipPlacePart(slotName, pose);
@@ -7304,9 +7357,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == lastTakenPartLocal) {
             throw new IllegalStateException("null == lastTakenPart");
         }
-        final String msg = "placed part " + getLastTakenPart() + " in " + slotName;
+        final String msg = "placed part " + getPlannedHeldPart() + " in " + slotName;
         if (takeSnapshots) {
-            takeSnapshots("plan", "place-part-" + getLastTakenPart() + "in-" + slotName + "", pose, slotName);
+            takeSnapshots("plan", "place-part-" + getPlannedHeldPart() + "in-" + slotName + "", pose, slotName);
         }
         if (pose == null) {
             if (skipMissingParts) {
@@ -7316,7 +7369,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
-                    takeSnapshots("plan", "returning-" + getLastTakenPart() + "_no_pose_for_" + slotName, origPose, lastTakenPartLocal);
+                    takeSnapshots("plan", "returning-" + getPlannedHeldPart() + "_no_pose_for_" + slotName, origPose, lastTakenPartLocal);
                     final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, "returned." + lastTakenPartLocal, "skipped." + slotName);
                     addMarkerCommand(out, msg,
                             ((CRCLCommandWrapper wrapper) -> {
@@ -7353,7 +7406,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void recordSkipPlacePart(String slotName, @Nullable PoseType pose) throws IllegalStateException {
-        takeSnapshots("plan", "skipping-place-part-" + getLastTakenPart() + "-in-" + slotName + "", pose, slotName);
+        takeSnapshots("plan", "skipping-place-part-" + getPlannedHeldPart() + "-in-" + slotName + "", pose, slotName);
     }
 
     public static @Nullable
@@ -7410,7 +7463,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addSetFastSpeed(cmds);
         addMoveTo(cmds, approachPose, true, "placePartByPose.approachPose.return");
 
-        setLastTakenPart(null);
+        setPlannedHeldPart(null);
     }
 
     private void logToolOffsetInfo(List<MiddleCommandType> cmds, PoseType pose, PoseType poseWithToolOffset) {

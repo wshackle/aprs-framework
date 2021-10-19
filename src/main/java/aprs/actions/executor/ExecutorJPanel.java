@@ -657,6 +657,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         boolean aborting = aprsSystem.isAborting();
         String logMsg = ppi.getPartName() + ".to." + ppi.getSlotName();
         aprsSystem.logEvent("handlePlacePartCompleted", "requestCountDiffer=" + requestCountDiffer + ",aboring=" + aborting + ", ppi.getPddlActionIndex()=" + ppi.getPddlActionIndex() + ",action=" + ppi.getAction().asPddlLine());
+        aprsSystem.logEvent("handlePlacePartCompleted", "crclGenerator.getCurrentHeldPart()=" + crclGenerator.getCurrentHeldPart() + ",crclGenerator.getPlannedHeldPart()=" + crclGenerator.getPlannedHeldPart());
+        if(null != crclGenerator.getCurrentHeldPart()) {
+            throw new RuntimeException("crclGenerator.getCurrentHeldPart()=" + crclGenerator.getCurrentHeldPart());
+        }
         if (requestCountDiffer || aborting) {
             crclGenerator.takeSnapshots("exec", "safeAbortRequested" + sarc + ":" + safeAboutCount.get() + ".ppi=" + ppi, null, null);
             CRCLCommandWrapper wrapper = ppi.getWrapper();
