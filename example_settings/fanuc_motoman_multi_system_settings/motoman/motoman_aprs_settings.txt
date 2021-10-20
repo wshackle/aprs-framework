@@ -25,3 +25,4 @@ startup.robotcrclclient=true
 startup.robotcrclfanucserver=false
 startup.robotcrclmotomanserver=true
 startup.robotcrclsimserver=false
+sysQueriesDir=..\\..\\..\\netbeans_run_user_home\\aprsQueries\\Shared_Table
