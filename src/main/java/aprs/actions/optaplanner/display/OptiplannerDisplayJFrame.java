@@ -75,10 +75,12 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         outerOptiplannerJPanelInput.addActionsModifiedListener(() -> doSolve());
         loadRecentFilesMenu();
     }
-    
-    
+
+    private static final boolean enableRecentFilesMenu
+            = Boolean.getBoolean("aprs.actions.optaplanner.display.enableRecentFilesMenu");
+
     private static final File RECENT_ACTIONS_LIST_FILE
-            = new File(System.getProperty("user.home"), ".recentActionListsFile");
+            = new File(Utils.getAprsUserHomeDir(), ".recentActionListsFile");
 
     private static final List<File> recentActionListFiles = new ArrayList<>();
 
@@ -86,6 +88,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
     private static synchronized void readRecentActionListFile() throws IOException {
         try {
+            if(!enableRecentFilesMenu) {
+                return;
+            }
             if (RECENT_ACTIONS_LIST_FILE.exists()) {
 
                 List<File> newRecentActionListFiles = new ArrayList<>();
@@ -134,21 +139,27 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
     }
 
     private void addRecentActionListFile(File f) throws IOException {
-        if (!recentActionsFileListRead) {
-            try {
-                readRecentActionListFile();
-            } finally {
-                recentActionsFileListRead = true;
+        if (enableRecentFilesMenu) {
+            if (!recentActionsFileListRead) {
+                try {
+                    readRecentActionListFile();
+                } finally {
+                    recentActionsFileListRead = true;
+                }
             }
+            try (PrintWriter pw = new PrintWriter(new FileWriter(RECENT_ACTIONS_LIST_FILE, true))) {
+                pw.println(f.getCanonicalPath());
+            }
+            recentActionListFiles.add(f);
         }
-        try (PrintWriter pw = new PrintWriter(new FileWriter(RECENT_ACTIONS_LIST_FILE, true))) {
-            pw.println(f.getCanonicalPath());
-        }
-        recentActionListFiles.add(f);
     }
 
     private void loadRecentFilesMenu() {
         jMenuRecentFiles.removeAll();
+        if (!enableRecentFilesMenu) {
+            jMenuRecentFiles.setEnabled(false);
+            return;
+        }
         List<File> recentFiles = getRecentActionListFiles();
         for (int i = 0; i < recentFiles.size(); i++) {
             File f = recentFiles.get(i);
@@ -494,7 +505,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 //        long timeDiff = (t2 - t1);
 //        return timeDiff;
 //    }
-
     @UIEffect
     private void jMenuItemLoadOutputListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLoadOutputListActionPerformed
         JFileChooser chooser = new JFileChooser();
@@ -902,7 +912,6 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 //            startingList.add(newAction);
 //        }
 //    }
-
     private OpAction generateNewAction(int index, double minX, double maxX, double minY, double maxY, Random rand, List<OpAction> startingList, double minDist, OpActionType actionType, String partType, boolean required) {
         double x = minX + (maxX - minX) * rand.nextDouble();
         double y = minY + (maxY - minY) * rand.nextDouble();
