@@ -695,6 +695,26 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     }
 
+    private boolean useSimViewFilter = true;
+
+    /**
+     * Get the value of useSimViewFilter
+     *
+     * @return the value of useSimViewFilter
+     */
+    public boolean isUseSimViewFilter() {
+        return useSimViewFilter;
+    }
+
+    /**
+     * Set the value of useSimViewFilter
+     *
+     * @param useSimViewFilter new value of useSimViewFilter
+     */
+    public void setUseSimViewFilter(boolean useSimViewFilter) {
+        this.useSimViewFilter = useSimViewFilter;
+    }
+
     /**
      * Asynchronously get a list of PhysicalItems updated in one frame from the
      * vision system. The list will not be available until after the next frame
@@ -714,7 +734,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
                     + "\n started at" + startTime
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis()));
-            return x;
+            if (null != object2DViewJInternalFrame && useSimViewFilter) {
+                return object2DViewJInternalFrame.filterItems(x);
+            } else {
+                return x;
+            }
         });
     }
 
@@ -744,7 +768,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     printListToString(x.stream().map(PhysicalItem::getFullName).collect(Collectors.toList()), 8)
                     + "\n started at" + startTime
                     + "\n timeDiff=" + (startTime - System.currentTimeMillis()));
-            return x;
+            if (null != object2DViewJInternalFrame && useSimViewFilter) {
+                return object2DViewJInternalFrame.filterItems(x);
+            } else {
+                return x;
+            }
         });
     }
 
@@ -2646,7 +2674,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2669,7 +2697,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
+        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
                 CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
@@ -2773,7 +2801,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             if (null != programString) {
                 programFile = Utils.createTempFile("CRCLProgram", ".xml");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
             }
@@ -4556,7 +4584,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private void loadCustomWindowsFile() {
         final File fileToLoad = customWindowsFile;
         if (null != fileToLoad) {
-            try (BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
+            try ( BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
                 String line = br.readLine();
                 while (line != null) {
                     line = line.trim();
@@ -4578,7 +4606,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
-        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(winFile))) {
             props.load(br);
         }
         String classnameString = props.getProperty("classname");
@@ -7122,7 +7150,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
-        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+        try ( PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -8249,7 +8277,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
-                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                try ( PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
@@ -8812,7 +8840,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             updateRobotLimits();
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                     for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
@@ -9671,7 +9699,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-        try (FileReader fr = new FileReader(propertiesFile)) {
+        try ( FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         try {
@@ -9841,6 +9869,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 this.setUseCsvFilesInsteadOfDatabase(Boolean.parseBoolean(useCsvFilesInsteadOfDatabaseString));
             }
 
+            String useSimViewFilterString = props.getProperty(USE_SIMVIEW_FILTER);
+            if (null != useSimViewFilterString) {
+                this.setUseSimViewFilter(Boolean.parseBoolean(useSimViewFilterString));
+            }
             this.updateSubPropertiesFiles();
 //            if (null != this.pddlPlannerJInternalFrame) {
 //                this.pddlPlannerJInternalFrame.loadProperties();
@@ -9986,6 +10018,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     private static final String USE_CSV_FILES_INSTEAD_OF_DATABASE = "UseCsvFilesInsteadOfDatabase";
+    private static final String USE_SIMVIEW_FILTER = "UseSimViewFilter";
     private static final String ALERT_LIMITS = "alertLimits";
 
     private XFutureVoid syncPauseRecoverCheckbox() {
@@ -10129,6 +10162,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         propsMap.put(RELOAD_SIM_FILES_ON_REVERSE_PROP, Boolean.toString(isReloadSimFilesOnReverseCheckBoxSelected()));
         propsMap.put(LOG_CRCL_PROGRAMS_ENABLED, Boolean.toString(isLogCrclProgramsSelected()));
         propsMap.put(USE_CSV_FILES_INSTEAD_OF_DATABASE, Boolean.toString(this.isUseCsvFilesInsteadOfDatabase()));
+        propsMap.put(USE_SIMVIEW_FILTER, Boolean.toString(this.isUseSimViewFilter()));
         setDefaultRobotName();
         if (null != robotName) {
             propsMap.put(APRSROBOT_PROPERTY_NAME, robotName);
@@ -10580,7 +10614,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 File commandStatusLogFile = crclClientJInternalFrame.writeCommandStatusLogFile();
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 crclClientJInternalFrame.printPerfInfo(System.out, task);
-                try (PrintStream ps = new PrintStream(
+                try ( PrintStream ps = new PrintStream(
                         new FileOutputStream(Utils.createTempFile(task + "crcLClientPerfInfo", ".txt")))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
@@ -10757,7 +10791,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -10773,7 +10807,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {

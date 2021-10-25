@@ -542,41 +542,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
     
 
     private XFutureVoid setItems(List<PhysicalItem> items, boolean publish) {
-        final List<PhysicalItem> filteredItems1;
-        if (!Double.isFinite(minimumScore) || minimumScore <= Double.MIN_NORMAL) {
-            filteredItems1 = items;
-        } else {
-            filteredItems1 = new ArrayList<>();
-            for (PhysicalItem item : items) {
-                if (item.getScore() >= minimumScore) {
-                    filteredItems1.add(item);
-                }
-            }
-        }
+                
         final List<PhysicalItem> filteredItems2;
-        if (null == excludedObjectNames || excludedObjectNames.isEmpty()) {
-            filteredItems2 = filteredItems1;
-        } else {
-            filteredItems2 = new ArrayList<>();
-            for (PhysicalItem item : filteredItems1) {
-                String name = item.getName();
-//                System.out.println("name = " + name);
-                if(name.startsWith("sku_")) {
-                    name = name.substring(4);
-//                    System.out.println("name = " + name);
-                }
-                if(name.startsWith("part_")) {
-                    name = name.substring(5);
-//                    System.out.println("name = " + name);
-                }
-//                System.out.println("excludedObjectNames = " + excludedObjectNames);
-                final boolean contains = excludedObjectNames.contains(name);
-//                System.out.println("contains = " + contains);
-                if (!contains) {
-                    filteredItems2.add(item);
-                }
-            }
-        }
+        filteredItems2 = filterItems(items);
         if (!this.isSimulated() || !object2DJPanel1.isShowOutputItems() || !this.isConnected()) {
             notifySetItemsListeners(filteredItems2);
         }
@@ -613,6 +581,40 @@ public class Object2DOuterJPanel extends javax.swing.JPanel implements Object2DJ
             }
         }
         return future;
+    }
+
+    public List<PhysicalItem> filterItems(List<PhysicalItem> items) {
+        List<PhysicalItem> filteredItems2;
+        final List<PhysicalItem> filteredItems1;
+        if (!Double.isFinite(minimumScore) || minimumScore <= Double.MIN_NORMAL) {
+            filteredItems1 = items;
+        } else {
+            filteredItems1 = new ArrayList<>();
+            for (PhysicalItem item : items) {
+                if (item.getScore() >= minimumScore) {
+                    filteredItems1.add(item);
+                }
+            }
+        }
+        if (null == excludedObjectNames || excludedObjectNames.isEmpty()) {
+            filteredItems2 = filteredItems1;
+        } else {
+            filteredItems2 = new ArrayList<>();
+            for (PhysicalItem item : filteredItems1) {
+                String name = item.getName();
+if(name.startsWith("sku_")) {
+    name = name.substring(4);
+}
+if(name.startsWith("part_")) {
+    name = name.substring(5);
+}
+final boolean contains = excludedObjectNames.contains(name);
+if (!contains) {
+    filteredItems2.add(item);
+}
+            }
+        }
+        return filteredItems2;
     }
 
     private volatile long lastSetOutputItemsInternalTime = 0;

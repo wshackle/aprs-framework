@@ -52,6 +52,10 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         return object2DOuterJPanel1;
     }
 
+    public List<PhysicalItem> filterItems(List<PhysicalItem> items) {
+        return object2DOuterJPanel1.filterItems(items);
+    }
+    
     /**
      * Creates new form Object2DViewJInternalFrame
      */

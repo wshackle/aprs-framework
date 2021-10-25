@@ -677,6 +677,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         jMenuItemAddExistingCustomWindowStartup = new javax.swing.JMenuItem();
         jMenuItemNewCustomWindowStartup = new javax.swing.JMenuItem();
         jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase = new javax.swing.JCheckBoxMenuItem();
+        jCheckBoxMenuItemUseSimViewItemFilter = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemStandAloneMode = new javax.swing.JCheckBoxMenuItem();
         jMenuExecute = new javax.swing.JMenu();
         jMenuItemStartActionList = new javax.swing.JMenuItem();
@@ -1033,6 +1034,10 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             }
         });
         jMenuOptions.add(jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase);
+
+        jCheckBoxMenuItemUseSimViewItemFilter.setSelected(true);
+        jCheckBoxMenuItemUseSimViewItemFilter.setText("Use SimView Item Filter");
+        jMenuOptions.add(jCheckBoxMenuItemUseSimViewItemFilter);
 
         jCheckBoxMenuItemStandAloneMode.setText("Stand-Alone mode (no supervisor required)");
         jMenuOptions.add(jCheckBoxMenuItemStandAloneMode);
@@ -2510,6 +2515,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStartupRobtCRCLSimServer;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemStepping;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseCsvFilesInsteadOfDatabase;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseSimViewItemFilter;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItemUseTeachTable;
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
