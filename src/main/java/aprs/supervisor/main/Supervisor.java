@@ -5068,7 +5068,7 @@ public class Supervisor {
         });
         
         XFuture<Boolean> xf9 = xf8.thenCompose("startFlip.step8", x -> {
-            logEvent("startFlip.step8 : xf8=" + xf7);
+            logEvent("startFlip.step8 : xf8=" + xf8);
             return fanucCartSys.startActionsList("flip8", 
                     Arrays.asList(new Action[]{
                         Action.newMoveRecordedJoints("returning"),
