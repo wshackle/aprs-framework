@@ -2080,16 +2080,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } finally {
             final StackTraceElement[] checkCallerTrace = Thread.currentThread().getStackTrace();
+            final boolean manualActionF = manualAction;
             addMarkerCommand(cmds, "check currentHeldPart", new CRCLCommandWrapperConsumer() {
                 @Override
                 public void accept(CRCLCommandWrapper t) {
-                    if(null != currentHeldPart) {
+                    if(null != currentHeldPart && !manualActionF) {
                         System.err.println("checkCallerTrace="+Utils.traceToString(checkCallerTrace));
                         throw new RuntimeException("currentHeldPart="+currentHeldPart);
                     }
                 }
             });
-            if(null != plannedHeldPart) {
+            if(null != plannedHeldPart && !manualAction) {
                 throw new RuntimeException("plannedHeldPart="+plannedHeldPart);
             }
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);

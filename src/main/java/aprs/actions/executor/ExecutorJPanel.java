@@ -364,7 +364,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Add a listener to be called from setSelectedToolName.
-     * 
+     *
      * @param listener listener to be stored in collection
      */
     @Override
@@ -374,7 +374,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Add a listener to be no longer called from setSelectedToolName.
-     * 
+     *
      * @param listener listener to be removed from collection
      */
     @Override
@@ -384,9 +384,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Sets the current tool that is assumed to be attached to the robot. The
-     * robot will not move to get the tool. This may change the tool offset pose.
-     * 
-     * @param newToolName new tool to be associated with the robot and key for tool offset map
+     * robot will not move to get the tool. This may change the tool offset
+     * pose.
+     *
+     * @param newToolName new tool to be associated with the robot and key for
+     * tool offset map
      */
     @Override
     public void setSelectedToolName(String newToolName) {
@@ -658,7 +660,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         String logMsg = ppi.getPartName() + ".to." + ppi.getSlotName();
         aprsSystem.logEvent("handlePlacePartCompleted", "requestCountDiffer=" + requestCountDiffer + ",aboring=" + aborting + ", ppi.getPddlActionIndex()=" + ppi.getPddlActionIndex() + ",action=" + ppi.getAction().asPddlLine());
         aprsSystem.logEvent("handlePlacePartCompleted", "crclGenerator.getCurrentHeldPart()=" + crclGenerator.getCurrentHeldPart() + ",crclGenerator.getPlannedHeldPart()=" + crclGenerator.getPlannedHeldPart());
-        if(null != crclGenerator.getCurrentHeldPart()) {
+        if (null != crclGenerator.getCurrentHeldPart()) {
             throw new RuntimeException("crclGenerator.getCurrentHeldPart()=" + crclGenerator.getCurrentHeldPart());
         }
         if (requestCountDiffer || aborting) {
@@ -2659,7 +2661,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Clear the collection of kits to check at the next check kits action.
-     * 
+     *
      * @param startAbortCount unused except for debugging
      */
     @Override
@@ -3097,7 +3099,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //            }
 //        }
 //    }
-
     private static final SolverFactory<OpActionPlan> PRIVATE_SOLVER_FACTORY
             = OpActionPlan.createSolverFactory();
 
@@ -4355,7 +4356,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != serviceFinal) {
                 serviceFinal.submit(() -> {
                     try {
-                        setRunProgramFuture(this.lookForParts());
+                        crclGenerator.setManualAction(true);
+                        final XFuture<Boolean> lookForPartsProgram = this.lookForParts();
+                        crclGenerator.setManualAction(false);
+                        setRunProgramFuture(lookForPartsProgram);
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
                         abortProgram();
@@ -4365,7 +4369,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                setRunProgramFuture(this.lookForParts());
+                crclGenerator.setManualAction(true);
+                final XFuture<Boolean> lookForPartsProgram = this.lookForParts();
+                crclGenerator.setManualAction(false);
+                setRunProgramFuture(lookForPartsProgram);
             }
         } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -4936,9 +4943,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     /**
-     * This should only be called internally by AprsSystem via ExecutorJInternalFrame
+     * This should only be called internally by AprsSystem via
+     * ExecutorJInternalFrame
      */
-     boolean completeActionList(String comment, int startSafeAbortRequestCount, StackTraceElement[] callerTrace) {
+    boolean completeActionList(String comment, int startSafeAbortRequestCount, StackTraceElement[] callerTrace) {
         try {
             checkReverse();
             boolean rev = isReverseFlag();
@@ -4985,7 +4993,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 //        continueActionListPrivate();
 //        return ret;
 //    }
-
     private final AtomicInteger continueActionsCount = new AtomicInteger(0);
     private volatile long continueActionsListTime = 0;
 
@@ -5100,6 +5107,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void jButtonRecordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordActionPerformed
+        if (!checkRobotConnected()) {
+            return;
+        }
+        checkDbSupplierPublisher();
         queryLogFileName();
         System.out.println("jButtonRecordActionPerformed: recordCsvName = " + recordCsvName);
         String partName = manualObjectCachedComboBox.getSelectedItem();
@@ -5237,6 +5248,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonRecordLookForJointsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordLookForJointsActionPerformed
         try {
+            if (!checkRobotConnected()) {
+                return;
+            }
+            checkDbSupplierPublisher();
             XFuture<CRCLStatusType> xfStat = aprsSystem.getNewStatus();
             xfStat.thenCompose((CRCLStatusType newStatus) -> {
                 return Utils.runOnDispatchThread(() -> {
@@ -5917,8 +5932,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private static final String APPROACH_COLUMN_HEADER = "Approach";
 
     private @Nullable
-    String getJointValsString() {
-        CRCLStatusType stat = aprsSystem.getCurrentStatus();
+    String getJointValsString(@Nullable CRCLStatusType stat) {
+//        CRCLStatusType stat = aprsSystem.getCurrentStatus();
         if (null != stat) {
             JointStatusesType jointStatuses = stat.getJointStatuses();
             if (null != jointStatuses) {
@@ -5935,28 +5950,39 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonRecordToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderPoseActionPerformed
         try {
-            Map<String, PoseType> toolHolderPoseMap
-                    = crclGenerator.getToolHolderPoseMap();
-            PoseType pose = aprsSystem.getCurrentPose();
-            if (null == pose) {
-                warnDialog("Can not read current pose.");
+            if (!checkRobotConnected()) {
                 return;
             }
+            checkDbSupplierPublisher();
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Pose");
             if (null == toolHolderPoseName
                     || toolHolderPoseName.length() < 1) {
                 toolHolderPoseName = "toolChangerPose" + (toolHolderPositionsCachedTable.getRowCount() + 1);
             }
+            final String toolHolderPoseNameFinal = toolHolderPoseName;
+            XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
+            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+                try {
+                    Map<String, PoseType> toolHolderPoseMap
+                            = crclGenerator.getToolHolderPoseMap();
+                    PoseType pose = CRCLPosemath.pose(newStatus);
+                    if (null == pose) {
+                        warnDialog("Can not read current pose.");
+                        return;
+                    }
 //            toolChangerPose = pose;
-            String name = toolHolderPoseName;
-            PmRpy rpy = CRCLPosemath.toPmRpy(pose);
-            String jointString = getJointValsString();
-            updateToolChangePose(name, false, pose, rpy, jointString);
-            toolHolderPoseMap.put(name, pose);
-            PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
-            updateToolChangePose(name, true, approachPose, rpy, null);
-            crclGenerator.getToolChangerJointValsMap().get(name);
-            saveToolChangerPoseMap();
+                    PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+                    String jointString = getJointValsString(newStatus);
+                    updateToolChangePose(toolHolderPoseNameFinal, false, pose, rpy, jointString);
+                    toolHolderPoseMap.put(toolHolderPoseNameFinal, pose);
+                    PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
+                    updateToolChangePose(toolHolderPoseNameFinal, true, approachPose, rpy, null);
+                    crclGenerator.getToolChangerJointValsMap().get(toolHolderPoseNameFinal);
+                    saveToolChangerPoseMap();
+                } catch (Exception ex) {
+                    LOGGER.log(Level.SEVERE, "", ex);
+                }
+            });
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -6355,29 +6381,40 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonAddToolHolderPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonAddToolHolderPoseActionPerformed
         try {
             clearEmptyToolChangerPoseRows();
-            PoseType pose = aprsSystem.getCurrentPose();
-            if (null == pose || null == pose.getPoint()) {
-                warnDialog("Can not read current pose.");
+            if (!checkRobotConnected()) {
                 return;
             }
+            checkDbSupplierPublisher();
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
-            Map<String, PoseType> toolHolderPoseMap
-                    = crclGenerator.getToolHolderPoseMap();
-            if (nameToAdd != null && nameToAdd.length() > 0) {
-                if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.asList(getToolChangerNames()).contains(nameToAdd)) {
-                    warnDialog(nameToAdd + " already added.");
-                    return;
+            XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
+            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+                try {
+                    PoseType pose = CRCLPosemath.pose(newStatus);
+                    if (null == pose || null == pose.getPoint()) {
+                        warnDialog("Can not read current pose.");
+                        return;
+                    }
+                    Map<String, PoseType> toolHolderPoseMap
+                            = crclGenerator.getToolHolderPoseMap();
+                    if (nameToAdd != null && nameToAdd.length() > 0) {
+                        if (toolHolderPoseMap.containsKey(nameToAdd) || Arrays.asList(getToolChangerNames()).contains(nameToAdd)) {
+                            warnDialog(nameToAdd + " already added.");
+                            return;
+                        }
+                        PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+                        String jointString = getJointValsString(newStatus);
+                        updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
+                        toolHolderPoseMap.put(nameToAdd, pose);
+                        PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
+                        updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
+                        clearEmptyToolChangerPoseRows();
+                        Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
+                        saveToolChangerPoseMap();
+                    }
+                } catch (Exception ex) {
+                    LOGGER.log(Level.SEVERE, "", ex);
                 }
-                PmRpy rpy = CRCLPosemath.toPmRpy(pose);
-                String jointString = getJointValsString();
-                updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
-                toolHolderPoseMap.put(nameToAdd, pose);
-                PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
-                updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
-                clearEmptyToolChangerPoseRows();
-                Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
-                saveToolChangerPoseMap();
-            }
+            });
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -6386,26 +6423,38 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private void jButtonRecordToolHolderApproachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordToolHolderApproachActionPerformed
         try {
-            PoseType pose = aprsSystem.getCurrentPose();
-            if (null == pose) {
-                warnDialog("Can not read current pose.");
+            if (!checkRobotConnected()) {
                 return;
             }
+            checkDbSupplierPublisher();
             String toolHolderPoseName = queryUserForToolHolderPosName("Record Approach");
             if (null == toolHolderPoseName
                     || toolHolderPoseName.length() < 1) {
                 toolHolderPoseName = "toolChangerPose" + (toolHolderPositionsCachedTable.getRowCount() + 1);
             }
+            final String toolHolderPoseNameFinal = toolHolderPoseName;
+            XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
+            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+                try {
+                    PoseType pose = CRCLPosemath.pose(newStatus);
+                    if (null == pose) {
+                        warnDialog("Can not read current pose.");
+                        return;
+                    }
 
-            PmRpy rpy = CRCLPosemath.toPmRpy(pose);
-            String jointString = getJointValsString();
-            updateToolChangePose(toolHolderPoseName, true, pose, rpy, jointString);
-            if (null != jointString) {
-                crclGenerator.getToolChangerJointValsMap().put(toolHolderPoseName, jointString);
-            }
-            saveToolChangerPoseMap();
+                    PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+                    String jointString = getJointValsString(newStatus);
+                    updateToolChangePose(toolHolderPoseNameFinal, true, pose, rpy, jointString);
+                    if (null != jointString) {
+                        crclGenerator.getToolChangerJointValsMap().put(toolHolderPoseNameFinal, jointString);
+                    }
+                    saveToolChangerPoseMap();
+                } catch (Exception ex) {
+                    showExceptionMessage(ex);
+                }
+            });
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
         }
     }//GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
 
@@ -6650,10 +6699,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                                     completeQuickCalib(partName, curPosePoint, curPoseString);
                                 });
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "", ex);
+                showExceptionMessage(ex);
             }
         }
     }//GEN-LAST:event_jButtonQuickCalibActionPerformed
+
+    private void showExceptionMessage(Exception ex) throws HeadlessException {
+        LOGGER.log(Level.SEVERE, "", ex);
+        JOptionPane.showMessageDialog(parentComponent, ex.getMessage());
+    }
 
     private void jComboBoxManualObjectNameItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboBoxManualObjectNameItemStateChanged
         updateSelectedPartPoseInfo();
@@ -6732,20 +6786,32 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void jButtonRecordPoseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRecordPoseActionPerformed
         try {
-            PoseType pose = aprsSystem.getCurrentPose();
-            if (null == pose) {
-                warnDialog("Can not read current pose.");
+            if (!checkRobotConnected()) {
                 return;
             }
+            checkDbSupplierPublisher();
             String recordedPoseName = queryUserForNewRecordedPosName("Record Pose");
             if (null == recordedPoseName
                     || recordedPoseName.length() < 1) {
                 recordedPoseName = "recordedPose" + (recordedPositionsCachedTable.getRowCount() + 1);
             }
-            String jointString = getJointValsString();
-            storeNamedPoseAndJointString(recordedPoseName, pose, jointString);
+            final String recordedPoseNameFinal = recordedPoseName;
+            XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
+            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+                try {
+                    PoseType pose = CRCLPosemath.pose(newStatus);
+                    if (null == pose) {
+                        warnDialog("Can not read current pose.");
+                        return;
+                    }
+                    String jointString = getJointValsString(newStatus);
+                    storeNamedPoseAndJointString(recordedPoseNameFinal, pose, jointString);
+                } catch (Exception ex) {
+                    showExceptionMessage(ex);
+                }
+            });
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
         }
     }//GEN-LAST:event_jButtonRecordPoseActionPerformed
 
@@ -6775,9 +6841,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedPoseName);
                 return;
             }
+            crclGenerator.setManualAction(true);
             cartesianMoveToRecordedPosition(recordedPoseName);
+            crclGenerator.setManualAction(false);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
@@ -6814,7 +6882,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             deleteMatchingRowsFromTable(recordedPositionsCachedTable, nameToDelete);
             saveRecordedPosesMap();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
         }
     }//GEN-LAST:event_jButtonDeleteRecordedPoseActionPerformed
 
@@ -6833,24 +6901,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedJointsName);
                 return;
             }
+            crclGenerator.setManualAction(true);
             jointMoveToNamedPosition(recordedJointsName);
+            crclGenerator.setManualAction(false);
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
     }//GEN-LAST:event_jButtonMoveRecordedJointsActionPerformed
 
     /**
-     * Perform a cartesian move to a previously recorded and named position.
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
+     * Perform a cartesian move to a previously recorded and named position. The
+     * move may be executed asynchronously in another thread. Any actions
+     * currently in progress will be aborted first.
+     *
      * @param recordedPoseName name of previously recorded pose
      * @return future indicating if/when the move is completed.
      */
     @Override
-    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName)  {
+    public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
         checkDbSupplierPublisher();
         setReplanFromIndex(0);
         abortProgram();
@@ -6862,7 +6932,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     () -> {
                         try {
                             XFuture<Boolean> future
-                            = this.moveToRecordedJoints(recordedPoseName);
+                            = this.moveToRecordedPose(recordedPoseName);
                             setRunProgramFuture(future);
                             return future;
                         } catch (Exception ex) {
@@ -6893,7 +6963,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             try {
                 XFuture<Boolean> future
-                        = this.moveToRecordedJoints(recordedPoseName);
+                        = this.moveToRecordedPose(recordedPoseName);
                 setRunProgramFuture(future);
                 return future;
             } catch (Exception exception) {
@@ -6919,11 +6989,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     /**
-     * Perform a joint move to a previously recorded and named set of joint positions.
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
-     * @param recordedJointsName name of previously recorded set of joint positions
+     * Perform a joint move to a previously recorded and named set of joint
+     * positions. The move may be executed asynchronously in another thread. Any
+     * actions currently in progress will be aborted first.
+     *
+     * @param recordedJointsName name of previously recorded set of joint
+     * positions
      * @return future indicating if/when the move is completed.
      */
     @Override
@@ -6975,12 +7046,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    
     /**
-     * Perform an Open Gripper action. 
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
+     * Perform an Open Gripper action. The move may be executed asynchronously
+     * in another thread. Any actions currently in progress will be aborted
+     * first.
+     *
      * @return future indicating if/when the action is completed.
      */
     public XFuture<Boolean> openGripper() {
@@ -7030,13 +7100,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
     }
-    
-    
+
     /**
-     * Perform an Open Gripper action. 
-     * The move may be executed asynchronously in another thread.
-     * Any actions currently in progress will be aborted first.
-     * 
+     * Perform an Open Gripper action. The move may be executed asynchronously
+     * in another thread. Any actions currently in progress will be aborted
+     * first.
+     *
      * @return future indicating if/when the action is completed.
      */
     public XFuture<Boolean> closeGripper() {
@@ -7086,7 +7155,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
     }
-    
+
     private void jButtonRenameToolHolderPose1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonRenameToolHolderPose1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jButtonRenameToolHolderPose1ActionPerformed
@@ -7102,7 +7171,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             autoStart = true;
             openGripper();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
@@ -7119,7 +7188,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             autoStart = true;
             closeGripper();
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            showExceptionMessage(ex);
             abortProgram();
             showExceptionInProgram(ex);
         }
@@ -8172,7 +8241,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         replanStarted.set(false);
         return startCrclProgram(program);
     }
-    
+
     private XFuture<Boolean> closeGripperInternal() throws Exception {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
@@ -8195,8 +8264,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         replanStarted.set(false);
         return startCrclProgram(program);
     }
-    
-    
+
     private XFuture<Boolean> moveToRecordedJoints(String recordedName) throws Exception {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
@@ -8235,7 +8303,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
+        crclGenerator.setManualAction(true);
         List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
+        crclGenerator.setManualAction(false);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8649,8 +8719,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Add a listener to be called from updateCurrentToolHolderContentsMap
-     * 
-     * @param listener a listener to be added to a collection to be notified with new info on what holder holds which tool
+     *
+     * @param listener a listener to be added to a collection to be notified
+     * with new info on what holder holds which tool
      */
     @Override
     public void addToolHolderContentsListener(BiConsumer<String, String> listener) {
@@ -8659,8 +8730,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     /**
      * Remove a listener to be called from updateCurrentToolHolderContentsMap
-     * 
-     * @param listener a listener to be removed a collection to be notified with new info on what holder holds which tool
+     *
+     * @param listener a listener to be removed a collection to be notified with
+     * new info on what holder holds which tool
      */
     @Override
     public void removeToolHolderContentsListener(BiConsumer<String, String> listener) {
@@ -9741,14 +9813,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private final ProgramLineListener programLineListener = this::programLineListenerAccept;
-    
-   /**
-     * Called by CRCL Swing client to nofify another object of a change  of program/line/state in the client.
-     * This is required for implementing ProgramLineListener.
-     * 
+
+    /**
+     * Called by CRCL Swing client to nofify another object of a change of
+     * program/line/state in the client. This is required for implementing
+     * ProgramLineListener.
+     *
      * @param panel panel that detected/initiated a change.
      * @param line new line number
-     * @param program CRCL program 
+     * @param program CRCL program
      * @param status new CRCL status
      */
     private void programLineListenerAccept(CrclSwingClientJPanel panel, int line, CRCLProgramType program, CRCLStatusType status) {
