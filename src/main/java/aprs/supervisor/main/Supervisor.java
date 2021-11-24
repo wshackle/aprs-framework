@@ -5115,9 +5115,10 @@ public class Supervisor {
         
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlipMF.step3", x -> {
             logEvent("startFlipMF.step2 : xf2=" + xf2);
+            sharedTableSys.setExecutorOption("skipMissingParts", "false");
             return sharedTableSys.startActionsList("flip2", 
                     Arrays.asList(new Action[]{
-                        Action.newTakePartAction("part_black_gear_in_pt_1"),
+                        Action.newTakePartAction("part_black_gear_in_kt_1"),
                         Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
                         Action.newMoveRecordedPose("flipmf_present_gear")
                     }),false);
