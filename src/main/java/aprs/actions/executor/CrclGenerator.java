@@ -1371,8 +1371,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param startingIndex starting index into list of PDDL actions
      * @param options options to use as commands are generated
      * @param startSafeAbortRequestCount abort request count taken when higher
-     * level action was started this method will immediately abort if the
-     * request count is now already higher
+     *     level action was started this method will immediately abort if the
+     *     request count is now already higher
+     * @param manualAction action was initiated manually which allows otherwise invalid starting/stopping conditions
+     * 
      * @return list of CRCL commands
      * @throws Exception with cause: IllegalStateException if database not
      * connected SQLException if query of the database failed
@@ -1384,7 +1386,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * CRCL command. rcs.posemath.PmException failure occurred while computing a
      * pose such as an invalid transform
      */
-    public List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount)
+    public List<MiddleCommandType> generate(
+            List<Action> actions, 
+            int startingIndex, 
+            Map<String, String> options, 
+            int startSafeAbortRequestCount,
+            boolean manualAction)
             throws Exception {
         final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem, "aprsSystem");
         GenerateParams gparams = new GenerateParams();
@@ -1509,7 +1516,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         boolean newItemsReceived;
         final int startingVisionUpdateCount;
-
+        boolean manualAction;
+        
         private GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
             int ssarc0;
@@ -1532,25 +1540,25 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     GenerateParams newGenerateParams() {
         return new GenerateParams();
     }
-    private boolean manualAction;
-
-    /**
-     * Get the value of manualAction
-     *
-     * @return the value of manualAction
-     */
-    public boolean isManualAction() {
-        return manualAction;
-    }
-
-    /**
-     * Set the value of manualAction
-     *
-     * @param manualAction new value of manualAction
-     */
-    public void setManualAction(boolean manualAction) {
-        this.manualAction = manualAction;
-    }
+//    private boolean manualAction;
+//
+//    /**
+//     * Get the value of manualAction
+//     *
+//     * @return the value of manualAction
+//     */
+//    public boolean isManualAction() {
+//        return manualAction;
+//    }
+//
+//    /**
+//     * Set the value of manualAction
+//     *
+//     * @param manualAction new value of manualAction
+//     */
+//    public void setManualAction(boolean manualAction) {
+//        this.manualAction = manualAction;
+//    }
 
     private volatile @MonotonicNonNull
     List<List<Action>> takePlaceActions = null;
@@ -1605,7 +1613,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private List<MiddleCommandType> privateGenerateNoReplan(
-            GenerateParams gparams,
+            final GenerateParams gparams,
             @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException, IllegalStateException, IllegalArgumentException {
         final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
@@ -1698,7 +1706,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 actionToCrclTakenPartsNames = new String[gparamsActionsSize];
             }
             if (startingIndex == 0) {
-                if (!manualAction) {
+                if (!gparams.manualAction) {
                     if(null != currentHeldPart) {
                         System.out.println("setCurrentHeldPartTrace = " + Utils.traceToString(setCurrentHeldPartTrace));
                         throw new RuntimeException("currentHeldPart="+currentHeldPart);
@@ -2080,7 +2088,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } finally {
             final StackTraceElement[] checkCallerTrace = Thread.currentThread().getStackTrace();
-            final boolean manualActionF = manualAction;
+            final boolean manualActionF = gparams.manualAction;
             addMarkerCommand(cmds, "check currentHeldPart", new CRCLCommandWrapperConsumer() {
                 @Override
                 public void accept(CRCLCommandWrapper t) {
@@ -2090,7 +2098,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     }
                 }
             });
-            if(null != plannedHeldPart && !manualAction) {
+            if(null != plannedHeldPart && !gparams.manualAction) {
                 throw new RuntimeException("plannedHeldPart="+plannedHeldPart);
             }
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);

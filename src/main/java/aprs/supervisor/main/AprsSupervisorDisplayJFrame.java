@@ -102,6 +102,7 @@ import aprs.remote.Scriptable;
 import static aprs.remote.Scriptable.scriptableOf;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.utils.server.CRCLServerSocket;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -1519,6 +1520,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jCheckBoxMenuItemBlockTransfers = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemSingleStep = new javax.swing.JCheckBoxMenuItem();
         jCheckBoxMenuItemEnableRemoteConsole = new javax.swing.JCheckBoxMenuItem();
+        jMenuItemSetGlobalSpeedOverride = new javax.swing.JMenuItem();
         jMenuSpecialTests = new javax.swing.JMenu();
         jMenuItemMultiCycleTest = new javax.swing.JMenuItem();
         jCheckBoxMenuItemRandomTest = new javax.swing.JCheckBoxMenuItem();
@@ -1535,7 +1537,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jMenuItemReloadSimFiles = new javax.swing.JMenuItem();
         jMenuItemRestoreOrigRobotInfo = new javax.swing.JMenuItem();
         jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst = new javax.swing.JMenuItem();
-        jMenuItemSpecialTestFlip = new javax.swing.JMenuItem();
+        jMenuItemSpecialTestFlipFanucPartWithMotomanHelp = new javax.swing.JMenuItem();
+        jMenuItemSpecialTestFlipMotomanPartWithFanucHelp = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Multi Aprs Supervisor");
@@ -1627,7 +1630,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelRobotsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelRobotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneRobots, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
                     .addGroup(jPanelRobotsLayout.createSequentialGroup()
                         .addComponent(jLabel6)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1697,7 +1700,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         jPanelPosMapFilesLayout.setHorizontalGroup(
             jPanelPosMapFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelPosMapFilesLayout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 863, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 942, Short.MAX_VALUE)
                 .addGap(6, 6, 6))
         );
         jPanelPosMapFilesLayout.setVerticalGroup(
@@ -1920,7 +1923,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addComponent(jCheckBoxUpdateFutureAutomatically)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxFutureLongForm)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 202, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 266, Short.MAX_VALUE)
                         .addComponent(jButtonFuturesCancelAll))
                     .addComponent(jScrollPaneTreeSelectedFuture, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jScrollPane3))
@@ -2016,7 +2019,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)))
+                        .addComponent(jTextFieldEventsLogFile, javax.swing.GroupLayout.DEFAULT_SIZE, 482, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanelEventsLayout.setVerticalGroup(
@@ -2054,7 +2057,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelTeachTableLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelTeachTableLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
+                    .addComponent(object2DOuterJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 946, Short.MAX_VALUE)
                     .addComponent(jComboBoxTeachSystemView, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2118,7 +2121,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             .addGroup(jPanelToolsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelToolsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 861, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneSharedToolsTable, javax.swing.GroupLayout.DEFAULT_SIZE, 946, Short.MAX_VALUE)
                     .addGroup(jPanelToolsLayout.createSequentialGroup()
                         .addComponent(jButtonAddSharedToolsRow)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2495,6 +2498,14 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuOptions.add(jCheckBoxMenuItemEnableRemoteConsole);
 
+        jMenuItemSetGlobalSpeedOverride.setText("Set Global CRCL Server Socket Speed Override . . . ");
+        jMenuItemSetGlobalSpeedOverride.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSetGlobalSpeedOverrideActionPerformed(evt);
+            }
+        });
+        jMenuOptions.add(jMenuItemSetGlobalSpeedOverride);
+
         jMenuBar1.add(jMenuOptions);
 
         jMenuSpecialTests.setText("Special Tests");
@@ -2619,13 +2630,21 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         });
         jMenuSpecialTests.add(jMenuItemStartScanAllThenContinuousConveyorDemoRevFirst);
 
-        jMenuItemSpecialTestFlip.setText("Flip");
-        jMenuItemSpecialTestFlip.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItemSpecialTestFlipFanucPartWithMotomanHelp.setText("Flip Fanuc Part with Motoman Help");
+        jMenuItemSpecialTestFlipFanucPartWithMotomanHelp.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemSpecialTestFlipActionPerformed(evt);
+                jMenuItemSpecialTestFlipFanucPartWithMotomanHelpActionPerformed(evt);
             }
         });
-        jMenuSpecialTests.add(jMenuItemSpecialTestFlip);
+        jMenuSpecialTests.add(jMenuItemSpecialTestFlipFanucPartWithMotomanHelp);
+
+        jMenuItemSpecialTestFlipMotomanPartWithFanucHelp.setText("Flip Motoman Part with Fanuc Help");
+        jMenuItemSpecialTestFlipMotomanPartWithFanucHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemSpecialTestFlipMotomanPartWithFanucHelpActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemSpecialTestFlipMotomanPartWithFanucHelp);
 
         jMenuBar1.add(jMenuSpecialTests);
 
@@ -4635,10 +4654,27 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jCheckBoxMenuItemEnableRemoteConsoleActionPerformed
 
-    private void jMenuItemSpecialTestFlipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSpecialTestFlipActionPerformed
-        interactivStartRunnable(() -> setMainFuture(startFlip()),
-                jMenuItemSpecialTestFlip.getText());
-    }//GEN-LAST:event_jMenuItemSpecialTestFlipActionPerformed
+    private void jMenuItemSpecialTestFlipFanucPartWithMotomanHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSpecialTestFlipFanucPartWithMotomanHelpActionPerformed
+        interactivStartRunnable(() -> setMainFuture(startFlipFM()),
+                jMenuItemSpecialTestFlipFanucPartWithMotomanHelp.getText());
+    }//GEN-LAST:event_jMenuItemSpecialTestFlipFanucPartWithMotomanHelpActionPerformed
+
+    private void jMenuItemSpecialTestFlipMotomanPartWithFanucHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSpecialTestFlipMotomanPartWithFanucHelpActionPerformed
+        interactivStartRunnable(() -> setMainFuture(startFlipMF()),
+                jMenuItemSpecialTestFlipMotomanPartWithFanucHelp.getText());
+    }//GEN-LAST:event_jMenuItemSpecialTestFlipMotomanPartWithFanucHelpActionPerformed
+
+    private void jMenuItemSetGlobalSpeedOverrideActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetGlobalSpeedOverrideActionPerformed
+        try {
+            String overrideString = JOptionPane.showInputDialog("New Global CRCL Server Socket Speed Override?", 1.0);
+            double override = Double.parseDouble(overrideString);
+            CRCLServerSocket.setGlobalSpeedOverride(override);            
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
+            JOptionPane.showMessageDialog(this, "Excetption occurred:" + ex);
+        }
+       
+    }//GEN-LAST:event_jMenuItemSetGlobalSpeedOverrideActionPerformed
 
     public void closeAprsRemoteConsoleService() {
         try {
@@ -5174,11 +5210,18 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.startScanAllThenContinuousDemoRevFirstOnSupervisorService();
     }
 
-    private XFuture<?> startFlip() {
+    private XFuture<?> startFlipMF() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startFlipOnSupervisorService();
+        return supervisor.startFlipMFOnSupervisorService();
+    }
+    
+    private XFuture<?> startFlipFM() {
+        if (null == supervisor) {
+            throw new IllegalStateException("null == supervisor");
+        }
+        return supervisor.startFlipFMOnSupervisorService();
     }
     
     /**
@@ -6455,8 +6498,10 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemSaveSetupAs;
     private javax.swing.JMenuItem jMenuItemScanAll;
     private javax.swing.JMenuItem jMenuItemSetConveyorViewCloneSystem;
+    private javax.swing.JMenuItem jMenuItemSetGlobalSpeedOverride;
     private javax.swing.JMenuItem jMenuItemSetMaxCycles;
-    private javax.swing.JMenuItem jMenuItemSpecialTestFlip;
+    private javax.swing.JMenuItem jMenuItemSpecialTestFlipFanucPartWithMotomanHelp;
+    private javax.swing.JMenuItem jMenuItemSpecialTestFlipMotomanPartWithFanucHelp;
     private javax.swing.JMenuItem jMenuItemStartAll;
     private javax.swing.JMenuItem jMenuItemStartAllReverse;
     private javax.swing.JMenuItem jMenuItemStartColorTextDisplay;

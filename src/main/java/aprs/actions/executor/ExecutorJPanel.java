@@ -4356,9 +4356,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != serviceFinal) {
                 serviceFinal.submit(() -> {
                     try {
-                        crclGenerator.setManualAction(true);
                         final XFuture<Boolean> lookForPartsProgram = this.lookForParts();
-                        crclGenerator.setManualAction(false);
                         setRunProgramFuture(lookForPartsProgram);
                     } catch (Exception ex) {
                         Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -4369,9 +4367,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 });
             } else {
-                crclGenerator.setManualAction(true);
-                final XFuture<Boolean> lookForPartsProgram = this.lookForParts();
-                crclGenerator.setManualAction(false);
+                final XFuture<Boolean> lookForPartsProgram = this.lookForParts(true);
                 setRunProgramFuture(lookForPartsProgram);
             }
         } catch (Exception ex) {
@@ -6841,9 +6837,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedPoseName);
                 return;
             }
-            crclGenerator.setManualAction(true);
             cartesianMoveToRecordedPosition(recordedPoseName);
-            crclGenerator.setManualAction(false);
         } catch (Exception ex) {
             showExceptionMessage(ex);
             abortProgram();
@@ -6901,9 +6895,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 warnDialog("recordedPoseName to take is " + recordedJointsName);
                 return;
             }
-            crclGenerator.setManualAction(true);
             jointMoveToNamedPosition(recordedJointsName);
-            crclGenerator.setManualAction(false);
         } catch (Exception ex) {
             showExceptionMessage(ex);
             abortProgram();
@@ -6921,6 +6913,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     @Override
     public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
+        return cartesianMoveToRecordedPosition(recordedPoseName,false);
+    }
+    
+    private XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName, boolean manualAction) {
         checkDbSupplierPublisher();
         setReplanFromIndex(0);
         abortProgram();
@@ -6999,13 +6995,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     @Override
     public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
+        return jointMoveToNamedPosition(recordedJointsName,false);
+    }
+    
+    private XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName, boolean manualAction) {
         final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
         if (null != generateCrclService) {
             return XFuture.supplyAsync("jointMoveToNamedPosition:" + recordedJointsName,
                     () -> {
                         try {
                             XFuture<Boolean> future
-                            = this.moveToRecordedJoints(recordedJointsName);
+                            = this.moveToRecordedJoints(recordedJointsName,manualAction);
                             setRunProgramFuture(future);
                             return future;
                         } catch (Exception ex) {
@@ -7036,7 +7036,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             try {
                 XFuture<Boolean> future
-                        = this.moveToRecordedJoints(recordedJointsName);
+                        = this.moveToRecordedJoints(recordedJointsName,manualAction);
                 setRunProgramFuture(future);
                 return future;
             } catch (Exception exception) {
@@ -7811,10 +7811,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private synchronized List<MiddleCommandType> generate(List<Action> actions, int startingIndex, Map<String, String> options, int startSafeAbortRequestCount, int sectionNumber)
+    private synchronized List<MiddleCommandType> generate(
+            List<Action> actions,
+            int startingIndex, 
+            Map<String, String> options, 
+            int startSafeAbortRequestCount, 
+            int sectionNumber,
+            boolean manualAction)
             throws Exception {
         appendGenerateAbortLog("generate", actions.size(), isReverseFlag(), startingIndex, startSafeAbortRequestCount, sectionNumber);
-        List<MiddleCommandType> ret = crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount);
+        List<MiddleCommandType> ret = crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount,manualAction);
         loadCheckKitListToTable(crclGenerator.getLastScanKitsToCheckInfoList());
         loadCorrectiveActionListToTable(crclGenerator.getLastCheckKitsCorrectiveActions());
         loadOptimizedCorrectiveActionListToTable(crclGenerator.getLastCheckKitsOptimizedCorrectiveActions());
@@ -7904,7 +7910,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         synchronized (actionsList) {
             List<Action> actionListDebugCopy = new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();
-            cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber);
+            cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber,false);
             resetReadOnlyActionsList(reverseFlag);
             actionsListSize = actionsList.size();
             for (int i = startReplanFromIndex; i < actionsListSize && i < crclGenerator.getLastIndex(); i++) {
@@ -8087,9 +8093,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         placePartActionsList.add(placePartAction);
         syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
-        crclGenerator.setManualAction(true);
-        List<MiddleCommandType> cmds = generate(placePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
-        crclGenerator.setManualAction(false);
+        List<MiddleCommandType> cmds = generate(placePartActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
         CRCLUtils.middleCommands(program).addAll(cmds);
@@ -8116,7 +8120,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1,true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8167,6 +8171,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> moveToRecordedPose(String recordedPoseName) throws Exception {
+        return moveToRecordedPose(recordedPoseName,false);
+    }
+    
+    private XFuture<Boolean> moveToRecordedPose(String recordedPoseName, boolean manualAction) throws Exception {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -8178,7 +8186,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,manualAction);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8231,7 +8239,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8254,7 +8262,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8265,7 +8273,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return startCrclProgram(program);
     }
 
-    private XFuture<Boolean> moveToRecordedJoints(String recordedName) throws Exception {
+    private XFuture<Boolean> moveToRecordedJoints(String recordedName, boolean manualAction) throws Exception {
         crclGenerator.partialReset();
         Map<String, String> options = getTableOptions();
         setReplanFromIndex(0);
@@ -8277,7 +8285,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,manualAction);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8303,9 +8311,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        crclGenerator.setManualAction(true);
-        List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1);
-        crclGenerator.setManualAction(false);
+        List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8599,8 +8605,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return startCrclProgram(program);
     }
 
-    @SuppressWarnings("guieffect")
     private XFuture<Boolean> lookForParts() {
+        return lookForParts(false);
+    }
+            
+    @SuppressWarnings("guieffect")
+    private XFuture<Boolean> lookForParts(boolean manualAction) {
         try {
             CRCLProgramType program = createLookForPartsProgram();
             return startCrclProgram(program)
@@ -8653,7 +8663,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.clearPoseCache();
         crclGenerator.clearLastRequiredPartsMap();
         CRCLProgramType program = createEmptyProgram();
-        List<MiddleCommandType> cmds = generate(lookForActionsList, 0, options, safeAbortRequestCount.get(), -1);
+        List<MiddleCommandType> cmds = generate(lookForActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
         CRCLUtils.middleCommands(program).addAll(cmds);
@@ -8866,7 +8876,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     = generate(actionsList,
                             0,
                             options,
-                            safeAbortRequestCount.get(), -1);
+                            safeAbortRequestCount.get(), 
+                            -1,
+                            true);
             indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
             CRCLUtils.middleCommands(program).clear();
             CRCLUtils.middleCommands(program).addAll(cmds);
