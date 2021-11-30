@@ -27,6 +27,8 @@ import aprs.actions.executor.CrclGenerator;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorDisplayInterface;
 import aprs.actions.executor.ExecutorJInternalFrame;
+import aprs.actions.executor.ExecutorBooleanOption;
+import aprs.actions.executor.ExecutorOptionValuePair;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.database.*;
@@ -8339,7 +8341,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @param newReverseFlag are the actions used to empty kit trays
      * @return future of the underlying task to execute the actions.
      */
-    public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, boolean newReverseFlag) {
+    public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, 
+            ExecutorOptionValuePair<?,?> ... options) {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -8347,9 +8350,25 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         for (Action action : actions) {
             actionsCopy.add(action);
         }
+        Map<ExecutorBooleanOption,Boolean> map = ExecutorBooleanOption.map(options);
+        boolean newReverseFlag = (boolean) map.get(ExecutorBooleanOption.REVERSE);
+        
         return privateStartActions(comment, newReverseFlag, actionsCopy);
     }
 
+    public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, 
+            boolean newReverseFlag) {
+        if (null == executorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
+        List<Action> actionsCopy = new ArrayList<>();
+        for (Action action : actions) {
+            actionsCopy.add(action);
+        }
+        
+        return privateStartActions(comment, newReverseFlag, actionsCopy);
+    }
+    
     /**
      * Load a text file of actions and start executing it from the beginning.
      *

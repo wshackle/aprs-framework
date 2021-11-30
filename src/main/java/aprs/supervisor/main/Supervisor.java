@@ -87,6 +87,8 @@ import java.util.stream.Stream;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import aprs.actions.executor.ExecutorBooleanOption;
+
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -5014,6 +5016,7 @@ public class Supervisor {
     }
     
     
+    
     public XFuture<Boolean> startFlipFM() {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
@@ -5033,7 +5036,7 @@ public class Supervisor {
                     Arrays.asList(new Action[]{
                         Action.newTakePartAction("part_black_gear_in_pt_1"),
                         Action.newMoveRecordedJoints("present_gear")
-                    }),false);
+                    }),ExecutorBooleanOption.REVERSE.with(true));
         });
         XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step3 : xf3=" + xf3);
@@ -5121,7 +5124,7 @@ public class Supervisor {
                         Action.newTakePartAction("part_black_gear_in_kt_1"),
                         Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
                         Action.newMoveRecordedPose("flipmf_present_gear")
-                    }),false);
+                    }),true);
         });
         return xf3;
 //        XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
