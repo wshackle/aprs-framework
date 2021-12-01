@@ -314,11 +314,11 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.removePositionMap(pm);
     }
 
-    public Map<String, String> getOptions() {
+    public Map<ExecutorOption, ?> getOptions() {
         return this.executorJPanel1.getTableOptions();
     }
 
-    public void setOption(String key, String value) {
+    public void setOption(ExecutorOption key, Object value) {
         this.executorJPanel1.setOption(key, value);
     }
 

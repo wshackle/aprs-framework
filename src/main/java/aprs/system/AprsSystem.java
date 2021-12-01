@@ -27,8 +27,7 @@ import aprs.actions.executor.CrclGenerator;
 import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.actions.executor.ExecutorDisplayInterface;
 import aprs.actions.executor.ExecutorJInternalFrame;
-import aprs.actions.executor.ExecutorBooleanOption;
-import aprs.actions.executor.ExecutorOptionValuePair;
+import aprs.actions.executor.ExecutorOption;
 import aprs.actions.executor.PositionMap;
 import aprs.cachedcomponents.CachedCheckBox;
 import aprs.database.*;
@@ -93,6 +92,10 @@ import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.shortenItemPartName;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+
+//
+import aprs.actions.executor.ExecutorOption;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -1210,7 +1213,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      * @return the current executor options.
      */
-    public Map<String, String> getExecutorOptions() {
+    public Map<ExecutorOption,?> getExecutorOptions() {
         if (null == executorJInternalFrame1) {
             return Collections.emptyMap();
         }
@@ -1223,7 +1226,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @param key name of option to set
      * @param value value option should be set to
      */
-    public void setExecutorOption(String key, String value) {
+    public void setExecutorOption(ExecutorOption key, Object value) {
         if (null != executorJInternalFrame1) {
             executorJInternalFrame1.setOption(key, value);
         }
@@ -8342,7 +8345,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return future of the underlying task to execute the actions.
      */
     public XFuture<Boolean> startActionsList(String comment, Iterable<Action> actions, 
-            ExecutorOptionValuePair<?,?> ... options) {
+            ExecutorOption.WithValue<?,?> ... options) {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -8350,8 +8353,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         for (Action action : actions) {
             actionsCopy.add(action);
         }
-        Map<ExecutorBooleanOption,Boolean> map = ExecutorBooleanOption.map(options);
-        boolean newReverseFlag = (boolean) map.get(ExecutorBooleanOption.REVERSE);
+        Map<ExecutorOption.ForBoolean,Boolean> map = ExecutorOption.ForBoolean.map(options);
+        boolean newReverseFlag = (boolean) map.get(ExecutorOption.ForBoolean.REVERSE);
         
         return privateStartActions(comment, newReverseFlag, actionsCopy);
     }

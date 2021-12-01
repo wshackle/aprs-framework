@@ -479,7 +479,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void setPauseInsteadOfRecover(boolean val) {
-        setOption("pauseInsteadOfRecover", Boolean.toString(val));
+        setOption(ExecutorOption.ForBoolean.pauseInsteadOfRecover, val);
         crclGenerator.setPauseInsteadOfRecover(val);
     }
 
@@ -2991,15 +2991,15 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 }
             }
         }
-        propsMap.put(REVERSE_FLAG, Boolean.toString(reverseFlag));
-        propsMap.put(SAVE_PROGRAM_RUN_DATA_FLAG, Boolean.toString(saveProgramRunData));
+        propsMap.put(ExecutorOption.ForBoolean.REVERSE.name(), Boolean.toString(reverseFlag));
+        propsMap.put(ExecutorOption.ForBoolean.saveProgramRunData.name(), Boolean.toString(saveProgramRunData));
         Properties props = new Properties();
         props.putAll(propsMap);
         props.putAll(getTableOptions());
 //        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
 //        props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
         props.put(POS_ERROR_MAP_FILES, Arrays.toString(getRelPathPositionMapFileNames()));
-        props.put(ENABLE_OPTA_PLANNER, Boolean.toString(enableOptaplannerCachedCheckBox.isSelected()));
+        props.put(ExecutorOption.ForBoolean.enableOptaPlanner, Boolean.toString(enableOptaplannerCachedCheckBox.isSelected()));
         Utils.saveProperties(propertiesFile, props);
     }
 
@@ -5206,7 +5206,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 }
                 if (!keyFound) {
-                    optionsCachedTable.addRow(new Object[]{"lookForJoints", jointVals});
+                    optionsCachedTable.addRow(new Object[]{ExecutorOption.ForString.lookForJoints, jointVals});
                 }
                 crclGenerator.setOptions(getTableOptions());
             }
@@ -5222,7 +5222,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     }
                 }
                 if (!keyFound) {
-                    optionsCachedTable.addRow(new Object[]{"lookForXYZ", xyzString});
+                    optionsCachedTable.addRow(new Object[]{ExecutorOption.ForString.lookForXYZ, xyzString});
                 }
                 crclGenerator.setOptions(getTableOptions());
             }
@@ -5459,7 +5459,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return f;
             }
         }
-        String optionPath = crclGenerator.getOptions().get("toolChangerPoseFile");
+        String optionPath = crclGenerator.getStringOptionsMap().get("toolChangerPoseFile");
         if (optionPath != null && optionPath.trim().length() > 0) {
             File f = new File(optionPath);
             if (f.exists() && f.canRead()) {
@@ -5487,7 +5487,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return f;
             }
         }
-        String optionPath = crclGenerator.getOptions().get("recordedPositionsFile");
+        String optionPath = crclGenerator.getStringOptionsMap().get("recordedPositionsFile");
         if (optionPath != null && optionPath.trim().length() > 0) {
             File f = new File(optionPath);
             if (f.exists() && f.canRead()) {
@@ -5506,13 +5506,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void setToolChangePoseFileCanonicalPath(final String canonicalPath) {
-        setOptionsTableValue("toolChangerPoseFile", canonicalPath);
+        setOptionsTableValue(ExecutorOption.ForString.toolChangerPoseFile, canonicalPath);
         jTextFieldToolChangerPoseFile.setText(canonicalPath);
         crclGenerator.setOptions(getTableOptions());
     }
 
     public void setRecordedPosesFileCanonicalPath(final String canonicalPath) {
-        setOptionsTableValue("recordedPoses", canonicalPath);
+        setOptionsTableValue(ExecutorOption.ForString.recordedPoses, canonicalPath);
         jTextFieldRecordedPosesFile.setText(canonicalPath);
         crclGenerator.setOptions(getTableOptions());
     }
@@ -5527,7 +5527,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 return f;
             }
         }
-        String optionPath = crclGenerator.getOptions().get("partToolFile");
+        String optionPath = crclGenerator.getStringOptionsMap().get("partToolFile");
         if (optionPath != null && optionPath.length() > 0) {
             File f = new File(optionPath);
             if (f.exists() && f.canRead()) {
@@ -5546,7 +5546,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     public void setPartToolFileCanonnicalPath(final String canonicalPath) {
-        setOptionsTableValue("partToolFile", canonicalPath);
+        setOptionsTableValue(ExecutorOption.ForString.partToolFile, canonicalPath);
         jTextFieldPartToolFile.setText(canonicalPath);
         crclGenerator.setOptions(getTableOptions());
     }
@@ -7814,7 +7814,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private synchronized List<MiddleCommandType> generate(
             List<Action> actions,
             int startingIndex, 
-            Map<String, String> options, 
+            Map<ExecutorOption, ?> options, 
             int startSafeAbortRequestCount, 
             int sectionNumber,
             boolean manualAction)
@@ -7874,7 +7874,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     List<Action> lastPddlActionSectionToCrclActionListCopy = null;
 
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption,?> options = getTableOptions();
         final int rpi = getReplanFromIndex();
         if (rpi < 0 || rpi > actionsListSize) {
             setReplanFromIndex(0);
@@ -8085,7 +8085,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> placePartSlot(String part, String slot) throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption,?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> placePartActionsList = new ArrayList<>();
         Action placePartAction
@@ -8108,7 +8108,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption,?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> testPartPositionActionList = new ArrayList<>();
         Action takePartAction = Action.newSingleArgAction(
@@ -8176,7 +8176,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     
     private XFuture<Boolean> moveToRecordedPose(String recordedPoseName, boolean manualAction) throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> actionsList = new ArrayList<>();
         Action moveRecordedPoseAction
@@ -8229,7 +8229,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> openGripperInternal() throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> actionsList = new ArrayList<>();
         Action openGripperAction
@@ -8252,7 +8252,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> closeGripperInternal() throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> actionsList = new ArrayList<>();
         Action closeGripperAction
@@ -8275,7 +8275,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> moveToRecordedJoints(String recordedName, boolean manualAction) throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> actionsList = new ArrayList<>();
         Action moveRecordedJointsAction
@@ -8298,7 +8298,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> takePart(String part) throws Exception {
         crclGenerator.partialReset();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> takePartActionsList = new ArrayList<>();
         Action takePartAction
@@ -8353,7 +8353,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> returnPart(String part) {
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         CRCLProgramType program = createEmptyProgram();
@@ -8475,7 +8475,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private XFuture<Boolean> randomDropOff() {
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         crclGenerator.setOptions(options);
@@ -8541,7 +8541,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             this.clearAll();
             return;
         }
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption,?> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         crclGenerator.setOptions(options);
@@ -8591,7 +8591,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> randomPickup() throws CRCLException, PmException {
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         crclGenerator.setOptions(options);
@@ -8655,7 +8655,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private CRCLProgramType createLookForPartsProgramInternal() throws Exception {
         checkDbSupplierPublisher();
-        Map<String, String> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> lookForActionsList = new ArrayList<>();
         Action lookForAction = Action.newNoArgAction(LOOK_FOR_PARTS);
@@ -8675,7 +8675,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> gotoToolChangerApproach(String poseName, PoseType pose) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
             Action gototToolChangerApproachAction
@@ -8700,7 +8700,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> gotoToolChangerPose(String poseName, PoseType pose) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
             Action gototToolChangerApproachAction
@@ -8793,7 +8793,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> dropToolByHolder(String holderName) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action dropToolByHolderAction
@@ -8817,7 +8817,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> dropToolAny() {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             List<Action> newActionsList = new ArrayList<>();
             Action dropToolAnyAction
@@ -8839,7 +8839,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile StackTraceElement lastExecuteActionsTrace @Nullable []  = null;
     private volatile long lastExecuteActionsTime = -1;
 
-    private XFuture<Boolean> executeActions(List<Action> actionsList, Map<String, String> options) {
+    private XFuture<Boolean> executeActions(List<Action> actionsList, Map<ExecutorOption, ?> options) {
         this.loadActionsList(
                 actionsList, //Iterable<? extends Action> newActions, 
                 reverseFlag, //  boolean newReverseFlag,
@@ -8869,7 +8869,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private XFuture<Boolean> executeActionsInternal(List<Action> actionsList, Map<String, String> options) {
+    private XFuture<Boolean> executeActionsInternal(List<Action> actionsList, Map<ExecutorOption, ?> options) {
         try {
             CRCLProgramType program = createEmptyProgram();
             List<MiddleCommandType> cmds
@@ -8895,7 +8895,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> pickupToolByHolder(String holderName) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
@@ -8920,7 +8920,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> pickupToolByTool(String toolName) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
@@ -8943,7 +8943,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> switchTool(String toolName) {
         try {
-            Map<String, String> options = getTableOptions();
+            Map<ExecutorOption, ?> options = getTableOptions();
             setReplanFromIndex(0);
             syncPanelToGeneratorToolDataOnDisplay();
             List<Action> newActionsList = new ArrayList<>();
@@ -9043,7 +9043,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         return f1; //XFuture.allOfWithName("checkDbSupplierPublisher.all", f1,f2);
     }
 
-    public void setOption(String key, String val) {
+    public void setOption(ExecutorOption key, Object val) {
         for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
             Object keyCheck = optionsCachedTable.getValueAt(i, 0);
             if (Objects.equals(keyCheck, key)) {
@@ -9064,15 +9064,44 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final CachedTable optionsCachedTable;
 
-    public Map<String, String> getTableOptions() {
-        Map<String, String> options = new HashMap<>();
+    public Map<ExecutorOption, ?> getTableOptions() {
+        Map<ExecutorOption, Object> options = new HashMap<>();
         @Nullable
         Object[][] optionsData = optionsCachedTable.getData();
         for (int i = 0; i < optionsData.length; i++) {
             Object key = optionsData[i][0];
             Object val = optionsData[i][1];
-            if (null != key && null != val) {
-                options.put(key.toString(), val.toString());
+            if(null == key) {
+                continue;
+            }
+            if(null == val) {
+                continue;
+            }
+            ExecutorOption exOpt = ExecutorOption.of(key.toString());
+            if(exOpt instanceof ExecutorOption.ForString) {
+                if(val instanceof String) {
+                    options.put(exOpt, val);
+                } else {
+                    options.put(exOpt, val.toString());
+                }
+            } else if(exOpt instanceof ExecutorOption.ForBoolean) {
+                if(val instanceof Boolean) {
+                    options.put(exOpt, val);
+                } else {
+                    options.put(exOpt, Boolean.parseBoolean(val.toString()));
+                }
+            } else if(exOpt instanceof ExecutorOption.ForInt) {
+                if(val instanceof Integer) {
+                    options.put(exOpt, val);
+                } else {
+                    options.put(exOpt, Integer.parseInt(val.toString()));
+                }
+            } else if(exOpt instanceof ExecutorOption.ForDouble) {
+                if(val instanceof Double) {
+                    options.put(exOpt, val);
+                } else {
+                    options.put(exOpt, Double.parseDouble(val.toString()));
+                }
             }
         }
         return options;
@@ -9321,14 +9350,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             setInternalReverseActionsFileString(propsReverseActionsFileString, true);
             boolean reverseFlagFromProperty = false;
-            String reverseFlagProperty = props.getProperty(REVERSE_FLAG);
+            String reverseFlagProperty = props.getProperty(ExecutorOption.ForBoolean.REVERSE.name());
             if (null != reverseFlagProperty) {
                 reverseFlagFromProperty = Boolean.parseBoolean(reverseFlagProperty);
             }
             setReverseFlag(reverseFlagFromProperty);
 
             boolean saveProgramRunDataFlagFromProperty = false;
-            String saveProgramRunDataFlagProperty = props.getProperty(SAVE_PROGRAM_RUN_DATA_FLAG);
+            String saveProgramRunDataFlagProperty = props.getProperty(ExecutorOption.ForBoolean.saveProgramRunData.name());
             if (null != saveProgramRunDataFlagProperty) {
                 saveProgramRunDataFlagFromProperty = Boolean.parseBoolean(saveProgramRunDataFlagProperty);
             }
@@ -9339,7 +9368,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (null != autostartString) {
                 this.autoStart = Boolean.valueOf(autostartString);
             }
-            String enableOptaPlannerString = props.getProperty(ENABLE_OPTA_PLANNER);
+            String enableOptaPlannerString = props.getProperty(ExecutorOption.ForBoolean.enableOptaPlanner.name());
             if (null != enableOptaPlannerString) {
                 boolean enableOptaPlanner = Boolean.valueOf(enableOptaPlannerString);
                 enableOptaplannerCachedCheckBox.setSelected(enableOptaPlanner);
@@ -9350,10 +9379,21 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                         && !name.equals(MANUAL_PART_NAMES)
                         && !name.equals(MANUAL_SLOT_NAMES)) {
                     final String propertyValue = props.getProperty(name);
+                    ExecutorOption exOptOf = ExecutorOption.of(name);
                     if (null != propertyValue) {
-                        setOptionsTableValue(name, propertyValue);
+                        if(exOptOf instanceof ExecutorOption.ForString) {
+                            setOptionsTableValue(exOptOf, propertyValue);
+                        } else if(exOptOf instanceof ExecutorOption.ForBoolean) {
+                            setOptionsTableValue(exOptOf, Boolean.parseBoolean(propertyValue));
+                        } else if(exOptOf instanceof ExecutorOption.ForDouble) {
+                            setOptionsTableValue(exOptOf, Double.parseDouble(propertyValue));
+                        } else if(exOptOf instanceof ExecutorOption.ForInt) {
+                            setOptionsTableValue(exOptOf, Integer.parseInt(propertyValue));
+                        }
                     } else {
-                        setOptionsTableValue(name, "");
+                        if(exOptOf instanceof ExecutorOption.ForString) {
+                            setOptionsTableValue(exOptOf, "");
+                        } 
                     }
                 }
             }
@@ -9407,15 +9447,18 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    public void setOptionsTableValue(String name, final String propertyValue) {
+    public void setOptionsTableValue(ExecutorOption opt, final Object propertyValue) {
         boolean foundit = false;
         for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
             Object tableValue0 = optionsCachedTable.getValueAt(i, 0);
             if (tableValue0 == null) {
                 continue;
             }
-            String nameFromTable = tableValue0.toString();
-            if (nameFromTable.equals(name)) {
+            ExecutorOption optFromTable 
+                    = (tableValue0 instanceof ExecutorOption)
+                    ? ((ExecutorOption) tableValue0)
+                    : ExecutorOption.of(tableValue0.toString());
+            if (optFromTable.equals(opt)) {
                 Object tableValue1 = optionsCachedTable.getValueAt(i, 1);
                 if (!Objects.equals(tableValue1, propertyValue)) {
                     optionsCachedTable.setValueAt(propertyValue, i, 1);
@@ -9425,7 +9468,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
         }
         if (!foundit) {
-            optionsCachedTable.addRow(new Object[]{name, propertyValue});
+            optionsCachedTable.addRow(new Object[]{opt, propertyValue});
         }
     }
 
@@ -9451,14 +9494,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void completeLoadPropertiesOnDisplay() {
-        Map<String, String> optionsMap = getTableOptions();
+        Map<ExecutorOption, ?> optionsMap = getTableOptions();
         crclGenerator.loadOptionsMap(optionsMap, false);
         syncPanelToGeneratorToolDataOnDisplay();
         loadToolMenus();
     }
 
-    private static final String REVERSE_FLAG = "reverseFlag";
-    private static final String SAVE_PROGRAM_RUN_DATA_FLAG = "saveProgramRunData";
+//    private static final String REVERSE_FLAG = "reverseFlag";
+//    private static final String SAVE_PROGRAM_RUN_DATA_FLAG = "saveProgramRunData";
 
     @UIEffect
     private void loadToolMenus() {
@@ -9628,7 +9671,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
+//    private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
 
     private void loadComboModels(Properties props) {
         String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");

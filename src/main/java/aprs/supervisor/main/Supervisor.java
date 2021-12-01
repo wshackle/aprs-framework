@@ -23,6 +23,7 @@
 package aprs.supervisor.main;
 
 import aprs.actions.executor.Action;
+import aprs.actions.executor.ExecutorOption;
 import aprs.actions.executor.PositionMap;
 import aprs.actions.executor.PositionMapJPanel;
 import aprs.cachedcomponents.CachedTable;
@@ -87,7 +88,8 @@ import java.util.stream.Stream;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
-import aprs.actions.executor.ExecutorBooleanOption;
+
+import aprs.actions.executor.ExecutorOption.ForBoolean;
 
 
 /**
@@ -1672,10 +1674,11 @@ public class Supervisor {
         "jointAccel", "jointSpeed", "rotSpeed", "fastTransSpeed", "settleDwellTime", "lookForJoints",
         "useJointLookFor"};
 
-    private void copyOptions(String options[], Map<String, String> mapIn, Map<String, String> mapOut) {
-        for (String opt : options) {
-            if (mapIn.containsKey(opt)) {
-                mapOut.put(opt, mapIn.get(opt));
+    private void copyOptions(String options[], Map<ExecutorOption,?> mapIn, Map<ExecutorOption,Object> mapOut) {
+        for (String optString : options) {
+            final ExecutorOption exOptOf = ExecutorOption.of(optString);
+            if (mapIn.containsKey(exOptOf)) {
+                mapOut.put(exOptOf, mapIn.get(exOptOf));
             }
         }
     }
@@ -2570,14 +2573,14 @@ public class Supervisor {
 
             int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
 
-            Map<String, String> stealFromOptionsCopy = new HashMap<>();
-            Map<String, String> stealFromOptionsOrig = stealFrom.getExecutorOptions();
+            Map<ExecutorOption,Object> stealFromOptionsCopy = new HashMap<>();
+            Map<ExecutorOption,?> stealFromOptionsOrig = stealFrom.getExecutorOptions();
             if (null != stealFromOptionsOrig) {
                 copyOptions(transferrableOptions, stealFromOptionsOrig, stealFromOptionsCopy);
             }
 
-            Map<String, String> stealForOptionsCopy = new HashMap<>();
-            Map<String, String> stealForOptionsOrig = stealFor.getExecutorOptions();
+            Map<ExecutorOption,Object> stealForOptionsCopy = new HashMap<>();
+            Map<ExecutorOption,?> stealForOptionsOrig = stealFor.getExecutorOptions();
             if (null != stealForOptionsOrig) {
                 copyOptions(transferrableOptions, stealForOptionsOrig, stealForOptionsCopy);
             }
@@ -2632,13 +2635,16 @@ public class Supervisor {
                         logEvent("transfer : " + stealFor + " connectRobot(" + stealFromRobotName + ","
                                 + stealFromOrigCrclHost + "," + stealFromOrigCrclPort + ")" + " : srn=" + srn);
                         stealFor.addPositionMap(pm);
-                        for (String opt : transferrableOptions) {
-                            if (stealFromOptionsCopy.containsKey(opt)) {
-                                stealFor.setExecutorOption(opt, stealFromOptionsCopy.get(opt));
+                        for (String optString : transferrableOptions) {
+                            final ExecutorOption exOptOf = ExecutorOption.of(optString);
+                            if (stealFromOptionsCopy.containsKey(exOptOf)) {
+                                stealFor.setExecutorOption(exOptOf, stealFromOptionsCopy.get(exOptOf));
                             }
                         }
                         stealFor.setToolHolderOperationEnabled(false);
-                        String stealForRpy = stealFor.getExecutorOptions().get("rpy");
+                        String stealForRpy = ExecutorOption.ForString
+                                .map(stealFor.getExecutorOptions())
+                                .get(ExecutorOption.ForString.RPY);
                         logEvent("stealForRpy=" + stealForRpy);
                         robotTaskMapPut(stealFromRobotName, stealFor);
                         return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort)
@@ -2677,7 +2683,7 @@ public class Supervisor {
     }
 
     private NamedFunction<Integer, XFutureVoid> setupReturnRobots(final int srn, int ecc, AprsSystem stealFor,
-            AprsSystem stealFrom, Map<String, String> stealForOptions, PositionMap pm) {
+            AprsSystem stealFrom, Map<ExecutorOption,?> stealForOptions, PositionMap pm) {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         if (null == stealFromOrigCrclHost) {
             throw new IllegalStateException("null robotCrclHost in stealFrom =" + stealFrom);
@@ -2707,9 +2713,14 @@ public class Supervisor {
     private volatile StackTraceElement lastSetupRobotReturnInternalTrace0 @Nullable []  = null;
     private volatile StackTraceElement lastSetupRobotReturnInternalTrace1 @Nullable []  = null;
 
-    private NamedFunction<Integer, XFutureVoid> setupRobotReturnInternal(AprsSystem stealFrom, AprsSystem stealFor,
-            final int srn, int setup_ecc, String stealForRobotName, String stealFromRobotName,
-            String stealFromOrigCrclHost, Map<String, String> stealForOptions, PositionMap pm,
+    private NamedFunction<Integer, XFutureVoid> setupRobotReturnInternal(
+            AprsSystem stealFrom, 
+            AprsSystem stealFor,
+            final int srn, int setup_ecc, 
+            String stealForRobotName, String stealFromRobotName,
+            String stealFromOrigCrclHost, 
+            Map<ExecutorOption, ?> stealForOptions, 
+            PositionMap pm,
             String stealForOrigCrclHost) {
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
         int stealForOrigCrclPort = stealFor.getRobotCrclPort();
@@ -2808,14 +2819,18 @@ public class Supervisor {
                                 return cancelledSrn(srn);
                             }
                         }
-                        for (String opt : transferrableOptions) {
-                            if (stealForOptions.containsKey(opt)) {
-                                stealFor.setExecutorOption(opt, stealForOptions.get(opt));
+                        for (String optString : transferrableOptions) {
+                            ExecutorOption exOptOf = ExecutorOption.of(optString);
+                            if (stealForOptions.containsKey(exOptOf)) {
+                                stealFor.setExecutorOption(exOptOf, stealForOptions.get(optString));
                             }
                         }
                         stealFor.setToolHolderOperationEnabled(true);
                         stealFor.removePositionMap(pm);
-                        String stealForRpy = stealFor.getExecutorOptions().get("rpy");
+                        String stealForRpy = 
+                                ExecutorOption.ForString
+                                .map(stealFor.getExecutorOptions())
+                                .get(ExecutorOption.ForString.RPY);
                         logEvent("stealForRpy=" + stealForRpy);
                         final String stealForTaskName = stealFor.getTaskName();
                         logEvent("start returnRobot." + stealForTaskName + " connect to " + stealForRobotName + " at "
@@ -5036,7 +5051,7 @@ public class Supervisor {
                     Arrays.asList(new Action[]{
                         Action.newTakePartAction("part_black_gear_in_pt_1"),
                         Action.newMoveRecordedJoints("present_gear")
-                    }),ExecutorBooleanOption.REVERSE.with(true));
+                    }),ExecutorOption.ForBoolean.REVERSE.with(true));
         });
         XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step3 : xf3=" + xf3);
@@ -5118,7 +5133,7 @@ public class Supervisor {
         
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlipMF.step3", x -> {
             logEvent("startFlipMF.step2 : xf2=" + xf2);
-            sharedTableSys.setExecutorOption("skipMissingParts", "false");
+            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
             return sharedTableSys.startActionsList("flip2", 
                     Arrays.asList(new Action[]{
                         Action.newTakePartAction("part_black_gear_in_kt_1"),
