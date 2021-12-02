@@ -1,1 +1,1 @@
-/home/shackle/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/teachProps.txt
+/mnt/sda6/home/will/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/teachProps.txt

@@ -1,1 +1,0 @@
-/home/shackle/NetBeansProjects/aprs-framework/CRCLPrograms/simMotomanStackMove2.xml

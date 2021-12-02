@@ -5454,7 +5454,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 ExecutorOption.ForBoolean.map(optionsMap),
                 ExecutorOption.ForDouble.map(optionsMap),
                 ExecutorOption.ForInt.map(optionsMap),
-                true);
+                doCheckPose);
     }
             
     public void loadOptionsMap(
