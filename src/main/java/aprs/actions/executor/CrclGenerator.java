@@ -5905,31 +5905,38 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.endPoseTolerance = endPoseTolerance;
     }
 
+    private String getStringOpt(ExecutorOption.ForString opt, String def) {
+        return stringOptionsMap.getOrDefault(opt, def);
+    }
+    
+    private Double getDoubleOpt(ExecutorOption.ForDouble opt, double def) {
+        return doubleOptionsMap.getOrDefault(opt, def);
+    }
+    
+    private Boolean getBooleanOpt(ExecutorOption.ForBoolean opt, boolean def) {
+        return booleanOptionsMap.getOrDefault(opt, def);
+    }
+    
     private void checkEndPoseToleranceSetting(List<MiddleCommandType> out) {
         if (!endPoseTolerancesChecked) {
             if (null == endPoseTolerance) {
                 boolean useEndPoseTolerance = booleanOptionsMap.getOrDefault(ExecutorOption.ForBoolean.useEndPoseTolerance, false);
                 if (useEndPoseTolerance) {
                     PoseToleranceType newEndPoseTolerance = new PoseToleranceType();
-                    String endPoseXPointToleranceString = stringOptionsMap.getOrDefault("endPoseXPointTolerance", "10.0");
-                    double endPoseXPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    double endPoseXPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseXPointTolerance, 10.0);
                     newEndPoseTolerance.setXPointTolerance(endPoseXPointToleranceValue);
 
-                    String endPoseYPointToleranceString = stringOptionsMap.getOrDefault("endPoseYPointTolerance", "10.0");
-                    double endPoseYPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    double endPoseYPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseYPointTolerance, 10.0);
                     newEndPoseTolerance.setYPointTolerance(endPoseYPointToleranceValue);
 
-                    String endPoseZPointToleranceString = stringOptionsMap.getOrDefault("endPoseZPointTolerance", "10.0");
-                    double endPoseZPointToleranceValue = Double.parseDouble(endPoseZPointToleranceString);
+                    double endPoseZPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseZPointTolerance, 10.0);;
                     newEndPoseTolerance.setZPointTolerance(endPoseZPointToleranceValue);
 
-                    String endPoseXAxisToleranceString = stringOptionsMap.getOrDefault("endPoseXAxisTolerance", "10.0");
-                    double endPoseXAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
-                    newEndPoseTolerance.setXAxisTolerance(endPoseZPointToleranceValue);
+                    double endPoseXAxisToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseXAxisTolerance, 10.0);
+                    newEndPoseTolerance.setXAxisTolerance(endPoseXAxisToleranceValue);
 
-                    String endPoseYAxisToleranceString = stringOptionsMap.getOrDefault("endPoseZAxisTolerance", "10.0");
-                    double endPoseYAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
-                    newEndPoseTolerance.setZAxisTolerance(endPoseZPointToleranceValue);
+                    double endPoseZAxisToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseZAxisTolerance, 10.0);
+                    newEndPoseTolerance.setZAxisTolerance(endPoseZAxisToleranceValue);
 
                     final SetEndPoseToleranceType setEndPoseToleranceCommand
                             = new SetEndPoseToleranceType();
@@ -7429,11 +7436,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addMessageCommand(List<MiddleCommandType> cmds, String message) {
-        String useMessageCommandsString = stringOptionsMap.get("useMessageCommands");
-        useMessageCommands = (null != useMessageCommandsString
-                && useMessageCommandsString.length() > 0
-                && Boolean.parseBoolean(useMessageCommandsString));
-
+        useMessageCommands = getBooleanOpt(ExecutorOption.ForBoolean.useMessageCommands,false);
+        
         if (useMessageCommands) {
             MessageType messageCmd = new MessageType();
             messageCmd.setMessage(message);

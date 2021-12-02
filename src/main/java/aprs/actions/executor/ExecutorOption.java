@@ -228,6 +228,7 @@ public interface ExecutorOption {
         saveProgramRunData,
         enableOptaPlanner,
         useEndPoseTolerance,
+        useMessageCommands,
         INVALID_BOOL_OPT;
 
         public WithValue<ForBoolean, Boolean> with(boolean arg) {
@@ -268,6 +269,11 @@ public interface ExecutorOption {
         kitInspectDistThreshold,
         slowTransSpeed,
         verySlowTransSpeed,
+        endPoseXPointTolerance,
+        endPoseYPointTolerance,
+        endPoseZPointTolerance,
+        endPoseXAxisTolerance,
+        endPoseZAxisTolerance,
         INVALID_DOUBLE_OPT;
 
         public WithValue<ForDouble, Double> with(double arg) {

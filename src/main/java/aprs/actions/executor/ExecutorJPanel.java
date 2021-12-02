@@ -348,7 +348,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private String readSelectedToolNameFile(File file) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while (null != (line = br.readLine())) {
                 line = line.trim();
@@ -421,7 +421,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             }
             String curSavedToolName = readSelectedToolNameFile(filename);
             if (!Objects.equals(curSavedToolName, newToolName)) {
-                try (PrintWriter pw = new PrintWriter(new FileWriter(new File(propertiesFile.getParentFile(), filename)))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(new File(propertiesFile.getParentFile(), filename)))) {
                     pw.println(newToolName);
                 } catch (IOException ex) {
                     Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -1077,8 +1077,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 {"endPoseXAxisTolerance", "10.0"},
                 {"endPoseXAxisTolerance", "10.0"},
                 {"useMessageCommands", "false"},
-                {"toolChangerPoseFile", null},
-                {"requiredToolFile", ""}
+                {"toolChangerPoseFile", null}
             },
             new String [] {
                 "Name", "Value"
@@ -3197,7 +3196,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
 
         List<String> lines = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
                 lines.add(line);
@@ -4437,7 +4436,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         logDebug("f.getCanonicalPath() = " + f.getCanonicalPath());
         boolean newFile = !f.exists();
         logDebug("newFile = " + newFile);
-        try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
             if (newFile) {
                 pw.println("Time,PartName,Input_X,Input_Y,Input_Z,Output_X,Output_Y,Output_Z,Offset_X,Offset_Y,Offset_Z");
             }
@@ -4628,7 +4627,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void addFailLogCsvHeader(File f) throws IOException {
         if (!f.exists()) {
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, false))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, false))) {
                 pw.println("time,status,object,x,y");
             }
         }
@@ -4663,7 +4662,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String poseFromDbString
                     = poseFromDbPoint.getX()
                     + "," + poseFromDbPoint.getY();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",FAIL," + partName + "," + poseFromDbString);
             }
         } catch (Exception ex) {
@@ -4701,7 +4700,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String poseFromDbString
                     = poseFromDbPoint.getX()
                     + "," + poseFromDbPoint.getY();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",SUCCESS," + partName + "," + poseFromDbString);
             }
         } catch (Exception ex) {
@@ -5290,7 +5289,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final Map<String, String> partToolMap = crclGenerator.getPartToolMap();
         partToolMap.clear();
         partToolCachedTable.setRowCount(0);
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
@@ -5364,7 +5363,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void loadPosesFileToTable(final CachedTable table, File f, Map<String, PoseType> tablePoseMap, Map<String, String> jointsMap, boolean toolHolderMode) {
         table.setRowCount(0);
 
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
@@ -6913,9 +6912,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     @Override
     public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
-        return cartesianMoveToRecordedPosition(recordedPoseName,false);
+        return cartesianMoveToRecordedPosition(recordedPoseName, false);
     }
-    
+
     private XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName, boolean manualAction) {
         checkDbSupplierPublisher();
         setReplanFromIndex(0);
@@ -6995,9 +6994,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      */
     @Override
     public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
-        return jointMoveToNamedPosition(recordedJointsName,false);
+        return jointMoveToNamedPosition(recordedJointsName, false);
     }
-    
+
     private XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName, boolean manualAction) {
         final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
         if (null != generateCrclService) {
@@ -7005,7 +7004,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     () -> {
                         try {
                             XFuture<Boolean> future
-                            = this.moveToRecordedJoints(recordedJointsName,manualAction);
+                            = this.moveToRecordedJoints(recordedJointsName, manualAction);
                             setRunProgramFuture(future);
                             return future;
                         } catch (Exception ex) {
@@ -7036,7 +7035,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } else {
             try {
                 XFuture<Boolean> future
-                        = this.moveToRecordedJoints(recordedJointsName,manualAction);
+                        = this.moveToRecordedJoints(recordedJointsName, manualAction);
                 setRunProgramFuture(future);
                 return future;
             } catch (Exception exception) {
@@ -7784,8 +7783,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Object[] rowValues = new Object[]{type, reverse, actionsSize, startingIndex, startSafeAbortRequestCount, sectionNumber, aprsSystem.getRunNumber(), initialRunningProgram, aprsSystem.getRobotName(), actionsFileName};
             aprsSystem.logEvent("appendGenerateAbortLog." + type, rowValues);
             try (
-                    FileWriter fw = new FileWriter(logFile, true);
-                    CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
+                     FileWriter fw = new FileWriter(logFile, true);  CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
             aprsSystem.runOnDispatchThread(() -> {
@@ -7813,14 +7811,14 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private synchronized List<MiddleCommandType> generate(
             List<Action> actions,
-            int startingIndex, 
-            Map<ExecutorOption, ?> options, 
-            int startSafeAbortRequestCount, 
+            int startingIndex,
+            Map<ExecutorOption, ?> options,
+            int startSafeAbortRequestCount,
             int sectionNumber,
             boolean manualAction)
             throws Exception {
         appendGenerateAbortLog("generate", actions.size(), isReverseFlag(), startingIndex, startSafeAbortRequestCount, sectionNumber);
-        List<MiddleCommandType> ret = crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount,manualAction);
+        List<MiddleCommandType> ret = crclGenerator.generate(actions, startingIndex, options, startSafeAbortRequestCount, manualAction);
         loadCheckKitListToTable(crclGenerator.getLastScanKitsToCheckInfoList());
         loadCorrectiveActionListToTable(crclGenerator.getLastCheckKitsCorrectiveActions());
         loadOptimizedCorrectiveActionListToTable(crclGenerator.getLastCheckKitsOptimizedCorrectiveActions());
@@ -7874,7 +7872,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     List<Action> lastPddlActionSectionToCrclActionListCopy = null;
 
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
-        Map<ExecutorOption,?> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         final int rpi = getReplanFromIndex();
         if (rpi < 0 || rpi > actionsListSize) {
             setReplanFromIndex(0);
@@ -7910,7 +7908,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         synchronized (actionsList) {
             List<Action> actionListDebugCopy = new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();
-            cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber,false);
+            cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber, false);
             resetReadOnlyActionsList(reverseFlag);
             actionsListSize = actionsList.size();
             for (int i = startReplanFromIndex; i < actionsListSize && i < crclGenerator.getLastIndex(); i++) {
@@ -8085,7 +8083,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> placePartSlot(String part, String slot) throws Exception {
         crclGenerator.partialReset();
-        Map<ExecutorOption,?> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> placePartActionsList = new ArrayList<>();
         Action placePartAction
@@ -8093,7 +8091,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         placePartActionsList.add(placePartAction);
         syncCrclGeneratorPositionMaps();
         CRCLProgramType program = createEmptyProgram();
-        List<MiddleCommandType> cmds = generate(placePartActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(placePartActionsList, 0, options, safeAbortRequestCount.get(), -1, true);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
         CRCLUtils.middleCommands(program).addAll(cmds);
@@ -8108,7 +8106,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
-        Map<ExecutorOption,?> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<Action> testPartPositionActionList = new ArrayList<>();
         Action takePartAction = Action.newSingleArgAction(
@@ -8120,7 +8118,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(testPartPositionActionList, 0, options, safeAbortRequestCount.get(), -1, true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8171,9 +8169,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> moveToRecordedPose(String recordedPoseName) throws Exception {
-        return moveToRecordedPose(recordedPoseName,false);
+        return moveToRecordedPose(recordedPoseName, false);
     }
-    
+
     private XFuture<Boolean> moveToRecordedPose(String recordedPoseName, boolean manualAction) throws Exception {
         crclGenerator.partialReset();
         Map<ExecutorOption, ?> options = getTableOptions();
@@ -8186,7 +8184,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,manualAction);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1, manualAction);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8239,7 +8237,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1, true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8262,7 +8260,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1, true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8285,7 +8283,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1,manualAction);
+        List<MiddleCommandType> cmds = generate(actionsList, 0, options, safeAbortRequestCount.get(), -1, manualAction);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8311,7 +8309,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         CRCLProgramType program = createEmptyProgram();
         Solver<OpActionPlan> origSolver = crclGenerator.getSolver();
         crclGenerator.setSolver(null);
-        List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(takePartActionsList, 0, options, safeAbortRequestCount.get(), -1, true);
         crclGenerator.setSolver(origSolver);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
@@ -8541,7 +8539,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             this.clearAll();
             return;
         }
-        Map<ExecutorOption,?> options = getTableOptions();
+        Map<ExecutorOption, ?> options = getTableOptions();
         setReplanFromIndex(0);
         List<MiddleCommandType> cmds = new ArrayList<>();
         crclGenerator.setOptions(options);
@@ -8608,7 +8606,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private XFuture<Boolean> lookForParts() {
         return lookForParts(false);
     }
-            
+
     @SuppressWarnings("guieffect")
     private XFuture<Boolean> lookForParts(boolean manualAction) {
         try {
@@ -8663,7 +8661,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.clearPoseCache();
         crclGenerator.clearLastRequiredPartsMap();
         CRCLProgramType program = createEmptyProgram();
-        List<MiddleCommandType> cmds = generate(lookForActionsList, 0, options, safeAbortRequestCount.get(), -1,true);
+        List<MiddleCommandType> cmds = generate(lookForActionsList, 0, options, safeAbortRequestCount.get(), -1, true);
         indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
         CRCLUtils.middleCommands(program).clear();
         CRCLUtils.middleCommands(program).addAll(cmds);
@@ -8876,7 +8874,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     = generate(actionsList,
                             0,
                             options,
-                            safeAbortRequestCount.get(), 
+                            safeAbortRequestCount.get(),
                             -1,
                             true);
             indexCachedTextField.setText(Integer.toString(getReplanFromIndex()));
@@ -9071,33 +9069,33 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         for (int i = 0; i < optionsData.length; i++) {
             Object key = optionsData[i][0];
             Object val = optionsData[i][1];
-            if(null == key) {
+            if (null == key) {
                 continue;
             }
-            if(null == val) {
+            if (null == val) {
                 continue;
             }
             ExecutorOption exOpt = ExecutorOption.of(key.toString());
-            if(exOpt instanceof ExecutorOption.ForString) {
-                if(val instanceof String) {
+            if (exOpt instanceof ExecutorOption.ForString) {
+                if (val instanceof String) {
                     options.put(exOpt, val);
                 } else {
                     options.put(exOpt, val.toString());
                 }
-            } else if(exOpt instanceof ExecutorOption.ForBoolean) {
-                if(val instanceof Boolean) {
+            } else if (exOpt instanceof ExecutorOption.ForBoolean) {
+                if (val instanceof Boolean) {
                     options.put(exOpt, val);
                 } else {
                     options.put(exOpt, Boolean.parseBoolean(val.toString()));
                 }
-            } else if(exOpt instanceof ExecutorOption.ForInt) {
-                if(val instanceof Integer) {
+            } else if (exOpt instanceof ExecutorOption.ForInt) {
+                if (val instanceof Integer) {
                     options.put(exOpt, val);
                 } else {
                     options.put(exOpt, Integer.parseInt(val.toString()));
                 }
-            } else if(exOpt instanceof ExecutorOption.ForDouble) {
-                if(val instanceof Double) {
+            } else if (exOpt instanceof ExecutorOption.ForDouble) {
+                if (val instanceof Double) {
                     options.put(exOpt, val);
                 } else {
                     options.put(exOpt, Double.parseDouble(val.toString()));
@@ -9320,130 +9318,141 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @SuppressWarnings("UnnecessaryBoxing")
     public void loadProperties() throws IOException {
-        if (null != propertiesFile && propertiesFile.exists()) {
-            if (propertiesFile.isDirectory()) {
-                logDebug("Can not loadProperties file \"" + propertiesFile + "\" : It is a directory instead of text file.");
-                return;
-            }
-            if (!propertiesFile.canRead()) {
-                logDebug("Can not loadProperties file \"" + propertiesFile + "\" : file is not readable.");
-                return;
-            }
-            Properties props = new Properties();
-            try (FileReader fr = new FileReader(propertiesFile)) {
-                props.load(fr);
-            }
-            loadComboModels(props);
-            String propsActionsFileString = propsGetFileName(props, PDDLOUTPUT);
-            if (isTempDir(propsActionsFileString)) {
-                propsActionsFileString = null;
-            } else {
-                checkFilename(propsActionsFileString);
-            }
-            this.actionsFileString = propsActionsFileString;
+        try {
+            if (null != propertiesFile && propertiesFile.exists()) {
+                if (propertiesFile.isDirectory()) {
+                    logDebug("Can not loadProperties file \"" + propertiesFile + "\" : It is a directory instead of text file.");
+                    return;
+                }
+                if (!propertiesFile.canRead()) {
+                    logDebug("Can not loadProperties file \"" + propertiesFile + "\" : file is not readable.");
+                    return;
+                }
+                Properties props = new Properties();
+                try ( FileReader fr = new FileReader(propertiesFile)) {
+                    props.load(fr);
+                }
+                loadComboModels(props);
+                String propsActionsFileString = propsGetFileName(props, PDDLOUTPUT);
+                if (isTempDir(propsActionsFileString)) {
+                    propsActionsFileString = null;
+                } else {
+                    checkFilename(propsActionsFileString);
+                }
+                this.actionsFileString = propsActionsFileString;
 
-            String propsReverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
-            if (isTempDir(propsReverseActionsFileString)) {
-                propsReverseActionsFileString = null;
-            } else {
-                checkFilename(propsReverseActionsFileString);
-            }
-            setInternalReverseActionsFileString(propsReverseActionsFileString, true);
-            boolean reverseFlagFromProperty = false;
-            String reverseFlagProperty = props.getProperty(ExecutorOption.ForBoolean.REVERSE.name());
-            if (null != reverseFlagProperty) {
-                reverseFlagFromProperty = Boolean.parseBoolean(reverseFlagProperty);
-            }
-            setReverseFlag(reverseFlagFromProperty);
+                String propsReverseActionsFileString = propsGetFileName(props, REVERSE_PDDLOUTPUT);
+                if (isTempDir(propsReverseActionsFileString)) {
+                    propsReverseActionsFileString = null;
+                } else {
+                    checkFilename(propsReverseActionsFileString);
+                }
+                setInternalReverseActionsFileString(propsReverseActionsFileString, true);
+                boolean reverseFlagFromProperty = false;
+                String reverseFlagProperty = props.getProperty(ExecutorOption.ForBoolean.REVERSE.name());
+                if (null != reverseFlagProperty) {
+                    reverseFlagFromProperty = Boolean.parseBoolean(reverseFlagProperty);
+                }
+                setReverseFlag(reverseFlagFromProperty);
 
-            boolean saveProgramRunDataFlagFromProperty = false;
-            String saveProgramRunDataFlagProperty = props.getProperty(ExecutorOption.ForBoolean.saveProgramRunData.name());
-            if (null != saveProgramRunDataFlagProperty) {
-                saveProgramRunDataFlagFromProperty = Boolean.parseBoolean(saveProgramRunDataFlagProperty);
-            }
-            setSaveProgramRunData(saveProgramRunDataFlagFromProperty);
+                boolean saveProgramRunDataFlagFromProperty = false;
+                String saveProgramRunDataFlagProperty = props.getProperty(ExecutorOption.ForBoolean.saveProgramRunData.name());
+                if (null != saveProgramRunDataFlagProperty) {
+                    saveProgramRunDataFlagFromProperty = Boolean.parseBoolean(saveProgramRunDataFlagProperty);
+                }
+                setSaveProgramRunData(saveProgramRunDataFlagFromProperty);
 
 //            reloadActionsFile(reverseFlagFromProperty, true);
-            String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
-            if (null != autostartString) {
-                this.autoStart = Boolean.valueOf(autostartString);
-            }
-            String enableOptaPlannerString = props.getProperty(ExecutorOption.ForBoolean.enableOptaPlanner.name());
-            if (null != enableOptaPlannerString) {
-                boolean enableOptaPlanner = Boolean.valueOf(enableOptaPlannerString);
-                enableOptaplannerCachedCheckBox.setSelected(enableOptaPlanner);
-            }
-            for (String name : props.stringPropertyNames()) {
-                if (!name.equals(PDDLCRCLAUTOSTART)
-                        && !name.equals(PDDLOUTPUT)
-                        && !name.equals(MANUAL_PART_NAMES)
-                        && !name.equals(MANUAL_SLOT_NAMES)) {
-                    final String propertyValue = props.getProperty(name);
-                    ExecutorOption exOptOf = ExecutorOption.of(name);
-                    if (null != propertyValue) {
-                        if(exOptOf instanceof ExecutorOption.ForString) {
-                            setOptionsTableValue(exOptOf, propertyValue);
-                        } else if(exOptOf instanceof ExecutorOption.ForBoolean) {
-                            setOptionsTableValue(exOptOf, Boolean.parseBoolean(propertyValue));
-                        } else if(exOptOf instanceof ExecutorOption.ForDouble) {
-                            setOptionsTableValue(exOptOf, Double.parseDouble(propertyValue));
-                        } else if(exOptOf instanceof ExecutorOption.ForInt) {
-                            setOptionsTableValue(exOptOf, Integer.parseInt(propertyValue));
+                String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
+                if (null != autostartString) {
+                    this.autoStart = Boolean.valueOf(autostartString);
+                }
+                String enableOptaPlannerString = props.getProperty(ExecutorOption.ForBoolean.enableOptaPlanner.name());
+                if (null != enableOptaPlannerString) {
+                    boolean enableOptaPlanner = Boolean.valueOf(enableOptaPlannerString);
+                    enableOptaplannerCachedCheckBox.setSelected(enableOptaPlanner);
+                }
+                for (String name : props.stringPropertyNames()) {
+                    if (!name.equals(PDDLCRCLAUTOSTART)
+                            && !name.equals(PDDLOUTPUT)
+                            && !name.equals(REVERSE_PDDLOUTPUT)
+                            && !name.equals(MANUAL_PART_NAMES)
+                            && !name.equals(MANUAL_SLOT_NAMES)
+                            && !name.equals(POS_ERROR_MAP_FILES)
+                            && !name.equals("joint0DiffToleranceString")) {
+                        final String propertyValue = props.getProperty(name);
+                        ExecutorOption exOptOf = ExecutorOption.of(name);
+                        if (null != propertyValue) {
+                            if (exOptOf instanceof ExecutorOption.ForString) {
+                                setOptionsTableValue(exOptOf, propertyValue);
+                            } else if (exOptOf instanceof ExecutorOption.ForBoolean) {
+                                setOptionsTableValue(exOptOf, Boolean.parseBoolean(propertyValue));
+                            } else if (exOptOf instanceof ExecutorOption.ForDouble) {
+                                setOptionsTableValue(exOptOf, Double.parseDouble(propertyValue));
+                            } else if (exOptOf instanceof ExecutorOption.ForInt) {
+                                setOptionsTableValue(exOptOf, Integer.parseInt(propertyValue));
+                            }
+                        } else {
+                            if (exOptOf instanceof ExecutorOption.ForString) {
+                                setOptionsTableValue(exOptOf, "");
+                            }
                         }
-                    } else {
-                        if(exOptOf instanceof ExecutorOption.ForString) {
-                            setOptionsTableValue(exOptOf, "");
-                        } 
                     }
                 }
-            }
 
-            String approachToolChangerZOffsetString = props.getProperty("approachToolChangerZOffset");
-            if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 1) {
-                jTextFieldToolChangerApproachZOffset.setText(approachToolChangerZOffsetString);
-            }
-
-            String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
-            if (null != errorMapFiles && errorMapFiles.length() > 0) {
-                loadErrorMapFiles(errorMapFiles);
-            }
-            loadHolderContentsMap();
-            try {
-                loadToolChangerPoseMap();
-            } catch (IOException iOException) {
-                Logger.getLogger(ExecutorJPanel.class.getName()).log(
-                        Level.SEVERE,
-                        aprsSystem.getTaskName() + " failed to loadToolChangerPoseMap",
-                        iOException);
-            }
-            try {
-                loadRecordedPosesMap();
-            } catch (IOException iOException) {
-                Logger.getLogger(ExecutorJPanel.class.getName()).log(
-                        Level.SEVERE,
-                        aprsSystem.getTaskName() + " failed to loadRecordedPosesMap",
-                        iOException);
-            }
-            try {
-                loadPartToolMap();
-            } catch (IOException iOException) {
-                Logger.getLogger(ExecutorJPanel.class.getName()).log(
-                        Level.SEVERE,
-                        aprsSystem.getTaskName() + " failed to loadPartToolMap",
-                        iOException);
-            }
-            loadToolOffsetMap();
-            loadTrayAttachOffsetMap();
-            String filename = getSelectedToolNameFileName();
-            if (null != filename && filename.length() > 1) {
-                String selectedTool = readSelectedToolNameFile(filename);
-                if (null != selectedTool) {
-                    setSelectedToolName(selectedTool);
+                String approachToolChangerZOffsetString = props.getProperty("approachToolChangerZOffset");
+                if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 1) {
+                    jTextFieldToolChangerApproachZOffset.setText(approachToolChangerZOffsetString);
                 }
-            }
-            initGenerateAbortLogFile();
 
-            aprsSystem.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
+                String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
+                if (null != errorMapFiles && errorMapFiles.length() > 0) {
+                    loadErrorMapFiles(errorMapFiles);
+                }
+                loadHolderContentsMap();
+                try {
+                    loadToolChangerPoseMap();
+                } catch (IOException iOException) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(
+                            Level.SEVERE,
+                            aprsSystem.getTaskName() + " failed to loadToolChangerPoseMap",
+                            iOException);
+                }
+                try {
+                    loadRecordedPosesMap();
+                } catch (IOException iOException) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(
+                            Level.SEVERE,
+                            aprsSystem.getTaskName() + " failed to loadRecordedPosesMap",
+                            iOException);
+                }
+                try {
+                    loadPartToolMap();
+                } catch (IOException iOException) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(
+                            Level.SEVERE,
+                            aprsSystem.getTaskName() + " failed to loadPartToolMap",
+                            iOException);
+                }
+                loadToolOffsetMap();
+                loadTrayAttachOffsetMap();
+                String filename = getSelectedToolNameFileName();
+                if (null != filename && filename.length() > 1) {
+                    String selectedTool = readSelectedToolNameFile(filename);
+                    if (null != selectedTool) {
+                        setSelectedToolName(selectedTool);
+                    }
+                }
+                initGenerateAbortLogFile();
+
+                aprsSystem.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
+            }
+        } catch (IOException ioex) {
+            LOGGER.log(Level.SEVERE, "Failed to loadProperties with propertiesFile=" + propertiesFile, ioex);
+            throw ioex;
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Failed to loadProperties with propertiesFile=" + propertiesFile, ex);
+            throw ex;
         }
     }
 
@@ -9454,10 +9463,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             if (tableValue0 == null) {
                 continue;
             }
-            ExecutorOption optFromTable 
+            ExecutorOption optFromTable
                     = (tableValue0 instanceof ExecutorOption)
-                    ? ((ExecutorOption) tableValue0)
-                    : ExecutorOption.of(tableValue0.toString());
+                            ? ((ExecutorOption) tableValue0)
+                            : ExecutorOption.of(tableValue0.toString());
             if (optFromTable.equals(opt)) {
                 Object tableValue1 = optionsCachedTable.getValueAt(i, 1);
                 if (!Objects.equals(tableValue1, propertyValue)) {
@@ -9477,8 +9486,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (null == generateAbortLogFile && !aprsSystem.isClosing()) {
             generateAbortLogFile = Utils.createTempFile("generateAbortLog" + aprsSystem.getTaskName(), ".csv");
             try (
-                    FileWriter fw = new FileWriter(generateAbortLogFile);
-                    CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
+                     FileWriter fw = new FileWriter(generateAbortLogFile);  CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
                 csvp.getOut(); // use it for nothing to avoid warning
             }
             println("generateAbortLogFile = " + generateAbortLogFile);
@@ -9502,7 +9510,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
 //    private static final String REVERSE_FLAG = "reverseFlag";
 //    private static final String SAVE_PROGRAM_RUN_DATA_FLAG = "saveProgramRunData";
-
     @UIEffect
     private void loadToolMenus() {
         toolDropByHolderMenu.removeAll();
@@ -9672,7 +9679,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
 //    private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
-
     private void loadComboModels(Properties props) {
         String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
         String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
