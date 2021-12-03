@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -951,18 +952,23 @@ public class Utils {
      * @param props properties to save
      */
     public static void saveProperties(File file, Properties props) {
-        List<String> names = new ArrayList<>();
+        List<Object> names = new ArrayList<>();
         for (Object key : props.keySet()) {
-            names.add(key.toString());
+            names.add(key);
         }
-        Collections.sort(names);
+        Collections.sort(names,new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
         try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
             for (int i = 0; i < names.size(); i++) {
-                String name = names.get(i);
+                Object name = names.get(i);
                 Object value = props.get(name);
                 if (null != value) {
                     if (value instanceof String) {

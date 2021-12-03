@@ -2994,7 +2994,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         propsMap.put(ExecutorOption.ForBoolean.saveProgramRunData.name(), Boolean.toString(saveProgramRunData));
         Properties props = new Properties();
         props.putAll(propsMap);
-        props.putAll(getTableOptions());
+        final Map<ExecutorOption, ?> tableOptions = getTableOptions();
+        for(Map.Entry<ExecutorOption,?> entry : tableOptions.entrySet()) {
+            if(null != entry.getKey() && null != entry.getValue()) {
+                props.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+        }
+//        props.putAll(tableOptions);
 //        props.put(MANUAL_PART_NAMES, Arrays.toString(getComboPartNames(10)));
 //        props.put(MANUAL_SLOT_NAMES, Arrays.toString(getComboSlotNames(10)));
         props.put(POS_ERROR_MAP_FILES, Arrays.toString(getRelPathPositionMapFileNames()));

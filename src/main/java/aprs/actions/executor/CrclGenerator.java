@@ -792,7 +792,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
         final AprsSystem aprsSystem1 = requireNonNull(this.aprsSystem, "aprsSystem");
-        try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
+        try ( PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
     }
@@ -2692,7 +2692,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 format = format.withHeader(OptiplannerLogEntry.HEADERS);
             }
             final List<Object> logEntryList = Arrays.asList(logEntry.toArray());
-            try (CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
+            try ( CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
                 printer.printRecord(logEntryList);
             }
             optiplannerLogEntrys.add(logEntry);
@@ -2727,7 +2727,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             File actionsInFile = aprsSystemLocal.createTempFile("actionsIn", ".txt");
             aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
             int sizeIn = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeIn++;
@@ -2940,7 +2940,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     lastOptimizeLaterPddlActions = laterPddlActions;
                     File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
                     int sizeOut = 0;
-                    try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+                    try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                         for (int i = startingIndex; i < fullReplanPddlActions.size(); i++) {
                             ps.println(fullReplanPddlActions.get(i).asPddlLine());
                             sizeOut++;
@@ -2963,7 +2963,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
             int sizeOut = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeOut++;
@@ -4000,14 +4000,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    private @Nullable String plannedHeldPart = null;
+    private @Nullable
+    String plannedHeldPart = null;
 
     public @Nullable
     String getPlannedHeldPart() {
         return plannedHeldPart;
     }
 
-    private @Nullable String currentHeldPart = null;
+    private @Nullable
+    String currentHeldPart = null;
 
     public void setCurrentHeldPart(String part) {
         this.currentHeldPart = part;
@@ -5443,11 +5445,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return;
         }
         settingsChecked = true;
-        loadOptionsMap(this.stringOptionsMap,this.booleanOptionsMap,this.doubleOptionsMap, this.intOptionsMap, true);
+        loadOptionsMap(this.stringOptionsMap, this.booleanOptionsMap, this.doubleOptionsMap, this.intOptionsMap, true);
     }
 
     public void loadOptionsMap(
-            Map<ExecutorOption,?> optionsMap,
+            Map<ExecutorOption, ?> optionsMap,
             boolean doCheckPose) throws NumberFormatException {
         loadOptionsMap(
                 ExecutorOption.ForString.map(optionsMap),
@@ -5456,7 +5458,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 ExecutorOption.ForInt.map(optionsMap),
                 doCheckPose);
     }
-            
+
     public void loadOptionsMap(
             Map<ExecutorOption.ForString, String> stringOptionsMap,
             Map<ExecutorOption.ForBoolean, Boolean> bOptMap,
@@ -5499,7 +5501,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             xAxis = vector(1.0, 0.0, 0.0);
             zAxis = vector(0.0, 0.0, -1.0);
         }
-        
+
         // doubles
         approachZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.approachZOffset, approachZOffset);
         approachToolChangerZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.approachToolChangerZOffset, approachToolChangerZOffset);
@@ -5521,20 +5523,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         kitInspectDistThreshold = dOptMap.getOrDefault(ExecutorOption.ForDouble.kitInspectDistThreshold, kitInspectDistThreshold);
         slowTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.slowTransSpeed, slowTransSpeed);
         verySlowTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.verySlowTransSpeed, verySlowTransSpeed);
-                
+
         // ints
         takePartArgIndex = iOptMap.getOrDefault(ExecutorOption.ForInt.takePartArgIndex, takePartArgIndex);
         placePartSlotArgIndex = iOptMap.getOrDefault(ExecutorOption.ForInt.placePartSlotArgIndex, placePartSlotArgIndex);
         visionCycleNewDiffThreshold = iOptMap.getOrDefault(ExecutorOption.ForInt.visionCycleNewDiffThreshold, visionCycleNewDiffThreshold);
-        
-        
+
         takeSnapshots = bOptMap.getOrDefault(ExecutorOption.ForBoolean.takeSnapshots, takeSnapshots);
         pauseInsteadOfRecover = bOptMap.getOrDefault(ExecutorOption.ForBoolean.pauseInsteadOfRecover, pauseInsteadOfRecover);
         doInspectKit = bOptMap.getOrDefault(ExecutorOption.ForBoolean.doInspectKit, doInspectKit);
         requireNewPoses = bOptMap.getOrDefault(ExecutorOption.ForBoolean.requireNewPoses, requireNewPoses);
         skipMissingParts = bOptMap.getOrDefault(ExecutorOption.ForBoolean.skipMissingParts, skipMissingParts);
         useJointMovesForToolHolderApproach = bOptMap.getOrDefault(ExecutorOption.ForBoolean.useJointMovesForToolHolderApproach, useJointMovesForToolHolderApproach);
-        
+
     }
 
     private void addOpenGripper(List<MiddleCommandType> cmds) {
@@ -5787,15 +5788,27 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
-        if (!aprsSystem.isWithinLimits(cart)) {
+        try {
+            if (!aprsSystem.isWithinLimits(cart)) {
 
+                final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
+                try {
+                    takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
+                } catch (IOException ioex) {
+                     LOGGER.log(Level.SEVERE, "",ioex);
+                }
+                LOGGER.log(Level.SEVERE, "stringOptionsMap=" + stringOptionsMap + ",\n" + errmsg);
+                throw new IllegalStateException(errmsg);
+            }
+        } catch (Exception ex) {
             final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
             try {
                 takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+            } catch (IOException ioex) {
+                LOGGER.log(Level.SEVERE, "",ioex);
             }
-            throw new IllegalStateException(errmsg);
+            LOGGER.log(Level.SEVERE, "stringOptionsMap=" + stringOptionsMap + ",\n" + errmsg, ex);
+            throw new IllegalStateException(errmsg, ex);
         }
         return CRCLPosemath.toPointType(cart);
     }
@@ -5908,15 +5921,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private String getStringOpt(ExecutorOption.ForString opt, String def) {
         return stringOptionsMap.getOrDefault(opt, def);
     }
-    
+
     private Double getDoubleOpt(ExecutorOption.ForDouble opt, double def) {
         return doubleOptionsMap.getOrDefault(opt, def);
     }
-    
+
     private Boolean getBooleanOpt(ExecutorOption.ForBoolean opt, boolean def) {
         return booleanOptionsMap.getOrDefault(opt, def);
     }
-    
+
     private void checkEndPoseToleranceSetting(List<MiddleCommandType> out) {
         if (!endPoseTolerancesChecked) {
             if (null == endPoseTolerance) {
@@ -6226,7 +6239,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean checkAtLookForPosition() {
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         checkSettings();
-        boolean useLookForJoint = booleanOptionsMap.getOrDefault(ExecutorOption.ForBoolean.useJointLookFor,false);
+        boolean useLookForJoint = booleanOptionsMap.getOrDefault(ExecutorOption.ForBoolean.useJointLookFor, false);
         String lookForJointsString = stringOptionsMap.get(ExecutorOption.ForString.lookForJoints);
         if (null == lookForJointsString || lookForJointsString.length() < 1) {
             useLookForJoint = false;
@@ -6902,7 +6915,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
 
-        try (WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
+        try ( WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -7436,8 +7449,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addMessageCommand(List<MiddleCommandType> cmds, String message) {
-        useMessageCommands = getBooleanOpt(ExecutorOption.ForBoolean.useMessageCommands,false);
-        
+        useMessageCommands = getBooleanOpt(ExecutorOption.ForBoolean.useMessageCommands, false);
+
         if (useMessageCommands) {
             MessageType messageCmd = new MessageType();
             messageCmd.setMessage(message);
