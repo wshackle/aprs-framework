@@ -34,11 +34,11 @@ import java.util.TreeMap;
  */
 public interface ExecutorOption {
 
-    public static <K extends Enum & ExecutorOption, V> Map<K, V> map(
+    public static <K extends Enum<K> & ExecutorOption, V> Map<K, V> map(
             Class<K> keyClass,
             Class<V> valueClass,
             Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
-        Map<K, V> map = new EnumMap(keyClass);
+        Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (int i = 0; i < optionpairs.length; i++) {
             Map.Entry<?, ?> optionpair = optionpairs[i];
             if (keyClass.isInstance(optionpair.getKey())) {
@@ -51,11 +51,11 @@ public interface ExecutorOption {
         return map;
     }
 
-    public static <K extends Enum & ExecutorOption, V> Map<K, V> map(
+    public static <K extends Enum<K> & ExecutorOption, V> Map<K, V> map(
             Class<K> keyClass,
             Class<V> valueClass,
             Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
-        Map<K, V> map = new EnumMap(keyClass);
+        Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (Map.Entry<?, ?> optionpair : optionpairs) {
             if (keyClass.isInstance(optionpair.getKey())) {
                 if (!valueClass.isInstance(optionpair.getValue())) {
@@ -67,11 +67,11 @@ public interface ExecutorOption {
         return map;
     }
 
-    public static <K extends Enum & ExecutorOption, V> Map<K, V> map(
+    public static <K extends Enum<K> & ExecutorOption, V> Map<K, V> map(
             Class<K> keyClass,
             Class<V> valueClass,
             Map<? extends ExecutorOption, ?> optionpairs) {
-        Map<K, V> map = new EnumMap(keyClass);
+        Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (Map.Entry<?, ?> optionpair : optionpairs.entrySet()) {
             if (keyClass.isInstance(optionpair.getKey())) {
                 if (!valueClass.isInstance(optionpair.getValue())) {
@@ -187,7 +187,7 @@ public interface ExecutorOption {
                 "No ExecutorOption named " + name);
     }
 
-    static public class WithValue<K extends Enum & ExecutorOption, V> implements Map.Entry<K, V> {
+    static public class WithValue<K extends Enum<?> & ExecutorOption, V> implements Map.Entry<K, V> {
 
         protected final K key;
         protected V value;
@@ -232,7 +232,7 @@ public interface ExecutorOption {
         INVALID_BOOL_OPT;
 
         public WithValue<ForBoolean, Boolean> with(boolean arg) {
-            return new WithValue(this, arg);
+            return new WithValue<>(this, arg);
         }
 
         public static Map<ForBoolean, Boolean> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
@@ -277,7 +277,7 @@ public interface ExecutorOption {
         INVALID_DOUBLE_OPT;
 
         public WithValue<ForDouble, Double> with(double arg) {
-            return new WithValue(this, arg);
+            return new WithValue<>(this, arg);
         }
 
         public static Map<ForDouble, Double> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
@@ -305,7 +305,7 @@ public interface ExecutorOption {
         INVALID_STRING_OPT;
 
         public WithValue<ForString, String> with(String arg) {
-            return new WithValue(this, arg);
+            return new WithValue<>(this, arg);
         }
 
         public static Map<ForString, String> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
@@ -327,8 +327,8 @@ public interface ExecutorOption {
         visionCycleNewDiffThreshold,
         INVALID_INT_OPT;
 
-        public WithValue<ForString, String> with(int arg) {
-            return new WithValue(this, arg);
+        public WithValue<ForInt, Integer> with(int arg) {
+            return new WithValue<>(this, arg);
         }
 
         public static Map<ForInt, Integer> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {

@@ -137,45 +137,45 @@ public class Supervisor {
     }
 
     
-    public XFuture<?> runScript(BufferedReader br) throws IOException {
-        String line = null;
-        Map<String, XFuture<?>> sysFutureMap = new ConcurrentHashMap<>();
-        AprsSystem sys = null;
-        File actionsFileTmp = null;
-        XFuture<?> ret = null;
-        while (null != (line = br.readLine())) {
-            line = line.trim();
-            if (line.startsWith("sys=")) {
-                sys = getSysByTask(line.substring(4).trim());
-                continue;
-            } else if (line.startsWith("sync")) {
-                final File oldActionsFileTmp = actionsFileTmp;
-                actionsFileTmp = null;
-                final AprsSystem sysToSync = sys;
-                sys = null;
-                XFuture<?> xf = sysFutureMap.compute(sys.getTaskName(),
-                        (String key, XFuture<?> value) -> {
-                            try {
-                                if (value == null) {
-                                    return sysToSync.startActionsFile(oldActionsFileTmp);
-                                } else {
-                                    return value.thenComposeIO(x -> sysToSync.startActionsFile(oldActionsFileTmp));
-                                }
-                            } catch (Exception exception) {
-                                return XFuture.completedFuture(key);
-                            }
-                        });
-            } else {
-                if (null == actionsFileTmp) {
-                    actionsFileTmp = Utils.createTempFile("actions", ".txt");
-                }
-                try (PrintWriter pw = new PrintWriter(new FileOutputStream(actionsFileTmp, true/* append */))) {
-                    pw.println(line);
-                }
-            }
-        }
-        return ret;
-    }
+//    public XFuture<?> runScript(BufferedReader br) throws IOException {
+//        String line = null;
+//        Map<String, XFuture<?>> sysFutureMap = new ConcurrentHashMap<>();
+//        AprsSystem sys = null;
+//        File actionsFileTmp = null;
+//        XFuture<?> ret = null;
+//        while (null != (line = br.readLine())) {
+//            line = line.trim();
+//            if (line.startsWith("sys=")) {
+//                sys = getSysByTask(line.substring(4).trim());
+//                continue;
+//            } else if (line.startsWith("sync")) {
+//                final File oldActionsFileTmp = actionsFileTmp;
+//                actionsFileTmp = null;
+//                final AprsSystem sysToSync = sys;
+//                sys = null;
+//                XFuture<?> xf = sysFutureMap.compute(sys.getTaskName(),
+//                        (String key, XFuture<?> value) -> {
+//                            try {
+//                                if (value == null) {
+//                                    return sysToSync.startActionsFile(oldActionsFileTmp);
+//                                } else {
+//                                    return value.thenComposeIO(x -> sysToSync.startActionsFile(oldActionsFileTmp));
+//                                }
+//                            } catch (Exception exception) {
+//                                return XFuture.completedFuture(key);
+//                            }
+//                        });
+//            } else {
+//                if (null == actionsFileTmp) {
+//                    actionsFileTmp = Utils.createTempFile("actions", ".txt");
+//                }
+//                try (PrintWriter pw = new PrintWriter(new FileOutputStream(actionsFileTmp, true/* append */))) {
+//                    pw.println(line);
+//                }
+//            }
+//        }
+//        return ret;
+//    }
 
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {

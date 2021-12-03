@@ -50,14 +50,14 @@ public class Scriptable<T> {
 
     public static <T> Scriptable<T> scriptableOf(Class<T> tclzz, T t) {
         if (t != null) {
-            return new Scriptable(tclzz, t, getDefaultActionsMap(tclzz), getDefaultFunctionsMap(tclzz));
+            return new Scriptable<>(tclzz, t, getDefaultActionsMap(tclzz), getDefaultFunctionsMap(tclzz));
         } else {
             return scriptableOfStatic(tclzz);
         }
     }
 
     public static <T> Scriptable<T> scriptableOfStatic(Class<T> tclzz1) {
-        return new Scriptable(tclzz1, null, getDefaultStaticActionsMap(tclzz1), getDefaultStaticFunctionsMap(tclzz1));
+        return new Scriptable<>(tclzz1, null, getDefaultStaticActionsMap(tclzz1), getDefaultStaticFunctionsMap(tclzz1));
     }
 
     public static <T> Map<String, ScriptableAction<T>> getDefaultStaticActionsMap(final Class<T> aClass) {
@@ -144,14 +144,14 @@ public class Scriptable<T> {
             map.put(method.getName(), new ScriptableFunction<T>() {
 
                 @Override
-                @SuppressWarnings("nullness")
+                @SuppressWarnings({"nullness","rawtypes"})
                 public @Nullable
-                Scriptable applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
+                Scriptable<?> applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
                     Object o = method.invoke(t, args);
                     if (o == null) {
                         return null;
                     }
-                    final Class<? extends Object> oClass1 = o.getClass();
+                    final Class<?> oClass1 = o.getClass();
                     return new Scriptable(oClass1, o, getDefaultActionsMap(oClass1), getDefaultFunctionsMap(oClass1));
                 }
 
@@ -386,7 +386,7 @@ public class Scriptable<T> {
                     System.out.println("out[i] = " + out[i]);
                     continue;
                 }
-                Constructor constructor = findConstructor(argType, new Class[]{String.class});
+                Constructor<?> constructor = findConstructor(argType, new Class[]{String.class});
                 System.out.println("constructor = " + constructor);
                 if (null != constructor) {
                     out[i] = constructor.newInstance(stringArg);
@@ -459,10 +459,10 @@ public class Scriptable<T> {
 
     public String toVerboseString() {
         final Set<String> actionsKeySet = actions.keySet();
-        List<String> actionsNameList = new ArrayList(actionsKeySet);
+        List<String> actionsNameList = new ArrayList<>(actionsKeySet);
         Collections.sort(actionsNameList);
         final Set<String> functionsKeySet = functions.keySet();
-        List<String> functionsNameList = new ArrayList(functionsKeySet);
+        List<String> functionsNameList = new ArrayList<>(functionsKeySet);
         Collections.sort(functionsNameList);
         StringBuilder sb = new StringBuilder();
         sb

@@ -123,7 +123,7 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
 //                    pw.print("fields.length = " + fields.length + "\r\n");
 //                    pw.print("fields=" + Arrays.toString(fields) + "\r\n");
                     if (fields.length < 1) {
-                        List<String> keyList = new ArrayList(scriptablesMap.keySet());
+                        List<String> keyList = new ArrayList<>(scriptablesMap.keySet());
                         Collections.sort(keyList);
                         pw.print("Try print or list and then one of these :  " + keyList + "\r\n");
                     } else if (fields[0].equalsIgnoreCase("print")) {
@@ -135,7 +135,7 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
                             pw.print(field + " = " + scriptablesMap.get(field) + "\r\n");
                         }
                         if (fields.length < 2) {
-                            List<String> keyList = new ArrayList(scriptablesMap.keySet());
+                            List<String> keyList = new ArrayList<>(scriptablesMap.keySet());
                             Collections.sort(keyList);
                             for (String key : keyList) {
                                 pw.print(key + " = " + scriptablesMap.get(key) + "\r\n");
@@ -153,7 +153,7 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
                             }
                         }
                         if (fields.length < 2) {
-                            List<String> keyList = new ArrayList(scriptablesMap.keySet());
+                            List<String> keyList = new ArrayList<>(scriptablesMap.keySet());
                             Collections.sort(keyList);
                             for (String key : keyList) {
                                 final Scriptable<?> scriptable = scriptablesMap.get(key);
@@ -166,7 +166,7 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
                         Scriptable<?> scriptable = scriptablesMap.get(fields[0]);
                         if (null == scriptable) {
                             pw.print("\"" + fields[0] + "\" is not defined\r\n");
-                            List<String> keyList = new ArrayList(scriptablesMap.keySet());
+                            List<String> keyList = new ArrayList<>(scriptablesMap.keySet());
                             Collections.sort(keyList);
                             pw.print("Try one of these:  " + keyList + "\r\n");
                         } else {
@@ -243,7 +243,9 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
             }
         } else {
             int port = Integer.parseInt(args[0]);
-            new AprsRemoteConsoleServerSocket(port).run();
+            try(AprsRemoteConsoleServerSocket socket = new AprsRemoteConsoleServerSocket(port)){
+            	socket.run();
+            }
         }
     }
 

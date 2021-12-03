@@ -1008,8 +1008,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 scriptablesMap.put("launcher", scriptableOfStatic(LauncherAprsJFrame.class));
                 scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
                 scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
-                AprsRemoteConsoleServerSocket serverSocket = new AprsRemoteConsoleServerSocket(port, scriptablesMap);
-                serverSocket.run();
+                try(AprsRemoteConsoleServerSocket serverSocket 
+                		= new AprsRemoteConsoleServerSocket(port, scriptablesMap)){
+                	serverSocket.run();
+                }
             }
         } catch (Exception exception) {
 
