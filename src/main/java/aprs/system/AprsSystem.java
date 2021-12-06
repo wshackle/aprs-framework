@@ -6103,7 +6103,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     System.err.println(cart + "under maxlimit " + lim.getMin());
                 }
             }
-            final String errmsg = "Position is not within limits : cart =" + cart + ", b";
+            final String errmsg = "Position is not within limits : cart =" + cart + ", limits="+limits;
             try {
                 takeSimViewSnapshot(errmsg, cart, "bad point");
             } catch (IOException ex) {
