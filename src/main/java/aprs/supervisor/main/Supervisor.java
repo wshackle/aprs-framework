@@ -252,7 +252,7 @@ public class Supervisor {
                     if (null != displayJFrame) {
                         displayJFrame.close();
                     }
-                    System.exit(0);
+                    CRCLUtils.systemExit(0);
                 });
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -272,12 +272,12 @@ public class Supervisor {
     }
 
     @SuppressWarnings("guieffect")
-    public XFuture<?> multiCycleTest(long startTime, int numCycles, boolean useConveyor) {
+    public XFuture<MultiCycleResults> multiCycleTest(long startTime, int numCycles, boolean useConveyor) {
 
         XFuture<?> completePrevMultiFuture = completePrevMulti();
         lastCompletePrevMultiFuture = completePrevMultiFuture;
 
-        XFuture<?> ret = completePrevMultiFuture
+        XFuture<MultiCycleResults> ret = completePrevMultiFuture
                 .thenCompose(x -> completeMultiCycleTest(startTime, numCycles, useConveyor));
         lastCompleteMultiCycleTestFuture = ret;
         return ret;
@@ -4345,7 +4345,7 @@ public class Supervisor {
                 }
             });
         }
-        System.exit(0);
+        CRCLUtils.systemExit(0);
     }
 
     private volatile @Nullable XFutureVoid ContinuousDemoFuture = null;
@@ -9546,7 +9546,7 @@ public class Supervisor {
 
     @SuppressWarnings("guieffect")
     public static Supervisor createSupervisor() {
-        return GraphicsEnvironment.isHeadless() ? new Supervisor() : createAprsSupervisorWithSwingDisplay(true);
+        return CRCLUtils.graphicsEnvironmentIsHeadless() ? new Supervisor() : createAprsSupervisorWithSwingDisplay(true);
     }
 
     /**

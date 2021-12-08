@@ -36,7 +36,6 @@ import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
 import java.awt.Frame;
 
-import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -62,6 +61,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 import javax.swing.JMenuItem;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.utils.CRCLUtils;
 
 /**
  *
@@ -745,7 +745,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!GraphicsEnvironment.isHeadless()) {
+                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -769,7 +769,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-    public static void multiCycleTest(@Nullable File launchFile, int numCycles, boolean useConveyor) {
+    public static XFuture<Supervisor.MultiCycleResults> multiCycleTest(@Nullable File launchFile, int numCycles, boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
 
@@ -777,7 +777,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!GraphicsEnvironment.isHeadless()) {
+                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -786,19 +786,20 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                     LaunchFileRunner runner = new LaunchFileRunner();
                     launchFuture = runner.run(launchFile, -1, true);
                 }
-                launchFuture
+                return launchFuture
                         .thenRun(() -> {
                             if (null != processLauncher) {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
-                        }).thenComposeToVoid(() -> {
-                            return Utils.runOnDispatchThread(() -> supervisor.multiCycleTest(startTime, numCycles, useConveyor));
-                        });
-            } catch (IOException ex) {
+                        }).thenCompose(() -> {
+                            return Utils.supplyOnDispatchThread(() -> supervisor.multiCycleTest(startTime, numCycles, useConveyor));
+                        }).thenCompose(x -> x);
+            } catch (Exception ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
         } else {
-            supervisor.multiCycleTest(startTime, numCycles, useConveyor);
+            return supervisor.multiCycleTest(startTime, numCycles, useConveyor);
         }
     }
 
@@ -1120,7 +1121,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
-                if (!GraphicsEnvironment.isHeadless()) {
+                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
                     LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
                     lFrame.checkFiles();
                     lFrame.setVisible(true);

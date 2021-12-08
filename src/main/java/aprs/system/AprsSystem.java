@@ -4057,7 +4057,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     @SuppressWarnings("guieffect")
     private static boolean isHeadless() {
-	return GraphicsEnvironment.isHeadless();
+	return CRCLUtils.graphicsEnvironmentIsHeadless();
     }
 
     public static XFuture<AprsSystem> createSystem(File propertiesFile) {

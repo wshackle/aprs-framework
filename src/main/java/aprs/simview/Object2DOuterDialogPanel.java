@@ -23,10 +23,8 @@
 package aprs.simview;
 
 import java.awt.Frame;
-import java.awt.HeadlessException;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Properties;
@@ -42,6 +40,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import aprs.database.PhysicalItem;
 import aprs.misc.Utils;
+import crcl.utils.CRCLUtils;
 
 /**
  *
@@ -301,7 +300,7 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
 		        propsFileChooser.getSelectedFile(),
 		        singleItemsFile,
 		        visionLogLinesFile);
-		System.exit(0);
+		CRCLUtils.systemExit(0);
 	    } catch (Exception ex) {
 		Logger.getLogger(Object2DOuterDialogPanel.class.getName()).log(Level.SEVERE, "", ex);
 		throw new RuntimeException(ex);
