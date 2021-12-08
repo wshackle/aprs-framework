@@ -41,6 +41,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.reflections.scanners.MethodAnnotationsScanner;
 
 /**
  *
@@ -144,7 +145,7 @@ public class Scriptable<T> {
             map.put(method.getName(), new ScriptableFunction<T>() {
 
                 @Override
-                @SuppressWarnings({"nullness","rawtypes"})
+                @SuppressWarnings({"nullness","rawtypes", "unchecked"})
                 public @Nullable
                 Scriptable<?> applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
                     Object o = method.invoke(t, args);
@@ -152,7 +153,7 @@ public class Scriptable<T> {
                         return null;
                     }
                     final Class<?> oClass1 = o.getClass();
-                    return new Scriptable(oClass1, o, getDefaultActionsMap(oClass1), getDefaultFunctionsMap(oClass1));
+                    return new Scriptable(method.getReturnType(), o, getDefaultActionsMap(oClass1), getDefaultFunctionsMap(oClass1));
                 }
 
                 @Override
@@ -190,7 +191,7 @@ public class Scriptable<T> {
             map.put(method.getName() + suffix, new ScriptableFunction<T>() {
 
                 @Override
-                @SuppressWarnings("nullness")
+                @SuppressWarnings({"nullness","rawtypes", "unchecked"})
                 public @Nullable
                 Scriptable<?> applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
                     Object o = method.invoke(t, args);
@@ -198,7 +199,7 @@ public class Scriptable<T> {
                         return null;
                     }
                     final Class<? extends Object> oClass = o.getClass();
-                    return new Scriptable(oClass, o, getDefaultActionsMap(oClass), getDefaultFunctionsMap(oClass));
+                    return new Scriptable(method.getReturnType(), o, getDefaultActionsMap(oClass), getDefaultFunctionsMap(oClass));
                 }
 
                 @Override

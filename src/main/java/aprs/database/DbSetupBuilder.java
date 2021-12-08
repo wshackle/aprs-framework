@@ -149,9 +149,9 @@ public class DbSetupBuilder {
                 }
             }
             if(!clstreamok) {
-                File f = new File(name);
+                File f = Utils.file(name);
                 if(!f.exists()) {
-                    f = new File("src/main/resources/",name);
+                    f = Utils.file("src/main/resources/",name);
                 }
                 if(f.exists()) {
                     try (BufferedReader br = new BufferedReader(new FileReader(f))) {

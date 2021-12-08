@@ -40,6 +40,7 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.drools.model.operators.ExcludesOperator;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.block.factory.Comparators;
@@ -4436,7 +4437,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private File imageLogDir() throws IOException {
         if (null == aprsSystem) {
-            File imgDir = new File(Utils.getlogFileDir(), "images");
+            File imgDir = Utils.file(Utils.getlogFileDir(), "images");
             imgDir.mkdirs();
             return imgDir;
         }
@@ -5817,9 +5818,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     public void addMoveToLookForPosition(List<MiddleCommandType> out, boolean firstAction) {
 
-        String useLookForJointString = stringOptionsMap.get("useJointLookFor");
-        boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.parseBoolean(useLookForJointString));
-        String lookForJointsString = stringOptionsMap.get("lookForJoints");
+        boolean useLookForJoint = getBooleanOpt(ExecutorOption.ForBoolean.useJointLookFor,false);
+        String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
         if (null == lookForJointsString || lookForJointsString.length() < 1) {
             useLookForJoint = false;
         }
@@ -6469,28 +6469,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addSlowLimitedMoveUpFromCurrent(out);
         String jointValsString = toolChangerJointValsMap.get(toolChangerPosName);
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
-            String lookForJointsString = stringOptionsMap.get("lookForJoints");
-            double jointVals[] = jointValStringToArray(jointValsString);
-//            double joint0Diff = expectedJoint0Val - jointVals[0];
-//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
-//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
-//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
-//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
-//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
-//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
-//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-//                    addPrepJointMove(lookForJointVals, out);
-//                    lookForJointVals[0] = jointVals[0];
-//                    addMessageCommand(out,
-//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
-//
-//                }
-//            }
-//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+            String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
             if (null != lookForJointsString && lookForJointsString.length() > 0) {
                 double lookForJointVals[] = jointValStringToArray(lookForJointsString);
                 addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
             }
+            double jointVals[] = jointValStringToArray(jointValsString);
             addJointMove(out, jointVals, 1.0, 0, 1);
             addJointMove(out, jointVals, 1.0, 1, jointVals.length);
         } else {
@@ -6808,30 +6792,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         checkSettings();
         checkDbReady();
-        String lookForJointsString = stringOptionsMap.get("lookForJoints");
-        double jointVals[] = jointValStringToArray(jointValsString);
-//            double joint0Diff = expectedJoint0Val - jointVals[0];
-//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
-//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
-//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
-//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
-//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
-//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
-//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-//                    addPrepJointMove(lookForJointVals, out);
-//                    lookForJointVals[0] = jointVals[0];
-//                    addMessageCommand(out,
-//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
-//
-//                }
-//            }
-//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+        
+        String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
         if (null != lookForJointsString && lookForJointsString.length() > 0) {
             double lookForJointVals[] = jointValStringToArray(lookForJointsString);
             checkJointToleranceSetting(out);
 //            addPrepJointMove(lookForJointVals, out);
             addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
         }
+        double jointVals[] = jointValStringToArray(jointValsString);
         addJointMove(out, jointVals, 1.0, 0, 1);
         addJointMove(out, jointVals, 1.0, 1, jointVals.length);
     }

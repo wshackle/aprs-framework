@@ -1,2 +1,2 @@
 #  Automatically saved 
-lastPropertyFileName=/mnt/sda6/home/will/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt
+lastPropertyFileName=/home/shackle/NetBeansProjects/aprs-framework/example_settings/multiple_simulated_systems_settings/simulated_fanuc/simulated_fanuc_properties.txt

@@ -33,12 +33,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import aprs.misc.Utils;
 
 /**
  *
@@ -57,12 +61,10 @@ public class DbCsvBackup {
             String taskName,
             boolean replace,
             @Nullable File sysQueriesDir) throws SQLException, IOException {
-//        File homeDir = new File(System.getProperty("user.home"));
-//        File queriesDir = new File(homeDir, "aprsQueries");
-//        File sysQueriesDir = new File(queriesDir, taskName.replace(' ', '_'));
+
         File dir = null;
         if (null != sysQueriesDir) {
-            dir = new File(sysQueriesDir, name);
+            dir = Utils.file(sysQueriesDir, name);
             //noinspection ResultOfMethodCallIgnored
             dir.mkdirs();
         } else if(null != preparedStatement) {
@@ -92,19 +94,19 @@ public class DbCsvBackup {
             if (fa != null && fa.length == 1 && fa[0].exists()) {
                 queryFile = fa[0];
                 String prefix = queryFile.getName().substring(0, queryFile.getName().length() - "_query.txt".length());
-                resultsFile = new File(dir, prefix + "_results.csv");
-                metaFile = new File(dir, prefix + "_meta.csv");
+                resultsFile = Utils.file(dir, prefix + "_results.csv");
+                metaFile = Utils.file(dir, prefix + "_meta.csv");
             } else {
-                throw new RuntimeException("simQuery=" + simQuery + ",dir=" + dir);
+                throw new RuntimeException("simQuery=" + simQuery + ",dir=" + dir+", fa="+Arrays.toString(fa));
             }
         } else {
             final int simQueryHashCode = simQuery.hashCode();
             resultsFile
-                    = new File(dir, simQueryHashCode + "_results.csv");
+                    = Utils.file(dir, simQueryHashCode + "_results.csv");
             queryFile
-                    = new File(dir, simQueryHashCode + "_query.txt");
+                    = Utils.file(dir, simQueryHashCode + "_query.txt");
             metaFile
-                    = new File(dir, simQueryHashCode + "_meta.csv");
+                    = Utils.file(dir, simQueryHashCode + "_meta.csv");
         }
 
         if (debug) {

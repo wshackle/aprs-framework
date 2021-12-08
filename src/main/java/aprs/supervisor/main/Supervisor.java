@@ -91,7 +91,6 @@ import static crcl.utils.CRCLUtils.requireNonNull;
 
 import aprs.actions.executor.ExecutorOption.ForBoolean;
 
-
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
@@ -106,10 +105,10 @@ public class Supervisor {
         this(null);
     }
 
-    private void updateTestLog(int cycle_count, long timeDiff) {
+    private void updateTestLog(int cycle_count, long timeDiff) throws IOException {
         long timeDiffPerCycle = cycle_count > 0 ? timeDiff / cycle_count : -1;
 
-        File f = new File(Utils.getAprsUserHomeDir(), "aprs_test_logs.csv");
+        File f = Utils.file(Utils.getAprsUserHomeDir(), "aprs_test_logs.csv");
         int disableCount = this.getTotalDisableCount();
         println("disableCount = " + disableCount);
         long disableTime = this.getTotalDisableTime();
@@ -136,7 +135,6 @@ public class Supervisor {
         });
     }
 
-    
 //    public XFuture<?> runScript(BufferedReader br) throws IOException {
 //        String line = null;
 //        Map<String, XFuture<?>> sysFutureMap = new ConcurrentHashMap<>();
@@ -176,7 +174,6 @@ public class Supervisor {
 //        }
 //        return ret;
 //    }
-
     @SuppressWarnings("guieffect")
     public XFuture<?> multiCycleTestNoDisables(long startTime, int maxCycles, boolean useConveyor) {
         XFuture<?> completePrevMultiFuture = completePrevMulti();
@@ -201,9 +198,8 @@ public class Supervisor {
                 return displayJFrame.conveyorTestPrep(sys);
             }).thenComposeToVoid(this::startScanAll);
         } else {
-            startScanAllFuture
-                    = completePrevMultiFuture
-                            .thenComposeToVoid((x) -> Supervisor.this.startScanAll());
+            startScanAllFuture = completePrevMultiFuture
+                    .thenComposeToVoid((x) -> Supervisor.this.startScanAll());
         }
         XFuture<?> xf2 = startScanAllFuture.thenRun(() -> {
             if (!startScanAllFuture.isDone()) {
@@ -221,41 +217,47 @@ public class Supervisor {
             return this.startContinuousDemoRevFirst();
         });
         XFuture<?> xf4 = xf3.alwaysRun(() -> {
-            long endTime = System.currentTimeMillis();
-            long timeDiff = endTime - startTime;
-            int cycle_count = this.getContiousDemoCycleCount();
-            if (cycle_count != maxCycles) {
-                throw new RuntimeException("cycle_count = " + cycle_count + ", maxCycles=" + maxCycles);
-            }
-            updateTestLog(cycle_count, timeDiff);
-            if (!xf2.isDone()) {
-                System.err.println("wtf");
-            }
-            if (!xf3.isDone()) {
-                System.err.println("wtf");
-            }
-            this.displayUpdatesDisabled = false;
-            Utils.printOnlyOnDispatchCallers();
-            runOnDispatchThread(() -> {
-
-                println("timeDiff = " + timeDiff);
-                PlayAlert();
-                println();
-                println("===============================================================");
-                println();
-                String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60,
-                        cycle_count);
-                println(msg);
-                println();
-                println("===============================================================");
-                println();
-                this.close();
-                if (null != displayJFrame) {
-                    displayJFrame.close();
+            try {
+                long endTime = System.currentTimeMillis();
+                long timeDiff = endTime - startTime;
+                int cycle_count = this.getContiousDemoCycleCount();
+                if (cycle_count != maxCycles) {
+                    throw new RuntimeException("cycle_count = " + cycle_count + ", maxCycles=" + maxCycles);
                 }
-                System.exit(0);
-            });
+                updateTestLog(cycle_count, timeDiff);
+                if (!xf2.isDone()) {
+                    System.err.println("wtf");
+                }
+                if (!xf3.isDone()) {
+                    System.err.println("wtf");
+                }
+                this.displayUpdatesDisabled = false;
+                Utils.printOnlyOnDispatchCallers();
+                runOnDispatchThread(() -> {
+
+                    println("timeDiff = " + timeDiff);
+                    PlayAlert();
+                    println();
+                    println("===============================================================");
+                    println();
+                    String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                            (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60,
+                            ((timeDiff / 1000)) % 60,
+                            cycle_count);
+                    println(msg);
+                    println();
+                    println("===============================================================");
+                    println();
+                    this.close();
+                    if (null != displayJFrame) {
+                        displayJFrame.close();
+                    }
+                    System.exit(0);
+                });
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         });
         return xf4;
     }
@@ -322,9 +324,22 @@ public class Supervisor {
         return this.conveyorForward(sys, startAbortCount, startEnableChangeCount);
     }
 
-    public XFuture<?> completeMultiCycleTest(long startTime, int numCycles, boolean useConveyor) {
+    public static class MultiCycleResults {
+
+        public long startTime;
+        public long numCycles;
+        public boolean useConveyor;
+        public int stepsDone = 0;
+
+    }
+
+    public XFuture<MultiCycleResults> completeMultiCycleTest(long startTime, int numCycles, boolean useConveyor) {
         XFutureVoid supervisorScanAllFuture;
         this.setShowFullScreenMessages(false);
+        final MultiCycleResults results = new MultiCycleResults();
+        results.startTime = startTime;
+        results.numCycles = numCycles;
+        results.useConveyor = useConveyor;
         this.setMax_cycles(numCycles);
         if (useConveyor) {
             if (null != displayJFrame) {
@@ -345,28 +360,42 @@ public class Supervisor {
             if (null == displayJFrame) {
                 throw new NullPointerException("displayJFrame");
             }
-            supervisorScanAllFuture
-                    = displayJFrame.conveyorTestPrep(sys)
-                            .thenComposeToVoid(convTaskName,
-                                    this::startScanAll);
+            supervisorScanAllFuture = displayJFrame.conveyorTestPrep(sys)
+                    .thenComposeToVoid(convTaskName,
+                            this::startScanAll);
         } else {
             supervisorScanAllFuture = startScanAll();
         }
-        XFuture<?> xf2 = supervisorScanAllFuture.thenRun(() -> {
+        XFutureVoid xf2 = supervisorScanAllFuture.thenRun(() -> {
             if (!supervisorScanAllFuture.isDone()) {
                 System.err.println("wtf");
             }
+            results.stepsDone++;
         });
-        XFuture<?> randomTestFirstActionReversedFuture = xf2.thenCompose(x -> {
+        XFutureVoid randomTestFirstActionReversedFuture = xf2.thenComposeToVoid(x -> {
             if (!supervisorScanAllFuture.isDone()) {
                 System.err.println("wtf");
             }
             if (!supervisorScanAllFuture.isDone()) {
                 System.err.println("wtf");
             }
+            results.stepsDone++;
             return this.startRandomTestFirstActionReversed();
         });
-        XFuture<?> xf4 = randomTestFirstActionReversedFuture.alwaysCompose(() -> {
+        XFuture<?> xf4
+                = randomTestFirstActionReversedFuture
+                        .alwaysCompose(
+                                () -> {
+                                    return multiCycleTestLastStep(supervisorScanAllFuture, xf2, randomTestFirstActionReversedFuture, numCycles, startTime, results);
+                                });
+        XFuture<MultiCycleResults> ret
+                = xf4
+                        .thenApply(x -> results);
+        return ret;
+    }
+
+    private XFuture<MultiCycleResults> multiCycleTestLastStep(XFutureVoid supervisorScanAllFuture, XFuture<?> xf2, XFuture<?> randomTestFirstActionReversedFuture, int numCycles, long startTime, final MultiCycleResults results) throws RuntimeException {
+        try {
             println("supervisorScanAllFuture = " + supervisorScanAllFuture);
             if (supervisorScanAllFuture.isCompletedExceptionally()) {
                 final Function<Throwable, Void> printExFunction = (Throwable throwable) -> {
@@ -391,28 +420,35 @@ public class Supervisor {
                 System.err.println("wtf");
             }
             Utils.printOnlyOnDispatchCallers();
-            return runOnDispatchThread(() -> {
+            results.stepsDone++;
+            XFutureVoid dispatchFuture
+                    = runOnDispatchThread(() -> {
 
-                println("timeDiff = " + timeDiff);
-                PlayAlert();
-                println();
-                println("===============================================================");
-                println();
-                String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60, ((timeDiff / 1000)) % 60,
-                        cycle_count);
-                println(msg);
-                println();
-                println("===============================================================");
-                println();
-                this.close();
-                if (null != displayJFrame) {
-                    displayJFrame.close();
-                }
-                System.exit(0);
-            });
-        });
-        return xf4;
+                        println("timeDiff = " + timeDiff);
+                        PlayAlert();
+                        println();
+                        println("===============================================================");
+                        println();
+                        String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                                (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60,
+                                ((timeDiff / 1000)) % 60,
+                                cycle_count);
+                        println(msg);
+                        println();
+                        println("===============================================================");
+                        println();
+                        this.close();
+                        if (null != displayJFrame) {
+                            displayJFrame.close();
+                        }
+                        results.stepsDone++;
+
+                    });
+            return dispatchFuture.thenApply(x -> results);
+        } catch (Exception ex) {
+            getLogger().log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     private final Object2DOuterJPanel object2DOuterJPanel1;
@@ -557,10 +593,20 @@ public class Supervisor {
 
     @SuppressWarnings("nullness")
     private static CachedTable newPositionMappingsTable() {
-        return new CachedTable(
-                new Object[][]{{"System", "Robot1", "Robot2"}, {"Robot1", null, new File("R1R2.csv")},
-                {"Robot2", new File("R1R2.csv"), null},},
-                new Class<?>[]{String.class, String.class, String.class}, new String[]{"", "", ""});
+        try {
+            File r1r2CsvFile = Utils.file("R1R2.csv");
+            Object[][] data = new Object[][]{
+                {"System", "Robot1", "Robot2"},
+                {"Robot1", null, r1r2CsvFile},
+                {"Robot2", r1r2CsvFile, null}};
+            return new CachedTable(
+                    data,
+                    new Class<?>[]{String.class, String.class, String.class},
+                    new String[]{"", "", ""});
+        } catch (Exception ex) {
+            getLogger().log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     public @Nullable
@@ -607,9 +653,20 @@ public class Supervisor {
 
     @SuppressWarnings({"rawtypes", "nullness"})
     public static TableModel defaultPositionMappingsModel() {
-        return new PositionMappingTableModel(new Object[][]{{"System", "Robot1", "Robot2"},
-        {"Robot1", null, new File("R1R2.csv")}, {"Robot2", new File("R1R2.csv"), null},},
-                new Object[]{"", "", ""});
+        try {
+            File r1r2CsvFile = Utils.file("R1R2.csv");
+            Object[][] data = new Object[][]{
+                {"System", "Robot1", "Robot2"},
+                {"Robot1", null, r1r2CsvFile},
+                {"Robot2", r1r2CsvFile, null}
+            };
+            return new PositionMappingTableModel(
+                    data,
+                    new Object[]{"", "", ""});
+        } catch (Exception ex) {
+            getLogger().log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -622,58 +679,6 @@ public class Supervisor {
                     "PropertiesFile"});
     }
 
-    // private static JTable newTasksTable() {
-//        JTable jTableTasks = new JTable();
-//        jTableTasks.setModel(new javax.swing.table.DefaultTableModel(
-//                new Object[][]{},
-//                new String[]{
-//                    "Priority", "Task(s)", "Robot(s)", "Scan Image", "Live Image", "Details", "PropertiesFile"
-//                }
-//        ) {
-//            Class[] types = new Class[]{
-//                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class
-//            };
-//            boolean[] canEdit = new boolean[]{
-//                false, false, false, false, false, false, false
-//            };
-//
-//            public Class getColumnClass(int columnIndex) {
-//                return types[columnIndex];
-//            }
-//
-//            public boolean isCellEditable(int rowIndex, int columnIndex) {
-//                return canEdit[columnIndex];
-//            }
-//        });
-//        return jTableTasks;
-//    }
-//    private static JTable newRobotsTable() {
-//        JTable jTableRobots = new JTable();
-//        jTableRobots.setModel(new javax.swing.table.DefaultTableModel(
-//            new Object [][] {
-//
-//            },
-//            new String [] {
-//                "Robot", "Enabled", "Host", "Port", "Disable Count", "Disable Time"
-//            }
-//        ) {
-//            Class[] types = new Class [] {
-//                java.lang.String.class, java.lang.Boolean.class, java.lang.String.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class
-//            };
-//            boolean[] canEdit = new boolean [] {
-//                false, true, false, false, false, false
-//            };
-//
-//            public Class getColumnClass(int columnIndex) {
-//                return types [columnIndex];
-//            }
-//
-//            public boolean isCellEditable(int rowIndex, int columnIndex) {
-//                return canEdit [columnIndex];
-//            }
-//        });
-//        return jTableRobots;
-//    }
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static CachedTable newSelectedPosMapFileTable() {
         return new CachedTable(new Object[][]{},
@@ -683,31 +688,6 @@ public class Supervisor {
                     "Label"});
     }
 
-    // private static JTable newSelectedPosMapFileTable() {
-//        JTable jTableSelectedPosMapFile = new JTable();
-//        jTableSelectedPosMapFile.setModel(new javax.swing.table.DefaultTableModel(
-//                new Object[][]{},
-//                new String[]{
-//                    "Xin", "Yin", "Zin", "Xout", "Yout", "Zout", "Offset_X", "Offset_Y", "Offset_Z", "Label"
-//                }
-//        ) {
-//            Class[] types = new Class[]{
-//                java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
-//            };
-//            boolean[] canEdit = new boolean[]{
-//                true, true, true, true, true, true, false, false, false, true
-//            };
-//
-//            public Class getColumnClass(int columnIndex) {
-//                return types[columnIndex];
-//            }
-//
-//            public boolean isCellEditable(int rowIndex, int columnIndex) {
-//                return canEdit[columnIndex];
-//            }
-//        });
-//        return jTableSelectedPosMapFile;
-//    }
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static CachedTable newSharedToolsTable() {
         return new CachedTable(new Object[][]{},
@@ -860,7 +840,7 @@ public class Supervisor {
         if (null == setupFile || null == setupFile.getParentFile()) {
             return null;
         }
-        return readRelativePathFromFileFile(new File(setupFile.getParentFile(), LAST_APRS_SIM_TEACH_FILETXT));
+        return readRelativePathFromFileFile(Utils.file(setupFile.getParentFile(), LAST_APRS_SIM_TEACH_FILETXT));
     }
 
     /**
@@ -879,9 +859,9 @@ public class Supervisor {
     File readPathFromFileFile(File fileFile, @Nullable String dirName) throws IOException {
         try {
             if (null != dirName && dirName.length() > 0) {
-                File dir = new File(dirName);
+                File dir = Utils.file(dirName);
                 if (dir.exists()) {
-                    File f0 = new File(dir, fileFile.getName());
+                    File f0 = Utils.file(dir, fileFile.getName());
                     if (f0.exists()) {
                         File f1 = readRelativePathFromFileFile(f0);
                         if (f1 != null && f1.exists()) {
@@ -896,7 +876,7 @@ public class Supervisor {
         if (fileFile.exists()) {
             String firstLine = readFirstLine(fileFile);
             if (null != firstLine && firstLine.length() > 0) {
-                return new File(firstLine);
+                return Utils.file(firstLine);
             }
         }
         return null;
@@ -907,7 +887,7 @@ public class Supervisor {
         if (fileFile.exists()) {
             String firstLine = readFirstLine(fileFile);
             if (null != firstLine && firstLine.length() > 0) {
-                return new File(fileFile.getParentFile(), firstLine.trim());
+                return Utils.file(fileFile.getParentFile(), firstLine.trim());
             }
         }
         return null;
@@ -1674,7 +1654,7 @@ public class Supervisor {
         "jointAccel", "jointSpeed", "rotSpeed", "fastTransSpeed", "settleDwellTime", "lookForJoints",
         "useJointLookFor"};
 
-    private void copyOptions(String options[], Map<ExecutorOption,?> mapIn, Map<ExecutorOption,Object> mapOut) {
+    private void copyOptions(String options[], Map<ExecutorOption, ?> mapIn, Map<ExecutorOption, Object> mapOut) {
         for (String optString : options) {
             final ExecutorOption exOptOf = ExecutorOption.of(optString);
             if (mapIn.containsKey(exOptOf)) {
@@ -2573,14 +2553,14 @@ public class Supervisor {
 
             int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
 
-            Map<ExecutorOption,Object> stealFromOptionsCopy = new HashMap<>();
-            Map<ExecutorOption,?> stealFromOptionsOrig = stealFrom.getExecutorOptions();
+            Map<ExecutorOption, Object> stealFromOptionsCopy = new HashMap<>();
+            Map<ExecutorOption, ?> stealFromOptionsOrig = stealFrom.getExecutorOptions();
             if (null != stealFromOptionsOrig) {
                 copyOptions(transferrableOptions, stealFromOptionsOrig, stealFromOptionsCopy);
             }
 
-            Map<ExecutorOption,Object> stealForOptionsCopy = new HashMap<>();
-            Map<ExecutorOption,?> stealForOptionsOrig = stealFor.getExecutorOptions();
+            Map<ExecutorOption, Object> stealForOptionsCopy = new HashMap<>();
+            Map<ExecutorOption, ?> stealForOptionsOrig = stealFor.getExecutorOptions();
             if (null != stealForOptionsOrig) {
                 copyOptions(transferrableOptions, stealForOptionsOrig, stealForOptionsCopy);
             }
@@ -2683,7 +2663,7 @@ public class Supervisor {
     }
 
     private NamedFunction<Integer, XFutureVoid> setupReturnRobots(final int srn, int ecc, AprsSystem stealFor,
-            AprsSystem stealFrom, Map<ExecutorOption,?> stealForOptions, PositionMap pm) {
+            AprsSystem stealFrom, Map<ExecutorOption, ?> stealForOptions, PositionMap pm) {
         String stealFromOrigCrclHost = stealFrom.getRobotCrclHost();
         if (null == stealFromOrigCrclHost) {
             throw new IllegalStateException("null robotCrclHost in stealFrom =" + stealFrom);
@@ -2714,12 +2694,12 @@ public class Supervisor {
     private volatile StackTraceElement lastSetupRobotReturnInternalTrace1 @Nullable []  = null;
 
     private NamedFunction<Integer, XFutureVoid> setupRobotReturnInternal(
-            AprsSystem stealFrom, 
+            AprsSystem stealFrom,
             AprsSystem stealFor,
-            final int srn, int setup_ecc, 
+            final int srn, int setup_ecc,
             String stealForRobotName, String stealFromRobotName,
-            String stealFromOrigCrclHost, 
-            Map<ExecutorOption, ?> stealForOptions, 
+            String stealFromOrigCrclHost,
+            Map<ExecutorOption, ?> stealForOptions,
             PositionMap pm,
             String stealForOrigCrclHost) {
         int stealFromOrigCrclPort = stealFrom.getRobotCrclPort();
@@ -2799,46 +2779,51 @@ public class Supervisor {
                                         .thenCompose(() -> refreshRobotsTable());
                             }, supervisorExecutorService)
                     .thenComposeAsync("returnRobot.transferOption", x -> {
-                        logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at "
-                                + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn + ",setup_ecc="
-                                + setup_ecc);
-                        if (stealFor.isConnected()) {
-                            System.out.println("");
-                            System.out.flush();
-                            System.err.println("setupRobotReturnInternalTrace0 = "
-                                    + CRCLUtils.traceToString(setupRobotReturnInternalTrace0));
-                            System.err.println("setupRobotReturnInternalTrace1 = "
-                                    + CRCLUtils.traceToString(setupRobotReturnInternalTrace1));
-                            throw new IllegalStateException("stealFor.isConnected() : stealFor" + stealFor);
-                        }
-                        if (null != new_ecc && -1 != new_ecc) {
-                            if (checkEcc(new_ecc)) {
-                                return cancelledEcc(new_ecc);
+                        try {
+                            logEvent(stealFrom.getTaskName() + " connected to " + stealFromRobotName + " at "
+                                    + stealFromOrigCrclHost + ":" + stealFromOrigCrclPort + " : srn=" + srn + ",setup_ecc="
+                                    + setup_ecc);
+                            if (stealFor.isConnected()) {
+                                System.out.println("");
+                                System.out.flush();
+                                System.err.println("setupRobotReturnInternalTrace0 = "
+                                        + CRCLUtils.traceToString(setupRobotReturnInternalTrace0));
+                                System.err.println("setupRobotReturnInternalTrace1 = "
+                                        + CRCLUtils.traceToString(setupRobotReturnInternalTrace1));
+                                throw new IllegalStateException("stealFor.isConnected() : stealFor" + stealFor);
                             }
-                            if (checkSrn(srn)) {
-                                return cancelledSrn(srn);
+                            if (null != new_ecc && -1 != new_ecc) {
+                                if (checkEcc(new_ecc)) {
+                                    return cancelledEcc(new_ecc);
+                                }
+                                if (checkSrn(srn)) {
+                                    return cancelledSrn(srn);
+                                }
                             }
-                        }
-                        for (String optString : transferrableOptions) {
-                            ExecutorOption exOptOf = ExecutorOption.of(optString);
-                            if (stealForOptions.containsKey(exOptOf)) {
-                                stealFor.setExecutorOption(exOptOf, stealForOptions.get(optString));
+                            for (String optString : transferrableOptions) {
+                                ExecutorOption exOptOf = ExecutorOption.of(optString);
+                                if (stealForOptions.containsKey(exOptOf)) {
+                                    stealFor.setExecutorOption(exOptOf, stealForOptions.get(exOptOf));
+                                }
                             }
+                            stealFor.setToolHolderOperationEnabled(true);
+                            stealFor.removePositionMap(pm);
+                            String stealForRpy = ExecutorOption.ForString
+                                    .map(stealFor.getExecutorOptions())
+                                    .get(ExecutorOption.ForString.RPY);
+                            logEvent("stealForRpy=" + stealForRpy);
+                            final String stealForTaskName = stealFor.getTaskName();
+                            logEvent("start returnRobot." + stealForTaskName + " connect to " + stealForRobotName + " at "
+                                    + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn + ",ecc="
+                                    + setup_ecc);
+                            robotTaskMapPut(stealForRobotName, stealFor);
+                            return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort)
+                                    .thenCompose(() -> refreshRobotsTable());
+                        } catch (Exception ex) {
+                            logEventErr(ex.getMessage());
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+                            throw new RuntimeException(ex);
                         }
-                        stealFor.setToolHolderOperationEnabled(true);
-                        stealFor.removePositionMap(pm);
-                        String stealForRpy = 
-                                ExecutorOption.ForString
-                                .map(stealFor.getExecutorOptions())
-                                .get(ExecutorOption.ForString.RPY);
-                        logEvent("stealForRpy=" + stealForRpy);
-                        final String stealForTaskName = stealFor.getTaskName();
-                        logEvent("start returnRobot." + stealForTaskName + " connect to " + stealForRobotName + " at "
-                                + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn + ",ecc="
-                                + setup_ecc);
-                        robotTaskMapPut(stealForRobotName, stealFor);
-                        return stealFor.connectRobot(stealForRobotName, stealForOrigCrclHost, stealForOrigCrclPort)
-                                .thenCompose(() -> refreshRobotsTable());
                     }, supervisorExecutorService).thenRun(() -> {
                 logEvent(stealFor.getTaskName() + " connected to " + stealForRobotName + " at "
                         + stealForOrigCrclHost + ":" + stealForOrigCrclPort + " : srn=" + srn + ",setup_ecc="
@@ -3217,7 +3202,7 @@ public class Supervisor {
         String timeString = getTimeString(time);
         if (null == logPrintStream) {
             try {
-                File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
+                File supervisorDir = Utils.file(Utils.getlogFileDir(), "supervisor");
                 supervisorDir.mkdirs();
                 File logFile = Utils.createTempFile("events_log_", ".txt", supervisorDir);
                 println("Supervisor event log file =" + logFile.getCanonicalPath());
@@ -3362,28 +3347,73 @@ public class Supervisor {
 
     private final Map<String, String> robotTaskMap = new HashMap<>();
 
-    private static File getLastSetupFileFile() {
-        final String aprsUserHomeDir = Utils.getAprsUserHomeDir();
-        final String property
-                = System.getProperty("aprsLastMultiSystemSetupFile",
-                        aprsUserHomeDir + File.separator + ".lastAprsSetupFile.txt");
-        return new File(property);
+    private static File initLastSetupFileFile() {
+        try {
+            final String aprsUserHomeDir = Utils.getAprsUserHomeDir();
+            final String property = System.getProperty("aprsLastMultiSystemSetupFile",
+                    aprsUserHomeDir + File.separator + ".lastAprsSetupFile.txt");
+            return Utils.file(property);
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
-    private final static File LAST_SETUP_FILE_FILE = getLastSetupFileFile();
-    private final static File LAST_SHARED_TOOLS_FILE_FILE = new File(
-            System.getProperty("aprsLastMultiSystemSharedToolsFile",
-                    Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSharedToolsFile.txt"));
+
+    private final static File LAST_SETUP_FILE_FILE = initLastSetupFileFile();
+    private final static File LAST_SHARED_TOOLS_FILE_FILE = initLastSharedToolsFileFile();
+
+    private static File initLastSharedToolsFileFile() {
+        try {
+            return Utils.file(
+                    System.getProperty("aprsLastMultiSystemSharedToolsFile",
+                            Utils.getAprsUserHomeDir() + File.separator + ".lastAprsSharedToolsFile.txt"));
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
     private static final String LAST_APRS_SIM_TEACH_FILETXT = ".lastAprsSimTeachFile.txt";
-    private final static File LAST_SIM_TEACH_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemSimTeachFile",
-            Utils.getAprsUserHomeDir() + File.separator + LAST_APRS_SIM_TEACH_FILETXT));
-    private final static File LAST_SIM_TEACH_PROPERTIES_FILE_FILE = new File(
-            System.getProperty("aprsLastMultiSystemTeachPropertiesFile",
-                    Utils.getAprsUserHomeDir() + File.separator + ".lastAprsTeachPropertiesFile.txt"));
-    private final static File LAST_POSMAP_FILE_FILE = new File(System.getProperty("aprsLastMultiSystemPosMapFile",
-            Utils.getAprsUserHomeDir() + File.separator + ".lastAprsPosMapFile.txt"));
+    private final static File LAST_SIM_TEACH_FILE_FILE = initLastSimTeachFile();
+
+    private static File initLastSimTeachFile() {
+        try {
+            String fileName = System.getProperty("aprsLastMultiSystemSimTeachFile",
+                    Utils.getAprsUserHomeDir() + File.separator + LAST_APRS_SIM_TEACH_FILETXT);
+            return Utils.file(fileName);
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private final static File LAST_SIM_TEACH_PROPERTIES_FILE_FILE = initLastSimTeachPropertiesFile();
+
+    private static File initLastSimTeachPropertiesFile() {
+        try {
+            return Utils.file(
+                    System.getProperty("aprsLastMultiSystemTeachPropertiesFile",
+                            Utils.getAprsUserHomeDir() + File.separator + ".lastAprsTeachPropertiesFile.txt"));
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private final static File LAST_POSMAP_FILE_FILE = initLastPosMapFile();
+
+    private static File initLastPosMapFile() {
+        try {
+            return Utils.file(System.getProperty("aprsLastMultiSystemPosMapFile",
+                    Utils.getAprsUserHomeDir() + File.separator + ".lastAprsPosMapFile.txt"));
+        } catch (Exception ex) {
+            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
 
     private @Nullable
-    File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
+    File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException, IOException {
         if (null == displayJFrame) {
             throw new IllegalStateException("null == displayJFrame");
         }
@@ -3392,8 +3422,11 @@ public class Supervisor {
 
     /**
      * Query the user to select a file to save setup data in.
+     *
+     * @throws IOException
+     * @throws HeadlessException
      */
-    public void browseSaveSetupAs() {
+    public void browseSaveSetupAs() throws HeadlessException, IOException {
         File chosenFile = chooseFileForSaveAs(lastSetupFile);
         if (null != chosenFile) {
             try {
@@ -3435,7 +3468,7 @@ public class Supervisor {
         if (null != setupFile) {
             return setupFile;
         }
-        File ret = new File(getSetupFilePathString());
+        File ret = Utils.file(getSetupFilePathString());
         setSetupFile(ret);
         return ret;
     }
@@ -3510,7 +3543,7 @@ public class Supervisor {
                 if (null != setup) {
                     Map<String, String> filesMapOutNN = filesMapOut;
                     Supervisor supervisorNN = supervisor;
-                    return supervisorNN.loadSetupFile(new File(setup)).thenRun(() -> {
+                    return supervisorNN.loadSetupFile(Utils.file(setup)).thenRun(() -> {
                         supervisorNN.loadFromFilesMap(filesMapOutNN);
                     }).thenApply(x -> supervisorNN);
                 } else {
@@ -3530,20 +3563,20 @@ public class Supervisor {
         try {
             String posMapsFilesFile = filesMapOutNN.get("PosMap");
             if (null != posMapsFilesFile) {
-                loadPositionMappingsFilesFile(new File(posMapsFilesFile));
+                loadPositionMappingsFilesFile(Utils.file(posMapsFilesFile));
             }
             String simTeach = filesMapOutNN.get("SimTeach");
             if (null != simTeach) {
-                loadSimTeach(new File(simTeach));
+                loadSimTeach(Utils.file(simTeach));
             }
 
             String teachProps = filesMapOutNN.get("TeachProps");
             if (null != teachProps) {
-                loadTeachProps(new File(teachProps));
+                loadTeachProps(Utils.file(teachProps));
             }
             String sharedTools = filesMapOutNN.get("SharedTools");
             if (null != sharedTools) {
-                loadSharedTools(new File(sharedTools));
+                loadSharedTools(Utils.file(sharedTools));
             }
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
@@ -3583,7 +3616,7 @@ public class Supervisor {
         if (null != posMapFile) {
             return posMapFile;
         }
-        posMapFile = new File(getPosMapFilePathString());
+        posMapFile = Utils.file(getPosMapFilePathString());
         return posMapFile;
     }
 
@@ -3607,7 +3640,7 @@ public class Supervisor {
         if (null != simTeachFile) {
             return simTeachFile;
         }
-        simTeachFile = new File(getSimTeachFilePathString());
+        simTeachFile = Utils.file(getSimTeachFilePathString());
         return simTeachFile;
     }
 
@@ -3631,7 +3664,7 @@ public class Supervisor {
         if (null != teachPropsFile) {
             return teachPropsFile;
         }
-        teachPropsFile = new File(getTeachPropsFilePathString());
+        teachPropsFile = Utils.file(getTeachPropsFilePathString());
         return teachPropsFile;
     }
 
@@ -3655,7 +3688,7 @@ public class Supervisor {
         if (null != sharedToolsFile) {
             return sharedToolsFile;
         }
-        sharedToolsFile = new File(getSharedToolsFilePathString());
+        sharedToolsFile = Utils.file(getSharedToolsFilePathString());
         return sharedToolsFile;
     }
 
@@ -4496,22 +4529,21 @@ public class Supervisor {
             return prepAndFinishToXFutureVoidOnDispatch(() -> {
                 try {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
-                    XFutureVoid outerRet
-                            = resetAll(false)
-                                    .thenComposeAsyncToVoid(x -> {
-                                        try {
-                                            clearAllErrors();
-                                            connectAll();
-                                            return startRandomTestFirstActionReversed2();
-                                        } catch (Exception e) {
-                                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                                            MultiLineStringJPanel.showText("Exception occurred: " + e);
-                                            XFutureVoid ret = new XFutureVoid(
-                                                    "internal startRandomTestFirstActionReversed with exception " + e);
-                                            ret.completeExceptionally(e);
-                                            return ret;
-                                        }
-                                    }, supervisorExecutorService);
+                    XFutureVoid outerRet = resetAll(false)
+                            .thenComposeAsyncToVoid(x -> {
+                                try {
+                                    clearAllErrors();
+                                    connectAll();
+                                    return startRandomTestFirstActionReversed2();
+                                } catch (Exception e) {
+                                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
+                                    MultiLineStringJPanel.showText("Exception occurred: " + e);
+                                    XFutureVoid ret = new XFutureVoid(
+                                            "internal startRandomTestFirstActionReversed with exception " + e);
+                                    ret.completeExceptionally(e);
+                                    return ret;
+                                }
+                            }, supervisorExecutorService);
                     return outerRet
                             .peekNoCancelException(this::handleXFutureException)
                             .thenComposeToVoid(() -> this.waitSingleStep("startRandomTestFirstActionReversed"));
@@ -4643,7 +4675,7 @@ public class Supervisor {
 //			File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
 //			customDir.delete();
 //			customDir.mkdirs();
-//			File tmpFile = new File(customDir, "Custom.java");
+//			File tmpFile = Utils.file(customDir, "Custom.java");
 //			println("tmpFile = " + tmpFile.getCanonicalPath());
 //			File[] files1 = { tmpFile };
 //
@@ -4848,9 +4880,9 @@ public class Supervisor {
                 throw new RuntimeException("no teach items for " + aprsSys.getTaskName());
             }
             try {
-                File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
+                File supervisorDir = Utils.file(Utils.getlogFileDir(), "supervisor");
                 supervisorDir.mkdirs();
-                File subDir = new File(supervisorDir, aprsSys.getTaskName());
+                File subDir = Utils.file(supervisorDir, aprsSys.getTaskName());
                 subDir.mkdirs();
                 tempImageFile = Utils.createTempFile("filteredTeachItems_completeScanOneInternal_" + aprsSys.toString(),
                         ".PNG",
@@ -4865,9 +4897,9 @@ public class Supervisor {
                     0, false, false, true, false);
         } else {
             try {
-                File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
+                File supervisorDir = Utils.file(Utils.getlogFileDir(), "supervisor");
                 supervisorDir.mkdirs();
-                File subDir = new File(supervisorDir, aprsSys.getTaskName());
+                File subDir = Utils.file(supervisorDir, aprsSys.getTaskName());
                 subDir.mkdirs();
                 tempImageFile = Utils.createTempFile("completeScanOneInternal_" + aprsSys.toString(), ".PNG", subDir);
                 aprsSys.saveScanStyleImage(
@@ -4994,14 +5026,14 @@ public class Supervisor {
                         this::startFlipFM, supervisorExecutorService)
                 .thenCompose(x -> x);
     }
-    
+
     public XFuture<Boolean> startFlipMFOnSupervisorService() {
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
                         this::startFlipMF, supervisorExecutorService)
                 .thenCompose(x -> x);
     }
-    
+
     private XFutureVoid startScanAllThenContinuousDemoRevFirst() {
         logEvent("startScanAllThenContinuousDemoRevFirst starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
@@ -5029,9 +5061,7 @@ public class Supervisor {
         }
         return XFuture.allOfWithName("lookForPartsAll", futures);
     }
-    
-    
-    
+
     public XFuture<Boolean> startFlipFM() {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
@@ -5039,74 +5069,74 @@ public class Supervisor {
         logEvent("fanucCartSys = " + fanucCartSys);
         AprsSystem sharedTableSys = getSysByTask("Shared Table");
         logEvent("sharedTableSys = " + sharedTableSys);
-        
+
         XFutureVoid xf2 = xf1.thenComposeToVoid("startFlip.step2", x -> {
             logEvent("startFlip.step2 : xf1=" + xf1);
-            
+
             return lookForPartsAll(false);
         });
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step2 : xf2=" + xf2);
-            return fanucCartSys.startActionsList("flip2", 
+            return fanucCartSys.startActionsList("flip2",
                     Arrays.asList(new Action[]{
-                        Action.newTakePartAction("part_black_gear_in_pt_1"),
-                        Action.newMoveRecordedJoints("present_gear")
-                    }),ExecutorOption.ForBoolean.REVERSE.with(true));
+                Action.newTakePartAction("part_black_gear_in_pt_1"),
+                Action.newMoveRecordedJoints("present_gear")
+            }), ExecutorOption.ForBoolean.REVERSE.with(true));
         });
         XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step3 : xf3=" + xf3);
-            return sharedTableSys.startActionsList("flip3", 
+            return sharedTableSys.startActionsList("flip3",
                     Arrays.asList(new Action[]{
-                        Action.newMoveRecordedPose("p1"),
-                        Action.newMoveRecordedPose("p2"),
-                        Action.newCloseGripper()
-                    }),false);
+                Action.newMoveRecordedPose("p1"),
+                Action.newMoveRecordedPose("p2"),
+                Action.newCloseGripper()
+            }), false);
         });
         XFuture<Boolean> xf5 = xf4.thenCompose("startFlip.step4", x -> {
             logEvent("startFlip.step4 : xf4=" + xf4);
-            return fanucCartSys.startActionsList("flip4", 
+            return fanucCartSys.startActionsList("flip4",
                     Arrays.asList(new Action[]{
-                        Action.newOpenGripper()
-                    }),false);
+                Action.newOpenGripper()
+            }), false);
         });
         XFuture<Boolean> xf6 = xf5.thenCompose("startFlip.step5", x -> {
             logEvent("startFlip.step5 : xf5=" + xf5);
-            return sharedTableSys.startActionsList("flip5", 
+            return sharedTableSys.startActionsList("flip5",
                     Arrays.asList(new Action[]{
-                        Action.newMoveRecordedPose("p3"),
-                        Action.newMoveRecordedPose("p4"),
-                        Action.newMoveRecordedPose("p5")
-                    }),false);
+                Action.newMoveRecordedPose("p3"),
+                Action.newMoveRecordedPose("p4"),
+                Action.newMoveRecordedPose("p5")
+            }), false);
         });
         XFuture<Boolean> xf7 = xf6.thenCompose("startFlip.step6", x -> {
             logEvent("startFlip.step6 : xf6=" + xf6);
-            return fanucCartSys.startActionsList("flip6", 
+            return fanucCartSys.startActionsList("flip6",
                     Arrays.asList(new Action[]{
-                        Action.newCloseGripper()
-                    }),false);
+                Action.newCloseGripper()
+            }), false);
         });
         XFuture<Boolean> xf8 = xf7.thenCompose("startFlip.step7", x -> {
             logEvent("startFlip.step7 : xf7=" + xf7);
-            return sharedTableSys.startActionsList("flip7", 
+            return sharedTableSys.startActionsList("flip7",
                     Arrays.asList(new Action[]{
-                        Action.newOpenGripper(),
-                        Action.newMoveRecordedPose("p6"),
-                        Action.newLookForParts(0)
-                    }),false);
+                Action.newOpenGripper(),
+                Action.newMoveRecordedPose("p6"),
+                Action.newLookForParts(0)
+            }), false);
         });
-        
+
         XFuture<Boolean> xf9 = xf8.thenCompose("startFlip.step8", x -> {
             logEvent("startFlip.step8 : xf8=" + xf8);
-            return fanucCartSys.startActionsList("flip8", 
+            return fanucCartSys.startActionsList("flip8",
                     Arrays.asList(new Action[]{
-                        Action.newMoveRecordedJoints("returning"),
-                        Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
-                        Action.newLookForParts(0)
-                    }),false);
+                Action.newMoveRecordedJoints("returning"),
+                Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
+                Action.newLookForParts(0)
+            }), false);
         });
         return xf9;
     }
-    
+
     public XFuture<Boolean> startFlipMF() {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
@@ -5114,32 +5144,33 @@ public class Supervisor {
         logEvent("fanucCartSys = " + fanucCartSys);
         AprsSystem sharedTableSys = getSysByTask("Shared Table");
         logEvent("sharedTableSys = " + sharedTableSys);
-        if(fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
+        if (fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
                 || fanucCartSys.isEnforceMinMaxLimits() || sharedTableSys.isEnforceMinMaxLimits()) {
-            int confirm = JOptionPane.showConfirmDialog(this.displayJFrame, "Disable Alert Limits on " + fanucCartSys+ " and "+ sharedTableSys);
+            int confirm = JOptionPane.showConfirmDialog(this.displayJFrame,
+                    "Disable Alert Limits on " + fanucCartSys + " and " + sharedTableSys);
             if (confirm == JOptionPane.YES_OPTION) {
                 sharedTableSys.setAlertLimitsCheckBoxSelected(false);
                 fanucCartSys.setAlertLimitsCheckBoxSelected(false);
                 sharedTableSys.setEnforceMinMaxLimits(false);
                 fanucCartSys.setEnforceMinMaxLimits(false);
             } else {
-               return XFuture.completedFuture(false);
+                return XFuture.completedFuture(false);
             }
         }
         XFutureVoid xf2 = xf1.thenComposeToVoid("startFlipMF.step2", x -> {
             logEvent("startFlipMF.step2 : xf1=" + xf1);
             return lookForPartsAll(false);
         });
-        
+
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlipMF.step3", x -> {
             logEvent("startFlipMF.step2 : xf2=" + xf2);
             sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
-            return sharedTableSys.startActionsList("flip2", 
+            return sharedTableSys.startActionsList("flip2",
                     Arrays.asList(new Action[]{
-                        Action.newTakePartAction("part_black_gear_in_kt_1"),
-                        Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
-                        Action.newMoveRecordedPose("flipmf_present_gear")
-                    }),true);
+                Action.newTakePartAction("part_black_gear_in_kt_1"),
+                Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
+                Action.newMoveRecordedPose("flipmf_present_gear")
+            }), true);
         });
         return xf3;
 //        XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {
@@ -5195,7 +5226,7 @@ public class Supervisor {
 //        });
 //        return xf9;
     }
-    
+
     /**
      * Have each system scan the parts area to create an action list to fill
      * kits in a way similar to the current configuration. This may require
@@ -6007,7 +6038,8 @@ public class Supervisor {
             System.err.flush();
             String message = "Single Step: " + info;
             return showMesssage(message)
-                    .thenComposeAsyncToVoid(info, () -> logEvent("Single Step advancing " + info), supervisorExecutorService);
+                    .thenComposeAsyncToVoid(info, () -> logEvent("Single Step advancing " + info),
+                            supervisorExecutorService);
         }
     }
 
@@ -6055,12 +6087,11 @@ public class Supervisor {
         conveyorVisPrevStartPos = conveyorPos();
         int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
-        XFutureVoid ret
-                = this.waitResume()
-                        .thenComposeToVoid(() -> displayJFrameFinal.conveyorVisPrevTray())
-                        .thenRun(() -> conveyorVisPrevFinish(count))
-                        .peekNoCancelException(this::handleXFutureException)
-                        .thenComposeToVoid(() -> this.waitSingleStep("conveyorVisPrev"));
+        XFutureVoid ret = this.waitResume()
+                .thenComposeToVoid(() -> displayJFrameFinal.conveyorVisPrevTray())
+                .thenRun(() -> conveyorVisPrevFinish(count))
+                .peekNoCancelException(this::handleXFutureException)
+                .thenComposeToVoid(() -> this.waitSingleStep("conveyorVisPrev"));
         conveyorTestFuture = ret;
         return ret;
     }
@@ -6456,10 +6487,9 @@ public class Supervisor {
         }
         String blockerList = toggleBlockerMap.keySet().toString();
 
-        XFuture<LockInfo> ret
-                = completeDisallowToggles(blockerName, blockerList, lockInfo)
-                        .peekNoCancelException(this::handleXFutureException)
-                        .thenCompose(x -> this.waitSingleStep("disallowToggles(" + blockerName + ")").thenSupply(() -> x));
+        XFuture<LockInfo> ret = completeDisallowToggles(blockerName, blockerList, lockInfo)
+                .peekNoCancelException(this::handleXFutureException)
+                .thenCompose(x -> this.waitSingleStep("disallowToggles(" + blockerName + ")").thenSupply(() -> x));
         return ret;
     }
 
@@ -7145,12 +7175,12 @@ public class Supervisor {
             takeAllSnapshotsRevFlag = lastStartAllActionsReverseFlag;
         }
         logEvent(info);
-        File supervisorDir = new File(Utils.getlogFileDir(), "supervisor");
+        File supervisorDir = Utils.file(Utils.getlogFileDir(), "supervisor");
         supervisorDir.mkdirs();
         int count = takeAllSnapshotsCount.incrementAndGet();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSys = aprsSystems.get(i);
-            File subDir = new File(supervisorDir, aprsSys.getTaskName());
+            File subDir = Utils.file(supervisorDir, aprsSys.getTaskName());
             subDir.mkdirs();
             if (aprsSys.isObjectViewSimulated()) {
                 aprsSys.takeSimViewSnapshot(Utils
@@ -7163,11 +7193,11 @@ public class Supervisor {
             }
         }
         if (newRevFlag) {
-            File newRevDir = new File(supervisorDir, "newrev");
+            File newRevDir = Utils.file(supervisorDir, "newrev");
             newRevDir.mkdirs();
             for (int i = 0; i < aprsSystems.size(); i++) {
                 AprsSystem aprsSys = aprsSystems.get(i);
-                File subDir = new File(newRevDir, aprsSys.getTaskName());
+                File subDir = Utils.file(newRevDir, aprsSys.getTaskName());
                 subDir.mkdirs();
                 if (aprsSys.isObjectViewSimulated()) {
                     aprsSys.takeSimViewSnapshot(
@@ -7335,7 +7365,8 @@ public class Supervisor {
             ContinuousDemoFuture = ret2;
             return ret2
                     .peekNoCancelException(this::handleXFutureException)
-                    .thenComposeToVoid(() -> this.waitSingleStep("continueContinuousDemo(" + prevBlockerName + "," + startingAbortCount + ")"));
+                    .thenComposeToVoid(() -> this.waitSingleStep(
+                    "continueContinuousDemo(" + prevBlockerName + "," + startingAbortCount + ")"));
         }
 
         final int cdcCount = ContinuousDemoCycle.get();
@@ -8830,7 +8861,7 @@ public class Supervisor {
      */
     public void saveSetupFile(File f) throws IOException {
         if (null == propertiesFile) {
-            propertiesFile = new File(f.getParentFile(), "supervisor_properties.txt");
+            propertiesFile = Utils.file(f.getParentFile(), "supervisor_properties.txt");
         }
         saveProperties(this.propertiesFile);
         saveCachedTable(f, tasksCachedTable,
@@ -9021,7 +9052,7 @@ public class Supervisor {
     }
 
     private static File resolveFile(String fname, @Nullable File dir) throws IOException {
-        File fi = new File(fname);
+        File fi = Utils.file(fname);
         if (!fi.exists() && dir != null && dir.exists() && dir.isDirectory()) {
             File altFile = dir.toPath().toRealPath().resolve(fname).toFile();
             if (altFile.exists()) {
@@ -9065,7 +9096,7 @@ public class Supervisor {
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
                     try (FileWriter fileWriter = new FileWriter(
-                            new File(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);
+                            Utils.file(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);
                             PrintWriter pw = new PrintWriter(fileWriter, true)) {
                         pw.println("date=" + new Date() + ", oldPath = " + oldPath + ", newFilePath = " + newFilePath
                                 + ", lastFileFile = " + lastFileFile);
@@ -9080,7 +9111,7 @@ public class Supervisor {
         }
         if (null != setupParent) {
             String lastFileFileName = lastFileFile.getName();
-            File savePathFile = new File(setupParent, lastFileFileName);
+            File savePathFile = Utils.file(setupParent, lastFileFileName);
             saveRelativePathInLastFileFile(f, savePathFile);
         }
     }
@@ -9114,7 +9145,7 @@ public class Supervisor {
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
                     try (PrintWriter pw = new PrintWriter(
-                            new FileWriter(new File(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
+                            new FileWriter(Utils.file(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
                         pw.println("date=" + new Date() + ", oldPath = " + oldPath + ", newFilePath = " + newFilePath
                                 + ", lastFileFile = " + lastFileFile);
                     }
@@ -9168,7 +9199,7 @@ public class Supervisor {
         if (null != setupFile) {
             File setupParent = setupFile.getParentFile();
             if (null != setupParent) {
-                File savePathFile = new File(setupParent, lastFileName);
+                File savePathFile = Utils.file(setupParent, lastFileName);
                 saveRelativePathInLastFileFile(f, savePathFile);
             }
         }
@@ -9700,21 +9731,29 @@ public class Supervisor {
         final File propertiesFile;
 
         public SysSetupFileEntry(CSVRecord csvRecord, File setupFile) {
-            this.priority = Integer.parseInt(csvRecord.get(0));
-            this.taskName = csvRecord.get(1);
-            this.robotName = csvRecord.get(2);
-            String pathname = csvRecord.get(3);
-            File f3 = new File(pathname);
-            if (f3.exists()) {
-                this.propertiesFile = f3;
-            } else {
-                File f4 = new File(setupFile.getParentFile(), pathname);
-                if (f4.exists()) {
-                    this.propertiesFile = f4;
+            try {
+                this.priority = Integer.parseInt(csvRecord.get(0));
+                this.taskName = csvRecord.get(1);
+                this.robotName = csvRecord.get(2);
+                String pathname = csvRecord.get(3);
+                File f3 = new File(pathname);
+                if (f3.exists()) {
+                    this.propertiesFile = f3;
                 } else {
-                    throw new RuntimeException(
-                            "Can't find file for pathName=" + pathname + " in setupFile=" + setupFile);
+                    if (File.separatorChar == '/' && pathname.contains("//")) {
+                        pathname = pathname.replace('\\', '/');
+                    }
+                    File f4 = Utils.file(setupFile.getParentFile(), pathname);
+                    if (f4.exists()) {
+                        this.propertiesFile = f4;
+                    } else {
+                        throw new RuntimeException(
+                                "Can't find file for pathName=" + pathname + " in setupFile=" + setupFile);
+                    }
                 }
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.SysSetupFileEntry.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
             }
         }
     };
@@ -10044,7 +10083,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                  @Nullable []  [] = null;
+    private volatile Object lastTasksTableData  @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
@@ -10353,24 +10392,24 @@ public class Supervisor {
         aprsSupervisorDisplayJFrame1.setVisible(true);
         String setup = filesMapOut.get("Setup");
         if (null != setup) {
-            return supervisor.loadSetupFile(new File(setup)).thenRun(() -> {
+            return supervisor.loadSetupFile(Utils.file(setup)).thenRun(() -> {
                 try {
                     String mapsFile = filesMapOut.get("PosMap");
                     if (null != mapsFile) {
-                        supervisor.loadPositionMappingsFilesFile(new File(mapsFile));
+                        supervisor.loadPositionMappingsFilesFile(Utils.file(mapsFile));
                     }
                     String simTeach = filesMapOut.get("SimTeach");
                     if (null != simTeach) {
-                        supervisor.loadSimTeach(new File(simTeach));
+                        supervisor.loadSimTeach(Utils.file(simTeach));
                     }
 
                     String teachProps = filesMapOut.get("TeachProps");
                     if (null != teachProps) {
-                        supervisor.loadTeachProps(new File(teachProps));
+                        supervisor.loadTeachProps(Utils.file(teachProps));
                     }
                     String sharedTools = filesMapOut.get("SharedTools");
                     if (null != sharedTools) {
-                        supervisor.loadSharedTools(new File(sharedTools));
+                        supervisor.loadSharedTools(Utils.file(sharedTools));
                     }
                     aprsSupervisorDisplayJFrame1.updateRobotsTable();
                 } catch (IOException iOException) {

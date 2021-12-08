@@ -758,7 +758,7 @@ public class LaunchFileRunner {
                 Neo4JKiller.killNeo4J();
             } else if (firstWord.equals("plj-cd") || firstWord.equals("cd") || firstWord.equals("chdir")) {
                 String text = afterFirstWord(line, firstWord);
-                File dir = new File(text);
+                File dir = Utils.file(text);
                 if (!dir.exists()) {
                     if (null != stringBuilder) {
                         stringBuilder.append("Directory \"");

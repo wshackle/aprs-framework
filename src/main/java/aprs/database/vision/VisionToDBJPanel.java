@@ -2726,7 +2726,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 System.err.println("takeSnapshot(" + f + ") called when table is empty");
                 return;
             }
-            File dbLogDir = new File(f.getParentFile(), "db_log_dir");
+            File dbLogDir = Utils.file(f.getParentFile(), "db_log_dir");
             dbLogDir.mkdirs();
             String csvFnameBase = f.getName();
             File csvFile = createTempFile(csvFnameBase + "_db", ".csv", dbLogDir);
@@ -2745,7 +2745,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         List<PhysicalItem> lastInput = dpu.getLastEnabledUpdateList();
         if (null != lastInput && !lastInput.isEmpty()) {
             try {
-                File dbInputLogDir = new File(f.getParentFile(), "visionToDb_input_dir");
+                File dbInputLogDir = Utils.file(f.getParentFile(), "visionToDb_input_dir");
                 dbInputLogDir.mkdirs();
                 File csvInputFile = Utils.createTempFile(f.getName() + "_visiontToDb", ".csv", dbInputLogDir);
                 try (PrintWriter pw = new PrintWriter(new FileWriter(csvInputFile))) {

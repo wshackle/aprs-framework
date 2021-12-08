@@ -37,7 +37,7 @@ public interface ExecutorOption {
     public static <K extends Enum<K> & ExecutorOption, V> Map<K, V> map(
             Class<K> keyClass,
             Class<V> valueClass,
-            Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
+            ExecutorOption.WithValue<?, ?> ... optionpairs) {
         Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (int i = 0; i < optionpairs.length; i++) {
             Map.Entry<?, ?> optionpair = optionpairs[i];
@@ -54,7 +54,7 @@ public interface ExecutorOption {
     public static <K extends Enum<K> & ExecutorOption, V> Map<K, V> map(
             Class<K> keyClass,
             Class<V> valueClass,
-            Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
+            Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
         Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (Map.Entry<?, ?> optionpair : optionpairs) {
             if (keyClass.isInstance(optionpair.getKey())) {
@@ -235,11 +235,11 @@ public interface ExecutorOption {
             return new WithValue<>(this, arg);
         }
 
-        public static Map<ForBoolean, Boolean> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
+        public static Map<ForBoolean, Boolean> map(ExecutorOption.WithValue<?, ?> ... optionpairs) {
             return ExecutorOption.map(ForBoolean.class, Boolean.class, optionpairs);
         }
 
-        public static Map<ForBoolean, Boolean> map(Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
+        public static Map<ForBoolean, Boolean> map(Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
             return ExecutorOption.map(ForBoolean.class, Boolean.class, optionpairs);
         }
 
@@ -280,11 +280,11 @@ public interface ExecutorOption {
             return new WithValue<>(this, arg);
         }
 
-        public static Map<ForDouble, Double> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
+        public static Map<ForDouble, Double> map(ExecutorOption.WithValue<?, ?> ... optionpairs) {
             return ExecutorOption.map(ForDouble.class, Double.class, optionpairs);
         }
 
-        public static Map<ForDouble, Double> map(Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
+        public static Map<ForDouble, Double> map(Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
             return ExecutorOption.map(ForDouble.class, Double.class, optionpairs);
         }
 
@@ -308,11 +308,11 @@ public interface ExecutorOption {
             return new WithValue<>(this, arg);
         }
 
-        public static Map<ForString, String> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
+        public static Map<ForString, String> map(ExecutorOption.WithValue<?, ?> ... optionpairs) {
             return ExecutorOption.map(ForString.class, String.class, optionpairs);
         }
 
-        public static Map<ForString, String> map(Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
+        public static Map<ForString, String> map(Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
             return ExecutorOption.map(ForString.class, String.class, optionpairs);
         }
 
@@ -331,11 +331,11 @@ public interface ExecutorOption {
             return new WithValue<>(this, arg);
         }
 
-        public static Map<ForInt, Integer> map(Map.Entry<? extends ExecutorOption, ?>... optionpairs) {
+        public static Map<ForInt, Integer> map(ExecutorOption.WithValue<?, ?> ... optionpairs) {
             return ExecutorOption.map(ForInt.class, Integer.class, optionpairs);
         }
 
-        public static Map<ForInt, Integer> map(Collection<Map.Entry<? extends ExecutorOption, ?>> optionpairs) {
+        public static Map<ForInt, Integer> map(Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
             return ExecutorOption.map(ForInt.class, Integer.class, optionpairs);
         }
 

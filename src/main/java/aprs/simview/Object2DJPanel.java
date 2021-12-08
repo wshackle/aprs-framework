@@ -22,32 +22,39 @@
  */
 package aprs.simview;
 
-import aprs.database.PhysicalItem;
-import aprs.database.Slot;
-import aprs.misc.PmCartesianMinMaxLimit;
-import aprs.misc.SlotOffsetProvider;
-import aprs.system.AprsSystem;
-import crcl.base.PointType;
-import crcl.base.PoseType;
-import crcl.utils.CRCLPosemath;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.simview.DisplayAxis.POS_X_POS_Y;
+import static aprs.simview.Object2DViewDragMode.DO_NOTHING;
 
-import rcs.posemath.PmCartesian;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Line2D;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -55,11 +62,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
-import static aprs.misc.AprsCommonLogger.println;
-import static aprs.simview.DisplayAxis.POS_X_POS_Y;
-import static aprs.simview.Object2DViewDragMode.DO_NOTHING;
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import aprs.database.PhysicalItem;
+import aprs.database.Slot;
+import aprs.misc.PmCartesianMinMaxLimit;
+import aprs.misc.SlotOffsetProvider;
+import aprs.misc.Utils;
+import aprs.system.AprsSystem;
+import crcl.base.PointType;
+import crcl.base.PoseType;
+import crcl.utils.CRCLPosemath;
+import rcs.posemath.PmCartesian;
 
 /**
  *
@@ -440,9 +460,9 @@ public class Object2DJPanel extends JPanel {
 
     public static File imageFileToCsvFile(File f) {
         try {
-            File csvDir = new File(f.getParentFile(), "csv");
+            File csvDir = Utils.file(f.getParentFile(), "csv");
             csvDir.mkdirs();
-            File csvFile = new File(csvDir, f.getName() + ".csv");
+            File csvFile = Utils.file(csvDir, f.getName() + ".csv");
             return csvFile;
         } catch (Exception ex) {
             Logger.getLogger(Object2DOuterJPanel.class.getName()).log(Level.SEVERE, "", ex);

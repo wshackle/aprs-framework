@@ -309,8 +309,9 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
      * Remove a previously added position map.
      *
      * @param pm position map to be removed.
+     * @throws IOException 
      */
-    public void removePositionMap(PositionMap pm) {
+    public void removePositionMap(PositionMap pm) throws IOException {
         executorJPanel1.removePositionMap(pm);
     }
 

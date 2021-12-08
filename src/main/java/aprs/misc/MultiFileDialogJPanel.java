@@ -23,6 +23,7 @@
 package aprs.misc;
 
 import java.awt.Frame;
+import java.awt.HeadlessException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -166,35 +167,40 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
 
     @UIEffect
     private void jButtonBrowseSelectedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBrowseSelectedActionPerformed
-        int row = jTableFiles.getSelectedRow();
-        if (row < 0 || row > jTableFiles.getRowCount()) {
-            throw new IllegalStateException("row not selected");
-        }
-        File f = new File(Objects.toString(jTableFiles.getValueAt(row, 2))).getParentFile();
-        String ext = (String) jTableFiles.getValueAt(row, 3);
-        String type = (String) jTableFiles.getValueAt(row, 0);
-        JFileChooser chooser;
-        if (null != f) {
-            chooser = new JFileChooser(f);
-        } else {
-            chooser = new JFileChooser();
-        }
-        if (null != ext) {
-            FileNameExtensionFilter filenameExtensionFilter = new FileNameExtensionFilter(ext, ext.startsWith(".") ? ext.substring(1) : ext);
-            chooser.addChoosableFileFilter(filenameExtensionFilter);
-            chooser.setFileFilter(filenameExtensionFilter);
-        }
-        chooser.setDialogTitle("Choose Filename for " + type);
-        if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
-            DefaultTableModel model = (DefaultTableModel) jTableFiles.getModel();
-            try {
-                model.setValueAt(chooser.getSelectedFile().exists(), row, 1);
-                model.setValueAt(chooser.getSelectedFile().getCanonicalPath(), row, 2);
-            } catch (IOException ex) {
-                model.setValueAt(false, row, 1);
-                Logger.getLogger(MultiFileDialogJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            }
-        }
+        try {
+	    int row = jTableFiles.getSelectedRow();
+	    if (row < 0 || row > jTableFiles.getRowCount()) {
+	        throw new IllegalStateException("row not selected");
+	    }
+	    File f = Utils.file(Objects.toString(jTableFiles.getValueAt(row, 2))).getParentFile();
+	    String ext = (String) jTableFiles.getValueAt(row, 3);
+	    String type = (String) jTableFiles.getValueAt(row, 0);
+	    JFileChooser chooser;
+	    if (null != f) {
+	        chooser = new JFileChooser(f);
+	    } else {
+	        chooser = new JFileChooser();
+	    }
+	    if (null != ext) {
+	        FileNameExtensionFilter filenameExtensionFilter = new FileNameExtensionFilter(ext, ext.startsWith(".") ? ext.substring(1) : ext);
+	        chooser.addChoosableFileFilter(filenameExtensionFilter);
+	        chooser.setFileFilter(filenameExtensionFilter);
+	    }
+	    chooser.setDialogTitle("Choose Filename for " + type);
+	    if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
+	        DefaultTableModel model = (DefaultTableModel) jTableFiles.getModel();
+	        try {
+	            model.setValueAt(chooser.getSelectedFile().exists(), row, 1);
+	            model.setValueAt(chooser.getSelectedFile().getCanonicalPath(), row, 2);
+	        } catch (IOException ex) {
+	            model.setValueAt(false, row, 1);
+	            Logger.getLogger(MultiFileDialogJPanel.class.getName()).log(Level.SEVERE, "", ex);
+	        }
+	    }
+	} catch (Exception e) {
+	    Logger.getLogger(MultiFileDialogJPanel.class.getName()).log(Level.SEVERE, "", e);
+	    throw new RuntimeException(e);
+	}
     }//GEN-LAST:event_jButtonBrowseSelectedActionPerformed
 
     private @Nullable
@@ -203,7 +209,7 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
 
     private static boolean fileOk(String filename) {
         try {
-            return new File(filename).exists();
+            return Utils.file(filename).exists();
         } catch (Exception ignored) {
             return false;
         }

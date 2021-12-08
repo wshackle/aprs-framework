@@ -18,8 +18,8 @@ public class Custom implements Consumer<AprsSupervisorDisplayJFrame> {
             final AprsSystem motomanSys = supervisor.getSysByTask("Shared Table");
             System.out.println("fanucSys = " + fanucSys);
             System.out.println("motomanSys = " + motomanSys);
-            fanucSys.loadActionsFile(new File("example_pddl/fanuc_move_one_large_gear.txt"));
-            motomanSys.loadActionsFile(new File("example_pddl/motoman_move_one_large_gear.txt"));
+            fanucSys.loadActionsFile(File.file("example_pddl/fanuc_move_one_large_gear.txt"));
+            motomanSys.loadActionsFile(File.file("example_pddl/motoman_move_one_large_gear.txt"));
             fanucSys.connectRobot()
                     .thenCompose(x -> fanucSys.startActions("firstStep", false))
                     .thenCompose(x -> motomanSys.connectRobot())
