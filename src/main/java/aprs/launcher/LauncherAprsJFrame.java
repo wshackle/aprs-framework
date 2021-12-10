@@ -459,7 +459,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -772,6 +772,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     public static XFuture<Supervisor.MultiCycleResults> multiCycleTest(@Nullable File launchFile, int numCycles, boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
+//        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+//            supervisor.startColorTextReader();
+//            supervisor.setVisible(true);
+//        }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
 
         if (null != launchFile) {
             try {
@@ -792,17 +797,101 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
                         }).thenCompose(() -> {
-                            return Utils.supplyOnDispatchThread(() -> supervisor.multiCycleTest(startTime, numCycles, useConveyor));
-                        }).thenCompose(x -> x);
+                    return Utils.supplyOnDispatchThread(() -> {
+                        try {
+                            return supervisor.multiCycleTest(startTime, numCycles, useConveyor);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            } else {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    });
+                }).thenCompose(x -> x);
             } catch (Exception ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         } else {
-            return supervisor.multiCycleTest(startTime, numCycles, useConveyor);
+            try {
+                return supervisor.multiCycleTest(startTime, numCycles, useConveyor);
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
+            }
         }
     }
 
+    public static XFuture<Supervisor.MultiCycleResults> multiCycleTest(
+            File launchFile,
+            File sysFile,
+            File posMapsFile,
+            File teachPropsFile,
+            int numCycles,
+            boolean useConveyor) {
+        long startTime = System.currentTimeMillis();
+        Supervisor supervisor = Supervisor.createSupervisor();
+        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            supervisor.startColorTextReader();
+            supervisor.setVisible(true);
+        }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+
+        if (null != launchFile) {
+            try {
+                XFutureVoid launchFuture;
+                ProcessLauncherJFrame processLauncher;
+                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                    processLauncher = new ProcessLauncherJFrame();
+                    processLauncher.setVisible(true);
+                    launchFuture = processLauncher.run(launchFile);
+                } else {
+                    processLauncher = null;
+                    LaunchFileRunner runner = new LaunchFileRunner();
+                    launchFuture = runner.run(launchFile, -1, true);
+                }
+                return launchFuture
+                        .thenRun(() -> {
+                            if (null != processLauncher) {
+                                supervisor.setProcessLauncher(processLauncher);
+                            }
+                        }).thenCompose(() -> {
+                    return Utils.supplyOnDispatchThread(() -> {
+                        try {
+                            return supervisor.multiCycleTest(sysFile,posMapsFile,teachPropsFile,startTime, numCycles, useConveyor);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            } else {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    });
+                }).thenCompose(x -> x);
+            } catch (Exception ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            try {
+                return supervisor.multiCycleTest(sysFile,posMapsFile,teachPropsFile,startTime, numCycles, useConveyor);
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
     private static int defaultCycles = 10;
 
     private static void saveLaunchProperties() {
@@ -1032,7 +1121,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 scriptablesMap.put("launcher", scriptableOfStatic(LauncherAprsJFrame.class));
                 scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
                 scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
-                try (AprsRemoteConsoleServerSocket serverSocket
+                try ( AprsRemoteConsoleServerSocket serverSocket
                         = new AprsRemoteConsoleServerSocket(port, scriptablesMap)) {
                     serverSocket.run();
                 }

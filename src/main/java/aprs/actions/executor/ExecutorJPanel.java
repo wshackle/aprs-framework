@@ -9444,6 +9444,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	    newfilename = newfilename.substring(3);
 	    dir = dir.getParentFile();
 	}
+        if(null == dir) {
+            if(newfilename.startsWith("../") || newfilename.startsWith("..\\")) {
+                throw new NullPointerException("dir==null, propertiesFile="+propertiesFile+", key="+key+", filename="+filename+", newfilename="+newfilename);
+            } else {
+                dir = new File(System.getProperty("user.dir", "."));
+            }
+        }
 	File f = Utils.file(dir, newfilename);
 	if (!f.exists() && (Utils.file(dir, newfilename.replace('\\', File.separatorChar))).exists()) {
 	    newfilename = newfilename.replace('\\', File.separatorChar);
