@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -91,6 +92,8 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
+
 /**
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -101,7 +104,78 @@ public class Utils {
     private Utils() {
     }
 
-    public static String getAprsUserHomeDir() {
+    public static File file(String path) throws IOException {
+        try {
+            int index1 = path.indexOf('/');
+            int index2 = path.indexOf('\\');
+            if (index1 < 0 && index2 < 0) {
+                return file(new File(System.getProperty("user.dir")), path);
+            } else if (index1 == 0 || index2 == 0) {
+                return new File(swapFileSeparators(path));
+            } else if (index1 > 0 && (index2 < 0 || index1 < index2)) {
+                return file(new File(path.substring(0, index1)), path.substring(index1 + 1));
+            } else {
+                return file(new File(path.substring(0, index2)), path.substring(index2 + 1));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("path=" + path, e);
+        }
+    }
+
+    public static File file(String dirPath, String path) throws IOException {
+        return file(new File(swapFileSeparators(dirPath)), path);
+    }
+
+    public static File file(File parent, String append) throws IOException {
+        final File origParent = parent;
+        final String origAppend = append;
+        if (null == parent) {
+            throw new NullPointerException("parent");
+        }
+        if (null == append) {
+            throw new NullPointerException("append");
+        }
+        if (append.isEmpty()) {
+            throw new IllegalAddressException("append.isEmpty()");
+        }
+        if (!parent.exists()) {
+            File parentFile = parent.getParentFile();
+            if (null != parentFile && parentFile.exists() && parentFile.canWrite()) {
+                parent.mkdir();
+            }
+        }
+        if (!parent.exists()) {
+            throw new IllegalArgumentException("parent=" + parent);
+        }
+        if (!parent.isDirectory()) {
+            throw new IllegalArgumentException("!parent.isDirectory()");
+        }
+        append = swapFileSeparators(append);
+        String parentDirPrefix = ".." + File.separator;
+        while (append.startsWith(parentDirPrefix)) {
+            parent = parent.getParentFile();
+            append = append.substring(parentDirPrefix.length());
+            if (parent == null) {
+                if (append.startsWith(parentDirPrefix)) {
+                    throw new RuntimeException("parent=null : append=" + append + ", origParent=" + origParent + ", origAppend=" + origAppend);
+                } else {
+                    return new File(append);
+                }
+            }
+        }
+        return new File(parent, append);
+    }
+
+    private static String swapFileSeparators(String append) {
+        if (File.separator.equals("/")) {
+            append = append.replace('\\', '/');
+        } else if (File.separator.equals("\\")) {
+            append = append.replace('/', '\\');
+        }
+        return append;
+    }
+
+    public static String getAprsUserHomeDir() throws IOException {
         boolean isWindows = System.getProperty("os.name").startsWith("Windows");
 
         String dir;
@@ -113,7 +187,7 @@ public class Utils {
             dir = System.getProperty("linux.aprs.user.home", aprsUserHomeProperty);
         }
         if (dir != null && dir.length() > 1) {
-            File dirFile = new File(dir);
+            File dirFile = file(dir);
             if (dirFile.isDirectory() && dirFile.canWrite() && dirFile.exists()) {
                 try {
                     final String dirFileCanonicalPath = dirFile.getCanonicalPath();
@@ -150,7 +224,8 @@ public class Utils {
                 if (stackTraceElement.getClassName().startsWith("java.")) {
                     continue;
                 }
-                sb.append(stackTraceElement.getMethodName()).append('(').append(stackTraceElement.getFileName()).append(':').append(stackTraceElement.getLineNumber()).append(')');
+                sb.append(stackTraceElement.getMethodName()).append('(').append(stackTraceElement.getFileName())
+                        .append(':').append(stackTraceElement.getLineNumber()).append(')');
                 sb.append(", ");
             }
         }
@@ -243,8 +318,7 @@ public class Utils {
                 if (debug) {
                     println("PlayAlert: clip = " + clip);
                 }
-                InputStream inputStream
-                        = aClass.getResourceAsStream(resourceName);
+                InputStream inputStream = aClass.getResourceAsStream(resourceName);
                 if (null == inputStream) {
                     if (debug) {
                         println("PlayAlert: inputStream = " + inputStream);
@@ -274,7 +348,8 @@ public class Utils {
     private static final boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
 
     static public boolean arePlayAlertsEnabled() {
-        return playAlerts;
+        final boolean notHeadless = !CRCLUtils.graphicsEnvironmentIsHeadless();
+        return notHeadless && playAlerts;
     }
 
     @UIEffect
@@ -303,7 +378,6 @@ public class Utils {
             throw new RuntimeException("Utils.class.getResource(\"aprs.png\") threw " + e.getMessage(), e);
         }
     }
-    
 
     /**
      * A Runnable that may throw a checked exception.
@@ -322,7 +396,7 @@ public class Utils {
 
     static public @Nullable
     String readFirstLine(File f) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
     }
@@ -351,7 +425,8 @@ public class Utils {
         @SuppressWarnings("guieffect")
         public T get() throws InterruptedException, ExecutionException {
             if (SwingUtilities.isEventDispatchThread()) {
-                throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
+                throw new IllegalStateException(
+                        "One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
             }
             return super.get();
         }
@@ -361,7 +436,8 @@ public class Utils {
         @SuppressWarnings("guieffect")
         public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             if (SwingUtilities.isEventDispatchThread()) {
-                throw new IllegalStateException("One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
+                throw new IllegalStateException(
+                        "One can not get a swing future result on the EventDispatchThread. (getNow can still be used.)");
             }
             return super.get(timeout, unit);
         }
@@ -379,8 +455,7 @@ public class Utils {
      * @param id new id for command.
      */
     public static void setCommandID(CRCLCommandType cmd, long id) {
-        assert cmd.getCommandID() <= id :
-                createAssertErrorString(cmd, id);
+        assert cmd.getCommandID() <= id : createAssertErrorString(cmd, id);
         cmd.setCommandID(id);
     }
 
@@ -592,8 +667,7 @@ public class Utils {
         return runOnDispatchThread("runOnDispatchThread", r);
     }
 
-    private static final boolean RECORD_DISPATCH_CALLERS
-            = Boolean.getBoolean("aprs.recordDispatchCallers");
+    private static final boolean RECORD_DISPATCH_CALLERS = Boolean.getBoolean("aprs.recordDispatchCallers");
 
     private static final AtomicInteger dispathThreadExceptionCount = new AtomicInteger();
 
@@ -797,7 +871,7 @@ public class Utils {
      * @param table table to be resized
      */
     public static void autoResizeTableColWidths(@Nullable JTable table) {
-        if(null != table) {
+        if (null != table) {
             Utils.runOnDispatchThread(() -> autoResizeTableColWidthsOnDisplay(table));
         }
     }
@@ -825,7 +899,7 @@ public class Utils {
     @UIEffect
     public static void autoResizeTableColWidthsOnDisplay(@Nullable JTable table) {
 
-        if(null == table) {
+        if (null == table) {
             return;
         }
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -872,11 +946,13 @@ public class Utils {
                         if (null != comp && null != comp.getPreferredSize()) {
                             width = Math.max(width, comp.getPreferredSize().width);
                         } else {
-                            System.err.println("table has invalid renderer for cell (" + r + "," + i + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                            System.err.println("table has invalid renderer for cell (" + r + "," + i
+                                    + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException("r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount() + ",table.getColumnCount()=" + table.getColumnCount(), e);
+                    throw new RuntimeException("r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount()
+                            + ",table.getColumnCount()=" + table.getColumnCount(), e);
                 }
             }
             if (i == table.getColumnCount() - 1) {
@@ -951,18 +1027,23 @@ public class Utils {
      * @param props properties to save
      */
     public static void saveProperties(File file, Properties props) {
-        List<String> names = new ArrayList<>();
+        List<Object> names = new ArrayList<>();
         for (Object key : props.keySet()) {
-            names.add(key.toString());
+            names.add(key);
         }
-        Collections.sort(names);
+        Collections.sort(names, new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
             for (int i = 0; i < names.size(); i++) {
-                String name = names.get(i);
+                Object name = names.get(i);
                 Object value = props.get(name);
                 if (null != value) {
                     if (value instanceof String) {
@@ -1027,7 +1108,8 @@ public class Utils {
             }
             int i = colIndex;
             if (i < 0 || i > cachedTable.getColumnCount()) {
-                throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to " + cachedTable.getColumnCount() + " : " + columnIndexes);
+                throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to "
+                        + cachedTable.getColumnCount() + " : " + columnIndexes);
             }
             colNameList.add(cachedTable.getColumnName(i));
         }
@@ -1050,7 +1132,8 @@ public class Utils {
             }
             int i = colIndex;
             if (i < 0 || i > tm.getColumnCount()) {
-                throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to " + tm.getColumnCount() + " : " + columnIndexes);
+                throw new IllegalArgumentException("columnIndexes contains " + i + " outside range 0 to "
+                        + tm.getColumnCount() + " : " + columnIndexes);
             }
             colNameList.add(tm.getColumnName(i));
         }
@@ -1065,7 +1148,8 @@ public class Utils {
      * @throws IOException file could not be written
      */
     public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+                CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < cachedTable.getColumnCount(); i++) {
                 colNameList.add(cachedTable.getColumnName(i));
@@ -1079,7 +1163,8 @@ public class Utils {
                     } else if (o instanceof File) {
                         File parentFile = f.getParentFile();
                         if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                            Path rel = parentFile.toPath().toRealPath()
+                                    .relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
                             if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
                                 l.add(rel);
                             } else {
@@ -1119,7 +1204,8 @@ public class Utils {
      */
     @UIEffect
     public static void saveTableModel(File f, TableModel tm) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), CSVFormat.DEFAULT.withHeader(tableHeaders(tm)))) {
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+                CSVFormat.DEFAULT.withHeader(tableHeaders(tm)))) {
 
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < tm.getColumnCount(); i++) {
@@ -1135,7 +1221,8 @@ public class Utils {
                     if (o instanceof File) {
                         File parentFile = f.getParentFile();
                         if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath().relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                            Path rel = parentFile.toPath().toRealPath()
+                                    .relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
                             if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
                                 l.add(rel);
                             } else {
@@ -1197,13 +1284,16 @@ public class Utils {
      */
     public static <T> T[] copyOfRangeNonNullsOnly(Class<T> clzz, T[] in, int start, int end) {
         if (start > end) {
-            throw new IllegalArgumentException("start must be less than or equal to end : start = " + start + ", end = " + end + " for array =" + Arrays.toString(in));
+            throw new IllegalArgumentException("start must be less than or equal to end : start = " + start + ", end = "
+                    + end + " for array =" + Arrays.toString(in));
         }
         if (start < 0) {
-            throw new IllegalArgumentException("start must not be less 0:  start = " + start + ", end = " + end + " for array =" + Arrays.toString(in));
+            throw new IllegalArgumentException("start must not be less 0:  start = " + start + ", end = " + end
+                    + " for array =" + Arrays.toString(in));
         }
         if (end > in.length) {
-            throw new IllegalArgumentException("end must be less than size start = " + start + ", end = " + end + ", in.length=" + in.length + " for array =" + Arrays.toString(in));
+            throw new IllegalArgumentException("end must be less than size start = " + start + ", end = " + end
+                    + ", in.length=" + in.length + " for array =" + Arrays.toString(in));
         }
         int nonNulls = 0;
         for (int i = start; i < end; i++) {
@@ -1259,12 +1349,13 @@ public class Utils {
     }
 
     @UIEffect
-    public static <T> void readCsvFileToTableAndMap(boolean forceColumns, @Nullable DefaultTableModel dtm, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+    public static <T> void readCsvFileToTableAndMap(boolean forceColumns, @Nullable DefaultTableModel dtm, File f,
+            @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 
         if (null != dtm) {
             dtm.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (forceColumns && null != dtm) {
                 dtm.setRowCount(0);
@@ -1287,7 +1378,10 @@ public class Utils {
                         break;
                     }
                     if (val0.length() < 1) {
-                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec=" + rec + " in file=" + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0 + ",skipRows=" + skipRows);
+                        LOGGER.log(Level.WARNING,
+                                "skipping record with empty name field : rec=" + rec + " in file="
+                                + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0
+                                + ",skipRows=" + skipRows);
                     }
                     skipRows++;
                 }
@@ -1319,7 +1413,8 @@ public class Utils {
                                 }
                             }
                         } catch (Exception exception) {
-                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec="
+                                    + rec;
                             LOGGER.log(Level.SEVERE, msg, exception);
                             throw new RuntimeException(msg, exception);
                         }
@@ -1344,8 +1439,7 @@ public class Utils {
                     + ", nameRecord=" + nameRecord
                     + ", map=" + map
                     + ", recordToValue=" + recordToValue,
-                    ex
-            );
+                    ex);
             throw new RuntimeException(ex);
         }
     }
@@ -1354,7 +1448,8 @@ public class Utils {
         readCsvFileToTableAndMap(cachedTable, f, null, null, null);
     }
 
-    public static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff, long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
+    public static void saveTestLogEntry(File f, boolean alreadyExists, int cycle_count, long timeDiff,
+            long timeDiffPerCycle, int disableCount, long disableTime, long totalRandomDelays, int ignoredToggles) {
         final CSVFormat format;
         if (alreadyExists) {
             format = CSVFormat.DEFAULT;
@@ -1367,10 +1462,9 @@ public class Utils {
                     "disableCount",
                     "disableTime",
                     "totalRandomDelays",
-                    "ignoredToggles"
-            );
+                    "ignoredToggles");
         }
-        try (CSVPrinter printer = new CSVPrinter(
+        try ( CSVPrinter printer = new CSVPrinter(
                 new FileWriter(f, alreadyExists), format)) {
             printer.printRecord(
                     Utils.getDateTimeString(),
@@ -1380,19 +1474,19 @@ public class Utils {
                     disableCount,
                     disableTime,
                     totalRandomDelays,
-                    ignoredToggles
-            );
+                    ignoredToggles);
         } catch (IOException ex) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
     }
 
-    public static <T> void readCsvFileToTableAndMap(CachedTable cachedTable, File f, @Nullable String nameRecord, @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
+    public static <T> void readCsvFileToTableAndMap(CachedTable cachedTable, File f, @Nullable String nameRecord,
+            @Nullable Map<String, T> map, @Nullable Function<CSVRecord, T> recordToValue) {
 
         if (null != cachedTable) {
             cachedTable.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
@@ -1408,7 +1502,10 @@ public class Utils {
                         break;
                     }
                     if (val0.length() < 1) {
-                        LOGGER.log(Level.WARNING, "skipping record with empty name field : rec=" + rec + " in file=" + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0 + ",skipRows=" + skipRows);
+                        LOGGER.log(Level.WARNING,
+                                "skipping record with empty name field : rec=" + rec + " in file="
+                                + f.getCanonicalPath() + ", colName=" + colName + ", val0=" + val0
+                                + ",skipRows=" + skipRows);
                     }
                     skipRows++;
                 }
@@ -1440,7 +1537,8 @@ public class Utils {
                                 }
                             }
                         } catch (Exception exception) {
-                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec=" + rec;
+                            String msg = "colName=" + colName + ", colIndex=" + colIndex + ", val=" + val + ", rec="
+                                    + rec;
                             LOGGER.log(Level.SEVERE, msg, exception);
                             throw new RuntimeException(msg, exception);
                         }
@@ -1481,8 +1579,10 @@ public class Utils {
     public static void setToAprsLookAndFeel() {
         /* Set the preferred look and feel */
 
- /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-        * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+ /*
+	 * If Nimbus (introduced in Java SE 6) is not available, stay with the default
+	 * look and feel. For details see
+	 * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -1492,7 +1592,8 @@ public class Utils {
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+                | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(AprsSystem.class
                     .getName()).log(java.util.logging.Level.SEVERE, "", ex);
 

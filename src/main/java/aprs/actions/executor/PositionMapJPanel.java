@@ -22,24 +22,34 @@
  */
 package aprs.actions.executor;
 
-import aprs.cachedcomponents.CachedTable;
-import aprs.system.AprsSystem;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.awt.Color;
+import java.awt.Component;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JTable;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import aprs.cachedcomponents.CachedTable;
+import aprs.misc.Utils;
+import aprs.system.AprsSystem;
 
 /**
  *
@@ -54,17 +64,31 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @SuppressWarnings({"nullness","initialization"})
     @UIEffect
     public PositionMapJPanel() {
-        initComponents();
-        defaultBackgroundColor = this.getBackground();
-        defaultForegroundColor = this.getForeground();
-        Object spinnerIndexValueObject = jSpinnerIndex.getValue();
-        if (!(spinnerIndexValueObject instanceof Integer)) {
-            throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
-        }
-        spinnerIndexValue = (int) spinnerIndexValueObject;
-        positionMapFile = new File(jTextFieldErrorMapFilename.getText());
-        jTextFieldErrorMapFilename.addActionListener(e -> positionMapFile = new File(jTextFieldErrorMapFilename.getText()));
-        posMapCachedTable = new CachedTable(jTablePosMap);
+        try {
+	    initComponents();
+	    defaultBackgroundColor = this.getBackground();
+	    defaultForegroundColor = this.getForeground();
+	    Object spinnerIndexValueObject = jSpinnerIndex.getValue();
+	    if (!(spinnerIndexValueObject instanceof Integer)) {
+	        throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
+	    }
+	    spinnerIndexValue = (int) spinnerIndexValueObject;
+	    handleErrorMapFilenameAction();
+	    jTextFieldErrorMapFilename.addActionListener(e -> handleErrorMapFilenameAction());
+	    posMapCachedTable = new CachedTable(jTablePosMap);
+	} catch (Exception ex) {
+	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+	    throw new RuntimeException(ex);
+	}
+    }
+
+    private File handleErrorMapFilenameAction()  {
+	try {
+	    return positionMapFile = Utils.file(jTextFieldErrorMapFilename.getText());
+	} catch (Exception ex) {
+	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+	    throw new RuntimeException(ex);
+	}
     }
 
     private final Color defaultBackgroundColor;
@@ -255,7 +279,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMaps.get(index);
     }
 
-    private void setPositionMap(int index, PositionMap positionMap) {
+    private void setPositionMap(int index, PositionMap positionMap) throws IOException {
         reversePositionMaps = null;
         while (positionMaps.size() < index) {
             positionMaps.add(new PositionMap(Collections.emptyList()));
@@ -279,7 +303,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jLabelSize.setText("/" + positionMaps.size() + "   ");
     }
 
-    public void addPositionMap(PositionMap positionMap) {
+    public void addPositionMap(PositionMap positionMap) throws IOException {
         reversePositionMaps = null;
         for (int i = positionMaps.size() - 1; i >= 0; i--) {
             PositionMap pm = positionMaps.get(i);
@@ -301,7 +325,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
     }
 
-    public void removePositionMap(PositionMap positionMap) {
+    public void removePositionMap(PositionMap positionMap) throws IOException {
         reversePositionMaps = null;
         int spinVal = spinnerIndexValue;
         String pfn = positionMap.getFileName();
@@ -381,7 +405,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return null;
     }
 
-    public void setSelectedRowData(Object[] data) {
+    public void setSelectedRowData(Object[] data) throws IOException {
         int selectedRow = jTablePosMap.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < jTablePosMap.getRowCount()) {
             PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
@@ -396,21 +420,6 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             loadPositionMapToTable(positionMap);
             updatePositionMapInfoOnDisplay();
         }
-//        TableModel model = jTablePosMap.getModel();
-//        if (model instanceof DefaultTableModel) {
-//            DefaultTableModel dtm = (DefaultTableModel) model;
-//            Vector vector = dtm.getDataVector();
-//            if (selectedRow >= 0 && selectedRow < vector.size()) {
-//                Vector vdata = (Vector) vector.get(selectedRow);
-//                for (int i = 0; i < data.length; i++) {
-//                    vdata.set(i, data[i]);
-//                }
-//                PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
-//                positionMap.getErrmapList().set(selectedRow, PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]));
-//                reversePositionMaps = null;
-//                List<PositionMap> newReversePositionMaps = getReversePositionMaps();
-//            }
-//        }
     }
 
     @SafeEffect
@@ -430,11 +439,11 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     private final CachedTable posMapCachedTable;
 
-    private void loadPositionMapToTable(PositionMap positionMap) {
+    private void loadPositionMapToTable(PositionMap positionMap) throws IOException {
         posMapCachedTable.setRowCount(0);
         String filename = positionMap.getFileName();
         if (null != filename) {
-            positionMapFile = new File(filename);
+            positionMapFile = Utils.file(filename);
             jTextFieldErrorMapFilename.setText(filename);
         }
         for (Object a[] : positionMap.getTableIterable()) {
@@ -512,26 +521,36 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     @UIEffect
     private void jSpinnerIndexStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinnerIndexStateChanged
-        Object spinnerIndexValueObject = jSpinnerIndex.getValue();
-        if (!(spinnerIndexValueObject instanceof Integer)) {
-            throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
-        }
-        spinnerIndexValue = (int) spinnerIndexValueObject;
-        final int spinVal = (int) spinnerIndexValueObject;
-        if (getPositionMaps().size() == spinVal) {
-            setPositionMap(spinVal, PositionMap.emptyPositionMap());
-        }
-        PositionMap spinValPositionMap = getPositionMap(spinVal);
-        if (null != spinValPositionMap) {
-            loadPositionMapToTable(spinValPositionMap);
-        } else {
-            loadPositionMapToTable(PositionMap.emptyPositionMap());
-        }
+        try {
+	    Object spinnerIndexValueObject = jSpinnerIndex.getValue();
+	    if (!(spinnerIndexValueObject instanceof Integer)) {
+	        throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
+	    }
+	    spinnerIndexValue = (int) spinnerIndexValueObject;
+	    final int spinVal = (int) spinnerIndexValueObject;
+	    if (getPositionMaps().size() == spinVal) {
+	        setPositionMap(spinVal, PositionMap.emptyPositionMap());
+	    }
+	    PositionMap spinValPositionMap = getPositionMap(spinVal);
+	    if (null != spinValPositionMap) {
+	        loadPositionMapToTable(spinValPositionMap);
+	    } else {
+	        loadPositionMapToTable(PositionMap.emptyPositionMap());
+	    }
+	} catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
     }//GEN-LAST:event_jSpinnerIndexStateChanged
 
     @UIEffect
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
-        clearCurrentMap();
+        try {
+	    clearCurrentMap();
+	} catch (Exception ex) {
+	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+	    throw new RuntimeException(ex);
+	}
     }//GEN-LAST:event_jButtonClearActionPerformed
 
     @UIEffect
@@ -540,7 +559,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         getPositionMap(spinnerIndexValue).plot();
     }//GEN-LAST:event_jButtonPlotActionPerformed
 
-    public void clearCurrentMap() {
+    public void clearCurrentMap() throws IOException {
         final int spinVal = spinnerIndexValue;
         setPositionMap(spinVal, PositionMap.emptyPositionMap());
         PositionMap spinValPositionMap = getPositionMap(spinVal);
@@ -553,12 +572,17 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 
     @SafeEffect
     public void clearAllMaps() {
-        positionMaps.clear();
-        if (null != reversePositionMaps) {
-            reversePositionMaps.clear();
-        }
-        clearCurrentMap();
-        aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
+        try {
+	    positionMaps.clear();
+	    if (null != reversePositionMaps) {
+	        reversePositionMaps.clear();
+	    }
+	    clearCurrentMap();
+	    aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
+	} catch (Exception ex) {
+	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+	    throw new RuntimeException(ex);
+	}
     }
 
     @UIEffect

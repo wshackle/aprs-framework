@@ -31,7 +31,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.swing.Timer;
-import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
@@ -44,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
+import crcl.utils.CRCLUtils;
 
 /**
  *
@@ -199,7 +199,7 @@ public class LaunchFileRunner {
         XFutureVoid future1 = new XFutureVoid("timeoutFuture:line=" + line);
         long timeoutStartLocal = System.currentTimeMillis();
         this.timeoutStart = timeoutStartLocal;
-        if (GraphicsEnvironment.isHeadless()) {
+        if (CRCLUtils.graphicsEnvironmentIsHeadless()) {
             if (timeoutScheduledThreadPoolExecutor == null) {
                 timeoutScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
             }
@@ -224,7 +224,7 @@ public class LaunchFileRunner {
                             if (!ignoreTimeout.get()) {
                                 String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
                                 println(timeoutMsg);
-                                if (!GraphicsEnvironment.isHeadless()) {
+                                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
                                     MultiLineStringJPanel.showText(timeoutMsg);
                                 }
                             }
@@ -758,7 +758,7 @@ public class LaunchFileRunner {
                 Neo4JKiller.killNeo4J();
             } else if (firstWord.equals("plj-cd") || firstWord.equals("cd") || firstWord.equals("chdir")) {
                 String text = afterFirstWord(line, firstWord);
-                File dir = new File(text);
+                File dir = Utils.file(text);
                 if (!dir.exists()) {
                     if (null != stringBuilder) {
                         stringBuilder.append("Directory \"");

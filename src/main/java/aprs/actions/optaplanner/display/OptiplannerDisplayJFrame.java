@@ -80,7 +80,16 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             = Boolean.getBoolean("aprs.actions.optaplanner.display.enableRecentFilesMenu");
 
     private static final File RECENT_ACTIONS_LIST_FILE
-            = new File(Utils.getAprsUserHomeDir(), ".recentActionListsFile");
+            = initRecentActionsFile();
+
+    private static File initRecentActionsFile() {
+	try {
+	    return Utils.file(Utils.getAprsUserHomeDir(), ".recentActionListsFile");
+	} catch (Exception ex) {
+	    Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, "", ex);
+	    throw new RuntimeException(ex);
+	}
+    }
 
     private static final List<File> recentActionListFiles = new ArrayList<>();
 
@@ -97,7 +106,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 try (BufferedReader br = new BufferedReader(new FileReader(RECENT_ACTIONS_LIST_FILE))) {
                     String line = br.readLine();
                     while (line != null) {
-                        File f = new File(line);
+                        File f = Utils.file(line);
                         if (f.exists() && f.canRead()) {
                             newRecentActionListFiles.add(f);
                         }
@@ -129,7 +138,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             try {
                 readRecentActionListFile();
             } catch (IOException ex) {
-                Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, "", ex);
             } finally {
                 recentActionsFileListRead = true;
             }

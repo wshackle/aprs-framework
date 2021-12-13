@@ -24,6 +24,7 @@ package aprs.supervisor.colortextdisplay;
 
 import aprs.misc.Utils;
 import aprs.database.SocketLineReader;
+import crcl.utils.XFuture;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -162,12 +163,17 @@ public class ColorTextJPanel extends javax.swing.JPanel {
     private @Nullable
     SocketLineReader reader;
 
+    private volatile StackTraceElement startReaderTrace @Nullable [] = null;
+    
     /**
      * Start a separate thread to read a socket for messages to change colors
      * etc.
      */
     public void startReader() {
         try {
+            if(null != startReaderTrace) {
+                throw new RuntimeException("startReader already called. startReaderTrace="+XFuture.traceToString(startReaderTrace));
+            }
             SocketLineReader readerTmp 
                     = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
             this.reader = readerTmp;
@@ -191,6 +197,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
         if (null != reader) {
             reader.close();
             reader = null;
+            startReaderTrace = null;
         }
     }
 

@@ -22,7 +22,6 @@
  */
 package aprs.simview;
 
-import aprs.database.PhysicalItem;
 import java.awt.Frame;
 import java.io.File;
 import java.io.FileReader;
@@ -31,11 +30,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import aprs.database.PhysicalItem;
+import aprs.misc.Utils;
+import crcl.utils.CRCLUtils;
 
 /**
  *
@@ -168,7 +173,7 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
             return panel.cancelled;
         } catch (Exception ex) {
             panel.dialog.setVisible(false);
-            Logger.getLogger(Object2DOuterDialogPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Object2DOuterDialogPanel.class.getName()).log(Level.SEVERE, "", ex);
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
@@ -244,57 +249,62 @@ public class Object2DOuterDialogPanel extends javax.swing.JPanel {
     @SuppressWarnings("nullness")
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
         javax.swing.SwingUtilities.invokeLater(() -> {
-            JFileChooser propsFileChooser = new JFileChooser();
-            if (args.length > 0) {
-                propsFileChooser.setSelectedFile(new File(args[0]));
-            }
-            propsFileChooser.setDialogTitle("Properties File");
-            if (JFileChooser.APPROVE_OPTION != propsFileChooser.showOpenDialog(null)) {
-                return;
-            }
-            boolean single;
-            if (args.length > 1) {
-                single = Boolean.parseBoolean(args[1]);
-            } else {
-                String fileTypeInputString
-                        = (String) JOptionPane.showInputDialog(
-                                null, // parent compenent
-                                "Object 2D File Type Query", // title
-                                "Open single items set file or vision log lines file?", // nessage
-                                JOptionPane.QUESTION_MESSAGE,
-                                null, // icon
-                                new String[]{"single item set", "vision log lines"},
-                                "vision log lines");
-                single = fileTypeInputString.startsWith("single");
-            }
-            File singleItemsFile = null;
-            File visionLogLinesFile = null;
-            if (single) {
-                JFileChooser itemsFileChooser = new JFileChooser();
-                if (args.length > 2) {
-                    itemsFileChooser.setSelectedFile(new File(args[2]));
-                }
-                itemsFileChooser.setDialogTitle("Items File");
-                if (JFileChooser.APPROVE_OPTION != itemsFileChooser.showOpenDialog(null)) {
-                    return;
-                }
-                singleItemsFile = itemsFileChooser.getSelectedFile();
-            } else {
-                JFileChooser visionLogFileChooser = new JFileChooser();
-                if (args.length > 2) {
-                    visionLogFileChooser.setSelectedFile(new File(args[2]));
-                }
-                visionLogFileChooser.setDialogTitle("Vision Log File");
-                if (JFileChooser.APPROVE_OPTION != visionLogFileChooser.showOpenDialog(null)) {
-                    return;
-                }
-                visionLogLinesFile = visionLogFileChooser.getSelectedFile();
-            }
-            showObject2DDialog(null, "Outer2D Dialog test", true,
-                    propsFileChooser.getSelectedFile(),
-                    singleItemsFile,
-                    visionLogLinesFile);
-            System.exit(0);
+            try {
+		JFileChooser propsFileChooser = new JFileChooser();
+		if (args.length > 0) {
+		    propsFileChooser.setSelectedFile(Utils.file(args[0]));
+		}
+		propsFileChooser.setDialogTitle("Properties File");
+		if (JFileChooser.APPROVE_OPTION != propsFileChooser.showOpenDialog(null)) {
+		    return;
+		}
+		boolean single;
+		if (args.length > 1) {
+		    single = Boolean.parseBoolean(args[1]);
+		} else {
+		    String fileTypeInputString
+		            = (String) JOptionPane.showInputDialog(
+		                    null, // parent compenent
+		                    "Object 2D File Type Query", // title
+		                    "Open single items set file or vision log lines file?", // nessage
+		                    JOptionPane.QUESTION_MESSAGE,
+		                    null, // icon
+		                    new String[]{"single item set", "vision log lines"},
+		                    "vision log lines");
+		    single = fileTypeInputString.startsWith("single");
+		}
+		File singleItemsFile = null;
+		File visionLogLinesFile = null;
+		if (single) {
+		    JFileChooser itemsFileChooser = new JFileChooser();
+		    if (args.length > 2) {
+		        itemsFileChooser.setSelectedFile(Utils.file(args[2]));
+		    }
+		    itemsFileChooser.setDialogTitle("Items File");
+		    if (JFileChooser.APPROVE_OPTION != itemsFileChooser.showOpenDialog(null)) {
+		        return;
+		    }
+		    singleItemsFile = itemsFileChooser.getSelectedFile();
+		} else {
+		    JFileChooser visionLogFileChooser = new JFileChooser();
+		    if (args.length > 2) {
+		        visionLogFileChooser.setSelectedFile(Utils.file(args[2]));
+		    }
+		    visionLogFileChooser.setDialogTitle("Vision Log File");
+		    if (JFileChooser.APPROVE_OPTION != visionLogFileChooser.showOpenDialog(null)) {
+		        return;
+		    }
+		    visionLogLinesFile = visionLogFileChooser.getSelectedFile();
+		}
+		showObject2DDialog(null, "Outer2D Dialog test", true,
+		        propsFileChooser.getSelectedFile(),
+		        singleItemsFile,
+		        visionLogLinesFile);
+		CRCLUtils.systemExit(0);
+	    } catch (Exception ex) {
+		Logger.getLogger(Object2DOuterDialogPanel.class.getName()).log(Level.SEVERE, "", ex);
+		throw new RuntimeException(ex);
+	    }
         });
     }
 

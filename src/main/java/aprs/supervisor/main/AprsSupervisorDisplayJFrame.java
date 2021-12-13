@@ -2673,7 +2673,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public @Nullable
-    File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException {
+    File chooseFileForSaveAs(@Nullable File prevChooserFile) throws HeadlessException, IOException {
         JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to create (save as).");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
@@ -2710,7 +2710,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public @Nullable
-    File chooseSetupFileToOpen(@Nullable File prevChosenFile) throws HeadlessException {
+    File chooseSetupFileToOpen(@Nullable File prevChosenFile) throws HeadlessException, IOException {
         JFileChooser chooser = new JFileChooser(Utils.getAprsUserHomeDir());
         chooser.setDialogTitle("Choose APRS Multi Supervisor CSV to Open.");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Comma Separated Values", "csv");
@@ -3966,25 +3966,25 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (null != filesMapOut) {
                 String setup = filesMapOut.get("Setup");
                 if (null != setup) {
-                    saveSetupFile(new File(setup));
+                    saveSetupFile(Utils.file(setup));
                 }
                 String mapsFile = filesMapOut.get("PosMap");
                 if (null != mapsFile) {
-                    savePositionMaps(new File(mapsFile));
+                    savePositionMaps(Utils.file(mapsFile));
                 }
 
                 String simTeach = filesMapOut.get("SimTeach");
                 if (null != simTeach) {
-                    saveSimTeach(new File(simTeach));
+                    saveSimTeach(Utils.file(simTeach));
                 }
 
                 String teachProps = filesMapOut.get("TeachProps");
                 if (null != teachProps) {
-                    saveTeachProps(new File(teachProps));
+                    saveTeachProps(Utils.file(teachProps));
                 }
                 String sharedTools = filesMapOut.get("SharedTools");
                 if (null != sharedTools) {
-                    saveSharedTools(new File(sharedTools));
+                    saveSharedTools(Utils.file(sharedTools));
                 }
             }
         } catch (IOException ex) {
@@ -4870,7 +4870,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 String oldPath = supervisor.getConveyorTestObjectViewSimulatedFilePath();
                 String parentPath = parentFile.getCanonicalPath();
                 if (null != oldPath && oldPath.length() > 0) {
-                    File oldFile = new File(parentPath + File.separator + oldPath);
+                    File oldFile = Utils.file(parentPath + File.separator + oldPath);
                     if (oldFile.exists()) {
                         chooser.setCurrentDirectory(oldFile.getParentFile());
                         chooser.setSelectedFile(oldFile);
@@ -5041,7 +5041,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             File customDir = Paths.get(Utils.getAprsUserHomeDir(), ".aprs", "custom").toFile();
             customDir.delete();
             customDir.mkdirs();
-            File tmpFile = new File(customDir, "Custom.java");
+            File tmpFile = Utils.file(customDir, "Custom.java");
             println("tmpFile = " + tmpFile.getCanonicalPath());
             File[] files1 = {tmpFile};
 
@@ -5740,7 +5740,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private static File resolveFile(String fname, @Nullable File dir) throws IOException {
-        File fi = new File(fname);
+        File fi = Utils.file(fname);
         if (!fi.exists() && dir != null && dir.exists() && dir.isDirectory()) {
             File altFile = dir.toPath().toRealPath().resolve(fname).toFile();
             if (altFile.exists()) {

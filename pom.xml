@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.wshackle</groupId>
     <artifactId>aprs-framework</artifactId>
@@ -11,12 +13,13 @@
         <exec.mainClass>${main.class}</exec.mainClass>
         <optiplanner.version>7.47.0.Final</optiplanner.version>
         <crcl4java.version>1.9.1-SNAPSHOT</crcl4java.version>
-        <checker-framework.version>3.1.1</checker-framework.version>
+        <checker-framework.version>3.20.0</checker-framework.version>
         <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <crcl.project.groupId>com.github.wshackle</crcl.project.groupId>
+        <testcase.groups>always</testcase.groups>
     </properties>
     <name>aprs-framework</name>
     <url>
@@ -26,11 +29,11 @@
         Framework for the Agility Performance of Robotic Systems(APRS) an experimental
         research project by the National Institute of Standards and Technology(NIST).
     </description>
-    
+
     <repositories>
-        <!-- This forces the maven central url to be https: instead of http:
-        which is necessary if using an old version maven after the 
-        repository was changed in January 2020. -->
+        <!-- This forces the maven central url to be https: instead of http: which 
+        is necessary if using an old version maven after the repository was changed 
+        in January 2020. -->
         <repository>
             <snapshots>
                 <enabled>false</enabled>
@@ -39,7 +42,7 @@
             <name>Central Repository</name>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
-        
+
         <repository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -66,7 +69,7 @@
             <url>https://repo.maven.apache.org/maven2</url>
         </pluginRepository>
     </pluginRepositories>
-    
+
     <licenses>
         <license>
             <name>Public Domain(US Government Work)</name>
@@ -95,8 +98,8 @@
         <url>https://github.com/wshackle/aprs-framework</url>
         <tag>aprs-framework-1.0</tag>
     </scm>
-    
-    
+
+
     <dependencies>
         <dependency>
             <groupId>org.eclipse.collections</groupId>
@@ -104,7 +107,7 @@
             <version>9.0.0</version>
         </dependency>
 
-        
+
         <dependency>
             <!-- Needed for modbus for conveyor control. -->
             <groupId>com.ghgande</groupId>
@@ -131,7 +134,7 @@
             <artifactId>jcodec-javase</artifactId>
             <version>0.2.2</version>
         </dependency>
-        
+
         <dependency>
             <groupId>${crcl.project.groupId}</groupId>
             <artifactId>crcl4java-base</artifactId>
@@ -153,14 +156,14 @@
             <artifactId>rcslib</artifactId>
             <version>2017.07.19</version>
         </dependency>
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-      
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
@@ -171,10 +174,11 @@
             <artifactId>optaplanner-core</artifactId>
             <version>${optiplanner.version}</version>
         </dependency>
-        
 
 
-        <!-- Annotations from the Checker Framework: nullness, interning, locking, ... -->
+
+        <!-- Annotations from the Checker Framework: nullness, interning, locking, 
+        ... -->
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
@@ -182,11 +186,20 @@
             <!-- <artifactId>checker-qual7</artifactId> -->
             <version>${checker-framework.version}</version>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.9.8</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+    
+    
     <build>
-        
-        <!-- SKIP SETTING UP FILTERING LIKE THIS IF YOU USE THE GENERATE FILE MODE :-) -->
+
+        <!-- SKIP SETTING UP FILTERING LIKE THIS IF YOU USE THE GENERATE FILE MODE 
+        :-) -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -212,6 +225,36 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <groups>${testcase.groups},always</groups>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <groups>${testcase.groups},always</groups>
+                    <properties>
+                        <property>
+                            <name>junit</name>
+                            <value>false</value>
+                        </property>
+                    </properties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-help-plugin</artifactId>
@@ -259,7 +302,7 @@
                                 <requireJavaVersion>
                                     <version>[1.8.0,)</version>
                                 </requireJavaVersion>
-                            </rules>    
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
@@ -276,12 +319,15 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                     <showWarnings>true</showWarnings>
-                </configuration> 
+                </configuration>
             </plugin>
+
+            
         </plugins>
         <pluginManagement>
             <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <!--This plugin's configuration is used to store Eclipse m2e settings 
+                only. It has no influence on the Maven build itself. -->
                 <plugin>
                     <groupId>org.eclipse.m2e</groupId>
                     <artifactId>lifecycle-mapping</artifactId>
@@ -355,6 +401,59 @@
     </build>
     <profiles>
         <profile>
+            <id>SlowTests</id>
+            
+            <properties>
+                <testcase.groups>slow</testcase.groups>
+            </properties>
+        </profile>
+        <profile>
+            <id>FastTests</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <testcase.groups>fast</testcase.groups>
+            </properties>
+        </profile>
+        <profile>
+            <id>failsafe_all</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>fast,slow</groups>
+                            <properties>
+                                <property>
+                                    <name>junit</name>
+                                    <value>false</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>failsafe_fast</id>
+            <build>
+                <plugins>
+                    
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>verbose_setrelease_for_jdk9plus</id>
             <activation>
                 <jdk>[1.9,)</jdk>
@@ -370,7 +469,7 @@
                         <version>${maven-compiler-plugin.version}</version>
                         <configuration>
                             <release>${maven.compiler.release}</release>
-                        </configuration> 
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -415,7 +514,7 @@
                             </archive>
                         </configuration>
                     </plugin>
-                
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
@@ -438,11 +537,9 @@
             </build>
         </profile>
         <profile>
-            <!-- mvn -Dprofile.release  to activate this and the release,jar-with_depends profile. -->
-            <!--  <activation>
-                <property>
-                    <name>profile.release</name>
-                </property>
+            <!-- mvn -Dprofile.release to activate this and the release,jar-with_depends 
+            profile. -->
+            <!-- <activation> <property> <name>profile.release</name> </property> 
             </activation> -->
             <id>jar-with-depends</id>
             <build>
@@ -472,8 +569,8 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile> 
-        
+        </profile>
+
         <profile>
             <id>windows_with_gpg4win</id>
             <build>
@@ -545,8 +642,8 @@
                                 <phase>validate</phase>
                             </execution>
                         </executions>
-                    </plugin> 
-            
+                    </plugin>
+
                     <!-- specify manifest fields -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -554,7 +651,7 @@
                         <version>3.0.2</version>
                         <configuration>
                             <archive>
-                                <!--suppress  MavenModelInspection -->
+                                <!--suppress MavenModelInspection -->
                                 <manifestEntries>
                                     <Specification-Title>${project.name}</Specification-Title>
                                     <Specification-Version>${project.version}</Specification-Version>
@@ -600,7 +697,7 @@
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>1.6.0</version>
                         <executions>
-                    
+
                             <execution>
                                 <id>deploy_native</id>
                                 <phase>package</phase>
@@ -611,7 +708,7 @@
                                     <executable>
                                         ${java.home}/../bin/javapackager
                                     </executable>
- 
+
                                     <arguments>
                                         <argument>-deploy</argument>
                                         <argument>-native</argument>
@@ -655,120 +752,11 @@
                             </compilerArgs>
                             <showDeprecation>true</showDeprecation>
                             <verbose>true</verbose>
-                        </configuration> 
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>checkerframework_jdk8</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.checkerframework</groupId>
-                    <artifactId>checker</artifactId>
-                    <version>${checker-framework.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.checkerframework</groupId>
-                    <artifactId>jdk8</artifactId>
-                    <version>${checker-framework.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.google.errorprone</groupId>
-                    <artifactId>javac</artifactId>
-                    <version>9+181-r4173-1</version>
-                </dependency>
-            </dependencies>
-            <properties>
-                <!-- These properties will be set by the Maven Dependency plugin -->
-                <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
-                <errorProneJavac>${com.google.errorprone:javac:jar}</errorProneJavac>
-                <!-- Uncomment to use the Type Annotations compiler. -->
-                <!-- <typeAnnotationsJavac>${org.checkerframework:compiler:jar}</typeAnnotationsJavac> -->
-            </properties>
-            
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>3.0.0-M3</version>
-                        <executions>
-                            <execution>
-                                <id>enforce-java</id>
-                                <goals>
-                                    <goal>enforce</goal>
-                                </goals>
-                                <configuration>
-                                    <rules>
-                                        <requireJavaVersion>
-                                            <version>[1.8.0,1.9.0)</version>
-                                        </requireJavaVersion>
-                                    </rules>    
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <!-- For checker framework , http://types.cs.washington.edu/checker-framework/current/checker-framework-manual.html#maven -->
-                        <!-- This plugin will set properties values using dependency information -->
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <version>${maven-dependency-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>properties</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-            
-            
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>${maven-compiler-plugin.version}</version>
-                        <configuration>
-                            <fork>true</fork>
-                            <!-- If using JDK 8, add source and target. -->
-                            <source>1.8</source>
-                            <target>1.8</target>
-                            <!-- If using JDK 11, remove source and target and uncomment "release" below. -->
-                            <!-- <release>11</release> -->
-                            <compilerArguments>
-                                <Xmaxerrs>10000</Xmaxerrs>
-                                <Xmaxwarns>10000</Xmaxwarns>
-                            </compilerArguments>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>org.checkerframework</groupId>
-                                    <artifactId>checker</artifactId>
-                                    <version>${checker-framework.version}</version>
-                                </path>
-                            </annotationProcessorPaths>
-                            <annotationProcessors>
-                                <!-- Add all the checkers you want to enable here -->
-                                <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
-                            </annotationProcessors>
-                            <compilerArgs>
-                                <!-- If using JDK 8, use only the two arguments immediately below. -->
-                                <arg>-J-Xbootclasspath/p:${errorProneJavac}</arg>
-                                <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
-                                <arg>-parameters</arg>
-                                <!-- If using JDK 11, remove the two arguments above, remove the
-                                space in the one below, and uncomment it. -->
-                                <!-- <arg>-J- -add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg> -->
-
-                                <!-- Optionally, -Awarns turns type-checking errors into warnings. -->
-                                <!-- <arg>-Awarns</arg> -->
-                            </compilerArgs>
                         </configuration>
                     </plugin>
-                    
                 </plugins>
             </build>
         </profile>
-        
         <profile>
             <id>checkerframework_jdk11</id>
             <dependencies>
@@ -785,7 +773,7 @@
                 <!-- Uncomment to use the Type Annotations compiler. -->
                 <!-- <typeAnnotationsJavac>${org.checkerframework:compiler:jar}</typeAnnotationsJavac> -->
             </properties>
-            
+
             <build>
                 <plugins>
                     <plugin>
@@ -803,7 +791,7 @@
                                         <requireJavaVersion>
                                             <version>[11.0,12.0)</version>
                                         </requireJavaVersion>
-                                    </rules>    
+                                    </rules>
                                 </configuration>
                             </execution>
                         </executions>
@@ -822,18 +810,19 @@
                             </execution>
                         </executions>
                     </plugin>
-            
-            
+
+
                     <plugin>
                         <artifactId>maven-compiler-plugin</artifactId>
                         <version>${maven-compiler-plugin.version}</version>
                         <configuration>
                             <fork>false</fork>
                             <!-- If using JDK 8, add source and target. -->
-                            <!--<source>1.8</source>  -->
-                            <!--<target>1.8</target>  -->
-                            <!-- If using JDK 11, remove source and target and uncomment "release" below. -->
-                            <release>11</release> 
+                            <!--<source>1.8</source> -->
+                            <!--<target>1.8</target> -->
+                            <!-- If using JDK 11, remove source and target and uncomment "release" 
+                            below. -->
+                            <release>11</release>
                             <compilerArguments>
                                 <Xmaxerrs>10000</Xmaxerrs>
                                 <Xmaxwarns>10000</Xmaxwarns>
@@ -851,11 +840,12 @@
                             </annotationProcessors>
                             <compilerArgs>
                                 <!-- If using JDK 8, use only the two arguments immediately below. -->
-                                <!-- <arg>-J-Xbootclasspath/p:${errorProneJavac}</arg>  -->
-                                <!--  <arg>-Xbootclasspath/p:${annotatedJdk}</arg>  -->
-                                <!-- If using JDK 11, remove the two arguments above, remove the
+                                <!-- <arg>-J-Xbootclasspath/p:${errorProneJavac}</arg> -->
+                                <!-- <arg>-Xbootclasspath/p:${annotatedJdk}</arg> -->
+                                <!-- If using JDK 11, remove the two arguments above, remove the 
                                 space in the one below, and uncomment it. -->
-                                <arg>-J- -add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                                <arg>-J-
+                                    -add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
                                 <arg>-AstubDebug</arg>
                                 <arg>-parameters</arg>
                                 <!-- Optionally, -Awarns turns type-checking errors into warnings. -->
@@ -863,11 +853,11 @@
                             </compilerArgs>
                         </configuration>
                     </plugin>
-                    
+
                 </plugins>
             </build>
         </profile>
-        
+
         <profile>
             <id>jdpa_listen_not_true</id>
             <activation>
@@ -877,10 +867,10 @@
                 </property>
             </activation>
             <properties>
-                <custom.nb.exec.args>-ea -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n ${exec.args}</custom.nb.exec.args>
+                <custom.nb.exec.args>-enableassertions -agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n ${exec.args}</custom.nb.exec.args>
             </properties>
         </profile>
-        
+
         <profile>
             <id>jdpa_listen_true</id>
             <activation>
@@ -935,29 +925,15 @@
                     <version>1.0</version>
                     <optional>true</optional>
                     <scope>runtime</scope>
-                    <!-- 
-          Download jar from 
-              
-              https://www.ati-ia.com/Library/software/net_ft/ATINetFT.jar
-              
-              or from the webpage on the device itself.
-        
-              Or get the source and compile from
-        
-              https://www.ati-ia.com/Library/software/net_ft/src.zip
-              
-              
-              On Windows PC OPTIMUS install with this command(Paths will differ on other computers):
-        
-        SET  JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk-11.0.2+7
-        C:\Users\Public\Documents\Downloaded_Tools\ApacheNetbeans10.0\netbeans\java\maven\bin\mvn.cmd install:install-file -Dfile=C:\Users\Public\Documents\Downloaded_Tools\ATINetFT.jar -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar
-                  
-                  On linux run the script in this directory:
-                    getATINetFT.sh
-                    
-                  
-                    -->
-           
+                    <!-- Download jar from https://www.ati-ia.com/Library/software/net_ft/ATINetFT.jar 
+                    or from the webpage on the device itself. Or get the source and compile from 
+                    https://www.ati-ia.com/Library/software/net_ft/src.zip On Windows PC OPTIMUS 
+                    install with this command(Paths will differ on other computers): SET JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk-11.0.2+7 
+                    C:\Users\Public\Documents\Downloaded_Tools\ApacheNetbeans10.0\netbeans\java\maven\bin\mvn.cmd 
+                    install:install-file -Dfile=C:\Users\Public\Documents\Downloaded_Tools\ATINetFT.jar 
+                    -DgroupId=com.ati-ia -DartifactId=ATINetFT -Dversion=1.0 -Dpackaging=jar 
+                    On linux run the script in this directory: getATINetFT.sh -->
+
                 </dependency>
                 <dependency>
                     <groupId>com.github.wshackle</groupId>
@@ -982,7 +958,7 @@
                 </dependency>
             </dependencies>
         </profile>
-        <profile> 
+        <profile>
             <id>release</id>
             <distributionManagement>
                 <snapshotRepository>
@@ -995,7 +971,7 @@
                 </repository>
             </distributionManagement>
             <build>
-                
+
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>

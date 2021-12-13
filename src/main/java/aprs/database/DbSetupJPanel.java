@@ -22,19 +22,41 @@
  */
 package aprs.database;
 
-import aprs.cachedcomponents.CachedCheckBox;
-import aprs.cachedcomponents.CachedComboBox;
-import aprs.cachedcomponents.CachedTextField;
-import aprs.database.vision.VisionToDBJPanel;
-import aprs.misc.Utils;
-import aprs.system.AprsSystem;
-import crcl.utils.XFutureVoid;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import static aprs.misc.AprsCommonLogger.println;
+import static aprs.misc.Utils.autoResizeTableColWidths;
 
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EventObject;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFileChooser;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
@@ -44,19 +66,19 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
-import java.awt.*;
-import java.io.*;
-import java.sql.Connection;
-import java.util.List;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import static aprs.misc.AprsCommonLogger.println;
-import static aprs.misc.Utils.autoResizeTableColWidths;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import aprs.cachedcomponents.CachedCheckBox;
+import aprs.cachedcomponents.CachedComboBox;
+import aprs.cachedcomponents.CachedTextField;
+import aprs.database.vision.VisionToDBJPanel;
+import aprs.misc.Utils;
+import aprs.system.AprsSystem;
+import crcl.utils.XFutureVoid;
 
 /**
  *
@@ -548,19 +570,24 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
-        if (null == propertiesFile) {
-            throw new IllegalStateException("null == propertiesFile");
-        }
-        this.setPropertiesFile(new File(jComboBoxPropertiesFiles.getSelectedItem().toString()));
-        DbSetup newSetup;
         try {
-            newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        this.setDbSetup(newSetup);
-        this.notifyAllDbSetupListeners(null);
+	    if (null == propertiesFile) {
+	        throw new IllegalStateException("null == propertiesFile");
+	    }
+	    this.setPropertiesFile(Utils.file(jComboBoxPropertiesFiles.getSelectedItem().toString()));
+	    DbSetup newSetup;
+	    try {
+	        newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return;
+	    }
+	    this.setDbSetup(newSetup);
+	    this.notifyAllDbSetupListeners(null);
+	} catch (Exception e) {
+	    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
+	    throw new RuntimeException(e);
+	}
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
     @UIEffect
@@ -648,12 +675,22 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void jButtonLoadExternalDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadExternalDirectoryActionPerformed
-        loadExternalQueriesDirectory(new File(jTextFieldQueriesDirectory.getText()));
+        try {
+	    loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
+	} catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
     }//GEN-LAST:event_jButtonLoadExternalDirectoryActionPerformed
 
     @UIEffect
     private void jTextFieldQueriesDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldQueriesDirectoryActionPerformed
-        loadExternalQueriesDirectory(new File(jTextFieldQueriesDirectory.getText()));
+        try {
+	    loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
+	} catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
     }//GEN-LAST:event_jTextFieldQueriesDirectoryActionPerformed
 
     private XFutureVoid loadExternalQueriesDirectory(File f) {
@@ -729,7 +766,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                     localFutures.add(updateQueriesDir());
                     queriesMapReloaded = true;
                 } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
-                    localFutures.add(loadExternalQueriesDirectory(new File(queryDir)));
+                    localFutures.add(loadExternalQueriesDirectory(Utils.file(queryDir)));
                     queriesMapReloaded = true;
                 }
             }
@@ -1189,7 +1226,18 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", iOException);
         }
     }
-    private final File recentSettingsFile = new File(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
+    private final File recentSettingsFile = initRecentSettingsFile();
+
+    private File initRecentSettingsFile()  {
+	try {
+	    return Utils.file(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
+	} catch (Exception e) {
+	    // TODO Auto-generated catch block
+	    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
+	    throw new RuntimeException(e);
+	}
+    }
+    
     private @MonotonicNonNull File propertiesFile = null;
 
     private final CachedComboBox<String> propertiesFilesCachedComboBox;

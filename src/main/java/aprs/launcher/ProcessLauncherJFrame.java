@@ -212,19 +212,7 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
                     ProcessLauncherJFrame frm = new ProcessLauncherJFrame();
                     frm.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                     frm.addProcess("C:\\Users\\Public\\Documents\\APRS_AntVision_2018_03_06\\VideoTeachTable.exe");
-//                    frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-motoman\\bin\\Neo4j.bat");
                     frm.addProcess("C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\Neo4j.bat");
-//                    frm.addProcess(new File("C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc"),
-//                            "C:\\Program Files (x86)\\Java\\jre1.8.0_144\\bin\\java.exe",
-//                            "-DworkingDir=C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\..",
-//                            "-DconfigFile=conf\\neo4j-wrapper.conf",
-//                            "-DserverClasspath=lib/*.jar;system/lib/*.jar;plugins/**/*.jar;./conf*",
-//                            "-DserverMainClass=org.neo4j.server.CommunityBootstrapper",
-//                            "-jar",
-//                            "C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\windows-service-wrapper-5.jar"
-//                    );
-
-//                            "C:\\Program Files\\Java\\jdk1.8.0_92\\jre\\bin\\java.exe","-DworkingDir=C:\\Users\\shackle\\neo4j-community-2.3.11-fanuc\\bin\\..","-DconfigFile=conf\\neo4j-wrapper.conf","-DserverClasspath=lib/*.jar;system/lib/","..");
                     frm.setVisible(true);
                 } catch (Exception ex) {
                     Logger.getLogger(ProcessLauncherJFrame.class.getName()).log(Level.SEVERE, "", ex);
@@ -233,75 +221,6 @@ public class ProcessLauncherJFrame extends javax.swing.JFrame {
         });
     }
 
-//    static private class LogDisplayPanelOutputStream extends OutputStream {
-//
-//        final private LogDisplayJPanel logDisplayJPanel;
-//
-//        LogDisplayPanelOutputStream(LogDisplayJPanel logDisplayJInternalFrame, List<LineConsumer> lineConsumers) {
-//            this.logDisplayJPanel = logDisplayJInternalFrame;
-//            if (null == logDisplayJInternalFrame) {
-//                throw new IllegalArgumentException("logDisplayJInteralFrame may not be null");
-//            }
-//            this.lineConsumers = new ArrayList<>(lineConsumers);
-//        }
-//
-//        private StringBuffer sb = new StringBuffer();
-//
-//        private final List<LineConsumer> lineConsumers;
-//
-//        private void notifiyLineConsumers(String line) {
-////            println("line = " + line);
-////            println("lineConsumers = " + lineConsumers);
-//            for (int i = 0; i < lineConsumers.size(); i++) {
-//                LineConsumer consumer = lineConsumers.get(i);
-//                if (consumer.isFinished()) {
-//                    lineConsumers.remove(consumer);
-//                }
-//            }
-//            for (LineConsumer consumer : lineConsumers) {
-//                consumer.accept(line);
-//            }
-//            for (int i = 0; i < lineConsumers.size(); i++) {
-//                LineConsumer consumer = lineConsumers.get(i);
-//                if (consumer.isFinished()) {
-//                    lineConsumers.remove(consumer);
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public void write(byte[] buf, int off, int len) {
-//            if (null != logDisplayJPanel) {
-//                final String s = new String(buf, off, len);
-//                sb.append(s);
-//                if (s.contains("\n")) {
-//                    String fullString = sb.toString();
-//                    notifiyLineConsumers(fullString);
-//                    if (javax.swing.SwingUtilities.isEventDispatchThread()) {
-//                        logDisplayJPanel.appendText(fullString);
-//                    } else {
-//                        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                logDisplayJPanel.appendText(fullString);
-//                            }
-//                        });
-//                    }
-//                    sb = new StringBuffer();
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public void write(int b) throws IOException {
-//            if (b < 0 || b > 255) {
-//                throw new IOException("bad byte = " + b);
-//            }
-//            byte buf[] = new byte[1];
-//            buf[0] = (byte) b;
-//            this.write(buf, 0, 1);
-//        }
-//    }
     public List<LineConsumer> getLineConsumers() {
         return launchFileRunner.getLineConsumers();
     }

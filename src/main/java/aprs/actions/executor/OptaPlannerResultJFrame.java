@@ -282,13 +282,13 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
             if (outputPlanIndex < 0 || outputPlanIndex > jTable1.getColumnCount()) {
                 return;
             }
-            final File inputPlanFile = new File(jTable1.getValueAt(selectedRow, inputPlanIndex).toString());
+            final File inputPlanFile = Utils.file(jTable1.getValueAt(selectedRow, inputPlanIndex).toString());
             OpActionPlan inputPlan = OpActionPlan.loadActionList(inputPlanFile);
 
             OptiplannerDisplayJFrame displayJFrame = new OptiplannerDisplayJFrame();
             displayJFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             displayJFrame.setInputOpActionPlan(inputPlan);
-            final File outputPlanFile = new File(jTable1.getValueAt(selectedRow, outputPlanIndex).toString());
+            final File outputPlanFile = Utils.file(jTable1.getValueAt(selectedRow, outputPlanIndex).toString());
             OpActionPlan outputPlan = OpActionPlan.loadActionList(outputPlanFile);
             displayJFrame.setOutputOpActionPlan(outputPlan);
             displayJFrame.setVisible(true);
@@ -324,7 +324,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
             if (itemImageIndex < 0 || itemImageIndex >= jTable1.getColumnCount()) {
                 return;
             }
-            File itemImageFile = new File(jTable1.getValueAt(selectedRow, itemImageIndex).toString());
+            File itemImageFile = Utils.file(jTable1.getValueAt(selectedRow, itemImageIndex).toString());
             Desktop desktop = java.awt.Desktop.getDesktop();
             desktop.open(itemImageFile);
         } catch (IOException ex) {
@@ -352,7 +352,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
                 if (o != null) {
                     String oString = o.toString();
                     if (oString.length() > 0 && !oString.equals("null")) {
-                        object2DPropertiesFile = new File(oString);
+                        object2DPropertiesFile = Utils.file(oString);
                     }
                 }
             }
@@ -366,7 +366,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
                 if (o != null) {
                     String oString = o.toString();
                     if (oString.length() > 0 && !oString.equals("null")) {
-                        object2DLogLinesFile = new File(oString);
+                        object2DLogLinesFile = Utils.file(oString);
                     }
                 }
             }
@@ -374,7 +374,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
                 return;
             }
             final String csvFileName = jTable1.getValueAt(selectedRow, itemCsvIndex).toString();
-            File itemCsvFile = new File(csvFileName);
+            File itemCsvFile = Utils.file(csvFileName);
             Object2DOuterDialogPanel.showObject2DDialog(this, csvFileName, true, object2DPropertiesFile, itemCsvFile, object2DLogLinesFile);
         } catch (Exception ex) {
             Logger.getLogger(OptaPlannerResultJFrame.class.getName()).log(Level.SEVERE, null, ex);
@@ -394,7 +394,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
                 return;
             }
             final String actionsInFilename = jTable1.getValueAt(selectedRow, actionsInIndex).toString();
-            File actionsInFile = new File(actionsInFilename);
+            File actionsInFile = Utils.file(actionsInFilename);
             Desktop desktop = Desktop.getDesktop();
             desktop.open(actionsInFile);
         } catch (Exception ex) {
@@ -418,7 +418,7 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
                 return;
             }
             final String actionsOutFilename = jTable1.getValueAt(selectedRow, actionsOutIndex).toString();
-            File actionsOutFile = new File(actionsOutFilename);
+            File actionsOutFile = Utils.file(actionsOutFilename);
             Desktop desktop = Desktop.getDesktop();
             desktop.open(actionsOutFile);
         } catch (Exception ex) {

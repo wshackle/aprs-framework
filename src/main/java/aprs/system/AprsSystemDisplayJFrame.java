@@ -49,7 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
-import java.beans.PropertyVetoException;
+import crcl.utils.CRCLUtils;
 
 /**
  * AprsSystemInterface is the container for one robotic system in the APRS
@@ -1429,7 +1429,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
             Logger.getLogger(AprsSystemDisplayJFrame.class
                     .getName()).log(Level.SEVERE, "", ex);
         }
-        System.exit(0);
+        CRCLUtils.systemExit(0);
     }//GEN-LAST:event_jMenuItemExitActionPerformed
 
     private void startCrclClientJInternalFrame() {

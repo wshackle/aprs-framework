@@ -40,6 +40,7 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.drools.model.operators.ExcludesOperator;
 import org.eclipse.collections.api.collection.MutableCollection;
 import org.eclipse.collections.api.multimap.MutableMultimap;
 import org.eclipse.collections.impl.block.factory.Comparators;
@@ -792,7 +793,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
         final AprsSystem aprsSystem1 = requireNonNull(this.aprsSystem, "aprsSystem");
-        try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
+        try ( PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
     }
@@ -1167,7 +1168,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return actionToCrclLabels;
     }
 
-    private Map<String, String> options = Collections.emptyMap();
+    private Map<ExecutorOption.ForString, String> stringOptionsMap = Collections.emptyMap();
+    private Map<ExecutorOption.ForDouble, Double> doubleOptionsMap = Collections.emptyMap();
+    private Map<ExecutorOption.ForInt, Integer> intOptionsMap = Collections.emptyMap();
+    private Map<ExecutorOption.ForBoolean, Boolean> booleanOptionsMap = Collections.emptyMap();
 
     private final AtomicInteger lastIndex = new AtomicInteger();
     private volatile @Nullable
@@ -1245,26 +1249,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     /**
-     * Get a map of options as a name to value map.
+     * Get a map of stringOptionsMap as a name to value map.
      *
-     * @return options
+     * @return stringOptionsMap
      */
-    public Map<String, String> getOptions() {
-        if (options == null) {
+    public Map<ExecutorOption.ForString, String> getStringOptionsMap() {
+        if (stringOptionsMap == null) {
             return Collections.emptyMap();
         }
-        return Collections.unmodifiableMap(options);
+        return Collections.unmodifiableMap(stringOptionsMap);
     }
 
     private volatile boolean settingsChecked = false;
 
     /**
-     * Set the options with a name to value map.
+     * Set the stringOptionsMap with a name to value map.
      *
-     * @param options new value of options map
+     * @param options new value of stringOptionsMap map
      */
-    public synchronized void setOptions(Map<String, String> options) {
-        this.options = new HashMap<>(options);
+    public synchronized void setOptions(Map<ExecutorOption, ?> options) {
+
+        this.stringOptionsMap = ExecutorOption.ForString.map(options);
+        this.doubleOptionsMap = ExecutorOption.ForDouble.map(options);
+        this.booleanOptionsMap = ExecutorOption.ForBoolean.map(options);
         settingsChecked = false;
     }
 
@@ -1369,12 +1376,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @param actions list of PDDL Actions
      * @param startingIndex starting index into list of PDDL actions
-     * @param options options to use as commands are generated
+     * @param options stringOptionsMap to use as commands are generated
      * @param startSafeAbortRequestCount abort request count taken when higher
-     *     level action was started this method will immediately abort if the
-     *     request count is now already higher
-     * @param manualAction action was initiated manually which allows otherwise invalid starting/stopping conditions
-     * 
+     * level action was started this method will immediately abort if the
+     * request count is now already higher
+     * @param manualAction action was initiated manually which allows otherwise
+     * invalid starting/stopping conditions
+     *
      * @return list of CRCL commands
      * @throws Exception with cause: IllegalStateException if database not
      * connected SQLException if query of the database failed
@@ -1387,9 +1395,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * pose such as an invalid transform
      */
     public List<MiddleCommandType> generate(
-            List<Action> actions, 
-            int startingIndex, 
-            Map<String, String> options, 
+            List<Action> actions,
+            int startingIndex,
+            Map<ExecutorOption, ?> options,
             int startSafeAbortRequestCount,
             boolean manualAction)
             throws Exception {
@@ -1491,18 +1499,19 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * private implementation of generate
      * <p>
      * actions list of PDDL Actions startingIndex starting index into list of
-     * PDDL actions options options to use as commands are generated
-     * startSafeAbortRequestCount abort request count taken when higher level
-     * action was started this method will immediately abort if the request
-     * count is now already higher replan run optaplanner to replan provided
-     * actions origActions actions before being passed through optaplanner
-     * newItems optional list of newItems if the list has already been retreived
+     * PDDL actions stringOptionsMap stringOptionsMap to use as commands are
+     * generated startSafeAbortRequestCount abort request count taken when
+     * higher level action was started this method will immediately abort if the
+     * request count is now already higher replan run optaplanner to replan
+     * provided actions origActions actions before being passed through
+     * optaplanner newItems optional list of newItems if the list has already
+     * been retreived
      */
     class GenerateParams {
 
         List<Action> actions = Collections.emptyList();
         int startingIndex;
-        Map<String, String> options = Collections.emptyMap();
+        Map<ExecutorOption, ?> options = Collections.emptyMap();
         int startSafeAbortRequestCount;
         boolean replan;
         boolean optiplannerUsed;
@@ -1517,7 +1526,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         boolean newItemsReceived;
         final int startingVisionUpdateCount;
         boolean manualAction;
-        
+
         private GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
             int ssarc0;
@@ -1615,7 +1624,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private List<MiddleCommandType> privateGenerateNoReplan(
             final GenerateParams gparams,
             @Nullable List<PhysicalItem> physicalItemsParam) throws ConcurrentBlockProgramsException, IllegalStateException, IllegalArgumentException {
-        final Map<String, String> gparamsOptionsLocalCopy = gparams.options;
+        final Map<ExecutorOption, ?> gparamsOptionsLocalCopy = gparams.options;
         if (null == gparamsOptionsLocalCopy) {
             throw new NullPointerException("null == gparams.options");
         }
@@ -1707,9 +1716,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             if (startingIndex == 0) {
                 if (!gparams.manualAction) {
-                    if(null != currentHeldPart) {
+                    if (null != currentHeldPart) {
                         System.out.println("setCurrentHeldPartTrace = " + Utils.traceToString(setCurrentHeldPartTrace));
-                        throw new RuntimeException("currentHeldPart="+currentHeldPart);
+                        throw new RuntimeException("currentHeldPart=" + currentHeldPart);
                     }
                     setPlannedFromCurrentHeldPartTrace = setCurrentHeldPartTrace;
                     setPlannedHeldPart(currentHeldPart);
@@ -2092,14 +2101,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             addMarkerCommand(cmds, "check currentHeldPart", new CRCLCommandWrapperConsumer() {
                 @Override
                 public void accept(CRCLCommandWrapper t) {
-                    if(null != currentHeldPart && !manualActionF) {
-                        System.err.println("checkCallerTrace="+Utils.traceToString(checkCallerTrace));
-                        throw new RuntimeException("currentHeldPart="+currentHeldPart);
+                    if (null != currentHeldPart && !manualActionF) {
+                        System.err.println("checkCallerTrace=" + Utils.traceToString(checkCallerTrace));
+                        throw new RuntimeException("currentHeldPart=" + currentHeldPart);
                     }
                 }
             });
-            if(null != plannedHeldPart && !gparams.manualAction) {
-                throw new RuntimeException("plannedHeldPart="+plannedHeldPart);
+            if (null != plannedHeldPart && !gparams.manualAction) {
+                throw new RuntimeException("plannedHeldPart=" + plannedHeldPart);
             }
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);
         }
@@ -2377,7 +2386,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private List<MiddleCommandType> runOptaPlanner(
             List<Action> actions,
-            int startingIndex, Map<String, String> options1,
+            int startingIndex,
+            Map<ExecutorOption, ?> options1,
             int startSafeAbortRequestCount1,
             List<PhysicalItem> physicalItemsLocal)
             throws Exception {
@@ -2683,7 +2693,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 format = format.withHeader(OptiplannerLogEntry.HEADERS);
             }
             final List<Object> logEntryList = Arrays.asList(logEntry.toArray());
-            try (CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
+            try ( CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
                 printer.printRecord(logEntryList);
             }
             optiplannerLogEntrys.add(logEntry);
@@ -2718,7 +2728,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             File actionsInFile = aprsSystemLocal.createTempFile("actionsIn", ".txt");
             aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
             int sizeIn = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeIn++;
@@ -2931,7 +2941,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     lastOptimizeLaterPddlActions = laterPddlActions;
                     File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
                     int sizeOut = 0;
-                    try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+                    try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                         for (int i = startingIndex; i < fullReplanPddlActions.size(); i++) {
                             ps.println(fullReplanPddlActions.get(i).asPddlLine());
                             sizeOut++;
@@ -2954,7 +2964,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
             int sizeOut = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeOut++;
@@ -3991,21 +4001,24 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final Map<String, PoseType> returnPosesByName = new HashMap<>();
 
-    private @Nullable String plannedHeldPart = null;
+    private @Nullable
+    String plannedHeldPart = null;
 
     public @Nullable
     String getPlannedHeldPart() {
         return plannedHeldPart;
     }
 
-    private @Nullable String currentHeldPart = null;
+    private @Nullable
+    String currentHeldPart = null;
 
     public void setCurrentHeldPart(String part) {
         this.currentHeldPart = part;
         this.setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
     }
-    
-    public  @Nullable String getCurrentHeldPart() {
+
+    public @Nullable
+    String getCurrentHeldPart() {
         return currentHeldPart;
     }
     private double verySlowTransSpeed = 20.0;
@@ -4424,7 +4437,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private File imageLogDir() throws IOException {
         if (null == aprsSystem) {
-            File imgDir = new File(Utils.getlogFileDir(), "images");
+            File imgDir = Utils.file(Utils.getlogFileDir(), "images");
             imgDir.mkdirs();
             return imgDir;
         }
@@ -5429,16 +5442,31 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void checkSettings() {
-        if (settingsChecked || options == null) {
+        if (settingsChecked || stringOptionsMap == null) {
             return;
         }
         settingsChecked = true;
-        Map<String, String> optionsMap = this.options;
-        loadOptionsMap(optionsMap, true);
+        loadOptionsMap(this.stringOptionsMap, this.booleanOptionsMap, this.doubleOptionsMap, this.intOptionsMap, true);
     }
 
-    public void loadOptionsMap(Map<String, String> optionsMap, boolean doCheckPose) throws NumberFormatException {
-        String rpyString = optionsMap.get("rpy");
+    public void loadOptionsMap(
+            Map<ExecutorOption, ?> optionsMap,
+            boolean doCheckPose) throws NumberFormatException {
+        loadOptionsMap(
+                ExecutorOption.ForString.map(optionsMap),
+                ExecutorOption.ForBoolean.map(optionsMap),
+                ExecutorOption.ForDouble.map(optionsMap),
+                ExecutorOption.ForInt.map(optionsMap),
+                doCheckPose);
+    }
+
+    public void loadOptionsMap(
+            Map<ExecutorOption.ForString, String> stringOptionsMap,
+            Map<ExecutorOption.ForBoolean, Boolean> bOptMap,
+            Map<ExecutorOption.ForDouble, Double> dOptMap,
+            Map<ExecutorOption.ForInt, Integer> iOptMap,
+            boolean doCheckPose) throws NumberFormatException {
+        String rpyString = stringOptionsMap.get(ExecutorOption.ForString.RPY);
         if (null != rpyString && rpyString.length() > 0) {
             try {
                 String rpyFields[] = rpyString.split("[, \t]+");
@@ -5474,214 +5502,41 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             xAxis = vector(1.0, 0.0, 0.0);
             zAxis = vector(0.0, 0.0, -1.0);
         }
-        String approachZOffsetString = optionsMap.get("approachZOffset");
-        if (null != approachZOffsetString && approachZOffsetString.length() > 0) {
-            try {
-                approachZOffset = Double.parseDouble(approachZOffsetString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String approachToolChangerZOffsetString = optionsMap.get("approachToolChangerZOffset");
-        if (null != approachToolChangerZOffsetString && approachToolChangerZOffsetString.length() > 0) {
-            try {
-                approachToolChangerZOffset = Double.parseDouble(approachToolChangerZOffsetString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String placeZOffsetString = optionsMap.get("placeZOffset");
-        if (null != placeZOffsetString && placeZOffsetString.length() > 0) {
-            try {
-                placeZOffset = Double.parseDouble(placeZOffsetString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String takeZOffsetString = optionsMap.get("takeZOffset");
-        if (null != takeZOffsetString && takeZOffsetString.length() > 0) {
-            try {
-                takeZOffset = Double.parseDouble(takeZOffsetString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String joint0DiffToleranceString = optionsMap.get("joint0DiffTolerance");
-        if (null != joint0DiffToleranceString && joint0DiffToleranceString.length() > 0) {
-            try {
-                joint0DiffTolerance = Double.parseDouble(joint0DiffToleranceString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String settleDwellTimeString = optionsMap.get("settleDwellTime");
-        if (null != settleDwellTimeString && settleDwellTimeString.length() > 0) {
-            try {
-                settleDwellTime = Double.parseDouble(settleDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
 
-        String toolChangerDwellTimeString = optionsMap.get("toolChangerDwellTime");
-        if (null != toolChangerDwellTimeString && toolChangerDwellTimeString.length() > 0) {
-            try {
-                toolChangerDwellTime = Double.parseDouble(toolChangerDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
+        // doubles
+        approachZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.approachZOffset, approachZOffset);
+        approachToolChangerZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.approachToolChangerZOffset, approachToolChangerZOffset);
+        placeZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.placeZOffset, placeZOffset);
+        takeZOffset = dOptMap.getOrDefault(ExecutorOption.ForDouble.takeZOffset, takeZOffset);
+        joint0DiffTolerance = dOptMap.getOrDefault(ExecutorOption.ForDouble.joint0DiffTolerance, joint0DiffTolerance);
+        settleDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.settleDwellTime, settleDwellTime);
+        toolChangerDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.toolChangerDwellTime, toolChangerDwellTime);
+        lookDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.lookDwellTime, lookDwellTime);
+        skipLookDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.skipLookDwellTime, skipLookDwellTime);
+        afterMoveToLookForDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.afterMoveToLookForDwellTime, afterMoveToLookForDwellTime);
+        firstLookDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.firstLookDwellTime, firstLookDwellTime);
+        lastLookDwellTime = dOptMap.getOrDefault(ExecutorOption.ForDouble.lastLookDwellTime, lastLookDwellTime);
+        fastTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.fastTransSpeed, fastTransSpeed);
+        testTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.testTransSpeed, testTransSpeed);
+        rotSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.rotSpeed, rotSpeed);
+        jointSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.jointSpeed, jointSpeed);
+        jointAccel = dOptMap.getOrDefault(ExecutorOption.ForDouble.jointAccel, jointAccel);
+        kitInspectDistThreshold = dOptMap.getOrDefault(ExecutorOption.ForDouble.kitInspectDistThreshold, kitInspectDistThreshold);
+        slowTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.slowTransSpeed, slowTransSpeed);
+        verySlowTransSpeed = dOptMap.getOrDefault(ExecutorOption.ForDouble.verySlowTransSpeed, verySlowTransSpeed);
 
-        String lookDwellTimeString = optionsMap.get("lookDwellTime");
-        if (null != lookDwellTimeString && lookDwellTimeString.length() > 0) {
-            try {
-                lookDwellTime = Double.parseDouble(lookDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
+        // ints
+        takePartArgIndex = iOptMap.getOrDefault(ExecutorOption.ForInt.takePartArgIndex, takePartArgIndex);
+        placePartSlotArgIndex = iOptMap.getOrDefault(ExecutorOption.ForInt.placePartSlotArgIndex, placePartSlotArgIndex);
+        visionCycleNewDiffThreshold = iOptMap.getOrDefault(ExecutorOption.ForInt.visionCycleNewDiffThreshold, visionCycleNewDiffThreshold);
 
-        String skipLookDwellTimeString = optionsMap.get("skipLookDwellTime");
-        if (null != skipLookDwellTimeString && skipLookDwellTimeString.length() > 0) {
-            try {
-                skipLookDwellTime = Double.parseDouble(skipLookDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
+        takeSnapshots = bOptMap.getOrDefault(ExecutorOption.ForBoolean.takeSnapshots, takeSnapshots);
+        pauseInsteadOfRecover = bOptMap.getOrDefault(ExecutorOption.ForBoolean.pauseInsteadOfRecover, pauseInsteadOfRecover);
+        doInspectKit = bOptMap.getOrDefault(ExecutorOption.ForBoolean.doInspectKit, doInspectKit);
+        requireNewPoses = bOptMap.getOrDefault(ExecutorOption.ForBoolean.requireNewPoses, requireNewPoses);
+        skipMissingParts = bOptMap.getOrDefault(ExecutorOption.ForBoolean.skipMissingParts, skipMissingParts);
+        useJointMovesForToolHolderApproach = bOptMap.getOrDefault(ExecutorOption.ForBoolean.useJointMovesForToolHolderApproach, useJointMovesForToolHolderApproach);
 
-        String afterMoveToLookForDwellTimeString = optionsMap.get("afterMoveToLookForDwellTime");
-        if (null != afterMoveToLookForDwellTimeString && afterMoveToLookForDwellTimeString.length() > 0) {
-            try {
-                afterMoveToLookForDwellTime = Double.parseDouble(afterMoveToLookForDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        // afterMoveToLookForDwellTime
-        String firstLookDwellTimeString = optionsMap.get("firstLookDwellTime");
-        if (null != firstLookDwellTimeString && firstLookDwellTimeString.length() > 0) {
-            try {
-                firstLookDwellTime = Double.parseDouble(firstLookDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String lastLookDwellTimeString = optionsMap.get("lastLookDwellTime");
-        if (null != lastLookDwellTimeString && lastLookDwellTimeString.length() > 0) {
-            try {
-                lastLookDwellTime = Double.parseDouble(lastLookDwellTimeString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        String fastTransSpeedString = optionsMap.get("fastTransSpeed");
-        if (null != fastTransSpeedString && fastTransSpeedString.length() > 0) {
-            try {
-                fastTransSpeed = Double.parseDouble(fastTransSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        String testTransSpeedString = optionsMap.get("testTransSpeed");
-        if (null != testTransSpeedString && testTransSpeedString.length() > 0) {
-            try {
-                testTransSpeed = Double.parseDouble(testTransSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        String rotSpeedString = optionsMap.get("rotSpeed");
-        if (null != rotSpeedString && rotSpeedString.length() > 0) {
-            try {
-                rotSpeed = Double.parseDouble(rotSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String jointSpeedString = optionsMap.get("jointSpeed");
-        if (null != jointSpeedString && jointSpeedString.length() > 0) {
-            try {
-                jointSpeed = Double.parseDouble(jointSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String jointAccelString = optionsMap.get("jointAccel");
-        if (null != jointAccelString && jointAccelString.length() > 0) {
-            try {
-                jointAccel = Double.parseDouble(jointAccelString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        String kitInspectDistThresholdString = optionsMap.get("kitInspectDistThreshold");
-        if (null != kitInspectDistThresholdString && kitInspectDistThresholdString.length() > 0) {
-            try {
-                kitInspectDistThreshold = Double.parseDouble(kitInspectDistThresholdString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-
-        String slowTransSpeedString = optionsMap.get("slowTransSpeed");
-        if (null != slowTransSpeedString && slowTransSpeedString.length() > 0) {
-            try {
-                slowTransSpeed = Double.parseDouble(slowTransSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String verySlowTransSpeedString = optionsMap.get("verySlowTransSpeed");
-        if (null != verySlowTransSpeedString && verySlowTransSpeedString.length() > 0) {
-            try {
-                verySlowTransSpeed = Double.parseDouble(verySlowTransSpeedString);
-            } catch (NumberFormatException numberFormatException) {
-                LOGGER.log(Level.SEVERE, "", numberFormatException);
-            }
-        }
-        String takePartArgIndexString = optionsMap.get("takePartArgIndex");
-        if (null != takePartArgIndexString && takePartArgIndexString.length() > 0) {
-            int newTakePartArgIndex = Integer.parseInt(takePartArgIndexString);
-            this.setTakePartArgIndex(newTakePartArgIndex);
-        }
-        String placePartSlotArgIndexString = optionsMap.get("placePartSlotArgIndex");
-        if (null != placePartSlotArgIndexString && placePartSlotArgIndexString.length() > 0) {
-            this.placePartSlotArgIndex = Integer.parseInt(placePartSlotArgIndexString);
-        }
-        String takeSnapshotsString = optionsMap.get("takeSnapshots");
-        if (null != takeSnapshotsString && takeSnapshotsString.length() > 0) {
-            takeSnapshots = Boolean.parseBoolean(takeSnapshotsString);
-        }
-        String pauseInsteadOfRecoverString = optionsMap.get("pauseInsteadOfRecover");
-        if (null != pauseInsteadOfRecoverString && pauseInsteadOfRecoverString.length() > 0) {
-            pauseInsteadOfRecover = Boolean.parseBoolean(pauseInsteadOfRecoverString);
-        }
-        String doInspectKitString = optionsMap.get("doInspectKit");
-        if (null != doInspectKitString && doInspectKitString.length() > 0) {
-            doInspectKit = Boolean.parseBoolean(doInspectKitString);
-        }
-        String requireNewPosesString = optionsMap.get("requireNewPoses");
-        if (null != requireNewPosesString && requireNewPosesString.length() > 0) {
-            requireNewPoses = Boolean.parseBoolean(requireNewPosesString);
-        }
-        String skipMissingPartsString = optionsMap.get("skipMissingParts");
-        if (null != skipMissingPartsString && skipMissingPartsString.length() > 0) {
-            skipMissingParts = Boolean.parseBoolean(skipMissingPartsString);
-        }
-        String useJointMovesForToolHolderApproachString = optionsMap.get("useJointMovesForToolHolderApproach");
-        if (null != useJointMovesForToolHolderApproachString && useJointMovesForToolHolderApproachString.length() > 0) {
-            useJointMovesForToolHolderApproach = Boolean.parseBoolean(useJointMovesForToolHolderApproachString);
-        }
-        String visionCycleNewDiffThresholdString = optionsMap.get("visionCycleNewDiffThreshold");
-        if (null != visionCycleNewDiffThresholdString && visionCycleNewDiffThresholdString.length() > 0) {
-            visionCycleNewDiffThreshold = Integer.parseInt(visionCycleNewDiffThresholdString);
-        }
     }
 
     private void addOpenGripper(List<MiddleCommandType> cmds) {
@@ -5918,11 +5773,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     @Nullable
     PointType getLookForXYZ() {
-        if (null == options) {
+        if (null == stringOptionsMap) {
             LOGGER.warning("getLookForXYZ : null == options");
             return null;
         }
-        String lookforXYZSring = options.get("lookForXYZ");
+        String lookforXYZSring = stringOptionsMap.get(ExecutorOption.ForString.lookForXYZ);
         if (null == lookforXYZSring) {
             return null;
         }
@@ -5934,15 +5789,27 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (null == aprsSystem) {
             throw new NullPointerException("aprsSystem");
         }
-        if (!aprsSystem.isWithinLimits(cart)) {
+        try {
+            if (!aprsSystem.isWithinLimits(cart)) {
 
+                final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
+                try {
+                    takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
+                } catch (IOException ioex) {
+                     LOGGER.log(Level.SEVERE, "",ioex);
+                }
+                LOGGER.log(Level.SEVERE, "stringOptionsMap=" + stringOptionsMap + ",\n" + errmsg);
+                throw new IllegalStateException(errmsg);
+            }
+        } catch (Exception ex) {
             final String errmsg = "lookforXYZSring=" + lookforXYZSring + ", cart=" + cart + " not within limits";
             try {
                 takeSimViewSnapshot(errmsg, cart, "lookForXYZ");
-            } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+            } catch (IOException ioex) {
+                LOGGER.log(Level.SEVERE, "",ioex);
             }
-            throw new IllegalStateException(errmsg);
+            LOGGER.log(Level.SEVERE, "stringOptionsMap=" + stringOptionsMap + ",\n" + errmsg, ex);
+            throw new IllegalStateException(errmsg, ex);
         }
         return CRCLPosemath.toPointType(cart);
     }
@@ -5951,9 +5818,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     public void addMoveToLookForPosition(List<MiddleCommandType> out, boolean firstAction) {
 
-        String useLookForJointString = options.get("useJointLookFor");
-        boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.parseBoolean(useLookForJointString));
-        String lookForJointsString = options.get("lookForJoints");
+        boolean useLookForJoint = getBooleanOpt(ExecutorOption.ForBoolean.useJointLookFor,false);
+        String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
         if (null == lookForJointsString || lookForJointsString.length() < 1) {
             useLookForJoint = false;
         }
@@ -5967,7 +5833,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             PoseType pose = new PoseType();
             PointType pt = getLookForXYZ();
             if (null == pt) {
-                throw new IllegalStateException("getLookForXYZ() returned null: options.get(\"lookForXYZ\") = " + options.get("lookForXYZ"));
+                throw new IllegalStateException("getLookForXYZ() returned null: options.get(\"lookForXYZ\") = "
+                        + stringOptionsMap.get(ExecutorOption.ForString.lookForXYZ));
             }
             pose.setPoint(pt);
             pose.setXAxis(xAxis);
@@ -6003,7 +5870,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private void checkJointToleranceSetting(List<MiddleCommandType> out) {
         if (!jointTolerancesChecked) {
             if (null == jointPositionsTolerancesType) {
-                String jointTolerancesString = options.get("jointTolerances");
+                String jointTolerancesString = stringOptionsMap.get(ExecutorOption.ForString.jointTolerances);
                 if (null != jointTolerancesString) {
                     double jointTolerancesVals[] = jointValStringToArray(jointTolerancesString);
                     JointPositionsTolerancesType newJointTolerances = new JointPositionsTolerancesType();
@@ -6051,32 +5918,38 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.endPoseTolerance = endPoseTolerance;
     }
 
+    private String getStringOpt(ExecutorOption.ForString opt, String def) {
+        return stringOptionsMap.getOrDefault(opt, def);
+    }
+
+    private Double getDoubleOpt(ExecutorOption.ForDouble opt, double def) {
+        return doubleOptionsMap.getOrDefault(opt, def);
+    }
+
+    private Boolean getBooleanOpt(ExecutorOption.ForBoolean opt, boolean def) {
+        return booleanOptionsMap.getOrDefault(opt, def);
+    }
+
     private void checkEndPoseToleranceSetting(List<MiddleCommandType> out) {
         if (!endPoseTolerancesChecked) {
             if (null == endPoseTolerance) {
-                String useEndPoseToleranceString = options.get("useEndPoseTolerance");
-                boolean useEndPoseTolerance = Boolean.parseBoolean(useEndPoseToleranceString);
+                boolean useEndPoseTolerance = booleanOptionsMap.getOrDefault(ExecutorOption.ForBoolean.useEndPoseTolerance, false);
                 if (useEndPoseTolerance) {
                     PoseToleranceType newEndPoseTolerance = new PoseToleranceType();
-                    String endPoseXPointToleranceString = options.getOrDefault("endPoseXPointTolerance", "10.0");
-                    double endPoseXPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    double endPoseXPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseXPointTolerance, 10.0);
                     newEndPoseTolerance.setXPointTolerance(endPoseXPointToleranceValue);
 
-                    String endPoseYPointToleranceString = options.getOrDefault("endPoseYPointTolerance", "10.0");
-                    double endPoseYPointToleranceValue = Double.parseDouble(endPoseXPointToleranceString);
+                    double endPoseYPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseYPointTolerance, 10.0);
                     newEndPoseTolerance.setYPointTolerance(endPoseYPointToleranceValue);
 
-                    String endPoseZPointToleranceString = options.getOrDefault("endPoseZPointTolerance", "10.0");
-                    double endPoseZPointToleranceValue = Double.parseDouble(endPoseZPointToleranceString);
+                    double endPoseZPointToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseZPointTolerance, 10.0);;
                     newEndPoseTolerance.setZPointTolerance(endPoseZPointToleranceValue);
 
-                    String endPoseXAxisToleranceString = options.getOrDefault("endPoseXAxisTolerance", "10.0");
-                    double endPoseXAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
-                    newEndPoseTolerance.setXAxisTolerance(endPoseZPointToleranceValue);
+                    double endPoseXAxisToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseXAxisTolerance, 10.0);
+                    newEndPoseTolerance.setXAxisTolerance(endPoseXAxisToleranceValue);
 
-                    String endPoseYAxisToleranceString = options.getOrDefault("endPoseZAxisTolerance", "10.0");
-                    double endPoseYAxisToleranceValue = Double.parseDouble(endPoseXAxisToleranceString);
-                    newEndPoseTolerance.setZAxisTolerance(endPoseZPointToleranceValue);
+                    double endPoseZAxisToleranceValue = getDoubleOpt(ExecutorOption.ForDouble.endPoseZAxisTolerance, 10.0);
+                    newEndPoseTolerance.setZAxisTolerance(endPoseZAxisToleranceValue);
 
                     final SetEndPoseToleranceType setEndPoseToleranceCommand
                             = new SetEndPoseToleranceType();
@@ -6179,7 +6052,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     atanXYJoint0Map.put(atanxy, jointVals[0]);
                 }
             }
-            String lookForJointsString = options.get("lookForJoints");
+            String lookForJointsString = stringOptionsMap.get(ExecutorOption.ForString.lookForJoints);
             if (null != lookForJointsString) {
                 double jointVals[] = jointValStringToArray(lookForJointsString);
                 PointType pt = getLookForXYZ();
@@ -6366,16 +6239,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private boolean checkAtLookForPosition() {
         assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
         checkSettings();
-        String useLookForJointString = options.get("useJointLookFor");
-        boolean useLookForJoint = (null != useLookForJointString && useLookForJointString.length() > 0 && Boolean.parseBoolean(useLookForJointString));
-        String lookForJointsString = options.get("lookForJoints");
+        boolean useLookForJoint = booleanOptionsMap.getOrDefault(ExecutorOption.ForBoolean.useJointLookFor, false);
+        String lookForJointsString = stringOptionsMap.get(ExecutorOption.ForString.lookForJoints);
         if (null == lookForJointsString || lookForJointsString.length() < 1) {
             useLookForJoint = false;
         }
         if (!useLookForJoint) {
             PointType lookForPoint = getLookForXYZ();
             if (null == lookForPoint) {
-                throw new IllegalStateException("getLookForXYZ() returned null: options.get(\"lookForXYZ\") = " + options.get("lookForXYZ"));
+                throw new IllegalStateException("getLookForXYZ() returned null: options.get(\"lookForXYZ\") = " + stringOptionsMap.get(ExecutorOption.ForString.lookForXYZ));
             }
             PointType currentPoint = aprsSystem.getCurrentPosePoint();
             if (null == currentPoint) {
@@ -6597,28 +6469,12 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         addSlowLimitedMoveUpFromCurrent(out);
         String jointValsString = toolChangerJointValsMap.get(toolChangerPosName);
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
-            String lookForJointsString = options.get("lookForJoints");
-            double jointVals[] = jointValStringToArray(jointValsString);
-//            double joint0Diff = expectedJoint0Val - jointVals[0];
-//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
-//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
-//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
-//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
-//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
-//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
-//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-//                    addPrepJointMove(lookForJointVals, out);
-//                    lookForJointVals[0] = jointVals[0];
-//                    addMessageCommand(out,
-//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
-//
-//                }
-//            }
-//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+            String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
             if (null != lookForJointsString && lookForJointsString.length() > 0) {
                 double lookForJointVals[] = jointValStringToArray(lookForJointsString);
                 addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
             }
+            double jointVals[] = jointValStringToArray(jointValsString);
             addJointMove(out, jointVals, 1.0, 0, 1);
             addJointMove(out, jointVals, 1.0, 1, jointVals.length);
         } else {
@@ -6936,30 +6792,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         checkSettings();
         checkDbReady();
-        String lookForJointsString = options.get("lookForJoints");
-        double jointVals[] = jointValStringToArray(jointValsString);
-//            double joint0Diff = expectedJoint0Val - jointVals[0];
-//            logDebug("addGotoToolChangerApproachByName: jointVals[0] = " + jointVals[0]);
-//            logDebug("addGotoToolChangerApproachByName: expectedJoint0Val = " + expectedJoint0Val);
-//            logDebug("addGotoToolChangerApproachByName: diff0 = " + joint0Diff);
-//            logDebug("addGotoToolChangerApproachByName: joint0DiffTolerance = " + joint0DiffTolerance);
-//            if (!Double.isFinite(expectedJoint0Val) || Math.abs(joint0Diff) > joint0DiffTolerance) {
-//                if (null != lookForJointsString && lookForJointsString.length() > 0) {
-//                    double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-//                    addPrepJointMove(lookForJointVals, out);
-//                    lookForJointVals[0] = jointVals[0];
-//                    addMessageCommand(out,
-//                            "Goto Tool Changer Approach By Name " + toolChangerPosName + " addJointMove(lookForJointVals)");
-//
-//                }
-//            }
-//            addJointMove(out, lookForJointVals, 1.0, 0, 1);
+        
+        String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints,"");
         if (null != lookForJointsString && lookForJointsString.length() > 0) {
             double lookForJointVals[] = jointValStringToArray(lookForJointsString);
             checkJointToleranceSetting(out);
 //            addPrepJointMove(lookForJointVals, out);
             addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
         }
+        double jointVals[] = jointValStringToArray(jointValsString);
         addJointMove(out, jointVals, 1.0, 0, 1);
         addJointMove(out, jointVals, 1.0, 1, jointVals.length);
     }
@@ -7043,7 +6884,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
 
-        try (WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
+        try ( WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -7577,10 +7418,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addMessageCommand(List<MiddleCommandType> cmds, String message) {
-        String useMessageCommandsString = options.get("useMessageCommands");
-        useMessageCommands = (null != useMessageCommandsString
-                && useMessageCommandsString.length() > 0
-                && Boolean.parseBoolean(useMessageCommandsString));
+        useMessageCommands = getBooleanOpt(ExecutorOption.ForBoolean.useMessageCommands, false);
 
         if (useMessageCommands) {
             MessageType messageCmd = new MessageType();

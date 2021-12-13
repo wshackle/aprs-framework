@@ -613,15 +613,15 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final String taskname;
 
     private ResultSet getReultsSet(java.sql.PreparedStatement preparedStatement, String simQuery, String name) throws SQLException, IOException {
-        File homeDir = new File(System.getProperty("user.home"));
-        File queriesDir = new File(homeDir, "aprsQueries");
-        File sysQueriesDir = new File(queriesDir, taskname);
-        File dir = new File(sysQueriesDir, name.toString());
+        File homeDir = Utils.file(System.getProperty("user.home"));
+        File queriesDir = Utils.file(homeDir, "aprsQueries");
+        File sysQueriesDir = Utils.file(queriesDir, taskname);
+        File dir = Utils.file(sysQueriesDir, name.toString());
         //noinspection ResultOfMethodCallIgnored
         dir.mkdirs();
         File resultsFile = File.createTempFile("results", ".csv", dir);
         System.out.println("resultsFile = " + resultsFile);
-        File queryFile = new File(dir, "query" + resultsFile.getName().substring(7, resultsFile.getName().length() - 4) + ".txt");
+        File queryFile = Utils.file(dir, "query" + resultsFile.getName().substring(7, resultsFile.getName().length() - 4) + ".txt");
         try (PrintWriter pw = new PrintWriter(queryFile)) {
             pw.println(simQuery);
         }
@@ -1497,7 +1497,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                 ps.close();
             }
             if (enableDatabaseUpdates) {
-                File dbQueriesDir = new File(Utils.getlogFileDir(), "dbQueries");
+                File dbQueriesDir = Utils.file(Utils.getlogFileDir(), "dbQueries");
                 dbQueriesDir.mkdirs();
                 PrintStream ps = new PrintStream(new FileOutputStream(Utils.createTempFile("db_" + dbsetup.getPort(), "_log.txt", dbQueriesDir)));
                 for (Entry<String, List<Slot>> offsetEntry : offsetsMap.entrySet()) {

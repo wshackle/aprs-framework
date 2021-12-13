@@ -41,6 +41,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.reflections.scanners.MethodAnnotationsScanner;
 
 /**
  *
@@ -50,14 +51,14 @@ public class Scriptable<T> {
 
     public static <T> Scriptable<T> scriptableOf(Class<T> tclzz, T t) {
         if (t != null) {
-            return new Scriptable(tclzz, t, getDefaultActionsMap(tclzz), getDefaultFunctionsMap(tclzz));
+            return new Scriptable<>(tclzz, t, getDefaultActionsMap(tclzz), getDefaultFunctionsMap(tclzz));
         } else {
             return scriptableOfStatic(tclzz);
         }
     }
 
     public static <T> Scriptable<T> scriptableOfStatic(Class<T> tclzz1) {
-        return new Scriptable(tclzz1, null, getDefaultStaticActionsMap(tclzz1), getDefaultStaticFunctionsMap(tclzz1));
+        return new Scriptable<>(tclzz1, null, getDefaultStaticActionsMap(tclzz1), getDefaultStaticFunctionsMap(tclzz1));
     }
 
     public static <T> Map<String, ScriptableAction<T>> getDefaultStaticActionsMap(final Class<T> aClass) {
@@ -144,15 +145,15 @@ public class Scriptable<T> {
             map.put(method.getName(), new ScriptableFunction<T>() {
 
                 @Override
-                @SuppressWarnings("nullness")
+                @SuppressWarnings({"nullness","rawtypes", "unchecked"})
                 public @Nullable
-                Scriptable applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
+                Scriptable<?> applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
                     Object o = method.invoke(t, args);
                     if (o == null) {
                         return null;
                     }
-                    final Class<? extends Object> oClass1 = o.getClass();
-                    return new Scriptable(oClass1, o, getDefaultActionsMap(oClass1), getDefaultFunctionsMap(oClass1));
+                    final Class<?> oClass1 = o.getClass();
+                    return new Scriptable(method.getReturnType(), o, getDefaultActionsMap(oClass1), getDefaultFunctionsMap(oClass1));
                 }
 
                 @Override
@@ -190,7 +191,7 @@ public class Scriptable<T> {
             map.put(method.getName() + suffix, new ScriptableFunction<T>() {
 
                 @Override
-                @SuppressWarnings("nullness")
+                @SuppressWarnings({"nullness","rawtypes", "unchecked"})
                 public @Nullable
                 Scriptable<?> applyFunction(T t, Object[] args, PrintWriter pw) throws Exception {
                     Object o = method.invoke(t, args);
@@ -198,7 +199,7 @@ public class Scriptable<T> {
                         return null;
                     }
                     final Class<? extends Object> oClass = o.getClass();
-                    return new Scriptable(oClass, o, getDefaultActionsMap(oClass), getDefaultFunctionsMap(oClass));
+                    return new Scriptable(method.getReturnType(), o, getDefaultActionsMap(oClass), getDefaultFunctionsMap(oClass));
                 }
 
                 @Override
@@ -386,7 +387,7 @@ public class Scriptable<T> {
                     System.out.println("out[i] = " + out[i]);
                     continue;
                 }
-                Constructor constructor = findConstructor(argType, new Class[]{String.class});
+                Constructor<?> constructor = findConstructor(argType, new Class[]{String.class});
                 System.out.println("constructor = " + constructor);
                 if (null != constructor) {
                     out[i] = constructor.newInstance(stringArg);
@@ -459,10 +460,10 @@ public class Scriptable<T> {
 
     public String toVerboseString() {
         final Set<String> actionsKeySet = actions.keySet();
-        List<String> actionsNameList = new ArrayList(actionsKeySet);
+        List<String> actionsNameList = new ArrayList<>(actionsKeySet);
         Collections.sort(actionsNameList);
         final Set<String> functionsKeySet = functions.keySet();
-        List<String> functionsNameList = new ArrayList(functionsKeySet);
+        List<String> functionsNameList = new ArrayList<>(functionsKeySet);
         Collections.sort(functionsNameList);
         StringBuilder sb = new StringBuilder();
         sb
