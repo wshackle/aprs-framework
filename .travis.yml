@@ -1,0 +1,21 @@
+language: java
+
+
+jdk:
+  - openjdk8
+  - openjdk11
+  - openjdk17
+
+script:
+  - lsb_release -a
+  - uname -a
+  - java -version
+  - mvn -version
+  - mvn -U -PSlowTests verify
+  
+notifications:
+  email:
+    - william.shackleford@nist.gov
+    - wshackle@gmail.com
+
+
