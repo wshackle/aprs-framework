@@ -4963,17 +4963,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //    }
     private volatile boolean getPoseFailedOnce = false;
 
-//    private List<String> getAllPartsInKt(String name) throws SQLException, IOException {
-//
-//        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
-//
-//        if (null == qs) {
-//            throw new IllegalStateException("QuerySet for database not initialized.(null)");
-//        }
-//        List<String> partsInKtList = new ArrayList<>(qs.getAllPartsInKt(name));
-//
-//        return partsInKtList;
-//    }
+
     private volatile @Nullable
     PoseType lastTestApproachPose = null;
 
