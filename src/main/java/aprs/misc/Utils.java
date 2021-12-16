@@ -113,9 +113,9 @@ public class Utils {
             } else if (index1 == 0 || index2 == 0) {
                 return new File(swapFileSeparators(path));
             } else if (index1 > 0 && (index2 < 0 || index1 < index2)) {
-                return file(new File(path.substring(0, index1)), path.substring(index1 + 1));
+                return file(new File(path.substring(0, index1+1)), path.substring(index1 + 1));
             } else {
-                return file(new File(path.substring(0, index2)), path.substring(index2 + 1));
+                return file(new File(path.substring(0, index2+1)), path.substring(index2 + 1));
             }
         } catch (Exception e) {
             throw new RuntimeException("path=" + path, e);

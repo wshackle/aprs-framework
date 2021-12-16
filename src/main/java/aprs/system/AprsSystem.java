@@ -3394,25 +3394,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 			Logger.getLogger(CRCLServerSocket.class
 				.getName()).log(Level.SEVERE, null, ex);
 		    }
-		    // cd C:\Users\shackle\Documents\NetBeansProjects\aprs-framework;
-		    // JAVA_HOME=C:\\Users\\Public\\Documents\\Downloaded_Tools\\AdoptOpenJDK\\jdk-11.0.2+7
-		    // cmd /c
-		    // "\"C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven\\bin\\mvn.cmd\"
-		    // -Dproject.basedir=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework
-		    // -Dexec.args=\"-XX:+HeapDumpOnOutOfMemoryError
-		    // -XX:HeapDumpPath=aprs_heapdump.bin
-		    // -Dlinux.crcl.user.home=linux_netbeans_run_user_home
-		    // -Dlinux.aprs.user.home=linux_netbeans_run_user_home
-		    // -Dcrcl.user.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home
-		    // -Daprs.user.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home
-		    // -Duser.home=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_user_home
-		    // -Dcrcl.schemaChangeTime=-1 -Dcrcl.resourceChangeTime=-1 -classpath %classpath
-		    // aprs.launcher.LauncherAprsJFrame\"
-		    // -Dexec.executable=C:\\Users\\Public\\Documents\\Downloaded_Tools\\AdoptOpenJDK\\jdk-11.0.2+7\\bin\\java.exe
-		    // -Dexec.workingdir=
-		    // -Dmaven.ext.class.path=C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven-nblib\\netbeans-eventspy.jar;C:\\Users\\shackle\\Documents\\NetBeans-dev-dev-8a79dae337616d662b21f63284e03ec9954355ed-release\\netbeans\\java\\maven-nblib\\netbeans-cos.jar
-		    // -Dfile.encoding=UTF-8 -Padd_run_deps
-		    // org.codehaus.mojo:exec-maven-plugin:1.2.1:exec"
 		    final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
 		    setTitleErrorString(errMsg);
 		    throw new RuntimeException(errMsg);
