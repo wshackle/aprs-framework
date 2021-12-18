@@ -33,8 +33,6 @@ import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART_BY_TYPE_AND_POSITION;
 import static aprs.actions.executor.ActionType.UNINITIALIZED;
 import static aprs.actions.optaplanner.actionmodel.OpAction.allowedPartTypes;
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
