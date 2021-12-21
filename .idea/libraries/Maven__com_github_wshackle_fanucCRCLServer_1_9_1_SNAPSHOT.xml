@@ -1,0 +1,34 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.wshackle:fanucCRCLServer:1.9.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.9.1-SNAPSHOT/fanucCRCLServer-1.9.1-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.9.1-SNAPSHOT/fanucCRCLServer-1.9.1-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/fanucCRCLServer/1.9.1-SNAPSHOT/fanucCRCLServer-1.9.1-SNAPSHOT-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/ATINetFT_proxy/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/target/generated-sources/xjc" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-commons-math/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-commons-math/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCRCLServer/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCom4JBase/altsrc/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCom4JBase/target/generated-sources/com4j/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucStatusMonitor/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-motoman/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/target/generated-sources/copier" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/examples/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/src/test/java" />
+      <root url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/target/generated-sources/plugin" />
+    </SOURCES>
+  </library>
+</component>

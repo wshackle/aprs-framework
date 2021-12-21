@@ -169,6 +169,7 @@ import crcl.utils.outer.interfaces.ProgramRunData;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
+import java.util.EnumMap;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -2753,7 +2754,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2776,7 +2777,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
+        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
                 CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
@@ -2880,7 +2881,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             if (null != programString) {
                 programFile = Utils.createTempFile("CRCLProgram", ".xml");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
             }
@@ -4644,7 +4645,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private void loadCustomWindowsFile() {
         final File fileToLoad = customWindowsFile;
         if (null != fileToLoad) {
-            try (BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
+            try ( BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
                 String line = br.readLine();
                 while (line != null) {
                     line = line.trim();
@@ -4666,7 +4667,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
-        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(winFile))) {
             props.load(br);
         }
         String classnameString = props.getProperty("classname");
@@ -7227,7 +7228,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
-        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+        try ( PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -8354,7 +8355,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
-                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                try ( PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
@@ -8818,27 +8819,22 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private volatile boolean runningPrivateStartActions = false;
 
-
     private synchronized XFuture<Boolean> privateStartActions(
             String comment,
             @Nullable List<Action> actionsToLoad,
             ExecutorOption.WithValue<?, ?> @Nullable [] options) {
         StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
-        final boolean newReverseFlag;
-        if (null != options) {
-            Map<ExecutorOption.ForBoolean, Boolean> map = ExecutorOption.ForBoolean.map(options);
-            newReverseFlag = (boolean) map.getOrDefault(ExecutorOption.ForBoolean.REVERSE, false);
-        } else {
-            newReverseFlag = false;
-        }
+
         final ExecutorJInternalFrame pddlExecutorJInternalFrame1Final = executorJInternalFrame1;
         if (null == pddlExecutorJInternalFrame1Final) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+
         final CrclSwingClientJInternalFrame crclClientJInternalFrameFinal = crclClientJInternalFrame;
         if (null == crclClientJInternalFrameFinal) {
             throw new IllegalStateException("CRCL Client View must be open to use this function.");
         }
+
         String executorReadyString = pddlExecutorJInternalFrame1Final.readyForNewActionsListInfoString();
         if (!pddlExecutorJInternalFrame1Final.readyForNewActionsList()) {
             logEvent("executorReadyString", executorReadyString);
@@ -8848,6 +8844,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (!isConnected()) {
             throw new IllegalStateException("!isConnected() : robotName=" + this.robotName + ",host="
                     + crclClientJInternalFrameFinal.getHost() + ", port=" + crclClientJInternalFrameFinal.getPort());
+        }
+        final boolean newReverseFlag;
+        if (null != options) {
+            Map<ExecutorOption.ForBoolean, Boolean> map = ExecutorOption.ForBoolean.map(options);
+            newReverseFlag = (boolean) map.getOrDefault(ExecutorOption.ForBoolean.REVERSE, false);
+        } else {
+            newReverseFlag = false;
         }
         runningPrivateStartActions = true;
         privateStartActionsTrace = trace1;
@@ -8883,9 +8886,27 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 .thenCompose("startActions.pauseCheck.comment=" + comment + ", startRunNumber" + startRunNumber,
                         x -> waitForPause())
                 .thenApplyAsync(taskName, x -> {
+                    final Map<ExecutorOption, ?> origOptionsMap;
+                    final Map<ExecutorOption, Object> filteredOrigOptionsMap;
+                    if (null != options) {
+                        origOptionsMap = pddlExecutorJInternalFrame1Final.getOptions();
+                        filteredOrigOptionsMap = new HashMap<ExecutorOption, Object>();
+                        for (ExecutorOption.WithValue<?, ?> opt : options) {
+                            ExecutorOption key = opt.getKey();
+                            Object value = ((Object) opt.getValue());
+                            filteredOrigOptionsMap.put(key, value);
+                        }
+                        pddlExecutorJInternalFrame1Final.setOptions(options);
+                    } else {
+                        origOptionsMap = null;
+                        filteredOrigOptionsMap = null;
+                    }
                     try {
-                        return startActionsInternal(comment, startRunNumber, startAbortCount, newReverseFlag,
+
+                        boolean startActionsInternalRet = startActionsInternal(comment, startRunNumber, startAbortCount, newReverseFlag,
                                 reloadSimFiles, actionsToLoad);
+                        
+                        return startActionsInternalRet;
                     } catch (Exception exception) {
                         Logger.getLogger(AprsSystem.class
                                 .getName()).log(Level.SEVERE, "", exception);
@@ -8897,6 +8918,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                             throw (RuntimeException) exception;
                         } else {
                             throw new RuntimeException(exception);
+                        }
+                    } finally {
+                        if (null != filteredOrigOptionsMap) {
+                            pddlExecutorJInternalFrame1Final.setOptions(filteredOrigOptionsMap);
                         }
                     }
                 }, runProgramService)
@@ -8914,6 +8939,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         if (!ready) {
                             logEvent("newExecutorReadyString", newExecutorReadyString);
                         }
+
                         runningPrivateStartActions = false;
                     }
                 }, runProgramService);
@@ -8949,7 +8975,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             updateRobotLimits();
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                     for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
@@ -9815,7 +9841,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-        try (FileReader fr = new FileReader(propertiesFile)) {
+        try ( FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         try {
@@ -10732,7 +10758,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 File tmpPerfFile = Utils.createTempFile(task + "crcLClientPerfInfo", ".txt");
                 System.out.println("Saving Perf info for " + task + "  to " + tmpPerfFile);
-                try (PrintStream ps = new PrintStream(
+                try ( PrintStream ps = new PrintStream(
                         new FileOutputStream(tmpPerfFile))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
@@ -10909,7 +10935,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -10925,7 +10951,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {

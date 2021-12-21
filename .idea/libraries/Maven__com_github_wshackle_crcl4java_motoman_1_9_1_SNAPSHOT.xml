@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.wshackle:crcl4java-motoman:1.9.1-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-motoman/1.9.1-SNAPSHOT/crcl4java-motoman-1.9.1-20211215.152038-15.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-motoman/1.9.1-SNAPSHOT/crcl4java-motoman-1.9.1-20211215.152038-15-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/wshackle/crcl4java-motoman/1.9.1-SNAPSHOT/crcl4java-motoman-1.9.1-20211215.152038-15-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

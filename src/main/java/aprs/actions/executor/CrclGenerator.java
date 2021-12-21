@@ -1380,7 +1380,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param startSafeAbortRequestCount abort request count taken when higher
      * level action was started this method will immediately abort if the
      * request count is now already higher
-     * @param manualAction action was initiated manually which allows otherwise
+     * @param skipCheckHeldPart action was initiated manually which allows otherwise
      * invalid starting/stopping conditions
      *
      * @return list of CRCL commands
@@ -1399,7 +1399,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             int startingIndex,
             Map<ExecutorOption, ?> options,
             int startSafeAbortRequestCount,
-            boolean manualAction)
+            boolean skipCheckHeldPart)
             throws Exception {
         final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem, "aprsSystem");
         GenerateParams gparams = new GenerateParams();
@@ -1408,6 +1408,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         gparams.options = options;
         gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
         gparams.replan = !localAprsSystem.isCorrectionMode() && !lastProgramAborted;
+        gparams.skipCheckHeldPart = skipCheckHeldPart || getBooleanOpt(ExecutorOption.ForBoolean.skipCheckHeldPart, false);
         generateCount.incrementAndGet();
         if (gparams.startingIndex == 0) {
             generateFromZeroCount.incrementAndGet();
@@ -1525,7 +1526,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
         boolean newItemsReceived;
         final int startingVisionUpdateCount;
-        boolean manualAction;
+        boolean skipCheckHeldPart;
 
         private GenerateParams() {
             this.startingVisionUpdateCount = visionUpdateCount.get();
@@ -1715,7 +1716,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 actionToCrclTakenPartsNames = new String[gparamsActionsSize];
             }
             if (startingIndex == 0) {
-                if (!gparams.manualAction) {
+                if (!gparams.skipCheckHeldPart) {
                     if (null != currentHeldPart) {
                         System.out.println("setCurrentHeldPartTrace = " + Utils.traceToString(setCurrentHeldPartTrace));
                         throw new RuntimeException("currentHeldPart=" + currentHeldPart);
@@ -2097,17 +2098,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } finally {
             final StackTraceElement[] checkCallerTrace = Thread.currentThread().getStackTrace();
-            final boolean manualActionF = gparams.manualAction;
+            final boolean skipCheckHeldPartF = gparams.skipCheckHeldPart;
             addMarkerCommand(cmds, "check currentHeldPart", new CRCLCommandWrapperConsumer() {
                 @Override
                 public void accept(CRCLCommandWrapper t) {
-                    if (null != currentHeldPart && !manualActionF) {
+                    if (null != currentHeldPart && !skipCheckHeldPartF) {
                         System.err.println("checkCallerTrace=" + Utils.traceToString(checkCallerTrace));
                         throw new RuntimeException("currentHeldPart=" + currentHeldPart);
                     }
                 }
             });
-            if (null != plannedHeldPart && !gparams.manualAction) {
+            if (null != plannedHeldPart && !gparams.skipCheckHeldPart) {
                 throw new RuntimeException("plannedHeldPart=" + plannedHeldPart);
             }
             localAprsSystem.stopBlockingCrclPrograms(blockingCount);

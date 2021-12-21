@@ -229,7 +229,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	toolMenu.add(toolSetToolMenu);
 	jTableOptions.getModel().addTableModelListener((TableModelEvent e) -> {
 	    if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
-		crclGenerator.setOptions(getTableOptions());
+		crclGenerator.setOptions(getOptions());
 	    }
 	});
 	jTableRequiredTools.getModel().addTableModelListener((TableModelEvent e) -> {
@@ -450,7 +450,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	    }
 	}
 	optionsCachedTable.addRow(new Object[] { key, value });
-	crclGenerator.setOptions(getTableOptions());
+	crclGenerator.setOptions(getOptions());
     }
 
     public XFutureVoid setLookForXYZ(double x, double y, double z) {
@@ -2928,7 +2928,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	}
     }
 
+    public boolean isReverseCheckDisabled() {
+        return getBooleanOptionsMap()
+                .getOrDefault(ExecutorOption.ForBoolean.reverseCheckDisabled,Boolean.FALSE);
+    }
+
+    public Map<ExecutorOption.ForBoolean, Boolean> getBooleanOptionsMap() {
+        return ExecutorOption.ForBoolean.map(getOptions());
+    }
+    
     private void checkReverse() throws IllegalStateException {
+        if(isReverseCheckDisabled()) {
+           return; 
+        }
 	boolean revFlag = isReverseFlag();
 	if (aprsSystem.isReverseFlag() != revFlag) {
 	    throw new IllegalStateException(
@@ -3166,7 +3178,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	    propsMap.put(ExecutorOption.ForBoolean.saveProgramRunData.name(), Boolean.toString(saveProgramRunData));
 	    Properties props = new Properties();
 	    props.putAll(propsMap);
-	    final Map<ExecutorOption, ?> tableOptions = getTableOptions();
+	    final Map<ExecutorOption, ?> tableOptions = getOptions();
 	    for (Map.Entry<ExecutorOption, ?> entry : tableOptions.entrySet()) {
 		if (null != entry.getKey() && null != entry.getValue()) {
 		    if(entry.getKey() instanceof ExecutorOption.ForString && entry.getValue() instanceof String) {
@@ -3447,7 +3459,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void showLoadedPlanOptaPlanner(boolean newReverseFlag) throws Exception {
 	crclGenerator.clearPoseCache();
-	crclGenerator.setOptions(getTableOptions());
+	crclGenerator.setOptions(getOptions());
 	PointType lookForPt = crclGenerator.getLookForXYZ();
 
 	if (null != lookForPt && enableOptaplannerCachedCheckBox.isSelected()) {
@@ -5404,7 +5416,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 		if (!keyFound) {
 		    optionsCachedTable.addRow(new Object[] { ExecutorOption.ForString.lookForJoints, jointVals });
 		}
-		crclGenerator.setOptions(getTableOptions());
+		crclGenerator.setOptions(getOptions());
 	    }
 	    if (null != poseStatus) {
 		PointType point = poseStatus.getPose().getPoint();
@@ -5420,7 +5432,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 		if (!keyFound) {
 		    optionsCachedTable.addRow(new Object[] { ExecutorOption.ForString.lookForXYZ, xyzString });
 		}
-		crclGenerator.setOptions(getTableOptions());
+		crclGenerator.setOptions(getOptions());
 	    }
 	}
     }
@@ -5697,13 +5709,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     public void setToolChangePoseFileCanonicalPath(final String canonicalPath) {
 	setOptionsTableValue(ExecutorOption.ForString.toolChangerPoseFile, canonicalPath);
 	jTextFieldToolChangerPoseFile.setText(canonicalPath);
-	crclGenerator.setOptions(getTableOptions());
+	crclGenerator.setOptions(getOptions());
     }
 
     public void setRecordedPosesFileCanonicalPath(final String canonicalPath) {
 	setOptionsTableValue(ExecutorOption.ForString.recordedPoses, canonicalPath);
 	jTextFieldRecordedPosesFile.setText(canonicalPath);
-	crclGenerator.setOptions(getTableOptions());
+	crclGenerator.setOptions(getOptions());
     }
 
     public File getPartToolFile() throws IOException {
@@ -5744,7 +5756,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	}
 	setOptionsTableValue(ExecutorOption.ForString.partToolFile, relPath);
 	jTextFieldPartToolFile.setText(relPath);
-	crclGenerator.setOptions(getTableOptions());
+	crclGenerator.setOptions(getOptions());
     }
 
     private final CachedTable holderContentsCachedTable;
@@ -8053,7 +8065,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private volatile @Nullable List<Action> lastPddlActionSectionToCrclActionListCopy = null;
 
     private CRCLProgramType pddlActionSectionToCrcl(int sectionNumber) throws Exception {
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	final int rpi = getReplanFromIndex();
 	if (rpi < 0 || rpi > actionsListSize) {
 	    setReplanFromIndex(0);
@@ -8267,7 +8279,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> placePartSlot(String part, String slot) throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> placePartActionsList = new ArrayList<>();
 	Action placePartAction = Action.newPlacePartAction(slot, null);
@@ -8290,7 +8302,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> testPartPositionActionList = new ArrayList<>();
 	Action takePartAction = Action.newSingleArgAction(
@@ -8356,7 +8368,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> moveToRecordedPose(String recordedPoseName, boolean manualAction) throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> actionsList = new ArrayList<>();
 	Action moveRecordedPoseAction = Action.newMoveRecordedPose(recordedPoseName);
@@ -8406,7 +8418,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> openGripperInternal() throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> actionsList = new ArrayList<>();
 	Action openGripperAction = Action.newOpenGripper();
@@ -8428,7 +8440,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> closeGripperInternal() throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> actionsList = new ArrayList<>();
 	Action closeGripperAction = Action.newCloseGripper();
@@ -8450,7 +8462,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> moveToRecordedJoints(String recordedName, boolean manualAction) throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> actionsList = new ArrayList<>();
 	Action moveRecordedJointsAction = Action.newMoveRecordedJoints(recordedName);
@@ -8472,7 +8484,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> takePart(String part) throws Exception {
 	crclGenerator.partialReset();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> takePartActionsList = new ArrayList<>();
 	Action takePartAction = Action.newSingleArgAction(
@@ -8524,7 +8536,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> returnPart(String part) {
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<MiddleCommandType> cmds = new ArrayList<>();
 	CRCLProgramType program = createEmptyProgram();
@@ -8653,7 +8665,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private XFuture<Boolean> randomDropOff() {
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<MiddleCommandType> cmds = new ArrayList<>();
 	crclGenerator.setOptions(options);
@@ -8715,7 +8727,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	    this.clearAll();
 	    return;
 	}
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<MiddleCommandType> cmds = new ArrayList<>();
 	crclGenerator.setOptions(options);
@@ -8761,7 +8773,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     private XFuture<Boolean> randomPickup() throws CRCLException, PmException {
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<MiddleCommandType> cmds = new ArrayList<>();
 	crclGenerator.setOptions(options);
@@ -8825,7 +8837,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private CRCLProgramType createLookForPartsProgramInternal() throws Exception {
 	checkDbSupplierPublisher();
-	Map<ExecutorOption, ?> options = getTableOptions();
+	Map<ExecutorOption, ?> options = getOptions();
 	setReplanFromIndex(0);
 	List<Action> lookForActionsList = new ArrayList<>();
 	Action lookForAction = Action.newNoArgAction(LOOK_FOR_PARTS);
@@ -8845,7 +8857,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> gotoToolChangerApproach(String poseName, PoseType pose) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
 	    Action gototToolChangerApproachAction = Action.newSingleArgAction(
@@ -8869,7 +8881,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private XFuture<Boolean> gotoToolChangerPose(String poseName, PoseType pose) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    List<Action> gototToolChangerApproachActionsList = new ArrayList<>();
 	    Action gototToolChangerApproachAction = Action.newSingleArgAction(
@@ -8961,7 +8973,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> dropToolByHolder(String holderName) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    List<Action> newActionsList = new ArrayList<>();
 	    Action dropToolByHolderAction = Action.newSingleArgAction(
@@ -8985,7 +8997,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> dropToolAny() {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    List<Action> newActionsList = new ArrayList<>();
 	    Action dropToolAnyAction = Action.newNoArgAction(DROP_TOOL_ANY);
@@ -9063,7 +9075,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> pickupToolByHolder(String holderName) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    syncPanelToGeneratorToolDataOnDisplay();
 	    List<Action> newActionsList = new ArrayList<>();
@@ -9087,7 +9099,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> pickupToolByTool(String toolName) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    syncPanelToGeneratorToolDataOnDisplay();
 	    List<Action> newActionsList = new ArrayList<>();
@@ -9110,7 +9122,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private XFuture<Boolean> switchTool(String toolName) {
 	try {
-	    Map<ExecutorOption, ?> options = getTableOptions();
+	    Map<ExecutorOption, ?> options = getOptions();
 	    setReplanFromIndex(0);
 	    syncPanelToGeneratorToolDataOnDisplay();
 	    List<Action> newActionsList = new ArrayList<>();
@@ -9211,15 +9223,46 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 	return f1; // XFuture.allOfWithName("checkDbSupplierPublisher.all", f1,f2);
     }
 
-    public void setOption(ExecutorOption key, Object val) {
+    
+    public void setOptions(ExecutorOption.WithValue<?,?> ... options) {
+        for (ExecutorOption.WithValue<?,?> opt : options) {
+            privateSetOption(opt.getKey(), opt.getValue());
+        }
+        crclGenerator.setOptions(getOptions());
+    }
+    
+    public void setOptions(Iterable<? extends ExecutorOption.WithValue<?,?>> options) {
+        for (ExecutorOption.WithValue<?,?> opt : options) {
+            privateSetOption(opt.getKey(), opt.getValue());
+        }
+        crclGenerator.setOptions(getOptions());
+    }
+    
+    public <K extends ExecutorOption,V> void setOptions(Map<K,V> options) {
+        for (Map.Entry<K,V> entry : options.entrySet()) {
+            privateSetOption(entry.getKey(), entry.getValue());
+        }
+        crclGenerator.setOptions(getOptions());
+    }
+    
+    private void privateSetOption(ExecutorOption key, Object val) {
+        int matchingRow = -1;
 	for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
 	    Object keyCheck = optionsCachedTable.getValueAt(i, 0);
 	    if (Objects.equals(keyCheck, key)) {
 		optionsCachedTable.setValueAt(val, i, 1);
-		break;
+                matchingRow=i;
+		return;
 	    }
 	}
-	crclGenerator.setOptions(getTableOptions());
+        if(matchingRow < 0) {
+            optionsCachedTable.addRow(new Object[]{key,val});
+        }
+    }
+    
+    public void setOption(ExecutorOption key, Object val) {
+        privateSetOption(key, val);
+	crclGenerator.setOptions(getOptions());
     }
 
     public void setToolHolderOperationEnabled(boolean enable) {
@@ -9232,7 +9275,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final CachedTable optionsCachedTable;
 
-    public Map<ExecutorOption, ?> getTableOptions() {
+    public Map<ExecutorOption, ?> getOptions() {
 	Map<ExecutorOption, Object> options = new HashMap<>();
 	@Nullable
 	Object[][] optionsData = optionsCachedTable.getData();
@@ -9272,7 +9315,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 		}
 	    }
 	}
-	return options;
+	return Collections.unmodifiableMap(options);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -9688,7 +9731,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @UIEffect
     private void completeLoadPropertiesOnDisplay() {
-	Map<ExecutorOption, ?> optionsMap = getTableOptions();
+	Map<ExecutorOption, ?> optionsMap = getOptions();
 	crclGenerator.loadOptionsMap(optionsMap, false);
 	syncPanelToGeneratorToolDataOnDisplay();
 	loadToolMenus();

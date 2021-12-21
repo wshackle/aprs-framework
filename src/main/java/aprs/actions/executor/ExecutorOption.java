@@ -229,6 +229,8 @@ public interface ExecutorOption {
         enableOptaPlanner,
         useEndPoseTolerance,
         useMessageCommands,
+        reverseCheckDisabled,
+        skipCheckHeldPart,
         INVALID_BOOL_OPT;
 
         public WithValue<ForBoolean, Boolean> with(boolean arg) {

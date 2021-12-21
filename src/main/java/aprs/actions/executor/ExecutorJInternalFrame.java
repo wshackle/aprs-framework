@@ -316,9 +316,22 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     public Map<ExecutorOption, ?> getOptions() {
-        return this.executorJPanel1.getTableOptions();
+        return this.executorJPanel1.getOptions();
+    }
+    
+    
+    public void setOptions(ExecutorOption.WithValue<?,?> ... options) {
+        this.executorJPanel1.setOptions(options);
+    }
+    
+    public void setOptions(Iterable<? extends ExecutorOption.WithValue<?,?>> options) {
+        this.executorJPanel1.setOptions(options);
     }
 
+    public void setOptions(Map<? extends ExecutorOption,?> options) {
+        this.executorJPanel1.setOptions(options);
+    }
+    
     public void setOption(ExecutorOption key, Object value) {
         this.executorJPanel1.setOption(key, value);
     }

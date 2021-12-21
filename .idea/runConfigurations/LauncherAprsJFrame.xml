@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="LauncherAprsJFrame" type="Application" factoryName="Application">
+    <classpathModifications>
+      <entry path="C:\Users\shackle\.m2\repository\com\github\wshackle\crcl4java-motoman\1.9.1-SNAPSHOT\crcl4java-motoman-1.9.1-20210525.190847-6.jar" />
+      <entry path="C:\Users\shackle\.m2\repository\com\github\wshackle\fanucCRCLServer\1.9.1-SNAPSHOT\fanucCRCLServer-1.9.1-20210413.185753-4.jar" />
+      <entry path="C:\Users\shackle\Documents\NetBeansProjects\aprs-framework" />
+    </classpathModifications>
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
+    <option name="MAIN_CLASS_NAME" value="aprs.launcher.LauncherAprsJFrame" />
+    <module name="aprs-framework" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
