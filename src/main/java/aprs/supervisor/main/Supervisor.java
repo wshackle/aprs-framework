@@ -5131,14 +5131,14 @@ public class Supervisor {
                 Action.newMoveRecordedPose("p1"),
                 Action.newMoveRecordedPose("p2"),
                 Action.newCloseGripper()
-            }), false);
+            }));
         });
         XFuture<Boolean> xf5 = xf4.thenCompose("startFlip.step4", x -> {
             logEvent("startFlip.step4 : xf4=" + xf4);
             return fanucCartSys.startActionsList("flip4",
                     Arrays.asList(new Action[]{
                 Action.newOpenGripper()
-            }), false);
+            }));
         });
         XFuture<Boolean> xf6 = xf5.thenCompose("startFlip.step5", x -> {
             logEvent("startFlip.step5 : xf5=" + xf5);
@@ -5147,14 +5147,14 @@ public class Supervisor {
                 Action.newMoveRecordedPose("p3"),
                 Action.newMoveRecordedPose("p4"),
                 Action.newMoveRecordedPose("p5")
-            }), false);
+            }));
         });
         XFuture<Boolean> xf7 = xf6.thenCompose("startFlip.step6", x -> {
             logEvent("startFlip.step6 : xf6=" + xf6);
             return fanucCartSys.startActionsList("flip6",
                     Arrays.asList(new Action[]{
                 Action.newCloseGripper()
-            }), false);
+            }));
         });
         XFuture<Boolean> xf8 = xf7.thenCompose("startFlip.step7", x -> {
             logEvent("startFlip.step7 : xf7=" + xf7);
@@ -5163,7 +5163,7 @@ public class Supervisor {
                 Action.newOpenGripper(),
                 Action.newMoveRecordedPose("p6"),
                 Action.newLookForParts(0)
-            }), false);
+            }));
         });
 
         XFuture<Boolean> xf9 = xf8.thenCompose("startFlip.step8", x -> {
@@ -5173,7 +5173,7 @@ public class Supervisor {
                 Action.newMoveRecordedJoints("returning"),
                 Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
                 Action.newLookForParts(0)
-            }), false);
+            }));
         });
         return xf9;
     }
@@ -5211,7 +5211,7 @@ public class Supervisor {
                 Action.newTakePartAction("part_black_gear_in_kt_1"),
                 Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
                 Action.newMoveRecordedPose("flipmf_present_gear")
-            }), true);
+            }));
         });
         return xf3;
 //        XFuture<Boolean> xf4 = xf3.thenCompose("startFlip.step3", x -> {

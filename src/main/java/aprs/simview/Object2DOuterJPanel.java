@@ -3797,7 +3797,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 		final AprsSystem aprsSystemLocal = Objects.requireNonNull(aprsSystem, "aprsSystem");
 		draggedItemLocal.x = draggedItemStartingPointLocal.x;
 		draggedItemLocal.y = draggedItemStartingPointLocal.y;
-		aprsSystemLocal.startActionsList("inteactive move part", actions, false)
+		aprsSystemLocal.startActionsList("inteactive move part", actions)
 			.thenRun(() -> {
 			    List<PhysicalItem> itemsList = getItems();
 			    this.updateItemsTable(itemsList);

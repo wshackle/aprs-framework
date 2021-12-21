@@ -1,2 +1,2 @@
 #  Automatically saved 
-lastPropertyFileName=C:\\Users\\wshac\\aprs-framework\\example_settings\\multiple_simulated_systems_settings\\simulated_fanuc\\simulated_fanuc_properties.txt
+lastPropertyFileName=C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\example_settings\\fanuc_motoman_multi_system_settings\\fanuc\\aprs_fanuc_settings.txt
