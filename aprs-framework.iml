@@ -21,13 +21,13 @@
     <orderEntry type="library" name="Maven: org.jcodec:jcodec:0.2.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.jcodec:jcodec-javase:0.2.2" level="project" />
-    <orderEntry type="library" name="Maven: com.github.wshackle:crcl4java-base:1.9.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="crcl4java-base" />
     <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-impl:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-core:2.3.0.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:javax.activation-api:1.2.0" level="project" />
-    <orderEntry type="library" name="Maven: com.github.wshackle:crcl4java-utils:1.9.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: com.github.wshackle:crclcopier:1.9.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: com.github.wshackle:crcl4java-ui:1.9.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="crcl4java-utils" />
+    <orderEntry type="module" module-name="crclcopier" />
+    <orderEntry type="module" module-name="crcl4java-ui" />
     <orderEntry type="library" name="Maven: com.github.wshackle:rcslib:2017.07.19" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.13.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
@@ -68,11 +68,11 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.ati-ia:ATINetFT:1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.wshackle:ATINetFT_proxy:1.9.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.wshackle:fanucCRCLServer:1.9.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="ATINetFT_proxy" scope="RUNTIME" />
+    <orderEntry type="module" module-name="fanucCRCLServer" scope="RUNTIME" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.jvnet.com4j:com4j:2.1" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.wshackle:fanucCom4JBase:1.9.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.wshackle:crcl4java-motoman:1.9.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="fanucCom4JBase" scope="RUNTIME" />
+    <orderEntry type="module" module-name="crcl4java-motoman" scope="RUNTIME" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: commons-net:commons-net:3.7.2" level="project" />
   </component>
 </module>

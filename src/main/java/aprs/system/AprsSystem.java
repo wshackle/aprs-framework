@@ -3391,48 +3391,67 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     public XFutureVoid startFanucCrclServer() {
         try {
             return runOnDispatchThread(() -> {
-                fanucServerProvider = getServerProvider("FanucCRCLServer");
-                if (null != fanucServerProvider) {
-                    fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
-                    fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
-                    addInternalFrame(fanucCRCLServerJInternalFrame);
-                } else {
-                    System.out.println("");
-                    System.out.flush();
-                    System.err.println("");
-                    System.err.flush();
-                    System.err.println("startFanucCrclServer: serverJInternalFrameProviderFinders = "
-                            + serverJInternalFrameProviderFinders);
-                    final String[] classpaths = System.getProperty("java.class.path")
-                            .split(System.getProperty("path.separator"));
-                    System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
-                    for (int i = 0; i < classpaths.length; i++) {
-                        String classpath = classpaths[i];
-                        System.err.println("   \tstartFanucCrclServer: classpath[" + i + " of " + classpaths.length
-                                + "] = " + classpath);
+                try {
+                    fanucServerProvider = getServerProvider("FanucCRCLServer");
+                    if (null != fanucServerProvider) {
+                        fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
+                        fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
+                        addInternalFrame(fanucCRCLServerJInternalFrame);
+                    } else {
+                        System.out.println("");
+                        System.out.flush();
+                        System.err.println("");
+                        System.err.flush();
+                        System.err.println("startFanucCrclServer: serverJInternalFrameProviderFinders = "
+                                + serverJInternalFrameProviderFinders);
+                        final String[] classpaths = System.getProperty("java.class.path")
+                                .split(System.getProperty("path.separator"));
+                        System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
+                        for (int i = 0; i < classpaths.length; i++) {
+                            String classpath = classpaths[i];
+                            System.err.println("   \tstartFanucCrclServer: classpath[" + i + " of " + classpaths.length
+                                    + "] = " + classpath);
+                        }
+                        System.out.println("");
+                        System.out.flush();
+                        System.err.println("");
+                        System.err.flush();
+                        try {
+                            Class<?> clzz = Class.forName(
+                                    "com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrameProviderFinder");
+                            System.out.println("clzz = " + clzz);
+                            ProtectionDomain protDom = clzz.getProtectionDomain();
+                            System.out.println("protDom = " + protDom);
+                        } catch (ClassNotFoundException ex) {
+                            Logger.getLogger(CRCLServerSocket.class
+                                    .getName()).log(Level.SEVERE, null, ex);
+                        }
+                        final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
+                        setTitleErrorString(errMsg);
+                        throw new RuntimeException(errMsg);
                     }
-                    System.out.println("");
-                    System.out.flush();
-                    System.err.println("");
-                    System.err.flush();
-                    try {
-                        Class<?> clzz = Class.forName(
-                                "com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrameProviderFinder");
-                        System.out.println("clzz = " + clzz);
-                        ProtectionDomain protDom = clzz.getProtectionDomain();
-                        System.out.println("protDom = " + protDom);
-                    } catch (ClassNotFoundException ex) {
-                        Logger.getLogger(CRCLServerSocket.class
-                                .getName()).log(Level.SEVERE, null, ex);
-                    }
-                    final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
-                    setTitleErrorString(errMsg);
-                    throw new RuntimeException(errMsg);
+                }catch (Exception ex) {
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, "", ex);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, "", ex);
+                    Logger.getLogger(AprsSystem.class
+                            .getName()).log(Level.SEVERE, "", ex);
+                    setTitleErrorString(ex.getMessage());
+                    throw new RuntimeException(ex);
                 }
             });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
+                    .getName()).log(Level.SEVERE, "fanucServerProvider="+fanucServerProvider);
+            Class<? extends @Nullable ServerJInternalFrameProviderInterface> fsPClass = fanucServerProvider.getClass();
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "fsPClass="+fsPClass);
+            ProtectionDomain protectionDomain = fsPClass.getProtectionDomain();
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "protectionDomain="+protectionDomain);
+            Logger.getLogger(AprsSystem.class
+                    .getName()).log(Level.SEVERE, "",ex);
             setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
         }

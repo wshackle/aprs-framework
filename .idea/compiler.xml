@@ -7,16 +7,45 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="crcl4java-ui" />
+        <module name="fanucCom4JBase" />
+        <module name="crcl4java-motoman" />
         <module name="aprs-framework" />
+        <module name="generate-copier-maven-plugin" />
+        <module name="fanucCRCLServer" />
+        <module name="crcl4java-utils" />
+        <module name="crcl4java-base" />
+        <module name="ATINetFT_proxy" />
+        <module name="crclcopier" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="aprs-framework" target="1.8" />
+      <module name="ATINetFT_proxy" target="${maven.compiler.release}" />
+      <module name="crcl4java" target="${maven.compiler.release}" />
+      <module name="crcl4java-base" target="${maven.compiler.release}" />
+      <module name="crcl4java-fanuc" target="${maven.compiler.release}" />
+      <module name="crcl4java-motoman" target="${maven.compiler.release}" />
+      <module name="crcl4java-ui" target="${maven.compiler.release}" />
+      <module name="crcl4java-utils" target="${maven.compiler.release}" />
+      <module name="crclcopier" target="${maven.compiler.release}" />
+      <module name="fanucCom4JBase" target="${maven.compiler.release}" />
+      <module name="fanucCRCLServer" target="${maven.compiler.release}" />
+      <module name="generate-copier-maven-plugin" target="${maven.compiler.release}" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="ATINetFT_proxy" options="-parameters" />
       <module name="aprs-framework" options="-parameters" />
+      <module name="crcl4java-base" options="-parameters" />
+      <module name="crcl4java-motoman" options="-parameters" />
+      <module name="crcl4java-ui" options="-parameters" />
+      <module name="crcl4java-utils" options="-parameters" />
+      <module name="crclcopier" options="-parameters" />
+      <module name="fanucCRCLServer" options="-parameters" />
+      <module name="fanucCom4JBase" options="-parameters" />
+      <module name="generate-copier-maven-plugin" options="-parameters" />
     </option>
   </component>
 </project>
