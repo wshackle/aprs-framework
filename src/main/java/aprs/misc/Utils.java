@@ -136,20 +136,19 @@ public class Utils {
             throw new NullPointerException("append");
         }
         if (append.isEmpty()) {
-            throw new IllegalAddressException("append.isEmpty()");
+            throw new IllegalArgumentException("append.isEmpty()");
         }
-        if (!parent.exists()) {
-            File parentFile = parent.getParentFile();
-            if (null != parentFile && parentFile.exists() && parentFile.canWrite()) {
-                parent.mkdir();
-            }
-        }
-        if (!parent.exists()) {
-            throw new IllegalArgumentException("parent=" + parent);
-        }
-        if (!parent.isDirectory()) {
-            throw new IllegalArgumentException("!parent.isDirectory()");
-        }
+//        if (!parent.exists()) {
+//            File parentFile = parent.getParentFile();
+//            if (null != parentFile && parentFile.exists() && parentFile.canWrite()) {
+//                parent.mkdir();
+//            }
+//        }
+//        if (!parent.exists()) {
+//            throw new IllegalArgumentException("parent=" + parent);
+//        } else if (!parent.isDirectory()) {
+//            throw new IllegalArgumentException("!parent.isDirectory()");
+//        }
         append = swapFileSeparators(append);
         String parentDirPrefix = ".." + File.separator;
         while (append.startsWith(parentDirPrefix)) {

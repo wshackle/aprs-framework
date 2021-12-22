@@ -149,7 +149,7 @@ public class DbSetupBuilder {
                 }
             }
             if(!clstreamok) {
-                File f = Utils.file(name);
+                File f = new File(name);
                 if(!f.exists()) {
                     f = Utils.file("src/main/resources/",name);
                 }
