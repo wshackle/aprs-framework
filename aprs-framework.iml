@@ -67,12 +67,5 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.8" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.ati-ia:ATINetFT:1.0" level="project" />
-    <orderEntry type="module" module-name="ATINetFT_proxy" scope="RUNTIME" />
-    <orderEntry type="module" module-name="fanucCRCLServer" scope="RUNTIME" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.jvnet.com4j:com4j:2.1" level="project" />
-    <orderEntry type="module" module-name="fanucCom4JBase" scope="RUNTIME" />
-    <orderEntry type="module" module-name="crcl4java-motoman" scope="RUNTIME" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: commons-net:commons-net:3.7.2" level="project" />
   </component>
 </module>

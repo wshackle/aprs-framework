@@ -12,7 +12,6 @@
       <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/crcl4java-utils.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/crcl4java-utils.iml" />
       <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/crclcopier.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/crclcopier.iml" />
       <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCRCLServer/fanucCRCLServer.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCRCLServer/fanucCRCLServer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCom4JBase/fanucCom4JBase.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCom4JBase/fanucCom4JBase.iml" />
       <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/generate-copier-maven-plugin.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/generate-copier-maven-plugin.iml" />
     </modules>
   </component>

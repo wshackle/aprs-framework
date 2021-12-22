@@ -8,7 +8,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="crcl4java-ui" />
-        <module name="fanucCom4JBase" />
         <module name="crcl4java-motoman" />
         <module name="aprs-framework" />
         <module name="generate-copier-maven-plugin" />
