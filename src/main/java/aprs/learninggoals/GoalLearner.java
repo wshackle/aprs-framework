@@ -335,14 +335,14 @@ public class GoalLearner {
                     + ")");
         }
         if (!correctionMode) {
-            l.add(Action.newLookForParts(2));
+            l.add(Action.newLookForParts());
         }
         l.add(Action.newNoArgAction(CLEAR_KITS_TO_CHECK));
         for (String kitToCheckString : kitToCheckStrings) {
             l.add(Action.parse(kitToCheckString));
         }
         l.add(Action.newNoArgAction(CHECK_KITS));
-        l.add(Action.newLookForParts(2));
+        l.add(Action.newLookForParts());
         l.add(Action.newNoArgAction(CLEAR_KITS_TO_CHECK));
         l.add(Action.newNoArgAction(END_PROGRAM));
         if (null != allEmptyA && allEmptyA.length > 0) {

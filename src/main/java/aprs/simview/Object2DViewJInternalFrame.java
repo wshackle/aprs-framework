@@ -65,7 +65,14 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
         initComponents();
     }
 
-    public XFutureVoid refresh(boolean loadFile) {
+    @SuppressWarnings({"nullness","initialization"})
+    @UIEffect
+    public Object2DViewJInternalFrame(AprsSystem aprsSystem) {
+        this();
+        object2DOuterJPanel1.setAprsSystem(aprsSystem);
+    }
+    
+    public XFuture<Object2DOuterJPanel.SetItemsResult> refresh(boolean loadFile) {
         return object2DOuterJPanel1.refresh(loadFile);
     }
 
@@ -219,7 +226,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     @Override
-    public XFutureVoid setItems(List<PhysicalItem> items) {
+    public XFuture<Object2DOuterJPanel.SetItemsResult> setItems(List<PhysicalItem> items) {
         return object2DOuterJPanel1.setItems(items);
     }
 

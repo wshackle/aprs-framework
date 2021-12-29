@@ -950,11 +950,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     /**
      * Force the Object 2D Simulation View to refresh, this method has no effect
      * if the view is not visible or is not in simulation mode.
+     * @return future for checking when refresh is done
      */
-    public void refreshSimView() {
+    public XFuture<Object2DOuterJPanel.SetItemsResult> refreshSimView() {
         if (null != object2DViewJInternalFrame) {
-            object2DViewJInternalFrame.refresh(false);
+            return object2DViewJInternalFrame.refresh(false);
         }
+        return XFutureVoid.completedFuture(new Object2DOuterJPanel.SetItemsResult("null == object2DViewJInternalFrame", false));
     }
 
     public long getLastSimViewRefreshTime() {
@@ -8922,8 +8924,15 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     }
                     try {
 
-                        boolean startActionsInternalRet = startActionsInternal(comment, startRunNumber, startAbortCount, newReverseFlag,
-                                reloadSimFiles, actionsToLoad);
+                        boolean startActionsInternalRet = startActionsInternal(
+                        	comment, 
+                        	startRunNumber, 
+                        	startAbortCount, 
+                        	newReverseFlag,
+                                reloadSimFiles, 
+                                actionsToLoad,
+                                trace1 //callertrace
+                                );
                         
                         return startActionsInternalRet;
                     } catch (Exception exception) {
@@ -8968,12 +8977,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private volatile StackTraceElement startActionsInternalTrace @Nullable []  = null;
 
-    private boolean startActionsInternal(String comment,
+    private boolean startActionsInternal(
+	    String comment,
             long startRunNumber,
             int startAbortCount,
             boolean newReverseFlag,
             boolean reloadSimFiles,
-            @Nullable List<Action> actionsToLoad) throws IllegalStateException {
+            @Nullable List<Action> actionsToLoad,
+            StackTraceElement callertrace[]) throws IllegalStateException {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
@@ -9021,11 +9032,16 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             }
         } catch (Exception ex) {
 
-            System.err.println("reloadedActions = " + reloadedActions);
-            System.err.println("actionsToLoad = " + actionsToLoad);
-            System.err.println("newReverseFlag = " + newReverseFlag);
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
+            
+            Logger logger = Logger.getLogger(AprsSystem.class
+                    .getName());
+            logger.log(Level.SEVERE,"reloadedActions = {0}", reloadedActions);
+            logger.log(Level.SEVERE,"actionsToLoad = {0}", actionsToLoad);
+            logger.log(Level.SEVERE,"newReverseFlag = {0}" , newReverseFlag);
+            logger.log(Level.SEVERE, "", ex);
+            logger.log(Level.SEVERE, "currentThread={0}", Thread.currentThread());
+            logger.log(Level.SEVERE, "reportertrace={0}", XFuture.traceToString(Thread.currentThread().getStackTrace()));
+            logger.log(Level.SEVERE, "callertrace={0}", XFuture.traceToString(callertrace));
             setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;

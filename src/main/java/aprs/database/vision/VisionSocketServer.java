@@ -199,13 +199,14 @@ public class VisionSocketServer implements AutoCloseable {
         return publishCount.get();
     }
 
-    public void publishList(String prefix, List<PhysicalItem> list) {
+    public int publishList(String prefix, List<PhysicalItem> list) {
+        int clients_updated = 0;
         String line = prefix + listToLine(list);
         byte ba[] = line.getBytes();
         this.bytesToSend = ba;
         for (Socket client : clients) {
             if (Thread.currentThread().isInterrupted()) {
-                return;
+                return clients_updated;
             }
             if (null != client) {
                 if (client.isClosed() || client.isInputShutdown() || client.isOutputShutdown()) {
@@ -224,6 +225,7 @@ public class VisionSocketServer implements AutoCloseable {
                         }
                     }
                     client.getOutputStream().write(ba);
+                    clients_updated++;
                 } catch (IOException ex) {
                     try {
                         client.close();
@@ -263,6 +265,7 @@ public class VisionSocketServer implements AutoCloseable {
         if (!clients.isEmpty() && !closing) {
             incrementPublishCount();
         }
+        return clients_updated;
     }
 
     private final ConcurrentLinkedDeque<Consumer<Integer>> incrementPublishCountListeners = new ConcurrentLinkedDeque<>();

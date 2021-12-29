@@ -159,10 +159,10 @@ public class Action {
                 .build();
     }
 
-    public static Action newLookForParts(int arg0) {
+    public static Action newLookForParts() {
         return new Action.ActionBuilder()
                 .type(ActionType.LOOK_FOR_PARTS)
-                .args(new String[]{Integer.toString(arg0)})
+                .args(new String[]{})
                 .build();
     }
 
