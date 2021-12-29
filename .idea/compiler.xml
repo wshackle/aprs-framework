@@ -8,10 +8,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="crcl4java-ui" />
+        <module name="crcl4java-motoman" />
         <module name="aprs-framework" />
         <module name="generate-copier-maven-plugin" />
+        <module name="fanucCRCLServer" />
         <module name="crcl4java-utils" />
         <module name="crcl4java-base" />
+        <module name="ATINetFT_proxy" />
         <module name="crclcopier" />
       </profile>
     </annotationProcessing>
@@ -34,7 +37,6 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ATINetFT_proxy" options="-parameters" />
       <module name="aprs-framework" options="-parameters" />
-      <module name="crcl4java" options="" />
       <module name="crcl4java-base" options="-parameters" />
       <module name="crcl4java-motoman" options="-parameters" />
       <module name="crcl4java-ui" options="-parameters" />
