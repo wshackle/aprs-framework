@@ -590,7 +590,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0 && !ignoreMissedDropOffs && !ignoreMissedPickups) {
-            return future.thenSupply(() -> new SetItemsResult("captured_item_inde="+captured_item_index, false));
+            return future.thenSupply(() -> new SetItemsResult("captured_item_index="+captured_item_index, false));
         }
         if (null != draggedItem) {
             return future.thenSupply(() -> new SetItemsResult("draggedItem="+draggedItem, false));
