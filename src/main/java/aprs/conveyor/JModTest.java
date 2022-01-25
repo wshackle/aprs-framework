@@ -25,8 +25,9 @@ package aprs.conveyor;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
-import com.sun.istack.logging.Logger;
 import java.util.logging.Level;
+import static java.util.logging.Level.SEVERE;
+import java.util.logging.Logger;
 
 /**
  *
@@ -37,7 +38,7 @@ public class JModTest {
 
     protected static ModbusTCPMaster master;
 
-    private static final Logger logger = Logger.getLogger(JModTest.class);
+    private static final Logger logger = Logger.getLogger(JModTest.class.getName());
 
     public static void main(String[] args) {
         try {
@@ -52,7 +53,7 @@ public class JModTest {
             System.out.println("connected");
 //            logger.info("Read coil 1 status [192.168.1.50:502] - %b", new Object[]{ master.readCoils(0, 1).getBit(0)});
         } catch (Exception e) {
-            logger.severe("Cannot initialise tests - %s", e);
+            logger.log(SEVERE,"Cannot initialise tests", e);
         } finally {
             try {
                 master.writeSingleRegister(0x8000, new SimpleRegister(0)); // make it not go

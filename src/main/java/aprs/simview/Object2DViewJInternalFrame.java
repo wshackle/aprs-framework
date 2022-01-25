@@ -357,4 +357,12 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     File getLogLinesFile() {
         return this.object2DOuterJPanel1.getLogLinesFile();
     }
+    
+    public void disconnectCurrentPosition() {
+        this.object2DOuterJPanel1.disconnectCurrentPosition();
+    }
+    
+    public void disconnect() {
+        this.object2DOuterJPanel1.disconnect();
+    }
 }

@@ -174,6 +174,7 @@ public class ColorTextJPanel extends javax.swing.JPanel {
             if(null != startReaderTrace) {
                 throw new RuntimeException("startReader already called. startReaderTrace="+XFuture.traceToString(startReaderTrace));
             }
+            startReaderTrace = Thread.currentThread().getStackTrace();
             SocketLineReader readerTmp 
                     = SocketLineReader.startServer(COLORTEXT_SOCKET_PORT, "ColorTextServer", this::parseSocketLine);
             this.reader = readerTmp;

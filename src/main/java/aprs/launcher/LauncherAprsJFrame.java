@@ -62,6 +62,8 @@ import java.util.TreeMap;
 import javax.swing.JMenuItem;
 import static aprs.remote.Scriptable.scriptableOfStatic;
 import crcl.utils.CRCLUtils;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.plaf.FileChooserUI;
 
 /**
  *
@@ -134,6 +136,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         jMenuItemMultiCycleMultiSystemTest = new javax.swing.JMenuItem();
         jMenuItemTenCycleMultiSystemTestNoDisables = new javax.swing.JMenuItem();
         jMenuItemReviewLastOptaPlannerResults = new javax.swing.JMenuItem();
+        jMenuItemFlipFMTest = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jCheckBoxMenuItemLaunchExternal = new javax.swing.JCheckBoxMenuItem();
         jMenuItemSetLaunchFile = new javax.swing.JMenuItem();
@@ -318,6 +321,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         });
         jMenuSpecialTests.add(jMenuItemReviewLastOptaPlannerResults);
 
+        jMenuItemFlipFMTest.setText("Flip FM Test");
+        jMenuItemFlipFMTest.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemFlipFMTestActionPerformed(evt);
+            }
+        });
+        jMenuSpecialTests.add(jMenuItemFlipFMTest);
+
         jMenuBar1.add(jMenuSpecialTests);
 
         jMenu2.setText("Launcher Settings");
@@ -459,7 +470,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try ( PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -828,6 +839,84 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
+//    public static XFuture<Boolean> flipFMTest(@Nullable File launchFile,
+//            File setupFile,
+//            File positionMappingsFile,
+//            File fanucSimItemsFile) {
+//        long startTime = System.currentTimeMillis();
+//        Supervisor supervisor = Supervisor.createSupervisor();
+////        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+////            supervisor.startColorTextReader();
+////            supervisor.setVisible(true);
+////        }
+//        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+//
+//        if (null != launchFile) {
+//            try {
+//                XFutureVoid launchFuture;
+//                ProcessLauncherJFrame processLauncher;
+//                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+//                    processLauncher = new ProcessLauncherJFrame();
+//                    processLauncher.setVisible(true);
+//                    launchFuture = processLauncher.run(launchFile);
+//                } else {
+//                    processLauncher = null;
+//                    LaunchFileRunner runner = new LaunchFileRunner();
+//                    launchFuture = runner.run(launchFile, -1, true);
+//                }
+//                return launchFuture
+//                        .thenRun(() -> {
+//                            if (null != processLauncher) {
+//                                supervisor.setProcessLauncher(processLauncher);
+//                            }
+//                        }).thenCompose(() -> {
+//                    return Utils.supplyOnDispatchThread(() -> {
+//                        try {
+//                            return supervisor.flipFMTest(setupFile, positionMappingsFile, startTime, fanucSimItemsFile);
+//                        } catch (Exception ex) {
+//                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+//                            if (ex instanceof RuntimeException) {
+//                                throw (RuntimeException) ex;
+//                            } else {
+//                                throw new RuntimeException(ex);
+//                            }
+//                        }
+//                    });
+//                }).thenCompose(x -> x);
+//            } catch (Exception ex) {
+//                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+//                throw new RuntimeException(ex);
+//            }
+//        } else {
+//            try {
+//                return supervisor.flipFMTest(setupFile, positionMappingsFile, startTime, fanucSimItemsFile);
+//            } catch (Exception ex) {
+//                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+//                if (ex instanceof RuntimeException) {
+//                    throw (RuntimeException) ex;
+//                } else {
+//                    throw new RuntimeException(ex);
+//                }
+//            }
+//        }
+//    }
+    /**
+     * Test multiple cycles of filling and emptying kit trays. The test is
+     * performed asynchronously in another thread.
+     *
+     * @param setupFile CSV file with tasks and robots
+     * @param positionMappingsFile CSV file with other filenames for transforms
+     * between robots
+     * @param teachFile CSV file with positions of parts in trays to teach the
+     * goal configuration
+     * @param startTime start time in ms since 1970 for performance log
+     * @param numCycles number of times to move parts back and forth between kit
+     * trays and parts trays
+     * @param useConveyor include use of the conveyor in the test
+     * @return future for determining when the test is done
+     * @throws IOException couldn't open one of the files or connect to one of
+     * the network servers
+     */
     public static XFuture<Supervisor.MultiCycleResults> multiCycleTest(
             File launchFile,
             File sysFile,
@@ -837,7 +926,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
-        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
             supervisor.startColorTextReader();
             supervisor.setVisible(true);
         }
@@ -864,7 +953,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         }).thenCompose(() -> {
                     return Utils.supplyOnDispatchThread(() -> {
                         try {
-                            return supervisor.multiCycleTest(sysFile,posMapsFile,teachPropsFile,startTime, numCycles, useConveyor);
+                            return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor);
                         } catch (Exception ex) {
                             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                             if (ex instanceof RuntimeException) {
@@ -874,14 +963,16 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             }
                         }
                     });
-                }).thenCompose(x -> x);
+                })
+                        .thenCompose(x -> x)
+                        .alwaysRun(() -> supervisor.close());
             } catch (Exception ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
             }
         } else {
             try {
-                return supervisor.multiCycleTest(sysFile,posMapsFile,teachPropsFile,startTime, numCycles, useConveyor);
+                return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor);
             } catch (Exception ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                 if (ex instanceof RuntimeException) {
@@ -892,6 +983,70 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             }
         }
     }
+
+    public static XFuture<Boolean> flipFMTest(
+            File launchFile,
+            File sysFile,
+            File posMapsFile,
+            File fanucSimItemsFile) {
+        long startTime = System.currentTimeMillis();
+        Supervisor supervisor = Supervisor.createSupervisor();
+//        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+//            supervisor.startColorTextReader();
+//            supervisor.setVisible(true);
+//        }
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+
+        if (null != launchFile) {
+            try {
+                XFutureVoid launchFuture;
+                ProcessLauncherJFrame processLauncher;
+                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                    processLauncher = new ProcessLauncherJFrame();
+                    processLauncher.setVisible(true);
+                    launchFuture = processLauncher.run(launchFile);
+                } else {
+                    processLauncher = null;
+                    LaunchFileRunner runner = new LaunchFileRunner();
+                    launchFuture = runner.run(launchFile, -1, true);
+                }
+                return launchFuture
+                        .thenRun(() -> {
+                            if (null != processLauncher) {
+                                supervisor.setProcessLauncher(processLauncher);
+                            }
+                        }).thenCompose(() -> {
+                    return Utils.supplyOnDispatchThread(() -> {
+                        try {
+                            return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                            if (ex instanceof RuntimeException) {
+                                throw (RuntimeException) ex;
+                            } else {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    });
+                }).thenCompose(x -> x).alwaysRun(() -> supervisor.close());
+            } catch (Exception ex) {
+                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        } else {
+            try {
+                return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+    }
+
     private static int defaultCycles = 10;
 
     private static void saveLaunchProperties() {
@@ -1002,6 +1157,69 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
     }//GEN-LAST:event_jMenuItemReviewLastOptaPlannerResultsActionPerformed
 
+    private File chooseFile(File dir, String dialogTitle, String extension) {
+        try {
+            JFileChooser chooser = new JFileChooser(dir);
+            chooser.setDialogTitle(dialogTitle);
+            chooser.setFileFilter(new FileNameExtensionFilter(extension, extension));
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                return chooser.getSelectedFile();
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return null;
+    }
+
+    private void jMenuItemFlipFMTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFlipFMTestActionPerformed
+
+        try {
+            if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
+                try {
+                    File launchFile = chooseFile(getLastLaunchFile().getParentFile(), "Launch File", "txt");
+                    if (launchFile == null) {
+                        return;
+                    }
+                    File supervisorSetupFile = chooseFile(launchFile.getParentFile(), "Supervisor Setup File", "csv");
+                    if (null == supervisorSetupFile) {
+                        return;
+                    }
+                    File positionMappingsFile = chooseFile(launchFile.getParentFile(), "Position Mappings File", "csv");
+                    if (null == positionMappingsFile) {
+                        return;
+                    }
+                    File fanucSimItemsFile = chooseFile(launchFile.getParentFile(), "Fanuc Sim Items File", "csv");
+                    if (null == fanucSimItemsFile) {
+                        return;
+                    }
+                    this.setVisible(false);
+
+                    flipFMTest(launchFile, supervisorSetupFile, positionMappingsFile, fanucSimItemsFile);
+                } catch (IOException ex) {
+                    Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                }
+            } else {
+                File supervisorSetupFile = chooseFile(getLastLaunchFile().getParentFile(), "Supervisor Setup File", "csv");
+                if (null == supervisorSetupFile) {
+                    return;
+                }
+                File positionMappingsFile = chooseFile(supervisorSetupFile.getParentFile(), "Position Mappings File", "csv");
+                if (null == positionMappingsFile) {
+                    return;
+                }
+                File fanucSimItemsFile = chooseFile(supervisorSetupFile.getParentFile(), "Fanuc Sim Items File", "csv");
+                if (null == fanucSimItemsFile) {
+                    return;
+                }
+                this.setVisible(false);
+                flipFMTest(null, supervisorSetupFile, positionMappingsFile, fanucSimItemsFile);
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            JOptionPane.showMessageDialog(this, exception.toString());
+        }
+    }//GEN-LAST:event_jMenuItemFlipFMTestActionPerformed
+
     private static XFutureVoid openSingleWithLaunchFile(File launchFile, String args @Nullable []) {
         if (null != launchFile) {
             try {
@@ -1100,28 +1318,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         try {
             if (args[0].equals("--listenRemoteConsolePort")) {
                 final int port = Integer.parseInt(args[1]);
-//                Map<String, ScriptableFunction<String>> functions = new TreeMap<>();
-//                functions.put("launch", (String ignore, String launchargs[], PrintWriter pw) -> {
-//                    try {
-//                        if(launchargs.length < 1) {
-//                            return Scriptable.of(prevMulti(null));
-//                        } else {
-//                            return Scriptable.of(openMultiWithLaunchFile(new File(launchargs[0]), null, null));
-//                        }
-//                    } catch (Exception ex) {
-//                        Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, null, ex);
-//                        if (ex instanceof RuntimeException) {
-//                            throw (RuntimeException) ex;
-//                        } else {
-//                            throw new RuntimeException(ex);
-//                        }
-//                    }
-//                });
                 Map<String, Scriptable<?>> scriptablesMap = new TreeMap<>();
                 scriptablesMap.put("launcher", scriptableOfStatic(LauncherAprsJFrame.class));
                 scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
                 scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
-                try ( AprsRemoteConsoleServerSocket serverSocket
+                try (AprsRemoteConsoleServerSocket serverSocket
                         = new AprsRemoteConsoleServerSocket(port, scriptablesMap)) {
                     serverSocket.run();
                 }
@@ -1234,6 +1435,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItemFlipFMTest;
     private javax.swing.JMenuItem jMenuItemMultiCycleMultiSystemTest;
     private javax.swing.JMenuItem jMenuItemReviewLastOptaPlannerResults;
     private javax.swing.JMenuItem jMenuItemSetLaunchFile;

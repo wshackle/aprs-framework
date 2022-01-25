@@ -224,6 +224,7 @@ public class Supervisor {
     }
 
     private volatile @Nullable XFuture<?> lastCompletePrevMultiFuture = null;
+    private volatile @Nullable XFuture<?> lastCompletePrevFlipFMFuture = null;
 
     private volatile @Nullable XFuture<?> lastCompleteMultiCycleTestFuture = null;
 
@@ -245,9 +246,31 @@ public class Supervisor {
         return ret;
     }
 
+    /**
+     * Test multiple cycles of filling and emptying kit trays. The test is
+     * performed asynchronously in another thread.
+     *
+     * @param setupFile CSV file with tasks and robots
+     * @param positionMappingsFile CSV file with other filenames for transforms
+     * between robots
+     * @param teachFile CSV file with positions of parts in trays to teach the
+     * goal configuration
+     * @param startTime start time in ms since 1970 for performance log
+     * @param numCycles number of times to move parts back and forth between kit
+     * trays and parts trays
+     * @param useConveyor include use of the conveyor in the test
+     * @return future for determining when the test is done
+     * @throws IOException couldn't open one of the files or connect to one of
+     * the network servers
+     */
     @SuppressWarnings("guieffect")
-    public XFuture<MultiCycleResults> multiCycleTest(File setupFile, File positionMappingsFile, File teachFile,
-            long startTime, int numCycles, boolean useConveyor) throws IOException {
+    public XFuture<MultiCycleResults> multiCycleTest(
+            File setupFile,
+            File positionMappingsFile,
+            File teachFile,
+            long startTime,
+            int numCycles,
+            boolean useConveyor) throws IOException {
 
         String dir = setupFile.getParent();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
@@ -279,15 +302,66 @@ public class Supervisor {
                 }
             }
         });
-//        XFuture<?> completePrevMultiFuture =
-//                .loadSetupFile(setupFile)
-//                    .thenRun(() -> completeOpenSupevisor(supervisor, setupFile.getParent()))
-//                    .thenApply(x -> supervisor)
         lastCompletePrevMultiFuture = f3;
 
         XFuture<MultiCycleResults> ret = f3
                 .thenCompose(x -> completeMultiCycleTest(startTime, numCycles, useConveyor));
         lastCompleteMultiCycleTestFuture = ret;
+        return ret;
+    }
+
+    /**
+     * Test having Fanuc flip gear over with help of Motoman. The test is
+     * performed asynchronously in another thread.
+     *
+     * @param setupFile CSV file with tasks and robots
+     * @param positionMappingsFile CSV file with other filenames for transforms
+     * between robots
+     * @param startTime start time in ms since 1970 for performance log
+     * @return future for determining when the test is done
+     * @throws IOException couldn't open one of the files or connect to one of
+     * the network servers
+     */
+    @SuppressWarnings("guieffect")
+    public XFuture<Boolean> flipFMTest(
+            File setupFile,
+            File positionMappingsFile,
+            long startTime,
+            File fanucSimItemsFile) throws IOException {
+
+        String dir = setupFile.getParent();
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            startColorTextReader();
+        }
+        XFutureVoid f1 = loadSetupFile(setupFile);
+        XFutureVoid f2 = f1.thenRun(() -> {
+            try {
+                loadPositionMappingsFilesFile(positionMappingsFile);
+                AprsSystem fanucSys = getSysByTask("Fanuc Cart");
+                if (null != fanucSys) {
+                    if (fanucSys.isObjectViewSimulated()) {
+                        final Object2DOuterJPanel objectViewPanel = fanucSys.getObjectViewPanel();
+                        if (null != objectViewPanel) {
+                            objectViewPanel.loadFile(fanucSimItemsFile);
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        lastCompletePrevFlipFMFuture = f2;
+
+        XFuture<Boolean> ret = f2
+                .thenComposeAsync(x -> connectAll(), supervisorExecutorService)
+                .thenComposeAsync(x -> startFlipFM(), supervisorExecutorService);
+        lastCompletePrevFlipFMFuture = ret;
         return ret;
     }
 
@@ -339,6 +413,8 @@ public class Supervisor {
         public boolean useConveyor;
         public int stepsDone = 0;
         public int cyclesComplete;
+        public long timeDiff;
+        public String msg;
 
     }
 
@@ -421,8 +497,8 @@ public class Supervisor {
                 throw new RuntimeException("cycle_count = " + cycle_count + ", numCycles=" + numCycles);
             }
             long endTime = System.currentTimeMillis();
-            long timeDiff = endTime - startTime;
-            updateTestLog(cycle_count, timeDiff);
+            results.timeDiff = endTime - startTime;
+            updateTestLog(cycle_count, results.timeDiff);
             if (!xf2.isDone()) {
                 System.err.println("wtf");
             }
@@ -434,16 +510,18 @@ public class Supervisor {
             results.cyclesComplete = cycle_count;
             XFutureVoid dispatchFuture = runOnDispatchThread(() -> {
 
-                println("timeDiff = " + timeDiff);
+                println("timeDiff = " + results.timeDiff);
                 PlayAlert();
                 println();
                 println("===============================================================");
                 println();
-                String msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
-                        (timeDiff / 1000.0), (timeDiff / 3600000), (timeDiff / 60000) % 60,
-                        ((timeDiff / 1000)) % 60,
+                results.msg = String.format("Test took %.3f seconds  or %02d:%02d:%02d for %d cycles",
+                        (results.timeDiff / 1000.0),
+                        (results.timeDiff / 3600000),
+                        (results.timeDiff / 60000) % 60,
+                        ((results.timeDiff / 1000)) % 60,
                         cycle_count);
-                println(msg);
+                println(results.msg);
                 println();
                 println("===============================================================");
                 println();
@@ -635,26 +713,6 @@ public class Supervisor {
     @SuppressWarnings("serial")
     private static class PositionMappingTableModel extends DefaultTableModel {
 
-        // public PositionMappingTableModel() {
-//		}
-//
-//		public PositionMappingTableModel(int rowCount, int columnCount) {
-//			super(rowCount, columnCount);
-//		}
-//
-//		@SuppressWarnings("rawtypes")
-//		public PositionMappingTableModel(Vector columnNames, int rowCount) {
-//			super(columnNames, rowCount);
-//		}
-//
-//		public PositionMappingTableModel(Object[] columnNames, int rowCount) {
-//			super(columnNames, rowCount);
-//		}
-//
-//		@SuppressWarnings("rawtypes")
-//		public PositionMappingTableModel(Vector<? extends Vector> data, Vector<?> columnNames) {
-//			super(data, columnNames);
-//		}
         @SuppressWarnings({"rawtypes", "nullness"})
         public PositionMappingTableModel(@Nullable Object[][] data, Object[] columnNames) {
             super(data, columnNames);
@@ -4325,39 +4383,32 @@ public class Supervisor {
         }
 
         this.setVisible(false);
-        supervisorExecutorService.shutdownNow();
-        try {
-            supervisorExecutorService.awaitTermination(100, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+        if (null != supervisorThread && null != supervisorExecutorService) {
+            supervisorExecutorService.shutdownNow();
         }
         randomDelayExecutorService.shutdownNow();
-        try {
-            randomDelayExecutorService.awaitTermination(100, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
-        }
         if (null != processLauncher) {
             processLauncher.close().thenRun(this::myExit);
-
         } else {
             myExit();
         }
-
     }
 
     private void myExit() {
         if (null != displayJFrame) {
-            runOnDispatchThread(() -> {
-                if (null != displayJFrame) {
-                    displayJFrame.setVisible(false);
-                    displayJFrame.closeAprsRemoteConsoleService();
-                    displayJFrame.removeAll();
-                    displayJFrame.dispose();
-                }
-            });
+            displayJFrame.closeAprsRemoteConsoleService();
+            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                runOnDispatchThread(() -> {
+                    if (null != displayJFrame && !CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                        displayJFrame.setVisible(false);
+
+                        displayJFrame.removeAll();
+                        displayJFrame.dispose();
+                        CRCLUtils.systemExit(0);
+                    }
+                });
+            }
         }
-        CRCLUtils.systemExit(0);
     }
 
     private volatile @Nullable XFutureVoid ContinuousDemoFuture = null;
@@ -4928,7 +4979,8 @@ public class Supervisor {
                 List<Action> loadedActions = aprsSys.loadActionsFileEx(actionListFile, // File f,
                         false, // boolean showInOptaPlanner,
                         false, // newReverseFlag
-                        true // boolean forceNameChange
+                        true, // boolean forceNameChange
+                        null // options
                 );
             } catch (IOException ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
@@ -5084,8 +5136,13 @@ public class Supervisor {
 
         if (fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
                 || fanucCartSys.isEnforceMinMaxLimits() || sharedTableSys.isEnforceMinMaxLimits()) {
-            int confirm = JOptionPane.showConfirmDialog(this.displayJFrame,
-                    "Disable Alert Limits on " + fanucCartSys + " and " + sharedTableSys);
+            final int confirm;
+            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                confirm = JOptionPane.showConfirmDialog(this.displayJFrame,
+                        "Disable Alert Limits on " + fanucCartSys + " and " + sharedTableSys);
+            } else {
+                confirm = JOptionPane.YES_OPTION;
+            }
             if (confirm == JOptionPane.YES_OPTION) {
                 sharedTableSys.setAlertLimitsCheckBoxSelected(false);
                 fanucCartSys.setAlertLimitsCheckBoxSelected(false);
@@ -5163,22 +5220,23 @@ public class Supervisor {
 
         XFuture<Boolean> xf9 = xf8.thenCompose("startFlip.step8", x -> {
             logEvent("startFlip.step8 : xf8=" + xf8);
-            if(sharedTableSys.isObjectViewSimulated()) {
+            if (sharedTableSys.isObjectViewSimulated()) {
                 final Object2DOuterJPanel objectViewPanel = sharedTableSys.getObjectViewPanel();
-                if(null != objectViewPanel) {
+                if (null != objectViewPanel) {
                     objectViewPanel.setIgnoreMissedDropOffs(false);
                     objectViewPanel.setIgnoreMissedPickups(false);
                 }
             }
-            if(fanucCartSys.isObjectViewSimulated()) {
+            if (fanucCartSys.isObjectViewSimulated()) {
                 final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
-                if(null != objectViewPanel) {
+                if (null != objectViewPanel) {
                     objectViewPanel.setIgnoreMissedDropOffs(true);
                     objectViewPanel.setIgnoreMissedPickups(true);
                 }
             }
             return fanucCartSys.startActionsList("flip8",
                     Arrays.asList(new Action[]{
+                Action.newDisableOptimization(),
                 Action.newMoveRecordedJoints("returning"),
                 Action.newLookForParts(),
                 Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
@@ -5186,15 +5244,17 @@ public class Supervisor {
             }));
         });
         return xf9.thenApply(x -> {
-            if(fanucCartSys.isObjectViewSimulated()) {
+            if (fanucCartSys.isObjectViewSimulated()) {
                 final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
-                if(null != objectViewPanel) {
+                if (null != objectViewPanel) {
                     objectViewPanel.setIgnoreMissedDropOffs(false);
                     objectViewPanel.setIgnoreMissedPickups(false);
                 }
             }
             logEvent("startFlipFM completed.");
-            showMesssage("startFlipFM completed.");
+            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                showMesssage("startFlipFM completed.");
+            }
             return x;
         });
     }
@@ -6124,9 +6184,13 @@ public class Supervisor {
 
     @SuppressWarnings("nullness")
     public XFutureVoid showMesssage(String message) {
-        return Utils.runOnDispatchThread(() -> {
-            JOptionPane.showMessageDialog(displayJFrame, message);
-        });
+        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            return Utils.runOnDispatchThread(() -> {
+                JOptionPane.showMessageDialog(displayJFrame, message);
+            });
+        } else {
+            return XFutureVoid.completedFuture();
+        }
     }
 
     private static final XFutureVoid STEPPER_COMPLETED_FUTURE = XFutureVoid.completedFuture();
@@ -7317,8 +7381,10 @@ public class Supervisor {
 
     private final ExecutorService supervisorExecutorService = defaultSupervisorExecutorService;
 
+    private volatile @Nullable Thread randomDelayThread = null;
+
     private final ExecutorService defaultRandomDelayExecutorService = Executors
-            .newCachedThreadPool(new ThreadFactory() {
+            .newSingleThreadExecutor(new ThreadFactory() {
 
                 private int t;
 
@@ -7326,6 +7392,7 @@ public class Supervisor {
                 public Thread newThread(Runnable r) {
                     t++;
                     Thread thread = new Thread(r, "AprsSupervisor_random_delay_" + myThreadId + "_" + t);
+                    randomDelayThread = thread;
                     thread.setDaemon(true);
                     return thread;
                 }
@@ -10165,7 +10232,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData @Nullable []  [] = null;
+    private volatile Object lastTasksTableData         @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

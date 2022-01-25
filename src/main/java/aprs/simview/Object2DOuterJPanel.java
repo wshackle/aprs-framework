@@ -3116,7 +3116,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         }
     }// GEN-LAST:event_jCheckBoxConnectedActionPerformed
 
-    private void disconnect() {
+    public void disconnect() {
         if (null != visionSocketClient) {
             try {
                 visionSocketClient.close();
@@ -4030,6 +4030,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         this.object2DJPanel1.setSlotOffsetProvider(slotOffsetProvider);
     }
 
+    private volatile boolean connectedToCurrentPosition = false;
     private void connectCurrentPosition() {
         if (null != objectPanelToClone) {
             throw new RuntimeException("cloning");
@@ -4037,14 +4038,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         if (null != aprsSystem) {
             aprsSystem.addCurrentPoseListener(this.currentPoseListener);
         }
+        connectedToCurrentPosition = true;
     }
 
-    private void disconnectCurrentPosition() {
+    public void disconnectCurrentPosition() {
         if (null != objectPanelToClone) {
             throw new RuntimeException("cloning");
         }
-        if (null != aprsSystem) {
+        if (null != aprsSystem && connectedToCurrentPosition) {
+            connectedToCurrentPosition = false;
             aprsSystem.removeCurrentPoseListener(this.currentPoseListener);
+        }
+        if (showCurrentCachedCheckBox.isSelected()) {
+            showCurrentCachedCheckBox.setSelected(false);
         }
     }
 
@@ -4804,18 +4810,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     // End of variables declaration//GEN-END:variables
 
     public void dispose() {
-        if (null != this.visionSocketClient) {
-            try {
-                visionSocketClient.close();
-            } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "", ex);
-            }
-            visionSocketClient = null;
-        }
-        if (null != this.visionSocketServer) {
-            visionSocketServer.close();
-            visionSocketServer = null;
-        }
+        disconnect();
+        disconnectCurrentPosition();
     }
 
     private File propertiesFile;

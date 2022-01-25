@@ -950,6 +950,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     /**
      * Force the Object 2D Simulation View to refresh, this method has no effect
      * if the view is not visible or is not in simulation mode.
+     *
      * @return future for checking when refresh is done
      */
     public XFuture<Object2DOuterJPanel.SetItemsResult> refreshSimView() {
@@ -2756,7 +2757,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2779,7 +2780,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
+        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
                 CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
@@ -2883,7 +2884,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             if (null != programString) {
                 programFile = Utils.createTempFile("CRCLProgram", ".xml");
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
             }
@@ -3432,7 +3433,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         setTitleErrorString(errMsg);
                         throw new RuntimeException(errMsg);
                     }
-                }catch (Exception ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, "", ex);
                     Logger.getLogger(AprsSystem.class
@@ -3445,15 +3446,15 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             });
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "fanucServerProvider="+fanucServerProvider);
+                    .getName()).log(Level.SEVERE, "fanucServerProvider=" + fanucServerProvider);
             Class<? extends @Nullable ServerJInternalFrameProviderInterface> fsPClass = fanucServerProvider.getClass();
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "fsPClass="+fsPClass);
+                    .getName()).log(Level.SEVERE, "fsPClass=" + fsPClass);
             ProtectionDomain protectionDomain = fsPClass.getProtectionDomain();
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "protectionDomain="+protectionDomain);
+                    .getName()).log(Level.SEVERE, "protectionDomain=" + protectionDomain);
             Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "",ex);
+                    .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -4019,8 +4020,24 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void disconnectVision() {
+
         if (null != visionToDbJInternalFrame) {
-            runOnDispatchThread(visionToDbJInternalFrame::disconnectVision);
+            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                runOnDispatchThread(visionToDbJInternalFrame::disconnectVision);
+            } else {
+                visionToDbJInternalFrame.disconnectVision();
+            }
+        }
+        if (null != object2DViewJInternalFrame) {
+            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                runOnDispatchThread(() -> {
+                    object2DViewJInternalFrame.disconnect();
+                    object2DViewJInternalFrame.disconnectCurrentPosition();
+                });
+            } else {
+                object2DViewJInternalFrame.disconnect();
+                object2DViewJInternalFrame.disconnectCurrentPosition();
+            }
         }
     }
 
@@ -4666,7 +4683,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private void loadCustomWindowsFile() {
         final File fileToLoad = customWindowsFile;
         if (null != fileToLoad) {
-            try ( BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
                 String line = br.readLine();
                 while (line != null) {
                     line = line.trim();
@@ -4688,7 +4705,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
-        try ( BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
             props.load(br);
         }
         String classnameString = props.getProperty("classname");
@@ -7249,7 +7266,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
-        try ( PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -7261,7 +7278,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 actionFile, // File f,
                 false, // boolean showInOptaPlanner,
                 false, // newReverseFlag
-                true // boolean forceNameChange
+                true, // boolean forceNameChange
+                null // options
         );
     }
 
@@ -7270,7 +7288,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 actionFile, // File f,
                 false, // boolean showInOptaPlanner,
                 true, // newReverseFlag
-                true // boolean forceNameChange
+                true, // boolean forceNameChange
+                null // options
         );
     }
 
@@ -7288,11 +7307,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     public List<Action> loadActionsFileEx(File f,
             boolean showInOptaPlanner,
             boolean newReverseFlag,
-            boolean forceNameChange) throws IOException {
+            boolean forceNameChange,
+            ExecutorOption.WithValue<?, ?> @Nullable [] options) throws IOException {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Executor View must be open to use this function.");
         }
-        return executorJInternalFrame1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange);
+        return executorJInternalFrame1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange, options);
     }
 
     /**
@@ -7753,7 +7773,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             long doActions1TimeStart = System.currentTimeMillis();
             boolean actionsOk = executorJInternalFrame1.doActions(
                     comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount, startAbortCount,
-                    trace);
+                    trace,
+                    null // options
+            );
             long doActions1TimeEnd = System.currentTimeMillis();
             logToSuper("actionsOk=" + actionsOk + " time to complete = " + (doActions1TimeEnd - doActions1TimeStart)
                     + " ms");
@@ -7772,7 +7794,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 long doActions2TimeStart = System.currentTimeMillis();
                 boolean actionsOk2 = executorJInternalFrame1.doActions(
                         "2" + comment + "_" + reverseFirst + "_" + startAbortCount + "_" + startDisconnectCount,
-                        startAbortCount, trace);
+                        startAbortCount,
+                        trace,
+                        null //options
+                );
                 long doActions2TimeEnd = System.currentTimeMillis();
                 logToSuper("actionsOk2=" + actionsOk2 + " time to complete = "
                         + (doActions2TimeEnd - doActions2TimeStart) + " ms");
@@ -8376,7 +8401,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
-                try ( PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
@@ -8907,33 +8932,20 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 .thenCompose("startActions.pauseCheck.comment=" + comment + ", startRunNumber" + startRunNumber,
                         x -> waitForPause())
                 .thenApplyAsync(taskName, x -> {
-                    final Map<ExecutorOption, ?> origOptionsMap;
-                    final Map<ExecutorOption, Object> filteredOrigOptionsMap;
-                    if (null != options) {
-                        origOptionsMap = pddlExecutorJInternalFrame1Final.getOptions();
-                        filteredOrigOptionsMap = new HashMap<ExecutorOption, Object>();
-                        for (ExecutorOption.WithValue<?, ?> opt : options) {
-                            ExecutorOption key = opt.getKey();
-                            Object value = ((Object) opt.getValue());
-                            filteredOrigOptionsMap.put(key, value);
-                        }
-                        pddlExecutorJInternalFrame1Final.setOptions(options);
-                    } else {
-                        origOptionsMap = null;
-                        filteredOrigOptionsMap = null;
-                    }
+
                     try {
 
                         boolean startActionsInternalRet = startActionsInternal(
-                        	comment, 
-                        	startRunNumber, 
-                        	startAbortCount, 
-                        	newReverseFlag,
-                                reloadSimFiles, 
+                                comment,
+                                startRunNumber,
+                                startAbortCount,
+                                newReverseFlag,
+                                reloadSimFiles,
                                 actionsToLoad,
-                                trace1 //callertrace
-                                );
-                        
+                                trace1, //callertrace
+                                options
+                        );
+
                         return startActionsInternalRet;
                     } catch (Exception exception) {
                         Logger.getLogger(AprsSystem.class
@@ -8946,10 +8958,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                             throw (RuntimeException) exception;
                         } else {
                             throw new RuntimeException(exception);
-                        }
-                    } finally {
-                        if (null != filteredOrigOptionsMap) {
-                            pddlExecutorJInternalFrame1Final.setOptions(filteredOrigOptionsMap);
                         }
                     }
                 }, runProgramService)
@@ -8978,16 +8986,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private volatile StackTraceElement startActionsInternalTrace @Nullable []  = null;
 
     private boolean startActionsInternal(
-	    String comment,
+            String comment,
             long startRunNumber,
             int startAbortCount,
             boolean newReverseFlag,
             boolean reloadSimFiles,
             @Nullable List<Action> actionsToLoad,
-            StackTraceElement callertrace[]) throws IllegalStateException {
+            StackTraceElement callertrace[],
+            ExecutorOption.WithValue<?, ?> @Nullable [] options) throws IllegalStateException {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
+
         long currentRunNumber = runNumber.get();
         if (currentRunNumber != startRunNumber) {
             throw new IllegalStateException("runNumbeChanged");
@@ -9005,7 +9015,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             updateRobotLimits();
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                     for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
@@ -9014,12 +9024,16 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         f,
                         false,
                         newReverseFlag,
-                        false);
+                        false,
+                        options);
             } else {
                 reloadedActions = executorJInternalFrame1.reloadActionsFile(newReverseFlag);
             }
-            ret = executorJInternalFrame1.doActions("startActions." + comment + ", startRunNumber" + startRunNumber,
-                    startAbortCount, trace);
+            ret = executorJInternalFrame1.doActions(
+                    "startActions." + comment + ", startRunNumber" + startRunNumber,
+                    startAbortCount,
+                    trace,
+                    options);
             startActionsFinishComments
                     .add(comment + ",startRunNumber=" + startRunNumber + ",runNumber=" + currentRunNumber);
             if (currentRunNumber != startRunNumber) {
@@ -9032,12 +9046,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             }
         } catch (Exception ex) {
 
-            
             Logger logger = Logger.getLogger(AprsSystem.class
                     .getName());
-            logger.log(Level.SEVERE,"reloadedActions = {0}", reloadedActions);
-            logger.log(Level.SEVERE,"actionsToLoad = {0}", actionsToLoad);
-            logger.log(Level.SEVERE,"newReverseFlag = {0}" , newReverseFlag);
+            logger.log(Level.SEVERE, "reloadedActions = {0}", reloadedActions);
+            logger.log(Level.SEVERE, "actionsToLoad = {0}", actionsToLoad);
+            logger.log(Level.SEVERE, "newReverseFlag = {0}", newReverseFlag);
             logger.log(Level.SEVERE, "", ex);
             logger.log(Level.SEVERE, "currentThread={0}", Thread.currentThread());
             logger.log(Level.SEVERE, "reportertrace={0}", XFuture.traceToString(Thread.currentThread().getStackTrace()));
@@ -9876,7 +9889,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-        try ( FileReader fr = new FileReader(propertiesFile)) {
+        try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         try {
@@ -10793,7 +10806,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 File tmpPerfFile = Utils.createTempFile(task + "crcLClientPerfInfo", ".txt");
                 System.out.println("Saving Perf info for " + task + "  to " + tmpPerfFile);
-                try ( PrintStream ps = new PrintStream(
+                try (PrintStream ps = new PrintStream(
                         new FileOutputStream(tmpPerfFile))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
@@ -10970,7 +10983,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -10986,7 +10999,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {

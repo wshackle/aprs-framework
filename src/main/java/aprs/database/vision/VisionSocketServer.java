@@ -24,7 +24,11 @@ package aprs.database.vision;
 
 import aprs.database.PhysicalItem;
 import static aprs.misc.AprsCommonLogger.println;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -77,8 +81,7 @@ public class VisionSocketServer implements AutoCloseable {
 //        this.shutdownServiceOnClose = shutdownServiceOnClose;
 //        start();
 //    }
-
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public VisionSocketServer(int port, int backlog, InetAddress bindAddr) throws IOException {
         try {
             this.shutdownServiceOnClose = true;
@@ -91,7 +94,7 @@ public class VisionSocketServer implements AutoCloseable {
         }
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public VisionSocketServer(int port) throws IOException {
         try {
             this.shutdownServiceOnClose = true;
@@ -99,7 +102,54 @@ public class VisionSocketServer implements AutoCloseable {
             this.executorService = Executors.newCachedThreadPool(daemonThreadFactory);
             start();
         } catch (IOException iOException) {
+            final Logger logger = Logger.getLogger(VisionSocketServer.class.getName());
+            logger.log(Level.SEVERE, "Can't bind to port=" + port, iOException);
+            runNetStat(logger, port);
+
             throw new IOException("Can't bind to port=" + port, iOException);
+        }
+    }
+
+    public static  void runNetStat(final Logger logger, int port) {
+        try {
+        ProcessBuilder pb = new ProcessBuilder("/usr/bin/netstat", "-naptee");
+        File errFile = File.createTempFile("netstat_err", ".txt");
+        File outFile = File.createTempFile("netstat_out", ".txt");
+        logger.log(Level.SEVERE, "outFile={0}", outFile);
+        pb.redirectError(errFile);
+        pb.redirectOutput(outFile);
+        logger.log(Level.SEVERE, "Running " + pb.command());
+        Process process = pb.start();
+        try {
+            int code = process.waitFor();
+            final String portString = Integer.toString(port);
+            try (BufferedReader br = new BufferedReader(new FileReader(outFile))) {
+                String line;
+                while (null != (line = br.readLine())) {
+                    if (line.contains(portString)) {
+                        logger.log(Level.SEVERE, line);
+                    }
+                }
+            }
+            try (BufferedReader br = new BufferedReader(new FileReader(errFile))) {
+                String line;
+                while (null != (line = br.readLine())) {
+                    if (line.contains(portString)) {
+                        logger.log(Level.SEVERE, line);
+                    }
+                }
+            }
+            logger.log(Level.SEVERE, " " + pb.command() + " exited with code = " + code);
+        } catch (InterruptedException interruptedException) {
+            logger.log(Level.SEVERE, " " + pb.command() + " interrupted.", interruptedException);
+        }
+        } catch(Throwable throwable) {
+            logger.log(Level.SEVERE, "", throwable);
+            if(throwable instanceof RuntimeException) {
+                throw (RuntimeException) throwable;
+            } else {
+                throw new RuntimeException(throwable);
+            }
         }
     }
 
@@ -240,7 +290,7 @@ public class VisionSocketServer implements AutoCloseable {
                                         line));
                             }
                             Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE,
-                                    "port="+getPort()+", serverSocket="+serverSocket+", remoteAddress=" + remoteAddress,
+                                    "port=" + getPort() + ", serverSocket=" + serverSocket + ", remoteAddress=" + remoteAddress,
                                     ex1);
                         }
                     }
@@ -255,7 +305,7 @@ public class VisionSocketServer implements AutoCloseable {
                                     line));
                         }
                         Logger.getLogger(VisionSocketServer.class.getName()).log(Level.SEVERE,
-                                "port="+getPort()+", serverSocket="+serverSocket+", remoteAddress=" + remoteAddress,
+                                "port=" + getPort() + ", serverSocket=" + serverSocket + ", remoteAddress=" + remoteAddress,
                                 ex);
                     }
                 }
