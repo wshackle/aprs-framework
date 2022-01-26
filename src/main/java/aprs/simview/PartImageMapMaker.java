@@ -63,12 +63,14 @@ public class PartImageMapMaker {
             addPartImage(partImageMap, "big_gripper", "aprs/partImages/big_vacuum.png", 125.0, true, false, 0.0, 0.0);
             addPartImage(partImageMap, "sku_part_medium_gear", "aprs/partImages/medium_orange_gear.png", 75.0);
             addPartImage(partImageMap, "sku_part_large_gear", "aprs/partImages/large_green_gear.png", 100.0);
+             addPartImage(partImageMap, "sku_part_black_gear", "aprs/partImages/black_gear.png", 90.0);
             addPartImage(partImageMap, "sku_part_small_gear", "aprs/partImages/small_yellow_gear.png", 45.0);
             addPartImage(partImageMap, "sku_kit_s2l2_vessel", "aprs/partImages/red_s2l2_kit_tray_up.png", 220.0);
             addPartImage(partImageMap, "sku_large_gear_vessel", "aprs/partImages/purple_large_gear_tray_horz.png", 220.0);
             addPartImage(partImageMap, "sku_medium_gear_vessel", "aprs/partImages/blue_medium_gear_parts_tray.png", 160.0);
             addPartImage(partImageMap, "sku_small_gear_vessel", "aprs/partImages/orange_small_gear_parts_tray.png", 110.0);
             addPartImage(partImageMap, "sku_kit_m2l1_vessel", "aprs/partImages/m2l1_kit_tray_right.png", 190.0);
+           
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }

@@ -320,18 +320,18 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
     
     
-    public void setOptions(ExecutorOption.WithValue<?,?> ... options) {
-        this.executorJPanel1.setOptions(options);
-    }
-    
-    public void setOptions(Iterable<? extends ExecutorOption.WithValue<?,?>> options) {
-        this.executorJPanel1.setOptions(options);
-    }
-
-    public void setOptions(Map<? extends ExecutorOption,?> options) {
-        this.executorJPanel1.setOptions(options);
-    }
-    
+//    public void setOptions(ExecutorOption.WithValue<?,?> ... options) {
+//        this.executorJPanel1.setOptions(options);
+//    }
+//    
+//    public void setOptions(Iterable<? extends ExecutorOption.WithValue<?,?>> options) {
+//        this.executorJPanel1.setOptions(options);
+//    }
+//
+//    public void setOptions(Map<? extends ExecutorOption,?> options) {
+//        this.executorJPanel1.setOptions(options);
+//    }
+//    
     public void setOption(ExecutorOption key, Object value) {
         this.executorJPanel1.setOption(key, value);
     }
@@ -374,9 +374,14 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
 
     private final AprsSystem aprsSystem;
 
-    public List<Action> loadActionsFile(File f, boolean showInOptaPlanner, boolean newReverseFlag, boolean forceNameChange) throws IOException {
+    public List<Action> loadActionsFile(
+            File f,
+            boolean showInOptaPlanner, 
+            boolean newReverseFlag,
+            boolean forceNameChange,
+            ExecutorOption.WithValue<?, ?> @Nullable [] options) throws IOException {
 
-        return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange);
+        return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange,options);
     }
 
     @Override
@@ -423,8 +428,12 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return executorJPanel1.isDoingActions();
     }
 
-    public boolean doActions(String comment, int safeAbortCount, StackTraceElement[] callerTrace) {
-        return executorJPanel1.doActions(comment, safeAbortCount, callerTrace);
+    public boolean doActions(
+            String comment, 
+            int safeAbortCount, 
+            StackTraceElement[] callerTrace,
+            ExecutorOption.WithValue<?, ?> @Nullable [] options) {
+        return executorJPanel1.doActions(comment, safeAbortCount, callerTrace,options);
     }
 
     private final aprs.actions.executor.ExecutorJPanel executorJPanel1;
