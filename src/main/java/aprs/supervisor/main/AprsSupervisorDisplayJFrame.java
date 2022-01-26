@@ -4116,7 +4116,10 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     .alwaysComposeAsyncToVoid(() -> supervisorLocal.allowTogglesNoCheck(blockerName),
                             supervisorLocal.getSupervisorExecutorService()
                     )
-                    .thenRun(() -> logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn));
+                    .thenRun(() -> {
+                        logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn);
+                        JOptionPane.showMessageDialog(AprsSupervisorDisplayJFrame.this, actionName + " completed.");
+                    });
             interactivStartFuture = ret;
             return ret;
         } catch (Exception exception) {
@@ -4638,8 +4641,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 String portString = JOptionPane.showInputDialog(this, "Port for console service?", 7000);
                 int port = Integer.parseInt(portString);
                 Map<String, Scriptable<?>> scriptablesMap = new TreeMap<>();
-                scriptablesMap.put("display", scriptableOf(AprsSupervisorDisplayJFrame.class,this));
-                scriptablesMap.put("sup", scriptableOf(Supervisor.class,this.supervisor));
+                scriptablesMap.put("display", scriptableOf(AprsSupervisorDisplayJFrame.class, this));
+                scriptablesMap.put("sup", scriptableOf(Supervisor.class, this.supervisor));
                 scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
                 scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
                 aprsRemoteConsoleServerSocket = new AprsRemoteConsoleServerSocket(port, scriptablesMap);
@@ -4668,12 +4671,12 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         try {
             String overrideString = JOptionPane.showInputDialog("New Global CRCL Server Socket Speed Override?", 1.0);
             double override = Double.parseDouble(overrideString);
-            CRCLServerSocket.setGlobalSpeedOverride(override);            
+            CRCLServerSocket.setGlobalSpeedOverride(override);
         } catch (Exception ex) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
             JOptionPane.showMessageDialog(this, "Excetption occurred:" + ex);
         }
-       
+
     }//GEN-LAST:event_jMenuItemSetGlobalSpeedOverrideActionPerformed
 
     public void closeAprsRemoteConsoleService() {
@@ -5179,8 +5182,6 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         return supervisor.lookForPartsAll(keepDisabled);
     }
 
-    
-
     public XFutureVoid showScanCompleteDisplay() {
         final GraphicsDevice gd = this.getGraphicsConfiguration().getDevice();
         logEvent("Scans Complete");
@@ -5216,14 +5217,14 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         return supervisor.startFlipMFOnSupervisorService();
     }
-    
+
     private XFuture<?> startFlipFM() {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.startFlipFMOnSupervisorService();
     }
-    
+
     /**
      * Have each system scan the parts area to create an action list to fill
      * kits in a way similar to the current configuration. This may require
