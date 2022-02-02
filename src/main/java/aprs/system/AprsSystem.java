@@ -26,7 +26,6 @@ import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.shortenItemPartName;
 
 import java.awt.Container;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -169,8 +168,10 @@ import crcl.utils.outer.interfaces.ProgramRunData;
 import crcl.utils.server.CRCLServerSocket;
 import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
-import java.util.EnumMap;
+import javax.naming.NamingException;
+import javax.naming.spi.NamingManager;
 import rcs.posemath.PmCartesian;
+import sun.misc.ObjectInputFilter;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -192,6 +193,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         this(null, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
         if (immediate) {
             headlessEmptyInit();
+        }
+    }
+
+    static {
+        try {
+
+            ObjectInputFilter.Config.setSerialFilter(info -> ObjectInputFilter.Status.REJECTED);
+            NamingManager.setInitialContextFactoryBuilder(env -> {
+                throw new NamingException("JNDI disabled");
+            });
+        } catch (NamingException namingException) {
+            throw new RuntimeException(namingException);
         }
     }
 
