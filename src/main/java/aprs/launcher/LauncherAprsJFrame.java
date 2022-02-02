@@ -991,10 +991,6 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             File fanucSimItemsFile) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
-//        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
-//            supervisor.startColorTextReader();
-//            supervisor.setVisible(true);
-//        }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
 
         if (null != launchFile) {
