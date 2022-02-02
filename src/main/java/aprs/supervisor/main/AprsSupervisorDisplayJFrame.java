@@ -102,6 +102,7 @@ import aprs.remote.Scriptable;
 import static aprs.remote.Scriptable.scriptableOf;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.utils.CRCLUtils;
 import crcl.utils.server.CRCLServerSocket;
 
 /**
@@ -3222,31 +3223,46 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private volatile boolean closing = false;
 
     public void close() {
-        closing = true;
-        if (null != runTimeTimer) {
-            runTimeTimer.stop();
-            runTimeTimer = null;
-        }
-        if (null != conveyorVisJPanel1) {
-            this.conveyorVisJPanel1.disconnect();
-        }
-        this.colorTextJPanel1.stopReader();
-        if (null != colorTextJFrame) {
-            colorTextJFrame.setVisible(false);
-            colorTextJFrame = null;
-        }
-        if (null != colorTextSocket) {
-            try {
-                colorTextSocket.close();
-            } catch (IOException ex) {
-                log(Level.SEVERE, "", ex);
+        try {
+            closing = true;
+            if (null != runTimeTimer) {
+                runTimeTimer.stop();
+                runTimeTimer = null;
             }
-            colorTextSocket = null;
+            if (null != conveyorVisJPanel1) {
+                this.conveyorVisJPanel1.disconnect();
+            }
+            this.colorTextJPanel1.stopReader();
+            if (null != colorTextJFrame) {
+                colorTextJFrame.setVisible(false);
+                colorTextJFrame = null;
+            }
+            if (null != colorTextSocket) {
+                try {
+                    colorTextSocket.close();
+                } catch (IOException ex) {
+                    log(Level.SEVERE, "", ex);
+                }
+                colorTextSocket = null;
+            }
+            this.setVisible(false);
+            System.out.println("addOldEventToTableCount = " + this.addOldEventToTableCount);
+            System.out.println("addOldEventToTableResizeCount = " + this.addOldEventToTableResizeCount);
+            aprs.simview.Object2DJPanel.shutdownImageIOWriterService();
+            Thread.sleep(3000);
+            final Map<Thread, StackTraceElement[]> allStackTracesMap = Thread.getAllStackTraces();
+            for(Map.Entry<Thread, StackTraceElement[]> entry : allStackTracesMap.entrySet()) {
+                Thread thread = entry.getKey();
+                StackTraceElement[] trace = entry.getValue();
+                if(!thread.isDaemon() && thread.isAlive() && thread != Thread.currentThread()) {
+                    System.out.println("thread = " + thread);
+                    System.out.println("trace = " + XFuture.traceToString(trace));
+                }
+            }
+        CRCLUtils.systemExit(0);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
-        this.setVisible(false);
-        System.out.println("addOldEventToTableCount = " + this.addOldEventToTableCount);
-        System.out.println("addOldEventToTableResizeCount = " + this.addOldEventToTableResizeCount);
-
     }
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed

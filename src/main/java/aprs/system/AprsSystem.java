@@ -5969,7 +5969,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     .getName()).log(Level.SEVERE, "", ex);
         }
         try {
-            startDisconnectDatabase();
+            disconnectDatabase();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -10822,10 +10822,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != fanucServerProvider) {
             fanucServerProvider.disconnnectAllAndClose();
         }
-        runProgramService.shutdownNow();
-        if (null != aprsSystemDisplayJFrame) {
-            runOnDispatchThread(this::closeAprsSystemDisplayJFrame);
+        if(null != visionToDbJInternalFrame) {
+            visionToDbJInternalFrame.disconnectVision();
         }
+        runProgramService.shutdownNow();
+        closeAprsSystemDisplayJFrame();
         Runnable r = onCloseRunnable.getAndSet(null);
         if (null != r) {
             r.run();

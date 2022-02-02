@@ -4279,6 +4279,10 @@ public class Supervisor {
         }
         closing = true;
         XFuture.setClosingMode(true);
+        if(null != this.object2DOuterJPanel1) {
+            this.object2DOuterJPanel1.disconnect();
+            this.object2DOuterJPanel1.disconnectCurrentPosition();
+        }
 
         try {
             finishEncodingLiveImageMovie();

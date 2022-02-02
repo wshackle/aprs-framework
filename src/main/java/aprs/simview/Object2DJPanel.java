@@ -79,6 +79,7 @@ import aprs.system.AprsSystem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
+import java.util.concurrent.ExecutorService;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -636,12 +637,18 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, csvFile, itemsToPaint, w, h);
     }
 
-    private static final Executor imageIOWriterService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+    private static final ExecutorService imageIOWriterService = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-            return new Thread(r, "imageIOWriterService");
+            Thread t =  new Thread(r, "imageIOWriterService");
+            t.setDaemon(true);
+            return t;
         }
     });
+    
+    public static void shutdownImageIOWriterService() {
+        imageIOWriterService.shutdown();
+    }
 
     public ViewOptions currentViewOptions() {
         ViewOptions opts = new ViewOptions();

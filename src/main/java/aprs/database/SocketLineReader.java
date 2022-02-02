@@ -340,6 +340,7 @@ public class SocketLineReader {
                 }
             }
         }, threadname);
+        thread.setDaemon(true);
         thread.start();
     }
 

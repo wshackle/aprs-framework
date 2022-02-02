@@ -4026,6 +4026,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void gotoXYZ(double x, double y, double z) {
         CRCLProgramType program = this.createEmptyProgram();
+        SetTransSpeedType stst = new SetTransSpeedType();
+        setCommandId(stst);
+        TransSpeedAbsoluteType tas = new TransSpeedAbsoluteType();
+        tas.setSetting(crclGenerator.getSlowTransSpeed());
+        stst.setTransSpeed(tas);
+        final List<MiddleCommandType> middleCommands = CRCLUtils.middleCommands(program);
+        middleCommands.add(stst);
         MoveToType moveTo = new MoveToType();
         PoseType currentPose = aprsSystem.getCurrentPose();
         if (null == currentPose) {
@@ -4034,7 +4041,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         final VectorType xAxisCopy = requireNonNull(copy(currentPose.getXAxis()), "xAxisCopy");
         final VectorType zAxisCopy = requireNonNull(copy(currentPose.getZAxis()), "zAxisCopy");
         moveTo.setEndPosition(pose(point(x, y, z), xAxisCopy, zAxisCopy));
-        CRCLUtils.middleCommands(program).add(moveTo);
+        middleCommands.add(moveTo);
         startCrclProgram(program);
     }
 

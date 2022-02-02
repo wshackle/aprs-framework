@@ -1424,7 +1424,6 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
     private void jMenuItemExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemExitActionPerformed
         try {
             close();
-
         } catch (Exception ex) {
             Logger.getLogger(AprsSystemDisplayJFrame.class
                     .getName()).log(Level.SEVERE, "", ex);

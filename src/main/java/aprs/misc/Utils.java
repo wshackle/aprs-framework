@@ -118,6 +118,7 @@ public class Utils {
                 return file(new File(path.substring(0, index2+1)), path.substring(index2 + 1));
             }
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "path=" + path, e);
             throw new RuntimeException("path=" + path, e);
         }
     }
@@ -127,6 +128,9 @@ public class Utils {
     }
 
     public static File file(File parent, String append) throws IOException {
+        if(parent.toString().equals("..")) {
+            parent = new File(parent.getCanonicalPath());
+        }
         final File origParent = parent;
         final String origAppend = append;
         if (null == parent) {
@@ -151,12 +155,14 @@ public class Utils {
 //        }
         append = swapFileSeparators(append);
         String parentDirPrefix = ".." + File.separator;
+        File lastParentFile = parent;
         while (append.startsWith(parentDirPrefix)) {
+            lastParentFile = parent;
             parent = parent.getParentFile();
             append = append.substring(parentDirPrefix.length());
             if (parent == null) {
                 if (append.startsWith(parentDirPrefix)) {
-                    throw new RuntimeException("parent=null : append=" + append + ", origParent=" + origParent + ", origAppend=" + origAppend);
+                    throw new RuntimeException("parent=null : append=" + append + ", origParent=" + origParent + ", origParent.getCanonicalPath()=" + origParent.getCanonicalPath() + ", lastParentFile=" + lastParentFile + ", lastParentFile.getCanonicalPath()=" + lastParentFile.getCanonicalPath() + ", origAppend=" + origAppend);
                 } else {
                     return new File(append);
                 }
