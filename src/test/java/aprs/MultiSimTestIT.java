@@ -24,7 +24,7 @@ public class MultiSimTestIT {
     private static final String SYSFILE_PATH = System.getProperty("test.aprs.sysFilePath", EXAMPLE_SETTINGS_DIR + "multisim9.csv");
     private static final String POSMAPPINGS_PATH = System.getProperty("test.aprs.posMapPath", EXAMPLE_SETTINGS_DIR + "posmaps.csv");
     private static final String TEACHFILE_PATH = System.getProperty("test.aprs.teachPropsPath", EXAMPLE_SETTINGS_DIR + "teachProps.txt");
-    private static final int SLOW_TEST_CYCLES = Integer.parseInt(System.getProperty("test.aprs.slowTestCycles", "3"));
+    private static final int SLOW_TEST_CYCLES = Integer.parseInt(System.getProperty("test.aprs.slowTestCycles", "2"));
 
     private static final String FLIPFM_SIM_ITEMS_FILE = System.getProperty("test.aprs.flipFMSimItems", EXAMPLE_SETTINGS_DIR + "simulated_fanuc/fanuc_cart_objects_with_black_gear.csv");
     
@@ -38,7 +38,15 @@ public class MultiSimTestIT {
     @Test(groups = {"slow"})
     public void multiCycleTest() {
         try {
-            
+            long tstart = System.currentTimeMillis();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
             logger.severe("starting  multiCycleTest");
             VisionSocketServer.runNetStat(logger, 4001);
             CRCLUtils.setAllowExit(false);
@@ -54,6 +62,20 @@ public class MultiSimTestIT {
                             Utils.file(TEACHFILE_PATH), SLOW_TEST_CYCLES, false);
             final Supervisor.MultiCycleResults completedResults = results.get();
             System.out.println("results.get().stepsDone = " + completedResults.stepsDone);
+            long tend = System.currentTimeMillis();
+            long tdiff = tend - tstart;
+            System.out.println("tdiff = " + tdiff);
+            int minutes = (int) (((double) tdiff)/60000.0);
+            int seconds = (int) (((double) tdiff)/1000.0);
+            System.out.printf("multiCycleTest took %d minutes and %d seconds",minutes,seconds);
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
             Assert.assertEquals(completedResults.numCycles, completedResults.cyclesComplete);
             Assert.assertEquals(SLOW_TEST_CYCLES, completedResults.cyclesComplete);
 
@@ -69,6 +91,15 @@ public class MultiSimTestIT {
     @Test(groups = {"slow"})
     public void flipFMTest() {
         try {
+            long tstart = System.currentTimeMillis();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
             logger.severe("starting  flipFMTest");
             VisionSocketServer.runNetStat(logger, 4001);
             CRCLUtils.setAllowExit(false);
@@ -85,6 +116,20 @@ public class MultiSimTestIT {
                     );
             final Boolean completedResults = results.get();
             System.out.println("completedResults = " + completedResults);
+            long tend = System.currentTimeMillis();
+            long tdiff = tend - tstart;
+            System.out.println("tdiff = " + tdiff);
+            int minutes = (int) (((double) tdiff)/60000.0);
+            int seconds = (int) (((double) tdiff)/1000.0);
+            System.out.printf("flipFMTest took %d minutes and %d seconds",minutes,seconds);
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
             Assert.assertEquals(completedResults, Boolean.TRUE);
 
         } catch (Throwable ex) {
