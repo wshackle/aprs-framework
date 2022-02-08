@@ -171,7 +171,6 @@ import crcl.utils.server.ServerJInternalFrameProviderInterface;
 import javax.naming.NamingException;
 import javax.naming.spi.NamingManager;
 import rcs.posemath.PmCartesian;
-import sun.misc.ObjectInputFilter;
 
 /**
  * AprsSystem is the container for one robotic system in the APRS (Agility
@@ -198,8 +197,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     static {
         try {
-
-            ObjectInputFilter.Config.setSerialFilter(info -> ObjectInputFilter.Status.REJECTED);
             NamingManager.setInitialContextFactoryBuilder(env -> {
                 throw new NamingException("JNDI disabled");
             });
