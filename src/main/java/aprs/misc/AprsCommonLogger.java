@@ -22,6 +22,7 @@
  */
 package aprs.misc;
 
+import crcl.utils.CRCLUtils;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -55,6 +56,7 @@ public class AprsCommonLogger {
     }
 
     public static class System {
+
         public static final PrintStream out = out();
         public static final PrintStream err = err();
     }
@@ -107,10 +109,14 @@ public class AprsCommonLogger {
         origSystemErr = java.lang.System.err;
         outStream = new AprsCommonPrintStream(origSystemOut, stringConsumers);
         errStream = new AprsCommonPrintStream(origSystemErr, stringConsumers);
-        java.lang.System.setOut(outStream);
-        java.lang.System.setErr(errStream);
+        if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
+            java.lang.System.setOut(outStream);
+            java.lang.System.setErr(errStream);
+        }
         try {
             logFile = Utils.createTempFile("aprsPrintLogs_", ".txt");
+            origSystemOut.println("logging to " + logFile);
+            origSystemErr.println("logging to " + logFile);
             auxPrintStream = new PrintStream(logFile);
             stringConsumers.add(auxConsumer);
         } catch (Exception ex) {

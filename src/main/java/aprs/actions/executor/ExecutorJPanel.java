@@ -205,6 +205,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public ExecutorJPanel(AprsSystem aprsSystem1, Component parentComponent) {
+        assert SwingUtilities.isEventDispatchThread();
         this.aprsSystem = aprsSystem1;
         this.parentComponent = parentComponent;
 
@@ -276,7 +277,8 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 jTablePddlOutput.addMouseListener(new PddlOutputTableMouseListener());
                 toolOffsetTablemModelListenerEnabled = true;
                 setToolOffsetTableModelListenerOnDisplay();
-                setTrayAttachOffsetTableModelListener();
+                trayAttachOffsetTablemModelListenerEnabled = true;
+                setTrayAttachOffsetTableModelListenerOnDisplay();
             }
         } catch (Exception e) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", e);
@@ -460,6 +462,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             String valueString = String.format("%.3f,%.3f,%.3f", x, y, z);
             return aprsSystem.runOnDispatchThread("setLookForXYZ",
                     () -> setOptionsTableEntry("lookForXYZ", valueString));
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @UIEffect
+    public void setLookForXYZOnDisplay(double x, double y, double z) {
+        try {
+            String valueString = String.format("%.3f,%.3f,%.3f", x, y, z);
+            setOptionsTableEntry("lookForXYZ", valueString);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -3761,7 +3774,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     @SuppressWarnings("guieffect")
     private XFutureVoid loadProgramToTable(CRCLProgramType crclProgram) {
-        if (SwingUtilities.isEventDispatchThread()) {
+        if (SwingUtilities.isEventDispatchThread() || CRCLUtils.isGraphicsEnvironmentHeadless()) {
             loadProgramToTableInternal(crclProgram);
             return XFutureVoid.completedFuture();
         } else {
@@ -4973,7 +4986,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 final int safeAbortRequestCount1 = getSafeAbortRequestCount();
                 doActions(
                         "runButtonPressed_" + safeAbortRequestCount1 + "_" + jTextFieldPddlOutputActions.getText(),
-                        safeAbortRequestCount1, 
+                        safeAbortRequestCount1,
                         Thread.currentThread().getStackTrace(),
                         null // options
                 );
@@ -6811,38 +6824,42 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             throw new RuntimeException(ex);
                         }
                     }, generateCrclService);
-            return newItemsFuture.thenComposeToVoid((List<PhysicalItem> newItems) -> {
-                final List<PhysicalItem> newItemsCopy = new ArrayList<>(newItems);
-                return Utils.runOnDispatchThread(() -> {
-                    manualObjectCachedComboBox.removeAllElements();
-                    manualSlotCachedComboBox.removeAllElements();
-                    Function<PhysicalItem, String> keyExtractor = PhysicalItem::getFullName;
-                    final Comparator<PhysicalItem> itemsComparator = Comparator.comparing(keyExtractor);
-                    newItemsCopy.sort(itemsComparator);
-                    for (PhysicalItem item : newItemsCopy) {
-                        String fullName = item.getFullName();
-                        if (null != fullName) {
-                            switch (item.getType()) {
-                                case "P":
-                                case "KT":
-                                case "PT":
-                                    manualObjectCachedComboBox.addElement(fullName);
-                                    break;
-
-                                case "ES":
-                                case "SLOT":
-                                    manualSlotCachedComboBox.addElement(fullName);
-                                    break;
-                            }
-                        }
-                    }
-                    updatePositionCacheTable();
-                });
-            });
+            return newItemsFuture.thenAcceptAsync((List<PhysicalItem> newItems) -> {
+                updatePoseCacheStep2OnDisplay(newItems);
+            }, Utils.getDispatchThreadExecutorService());
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    private void updatePoseCacheStep2OnDisplay(List<PhysicalItem> newItems) {
+        final List<PhysicalItem> newItemsCopy = new ArrayList<>(newItems);
+//                        return Utils.runOnDispatchThread(() -> {
+        manualObjectCachedComboBox.removeAllElements();
+        manualSlotCachedComboBox.removeAllElements();
+        Function<PhysicalItem, String> keyExtractor = PhysicalItem::getFullName;
+        final Comparator<PhysicalItem> itemsComparator = Comparator.comparing(keyExtractor);
+        newItemsCopy.sort(itemsComparator);
+        for (PhysicalItem item : newItemsCopy) {
+            String fullName = item.getFullName();
+            if (null != fullName) {
+                switch (item.getType()) {
+                    case "P":
+                    case "KT":
+                    case "PT":
+                        manualObjectCachedComboBox.addElement(fullName);
+                        break;
+
+                    case "ES":
+                    case "SLOT":
+                        manualSlotCachedComboBox.addElement(fullName);
+                        break;
+                }
+            }
+        }
+        updatePositionCacheTable();
+//                        },generateCrclService);
     }
 
     @UIEffect

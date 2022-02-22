@@ -1747,12 +1747,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 safeAbortFuture = localSafeAbortFuture;
 
                 XFutureVoid localsafeAbortAndDisconnectFutureWaitAll1 = localSafeAbortFuture
-                        .thenComposeToVoid(
+                        .thenComposeAsyncToVoid(
                                 "startSafeAbortAndDisconnect(" + comment + ") waitAllLastFutures",
                                 x -> {
                                     setStopRunTime();
                                     return waitAllLastFutures();
-                                });
+                                }, runProgramService);
                 this.safeAbortAndDisconnectFutureWaitAll1 = localsafeAbortAndDisconnectFutureWaitAll1;
                 XFutureVoid localsafeAbortAndDisconnectFutureDisconnect2 = localsafeAbortAndDisconnectFutureWaitAll1
                         .thenRunAsync(localSafeAbortFuture.getName() + ".disconnect." + robotName,
@@ -1772,7 +1772,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                                 runProgramService);
                 this.safeAbortAndDisconnectFutureDisconnect2 = localsafeAbortAndDisconnectFutureDisconnect2;
                 XFutureVoid localsafeAbortAndDisconnectFutureWaitAll2 = localsafeAbortAndDisconnectFutureDisconnect2
-                        .thenComposeToVoid(x -> waitAllLastFutures())
+                        .thenComposeAsyncToVoid(x -> waitAllLastFutures(), runProgramService)
                         .alwaysRunAsync(() -> {
                             synchronized (this) {
                                 logEvent("END startSafeAbortAndDisconnect", comment, connected, doingActons, count);
@@ -3405,49 +3405,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             return runOnDispatchThread(() -> {
                 try {
-                    fanucServerProvider = getServerProvider("FanucCRCLServer");
-                    if (null != fanucServerProvider) {
-                        fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
-                        fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
-                        addInternalFrame(fanucCRCLServerJInternalFrame);
-                    } else {
-                        System.out.println("");
-                        System.out.flush();
-                        System.err.println("");
-                        System.err.flush();
-                        System.err.println("startFanucCrclServer: serverJInternalFrameProviderFinders = "
-                                + serverJInternalFrameProviderFinders);
-                        final String[] classpaths = System.getProperty("java.class.path")
-                                .split(System.getProperty("path.separator"));
-                        System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
-                        for (int i = 0; i < classpaths.length; i++) {
-                            String classpath = classpaths[i];
-                            System.err.println("   \tstartFanucCrclServer: classpath[" + i + " of " + classpaths.length
-                                    + "] = " + classpath);
-                        }
-                        System.out.println("");
-                        System.out.flush();
-                        System.err.println("");
-                        System.err.flush();
-                        try {
-                            Class<?> clzz = Class.forName(
-                                    "com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrameProviderFinder");
-                            System.out.println("clzz = " + clzz);
-                            ProtectionDomain protDom = clzz.getProtectionDomain();
-                            System.out.println("protDom = " + protDom);
-                        } catch (ClassNotFoundException ex) {
-                            Logger.getLogger(CRCLServerSocket.class
-                                    .getName()).log(Level.SEVERE, null, ex);
-                        }
-                        final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
-                        setTitleErrorString(errMsg);
-                        throw new RuntimeException(errMsg);
-                    }
+                    startFanucCrclServerOnDisplay();
                 } catch (Exception ex) {
-                    Logger.getLogger(AprsSystem.class
-                            .getName()).log(Level.SEVERE, "", ex);
-                    Logger.getLogger(AprsSystem.class
-                            .getName()).log(Level.SEVERE, "", ex);
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, "", ex);
                     setTitleErrorString(ex.getMessage());
@@ -3467,6 +3426,48 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
             throw new RuntimeException(ex);
+        }
+    }
+
+    @UIEffect
+    private void startFanucCrclServerOnDisplay() throws RuntimeException {
+        fanucServerProvider = getServerProvider("FanucCRCLServer");
+        if (null != fanucServerProvider) {
+            fanucServerProvider.start(fanucPreferRNN, fanucNeighborhoodName, fanucRobotHost, fanucCrclPort);
+            fanucCRCLServerJInternalFrame = fanucServerProvider.getJInternalFrame();
+            addInternalFrame(fanucCRCLServerJInternalFrame);
+        } else {
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            System.err.println("startFanucCrclServer: serverJInternalFrameProviderFinders = "
+                    + serverJInternalFrameProviderFinders);
+            final String[] classpaths = System.getProperty("java.class.path")
+                    .split(System.getProperty("path.separator"));
+            System.err.println("startFanucCrclServer: classpaths = " + Arrays.toString(classpaths));
+            for (int i = 0; i < classpaths.length; i++) {
+                String classpath = classpaths[i];
+                System.err.println("   \tstartFanucCrclServer: classpath[" + i + " of " + classpaths.length
+                        + "] = " + classpath);
+            }
+            System.out.println("");
+            System.out.flush();
+            System.err.println("");
+            System.err.flush();
+            try {
+                Class<?> clzz = Class.forName(
+                        "com.github.wshackle.fanuccrclservermain.FanucCRCLServerJInternalFrameProviderFinder");
+                System.out.println("clzz = " + clzz);
+                ProtectionDomain protDom = clzz.getProtectionDomain();
+                System.out.println("protDom = " + protDom);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(CRCLServerSocket.class
+                        .getName()).log(Level.SEVERE, null, ex);
+            }
+            final String errMsg = "no fanucServerProvider (Please add  -Padd_run_deps  to mvn command line or fanucCRCLServer classes/jar to classpath)";
+            setTitleErrorString(errMsg);
+            throw new RuntimeException(errMsg);
         }
     }
 
@@ -4008,38 +4009,37 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private final Consumer<Integer> visionLineListener;
 
-    public XFutureVoid connectVision() {
+    public void connectVision() {
         if (closing) {
             throw new IllegalStateException("Attempt to start connect vision when already closing.");
         }
         if (null == visionToDbJInternalFrame) {
             throw new IllegalStateException("null == visionToDbJInternalFrame");
         }
-        return Utils.supplyOnDispatchThread(visionToDbJInternalFrame::connectVision)
-                .thenComposeToVoid(x -> x)
-                .thenRun(() -> {
-                    final Object2DViewJInternalFrame object2DViewJInternalFrameLocal = object2DViewJInternalFrame;
-                    if (null != object2DViewJInternalFrameLocal) {
-                        object2DViewJInternalFrameLocal.addPublishCountListener(simPublishCountListener);
-                    }
-                    final VisionToDbJInternalFrame visionToDbJInternalFrameLocal = visionToDbJInternalFrame;
-                    if (null != visionToDbJInternalFrameLocal) {
-                        visionToDbJInternalFrameLocal.addLineCountListener(visionLineListener);
-                    }
-                });
+        visionToDbJInternalFrame.connectVision();
+//                .thenRun(() -> {
+        final Object2DViewJInternalFrame object2DViewJInternalFrameLocal = object2DViewJInternalFrame;
+        if (null != object2DViewJInternalFrameLocal) {
+            object2DViewJInternalFrameLocal.addPublishCountListener(simPublishCountListener);
+        }
+        final VisionToDbJInternalFrame visionToDbJInternalFrameLocal = visionToDbJInternalFrame;
+        if (null != visionToDbJInternalFrameLocal) {
+            visionToDbJInternalFrameLocal.addLineCountListener(visionLineListener);
+        }
+//                });
     }
 
     public void disconnectVision() {
 
         if (null != visionToDbJInternalFrame) {
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 runOnDispatchThread(visionToDbJInternalFrame::disconnectVision);
             } else {
                 visionToDbJInternalFrame.disconnectVision();
             }
         }
         if (null != object2DViewJInternalFrame) {
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 runOnDispatchThread(() -> {
                     object2DViewJInternalFrame.disconnect();
                     object2DViewJInternalFrame.disconnectCurrentPosition();
@@ -4083,8 +4083,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * Initialize the frame with the previously saved settings if available.
      */
     private XFutureVoid defaultInit() {
-        return initLoggerWindow()
-                .thenComposeToVoid(this::commonInit);
+        XFutureVoid displayInit = Utils.runOnDispatchThread(() -> {
+            initLoggerWindowOnDisplay();
+            startWindowsFromMenuCheckBoxesOnDisplay();
+        });
+        return commonInitStep2(displayInit);
+    }
+    
+    @UIEffect
+    private XFutureVoid defaultInitOnDisplay() {
+        initLoggerWindowOnDisplay();
+            startWindowsFromMenuCheckBoxesOnDisplay();
+        return commonInitStep2(XFutureVoid.completedFuture());
     }
 
     private void clearStartCheckBoxes() {
@@ -4108,7 +4118,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         skipCreateDbSetupFrame = true;
         clearStartCheckBoxes();
         return initLoggerWindow()
-                .thenComposeToVoid(this::commonInit);
+                .thenComposeAsyncToVoid(this::commonInit, runProgramService);
     }
 
     private void headlessEmptyInit() {
@@ -4119,7 +4129,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     @SuppressWarnings("guieffect")
     private static boolean isHeadless() {
-        return CRCLUtils.graphicsEnvironmentIsHeadless();
+        return CRCLUtils.isGraphicsEnvironmentHeadless();
     }
 
     public static XFuture<AprsSystem> createSystem(File propertiesFile) {
@@ -4188,6 +4198,17 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
     }
 
+    private static volatile @Nullable Thread starterServiceThread = null;
+    private static final ExecutorService starterService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, "AprsSystem.starterServiceThread");
+            thread.setDaemon(true);
+            starterServiceThread = thread;
+            return thread;
+        }
+    });
+
     private static XFuture<AprsSystem> createPrevAprsSystemWithSwingDisplay2() {
         AprsSystemDisplayJFrame aprsSystemDisplayJFrame1 = new AprsSystemDisplayJFrame();
         AprsSystem system = new AprsSystem(aprsSystemDisplayJFrame1,
@@ -4195,7 +4216,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             return system
                     .loadProperties()
-                    .thenComposeToVoid(() -> system.defaultInit())
+                    .thenComposeAsyncToVoid(() -> system.defaultInit(), starterService)
                     .thenApply(x -> {
                         aprsSystemDisplayJFrame1.setAprsSystem(system);
                         return system;
@@ -4216,7 +4237,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             if (null != propertiesFile) {
                 system.setPropertiesFile(propertiesFile);
                 return system.loadProperties()
-                        .thenComposeToVoid(() -> system.defaultInit())
+                        .thenComposeAsyncToVoid(() -> system.defaultInit(), starterService)
                         .thenApply(x -> {
                             aprsSystemDisplayJFrame1.setAprsSystem(system);
                             return system;
@@ -4248,7 +4269,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private static XFuture<AprsSystem> createPrevAprsSystemHeadless() throws IOException {
         AprsSystem system = new AprsSystem();
         return system.loadProperties()
-                .thenComposeToVoid(() -> system.defaultInit())
+                .thenComposeAsyncToVoid(() -> system.defaultInitOnDisplay(), Utils.getDispatchThreadExecutorService())
                 .thenApply(x -> {
                     return system;
                 });
@@ -4259,7 +4280,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != propertiesFile) {
             system.setPropertiesFile(propertiesFile);
             return system.loadProperties()
-                    .thenComposeToVoid(() -> system.defaultInit())
+                    .thenComposeAsyncToVoid(() -> system.defaultInitOnDisplay(),Utils.getDispatchThreadExecutorService())
                     .thenSupply(() -> {
                         return system;
                     });
@@ -4279,7 +4300,25 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (debug) {
             println("commonInitCount = " + currentCommonInitCout);
         }
-        return startWindowsFromMenuCheckBoxes()
+        final XFutureVoid startWindowsFromMenuCheckBoxesFuture = startWindowsFromMenuCheckBoxes();
+        return commonInitStep2(startWindowsFromMenuCheckBoxesFuture);
+    }
+
+    private XFutureVoid commonInitStep2(final XFutureVoid startWindowsFromMenuCheckBoxesFuture) {
+        return startWindowsFromMenuCheckBoxesFuture
+                .thenComposeAsync("commonInitConnectDatabase", x -> {
+                    boolean startConnectDatabaseSelected = isConnectDatabaseOnSetupStartupSelected();
+                    if (startConnectDatabaseSelected) {
+                        return startConnectDatabase();
+                    } else {
+                        return XFuture.completedFuture(false);
+                    }
+                }, getRunProgramService())
+                .thenRunAsync("commonInitConnectVision", () -> {
+                    if (isConnectVisionOnStartupSelected()) {
+                        connectVision();
+                    }
+                }, getRunProgramService())
                 .thenRun(this::completeCommonInit)
                 .peekNoCancelException((Throwable t) -> {
                     Utils.runOnDispatchThread(() -> {
@@ -4520,35 +4559,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         public R get();
     }
 
-    // @SuppressWarnings("guieffect")
-//    private static boolean isEventDispatchThread() {
-//        return SwingUtilities.isEventDispatchThread();
-//    }
-//    /**
-//     * Call a method that returns a value on the dispatch thread.
-//     *
-//     * @param <R> type of return of the caller
-//     * @param s supplier object with get method to be called.
-//     * @return future that will make the return value accessible when the call
-//     * is complete.
-//     */
-//    @SuppressWarnings("guieffect")
-//    private static <R> R supplyAndWaitOnDispatchThread(final UISupplier<R> s) {
-//
-//        try {
-//            if (isEventDispatchThread()) {
-//                return s.get();
-//            } else {
-//                AtomicReference<R> ret = new AtomicReference<>();
-//                javax.swing.SwingUtilities.invokeAndWait(() -> ret.set(s.get()));
-//                return ret.get();
-//            }
-//        } catch (InterruptedException | InvocationTargetException ex) {
-//            Logger.getLogger(AprsSystem.class
-//                    .getName()).log(Level.SEVERE, "", ex);
-//            throw new RuntimeException(ex);
-//        }
-//    }
     private boolean isConnectDatabaseOnSetupStartupSelected() {
         return onStartupConnectDatabaseCheckBox.isSelected();
     }
@@ -4567,121 +4577,66 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private XFutureVoid startWindowsFromMenuCheckBoxes() {
-        return Utils.supplyOnDispatchThread(this::startWindowsFromMenuCheckBoxesInternal)
-                .thenComposeToVoid(x -> x);
+        return Utils.runOnDispatchThread(this::startWindowsFromMenuCheckBoxesOnDisplay);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @UIEffect
-    private XFutureVoid startWindowsFromMenuCheckBoxesInternal() {
+    private void startWindowsFromMenuCheckBoxesOnDisplay() {
         try {
-            boolean onDispatchThread = SwingUtilities.isEventDispatchThread();
-            if (!onDispatchThread) {
-                throw new RuntimeException("Thread.currentThread()=" + Thread.currentThread());
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
+                boolean onDispatchThread = SwingUtilities.isEventDispatchThread();
+                if (!onDispatchThread) {
+                    throw new RuntimeException("Thread.currentThread()=" + Thread.currentThread());
+                }
             }
-            List<XFuture<?>> futures = new ArrayList<>();
             if (isKitInspectionStartupSelected()) {
-                XFutureVoid startKitInspectionFuture = startKitInspection();
-                futures.add(startKitInspectionFuture);
+                startKitInspectionOnDisplay();
             }
-//            if (isPddlPlannerStartupSelected()) {
-//                XFutureVoid startPddlPlannerFuture = startPddlPlanner();
-//                futures.add(startPddlPlannerFuture);
-//            }
+
             if (isExecutorStartupSelected()) {
-                XFutureVoid startExecutorFuture = startActionListExecutor();
-                futures.add(startExecutorFuture);
+                startActionsToCrclJInternalFrameOnDisplay();
             }
             XFutureVoid startVisionToDbFuture = null;
             if (isObjectSpStartupSelected()) {
-                startVisionToDbFuture = startVisionToDbJinternalFrame();
-                futures.add(startVisionToDbFuture);
+                startVisionToDbJinternalFrameOnDisplay();
             }
             XFutureVoid object2DViewFuture = null;
             if (isObject2DViewStartupSelected()) {
-                object2DViewFuture = startObject2DJinternalFrame();
-                futures.add(object2DViewFuture);
+                startObject2DJinternalFrameOnDisplay();
             }
-            XFutureVoid serverFuture = null;
             if (isRobotCrclSimServerStartupSelected()) {
-                XFutureVoid startSimServerFuture = startSimServerJInternalFrame();
-                serverFuture = startSimServerFuture;
-                futures.add(startSimServerFuture);
+                startSimServerJInternalFrameOnDisplay();
             }
 
             if (isExploreGraphDBStartupSelected()) {
-                XFutureVoid startExploreGraphDbFuture = startExploreGraphDb();
-                futures.add(startExploreGraphDbFuture);
+                startExploreGraphDbOnDisplay();
             }
             if (isRobotCrclFanucServerStartupSelected()) {
-                XFutureVoid startFanucFuture = startFanucCrclServer();
-                serverFuture = startFanucFuture;
-                futures.add(startFanucFuture);
+                startFanucCrclServerOnDisplay();
             }
             if (isRobotCrclMotomanServerStartupSelected() && !noMotomanServerProviderErrorOccured) {
-                XFutureVoid startMotomanFuture = startMotomanCrclServer();
-                serverFuture = startMotomanFuture;
-                futures.add(startMotomanFuture);
+                startMotomanCrclServerOnDisplay();
             }
             if (isRobotCrclGUIStartupSelected()) {
-                if (null != serverFuture) {
-                    XFutureVoid startCrclClientFuture = serverFuture
-                            .thenComposeToVoid(x -> startCrclClientJInternalFrame());
-                    futures.add(startCrclClientFuture);
-                } else {
-                    XFutureVoid startCrclClientFuture = startCrclClientJInternalFrame();
-                    futures.add(startCrclClientFuture);
-                }
+                startCrclClientJInternalFrameOnDisplay();
+
             }
             if (isForceTorqueSimStartupSelected()) {
-                if (null != serverFuture) {
-                    XFutureVoid startForceTorqueSimFuture = serverFuture.thenComposeToVoid(x -> startForceTorqueSim());
-                    futures.add(startForceTorqueSimFuture);
-                } else {
-                    XFutureVoid startForceTorqueSimFuture = startForceTorqueSim();
-                    futures.add(startForceTorqueSimFuture);
-                }
+                startForceTorqueSimOnDisplay();
             }
             if (isShowDatabaseSetupStartupSelected() && (!skipCreateDbSetupFrame)) {
                 createDbSetupFrame();
             }
             if (isShowDatabaseSetupStartupSelected()) {
-                if (onDispatchThread) {
-                    showDatabaseSetupWindowOnDisplay();
-                } else {
-
-                    XFutureVoid setupDatabaseFuture = showDatabaseSetupWindow();
-                    futures.add(setupDatabaseFuture);
-                }
+                showDatabaseSetupWindowOnDisplay();
             } else {
                 setConnectDatabaseOnStartupSelected(false);
             }
             updateSubPropertiesFiles();
 
-            boolean startConnectDatabaseSelected = isConnectDatabaseOnSetupStartupSelected();
-            if (startConnectDatabaseSelected) {
-                XFuture<Boolean> startConnectDatabaseFuture = startConnectDatabase();
-                futures.add(startConnectDatabaseFuture);
-            }
-            if (isConnectVisionOnStartupSelected() && null != startVisionToDbFuture) {
-                if (null != object2DViewFuture) {
-                    XFutureVoid connectVisionFuture = XFutureVoid.allOf(object2DViewFuture, startVisionToDbFuture)
-                            .thenComposeToVoid(this::connectVision);
-                    futures.add(connectVisionFuture);
-                } else {
-                    XFutureVoid connectVisionFuture = startVisionToDbFuture
-                            .thenComposeToVoid(this::connectVision);
-                    futures.add(connectVisionFuture);
-                }
-            }
             if (null != customWindowsFile) {
                 loadCustomWindowsFile();
-            }
-            if (futures.isEmpty()) {
-                return XFutureVoid.completedFutureWithName("startWindowsFromMenuCheckBoxes");
-            } else {
-                XFuture<?> futuresArray[] = futures.toArray(new XFuture[0]);
-                return XFutureVoid.allOfWithName("startWindowsFromMenuCheckBoxes", futuresArray);
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
@@ -5133,7 +5088,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return used to determine when the frame is started.
      */
     public XFutureVoid startObject2DJinternalFrame() {
-        XFutureVoid ret = Utils.composeToVoidOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
+        XFutureVoid ret = Utils.runOnDispatchThread(this::startObject2DJinternalFrameOnDisplay);
         startObject2DJinternalFrameFuture = ret;
         return ret;
     }
@@ -5141,7 +5096,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private volatile @Nullable XFutureVoid startObject2DJinternalFrameOnDisplayFuture = null;
 
     @UIEffect
-    private XFutureVoid startObject2DJinternalFrameOnDisplay() {
+    public void startObject2DJinternalFrameOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
 
             boolean alreadySelected = isObject2DViewStartupSelected();
@@ -5159,11 +5115,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             addInternalFrame(newObject2DViewJInternalFrame);
             this.object2DViewJInternalFrame = newObject2DViewJInternalFrame;
             if (object2DViewPropertiesFile.exists()) {
-                XFutureVoid ret = newObject2DViewJInternalFrame.loadProperties();
-                startObject2DJinternalFrameOnDisplayFuture = ret;
-                return ret;
-            } else if (newPropertiesFile) {
-                return XFutureVoid.completedFutureWithName(object2DViewPropertiesFile + " does not exist");
+                newObject2DViewJInternalFrame.loadPropertiesOnDisplay();
             } else {
                 throw new IllegalStateException(object2DViewPropertiesFile + " does not exist");
             }
@@ -5455,7 +5407,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     @UIEffect
     @SuppressWarnings("nullness")
-    private void startCrclClientJInternalFrameOnDisplay() {
+    public void startCrclClientJInternalFrameOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             boolean alreadySelected = isRobotCrclGUIStartupSelected();
             if (!alreadySelected) {
@@ -5533,7 +5486,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException
      */
     @UIEffect
-    private void startSimServerJInternalFrameOnDisplay() throws IOException {
+    public void startSimServerJInternalFrameOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         File propsFile = crclSimServerPropertiesFile();
         try {
             if (DEBUG_START_CRCL_SERVER) {
@@ -5678,9 +5632,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         return visionToDbPropertiesFile(propertiesDirectory, propertiesFileBaseString());
     }
 
-    private volatile @Nullable XFutureVoid xf1 = null;
-    private volatile @Nullable XFutureVoid xf2 = null;
-
     /**
      * Start the PDDL Executor (aka Actions to CRCL) and create and display the
      * window for displaying its output.
@@ -5690,8 +5641,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     public XFutureVoid startActionListExecutor() {
         try {
-            return Utils.composeToVoidOnDispatchThread(
-                    this::startActionsToCrclJInternalFrame);
+            return Utils.runOnDispatchThread(
+                    this::startActionsToCrclJInternalFrameOnDisplay);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -5700,7 +5651,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     @UIEffect
-    public XFutureVoid startActionsToCrclJInternalFrame() {
+    public void startActionsToCrclJInternalFrameOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             boolean alreadySelected = isExecutorStartupSelected();
             if (!alreadySelected) {
@@ -5717,35 +5669,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
             newExecFrame.setPropertiesFile(actionsToCrclPropertiesFile());
             newExecFrame.setDbSetupSupplier(dbSetupPublisherSupplier);
-//            if (null != pddlPlannerJInternalFrame) {
-//                pddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(newExecFrame);
-//            }
+
             this.executorJInternalFrame1 = newExecFrame;
             ExecutorJInternalFrame newExecFrameCopy = newExecFrame;
-            XFutureVoid loadPropertiesFuture = XFutureVoid
-                    .runAsync("startActionsToCrclJInternalFrame.loadProperties", () -> {
-                        try {
-                            newExecFrameCopy.loadProperties();
-                        } catch (IOException ex) {
-                            Logger.getLogger(AprsSystem.class
-                                    .getName()).log(Level.SEVERE, "", ex);
-                            throw new RuntimeException(ex);
-                        }
-                    }, runProgramService)
-                    .thenComposeToVoid(() -> {
-                        return syncPauseRecoverCheckbox();
-                    });
-            this.xf1 = loadPropertiesFuture;
-            XFutureVoid setupWindowsFuture = loadPropertiesFuture
-                    .thenComposeToVoid(() -> {
-                        return runOnDispatchThread(() -> {
-                            if (null != aprsSystemDisplayJFrame) {
-                                aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
-                            }
-                        });
-                    });
-            this.xf2 = setupWindowsFuture;
-            return setupWindowsFuture;
+            newExecFrameCopy.loadProperties();
+            syncPauseRecoverCheckboxOnDisplay();
+            if (null != aprsSystemDisplayJFrame) {
+                aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
+            }
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -5771,7 +5702,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //                newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
 //            }
 //            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile());
-//            newPddlPlannerJInternalFrame.loadProperties();
+//            newPddlPlannerJInternalFrame.loadPropertiesOnDisplay();
 //            newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(executorJInternalFrame1);
 //            addInternalFrame(newPddlPlannerJInternalFrame);
 //            this.pddlPlannerJInternalFrame = newPddlPlannerJInternalFrame;
@@ -6137,14 +6068,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             } else {
                 throw new RuntimeException(ex);
             }
-        }
-    }
-
-    private XFutureVoid setImageSizeMenuText() {
-        if (null != aprsSystemDisplayJFrame) {
-            return runOnDispatchThread(() -> setImageSizeMenuTextOnDisplay(snapShotWidth, snapShotHeight));
-        } else {
-            return XFutureVoid.completedFuture();
         }
     }
 
@@ -9895,38 +9818,43 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             throw new IllegalStateException("File " + propertiesFile + " does not exist");
         }
         newPropertiesFile = false;
-        IOException exA[] = new IOException[1];
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
         try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
-        try {
-            Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(
-                    () -> {
-                        return loadPropertiesOnDisplay(exA, props);
-                    });
-            if (null != exA[0]) {
-                throw new IOException(exA[0]);
-            }
-            return ret.thenComposeToVoid(x -> {
-                if (null != exA[0]) {
-                    throw new RuntimeException(exA[0]);
-                }
-                if (null != object2DViewJInternalFrame) {
-                    object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
-                }
-                if (null != visionToDbJInternalFrame) {
-                    visionToDbJInternalFrame.addLineCountListener(visionLineListener);
-                }
-                return x;
-            });
-        } catch (Exception ex) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", ex);
-            throw new RuntimeException(ex);
+        XFutureVoid ret = Utils.runOnDispatchThread(
+                () -> {
+                    try {
+                        completeLoadPropertiesOnDisplay(props);
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(AprsSystem.class
+                                .getName()).log(Level.SEVERE, "", ex);
+                        throw new RuntimeException(ex);
+                    }
+                });
+        return ret;
+    }
+
+    @UIEffect
+    public final void loadPropertiesOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
+        if (null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
         }
+        if (!propertiesFile.exists()) {
+            throw new IllegalStateException("File " + propertiesFile + " does not exist");
+        }
+        newPropertiesFile = false;
+        Properties props = new Properties();
+        newPropertiesFile = false;
+        println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
+        try (FileReader fr = new FileReader(propertiesFile)) {
+            props.load(fr);
+        }
+        completeLoadPropertiesOnDisplay(props);
     }
 
     private final List<Long> publishTimes = new ArrayList<>();
@@ -9970,250 +9898,226 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         this.customWindowsFile = customWindowsFile;
     }
 
-    private XFutureVoid loadPropertiesOnDisplay(IOException exA[], Properties props) {
+    @UIEffect
+    private void completeLoadPropertiesOnDisplay(Properties props) throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
 
-        try {
-            if (null == propertiesFile) {
-                throw new NullPointerException("propertiesFile");
+        if (null == propertiesFile) {
+            throw new NullPointerException("propertiesFile");
+        }
+        if (null != this.executorJInternalFrame1) {
+            String alertLimitsString = props.getProperty(ALERT_LIMITS);
+            if (null != alertLimitsString) {
+                setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
             }
-            List<XFuture<?>> futures = new ArrayList<>();
+        }
+        String useTeachTableString = props.getProperty(USETEACHTABLE);
+        if (null != useTeachTableString) {
+            setUseTeachTable(Boolean.parseBoolean(useTeachTableString));
+        }
 
-            if (null != this.executorJInternalFrame1) {
-                String alertLimitsString = props.getProperty(ALERT_LIMITS);
-                if (null != alertLimitsString) {
-                    setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
-                }
-            }
-            String useTeachTableString = props.getProperty(USETEACHTABLE);
-            if (null != useTeachTableString) {
-                setUseTeachTable(Boolean.parseBoolean(useTeachTableString));
-            }
+        String startExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
+        if (null != startExecutorString) {
+            setExecutorStartupSelected(Boolean.parseBoolean(startExecutorString));
+        }
+        String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
+        if (null != startObjectSpString) {
+            setObjectSpStartupSelected(Boolean.parseBoolean(startObjectSpString));
+        }
 
-            String startExecutorString = props.getProperty(STARTUPPDDLEXECUTOR);
-            if (null != startExecutorString) {
-                setExecutorStartupSelected(Boolean.parseBoolean(startExecutorString));
-            }
-            String startObjectSpString = props.getProperty(STARTUPPDDLOBJECTSP);
-            if (null != startObjectSpString) {
-                setObjectSpStartupSelected(Boolean.parseBoolean(startObjectSpString));
-            }
+        String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
+        if (null != startObjectViewString) {
+            setObject2DViewStartupSelected(Boolean.parseBoolean(startObjectViewString));
+        }
+        String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
+        if (null != startCRCLClientString) {
+            setRobotCrclGUIStartupSelected(Boolean.parseBoolean(startCRCLClientString));
+        }
+        String startForceTorqueSimString = props.getProperty(STARTUPFORCETORQUESIM);
+        if (null != startForceTorqueSimString) {
+            setForceTorqueSimStartupSelected(Boolean.parseBoolean(startForceTorqueSimString));
+        }
+        String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
+        if (null != startCRCLSimServerString) {
+            setRobotCrclSimServerStartupSelected(Boolean.parseBoolean(startCRCLSimServerString));
+        }
+        String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
+        if (null != startCRCLFanucServerString) {
+            setRobotCrclFanucServerStartupSelected(Boolean.parseBoolean(startCRCLFanucServerString));
+        }
+        String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
+        if (null != fanucCrclLocalPortString) {
+            this.fanucCrclPort = Integer.parseInt(fanucCrclLocalPortString);
+        }
+        String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
+        if (null != fanucRobotHostString) {
+            this.fanucRobotHost = fanucRobotHostString;
+        }
 
-            String startObjectViewString = props.getProperty(STARTUPPDDLOBJECTVIEW);
-            if (null != startObjectViewString) {
-                setObject2DViewStartupSelected(Boolean.parseBoolean(startObjectViewString));
+        String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
+        if (null != startCRCLMotomanServerString) {
+            setRobotCrclMotomanServerStartupSelected(Boolean.parseBoolean(startCRCLMotomanServerString));
+        }
+        String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
+        if (null != startConnectDBString) {
+            setConnectDatabaseOnStartupSelected(Boolean.parseBoolean(startConnectDBString));
+            if (isConnectDatabaseOnSetupStartupSelected()) {
+                setShowDatabaseSetupStartupSelected(true);
             }
-            String startCRCLClientString = props.getProperty(STARTUPROBOTCRCLCLIENT);
-            if (null != startCRCLClientString) {
-                setRobotCrclGUIStartupSelected(Boolean.parseBoolean(startCRCLClientString));
+        }
+        String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
+        if (null != startConnectVisionString) {
+            setConnectVisionOnStartupSelected(Boolean.parseBoolean(startConnectVisionString));
+            if (isConnectVisionOnStartupSelected()) {
+                setObjectSpStartupSelected(true);
             }
-            String startForceTorqueSimString = props.getProperty(STARTUPFORCETORQUESIM);
-            if (null != startForceTorqueSimString) {
-                setForceTorqueSimStartupSelected(Boolean.parseBoolean(startForceTorqueSimString));
-            }
-            String startCRCLSimServerString = props.getProperty(STARTUPROBOTCRCLSIMSERVER);
-            if (null != startCRCLSimServerString) {
-                setRobotCrclSimServerStartupSelected(Boolean.parseBoolean(startCRCLSimServerString));
-            }
-            String startCRCLFanucServerString = props.getProperty(STARTUPROBOTCRCLFANUCSERVER);
-            if (null != startCRCLFanucServerString) {
-                setRobotCrclFanucServerStartupSelected(Boolean.parseBoolean(startCRCLFanucServerString));
-            }
-            String fanucCrclLocalPortString = props.getProperty(FANUC_CRCL_LOCAL_PORT);
-            if (null != fanucCrclLocalPortString) {
-                this.fanucCrclPort = Integer.parseInt(fanucCrclLocalPortString);
-            }
-            String fanucRobotHostString = props.getProperty(FANUC_ROBOT_HOST);
-            if (null != fanucRobotHostString) {
-                this.fanucRobotHost = fanucRobotHostString;
-            }
+        }
+        String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
+        if (null != startExploreGraphDbString) {
+            setExploreGraphDBStartupSelected(Boolean.parseBoolean(startExploreGraphDbString));
+        }
 
-            String startCRCLMotomanServerString = props.getProperty(STARTUPROBOTCRCLMOTOMANSERVER);
-            if (null != startCRCLMotomanServerString) {
-                setRobotCrclMotomanServerStartupSelected(Boolean.parseBoolean(startCRCLMotomanServerString));
-            }
-            String startConnectDBString = props.getProperty(STARTUPCONNECTDATABASE);
-            if (null != startConnectDBString) {
-                setConnectDatabaseOnStartupSelected(Boolean.parseBoolean(startConnectDBString));
-                if (isConnectDatabaseOnSetupStartupSelected()) {
-                    setShowDatabaseSetupStartupSelected(true);
-                }
-            }
-            String startConnectVisionString = props.getProperty(STARTUPCONNECTVISION);
-            if (null != startConnectVisionString) {
-                setConnectVisionOnStartupSelected(Boolean.parseBoolean(startConnectVisionString));
-                if (isConnectVisionOnStartupSelected()) {
-                    setObjectSpStartupSelected(true);
-                }
-            }
-            String startExploreGraphDbString = props.getProperty(STARTUPEXPLOREGRAPHDB);
-            if (null != startExploreGraphDbString) {
-                setExploreGraphDBStartupSelected(Boolean.parseBoolean(startExploreGraphDbString));
-            }
+        String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
+        if (null != customWindowsFileString) {
+            setCustomWindowsFile(Utils.file(propertiesDirectory, customWindowsFileString));
+        }
+        String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
+        if (null != crclWebAppPortString) {
+            crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
+        }
 
-            String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
-            if (null != customWindowsFileString) {
-                setCustomWindowsFile(Utils.file(propertiesDirectory, customWindowsFileString));
-            }
-            String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
-            if (null != crclWebAppPortString) {
-                crclWebServerHttpPort = Integer.parseInt(crclWebAppPortString);
-            }
+        String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
+        if (null != startKitInspetion) {
+            setKitInspectionStartupSelected(Boolean.parseBoolean(startKitInspetion));
+        }
 
-            String startKitInspetion = props.getProperty(STARTUPKITINSPECTION);
-            if (null != startKitInspetion) {
-                setKitInspectionStartupSelected(Boolean.parseBoolean(startKitInspetion));
-            }
+        String useCsvFilesInsteadOfDatabaseString = props.getProperty(USE_CSV_FILES_INSTEAD_OF_DATABASE);
+        if (null != useCsvFilesInsteadOfDatabaseString) {
+            this.setUseCsvFilesInsteadOfDatabase(Boolean.parseBoolean(useCsvFilesInsteadOfDatabaseString));
+        }
 
-            String useCsvFilesInsteadOfDatabaseString = props.getProperty(USE_CSV_FILES_INSTEAD_OF_DATABASE);
-            if (null != useCsvFilesInsteadOfDatabaseString) {
-                this.setUseCsvFilesInsteadOfDatabase(Boolean.parseBoolean(useCsvFilesInsteadOfDatabaseString));
-            }
-
-            String useSimViewFilterString = props.getProperty(USE_SIMVIEW_FILTER);
-            if (null != useSimViewFilterString) {
-                this.setUseSimViewFilter(Boolean.parseBoolean(useSimViewFilterString));
-            }
-            this.updateSubPropertiesFiles();
+        String useSimViewFilterString = props.getProperty(USE_SIMVIEW_FILTER);
+        if (null != useSimViewFilterString) {
+            this.setUseSimViewFilter(Boolean.parseBoolean(useSimViewFilterString));
+        }
+        this.updateSubPropertiesFiles();
 //            if (null != this.pddlPlannerJInternalFrame) {
-//                this.pddlPlannerJInternalFrame.loadProperties();
+//                this.pddlPlannerJInternalFrame.loadPropertiesOnDisplay();
 //            }
+        if (null != this.executorJInternalFrame1) {
             if (null != this.executorJInternalFrame1) {
-                XFutureVoid loadPropertiesFuture = XFuture.runAsync("loadProperties",
-                        () -> {
-                            try {
-                                if (null != this.executorJInternalFrame1) {
-                                    this.executorJInternalFrame1.loadProperties();
-                                }
-                            } catch (IOException ex) {
-                                Logger.getLogger(AprsSystem.class
-                                        .getName()).log(Level.SEVERE, "", ex);
-                            }
-                        }, runProgramService)
-                        .thenComposeToVoid(() -> {
-                            String alertLimitsString = props.getProperty(ALERT_LIMITS);
-                            if (null != alertLimitsString) {
-                                setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
-                            }
-                            return syncPauseRecoverCheckbox();
-                        });
-                futures.add(loadPropertiesFuture);
+                this.executorJInternalFrame1.loadProperties();
             }
+            String alertLimitsString = props.getProperty(ALERT_LIMITS);
+            if (null != alertLimitsString) {
+                setAlertLimitsCheckBoxSelected(Boolean.parseBoolean(alertLimitsString));
+            }
+            syncPauseRecoverCheckboxOnDisplay();
+        }
 
-            if (null != this.object2DViewJInternalFrame) {
-                this.object2DViewJInternalFrame.loadProperties();
-            }
-            dbSetup = DbSetupBuilder
-                    .loadFromPropertiesFile(Utils.file(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"))
-                    .build();
+        if (null != this.object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.loadPropertiesOnDisplay();
+        }
+        dbSetup = DbSetupBuilder
+                .loadFromPropertiesFile(Utils.file(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"))
+                .build();
 
-            if (null != dbSetupJInternalFrame && null != dbSetup) {
-                DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
-                if (null != pub) {
-                    pub.setDbSetup(dbSetup);
-                }
+        if (null != dbSetupJInternalFrame && null != dbSetup) {
+            DbSetupPublisher pub = dbSetupJInternalFrame.getDbSetupPublisher();
+            if (null != pub) {
+                pub.setDbSetup(dbSetup);
             }
-            if (null != visionToDbJInternalFrame) {
-                this.visionToDbJInternalFrame.loadProperties();
+        }
+        if (null != visionToDbJInternalFrame) {
+            this.visionToDbJInternalFrame.loadProperties();
+        }
+        if (null != object2DViewJInternalFrame) {
+            this.object2DViewJInternalFrame.loadPropertiesOnDisplay();
+        }
+        if (null != this.crclClientJInternalFrame) {
+            crclClientJInternalFrame.loadProperties();
+        }
+        if (null != this.simServerJInternalFrame) {
+            simServerJInternalFrame.loadProperties();
+        }
+        if (null != this.motomanServerProvider) {
+            motomanServerProvider.loadProperties();
+        }
+        if (null != this.fanucServerProvider) {
+            fanucServerProvider.loadProperties();
+        }
+        if (null != this.forceTorqueSimJInternalFrame) {
+            forceTorqueSimJInternalFrame.loadProperties();
+        }
+        String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
+        if (null != motomanCrclLocalPortString) {
+            this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
+            if (null != motomanServerProvider) {
+                motomanServerProvider.setCrclPort(motomanCrclPort);
             }
-            if (null != object2DViewJInternalFrame) {
-                this.object2DViewJInternalFrame.loadProperties();
-            }
-            if (null != this.crclClientJInternalFrame) {
-                crclClientJInternalFrame.loadProperties();
-            }
-            if (null != this.simServerJInternalFrame) {
-                simServerJInternalFrame.loadProperties();
-            }
-            if (null != this.motomanServerProvider) {
-                motomanServerProvider.loadProperties();
-            }
-            if (null != this.fanucServerProvider) {
-                fanucServerProvider.loadProperties();
-            }
-            if (null != this.forceTorqueSimJInternalFrame) {
-                forceTorqueSimJInternalFrame.loadProperties();
-            }
-            String motomanCrclLocalPortString = props.getProperty(MOTOMAN_CRCL_LOCAL_PORT);
-            if (null != motomanCrclLocalPortString) {
-                this.motomanCrclPort = Integer.parseInt(motomanCrclLocalPortString);
-                if (null != motomanServerProvider) {
-                    motomanServerProvider.setCrclPort(motomanCrclPort);
-                }
-            }
-            String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
-            if (null != robotNameString) {
-                setRobotName(robotNameString);
+        }
+        String robotNameString = props.getProperty(APRSROBOT_PROPERTY_NAME);
+        if (null != robotNameString) {
+            setRobotName(robotNameString);
+        } else {
+            setDefaultRobotName();
+        }
+        File limitsCsv = getCartLimitsCsvFile();
+        if (limitsCsv.exists()) {
+            readLimitsFromCsv(limitsCsv);
+            updateRobotLimits();
+        }
+
+        String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
+        if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
+            setReloadSimFilesOnReverseCheckBoxSelected(Boolean.parseBoolean(reloadSimFilesOnReverseString));
+        }
+        String logCrclProgramsEnabledString = props.getProperty(LOG_CRCL_PROGRAMS_ENABLED);
+        if (null != logCrclProgramsEnabledString && logCrclProgramsEnabledString.trim().length() > 0) {
+            setLogCrclProgramsSelected(Boolean.parseBoolean(logCrclProgramsEnabledString));
+        }
+        propertyToCheckBox(props, SNAP_SHOT_ENABLE_PROP, snapshotsCheckBox);
+        String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
+        if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
+            snapShotWidth = Integer.parseInt(snapShotWidthString);
+        }
+        String snapShotHeightString = props.getProperty(SNAP_SHOT_HEIGHT_PROP);
+        if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
+            snapShotHeight = Integer.parseInt(snapShotHeightString);
+        }
+        if (null != aprsSystemDisplayJFrame) {
+            setImageSizeMenuTextOnDisplay(snapShotWidth, snapShotHeight);
+        }
+        String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
+        if (null != taskNameString) {
+            setTaskName(taskNameString);
+        }
+
+        String sysQueriesDirString = props.getProperty(SYS_QUERIES_DIR_PROP_NAME);
+        if (null != sysQueriesDirString && sysQueriesDirString.length() > 2) {
+            setSysQueriesDir(Utils.file(propertiesFile.getParentFile(), sysQueriesDirString));
+        } else if (this.isUseCsvFilesInsteadOfDatabase()) {
+            File homeDir = Utils.file(System.getProperty("user.home"));
+            File queriesDir = Utils.file(homeDir, "aprsQueries");
+            File sysQueriesDir0 = Utils.file(queriesDir, taskName.replace(' ', '_'));
+            if (sysQueriesDir0.exists() && sysQueriesDir0.canRead() && sysQueriesDir0.isDirectory()) {
+                setSysQueriesDir(sysQueriesDir0);
             } else {
-                setDefaultRobotName();
+                final File newAprsQueriesDir = Utils.file(propertiesFile.getParentFile(), "aprsQueries");
+                newAprsQueriesDir.mkdirs();
+                setSysQueriesDir(newAprsQueriesDir);
             }
-            File limitsCsv = getCartLimitsCsvFile();
-            if (limitsCsv.exists()) {
-                readLimitsFromCsv(limitsCsv);
-                updateRobotLimits();
-            }
-
-            String reloadSimFilesOnReverseString = props.getProperty(RELOAD_SIM_FILES_ON_REVERSE_PROP);
-            if (null != reloadSimFilesOnReverseString && reloadSimFilesOnReverseString.trim().length() > 0) {
-                setReloadSimFilesOnReverseCheckBoxSelected(Boolean.parseBoolean(reloadSimFilesOnReverseString));
-            }
-            String logCrclProgramsEnabledString = props.getProperty(LOG_CRCL_PROGRAMS_ENABLED);
-            if (null != logCrclProgramsEnabledString && logCrclProgramsEnabledString.trim().length() > 0) {
-                setLogCrclProgramsSelected(Boolean.parseBoolean(logCrclProgramsEnabledString));
-            }
-            propertyToCheckBox(props, SNAP_SHOT_ENABLE_PROP, snapshotsCheckBox);
-            String snapShotWidthString = props.getProperty(SNAP_SHOT_WIDTH_PROP);
-            if (null != snapShotWidthString && snapShotWidthString.trim().length() > 0) {
-                snapShotWidth = Integer.parseInt(snapShotWidthString);
-            }
-            String snapShotHeightString = props.getProperty(SNAP_SHOT_HEIGHT_PROP);
-            if (null != snapShotHeightString && snapShotHeightString.trim().length() > 0) {
-                snapShotHeight = Integer.parseInt(snapShotHeightString);
-            }
-            XFutureVoid setMenuTextFuture = setImageSizeMenuText();
-            futures.add(setMenuTextFuture);
-            String taskNameString = props.getProperty(APRSTASK_PROPERTY_NAME);
-            if (null != taskNameString) {
-                setTaskName(taskNameString);
-            }
-
-            String sysQueriesDirString = props.getProperty(SYS_QUERIES_DIR_PROP_NAME);
-            if (null != sysQueriesDirString && sysQueriesDirString.length() > 2) {
-                setSysQueriesDir(Utils.file(propertiesFile.getParentFile(), sysQueriesDirString));
-            } else if (this.isUseCsvFilesInsteadOfDatabase()) {
-                File homeDir = Utils.file(System.getProperty("user.home"));
-                File queriesDir = Utils.file(homeDir, "aprsQueries");
-                File sysQueriesDir0 = Utils.file(queriesDir, taskName.replace(' ', '_'));
-                if (sysQueriesDir0.exists() && sysQueriesDir0.canRead() && sysQueriesDir0.isDirectory()) {
-                    setSysQueriesDir(sysQueriesDir0);
-                } else {
-                    final File newAprsQueriesDir = Utils.file(propertiesFile.getParentFile(), "aprsQueries");
-                    newAprsQueriesDir.mkdirs();
-                    setSysQueriesDir(newAprsQueriesDir);
-                }
-            }
-            String startupActiveWinString = props.getProperty(STARTUP_ACTIVE_WIN);
-            if (null != startupActiveWinString) {
-                activeWin = ActiveWinEnum.valueOf(startupActiveWinString);
-                showActiveWin();
-            }
-            if (futures.isEmpty()) {
-                return XFutureVoid.completedFutureWithName("loadPropertiesOnDisplay_allComplete");
-            } else {
-                return XFutureVoid.allOf(futures);
-            }
-        } catch (IOException exception) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", exception);
-            exA[0] = exception;
-            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay IOException");
-            xfv.completeExceptionally(exception);
-            return xfv;
-        } catch (Exception exception) {
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "", exception);
-            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
-            xfv.completeExceptionally(exception);
-            return xfv;
+        }
+        String startupActiveWinString = props.getProperty(STARTUP_ACTIVE_WIN);
+        if (null != startupActiveWinString) {
+            activeWin = ActiveWinEnum.valueOf(startupActiveWinString);
+            showActiveWinOnDisplay();
+        }
+        if (null != object2DViewJInternalFrame) {
+            object2DViewJInternalFrame.addPublishCountListener(simPublishCountListener);
+        }
+        if (null != visionToDbJInternalFrame) {
+            visionToDbJInternalFrame.addLineCountListener(visionLineListener);
         }
     }
 
@@ -10221,22 +10125,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private static final String USE_SIMVIEW_FILTER = "UseSimViewFilter";
     private static final String ALERT_LIMITS = "alertLimits";
 
-    private XFutureVoid syncPauseRecoverCheckbox() {
+    @UIEffect
+    private void syncPauseRecoverCheckboxOnDisplay() {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
         if (null != aprsSystemDisplayJFrame) {
-            return runOnDispatchThread(() -> {
-                if (null == executorJInternalFrame1) {
-                    throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
-                }
-                if (null != aprsSystemDisplayJFrame) {
-                    aprsSystemDisplayJFrame
-                            .setPauseInsteadOfRecoverMenuCheckbox(executorJInternalFrame1.isPauseInsteadOfRecover());
-                }
-            });
-        } else {
-            return XFutureVoid.completedFuture();
+            aprsSystemDisplayJFrame
+                    .setPauseInsteadOfRecoverMenuCheckbox(executorJInternalFrame1.isPauseInsteadOfRecover());
         }
     }
 
@@ -10246,6 +10142,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     @UIEffect
     private void showActiveWinOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         switch (activeWin) {
             case SIMVIEW_WINDOW:
                 if (null != object2DViewJInternalFrame) {
@@ -10820,10 +10717,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         new FileOutputStream(tmpPerfFile))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
+                crclClientJInternalFrame.shutdownPollService();
             }
         } catch (IOException iOException) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", iOException);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
         }
         closeAllWindows();
         if (null != motomanServerProvider) {
@@ -10832,7 +10732,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != fanucServerProvider) {
             fanucServerProvider.disconnnectAllAndClose();
         }
-        if(null != visionToDbJInternalFrame) {
+        if (null != visionToDbJInternalFrame) {
             visionToDbJInternalFrame.disconnectVision();
         }
         runProgramService.shutdownNow();

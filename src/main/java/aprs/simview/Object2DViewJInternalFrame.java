@@ -250,10 +250,9 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     private volatile @Nullable
     XFutureVoid loadPropertiesFuture = null;
 
-    public XFutureVoid loadProperties() throws IOException {
-        XFutureVoid ret = object2DOuterJPanel1.loadProperties();
-        loadPropertiesFuture = ret;
-        return ret;
+    @UIEffect
+    public void loadPropertiesOnDisplay() throws IOException {
+        object2DOuterJPanel1.loadPropertiesOnDisplay();
     }
 
     public void setAprsSystem(AprsSystem aprsSystemInterface) {

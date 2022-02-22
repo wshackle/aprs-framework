@@ -57,7 +57,7 @@ public class VisionSocketClient implements AutoCloseable {
     private @Nullable
     SocketLineReader visionSlr = null;
     private @Nullable
-    ExecutorService visionExecServ = Executors.newFixedThreadPool(1);
+    ExecutorService visionExecServ = Executors.newSingleThreadExecutor();
     private volatile @Nullable
     String parsing_line = null;
     private static final AtomicInteger visioncycle = new AtomicInteger();
@@ -264,7 +264,7 @@ public class VisionSocketClient implements AutoCloseable {
 
     private volatile int emptyLines = 0;
 
-    public XFutureVoid start(Map<String, String> argsMap) {
+    public void start(Map<String, String> argsMap) {
         String host = "HOSTNOTSET";
         short port = -99;
         try {
@@ -383,11 +383,11 @@ public class VisionSocketClient implements AutoCloseable {
             if (null != displayInterface) {
                 displayInterface.setVisionConnected(true);
             }
-            final String lineFinal = line;
-            if (null == lineFinal) {
-                return XFutureVoid.completedFuture();
-            }
-            return this.updateListeners(visionList, lineFinal, false);
+//            final String lineFinal = line;
+//            if (null == lineFinal) {
+//                return XFutureVoid.completedFuture();
+//            }
+//            return this.updateListeners(visionList, lineFinal, false);
         } catch (Exception exception) {
             Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
             System.err.println("Connect to vision on host " + host + " with port " + port + " failed with message " + exception);

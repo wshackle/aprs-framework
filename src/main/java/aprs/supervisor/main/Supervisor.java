@@ -143,24 +143,26 @@ public class Supervisor {
         this.setMax_cycles(maxCycles);
         XFutureVoid startScanAllFuture;
         if (useConveyor) {
-            startScanAllFuture = completePrevMultiFuture.thenComposeToVoid(x -> {
-                String convTaskName = getConveyorClonedViewSystemTaskName();
-                AprsSystem sys = getSysByTask(convTaskName);
-                if (null == sys) {
-                    throw new RuntimeException("getSysByTask(" + convTaskName + ") returned null");
-                }
-                sys.setAlertLimitsCheckBoxSelected(false);
-                setupSystemForConveyorTest(sys);
-                setEnableTestRandomDelayMillis(60000);
-                setEnableTestMinRandomDelayMillis(15000);
-                if (null == displayJFrame) {
-                    throw new RuntimeException("displayJFrame is null");
-                }
-                return displayJFrame.conveyorTestPrep(sys);
-            }).thenComposeToVoid(this::startScanAll);
+            startScanAllFuture = completePrevMultiFuture
+                    .thenComposeAsyncToVoid(x -> {
+                        String convTaskName = getConveyorClonedViewSystemTaskName();
+                        AprsSystem sys = getSysByTask(convTaskName);
+                        if (null == sys) {
+                            throw new RuntimeException("getSysByTask(" + convTaskName + ") returned null");
+                        }
+                        sys.setAlertLimitsCheckBoxSelected(false);
+                        setupSystemForConveyorTest(sys);
+                        setEnableTestRandomDelayMillis(60000);
+                        setEnableTestMinRandomDelayMillis(15000);
+                        if (null == displayJFrame) {
+                            throw new RuntimeException("displayJFrame is null");
+                        }
+                        return displayJFrame.conveyorTestPrep(sys);
+                    }, supervisorExecutorService)
+                    .thenComposeAsyncToVoid(this::startScanAll, supervisorExecutorService);
         } else {
             startScanAllFuture = completePrevMultiFuture
-                    .thenComposeToVoid((x) -> Supervisor.this.startScanAll());
+                    .thenComposeAsyncToVoid((x) -> Supervisor.this.startScanAll(), supervisorExecutorService);
         }
         XFuture<?> xf2 = startScanAllFuture.thenRun(() -> {
             if (!startScanAllFuture.isDone()) {
@@ -274,7 +276,7 @@ public class Supervisor {
 
         String dir = setupFile.getParent();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
             startColorTextReader();
         }
         XFutureVoid f1 = loadSetupFile(setupFile);
@@ -290,7 +292,7 @@ public class Supervisor {
                 }
             }
         });
-        XFutureVoid f3 = f2.thenComposeToVoid(() -> {
+        XFutureVoid f3 = f2.thenComposeAsyncToVoid(() -> {
             try {
                 return loadTeachPropertiesFile(teachFile);
             } catch (Exception ex) {
@@ -301,7 +303,7 @@ public class Supervisor {
                     throw new RuntimeException(ex);
                 }
             }
-        });
+        }, supervisorExecutorService);
         lastCompletePrevMultiFuture = f3;
 
         XFuture<MultiCycleResults> ret = f3
@@ -331,7 +333,7 @@ public class Supervisor {
 
         String dir = setupFile.getParent();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
             startColorTextReader();
         }
         XFutureVoid f1 = loadSetupFile(setupFile);
@@ -446,8 +448,9 @@ public class Supervisor {
                 throw new NullPointerException("displayJFrame");
             }
             supervisorScanAllFuture = displayJFrame.conveyorTestPrep(sys)
-                    .thenComposeToVoid(convTaskName,
-                            this::startScanAll);
+                    .thenComposeAsyncToVoid(convTaskName,
+                            this::startScanAll,
+                            supervisorExecutorService);
         } else {
             supervisorScanAllFuture = startScanAll();
         }
@@ -457,7 +460,7 @@ public class Supervisor {
             }
             results.stepsDone++;
         });
-        XFutureVoid randomTestFirstActionReversedFuture = xf2.thenComposeToVoid(x -> {
+        XFutureVoid randomTestFirstActionReversedFuture = xf2.thenComposeAsyncToVoid(x -> {
             if (!supervisorScanAllFuture.isDone()) {
                 System.err.println("wtf");
             }
@@ -466,7 +469,7 @@ public class Supervisor {
             }
             results.stepsDone++;
             return this.startRandomTestFirstActionReversed();
-        });
+        }, supervisorExecutorService);
         XFuture<?> xf4 = randomTestFirstActionReversedFuture
                 .alwaysCompose(
                         () -> {
@@ -975,11 +978,11 @@ public class Supervisor {
     }
 
     public XFutureVoid loadAllPrevFiles(@Nullable String dirName) {
-        return this.startLoadPrevSetup().thenComposeToVoid(() -> {
+        return this.startLoadPrevSetup().thenComposeAsyncToVoid(() -> {
             this.loadPrevPositionMappingsFilesFile(dirName);
             this.loadPrevSimTeach();
             return this.loadPrevTeachProperties(dirName);
-        });
+        }, supervisorExecutorService);
 //        this.loadPrevSharedTools();
     }
 
@@ -1028,7 +1031,14 @@ public class Supervisor {
      */
     private XFutureVoid loadTeachPropertiesFile(File f) throws IOException {
         object2DOuterJPanel1.setPropertiesFile(f);
-        return object2DOuterJPanel1.loadProperties();
+        return runOnDispatchThread(() -> {
+            try {
+                object2DOuterJPanel1.loadPropertiesOnDisplay();
+            } catch (Exception exception) {
+                log(Level.SEVERE, "", exception);
+                throw new RuntimeException(exception);
+            }
+        });
     }
 
     /**
@@ -1473,20 +1483,22 @@ public class Supervisor {
                         }
                         return t.toString();
                     }
-                }).thenComposeToVoid("setRobotEnabled(" + robotName + "," + enabled + ").handle2", x -> {
-            logEvent("completeUnstealFuture:  setEnabled(" + robotName + "," + enabled + ") : ecc=" + ecc
-                    + ",x=" + x);
-            if (x == null || x.length() < 1) {
-                return XFutureVoid.completedFutureWithName(
-                        "setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2");
-            } else {
-                logEvent("Returning xfuture which will never complete x=\"" + x + "\"");
-                if (!x.contains("CancellationException")) {
-                    Thread.dumpStack();
-                }
-                return new XFuture<>(x + ".neverComplete");
-            }
-        });
+                }).thenComposeAsyncToVoid("setRobotEnabled(" + robotName + "," + enabled + ").handle2",
+                x -> {
+                    logEvent("completeUnstealFuture:  setEnabled(" + robotName + "," + enabled + ") : ecc=" + ecc
+                            + ",x=" + x);
+                    if (x == null || x.length() < 1) {
+                        return XFutureVoid.completedFutureWithName(
+                                "setRobotEnabled(" + robotName + "," + enabled + ").completedFuture2");
+                    } else {
+                        logEvent("Returning xfuture which will never complete x=\"" + x + "\"");
+                        if (!x.contains("CancellationException")) {
+                            Thread.dumpStack();
+                        }
+                        return new XFuture<>(x + ".neverComplete");
+                    }
+                },
+                supervisorExecutorService);
         nextLFR = XFuture.anyOfWithName("setRobotEnabled(" + robotName + "," + enabled + ").anyOf(unsteal,cancel)",
                 completeUnstealFuture, cancelFuture);
         return nextLFR;
@@ -1548,21 +1560,23 @@ public class Supervisor {
                         return "";
                     }
                 });
-        final XFutureVoid checkedStealRobotFuture = handledStealRobotFuture.thenComposeToVoid(
-                "setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions:ecc=" + ecc, (String x) -> {
-                    logEvent("After handle setEnabled(" + robotName + "," + enabled + ") : ecc=" + ecc + ",x=" + x
-                            + ", toggleBlockerMap.keySet()" + toggleBlockerMap.keySet());
-                    if (x == null || x.length() < 1) {
-                        return XFutureVoid.completedFutureWithName(
-                                "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete");
-                    } else {
-                        logEvent("Returning xfuture which will never complete x=\"" + x + "\"");
-                        if (!x.contains("CancellationException")) {
-                            Thread.dumpStack();
-                        }
-                        return new XFutureVoid(x + ".neverComplete");
-                    }
-                });
+        final XFutureVoid checkedStealRobotFuture = handledStealRobotFuture
+                .thenComposeAsyncToVoid(
+                        "setRobotEnabled(" + robotName + "," + enabled + ").checkForExceptions:ecc=" + ecc,
+                        (String x) -> {
+                            logEvent("After handle setEnabled(" + robotName + "," + enabled + ") : ecc=" + ecc + ",x=" + x
+                                    + ", toggleBlockerMap.keySet()" + toggleBlockerMap.keySet());
+                            if (x == null || x.length() < 1) {
+                                return XFutureVoid.completedFutureWithName(
+                                        "setRobotEnabled(" + robotName + "," + enabled + ").alreadyComplete");
+                            } else {
+                                logEvent("Returning xfuture which will never complete x=\"" + x + "\"");
+                                if (!x.contains("CancellationException")) {
+                                    Thread.dumpStack();
+                                }
+                                return new XFutureVoid(x + ".neverComplete");
+                            }
+                        }, supervisorExecutorService);
         nextLFR = XFuture.anyOfWithName(
                 "setRobotEnabled(" + robotName + "," + enabled + ").anyOf(steal,cancel):ecc=" + ecc,
                 checkedStealRobotFuture, cancelFuture);
@@ -2239,16 +2253,18 @@ public class Supervisor {
     }
 
     private XFutureVoid showCheckEnabledErrorSplash() {
-        return showErrorSplash("Not all robots\n could be enabled.").thenComposeToVoid(() -> {
-            return runOnDispatchThread(() -> {
-                setContinuousDemoSelected(false);
-                setContinuousDemoRevFirstSelected(false);
-                if (null != ContinuousDemoFuture) {
-                    ContinuousDemoFuture.cancelAll(true);
-                    ContinuousDemoFuture = null;
-                }
-            });
-        });
+        return showErrorSplash("Not all robots\n could be enabled.")
+                .thenComposeAsyncToVoid(
+                        x -> {
+                            return runOnDispatchThread(() -> {
+                                setContinuousDemoSelected(false);
+                                setContinuousDemoRevFirstSelected(false);
+                                if (null != ContinuousDemoFuture) {
+                                    ContinuousDemoFuture.cancelAll(true);
+                                    ContinuousDemoFuture = null;
+                                }
+                            });
+                        }, supervisorExecutorService);
     }
 
     private XFutureVoid showErrorSplash(String errMsgString) {
@@ -2474,16 +2490,17 @@ public class Supervisor {
             }, supervisorExecutorService);
         }
 
-        XFutureVoid part2 = part1.thenComposeToVoid("startSafeAbortAfterSwitch" + " : srn=" + srn,
-                (Boolean ignored) -> {
-                    if (checkEcc(ecc)) {
-                        return cancelledEcc(ecc);
-                    }
-                    if (checkSrn(srn)) {
-                        return cancelledSrn(ecc);
-                    }
-                    return stealFor.startSafeAbort("startSafeAbortAfterSwitch" + " : srn=" + srn + ",ecc=" + ecc);
-                });
+        XFutureVoid part2 = part1
+                .thenComposeAsyncToVoid("startSafeAbortAfterSwitch" + " : srn=" + srn,
+                        (Boolean ignored) -> {
+                            if (checkEcc(ecc)) {
+                                return cancelledEcc(ecc);
+                            }
+                            if (checkSrn(srn)) {
+                                return cancelledSrn(ecc);
+                            }
+                            return stealFor.startSafeAbort("startSafeAbortAfterSwitch" + " : srn=" + srn + ",ecc=" + ecc);
+                        }, supervisorExecutorService);
         lastStealRobotsInternalPart2 = part2;
         XFutureVoid part3 = part2
                 .thenRun(() -> logEvent("Safe abort completed for " + stealFor + " : srn=" + srn + ",ecc=" + ecc));
@@ -2698,10 +2715,11 @@ public class Supervisor {
                         return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort)
                                 .thenCompose(() -> refreshRobotsTable());
                     }, supervisorExecutorService)
-                    .thenComposeToVoid("showSwitching" + " : srn=" + srn, (Void ignore2) -> {
-                        return showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
-                                SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
-                    });
+                    .thenComposeAsyncToVoid("showSwitching" + " : srn=" + srn,
+                            (Void ignore2) -> {
+                                return showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
+                                        SplashScreen.getRobotArmImage(), SplashScreen.getBlueWhiteGreenColorList(), gd);
+                            }, supervisorExecutorService);
             lastStealRobotsInternalBeforeAllowToggles = beforeAllowTogglesFuture;
             lastStealRobotsInternalBeforeAllowTogglesTrace = Thread.currentThread().getStackTrace();
             return beforeAllowTogglesFuture;
@@ -3087,8 +3105,11 @@ public class Supervisor {
                 .alwaysComposeAsyncToVoid(() -> {
                     return allowToggles(revBlocker, stealFor, stealFrom);
                 }, supervisorExecutorService);
-        return part1Future.thenComposeToVoid("unsteal.continueAllOf" + " : srn=" + srn + ",ecc=" + ecc,
-                () -> completeUnstealAbortFuture(srn, stealFrom, stealFor, ecc)).thenRun(() -> {
+        return part1Future
+                .thenComposeAsyncToVoid("unsteal.continueAllOf" + " : srn=" + srn + ",ecc=" + ecc,
+                        x -> completeUnstealAbortFuture(srn, stealFrom, stealFor, ecc),
+                        supervisorExecutorService)
+                .thenRun(() -> {
                     logEvent("Finished completeExecuteUnstealRobots(" + revBlocker + "," + srn + "," + stealFor + ","
                             + stealFrom + "," + stealForRobotName + ",...): count =" + count);
                 });
@@ -3849,51 +3870,19 @@ public class Supervisor {
         if (closing || displayUpdatesDisabled) {
             return XFutureVoid.completedFuture();
         }
-//        callerMap.compute(getRunOnDispatchThreadCaller(), (String key, Integer value) -> {
-//            if (null == value) {
-//                return 1;
-//            } else {
-//                return value + 1;
-//            }
-//        });
-//        long startTime = System.currentTimeMillis();
-//        int startPending = dispatchPending.incrementAndGet();
-//        if (startPending > maxStartPending) {
-//            maxStartPending = startPending;
-//        }
         return aprs.misc.Utils.runOnDispatchThread(name, r);
-//                .thenRun(() -> {
-////                    long t = System.currentTimeMillis();
-////                    int endPending = dispatchPending.decrementAndGet();
-//                    long timeDiff = t - startTime;
-//                    int count = dispatchCount.incrementAndGet();
-//                    long totalTimeDiff = dispatchTime.addAndGet(timeDiff);
-//                });
     }
 
-    // @SuppressWarnings("UnusedReturnValue")
-//	private XFutureVoid prepAndFinishOnDispatch(Runnable r) {
-//
-//		return prepActions().thenComposeToVoid("prepAndFinishOnDispatch", () -> {
-//			return runOnDispatchThread(() -> {
-//				try {
-//					r.run();
-//				} catch (Exception e) {
-//					log(Level.SEVERE, "", e);
-//				}
-//			});
-//		});
-//	}
-//	private <T> XFuture<T> prepAndFinishOnDispatch(UiSupplier<XFuture<T>> supplier) {
-//		return prepActions().thenCompose(x -> Utils.supplyOnDispatchThread(supplier)).thenCompose(x -> x);
-//	}
     private XFutureVoid prepAndFinishToXFutureVoidOnDispatch(UiSupplier<XFutureVoid> supplier) {
-        return prepActions().thenCompose(x -> Utils.supplyXVoidOnDispatchThread(supplier)).thenComposeToVoid(x -> x);
+        final XFuture<XFutureVoid> uiFuture = prepActions()
+                .thenCompose(x -> Utils.supplyXVoidOnDispatchThread(supplier));
+        return uiFuture
+                .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
     XFutureVoid prepActions() {
         return XFuture.supplyAsync("prepActions", this::prepActionsInternal, supervisorExecutorService)
-                .thenComposeToVoid(x -> x);
+                .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
     XFutureVoid prepActionsInternal() {
@@ -4054,26 +4043,30 @@ public class Supervisor {
                 supervisorExecutorService);
         XFuture<LockInfo> disallowTogglesFuture = disallowTogglesFutureFuture.thenCompose(x -> x);
         XFutureVoid immediateAbortAllFuture = disallowTogglesFuture
-                .thenComposeToVoid(x -> immediateAbortAll("fullAbortAll"));
-        return immediateAbortAllFuture.thenRun("fullAbortAll.after.immediateAbortAll", () -> {
-            clearCheckBoxes();
-            mainFuture = lastFutureReturnedFinal;
-            ignoreTitleErrors.set(false);
-            for (XFuture<Boolean> f : systemContinueMap.values()) {
-                f.cancelAll(stealingRobots);
-            }
-            systemContinueMap.clear();
-            for (XFutureVoid f : debugSystemContinueMap.values()) {
-                f.cancelAll(stealingRobots);
-            }
-            debugSystemContinueMap.clear();
-            completeScanTillNewInternalCount.set(0);
-            startScanTillNewInternalCount.set(0);
-            for (AprsSystem sys : aprsSystems) {
-                sys.clearKitsToCheck(sys.getSafeAbortRequestCount());
-            }
-        }).alwaysComposeAsyncToVoid("allowTogglesFullAbort", () -> allowTogglesNoCheck(blockerName),
-                supervisorExecutorService);
+                .thenComposeAsyncToVoid(
+                        x -> immediateAbortAll("fullAbortAll"),
+                        supervisorExecutorService);
+        return immediateAbortAllFuture.thenRun("fullAbortAll.after.immediateAbortAll",
+                () -> {
+                    clearCheckBoxes();
+                    mainFuture = lastFutureReturnedFinal;
+                    ignoreTitleErrors.set(false);
+                    for (XFuture<Boolean> f : systemContinueMap.values()) {
+                        f.cancelAll(stealingRobots);
+                    }
+                    systemContinueMap.clear();
+                    for (XFutureVoid f : debugSystemContinueMap.values()) {
+                        f.cancelAll(stealingRobots);
+                    }
+                    debugSystemContinueMap.clear();
+                    completeScanTillNewInternalCount.set(0);
+                    startScanTillNewInternalCount.set(0);
+                    for (AprsSystem sys : aprsSystems) {
+                        sys.clearKitsToCheck(sys.getSafeAbortRequestCount());
+                    }
+                }).alwaysComposeAsyncToVoid("allowTogglesFullAbort",
+                        () -> allowTogglesNoCheck(blockerName),
+                        supervisorExecutorService);
     }
 
     public XFutureVoid publicReturnRobot() {
@@ -4085,7 +4078,7 @@ public class Supervisor {
                 supervisorExecutorService);
         XFuture<LockInfo> disallowTogglesFuture = disallowTogglesFutureFuture.thenCompose(x -> x);
         XFutureVoid immediateAbortAllFuture = disallowTogglesFuture
-                .thenComposeToVoid(x -> publicReturnRobotStep2("publicReturnRobot", false));
+                .thenComposeAsyncToVoid(x -> publicReturnRobotStep2("publicReturnRobot", false), supervisorExecutorService);
         return immediateAbortAllFuture.thenRun("fullAbortAll.after.immediateAbortAll", () -> {
             clearCheckBoxes();
             mainFuture = lastFutureReturnedFinal;
@@ -4279,7 +4272,7 @@ public class Supervisor {
         }
         closing = true;
         XFuture.setClosingMode(true);
-        if(null != this.object2DOuterJPanel1) {
+        if (null != this.object2DOuterJPanel1) {
             this.object2DOuterJPanel1.disconnect();
             this.object2DOuterJPanel1.disconnectCurrentPosition();
         }
@@ -4401,9 +4394,9 @@ public class Supervisor {
     private void myExit() {
         if (null != displayJFrame) {
             displayJFrame.closeAprsRemoteConsoleService();
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 runOnDispatchThread(() -> {
-                    if (null != displayJFrame && !CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                    if (null != displayJFrame && !CRCLUtils.isGraphicsEnvironmentHeadless()) {
                         displayJFrame.setVisible(false);
 
                         displayJFrame.removeAll();
@@ -4505,7 +4498,7 @@ public class Supervisor {
         firstEventTime = -1;
         return XFutureVoid.allOf(allResetFutures)
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("resetAll"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("resetAll"), supervisorExecutorService);
     }
 
     private volatile boolean correctionMode = true;
@@ -4613,7 +4606,7 @@ public class Supervisor {
                             }, supervisorExecutorService);
                     return outerRet
                             .peekNoCancelException(this::handleXFutureException)
-                            .thenComposeToVoid(() -> this.waitSingleStep("startRandomTestFirstActionReversed"));
+                            .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTestFirstActionReversed"), supervisorExecutorService);
                 } catch (Exception e) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
                     MultiLineStringJPanel.showText("Exception occurred: " + e);
@@ -5035,7 +5028,7 @@ public class Supervisor {
         }
         return lookForPartsAll()
                 .thenRunAsync("completeScanAllInternal", this::completeScanAllInternal, supervisorExecutorService)
-                .thenComposeToVoid(this::showScanCompleteDisplay);
+                .thenComposeAsyncToVoid(this::showScanCompleteDisplay, supervisorExecutorService);
     }
 
     private final AtomicInteger startScanTillNewInternalCount = new AtomicInteger();
@@ -5048,15 +5041,16 @@ public class Supervisor {
             throw new IllegalStateException();
         }
         return lookForPartsAll()
-                .thenComposeToVoid("completeScanTillNewInternal" + sc + ":" + cc, this::completeScanTillNewInternal)
-                .thenComposeToVoid("showScanCompleteDisplay", this::showScanCompleteDisplay).thenRun(() -> {
-            int new_cc = completeScanTillNewInternalCount.incrementAndGet();
-            try {
-                takeAllSnapshots("scan : sc=" + sc + ",cc=" + new_cc);
-            } catch (IOException ex) {
-                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
+                .thenComposeAsyncToVoid("completeScanTillNewInternal" + sc + ":" + cc, this::completeScanTillNewInternal, supervisorExecutorService)
+                .thenComposeAsyncToVoid("showScanCompleteDisplay", this::showScanCompleteDisplay, supervisorExecutorService)
+                .thenRun(() -> {
+                    int new_cc = completeScanTillNewInternalCount.incrementAndGet();
+                    try {
+                        takeAllSnapshots("scan : sc=" + sc + ",cc=" + new_cc);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
     }
 
     private XFutureVoid showScanCompleteDisplay() {
@@ -5085,7 +5079,7 @@ public class Supervisor {
         return XFuture
                 .supplyAsync("startScanAllThenContinuousDemoRevFirstOnSupervisorService",
                         this::startScanAllThenContinuousDemoRevFirst, supervisorExecutorService)
-                .thenComposeToVoid(x -> x);
+                .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
     public XFuture<Boolean> startFlipFMOnSupervisorService() {
@@ -5105,14 +5099,16 @@ public class Supervisor {
     private XFutureVoid startScanAllThenContinuousDemoRevFirst() {
         logEvent("startScanAllThenContinuousDemoRevFirst starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
-        XFutureVoid xf2 = xf1.thenComposeToVoid("startScanAllThenContinuousDemoRevFirst.step2", x -> {
-            logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf1=" + xf1);
-            return startScanAll();
-        });
-        XFutureVoid xf3 = xf2.thenComposeToVoid("startScanAllThenContinuousDemoRevFirst.step3", x -> {
-            logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf2=" + xf2);
-            return startContinuousDemoRevFirst();
-        });
+        XFutureVoid xf2 = xf1.thenComposeAsyncToVoid("startScanAllThenContinuousDemoRevFirst.step2",
+                x -> {
+                    logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf1=" + xf1);
+                    return startScanAll();
+                }, supervisorExecutorService);
+        XFutureVoid xf3 = xf2.thenComposeAsyncToVoid("startScanAllThenContinuousDemoRevFirst.step3",
+                x -> {
+                    logEvent("startScanAllThenContinuousDemoRevFirst.step2 : xf2=" + xf2);
+                    return startContinuousDemoRevFirst();
+                }, supervisorExecutorService);
         return xf3;
     }
 
@@ -5141,7 +5137,7 @@ public class Supervisor {
         if (fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
                 || fanucCartSys.isEnforceMinMaxLimits() || sharedTableSys.isEnforceMinMaxLimits()) {
             final int confirm;
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 confirm = JOptionPane.showConfirmDialog(this.displayJFrame,
                         "Disable Alert Limits on " + fanucCartSys + " and " + sharedTableSys);
             } else {
@@ -5156,11 +5152,11 @@ public class Supervisor {
                 return XFuture.completedFuture(false);
             }
         }
-        XFutureVoid xf2 = xf1.thenComposeToVoid("startFlip.step2", x -> {
-            logEvent("startFlip.step2 : xf1=" + xf1);
-
-            return lookForPartsAll(false);
-        });
+        XFutureVoid xf2 = xf1.thenComposeAsyncToVoid("startFlip.step2",
+                x -> {
+                    logEvent("startFlip.step2 : xf1=" + xf1);
+                    return lookForPartsAll(false);
+                }, supervisorExecutorService);
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step2 : xf2=" + xf2);
             return fanucCartSys.startActionsList("flip2",
@@ -5256,7 +5252,7 @@ public class Supervisor {
                 }
             }
             logEvent("startFlipFM completed.");
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 showMesssage("startFlipFM completed.");
             }
             return x;
@@ -5283,87 +5279,102 @@ public class Supervisor {
                 return XFuture.completedFuture(false);
             }
         }
-        XFutureVoid xf2 = xf1.thenComposeToVoid("startFlipMF.step2", x -> {
-            logEvent("startFlipMF.step2 : xf1=" + xf1);
-            return lookForPartsAll(false);
-        });
+        XFutureVoid xf2 = xf1
+                .thenComposeAsyncToVoid("startFlipMF.step2", x -> {
+                    logEvent("startFlipMF.step2 : xf1=" + xf1);
+                    return lookForPartsAll(false);
+                }, supervisorExecutorService);
 
-        XFuture<Boolean> xf3 = xf2.thenCompose("startFlipMF.step3", x -> {
-            logEvent("startFlipMF.step3 : xf2=" + xf2);
-            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
-            return sharedTableSys.startActionsList("flip2",
-                    Arrays.asList(new Action[]{
-                Action.newTakePartAction("part_black_gear_in_kt_1"),
-                Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
-                Action.newMoveRecordedPose("flipmf_present_gear")
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf4 = xf3.thenCompose("startFlipMF.step4", x -> {
-            logEvent("startFlipMF.step4 : xf3=" + xf3);
-            fanucCartSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
-            return fanucCartSys.startActionsList("flip4",
-                    Arrays.asList(new Action[]{
-                Action.newMoveRecordedJoints("prep_new_flip_2_2"),
-                Action.newMoveRecordedPose("new_flip_2_2"),
-                Action.newCloseGripper()
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf5 = xf4.thenCompose("startFlipMF.step5", x -> {
-            logEvent("startFlipMF.step5 : xf4=" + xf4);
-            return sharedTableSys.startActionsList("flip5",
-                    Arrays.asList(new Action[]{
-                Action.newOpenGripper(),}),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf6 = xf5.thenCompose("startFlipMF.step6", x -> {
-            logEvent("startFlipMF.step6 : xf5=" + xf5);
-            return fanucCartSys.startActionsList("flip6",
-                    Arrays.asList(new Action[]{
-                Action.newMoveRecordedPose("flip_2_3"),
-                Action.newMoveRecordedPose("flip_2_4"),
-                Action.newMoveRecordedPose("flip_2_5")
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf7 = xf6.thenCompose("startFlipMF.step7", x -> {
-            logEvent("startFlipMF.step7 : xf6=" + xf6);
-            return sharedTableSys.startActionsList("flip7",
-                    Arrays.asList(new Action[]{
-                Action.newCloseGripper()
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf8 = xf7.thenCompose("startFlipMF.step8", x -> {
-            logEvent("startFlipMF.step8 : xf7=" + xf7);
-            return fanucCartSys.startActionsList("flip8",
-                    Arrays.asList(new Action[]{
-                Action.newOpenGripper(),
-                Action.newMoveRecordedPose("flip_2_6"),
-                Action.newLookForParts()
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
-        XFuture<Boolean> xf9 = xf8.thenCompose("startFlipMF.step9", x -> {
-            logEvent("startFlipMF.step9 : xf8=" + xf8);
-            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
-            return sharedTableSys.startActionsList("flip9",
-                    Arrays.asList(new Action[]{
-                Action.newMoveRecordedPose("flipmf_present_gear_prep"),
-                Action.newLookForParts(),
-                Action.newPlacePartAction("empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1", "black_gear"),
-                Action.newLookForParts()
-            }),
-                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
-                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
-        });
+        XFuture<Boolean> xf3 = xf2
+                .thenCompose("startFlipMF.step3",
+                        x -> {
+                            logEvent("startFlipMF.step3 : xf2=" + xf2);
+                            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
+                            return sharedTableSys.startActionsList("flip2",
+                                    Arrays.asList(new Action[]{
+                                Action.newTakePartAction("part_black_gear_in_kt_1"),
+                                Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
+                                Action.newMoveRecordedPose("flipmf_present_gear")
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf4 = xf3
+                .thenCompose("startFlipMF.step4",
+                        x -> {
+                            logEvent("startFlipMF.step4 : xf3=" + xf3);
+                            fanucCartSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
+                            return fanucCartSys.startActionsList("flip4",
+                                    Arrays.asList(new Action[]{
+                                Action.newMoveRecordedJoints("prep_new_flip_2_2"),
+                                Action.newMoveRecordedPose("new_flip_2_2"),
+                                Action.newCloseGripper()
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf5 = xf4
+                .thenCompose("startFlipMF.step5",
+                        x -> {
+                            logEvent("startFlipMF.step5 : xf4=" + xf4);
+                            return sharedTableSys.startActionsList("flip5",
+                                    Arrays.asList(new Action[]{
+                                Action.newOpenGripper(),}),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf6 = xf5
+                .thenCompose("startFlipMF.step6",
+                        x -> {
+                            logEvent("startFlipMF.step6 : xf5=" + xf5);
+                            return fanucCartSys.startActionsList("flip6",
+                                    Arrays.asList(new Action[]{
+                                Action.newMoveRecordedPose("flip_2_3"),
+                                Action.newMoveRecordedPose("flip_2_4"),
+                                Action.newMoveRecordedPose("flip_2_5")
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf7 = xf6
+                .thenCompose("startFlipMF.step7",
+                        x -> {
+                            logEvent("startFlipMF.step7 : xf6=" + xf6);
+                            return sharedTableSys.startActionsList("flip7",
+                                    Arrays.asList(new Action[]{
+                                Action.newCloseGripper()
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf8 = xf7
+                .thenCompose("startFlipMF.step8",
+                        x -> {
+                            logEvent("startFlipMF.step8 : xf7=" + xf7);
+                            return fanucCartSys.startActionsList("flip8",
+                                    Arrays.asList(new Action[]{
+                                Action.newOpenGripper(),
+                                Action.newMoveRecordedPose("flip_2_6"),
+                                Action.newLookForParts()
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+        XFuture<Boolean> xf9 = xf8
+                .thenCompose("startFlipMF.step9",
+                        x -> {
+                            logEvent("startFlipMF.step9 : xf8=" + xf8);
+                            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
+                            return sharedTableSys.startActionsList("flip9",
+                                    Arrays.asList(new Action[]{
+                                Action.newMoveRecordedPose("flipmf_present_gear_prep"),
+                                Action.newLookForParts(),
+                                Action.newPlacePartAction("empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1", "black_gear"),
+                                Action.newLookForParts()
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
         return xf9;
     }
 
@@ -5400,7 +5411,7 @@ public class Supervisor {
         lastStartScanAllFutures = xf;
         return step2Xf
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("startScanAll"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("startScanAll"), supervisorExecutorService);
     }
 
     private final AtomicInteger srtCount = new AtomicInteger();
@@ -5418,11 +5429,13 @@ public class Supervisor {
         logEvent("Start Random Test : " + c);
         connectAll();
         return startCheckAndEnableAllRobots(startingAbortCount)
-                .thenComposeToVoid("startRandomTest.checkOk" + c,
+                .thenComposeAsyncToVoid("startRandomTest.checkOk" + c,
                         ok -> checkOkElseToVoid(ok, () -> startRandomTestStep2(startingAbortCount),
-                                this::showCheckEnabledErrorSplash))
+                                this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService)
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("startRandomTest"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTest"),
+                        supervisorExecutorService);
     }
 
     private volatile @Nullable XFutureVoid conveyorTestFuture = null;
@@ -5446,7 +5459,7 @@ public class Supervisor {
         int startAbortCount = sys.getSafeAbortRequestCount();
         int startEnableChangeCount = enableChangeCount.get();
         XFutureVoid ret = conveyorBack(sys, startAbortCount, startEnableChangeCount)
-                .thenComposeToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void) null));
+                .thenComposeAsyncToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void) null), supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -5465,7 +5478,8 @@ public class Supervisor {
         int startAbortCount = sys.getSafeAbortRequestCount();
         int startEnableChangeCount = enableChangeCount.get();
         XFutureVoid ret = conveyorForward(sys, startAbortCount, startEnableChangeCount)
-                .thenComposeToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void) null));
+                .thenComposeAsyncToVoid(x -> finishConveyorTest().thenApply(x2 -> (Void) null),
+                        supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -5507,7 +5521,7 @@ public class Supervisor {
                         Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     return checkedConveyorVisPrev(sys, startAbortCount, startEnableChangeCount, ok);
-                }, getSupervisorExecutorService());
+                }, supervisorExecutorService);
     }
 
     public XFutureVoid repeatingConveyorTest(int maxCount) {
@@ -5559,8 +5573,10 @@ public class Supervisor {
         conveyorVisNextCount.set(0);
         conveyorVisPrevCount.set(0);
         XFutureVoid ret = conveyorForward(sys, startAbortCount, startEnableChangeCount)
-                .thenComposeToVoid(x -> continueReverseRepeatingConveyorTest(sys, startAbortCount,
-                startEnableChangeCount, maxCount, count + 1));
+                .thenComposeAsyncToVoid(
+                        x -> continueReverseRepeatingConveyorTest(sys, startAbortCount,
+                                startEnableChangeCount, maxCount, count + 1),
+                        supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -5586,8 +5602,10 @@ public class Supervisor {
                 + "," + maxCount + "," + count + ")");
         conveyorVisNextCount.set(0);
         conveyorVisPrevCount.set(0);
-        XFutureVoid ret = conveyorBack(sys, startAbortCount, startEnableChangeCount).thenComposeToVoid(
-                x -> continueRepeatingConveyorTest(sys, startAbortCount, startEnableChangeCount, maxCount, count + 1));
+        XFutureVoid ret = conveyorBack(sys, startAbortCount, startEnableChangeCount)
+                .thenComposeAsyncToVoid(
+                        x -> continueRepeatingConveyorTest(sys, startAbortCount, startEnableChangeCount, maxCount, count + 1),
+                        supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -5629,7 +5647,7 @@ public class Supervisor {
                         Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     return checkedConveyorVisNext(sys, startAbortCount, startEnableChangeCount, ok);
-                }, getSupervisorExecutorService());
+                }, supervisorExecutorService);
     }
 
     private static volatile @Nullable XFuture<Boolean> fillTraysAndNextRepeatingFuture = null;
@@ -5899,7 +5917,7 @@ public class Supervisor {
         }
         return sys.fillKitTraysWithItemList(items, useUnassignedParts).thenComposeAsync((Boolean fillCompleted) -> {
             return checkedConveyorVisNext(sys, startAbortCount, startEnableChangeCount, fillCompleted);
-        }, getSupervisorExecutorService());
+        }, supervisorExecutorService);
     }
 
     private volatile @Nullable XFutureVoid lastConveyorVisNextRet = null;
@@ -5956,16 +5974,18 @@ public class Supervisor {
             } catch (IOException ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
             }
-            XFutureVoid conveyorVisNextRet = disallowTogglesFuture.thenComposeToVoid(x -> {
-                sys.clearVisionRequiredParts();
-                return conveyorVisNext();
-            }).alwaysRun(() -> {
-                try {
-                    takeAllSnapshots("END conveyorVisNex:" + convNextCount + ",pos=" + conveyorPos() + " ");
-                } catch (IOException ex) {
-                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
+            XFutureVoid conveyorVisNextRet = disallowTogglesFuture
+                    .thenComposeAsyncToVoid(x -> {
+                        sys.clearVisionRequiredParts();
+                        return conveyorVisNext();
+                    }, supervisorExecutorService)
+                    .alwaysRun(() -> {
+                        try {
+                            takeAllSnapshots("END conveyorVisNex:" + convNextCount + ",pos=" + conveyorPos() + " ");
+                        } catch (IOException ex) {
+                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
             lastConveyorVisNextRet = conveyorVisNextRet;
             XFuture<List<PhysicalItem>> simViewUpdateRet = conveyorVisNextRet.thenCompose(x -> sys.getSimViewUpdate());
             lastCheckedConveyorVisNextSimViewUpdateRet = simViewUpdateRet;
@@ -6091,7 +6111,7 @@ public class Supervisor {
         }
         return sys.emptyKitTraysWithItemList(items).thenComposeAsync((Boolean fillCompleted) -> {
             return checkedConveyorVisPrev(sys, startAbortCount, startEnableChangeCount, fillCompleted);
-        }, getSupervisorExecutorService());
+        }, supervisorExecutorService);
     }
 
     private final AtomicInteger conveyorVisNextCount = new AtomicInteger();
@@ -6118,10 +6138,10 @@ public class Supervisor {
         int count = conveyorVisNextCount.incrementAndGet();
         logEvent("Conveyor Next Starting " + count);
         XFutureVoid ret = this.waitResume()
-                .thenComposeToVoid(() -> displayJFrameFinal.conveyorVisNextTray())
+                .thenComposeAsyncToVoid(() -> displayJFrameFinal.conveyorVisNextTray(), supervisorExecutorService)
                 .thenRun(() -> conveyorVisNextFinish(count))
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("conveyorVisNext"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("conveyorVisNext"), supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -6188,7 +6208,7 @@ public class Supervisor {
 
     @SuppressWarnings("nullness")
     public XFutureVoid showMesssage(String message) {
-        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
             return Utils.runOnDispatchThread(() -> {
                 JOptionPane.showMessageDialog(displayJFrame, message);
             });
@@ -6235,10 +6255,10 @@ public class Supervisor {
         int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
         XFutureVoid ret = this.waitResume()
-                .thenComposeToVoid(() -> displayJFrameFinal.conveyorVisPrevTray())
+                .thenComposeAsyncToVoid(() -> displayJFrameFinal.conveyorVisPrevTray(), supervisorExecutorService)
                 .thenRun(() -> conveyorVisPrevFinish(count))
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("conveyorVisPrev"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("conveyorVisPrev"), supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
     }
@@ -6276,7 +6296,7 @@ public class Supervisor {
         resetMainRandomTestFuture();
         return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, f2, f1)
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("startRandomTestStep2"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTestStep2"), supervisorExecutorService);
     }
 
     private XFutureVoid startIndRandomTestStep2(int startingAbortCount) {
@@ -6911,9 +6931,9 @@ public class Supervisor {
             return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
         }
         XFutureVoid ret = startRandomDelay("pauseTest", 30000, 20000)
-                .thenComposeToVoid("pauseTest.pause" + pauseCount.get(), () -> runOnDispatchThread(this::pause))
-                .thenComposeToVoid(x -> startRandomDelay("pauseTest", 1000, 1000))
-                .thenComposeToVoid("pauseTest.resume" + pauseCount.get(), () -> runOnDispatchThread(this::resume));
+                .thenComposeAsyncToVoid("pauseTest.pause" + pauseCount.get(), () -> runOnDispatchThread(this::pause), supervisorExecutorService)
+                .thenComposeAsyncToVoid(x -> startRandomDelay("pauseTest", 1000, 1000), supervisorExecutorService)
+                .thenComposeAsyncToVoid("pauseTest.resume" + pauseCount.get(), () -> runOnDispatchThread(this::resume), supervisorExecutorService);
         pauseTestFuture = ret;
         resetMainPauseTestFuture();
         ret.thenCompose("pauseTest.recurse" + pauseCount.get(), x -> continuePauseTest());
@@ -7009,14 +7029,15 @@ public class Supervisor {
                     enableTestMinRandomDelayMillis).thenCompose("checkForWaitResume1", x -> this.waitResume())
                     .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
                     .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())
-                    .thenComposeToVoid("updateRandomTestCount" + randomTestCount.get(), x -> {
+                    .thenComposeAsyncToVoid("updateRandomTestCount" + randomTestCount.get(), x -> {
                         if (x) {
                             return this.updateRandomTestCount();
                         } else {
                             return XFuture.completedFuture(null);
                         }
-                    }).thenComposeAsyncToVoid("continueRandomTest.recurse" + randomTestCount.get(),
-                    () -> continueRandomTest(startingAbortCount), randomDelayExecutorService);
+                    }, supervisorExecutorService)
+                    .thenComposeAsyncToVoid("continueRandomTest.recurse" + randomTestCount.get(),
+                            () -> continueRandomTest(startingAbortCount), randomDelayExecutorService);
 
             XFuture<?> handledRandomTestFuture = ret.exceptionally((Throwable throwable) -> {
                 return handleRandomTestExcpeption(throwable);
@@ -7152,8 +7173,9 @@ public class Supervisor {
                         x -> startReverseActions(part2BlockerName, startingAbortCount), supervisorExecutorService)
                 .thenComposeAsync("startContinuousDemoRevFirst.checkLastReturnedFuture2",
                         x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
-                .thenComposeToVoid("continueContinuousDemo.incrementContinuousDemoCycle",
-                        x -> incrementContinuousDemoCycle("startPrivateContinuousDemoRevFirst", startingAbortCount))
+                .thenComposeAsyncToVoid("continueContinuousDemo.incrementContinuousDemoCycle",
+                        x -> incrementContinuousDemoCycle("startPrivateContinuousDemoRevFirst", startingAbortCount),
+                        supervisorExecutorService)
                 .thenComposeAsync("startContinuousDemoRevFirst.enableAndCheckAllRobots",
                         x -> startCheckAndEnableAllRobots(startingAbortCount), supervisorExecutorService)
                 .thenComposeAsyncToVoid("startContinuousDemoRevFirst",
@@ -7207,11 +7229,12 @@ public class Supervisor {
         AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFutureVoid ret = disallowToggles(blockerName, sysArray)
                 .thenCompose(x -> startCheckAndEnableAllRobots(startingAbortCount))
-                .thenComposeToVoid("startContinuousDemo" + cdcCount,
+                .thenComposeAsyncToVoid("startContinuousDemo" + cdcCount,
                         ok -> checkOkElse(ok, () -> continueContinuousDemo(blockerName, startingAbortCount),
-                                this::showCheckEnabledErrorSplash))
+                                this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService)
                 .peekNoCancelException(this::handleXFutureException)
-                .thenComposeToVoid(() -> this.waitSingleStep("startContinuousDemo"));
+                .thenComposeAsyncToVoid(() -> this.waitSingleStep("startContinuousDemo"), supervisorExecutorService);
         ContinuousDemoFuture = ret;
         return ret;
     }
@@ -7228,8 +7251,10 @@ public class Supervisor {
         int startingAbortCount = getAbortCount();
         logEvent("Start Continuous demo");
         connectAll();
-        XFutureVoid ret = startCheckAndEnableAllRobots(startingAbortCount).thenComposeToVoid("startIndContinuousDemo",
-                ok -> checkOkElseToVoid(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash));
+        XFutureVoid ret = startCheckAndEnableAllRobots(startingAbortCount)
+                .thenComposeAsyncToVoid("startIndContinuousDemo",
+                        ok -> checkOkElseToVoid(ok, this::startAllIndContinuousDemo, this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService);
         ContinuousDemoFuture = ret;
         if (null != randomTestFuture && isIndRandomToggleTestSelected()) {
             resetMainRandomTestFuture();
@@ -7250,9 +7275,11 @@ public class Supervisor {
         int startingAbortCount = getAbortCount();
         logEvent("Start Independent Random  Enable Toggle Test");
         connectAll();
-        return startCheckAndEnableAllRobots(startingAbortCount).thenComposeToVoid(
-                "startRandomEnableToggleIndependentContinuousDemo.checkOk", ok -> checkOkElseToVoid(ok,
-                        () -> startIndRandomTestStep2(startingAbortCount), this::showCheckEnabledErrorSplash));
+        return startCheckAndEnableAllRobots(startingAbortCount)
+                .thenComposeAsyncToVoid(
+                        "startRandomEnableToggleIndependentContinuousDemo.checkOk", ok -> checkOkElseToVoid(ok,
+                                () -> startIndRandomTestStep2(startingAbortCount), this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService);
     }
 
     private final AtomicInteger ContinuousDemoCycle = new AtomicInteger(0);
@@ -7441,53 +7468,59 @@ public class Supervisor {
             String part3BlockerName = "part3ContinueContinuousScanAndRun" + ccsarCount;
             XFuture<LockInfo> disallowTogglesFuture = disallowToggles(part1BlockerName);
             return disallowTogglesFuture.thenComposeAsync(x -> continuousDemoSetup(cdcCount), supervisorExecutorService)
-                    .thenComposeToVoid("continueContinuousScanAndRun.part2", x2 -> {
-                        final XFuture<?> lfr = this.getLastFutureReturned();
-                        XFutureVoid ret = startCheckAndEnableAllRobots(startingAbortCount)
-                                .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName, prevBlockerName),
-                                        supervisorExecutorService)
-                                .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal",
-                                        x -> scanTillNewInternal(), supervisorExecutorService)
-                                .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2",
-                                        x -> checkLastReturnedFuture(lfr, part2BlockerName), supervisorExecutorService)
-                                .thenComposeAsync("continueContinuousScanAndRun.startAllActions1",
-                                        x -> startAllActions("continueContinuousScanAndRun", false, part2BlockerName,
-                                                startingAbortCount),
-                                        supervisorExecutorService)
-                                .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1",
-                                        x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
-                                .thenComposeToVoid("continueContinuousScanAndRun.incrementContinuousDemoCycle",
-                                        x -> incrementContinuousDemoCycle("continueContinuousScanAndRun",
-                                                startingAbortCount))
-                                .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots",
-                                        x -> startCheckAndEnableAllRobots(startingAbortCount),
-                                        supervisorExecutorService)
-                                .thenCompose("allowToggles" + part3BlockerName,
-                                        x -> allowToggles(part3BlockerName).thenApply(v -> x))
-                                .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + cdcCount,
-                                        ok -> checkOkElseToVoid(ok,
-                                                () -> continueContinuousScanAndRun(part3BlockerName,
-                                                        startingAbortCount),
-                                                this::showCheckEnabledErrorSplash),
-                                        supervisorExecutorService)
-                                .peekNoCancelException(this::handleXFutureException).alwaysComposeAsyncToVoid(
-                                () -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName),
-                                supervisorExecutorService);
-                        ContinuousDemoFuture = ret;
-                        if (null != randomTestFuture) {
-                            if (isRandomTestSelected()) {
-                                resetMainRandomTestFuture();
-                            } else if (isRandomTestSelected()) {
-                                resetMainPauseTestFuture();
-                            }
-                        }
-                        return ret;
-                    });
+                    .thenComposeAsyncToVoid("continueContinuousScanAndRun.part2",
+                            x2 -> {
+                                return continueContinuousScanAndRunInternal(startingAbortCount, part1BlockerName, prevBlockerName, part2BlockerName, part3BlockerName, cdcCount);
+                            }, supervisorExecutorService);
         } catch (Exception exception) {
             logException(exception);
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
             throw asRuntimeException(exception);
         }
+    }
+
+    private XFutureVoid continueContinuousScanAndRunInternal(int startingAbortCount, String part1BlockerName, String prevBlockerName, String part2BlockerName, String part3BlockerName, final int cdcCount) {
+        final XFuture<?> lfr = this.getLastFutureReturned();
+        XFutureVoid ret = startCheckAndEnableAllRobots(startingAbortCount)
+                .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName, prevBlockerName),
+                        supervisorExecutorService)
+                .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal",
+                        x -> scanTillNewInternal(), supervisorExecutorService)
+                .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2",
+                        x -> checkLastReturnedFuture(lfr, part2BlockerName), supervisorExecutorService)
+                .thenComposeAsync("continueContinuousScanAndRun.startAllActions1",
+                        x -> startAllActions("continueContinuousScanAndRun", false, part2BlockerName,
+                                startingAbortCount),
+                        supervisorExecutorService)
+                .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture1",
+                        x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
+                .thenComposeAsyncToVoid("continueContinuousScanAndRun.incrementContinuousDemoCycle",
+                        x -> incrementContinuousDemoCycle("continueContinuousScanAndRun",
+                                startingAbortCount),
+                        supervisorExecutorService)
+                .thenComposeAsync("continueContinuousScanAndRun.enableAndCheckAllRobots",
+                        x -> startCheckAndEnableAllRobots(startingAbortCount),
+                        supervisorExecutorService)
+                .thenCompose("allowToggles" + part3BlockerName,
+                        x -> allowToggles(part3BlockerName).thenApply(v -> x))
+                .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + cdcCount,
+                        ok -> checkOkElseToVoid(ok,
+                                () -> continueContinuousScanAndRun(part3BlockerName,
+                                        startingAbortCount),
+                                this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService)
+                .peekNoCancelException(this::handleXFutureException).alwaysComposeAsyncToVoid(
+                () -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName),
+                supervisorExecutorService);
+        ContinuousDemoFuture = ret;
+        if (null != randomTestFuture) {
+            if (isRandomTestSelected()) {
+                resetMainRandomTestFuture();
+            } else if (isRandomTestSelected()) {
+                resetMainPauseTestFuture();
+            }
+        }
+        return ret;
     }
 
     private XFutureVoid startContinuousDemoReversActions(@Nullable String prevBlockerName, int startingAbortCount) {
@@ -7515,8 +7548,9 @@ public class Supervisor {
             ContinuousDemoFuture = ret2;
             return ret2
                     .peekNoCancelException(this::handleXFutureException)
-                    .thenComposeToVoid(() -> this.waitSingleStep(
-                    "continueContinuousDemo(" + prevBlockerName + "," + startingAbortCount + ")"));
+                    .thenComposeAsyncToVoid(
+                            () -> this.waitSingleStep("continueContinuousDemo(" + prevBlockerName + "," + startingAbortCount + ")"),
+                            supervisorExecutorService);
         }
 
         final int cdcCount = ContinuousDemoCycle.get();
@@ -7554,56 +7588,58 @@ public class Supervisor {
         }
         return disallowTogglesFuture.thenComposeAsyncToVoid((LockInfo ignored) -> {
             return continuousDemoSetup(cdcCount);
-        }, supervisorExecutorService).thenComposeToVoid("ContinuouseDemo.partw", x2 -> {
-            final XFuture<?> lfr = this.getLastFutureReturned();
-            if (null != lastContinueContinuousDemoNoRecurseFuture
-                    && !lastContinueContinuousDemoNoRecurseFuture.isDone()) {
-                throw new IllegalStateException(
-                        "lastContinueContinuousDemoNoRecurseFuture=" + lastContinueContinuousDemoNoRecurseFuture);
-            }
-            XFuture<Boolean> continueContinuousDemoNoRecursePart2Future = startCheckAndEnableAllRobots(
-                    startingAbortCount)
-                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1",
-                            x -> checkLastReturnedFuture(lfr, part2BlockerName), supervisorExecutorService)
-                    .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
-                        XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + cdcCount,
-                                false, prevBlockerName, startingAbortCount);
-                        XFutureVoid allowTogglesRet = allowToggles(part1BlockerName, sysArray);
-                        XFutureVoid allowToggles2Ret = allowToggles(part2BlockerName, sysArray);
-                        return XFutureVoid.allOf(startAllActionsRet, allowTogglesRet, allowToggles2Ret);
-                    }, supervisorExecutorService)
-                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2",
-                            x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
-                    .thenComposeAsync("continueContinuousDemo.startReverseActions",
-                            x -> startContinuousDemoReversActions(part3BlockerName, startingAbortCount),
-                            supervisorExecutorService)
-                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture3",
-                            x -> checkLastReturnedFuture(lfr, part4BlockerName), supervisorExecutorService)
-                    .thenComposeAsyncToVoid("continueContinuousDemo.incrementContinuousDemoCycle",
-                            x -> incrementContinuousDemoCycle("continueContinuousDemo", startingAbortCount),
-                            supervisorExecutorService)
-                    .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots",
-                            x -> startCheckAndEnableAllRobots(startingAbortCount), supervisorExecutorService);
-            lastContinueContinuousDemoNoRecurseFuture = continueContinuousDemoNoRecursePart2Future;
-            XFutureVoid ret = continueContinuousDemoNoRecursePart2Future
-                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdcCount, ok -> {
-                        logEvent("End Continue Continuous Demo : cdcCount=" + cdcCount + ", ok=" + ok
-                                + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
-                        return checkOkElse(ok, () -> continueContinuousDemo(part4BlockerName, startingAbortCount),
-                                this::showCheckEnabledErrorSplash);
-                    }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException)
-                    .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(prevBlockerName, part1BlockerName,
-                    part2BlockerName, part3BlockerName, part4BlockerName), supervisorExecutorService);
-            ContinuousDemoFuture = ret;
-            if (null != randomTestFuture) {
-                if (isRandomTestSelected()) {
-                    resetMainRandomTestFuture();
-                } else if (isRandomTestSelected()) {
-                    resetMainPauseTestFuture();
-                }
-            }
-            return ret;
-        });
+        }, supervisorExecutorService)
+                .thenComposeAsyncToVoid("ContinuouseDemo.partw",
+                        x2 -> {
+                            final XFuture<?> lfr = this.getLastFutureReturned();
+                            if (null != lastContinueContinuousDemoNoRecurseFuture
+                            && !lastContinueContinuousDemoNoRecurseFuture.isDone()) {
+                                throw new IllegalStateException(
+                                        "lastContinueContinuousDemoNoRecurseFuture=" + lastContinueContinuousDemoNoRecurseFuture);
+                            }
+                            XFuture<Boolean> continueContinuousDemoNoRecursePart2Future = startCheckAndEnableAllRobots(
+                                    startingAbortCount)
+                                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1",
+                                            x -> checkLastReturnedFuture(lfr, part2BlockerName), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinuousDemo.startAllActions1", x -> {
+                                        XFutureVoid startAllActionsRet = startAllActions("continueContinuousDemo" + cdcCount,
+                                                false, prevBlockerName, startingAbortCount);
+                                        XFutureVoid allowTogglesRet = allowToggles(part1BlockerName, sysArray);
+                                        XFutureVoid allowToggles2Ret = allowToggles(part2BlockerName, sysArray);
+                                        return XFutureVoid.allOf(startAllActionsRet, allowTogglesRet, allowToggles2Ret);
+                                    }, supervisorExecutorService)
+                                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture2",
+                                            x -> checkLastReturnedFuture(lfr, part3BlockerName), supervisorExecutorService)
+                                    .thenComposeAsync("continueContinuousDemo.startReverseActions",
+                                            x -> startContinuousDemoReversActions(part3BlockerName, startingAbortCount),
+                                            supervisorExecutorService)
+                                    .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture3",
+                                            x -> checkLastReturnedFuture(lfr, part4BlockerName), supervisorExecutorService)
+                                    .thenComposeAsyncToVoid("continueContinuousDemo.incrementContinuousDemoCycle",
+                                            x -> incrementContinuousDemoCycle("continueContinuousDemo", startingAbortCount),
+                                            supervisorExecutorService)
+                                    .thenComposeAsync("continueContinuousDemo.enableAndCheckAllRobots",
+                                            x -> startCheckAndEnableAllRobots(startingAbortCount), supervisorExecutorService);
+                            lastContinueContinuousDemoNoRecurseFuture = continueContinuousDemoNoRecursePart2Future;
+                            XFutureVoid ret = continueContinuousDemoNoRecursePart2Future
+                                    .thenComposeAsyncToVoid("continueContinuousDemo.recurse" + cdcCount, ok -> {
+                                        logEvent("End Continue Continuous Demo : cdcCount=" + cdcCount + ", ok=" + ok
+                                                + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
+                                        return checkOkElse(ok, () -> continueContinuousDemo(part4BlockerName, startingAbortCount),
+                                                this::showCheckEnabledErrorSplash);
+                                    }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException)
+                                    .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(prevBlockerName, part1BlockerName,
+                                    part2BlockerName, part3BlockerName, part4BlockerName), supervisorExecutorService);
+                            ContinuousDemoFuture = ret;
+                            if (null != randomTestFuture) {
+                                if (isRandomTestSelected()) {
+                                    resetMainRandomTestFuture();
+                                } else if (isRandomTestSelected()) {
+                                    resetMainPauseTestFuture();
+                                }
+                            }
+                            return ret;
+                        }, supervisorExecutorService);
     }
 
     private static final boolean DEBUG_CHECK_MAX_CYCLES = Boolean.parseBoolean("aprs.debugCheckMaxCycles");
@@ -7886,7 +7922,7 @@ public class Supervisor {
     public XFutureVoid enableAllRobotsOnSupervisorService() {
         return XFuture
                 .supplyAsync("enableAllRobotsOnSupervisorService", this::enableAllRobots, supervisorExecutorService)
-                .thenComposeToVoid(x -> x);
+                .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
     /**
@@ -7903,16 +7939,20 @@ public class Supervisor {
             clearStealingRobotsFlag();
             AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
             String blockerName = "enableAllRobots";
-            return disallowToggles(blockerName, sysArray).thenComposeToVoid(x -> {
-                try {
-                    return updateRobotsTableFromMapsAndEnableAll();
-                } catch (Exception exception) {
-                    log(Level.SEVERE, "", exception);
-                    throw new RuntimeException(exception);
-                }
-            }).alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
+            final XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
+            return disallowTogglesFuture
+                    .thenComposeAsyncToVoid(
+                            x -> {
+                                try {
+                                    return updateRobotsTableFromMapsAndEnableAll();
+                                } catch (Exception exception) {
+                                    log(Level.SEVERE, "", exception);
+                                    throw new RuntimeException(exception);
+                                }
+                            }, supervisorExecutorService)
+                    .alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
                     .peekNoCancelException(this::handleXFutureException)
-                    .thenComposeToVoid(() -> this.waitSingleStep("enableAllRobots"));
+                    .thenComposeAsyncToVoid(() -> this.waitSingleStep("enableAllRobots"), supervisorExecutorService);
         } catch (Exception exception) {
             log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
@@ -7994,7 +8034,7 @@ public class Supervisor {
                     }
                 }
             }
-            if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 initColorTextSocket();
                 writeToColorTextSocket("0x00FF00, 0x00FF000\r\n".getBytes());
             }
@@ -8157,11 +8197,11 @@ public class Supervisor {
         if (null != rf) {
             return rf
                     .peekNoCancelException(this::handleXFutureException)
-                    .thenComposeToVoid(() -> this.waitSingleStep("waitResume"));
+                    .thenComposeAsyncToVoid(() -> this.waitSingleStep("waitResume"), supervisorExecutorService);
         } else {
             return XFutureVoid.completedFutureWithName("waitResume.rf==null")
                     .peekNoCancelException(this::handleXFutureException)
-                    .thenComposeToVoid(() -> this.waitSingleStep("waitResume"));
+                    .thenComposeAsyncToVoid(() -> this.waitSingleStep("waitResume"), supervisorExecutorService);
         }
     }
 
@@ -8253,9 +8293,11 @@ public class Supervisor {
             logEvent("startPreCheckedContinuousDemo(recurseNum=" + recurseNum + ",reverseFirst=" + x + ") for " + sys);
             allowToggles(toggleLockName, sys);
             return ret;
-        }, supervisorExecutorService).thenComposeToVoid(
-                "continueSingleContinuousDemo.recurse " + recurseNum + " " + sys,
-                x -> continueSingleContinuousDemo(sys, (recurseNum + 1)));
+        }, supervisorExecutorService)
+                .thenComposeAsyncToVoid(
+                        "continueSingleContinuousDemo.recurse " + recurseNum + " " + sys,
+                        x -> continueSingleContinuousDemo(sys, (recurseNum + 1)),
+                        supervisorExecutorService);
     }
 
     private XFutureVoid startAllIndContinuousDemo() {
@@ -8268,7 +8310,7 @@ public class Supervisor {
             AprsSystem sys = aprsSystems.get(i);
             logEvent("startContinuousDemo(reverseFirst=false) for " + sys);
             futures[i] = sys.startContinuousDemo("startAllIndContinuousDemo", revFirst)
-                    .thenComposeToVoid(x -> continueSingleContinuousDemo(sys, 1));
+                    .thenComposeAsyncToVoid(x -> continueSingleContinuousDemo(sys, 1), supervisorExecutorService);
             tasksNames.append(aprsSystems.get(i).getTaskName());
             tasksNames.append(",");
         }
@@ -8589,9 +8631,11 @@ public class Supervisor {
         checkFutures();
         logEvent("Start All ");
         clearStealingRobotsFlag();
-        return startCheckAndEnableAllRobots(startingAbortCount).thenComposeToVoid("startAll.recurse",
-                ok -> checkOkElse(ok, () -> startAllActions("startAll", false, null, startingAbortCount),
-                        this::showCheckEnabledErrorSplash));
+        return startCheckAndEnableAllRobots(startingAbortCount)
+                .thenComposeAsyncToVoid("startAll.recurse",
+                        ok -> checkOkElse(ok, () -> startAllActions("startAll", false, null, startingAbortCount),
+                                this::showCheckEnabledErrorSplash),
+                        supervisorExecutorService);
     }
 
     /**
@@ -9415,8 +9459,8 @@ public class Supervisor {
     public XFutureVoid performStartAllAction() {
         immediateAbortAll("performStartAllAction");
         clearEventLog();
-        return connectAll().thenComposeAsyncToVoid(this::enableAllRobots, getSupervisorExecutorService())
-                .thenComposeAsyncToVoid(this::completePeformStartAction, getSupervisorExecutorService());
+        return connectAll().thenComposeAsyncToVoid(this::enableAllRobots, supervisorExecutorService)
+                .thenComposeAsyncToVoid(this::completePeformStartAction, supervisorExecutorService);
     }
 
     private XFutureVoid completePeformStartAction() {
@@ -9435,14 +9479,15 @@ public class Supervisor {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-        }, getSupervisorExecutorService()).thenComposeToVoid(x -> showAllTasksCompleteDisplay());
+        }, supervisorExecutorService)
+                .thenComposeAsyncToVoid(x -> showAllTasksCompleteDisplay(), supervisorExecutorService);
     }
 
     XFutureVoid performReverseStartAllAction() {
         immediateAbortAll("performStartAllAction");
         clearEventLog();
-        return connectAll().thenComposeAsyncToVoid(this::enableAllRobots, getSupervisorExecutorService())
-                .thenComposeAsyncToVoid(this::completePeformReverseStartAction, getSupervisorExecutorService());
+        return connectAll().thenComposeAsyncToVoid(this::enableAllRobots, supervisorExecutorService)
+                .thenComposeAsyncToVoid(this::completePeformReverseStartAction, supervisorExecutorService);
     }
 
     private XFutureVoid completePeformReverseStartAction() {
@@ -9462,7 +9507,7 @@ public class Supervisor {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-        }, getSupervisorExecutorService()).thenComposeToVoid(x -> showAllTasksCompleteDisplay());
+        }, supervisorExecutorService).thenComposeAsyncToVoid(x -> showAllTasksCompleteDisplay(), supervisorExecutorService);
     }
 
     void performRemoveSelectedSystemAction(int selectedIndex) {
@@ -9565,8 +9610,10 @@ public class Supervisor {
             rf.cancelAll(false);
         }
         XFutureVoid f = waitTogglesAllowed().thenComposeAsyncToVoid(x -> safeAbortAll(), supervisorExecutorService)
-                .thenComposeAsyncToVoid(() -> waitTimeoutOrAllOthers(10000, ContinuousDemoFuture,
-                stealRobotFuture.getAndSet(null), unStealRobotFuture.getAndSet(null)));
+                .thenComposeAsyncToVoid(
+                        () -> {
+                            return waitTimeoutOrAllOthers(10000, ContinuousDemoFuture, stealRobotFuture.getAndSet(null), unStealRobotFuture.getAndSet(null));
+                        }, supervisorExecutorService);
         setLastSafeAbortAllFuture(f);
 
         XFutureVoid f2 = f.alwaysComposeAsyncToVoid(() -> {
@@ -9611,7 +9658,7 @@ public class Supervisor {
             String blockerName = "showSafeAbortComplete" + showSafeAbortCount.incrementAndGet();
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
-            return f.thenComposeToVoid(x -> displayJFrameLocal.showSafeAbortComplete())
+            return f.thenComposeAsyncToVoid(x -> displayJFrameLocal.showSafeAbortComplete(),supervisorExecutorService)
                     .alwaysComposeToVoid(() -> allowTogglesInternal(blockerName, false, systems));
         } else {
             return XFutureVoid.completedFuture();
@@ -9636,7 +9683,15 @@ public class Supervisor {
 
     XFutureVoid loadTeachProps(File f) throws IOException {
         object2DOuterJPanel1.setPropertiesFile(f);
-        return object2DOuterJPanel1.loadProperties().thenRun(() -> saveLastTeachPropsFile(f));
+        return runOnDispatchThread(() -> {
+            try {
+                object2DOuterJPanel1.loadPropertiesOnDisplay();
+                saveLastTeachPropsFile(f);
+            } catch (Exception ex) {
+                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+        });
     }
 
     private final List<AprsSystem> aprsSystems = new ArrayList<>();
@@ -9698,7 +9753,7 @@ public class Supervisor {
 
     @SuppressWarnings("guieffect")
     public static Supervisor createSupervisor() {
-        return CRCLUtils.graphicsEnvironmentIsHeadless() ? new Supervisor()
+        return CRCLUtils.isGraphicsEnvironmentHeadless() ? new Supervisor()
                 : createAprsSupervisorWithSwingDisplay(true);
     }
 
@@ -9741,10 +9796,14 @@ public class Supervisor {
             props.load(fr);
         }
         try {
-            Utils.SwingFuture<XFutureVoid> ret = Utils.supplyOnDispatchThread(() -> {
-                return loadPropertiesOnDisplay(props);
+            if (Utils.isEventDispatchThread() || CRCLUtils.isGraphicsEnvironmentHeadless()) {
+                loadPropertiesOnDisplay(props);
+                return XFutureVoid.completedFuture();
+            }
+            XFutureVoid ret = Utils.runOnDispatchThread(() -> {
+                loadPropertiesOnDisplay(props);
             });
-            return ret.thenComposeToVoid(x -> x);
+            return ret;
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -9841,38 +9900,24 @@ public class Supervisor {
 
     private static final ConcurrentLinkedDeque<StackTraceElement[]> loadPropertiesOnDisplayTraces = new ConcurrentLinkedDeque<>();
 
-    private XFutureVoid loadPropertiesOnDisplay(Properties props) {
+    private void loadPropertiesOnDisplay(Properties props) {
         List<StackTraceElement[]> loadPropertiesTracesCopy = new ArrayList<>(loadPropertiesOnDisplayTraces);
         loadPropertiesOnDisplayTraces.add(Thread.currentThread().getStackTrace());
-        try {
-            List<XFuture<?>> futures = new ArrayList<>();
 
-            if (null != displayJFrame) {
-                XFutureVoid displayLoadPropertiesFuture = displayJFrame.loadProperties(props);
-                futures.add(displayLoadPropertiesFuture);
-            }
-            String correctionModeString = props.getProperty("correctionMode");
-            if (null != correctionModeString && correctionModeString.length() > 0) {
-                setCorrectionMode(Boolean.parseBoolean(correctionModeString));
-            }
-            String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
-            if (null != convTaskName) {
-                setConveyorClonedViewSystemTaskName(convTaskName);
-            }
-            String convTestFileName = props.getProperty("conveyorTestObjectViewSimulatedFilePath");
-            if (null != convTestFileName) {
-                setConveyorTestObjectViewSimulatedFilePath(convTestFileName);
-            }
-            if (futures.isEmpty()) {
-                return XFutureVoid.completedFutureWithName("loadPropertiesOnDisplay_allComplete");
-            } else {
-                return XFutureVoid.allOf(futures);
-            }
-        } catch (Exception exception) {
-            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", exception);
-            XFutureVoid xfv = new XFutureVoid("loadPropertiesOnDisplay Exception");
-            xfv.completeExceptionally(exception);
-            return xfv;
+        if (null != displayJFrame) {
+            displayJFrame.loadPropertiesDirect(props);
+        }
+        String correctionModeString = props.getProperty("correctionMode");
+        if (null != correctionModeString && correctionModeString.length() > 0) {
+            setCorrectionMode(Boolean.parseBoolean(correctionModeString));
+        }
+        String convTaskName = props.getProperty("conveyorClonedViewSystemTaskName");
+        if (null != convTaskName) {
+            setConveyorClonedViewSystemTaskName(convTaskName);
+        }
+        String convTestFileName = props.getProperty("conveyorTestObjectViewSimulatedFilePath");
+        if (null != convTestFileName) {
+            setConveyorTestObjectViewSimulatedFilePath(convTestFileName);
         }
     }
 
@@ -9974,14 +10019,15 @@ public class Supervisor {
                                     sysSetupFileEntry.taskName, sysSetupFileEntry.robotName),
                             supervisorExecutorService);
         }
-        return lastFuture.thenComposeToVoid("completeLoadSetup(" + f + ")", () -> completeLoadSetupFile(f));
+        return lastFuture
+                .thenComposeAsyncToVoid("completeLoadSetup(" + f + ")", () -> completeLoadSetupFile(f),supervisorExecutorService);
     }
 
     private XFutureVoid completeLoadSetupFile(File f) {
         try {
             aprsSystems.sort(Comparator.comparingInt(AprsSystem::getPriority));
             updateTasksTable();
-            return updateRobotsTable().thenComposeToVoid(() -> {
+            return updateRobotsTable().thenComposeAsyncToVoid(() -> {
                 try {
                     clearPositionMappingsFilesTable();
                     setSetupFile(f);
@@ -9994,7 +10040,7 @@ public class Supervisor {
                     throw new RuntimeException(exception);
                 }
                 return runOnDispatchThread(this::syncToolsFromRobots);
-            });
+            },supervisorExecutorService);
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -10056,7 +10102,7 @@ public class Supervisor {
             }
         }
         return XFutureVoid.allOfWithName("allof" + name, l.toArray(new XFutureVoid[0]))
-                .thenComposeToVoid(() -> clearWayToHoldersStep2(requester, holderName))
+                .thenComposeAsyncToVoid(() -> clearWayToHoldersStep2(requester, holderName),supervisorExecutorService)
                 .peekException((Throwable throwable) -> {
                     if (null != throwable) {
                         System.out.println("throwable = " + throwable);
@@ -10236,7 +10282,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData         @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                   @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

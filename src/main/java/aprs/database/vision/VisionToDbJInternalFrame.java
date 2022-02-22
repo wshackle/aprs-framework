@@ -337,8 +337,8 @@ public class VisionToDbJInternalFrame extends javax.swing.JInternalFrame impleme
     }
 
     @Override
-    public XFutureVoid connectVision() {
-        return visionToDBJPanel.connectVision();
+    public void connectVision() {
+        visionToDBJPanel.connectVision();
     }
 
     public void disconnectVision() {

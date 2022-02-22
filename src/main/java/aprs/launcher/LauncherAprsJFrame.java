@@ -680,14 +680,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
                 return processLauncher.run(launchFile)
-                        .thenComposeToVoid(() -> {
+                        .thenComposeAsyncToVoid(() -> {
                             try {
                                 return prevSingle();
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 throw new RuntimeException(e);
                             }
-                        });
+                        }, Utils.getDispatchThreadExecutorService());
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
@@ -756,7 +756,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -783,7 +783,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     public static XFuture<Supervisor.MultiCycleResults> multiCycleTest(@Nullable File launchFile, int numCycles, boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
-//        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+//        if(!CRCLUtils.isGraphicsEnvironmentHeadless()) {
 //            supervisor.startColorTextReader();
 //            supervisor.setVisible(true);
 //        }
@@ -793,7 +793,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -845,7 +845,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 //            File fanucSimItemsFile) {
 //        long startTime = System.currentTimeMillis();
 //        Supervisor supervisor = Supervisor.createSupervisor();
-////        if(!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+////        if(!CRCLUtils.isGraphicsEnvironmentHeadless()) {
 ////            supervisor.startColorTextReader();
 ////            supervisor.setVisible(true);
 ////        }
@@ -855,7 +855,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 //            try {
 //                XFutureVoid launchFuture;
 //                ProcessLauncherJFrame processLauncher;
-//                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+//                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
 //                    processLauncher = new ProcessLauncherJFrame();
 //                    processLauncher.setVisible(true);
 //                    launchFuture = processLauncher.run(launchFile);
@@ -926,7 +926,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             boolean useConveyor) {
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
-        if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
             supervisor.startColorTextReader();
             supervisor.setVisible(true);
         }
@@ -936,7 +936,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -950,21 +950,21 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             if (null != processLauncher) {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
-                        }).thenCompose(() -> {
-                    return Utils.supplyOnDispatchThread(() -> {
-                        try {
-                            return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor);
-                        } catch (Exception ex) {
-                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            } else {
-                                throw new RuntimeException(ex);
+                        }).thenCompose(
+                        () -> {
+                            try {
+                                return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor);
+                            } catch (Exception ex) {
+                                final Logger logger = Logger.getLogger(LauncherAprsJFrame.class.getName());
+                                logger.log(Level.SEVERE, "trace=" + XFuture.traceToString(trace));
+                                logger.log(Level.SEVERE, "", ex);
+                                if (ex instanceof RuntimeException) {
+                                    throw (RuntimeException) ex;
+                                } else {
+                                    throw new RuntimeException(ex);
+                                }
                             }
-                        }
-                    });
-                })
-                        .thenCompose(x -> x)
+                        })
                         .alwaysRun(() -> supervisor.close());
             } catch (Exception ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
@@ -997,7 +997,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             try {
                 XFutureVoid launchFuture;
                 ProcessLauncherJFrame processLauncher;
-                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                     processLauncher = new ProcessLauncherJFrame();
                     processLauncher.setVisible(true);
                     launchFuture = processLauncher.run(launchFile);
@@ -1011,20 +1011,20 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             if (null != processLauncher) {
                                 supervisor.setProcessLauncher(processLauncher);
                             }
-                        }).thenCompose(() -> {
-                    return Utils.supplyOnDispatchThread(() -> {
-                        try {
-                            return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
-                        } catch (Exception ex) {
-                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
-                            if (ex instanceof RuntimeException) {
-                                throw (RuntimeException) ex;
-                            } else {
-                                throw new RuntimeException(ex);
+                        })
+                        .thenCompose(() -> {
+                            try {
+                                return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
+                            } catch (Exception ex) {
+                                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
+                                if (ex instanceof RuntimeException) {
+                                    throw (RuntimeException) ex;
+                                } else {
+                                    throw new RuntimeException(ex);
+                                }
                             }
-                        }
-                    });
-                }).thenCompose(x -> x).alwaysRun(() -> supervisor.close());
+                        })
+                        .alwaysRun(() -> supervisor.close());
             } catch (Exception ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
@@ -1222,9 +1222,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 ProcessLauncherJFrame processLauncher = new ProcessLauncherJFrame();
                 processLauncher.setVisible(true);
                 return processLauncher.run(launchFile)
-                        .thenComposeToVoid(() -> {
+                        .thenComposeAsyncToVoid(() -> {
                             return openSingle(args);
-                        });
+                        }, Utils.getDispatchThreadExecutorService());
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
@@ -1407,7 +1407,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                     }
                 }
-                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                     LauncherAprsJFrame lFrame = new LauncherAprsJFrame();
                     lFrame.checkFiles();
                     lFrame.setVisible(true);

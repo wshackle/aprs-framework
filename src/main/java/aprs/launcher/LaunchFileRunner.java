@@ -199,7 +199,7 @@ public class LaunchFileRunner {
         XFutureVoid future1 = new XFutureVoid("timeoutFuture:line=" + line);
         long timeoutStartLocal = System.currentTimeMillis();
         this.timeoutStart = timeoutStartLocal;
-        if (CRCLUtils.graphicsEnvironmentIsHeadless()) {
+        if (CRCLUtils.isGraphicsEnvironmentHeadless()) {
             if (timeoutScheduledThreadPoolExecutor == null) {
                 timeoutScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
             }
@@ -224,7 +224,7 @@ public class LaunchFileRunner {
                             if (!ignoreTimeout.get()) {
                                 String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
                                 println(timeoutMsg);
-                                if (!CRCLUtils.graphicsEnvironmentIsHeadless()) {
+                                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                                     MultiLineStringJPanel.showText(timeoutMsg);
                                 }
                             }

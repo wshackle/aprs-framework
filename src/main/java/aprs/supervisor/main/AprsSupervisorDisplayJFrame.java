@@ -1137,7 +1137,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public XFutureVoid showErrorSplash(String errMsgString) {
         return fullAbortAll()
-                .thenComposeToVoid(() -> {
+                .thenComposeAsyncToVoid(() -> {
                     final GraphicsConfiguration graphicsConfiguration
                             = requireNonNull(
                                     this.getGraphicsConfiguration(),
@@ -1146,7 +1146,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     return showMessageFullScreen(errMsgString, 80.0f,
                             null,
                             SplashScreen.getRedYellowColorList(), gd);
-                });
+                }, getSupervisorExecutorService());
     }
 
     public boolean isShowSplashMessagesSelected() {
@@ -2817,7 +2817,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private XFutureVoid prepAndFinishToXFutureVoidOnDispatch(UiSupplier<XFutureVoid> supplier) {
         return prepActions()
                 .thenCompose(x -> Utils.supplyOnDispatchThread(supplier))
-                .thenComposeToVoid(x -> x);
+                .thenComposeAsyncToVoid(x -> x, supervisor.getSupervisorExecutorService());
     }
 
     @UIEffect
@@ -2959,7 +2959,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         XFutureVoid immediateAbortAllFuture
                 = immediateAbortAll("showSafeAbortComplete");
         XFutureVoid fullAbortAllFuture
-                = immediateAbortAllFuture.thenComposeToVoid(this::fullAbortAll);
+                = immediateAbortAllFuture.thenComposeAsyncToVoid(this::fullAbortAll, supervisor.getSupervisorExecutorService());
         return fullAbortAllFuture.thenRun(() -> {
             if (null != supervisor && !supervisor.isResetting() && null != gd) {
                 forceShowMessageFullScreen("Safe Abort Complete", 80.0f,
@@ -3251,15 +3251,15 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             aprs.simview.Object2DJPanel.shutdownImageIOWriterService();
             Thread.sleep(3000);
             final Map<Thread, StackTraceElement[]> allStackTracesMap = Thread.getAllStackTraces();
-            for(Map.Entry<Thread, StackTraceElement[]> entry : allStackTracesMap.entrySet()) {
+            for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTracesMap.entrySet()) {
                 Thread thread = entry.getKey();
                 StackTraceElement[] trace = entry.getValue();
-                if(!thread.isDaemon() && thread.isAlive() && thread != Thread.currentThread()) {
+                if (!thread.isDaemon() && thread.isAlive() && thread != Thread.currentThread()) {
                     System.out.println("thread = " + thread);
                     System.out.println("trace = " + XFuture.traceToString(trace));
                 }
             }
-        CRCLUtils.systemExit(0);
+            CRCLUtils.systemExit(0);
         } catch (InterruptedException ex) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", ex);
         }
@@ -3448,7 +3448,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 //        boolean reloadSimFiles = (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(this, "Reload sim files?"));
         resetting = true;
         return resetAll(false)
-                .thenComposeToVoid(x -> {
+                .thenComposeAsyncToVoid(x -> {
                     return Utils.composeToVoidOnDispatchThread(() -> {
                         boolean origIgnoreTitleErrs2 = ignoreTitleErrors.getAndSet(true);
                         try {
@@ -3466,10 +3466,10 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             resume();
                             resetAll(false);
                             return restoreOrigRobotInfo()
-                                    .thenComposeToVoid(() -> {
+                                    .thenComposeAsyncToVoid(() -> {
                                         connectAll();
                                         return enableAllRobots();
-                                    })
+                                    }, supervisor.getSupervisorExecutorService())
                                     .alwaysRun(() -> {
                                         resetting = false;
                                         if (!origIgnoreTitleErrs) {
@@ -3484,7 +3484,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                             throw e;
                         }
                     });
-                });
+                }, supervisor.getSupervisorExecutorService());
     }
 
     private volatile boolean resetting = false;
@@ -3631,8 +3631,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                        x -> enableAndContinueAllActions());
+                                .thenComposeAsyncToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> enableAndContinueAllActions(), supervisor.getSupervisorExecutorService());
                 setMainFuture(ContinuousDemoFuture);
             }
         });
@@ -3666,8 +3666,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             if (jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 ContinuousDemoFuture
                         = continueAllXF
-                                .thenComposeToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
-                                        x -> continueAllActions());
+                                .thenComposeAsyncToVoid("jMenuItemContinueAllActionPerformed.continueAllActions",
+                                        x -> continueAllActions(),
+                                        supervisor.getSupervisorExecutorService());
                 setMainFuture(ContinuousDemoFuture);
             }
             return continueAllXF;
@@ -3741,24 +3742,27 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     immediateAbortAll("jMenuItemRandomTestReverseFirstActionPerformed");
                     XFutureVoid outerRet
                             = resetAll(false)
-                                    .thenComposeToVoid(x -> {
-                                        XFutureVoid innerRet = Utils.supplyOnDispatchThread(() -> {
-                                            try {
-                                                clearAllErrors();
-                                                connectAll();
-                                                jCheckBoxMenuItemPause.setSelected(false);
-                                                resume();
-                                                return startRandomTestFirstActionReversed2();
-                                            } catch (Exception e) {
-                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
-                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
-                                                ret.completeExceptionally(e);
-                                                return ret;
-                                            }
-                                        }).thenComposeToVoid(x3 -> x3);
-                                        return innerRet;
-                                    });
+                                    .thenComposeAsyncToVoid(
+                                            x -> {
+                                                XFutureVoid innerRet = Utils.supplyOnDispatchThread(
+                                                        () -> {
+                                                            try {
+                                                                clearAllErrors();
+                                                                connectAll();
+                                                                jCheckBoxMenuItemPause.setSelected(false);
+                                                                resume();
+                                                                return startRandomTestFirstActionReversed2();
+                                                            } catch (Exception e) {
+                                                                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
+                                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
+                                                                XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
+                                                                ret.completeExceptionally(e);
+                                                                return ret;
+                                                            }
+                                                        })
+                                                        .thenComposeAsyncToVoid(x3 -> x3, supervisor.getSupervisorExecutorService());
+                                                return innerRet;
+                                            }, supervisor.getSupervisorExecutorService());
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
@@ -3779,12 +3783,12 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private XFutureVoid startRandomTestFirstActionReversed2() {
         return Utils.supplyOnDispatchThread(this::startRandomTestFirstActionReversed2OnDisplay)
-                .thenComposeToVoid(x -> x);
+                .thenComposeAsyncToVoid(x -> x, supervisor.getSupervisorExecutorService());
     }
 
     private XFutureVoid startRandomTestFirstActionReversed2OnDisplay() {
         return enableAllRobots()
-                .thenComposeToVoid(() -> {
+                .thenComposeAsyncToVoid(() -> {
                     clearContinuousDemoCycle();
                     clearRandomTestCount();
                     jCheckBoxMenuItemContDemoReverseFirstOption.setSelected(true);
@@ -3793,7 +3797,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     XFutureVoid ret = startRandomTest();
                     setMainFuture(ret);
                     return ret;
-                });
+                }, supervisor.getSupervisorExecutorService());
     }
 
     @UIEffect
@@ -4126,8 +4130,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             XFutureVoid prep1Future = prepInteractiveStart(actionName, isn, blockerName);
             final XFutureVoid dispatchRunnableFuture = prep1Future
-                    .thenComposeToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
-                            () -> dispatchAction(actionName, runnable));
+                    .thenComposeAsyncToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
+                            () -> dispatchAction(actionName, runnable), supervisor.getSupervisorExecutorService());
             XFutureVoid ret = dispatchRunnableFuture
                     .alwaysComposeAsyncToVoid(() -> supervisorLocal.allowTogglesNoCheck(blockerName),
                             supervisorLocal.getSupervisorExecutorService()
@@ -4160,8 +4164,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             XFutureVoid prep1Future = prepInteractiveStart(actionName, isn, blockerName);
             final XFutureVoid dispatchRunnableFuture = prep1Future
-                    .thenComposeToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
-                            () -> dispatchFutureSupplierAction(actionName, supplier, Void.class));
+                    .thenComposeAsyncToVoid("interactivStart(" + actionName + ",isn=" + isn + ")afterLookForParts",
+                            () -> dispatchFutureSupplierAction(actionName, supplier, Void.class),
+                            supervisor.getSupervisorExecutorService());
             XFutureVoid allowToggleFuture = prep1Future
                     .alwaysComposeAsyncToVoid(() -> supervisorLocal.allowTogglesNoCheck(blockerName),
                             supervisorLocal.getSupervisorExecutorService()
@@ -4211,9 +4216,10 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                 supervisorLocal.getSupervisorExecutorService());
         XFutureVoid iiraFuture
                 = disallowTogglesFuture
-                        .thenComposeToVoid(
+                        .thenComposeAsyncToVoid(
                                 "interactivStart(" + actionName + ",isn=" + isn + ")internalInteractiveResetAll",
-                                x -> internalInteractiveResetAll());
+                                x -> internalInteractiveResetAll(),
+                                supervisor.getSupervisorExecutorService());
         internalInteractiveResetAllFuture = iiraFuture;
         final XFutureVoid prep1Future = iiraFuture
                 .thenRun(() -> {
@@ -4849,27 +4855,28 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 Boolean.FALSE);
 
         XFutureVoid conveyorTestPrep = conveyorTestPrep(sys);
-
+        ExecutorService es = supervisorLocal.getSupervisorExecutorService();
         if (repeating) {
             String repeatCountText
                     = JOptionPane.showInputDialog(this,
                             "Repeating Count?",
                             "10");
             int repeatCount = Integer.parseInt(repeatCountText);
+
             if (reverseConvTest) {
                 return conveyorTestPrep
-                        .thenComposeToVoid(() -> supervisorLocal.reverseRepeatingConveyorTest(repeatCount));
+                        .thenComposeAsyncToVoid(() -> supervisorLocal.reverseRepeatingConveyorTest(repeatCount), es);
             } else {
                 return conveyorTestPrep
-                        .thenComposeToVoid(() -> supervisorLocal.repeatingConveyorTest(repeatCount));
+                        .thenComposeAsyncToVoid(() -> supervisorLocal.repeatingConveyorTest(repeatCount), es);
             }
         } else {
             if (reverseConvTest) {
                 return conveyorTestPrep
-                        .thenComposeToVoid(supervisorLocal::reverseConveyorTest);
+                        .thenComposeAsyncToVoid(supervisorLocal::reverseConveyorTest, es);
             } else {
                 return conveyorTestPrep
-                        .thenComposeToVoid(supervisorLocal::conveyorTest);
+                        .thenComposeAsyncToVoid(supervisorLocal::conveyorTest, es);
             }
         }
 
@@ -4988,23 +4995,27 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public XFutureVoid loadProperties(Properties props) {
         return Utils.runOnDispatchThread(() -> {
-            setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYDEBUG, jCheckBoxMenuItemDebug);
-            setDebug(jCheckBoxMenuItemDebug.isSelected());
-            setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYRECORD_LIVE_IMAGE_MOVIE, jCheckBoxMenuItemRecordLiveImageMovie);
-            setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYSHOW_SPLASH_MESSAGES, jCheckBoxMenuItemShowSplashMessages);
-            setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYUSE_TEACH_CAMERA, jCheckBoxMenuItemUseTeachCamera);
-            if (null != conveyorVisJPanel1) {
-                Map<String, String> convMap = new TreeMap<>();
-                for (String key : props.stringPropertyNames()) {
-                    if (key.startsWith(APRSSUPEVISORDISPLAYCONVEYOR)) {
-                        convMap.put(key.substring(APRSSUPEVISORDISPLAYCONVEYOR.length()), props.getProperty(key));
-                    }
-                }
-                if (!convMap.isEmpty()) {
-                    conveyorVisJPanel1.mapToProperties(convMap);
+            loadPropertiesDirect(props);
+        });
+    }
+
+    public void loadPropertiesDirect(Properties props) throws NumberFormatException {
+        setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYDEBUG, jCheckBoxMenuItemDebug);
+        setDebug(jCheckBoxMenuItemDebug.isSelected());
+        setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYRECORD_LIVE_IMAGE_MOVIE, jCheckBoxMenuItemRecordLiveImageMovie);
+        setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYSHOW_SPLASH_MESSAGES, jCheckBoxMenuItemShowSplashMessages);
+        setCheckboxFromProperty(props, APRSSUPERVISORDISPLAYUSE_TEACH_CAMERA, jCheckBoxMenuItemUseTeachCamera);
+        if (null != conveyorVisJPanel1) {
+            Map<String, String> convMap = new TreeMap<>();
+            for (String key : props.stringPropertyNames()) {
+                if (key.startsWith(APRSSUPEVISORDISPLAYCONVEYOR)) {
+                    convMap.put(key.substring(APRSSUPEVISORDISPLAYCONVEYOR.length()), props.getProperty(key));
                 }
             }
-        });
+            if (!convMap.isEmpty()) {
+                conveyorVisJPanel1.mapToProperties(convMap);
+            }
+        }
     }
 
     private void setCheckboxFromProperty(Properties props, String propName, JCheckBoxMenuItem checkBoxMenuItem) {
@@ -5255,7 +5266,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             throw new IllegalStateException("null == supervisor");
         }
         return supervisor.startScanAll()
-                .thenComposeToVoid(supervisor::updateTasksTableOnSupervisorService);
+                .thenComposeAsyncToVoid(
+                        supervisor::updateTasksTableOnSupervisorService,
+                        supervisor.getSupervisorExecutorService());
     }
 
     /**
@@ -5492,7 +5505,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         if (null != supervisor) {
             return supervisor.enableAllRobotsOnSupervisorService()
-                    .thenComposeToVoid(this::completeEnableAllRobots);
+                    .thenComposeAsyncToVoid(this::completeEnableAllRobots,supervisor.getSupervisorExecutorService());
         }
         return completeEnableAllRobots();
     }

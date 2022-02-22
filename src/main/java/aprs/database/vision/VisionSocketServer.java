@@ -126,7 +126,7 @@ public class VisionSocketServer implements AutoCloseable {
             try (BufferedReader br = new BufferedReader(new FileReader(outFile))) {
                 String line;
                 while (null != (line = br.readLine())) {
-                    if (line.contains(portString)) {
+                    if (line.contains(portString) || port < 1) {
                         logger.log(Level.SEVERE, line);
                     }
                 }
@@ -134,7 +134,7 @@ public class VisionSocketServer implements AutoCloseable {
             try (BufferedReader br = new BufferedReader(new FileReader(errFile))) {
                 String line;
                 while (null != (line = br.readLine())) {
-                    if (line.contains(portString)) {
+                    if (line.contains(portString)  || port < 1) {
                         logger.log(Level.SEVERE, line);
                     }
                 }

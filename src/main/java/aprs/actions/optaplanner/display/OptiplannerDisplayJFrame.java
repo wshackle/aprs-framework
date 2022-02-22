@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -83,12 +84,12 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
             = initRecentActionsFile();
 
     private static File initRecentActionsFile() {
-	try {
-	    return Utils.file(Utils.getAprsUserHomeDir(), ".recentActionListsFile");
-	} catch (Exception ex) {
-	    Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, "", ex);
-	    throw new RuntimeException(ex);
-	}
+        try {
+            return Utils.file(Utils.getAprsUserHomeDir(), ".recentActionListsFile");
+        } catch (Exception ex) {
+            Logger.getLogger(OpActionPlan.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     private static final List<File> recentActionListFiles = new ArrayList<>();
@@ -97,7 +98,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
 
     private static synchronized void readRecentActionListFile() throws IOException {
         try {
-            if(!enableRecentFilesMenu) {
+            if (!enableRecentFilesMenu) {
                 return;
             }
             if (RECENT_ACTIONS_LIST_FILE.exists()) {
@@ -639,34 +640,29 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         Arrays.sort(diffScoresArray);
         Arrays.sort(timeArray);
 
-        XFutureVoid setInputFuture = setInputOpActionPlan(worstPlan);
-        XFutureVoid setOutputFuture = setOutputOpActionPlan(bestPlan);
-        XFutureVoid.allOf(setInputFuture, setOutputFuture)
-                .thenComposeToVoid(x -> {
-                    return Utils.runOnDispatchThread(() -> {
+        setInputOpActionPlanOnDisplay(worstPlan);
+        setOutputOpActionPlanOnDisplay(bestPlan);
 
-                        try {
-                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("outscore", outScoresArray);
-                        } catch (Exception ex) {
-                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        try {
-                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("inscore", inScoresArray);
-                        } catch (Exception ex) {
-                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        try {
-                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("diffscore", diffScoresArray);
-                        } catch (Exception ex) {
-                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        try {
-                            diagapplet.plotter.plotterJFrame.ShowDoubleArray("time", timeArray);
-                        } catch (Exception ex) {
-                            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    });
-                });
+        try {
+            diagapplet.plotter.plotterJFrame.ShowDoubleArray("outscore", outScoresArray);
+        } catch (Exception ex) {
+            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            diagapplet.plotter.plotterJFrame.ShowDoubleArray("inscore", inScoresArray);
+        } catch (Exception ex) {
+            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            diagapplet.plotter.plotterJFrame.ShowDoubleArray("diffscore", diffScoresArray);
+        } catch (Exception ex) {
+            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            diagapplet.plotter.plotterJFrame.ShowDoubleArray("time", timeArray);
+        } catch (Exception ex) {
+            Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
+        }
         loadRecentFilesMenu();
     }//GEN-LAST:event_jMenuItemRepeatedShuffleTestActionPerformed
 
@@ -1004,7 +1000,33 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      */
     public XFutureVoid setInputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         XFutureVoid part1Future = outerOptiplannerJPanelInput.setOpActionPlan(opActionPlan);
-        return part1Future.thenComposeToVoid(() -> setInputOpActionPlanPart2(opActionPlan));
+        return part1Future.thenComposeAsyncToVoid(() -> setInputOpActionPlanPart2(opActionPlan), Utils.getDispatchThreadExecutorService());
+    }
+
+    /**
+     * Set the value of opActionPlan
+     *
+     * @param opActionPlan new value of opActionPlan
+     * @return future for determining when operation is complete
+     */
+    @UIEffect
+    public void setInputOpActionPlanOnDisplay(@Nullable OpActionPlan opActionPlan) {
+        assert SwingUtilities.isEventDispatchThread();
+        outerOptiplannerJPanelInput.setOpActionPlanOnDisplay(opActionPlan);
+        setInputOpActionPlanPart2OnDisplay(opActionPlan);
+    }
+
+    private void setInputOpActionPlanPart2OnDisplay(@Nullable OpActionPlan opActionPlan) {
+        if (null == opActionPlan) {
+            outerOptiplannerJPanelInput.setValueString("null");
+            return;
+        }
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(opActionPlan);
+        opActionPlan.setScore(score);
+        final long softScoreFinal = score.getSoftScore();
+        System.out.println("Input : score = " + score);
+        outerOptiplannerJPanelInput.setValueString(" " + softScoreFinal);
     }
 
     private XFutureVoid setInputOpActionPlanPart2(@Nullable OpActionPlan opActionPlan) {
@@ -1038,7 +1060,20 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
      */
     public XFutureVoid setOutputOpActionPlan(@Nullable OpActionPlan opActionPlan) {
         XFutureVoid part1Future = outerOptiplannerJPanelOutput.setOpActionPlan(opActionPlan);
-        return part1Future.thenComposeToVoid(() -> setOutputOpActionPlanPart2(opActionPlan));
+        return part1Future.thenRunAsync(() -> setOutputOpActionPlanPart2OnDisplay(opActionPlan), Utils.getDispatchThreadExecutorService());
+    }
+
+    /**
+     * Set the value of opActionPlan
+     *
+     * @param opActionPlan new value of opActionPlan
+     * @return future for determining when operation is complete
+     */
+    @UIEffect
+    public void setOutputOpActionPlanOnDisplay(@Nullable OpActionPlan opActionPlan) {
+        assert SwingUtilities.isEventDispatchThread();
+        outerOptiplannerJPanelOutput.setOpActionPlanOnDisplay(opActionPlan);
+        setOutputOpActionPlanPart2OnDisplay(opActionPlan);
     }
 
     private XFutureVoid setOutputOpActionPlanPart2(@Nullable OpActionPlan opActionPlan) {
@@ -1053,6 +1088,22 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         final long softScoreFinal = score.getSoftScore();
 
         return Utils.runOnDispatchThread(() -> outerOptiplannerJPanelOutput.setValueString(" " + softScoreFinal));
+    }
+
+    @UIEffect
+    private void setOutputOpActionPlanPart2OnDisplay(@Nullable OpActionPlan opActionPlan) {
+        assert SwingUtilities.isEventDispatchThread();
+        if (null == opActionPlan) {
+            outerOptiplannerJPanelOutput.setValueString(" null");
+            return;
+        }
+
+        EasyOpActionPlanScoreCalculator calculator = new EasyOpActionPlanScoreCalculator();
+        HardSoftLongScore score = calculator.calculateScore(opActionPlan);
+        opActionPlan.setScore(score);
+        System.out.println("Output : score = " + score);
+        final long softScoreFinal = score.getSoftScore();
+        outerOptiplannerJPanelOutput.setValueString(" " + softScoreFinal);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -62,6 +62,10 @@ import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.traceToString;
 import static crcl.utils.CRCLPosemath.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  *
@@ -996,7 +1000,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
 
     void disconnectVision() {
-        stopVisionStartThread();
+//        stopVisionStartThread();
         closeVision();
         if (null != aprsSystem && !aprsSystem.isClosing()) {
             Exception ex = new IllegalStateException("visionDisconnected");
@@ -1019,17 +1023,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         aprsSystem.runOnDispatchThread(() -> setVisionConnectedOnDisplay(false));
     }
 
-    private void stopVisionStartThread() {
-        if (null != startVisionThread) {
-            startVisionThread.interrupt();
-            try {
-                startVisionThread.join(100);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            }
-            startVisionThread = null;
-        }
-    }
+//    private void stopVisionStartThread() {
+//        if (null != startVisionThread) {
+//            startVisionThread.interrupt();
+//            try {
+//                startVisionThread.join(100);
+//            } catch (InterruptedException ex) {
+//                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
+//            }
+//            startVisionThread = null;
+//        }
+//    }
 
     private volatile boolean updatingFromArgs = false;
     private final CachedCheckBox addRepeatCountsToDatabaseNamesCachedCheckBox;
@@ -1434,8 +1438,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     }
     private static final String ADD_REPEAT_COUNTS_TO_DATABASE_NAMES = "AddRepeatCountsToDatabaseNames";
 
-    private @Nullable
-    Thread startVisionThread = null;
+//    private volatile @Nullable Thread startVisionThread = null;
     private List<PhysicalItem> transformedVisionList = Collections.emptyList();
 
     @SuppressWarnings("unchecked")
@@ -2166,7 +2169,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
     }
 
-    private XFutureVoid startVisionInternal(Map<String, String> argsMap) {
+    private void startVisionInternal(Map<String, String> argsMap) {
         closeVision();
         VisionSocketClient visionClientLocal = this.visionClient;
         if (null == visionClientLocal) {
@@ -2180,8 +2183,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         for (Consumer<Integer> l : this.incrementCountListeners) {
             visionClientLocal.addCountListener(l);
         }
-        return visionClientLocal.start(argsMap)
-                .thenComposeToVoid(() -> aprsSystem.runOnDispatchThread(this::finishConnectVision));
+        visionClientLocal.start(argsMap);
+        aprsSystem.runOnDispatchThread(this::finishConnectVision);
     }
 
     private boolean ignoreLosingItemsLists = false;
@@ -2211,12 +2214,14 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
+    
+    
 
     @Override
-    public XFutureVoid connectVision() {
+    public void connectVision() {
         String visionPortString = visionPortCachedTextField.getText();
         println("Starting connectVision ... (port = " + visionPortString + ") ");
-        XFutureVoid ret = new XFutureVoid("connectVision" + visionPortString);
+////        XFutureVoid ret = new XFutureVoid("connectVision" + visionPortString);
         Thread connectThread = Thread.currentThread();
         StackTraceElement connectTrace[] = connectThread.getStackTrace();
         try {
@@ -2224,28 +2229,27 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             argsMap.put("--visionhost", visionHostCachedTextField.getText());
             argsMap.put("--visionport", visionPortString);
             argsMap.put("ignoreLosingItemsLists", Boolean.toString(ignoreLosingItemsLists));
-            stopVisionStartThread();
-            startVisionThread = new Thread(() -> {
+//            stopVisionStartThread();
+//            startVisionThread = new Thread(() -> {
                 try {
-                    startVisionInternal(argsMap)
-                            .thenRun(() -> ret.complete());
+                    startVisionInternal(argsMap);
                 } catch (Exception e) {
                     System.err.println("connectThread = " + connectThread);
                     System.err.println("connectTrace = " + Arrays.toString(connectTrace));
                     System.err.println("argsMap = " + argsMap);
                     println("aprsSystemInterface = " + aprsSystem);
                     Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", e);
-                    ret.completeExceptionally(e);
+//                    ret.completeExceptionally(e);
                     throw new RuntimeException(e);
                 }
-            }, "startVisionThread");
-            startVisionThread.setDaemon(true);
-            startVisionThread.start();
+//            }, "startVisionThread");
+//            startVisionThread.setDaemon(true);
+//            startVisionThread.start();
         } catch (Exception exception) {
             addLogMessage(exception);
             throw new RuntimeException(exception);
         }
-        return ret;
+//        return ret;
     }
 
     private final AprsSystem aprsSystem;
@@ -2449,8 +2453,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private XFutureVoid queryDatabase() {
         if (null != dpu) {
             return dpu.queryDatabase()
-                    .thenComposeToVoid("VisionToDB.queryDatabase.updataPoseQueryInfo",
-                            l -> aprsSystem.runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+                    .thenAcceptAsync("VisionToDB.queryDatabase.updataPoseQueryInfo",
+                            l -> { 
+                                updataPoseQueryInfo(l);
+                                        },
+                            Utils.getDispatchThreadExecutorService());
         }
         return XFutureVoid.completedFutureWithName("queryDatabase.null==dpu");
     }
@@ -2458,8 +2465,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private XFutureVoid startQueryDatabaseNew() {
         if (null != dpu) {
             return dpu.queryDatabaseNew()
-                    .thenComposeToVoid("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
-                            l -> aprsSystem.runOnDispatchThread(() -> updataPoseQueryInfo(l)));
+                    .thenAcceptAsync("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
+                            l ->  updataPoseQueryInfo(l),Utils.getDispatchThreadExecutorService());
         }
         return XFutureVoid.completedFutureWithName("startQueryDatabaseNew.null==dpu");
     }

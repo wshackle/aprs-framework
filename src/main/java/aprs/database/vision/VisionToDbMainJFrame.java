@@ -81,8 +81,8 @@ class VisionToDbMainJFrame extends javax.swing.JFrame implements VisionToDBJFram
     }
 
     @Override
-    public XFutureVoid connectVision() {
-        return visionToDBJPanel.connectVision();
+    public void connectVision() {
+        visionToDBJPanel.connectVision();
     }
 
     public void updateFromArgs(Map<String, String> _argsMap) {

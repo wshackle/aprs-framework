@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.swing.JTable;
 import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -368,6 +369,24 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
         }
         return internalShowOpActionPlan(opActionPlan);
     }
+    
+    
+    /**
+     * Set the value of opActionPlan
+     *
+     * @param opActionPlan new value of opActionPlan
+     * @return future for determining when action is complete
+     */
+    @UIEffect
+    public void setOpActionPlanOnDisplay(@Nullable OpActionPlan opActionPlan) {
+        assert SwingUtilities.isEventDispatchThread();
+        opDisplayJPanel1.setOpActionPlan(opActionPlan);
+        if (null == opActionPlan) {
+            throw new RuntimeException("null == opActionPlan");
+        }
+        internalShowOpActionPlanOnDisplay(opActionPlan);
+    }
+    
 
     private XFutureVoid internalShowOpActionPlan(OpActionPlan opActionPlan) {
         return Utils.runOnDispatchThread(() -> internalShowOpActionPlanOnDisplay(opActionPlan));

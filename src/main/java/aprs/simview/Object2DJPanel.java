@@ -637,17 +637,41 @@ public class Object2DJPanel extends JPanel {
         takeSnapshot(f, csvFile, itemsToPaint, w, h);
     }
 
-    private static final ExecutorService imageIOWriterService = Executors.newSingleThreadExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t =  new Thread(r, "imageIOWriterService");
-            t.setDaemon(true);
-            return t;
+    private static volatile @Nullable Thread imageIOWriterThread = null;
+    private static volatile @Nullable ExecutorService imageIOWriterService = null;
+
+    private static ExecutorService getImageIOWriterService() {
+        if (imageIOWriterService != null
+                && !imageIOWriterService.isShutdown()
+                && !imageIOWriterService.isTerminated()
+                && null != imageIOWriterThread
+                && imageIOWriterThread.isAlive()) {
+            return imageIOWriterService;
         }
-    });
-    
-    public static void shutdownImageIOWriterService() {
-        imageIOWriterService.shutdown();
+        imageIOWriterService = null;
+        imageIOWriterThread=null;
+        ExecutorService service = Executors.newSingleThreadExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "imageIOWriterService");
+                imageIOWriterThread = t;
+                t.setDaemon(true);
+                return t;
+            }
+        });
+        imageIOWriterService = service;
+        return service;
+    }
+
+    public static void shutdownImageIOWriterService() throws InterruptedException {
+        if(null != imageIOWriterService) {
+            imageIOWriterService.shutdown();
+        }
+        if(null != imageIOWriterThread && Thread.currentThread() != imageIOWriterThread) {
+            imageIOWriterThread.join();
+        }
+        imageIOWriterThread = null;
+        imageIOWriterService = null;
     }
 
     public ViewOptions currentViewOptions() {
@@ -663,14 +687,14 @@ public class Object2DJPanel extends JPanel {
         opts.defaultRotationOffset = this.rotationOffset;
         if (opts.w < 1 || opts.h < 1) {
             final Dimension thisSize = this.getSize();
-            if(null == thisSize || thisSize.width < 100 || thisSize.height < 100) {
+            if (null == thisSize || thisSize.width < 100 || thisSize.height < 100) {
                 opts.w = 560;
                 opts.h = 682;
             } else {
                 opts.w = thisSize.width;
                 opts.h = thisSize.height;
             }
-        } 
+        }
         if (null == opts.backgroundColor) {
             opts.backgroundColor = this.getBackground();
         }
@@ -784,7 +808,7 @@ public class Object2DJPanel extends JPanel {
     private static volatile @Nullable PmCartesian lastPoint = null;
     private static volatile @Nullable String lastLabel = null;
 
-     private static <PI extends  @Nullable PhysicalItem> boolean itemListEquals(@Nullable List<PI> l1, @Nullable List<PI> l2) {
+    private static <PI extends @Nullable PhysicalItem> boolean itemListEquals(@Nullable List<PI> l1, @Nullable List<PI> l2) {
         if (null == l1) {
             if (null == l2) {
                 return true;
@@ -860,7 +884,7 @@ public class Object2DJPanel extends JPanel {
         List<@NonNull PhysicalItem> l1aNN = new ArrayList<>();
         List<@NonNull PhysicalItem> l2bNN = new ArrayList<>();
         itemListEquals(l1aNN, l2bNN);
-        
+
         List<PhysicalItem> itemsCopy = new ArrayList<>(items);
         Collections.sort(itemsCopy, java.util.Comparator.comparing(PhysicalItem::getName));
         if (point == null || (Objects.equals(lastLabel, label) && Objects.equals(lastPoint, point))) {
@@ -887,7 +911,8 @@ public class Object2DJPanel extends JPanel {
         }
         // noinspection UnusedAssignment
         int newSubmitCount = imageIOWriterServiceSubmittedCount.incrementAndGet();
-        imageIOWriterService.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
+        final ExecutorService imageIOWriterService1 = getImageIOWriterService();
+        imageIOWriterService1.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
     }
 
     private static void writeImageFileOnService(

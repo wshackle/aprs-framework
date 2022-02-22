@@ -68,6 +68,7 @@ import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import static aprs.misc.Utils.autoResizeTableColWidths;
+import crcl.utils.CRCLUtils;
 
 /**
  *
@@ -1164,7 +1165,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                 tableOffset += listOfLabelsLists.get(rsIndex - 1).size();
             }
         }
-        if (javax.swing.SwingUtilities.isEventDispatchThread()) {
+        if (javax.swing.SwingUtilities.isEventDispatchThread() || CRCLUtils.isGraphicsEnvironmentHeadless()) {
             updateNodes(model);
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> updateNodes(model));

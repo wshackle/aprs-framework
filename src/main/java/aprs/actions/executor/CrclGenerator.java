@@ -6956,13 +6956,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 loadNewItemsIntoPoseCache(filteredList);
                 return filteredList;
             }
+            
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
         }
     }
 
-    private void checkRefreshSimView(final long maxFutureGetTime) throws InterruptedException, ExecutionException, TimeoutException, RuntimeException {
+    private void checkRefreshSimView(final long maxFutureGetTime) throws Exception {
         if (aprsSystem.isObjectViewSimulated()) {
             final XFuture<Object2DOuterJPanel.SetItemsResult> future = aprsSystem.refreshSimView();
             Object2DOuterJPanel.SetItemsResult setItemsResult = future.get(maxFutureGetTime, TimeUnit.MILLISECONDS);
@@ -6970,7 +6971,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 throw new RuntimeException("Can't refresh simview : setItemsResult == null");
             } else if (!setItemsResult.isPublished()) {
                 throw new RuntimeException("Can't refresh simview : " + setItemsResult.getComment());
-            }
+            } 
         }
     }
 

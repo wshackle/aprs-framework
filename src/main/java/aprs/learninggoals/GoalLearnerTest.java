@@ -47,7 +47,10 @@ import aprs.actions.executor.CrclGenerator.PoseProvider;
 import aprs.system.AprsSystem;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
+import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -79,31 +82,31 @@ public class GoalLearnerTest {
 
         // Kit Tray has 4 slots two for small gears and two for large gears
         KitTray tray1 = KitTray.newKitTrayFromSkuIdRotXY("kit_s2l2_vessel", 1, 0, 50, 50);
-        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 1, 0.0, +32, +55,50);
+        Slot s11 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 1, 0.0, +32, +55, 50);
         addMap(s11, map);
-        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 2, 0.0, -32, +55,50);
+        Slot s12 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "small_gear", 2, 0.0, -32, +55, 50);
         addMap(s12, map);
-        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 1, 0.0, +54, -28,100);
+        Slot s13 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 1, 0.0, +54, -28, 100);
         addMap(s13, map);
-        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 2, 0.0, -54, -28,100);
+        Slot s14 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray1, "large_gear", 2, 0.0, -54, -28, 100);
         addMap(s14, map);
 
         // Small gear parts tray has two slots for small gears
         PartsTray tray2 = PartsTray.newPartsTrayFromSkuIdRotXY("small_gear_vessel", 1, 0, 200, 200);
-        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, +26.5,50);
+        Slot s21 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, +26.5, 50);
         addMap(s21, map);
-        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, +26.5,50);
+        Slot s22 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, +26.5, 50);
         addMap(s22, map);
-        Slot s23 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, -26.5,50);
+        Slot s23 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 1, 0.0, +26.5, -26.5, 50);
         addMap(s23, map);
-        Slot s24 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, -26.5,50);
+        Slot s24 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray2, "small_gear", 2, 0.0, -26.5, -26.5, 50);
         addMap(s24, map);
 
         // Large gear parts tray has two slots for large gears
         PartsTray tray3 = PartsTray.newPartsTrayFromSkuIdRotXY("large_gear_vessel", 1, 0, 400, 400);
-        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 1, 0.0, +59, +0,100);
+        Slot s31 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 1, 0.0, +59, +0, 100);
         addMap(s31, map);
-        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 2, 0.0, -59, +0,100);
+        Slot s32 = Slot.slotFromTrayPartNameIndexRotationXYDiameter(tray3, "large_gear", 2, 0.0, -59, +0, 100);
         addMap(s32, map);
 
         // The slot offset provider is a simple replacement for the part of 
@@ -178,7 +181,6 @@ public class GoalLearnerTest {
             }
             return slots;
         }
-
 
         @Override
         public Slot absSlotFromTrayAndOffset(PhysicalItem tray, Slot offsetItem, double rotationOffset) {
@@ -255,12 +257,17 @@ public class GoalLearnerTest {
     private static XFuture<AprsSystem> createSimpleSimViewer(SlotOffsetProvider sop, List<PhysicalItem> testData) {
         return AprsSystem.createEmptySystem()
                 .thenCompose((AprsSystem aprsSystem) -> {
-                    return completeCreateSimpleViewer(aprsSystem, sop, testData)
-                            .thenApply(x -> aprsSystem);
+                    try {
+                        return completeCreateSimpleViewer(aprsSystem, sop, testData)
+                                .thenApply(x -> aprsSystem);
+                    } catch (IOException ex) {
+                        Logger.getLogger(GoalLearnerTest.class.getName()).log(Level.SEVERE, "", ex);
+                        throw new RuntimeException(ex);
+                    }
                 });
     }
 
-    private static XFutureVoid completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) {
+    private static XFutureVoid completeCreateSimpleViewer(AprsSystem aprsSystem, SlotOffsetProvider sop, List<PhysicalItem> testData) throws IOException {
         aprsSystem.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         aprsSystem.setExternalSlotOffsetProvider(sop);
 
@@ -304,7 +311,8 @@ public class GoalLearnerTest {
             }
 
             @Override
-             public  @Nullable  PoseType getPose(String name) {
+            public @Nullable
+            PoseType getPose(String name) {
                 if (null == poseMap) {
                     getNewPhysicalItems();
                 }
@@ -330,30 +338,25 @@ public class GoalLearnerTest {
             }
         };
 
-        XFutureVoid xfv1 = aprsSystem.startActionListExecutor()
-                .thenRun(() -> {
-                    aprsSystem.setExecExternalPoseProvider(poseProvider);
-                });
-        XFutureVoid xfv2 = aprsSystem.startObject2DJinternalFrame();
-        XFutureVoid xfv3 = aprsSystem.startSimServerJInternalFrame();
-        XFutureVoid xfv4 = aprsSystem.startCrclClientJInternalFrame();
-        return XFutureVoid.allOf(xfv1, xfv2, xfv3, xfv4)
-                .thenComposeToVoid(() -> {
-                    aprsSystem.setSnapShotHeight(600);
-                    aprsSystem.setSnapShotWidth(800);
-                    aprsSystem.setSnapshotsSelected(true);
-                    aprsSystem.setRobotName("SimulatedRobot");
-                    aprsSystem.setTaskName("GoalLearnerTest");
-                    aprsSystem.setSimItemsData(testData);
-                    aprsSystem.setViewLimits(-100, -100, +500, +500);
+        aprsSystem.startActionsToCrclJInternalFrameOnDisplay();
+        aprsSystem.setExecExternalPoseProvider(poseProvider);
+        aprsSystem.startObject2DJinternalFrameOnDisplay();
+        aprsSystem.startSimServerJInternalFrameOnDisplay();
+        aprsSystem.startCrclClientJInternalFrameOnDisplay();
+        aprsSystem.setSnapShotHeight(600);
+        aprsSystem.setSnapShotWidth(800);
+        aprsSystem.setSnapshotsSelected(true);
+        aprsSystem.setRobotName("SimulatedRobot");
+        aprsSystem.setTaskName("GoalLearnerTest");
+        aprsSystem.setSimItemsData(testData);
+        aprsSystem.setViewLimits(-100, -100, +500, +500);
 
-                    aprsSystem.simViewSimulateAndDisconnect();
-                    aprsSystem.setSimViewTrackCurrentPos(true);
-                    aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
-                    aprsSystem.setVisible(true);
-                    return aprsSystem.setLookForXYZ(-80, -80, 0);
-                })
-                .thenComposeToVoid(() -> aprsSystem.connectRobot());
+        aprsSystem.simViewSimulateAndDisconnect();
+        aprsSystem.setSimViewTrackCurrentPos(true);
+        aprsSystem.setActiveWin(ActiveWinEnum.SIMVIEW_WINDOW);
+        aprsSystem.setVisible(true);
+        aprsSystem.setLookForXYZ(-80, -80, 0);
+        return aprsSystem.connectRobot();
     }
 
 }

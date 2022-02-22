@@ -435,7 +435,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                         return this.setItems(object2DJPanel1.getItems());
                     }
                 } else {
-                    return XFuture.completedFuture(new SetItemsResult("fileLoade="+fileLoaded+", visionSocketServer="+visionSocketServer+",paused="+pauseCachedCheckBox.isSelected(), false));
+                    return XFuture.completedFuture(new SetItemsResult("fileLoade=" + fileLoaded + ", visionSocketServer=" + visionSocketServer + ",paused=" + pauseCachedCheckBox.isSelected(), false));
                 }
             } else {
                 return XFutureVoid.completedFuture(new SetItemsResult("!simulatedCachedCheckBox.isSelected()", false));
@@ -590,33 +590,33 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             lastSetItemsInternalFuture = future;
         }
         if (captured_item_index > 0 && !ignoreMissedDropOffs && !ignoreMissedPickups) {
-            return future.thenSupply(() -> new SetItemsResult("captured_item_index="+captured_item_index, false));
+            return future.thenSupply(() -> new SetItemsResult("captured_item_index=" + captured_item_index, false));
         }
         if (null != draggedItem) {
-            return future.thenSupply(() -> new SetItemsResult("draggedItem="+draggedItem, false));
+            return future.thenSupply(() -> new SetItemsResult("draggedItem=" + draggedItem, false));
         }
         if (null != draggedItemsList && !draggedItemsList.isEmpty()) {
-            return future.thenSupply(() -> new SetItemsResult("draggedItemsList="+draggedItemsList, false));
+            return future.thenSupply(() -> new SetItemsResult("draggedItemsList=" + draggedItemsList, false));
         }
         if (publish) {
             VisionSocketServer srv = this.visionSocketServer;
             if (!pauseCachedCheckBox.isSelected()) {
                 if (null != srv) {
                     int clients_updated = publishCurrentItems();
-                    if(clients_updated > 0) {
-                        return future.thenSupply(() -> new SetItemsResult("published to "+clients_updated+" clients", true));
+                    if (clients_updated > 0) {
+                        return future.thenSupply(() -> new SetItemsResult("published to " + clients_updated + " clients", true));
                     } else {
-                        return future.thenSupply(() -> new SetItemsResult("publishCurrentItems() returned "+clients_updated, false));
+                        return future.thenSupply(() -> new SetItemsResult("publishCurrentItems() returned " + clients_updated, false));
                     }
                 } else {
                     List<PhysicalItem> newOutputItems = computeNewOutputList(filteredItems2);
                     future = future
-                            .thenComposeToVoid(() -> setOutputItems(newOutputItems));
+                            .thenComposeAsyncToVoid(() -> setOutputItems(newOutputItems),Utils.getDispatchThreadExecutorService());
                     return future.thenSupply(() -> new SetItemsResult("visionSocketServer==null", false));
                 }
             }
         }
-        return future.thenSupply(() -> new SetItemsResult("publish="+publish, false));
+        return future.thenSupply(() -> new SetItemsResult("publish=" + publish, false));
     }
 
     public List<PhysicalItem> filterItems(List<PhysicalItem> items) {
@@ -3902,12 +3902,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
         }
         return XFutureVoid.allOf(futuresList)
-                .thenComposeToVoid(() -> {
-                    return runOnDispatchThread(() -> {
+                .thenRunAsync(() -> {
                         this.repaint();
                         object2DJPanel1.repaint();
-                    });
-                });
+                },Utils.getDispatchThreadExecutorService());
     }
 
     @UIEffect
@@ -4031,6 +4029,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     }
 
     private volatile boolean connectedToCurrentPosition = false;
+
     private void connectCurrentPosition() {
         if (null != objectPanelToClone) {
             throw new RuntimeException("cloning");
@@ -4991,19 +4990,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         this.reverseFlag = reverseFlag;
     }
 
-    public XFutureVoid loadProperties() throws IOException {
+    @UIEffect
+    public void loadPropertiesOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         if (null != propertiesFile && propertiesFile.exists()) {
             loadingProperties = true;
             Properties props = new Properties();
             try (FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
-            return loadProperties(props);
+            loadPropertiesOnDisplay(props);
+        } else {
+            if (null == propertiesFile) {
+                throw new IllegalStateException("propertiesFile=" + propertiesFile);
+            }
+            throw new IllegalStateException("propertiesFile=" + propertiesFile + " does not exist");
         }
-        if (null == propertiesFile) {
-            throw new IllegalStateException("propertiesFile=" + propertiesFile);
-        }
-        throw new IllegalStateException("propertiesFile=" + propertiesFile + " does not exist");
     }
 
     private volatile @Nullable XFutureVoid loadPropertiesFuture2 = null;
@@ -5018,6 +5020,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     private void loadPropertiesOnDisplay(Properties props) {
+        assert SwingUtilities.isEventDispatchThread();
         updateDisplayFromProperties(props);
         loadPropertiesTableOnDisplay(props);
         checkConnectedProperty(props);

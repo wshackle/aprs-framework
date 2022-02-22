@@ -55,6 +55,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -64,6 +65,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -92,7 +95,8 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.guieffect.qual.UIType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  *
@@ -113,9 +117,9 @@ public class Utils {
             } else if (index1 == 0 || index2 == 0) {
                 return new File(swapFileSeparators(path));
             } else if (index1 > 0 && (index2 < 0 || index1 < index2)) {
-                return file(new File(path.substring(0, index1+1)), path.substring(index1 + 1));
+                return file(new File(path.substring(0, index1 + 1)), path.substring(index1 + 1));
             } else {
-                return file(new File(path.substring(0, index2+1)), path.substring(index2 + 1));
+                return file(new File(path.substring(0, index2 + 1)), path.substring(index2 + 1));
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "path=" + path, e);
@@ -128,7 +132,7 @@ public class Utils {
     }
 
     public static File file(File parent, String append) throws IOException {
-        if(parent.toString().equals("..")) {
+        if (parent.toString().equals("..")) {
             parent = new File(parent.getCanonicalPath());
         }
         final File origParent = parent;
@@ -353,7 +357,7 @@ public class Utils {
     private static final boolean playAlerts = Boolean.getBoolean("aprs.playAlerts");
 
     static public boolean arePlayAlertsEnabled() {
-        final boolean notHeadless = !CRCLUtils.graphicsEnvironmentIsHeadless();
+        final boolean notHeadless = !CRCLUtils.isGraphicsEnvironmentHeadless();
         return notHeadless && playAlerts;
     }
 
@@ -401,7 +405,7 @@ public class Utils {
 
     static public @Nullable
     String readFirstLine(File f) throws IOException {
-        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
     }
@@ -629,6 +633,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
+        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String callerString = trace[1].toString();
@@ -696,6 +701,98 @@ public class Utils {
         }
     }
 
+    private final  static ExecutorService dispatchThreadExecutorService = new ExecutorService() {
+        @Override
+        public void shutdown() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public boolean isShutdown() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public boolean isTerminated() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+        CompletableFuture<T> cf = new CompletableFuture();
+            javax.swing.SwingUtilities.invokeLater(() -> {
+            try {
+                cf.complete(task.call());
+            } catch (Exception ex) {
+                cf.completeExceptionally(ex);
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
+                throw new RuntimeException(ex);
+            }
+            });
+            return cf;   
+        }
+
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            CompletableFuture<T> cf = new CompletableFuture();
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                task.run();
+                cf.complete(result);
+            });
+            return cf;
+        }
+
+        @Override
+        public Future<?> submit(Runnable task) {
+            CompletableFuture cf = new CompletableFuture();
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                task.run();
+                cf.complete(null);
+            });
+            return cf;
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            javax.swing.SwingUtilities.invokeLater(command);
+        }
+
+    };
+    
+    public static ExecutorService getDispatchThreadExecutorService() {
+        return dispatchThreadExecutorService;
+    }
+
     /**
      * Run something on the dispatch thread and attach a name to it for
      * debugging/logging/visualization.
@@ -706,6 +803,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
+//        assert !SwingUtilities.isEventDispatchThread();
         XFutureVoid ret = new XFutureVoid(name);
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String callerString = trace[2].toString();
@@ -718,7 +816,7 @@ public class Utils {
                     onDispatchCallerMap.putIfAbsent(callerString, 1);
                 }
                 r.run();
-                ret.complete(null);
+                ret.complete();
             } catch (Exception e) {
                 int count = dispathThreadExceptionCount.incrementAndGet();
                 if (!(e instanceof PrintedException)) {
@@ -789,12 +887,13 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
+        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
-        if (isEventDispatchThread()) {
+        if (isEventDispatchThread() || !CRCLUtils.isGraphicsEnvironmentHeadless()) {
             try {
                 R val = s.get();
                 ret.complete(val);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 int count = dispathThreadExceptionCount.incrementAndGet();
                 LOGGER.log(Level.SEVERE, "", e);
                 if (count < 2) {
@@ -808,7 +907,7 @@ public class Utils {
                 try {
                     R val = s.get();
                     ret.complete(val);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     int count = dispathThreadExceptionCount.incrementAndGet();
                     LOGGER.log(Level.SEVERE, "", e);
                     if (count < 2) {
@@ -841,6 +940,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static <R> XFuture<R> composeOnDispatchThread(final UiSupplier<? extends XFuture<R>> s) {
+        assert !SwingUtilities.isEventDispatchThread();
         XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
         if (isEventDispatchThread()) {
             return s.get();
@@ -865,7 +965,7 @@ public class Utils {
             return s.get();
         } else {
             javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
-            return ret.thenComposeToVoid(x -> x);
+            return ret.toXFutureVoid(x -> x);
         }
     }
 
@@ -1043,7 +1143,7 @@ public class Utils {
             }
         });
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
-        try ( PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
@@ -1153,7 +1253,7 @@ public class Utils {
      * @throws IOException file could not be written
      */
     public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
                 CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < cachedTable.getColumnCount(); i++) {
@@ -1209,7 +1309,7 @@ public class Utils {
      */
     @UIEffect
     public static void saveTableModel(File f, TableModel tm) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
                 CSVFormat.DEFAULT.withHeader(tableHeaders(tm)))) {
 
             List<String> colNameList = new ArrayList<>();
@@ -1360,7 +1460,7 @@ public class Utils {
         if (null != dtm) {
             dtm.setRowCount(0);
         }
-        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (forceColumns && null != dtm) {
                 dtm.setRowCount(0);
@@ -1469,7 +1569,7 @@ public class Utils {
                     "totalRandomDelays",
                     "ignoredToggles");
         }
-        try ( CSVPrinter printer = new CSVPrinter(
+        try (CSVPrinter printer = new CSVPrinter(
                 new FileWriter(f, alreadyExists), format)) {
             printer.printRecord(
                     Utils.getDateTimeString(),
@@ -1491,7 +1591,7 @@ public class Utils {
         if (null != cachedTable) {
             cachedTable.setRowCount(0);
         }
-        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;
