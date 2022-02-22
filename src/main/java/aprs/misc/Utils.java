@@ -633,7 +633,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String callerString = trace[1].toString();
@@ -887,7 +887,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (isEventDispatchThread() || !CRCLUtils.isGraphicsEnvironmentHeadless()) {
             try {
@@ -941,13 +941,17 @@ public class Utils {
     @SuppressWarnings({"nullness", "guieffect"})
     public static <R> XFuture<R> composeOnDispatchThread(final UiSupplier<? extends XFuture<R>> s) {
         assert !SwingUtilities.isEventDispatchThread();
-        XFuture<XFuture<R>> ret = new SwingFuture<>("composeOnDispatchThread");
         if (isEventDispatchThread()) {
             return s.get();
         } else {
-
-            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
-            return ret.thenCompose(x -> x);
+            XFuture<R> ret = new SwingFuture<>("composeOnDispatchThread");
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                final XFuture<R> sget = s.get();
+                sget.thenAccept((R r) -> {
+                    ret.complete(r);
+                });
+            });
+            return ret;
         }
     }
 
@@ -960,6 +964,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
+        assert !SwingUtilities.isEventDispatchThread();
         if (isEventDispatchThread()) {
             return s.get();
         } else {

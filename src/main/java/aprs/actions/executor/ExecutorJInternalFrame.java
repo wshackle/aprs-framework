@@ -44,6 +44,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -270,7 +271,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
      */
     @Override
     public void setSelectedToolName(String newToolName) {
-        this.executorJPanel1.setSelectedToolName(newToolName);
+        this.executorJPanel1.setSelectedToolNameOnDisplay(newToolName);
     }
 
     public String getErrorString() {
@@ -285,8 +286,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         return this.executorJPanel1.incrementAndGetCommandId();
     }
 
-    public void reloadErrorMaps() throws IOException {
-        this.executorJPanel1.reloadErrorMaps();
+    @UIEffect
+    public void reloadErrorMapsOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
+        this.executorJPanel1.reloadErrorMapsOnDisplay();
     }
 
     /**
@@ -301,8 +304,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
      * @param pm position map to be added
      */
     @Override
-    public void addPositionMap(PositionMap pm) {
-        executorJPanel1.addPositionMap(pm);
+    public XFutureVoid startAddPositionMap(PositionMap pm) {
+        return executorJPanel1.addPositionMap(pm);
     }
 
     /**
@@ -345,7 +348,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     /**
-     * Add a listener to be called from setSelectedToolName.
+     * Add a listener to be called from setSelectedToolNameOnDisplay.
      *
      * @param listener listener to be stored in collection
      */
@@ -355,7 +358,7 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     }
 
     /**
-     * Add a listener to be no longer called from setSelectedToolName.
+     * Add a listener to be no longer called from setSelectedToolNameOnDisplay.
      *
      * @param listener listener to be removed from collection
      */
@@ -438,8 +441,10 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
 
     private final aprs.actions.executor.ExecutorJPanel executorJPanel1;
 
-    public void loadProperties() throws IOException {
-        this.executorJPanel1.loadProperties();
+    @UIEffect
+    public void loadPropertiesOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
+        this.executorJPanel1.loadPropertiesOnDisplay();
     }
 
     public void autoResizeTableColWidthsPddlOutput() {

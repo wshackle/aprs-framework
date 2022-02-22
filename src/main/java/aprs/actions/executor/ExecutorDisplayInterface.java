@@ -53,18 +53,6 @@ public interface ExecutorDisplayInterface {
      * @param action action to add.
      */
     public void addAction(Action action);
-
-//    /**
-//     * Process the current list of actions.
-//     */
-//    public void processActions();
-
-//    /**
-//     * Get the current aprsSystemInterface
-//     * @return aprsSystemInterface
-//     */
-//    public AprsSystem getAprsSystem();
-
     
     /**
      * Add a position map.
@@ -77,7 +65,7 @@ public interface ExecutorDisplayInterface {
      *
      * @param pm position map to be added
      */
-    public void addPositionMap(PositionMap pm);
+    public XFutureVoid startAddPositionMap(PositionMap pm);
     
     
     /**

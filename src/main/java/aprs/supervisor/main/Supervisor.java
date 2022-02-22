@@ -657,7 +657,6 @@ public class Supervisor {
 
         this.object2DOuterJPanel1 = (displayJFrame != null) ? displayJFrame.getObject2DOuterJPanel1()
                 : new Object2DOuterJPanel();
-//        this.object2DOuterJPanel1.setDebugTimes(true);
         this.positionMappingsFilesCachedTable = (displayJFrame != null)
                 ? new CachedTable(displayJFrame.getPositionMappingsFilesTable())
                 : newPositionMappingsTable();
@@ -2699,7 +2698,10 @@ public class Supervisor {
                         }
                         logEvent("transfer : " + stealFor + " connectRobot(" + stealFromRobotName + ","
                                 + stealFromOrigCrclHost + "," + stealFromOrigCrclPort + ")" + " : srn=" + srn);
-                        stealFor.addPositionMap(pm);
+                        return stealFor.startAddPositionMap(pm);
+                        }, supervisorExecutorService)
+                    .thenComposeAsyncToVoid("showSwitching" + " : srn=" + srn,
+                            (Void ignore2) -> {
                         for (String optString : transferrableOptions) {
                             final ExecutorOption exOptOf = ExecutorOption.of(optString);
                             if (stealFromOptionsCopy.containsKey(exOptOf)) {

@@ -103,7 +103,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 @SuppressWarnings({"CanBeFinal", "UnusedReturnValue", "MagicConstant", "unused", "serial"})
-public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDisplayInterface {
+public class ExecutorJPanel extends javax.swing.JPanel {
 
     private final JMenu toolMenu;
     private final JMenu toolDropByHolderMenu;
@@ -244,7 +244,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             }
                         }
                     }
-                    savePartToolMap();
+                    savePartToolMapOnDisplay();
                 }
             }
         });
@@ -364,21 +364,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private final ConcurrentLinkedQueue<Consumer<String>> selectedToolNameListeners = new ConcurrentLinkedQueue<>();
 
     /**
-     * Add a listener to be called from setSelectedToolName.
+     * Add a listener to be called from setSelectedToolNameOnDisplay.
      *
      * @param listener listener to be stored in collection
      */
-    @Override
     public void addSelectedToolNameListener(Consumer<String> listener) {
         selectedToolNameListeners.add(listener);
     }
 
     /**
-     * Add a listener to be no longer called from setSelectedToolName.
+     * Add a listener to be no longer called from setSelectedToolNameOnDisplay.
      *
      * @param listener listener to be removed from collection
      */
-    @Override
     public void removeSelectedToolNameListener(Consumer<String> listener) {
         selectedToolNameListeners.add(listener);
     }
@@ -391,8 +389,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param newToolName new tool to be associated with the robot and key for
      * tool offset map
      */
-    @Override
-    public void setSelectedToolName(String newToolName) {
+    @UIEffect
+    public void setSelectedToolNameOnDisplay(String newToolName) {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             if (null == newToolName) {
                 return;
@@ -429,12 +428,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
                 }
             }
-            aprsSystem.runOnDispatchThread(() -> setCurrentToolNamOnDisplay(newToolName, offsetText));
+            setCurrentToolNamOnDisplay(newToolName, offsetText);
             for (Consumer<String> listener : selectedToolNameListeners) {
                 listener.accept(newToolName);
             }
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
+            if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
+            }
         }
     }
 
@@ -481,13 +485,10 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile boolean toolOffsetTablemModelListenerEnabled = false;
 
-    private void setToolOffsetTableModelListener() {
-        toolOffsetTablemModelListenerEnabled = true;
-        aprsSystem.runOnDispatchThread(this::setToolOffsetTableModelListenerOnDisplay);
-    }
-
     @UIEffect
     private void setToolOffsetTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        toolOffsetTablemModelListenerEnabled = true;
         jTableToolOffsets.getModel().addTableModelListener(toolOffsetsModelListener);
     }
 
@@ -496,35 +497,26 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         crclGenerator.setPauseInsteadOfRecover(val);
     }
 
-    private void clearToolOffsetTableModelListener() {
-        toolOffsetTablemModelListenerEnabled = false;
-        aprsSystem.runOnDispatchThread(this::clearToolOffsetTableModelListenerOnDisplay);
-    }
-
     @UIEffect
     private void clearToolOffsetTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        toolOffsetTablemModelListenerEnabled = false;
         jTableToolOffsets.getModel().removeTableModelListener(toolOffsetsModelListener);
     }
 
     private volatile boolean trayAttachOffsetTablemModelListenerEnabled = false;
 
-    private void setTrayAttachOffsetTableModelListener() {
-        trayAttachOffsetTablemModelListenerEnabled = true;
-        aprsSystem.runOnDispatchThread(this::setTrayAttachOffsetTableModelListenerOnDisplay);
-    }
-
-    private void clearTrayAttachOffsetTableModelListener() {
-        trayAttachOffsetTablemModelListenerEnabled = false;
-        aprsSystem.runOnDispatchThread(this::clearTrayAttachOffsetTableModelListenerOnDisplay);
-    }
-
     @UIEffect
     private void setTrayAttachOffsetTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        trayAttachOffsetTablemModelListenerEnabled = true;
         jTableTrayAttachOffsets.getModel().addTableModelListener(trayAttachOffsetsModelListener);
     }
 
     @UIEffect
     private void clearTrayAttachOffsetTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        trayAttachOffsetTablemModelListenerEnabled = false;
         jTableTrayAttachOffsets.getModel().removeTableModelListener(trayAttachOffsetsModelListener);
     }
 
@@ -594,23 +586,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile boolean toolHolderContentsModelListenerEnabled = false;
 
-    private void setToolHolderContentsTableModelListener() {
-        toolHolderContentsModelListenerEnabled = true;
-        aprsSystem.runOnDispatchThread(this::setToolHolderContentsTableModelListenerOnDisplay);
-    }
-
-    private void clearToolHolderContentsTableModelListener() {
-        toolHolderContentsModelListenerEnabled = false;
-        aprsSystem.runOnDispatchThread(this::clearToolHolderContentsTableModelListenerOnDisplay);
-    }
-
     @UIEffect
     private void setToolHolderContentsTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        toolHolderContentsModelListenerEnabled = true;
         jTableHolderContents.getModel().addTableModelListener(toolHolderContentsModelListener);
     }
 
     @UIEffect
     private void clearToolHolderContentsTableModelListenerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        toolHolderContentsModelListenerEnabled = false;
         jTableHolderContents.getModel().removeTableModelListener(toolHolderContentsModelListener);
     }
 
@@ -2843,7 +2829,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param startAbortCount unused except for debugging
      */
-    @Override
     public void clearKitsToCheck(int startAbortCount) {
         try {
             crclGenerator.clearKitsToCheckExternal(false, crclGenerator.newGenerateParams());
@@ -3057,7 +3042,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @return the value of actionsList
      */
-    @Override
     public List<Action> getActionsList() {
         return readOnlyActionsList;
     }
@@ -3065,7 +3049,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     /**
      * Clear the actions list.
      */
-    @Override
     public void clearActionsList() {
         warnIfNewActionsNotReady();
         noWarnClearActionsList(this.reverseFlag);
@@ -3287,7 +3270,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private static final String MANUAL_PART_NAMES = "manualPartNames";
     private static final String MANUAL_SLOT_NAMES = "manualSlotNames";
 
-    @Override
     public void addAction(Action action) {
         if (null != action) {
             synchronized (actionsList) {
@@ -4099,10 +4081,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @param saveProgramRunData new value of saveProgramRunData
      */
-    public void setSaveProgramRunData(boolean saveProgramRunData) {
+    @UIEffect
+    private void setSaveProgramRunDataOnDisplay(boolean saveProgramRunData) {
+        assert SwingUtilities.isEventDispatchThread();
         this.saveProgramRunData = saveProgramRunData;
-        aprsSystem.runOnDispatchThread("saveProgramRunData",
-                () -> setOptionsTableEntry("saveProgramRunData", Boolean.toString(saveProgramRunData)));
+        final String entryString = Boolean.toString(saveProgramRunData);
+        setOptionsTableEntry("saveProgramRunData", entryString);
     }
 
     private boolean runCrclProgram(CRCLProgramType crclProgram) {
@@ -4283,7 +4267,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      *
      * @return future to determine when the abort completes etc.
      */
-    @Override
     public XFutureVoid abortProgram() {
         abortProgramThread = Thread.currentThread();
         abortProgramTrace = Thread.currentThread().getStackTrace();
@@ -5691,7 +5674,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
-        clearEmptyTableRows(table);
+        clearEmptyTableRowsOnDisplay(table);
     }
 
     public File getToolChangerPoseFile() throws IOException {
@@ -5805,31 +5788,35 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final CachedTable holderContentsCachedTable;
 
-    private void loadHolderContentsMap() {
+    @UIEffect
+    private void loadHolderContentsMapOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             if (null == propertiesFile || !propertiesFile.exists()) {
-                setToolHolderContentsTableModelListener();
+                setToolHolderContentsTableModelListenerOnDisplay();
                 return;
             }
             String filename = propertiesFile.getName() + TOOL_HOLDER_CONTENTS_CSV_EXTENSION;
             File f = Utils.file(propertiesFile.getParent(), filename);
             if (!f.exists()) {
-                setToolHolderContentsTableModelListener();
+                setToolHolderContentsTableModelListenerOnDisplay();
                 return;
             }
-            clearToolHolderContentsTableModelListener();
+            clearToolHolderContentsTableModelListenerOnDisplay();
             int lineNumber = 0;
             readCsvFileToTable(holderContentsCachedTable, f);
-            clearEmptyTableRows(holderContentsCachedTable);
+            clearEmptyTableRowsOnDisplay(holderContentsCachedTable);
             clearRedundantRows(holderContentsCachedTable);
-            setToolHolderContentsTableModelListener();
+            setToolHolderContentsTableModelListenerOnDisplay();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "", e);
             throw new RuntimeException(e);
         }
     }
 
-    private void loadToolOffsetMap() throws IOException {
+    @UIEffect
+    private void loadToolOffsetMapOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
@@ -5839,17 +5826,19 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             return;
         }
         Map<String, PoseType> toolOffsetMap = crclGenerator.getToolOffsetMap();
-        clearToolOffsetTableModelListener();
+        clearToolOffsetTableModelListenerOnDisplay();
         int lineNumber = 0;
         readCsvFileToTableAndMap(toolOffsetsCachedTable, f, "ToolName", toolOffsetMap, ExecutorJPanel::recordToPose);
         clearEmptyToolOffsetPoseRows();
         loadToolOffsetsTableToMap();
-        setToolOffsetTableModelListener();
+        setToolOffsetTableModelListenerOnDisplay();
     }
 
     private final CachedTable trayAttachOffsetsCachedTable;
 
-    private void loadTrayAttachOffsetMap() throws IOException {
+    @UIEffect
+    private void loadTrayAttachOffsetMapOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
@@ -5858,12 +5847,12 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         if (!f.exists()) {
             return;
         }
-        clearTrayAttachOffsetTableModelListener();
+        clearTrayAttachOffsetTableModelListenerOnDisplay();
         int lineNumber = 0;
         readCsvFileToTableAndMap(trayAttachOffsetsCachedTable, f, "TrayName", crclGenerator.getTrayAttachOffsetsMap(),
                 ExecutorJPanel::recordToPose);
         loadTrayAttachOffsetsTableToMap();
-        setTrayAttachOffsetTableModelListener();
+        setTrayAttachOffsetTableModelListenerOnDisplay();
     }
 
     public static PoseType recordToPose(CSVRecord rec) {
@@ -5906,7 +5895,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void saveRecordedPosesMap() {
         try {
             final CachedTable table = recordedPositionsCachedTable;
-            clearEmptyTableRows(table);
+            clearEmptyTableRowsOnDisplay(table);
 //            Map<String, PoseType> recordedPoseMap
 //                    = crclGenerator.getRecordedPoseMap();
             final File file = getRecordedPoseFile();
@@ -5917,11 +5906,13 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    private void savePartToolMap() {
+    @UIEffect
+    private void savePartToolMapOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             clearEmptyPartToolRows();
             Map<String, String> partToolMap = crclGenerator.getPartToolMap();
-            Utils.autoResizeTableColWidths(partToolCachedTable);
+            Utils.autoResizeTableColWidthsOnDisplay(partToolCachedTable.getjTable());
             final File file = getPartToolFile();
             Utils.saveCachedTable(file, partToolCachedTable);
         } catch (IOException ex) {
@@ -6239,7 +6230,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private final CachedTable toolOffsetsCachedTable;
 
-    private void clearEmptyTableRows(final CachedTable table) {
+    @UIEffect
+    private void clearEmptyTableRowsOnDisplay(final CachedTable table) {
+        assert SwingUtilities.isEventDispatchThread();
         for (int i = 0; i < table.getRowCount(); i++) {
             Object val = table.getValueAt(i, 0);
             if (val == null) {
@@ -6253,23 +6246,23 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 i--;
             }
         }
-        Utils.autoResizeTableColWidths(table);
+        Utils.autoResizeTableColWidthsOnDisplay(table.getjTable());
     }
 
     private void clearEmptyToolOffsetPoseRows() {
-        clearEmptyTableRows(toolOffsetsCachedTable);
+        clearEmptyTableRowsOnDisplay(toolOffsetsCachedTable);
     }
 
     private void clearEmptyPartToolRows() {
-        clearEmptyTableRows(partToolCachedTable);
+        clearEmptyTableRowsOnDisplay(partToolCachedTable);
     }
 
     private void clearEmptyToolChangerPoseRows() {
-        clearEmptyTableRows(toolHolderPositionsCachedTable);
+        clearEmptyTableRowsOnDisplay(toolHolderPositionsCachedTable);
     }
 
     private void clearEmptHolderContentsRows() {
-        clearEmptyTableRows(holderContentsCachedTable);
+        clearEmptyTableRowsOnDisplay(holderContentsCachedTable);
         clearRedundantRows(holderContentsCachedTable);
     }
 
@@ -6333,7 +6326,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private void setPoseInTable(final CachedTable table, String name, PoseType pose, int tableRowIndex, PmRpy rpy,
             boolean approach, String jointString) {
-        clearEmptyTableRows(table);
+        clearEmptyTableRowsOnDisplay(table);
         PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
         if (tableRowIndex < 0) {
             table.addRow(new Object[]{
@@ -6356,11 +6349,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             table.setValueAt(Math.toDegrees(rpy.y), tableRowIndex, 6);
             table.setValueAt(jointString, tableRowIndex, 8);
         }
-        clearEmptyTableRows(table);
+        clearEmptyTableRowsOnDisplay(table);
     }
 
     private void addHolderContentsRowIfNameNotFound(String name) {
-        clearToolHolderContentsTableModelListener();
+        clearToolHolderContentsTableModelListenerOnDisplay();
         int holderContentsTableRowIndex = getHolderContentsRow(name);
         if (holderContentsTableRowIndex < 0) {
             holderContentsCachedTable.addRow(new Object[]{
@@ -6370,7 +6363,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 ""
             });
         }
-        setToolHolderContentsTableModelListener();
+        setToolHolderContentsTableModelListenerOnDisplay();
     }
 
     @UIEffect
@@ -6580,7 +6573,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 i--;
             }
         }
-        clearEmptyTableRows(cachedTable);
+        clearEmptyTableRowsOnDisplay(cachedTable);
     }
 
     private void renameMatchingRowsFromTable(CachedTable cachedTable, String oldName, String newName) {
@@ -6591,7 +6584,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 i--;
             }
         }
-        clearEmptyTableRows(cachedTable);
+        clearEmptyTableRowsOnDisplay(cachedTable);
     }
 
     private void renameFromToolHolderContentsTable(String oldName, String newName) {
@@ -6774,7 +6767,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonAddToolOffsetActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButtonAddToolOffsetActionPerformed
         DefaultTableModel dtm = (DefaultTableModel) jTableToolOffsets.getModel();
         dtm.addRow(new Object[]{"tool" + (dtm.getRowCount() + 1), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ""});
-        clearToolOffsetTableModelListener();
+        clearToolOffsetTableModelListenerOnDisplay();
         Utils.autoResizeTableColWidths(jTableToolOffsets);
         saveToolOffsetPoseMap();
         loadToolOffsetsTableToMap();
@@ -6793,7 +6786,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 i--;
             }
         }
-        clearToolOffsetTableModelListener();
+        clearToolOffsetTableModelListenerOnDisplay();
         Utils.autoResizeTableColWidths(jTableToolOffsets);
         saveToolOffsetPoseMap();
         loadToolOffsetsTableToMap();
@@ -6879,11 +6872,11 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     private void jButtonAddTrayAttachActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButtonAddTrayAttachActionPerformed
         DefaultTableModel dtm = (DefaultTableModel) jTableTrayAttachOffsets.getModel();
         dtm.addRow(new Object[]{"tray" + (dtm.getRowCount() + 1), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ""});
-        clearTrayAttachOffsetTableModelListener();
+        clearTrayAttachOffsetTableModelListenerOnDisplay();
         Utils.autoResizeTableColWidths(jTableToolOffsets);
         saveTrayAttachOffsetPoseMap();
         loadTrayAttachOffsetsTableToMap();
-        setTrayAttachOffsetTableModelListener();
+        setTrayAttachOffsetTableModelListenerOnDisplay();
     }// GEN-LAST:event_jButtonAddTrayAttachActionPerformed
 
     @UIEffect
@@ -7173,7 +7166,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param recordedPoseName name of previously recorded pose
      * @return future indicating if/when the move is completed.
      */
-    @Override
     public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
         return cartesianMoveToRecordedPosition(recordedPoseName, false);
     }
@@ -7253,7 +7245,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * positions
      * @return future indicating if/when the move is completed.
      */
-    @Override
     public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
         return jointMoveToNamedPosition(recordedJointsName, false);
     }
@@ -8649,11 +8640,22 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param pm position map to be added
      * @throws IOException
      */
-    @Override
-    public void addPositionMap(PositionMap pm) {
+    public XFutureVoid addPositionMap(PositionMap pm) {
         try {
-            positionMapJPanel1.addPositionMap(pm);
-            syncCrclGeneratorPositionMaps();
+            final XFutureVoid runOnDispatchThreadFuture = Utils.runOnDispatchThread("addPositionMap", () -> {
+                try {
+                    positionMapJPanel1.addPositionMapOnDisplay(pm);
+                    syncCrclGeneratorPositionMaps();
+                } catch (Exception ex) {
+                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                    if (ex instanceof RuntimeException) {
+                        throw (RuntimeException) ex;
+                    } else {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
+            return runOnDispatchThreadFuture;
         } catch (Exception ex) {
             Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -8993,7 +8995,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param listener a listener to be added to a collection to be notified
      * with new info on what holder holds which tool
      */
-    @Override
     public void addToolHolderContentsListener(BiConsumer<String, String> listener) {
         updateToolHolderContentsListeners.add(listener);
     }
@@ -9004,7 +9005,6 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
      * @param listener a listener to be removed a collection to be notified with
      * new info on what holder holds which tool
      */
-    @Override
     public void removeToolHolderContentsListener(BiConsumer<String, String> listener) {
         updateToolHolderContentsListeners.add(listener);
     }
@@ -9012,7 +9012,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     @UIEffect
     private synchronized void updateCurrentToolHolderJTable(String toolChangerPosName, String toolName) {
         try {
-            clearToolHolderContentsTableModelListener();
+            clearToolHolderContentsTableModelListenerOnDisplay();
             for (int i = 0; i < holderContentsCachedTable.getRowCount(); i++) {
                 String holderName = (String) holderContentsCachedTable.getValueAt(i, 0);
                 if (toolChangerPosName.equals(holderName)) {
@@ -9034,7 +9034,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
             Utils.autoResizeTableColWidthsOnDisplay(jTableHolderContents);
             saveToolHolderContentsMap();
             loadToolMenus();
-            setToolHolderContentsTableModelListener();
+            setToolHolderContentsTableModelListenerOnDisplay();
         }
     }
 
@@ -9616,7 +9616,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
     }
 
     @SuppressWarnings("UnnecessaryBoxing")
-    public void loadProperties() throws IOException {
+    @UIEffect
+    public void loadPropertiesOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             if (null != propertiesFile && propertiesFile.exists()) {
                 if (propertiesFile.isDirectory()) {
@@ -9632,7 +9634,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 try (FileReader fr = new FileReader(propertiesFile)) {
                     props.load(fr);
                 }
-                loadComboModels(props);
+                loadComboModelsOnDisplay(props);
                 String propsActionsFileString = propsGetFileName(props, PDDLOUTPUT);
                 if (isTempDir(propsActionsFileString)) {
                     propsActionsFileString = null;
@@ -9661,7 +9663,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 if (null != saveProgramRunDataFlagProperty) {
                     saveProgramRunDataFlagFromProperty = Boolean.parseBoolean(saveProgramRunDataFlagProperty);
                 }
-                setSaveProgramRunData(saveProgramRunDataFlagFromProperty);
+                setSaveProgramRunDataOnDisplay(saveProgramRunDataFlagFromProperty);
 
 //            reloadActionsFile(reverseFlagFromProperty, true);
                 String autostartString = props.getProperty(PDDLCRCLAUTOSTART);
@@ -9718,9 +9720,9 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
                 String errorMapFiles = props.getProperty(POS_ERROR_MAP_FILES, "");
                 if (null != errorMapFiles && errorMapFiles.length() > 0) {
-                    loadErrorMapFiles(errorMapFiles);
+                    loadErrorMapFilesOnDisplay(errorMapFiles);
                 }
-                loadHolderContentsMap();
+                loadHolderContentsMapOnDisplay();
                 try {
                     loadToolChangerPoseMap();
                 } catch (IOException iOException) {
@@ -9745,18 +9747,17 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                             aprsSystem.getTaskName() + " failed to loadPartToolMap",
                             iOException);
                 }
-                loadToolOffsetMap();
-                loadTrayAttachOffsetMap();
+                loadToolOffsetMapOnDisplay();
+                loadTrayAttachOffsetMapOnDisplay();
                 String filename = getSelectedToolNameFileName();
                 if (null != filename && filename.length() > 1) {
                     String selectedTool = readSelectedToolNameFile(filename);
                     if (null != selectedTool) {
-                        setSelectedToolName(selectedTool);
+                        setSelectedToolNameOnDisplay(selectedTool);
                     }
                 }
                 initGenerateAbortLogFile();
-
-                aprsSystem.runOnDispatchThread(this::completeLoadPropertiesOnDisplay);
+                this.completeLoadPropertiesOnDisplay();
             }
         } catch (IOException ioex) {
             LOGGER.log(Level.SEVERE, "Failed to loadProperties with propertiesFile=" + propertiesFile, ioex);
@@ -9936,16 +9937,20 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
 
     private volatile String errorMapFilesArray@Nullable []  = null;
 
-    private void loadErrorMapFiles(String errorMapFiles) throws IOException {
+    @UIEffect
+    private void loadErrorMapFilesOnDisplay(String errorMapFiles) throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         errorMapFilesArray = errorMapFiles.split("[\t,\\[\\]\\{\\}" + File.pathSeparator + "]+");
-        reloadErrorMaps();
+        reloadErrorMapsOnDisplay();
     }
 
-    public void reloadErrorMaps() throws IOException {
+    @UIEffect
+    public void reloadErrorMapsOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         if (null == errorMapFilesArray) {
             throw new NullPointerException("errorMapFilesArray");
         }
-        positionMapJPanel1.clearCurrentMap();
+        positionMapJPanel1.clearCurrentMapOnDisplay();
         String emfa[] = errorMapFilesArray;
         if (null != emfa) {
             for (String emf : emfa) {
@@ -9959,7 +9964,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                 File f = Utils.file(fname);
                 if (f.exists()) {
                     try {
-                        positionMapJPanel1.addPositionMapFile(f);
+                        positionMapJPanel1.addPositionMapFileOnDisplay(f);
                     } catch (PositionMap.BadErrorMapFormatException ex) {
                         LOGGER.log(Level.SEVERE, "", ex);
                     }
@@ -9975,7 +9980,7 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
                     f = Utils.file(fullPath);
                     if (f.exists()) {
                         try {
-                            positionMapJPanel1.addPositionMapFile(f);
+                            positionMapJPanel1.addPositionMapFileOnDisplay(f);
                         } catch (PositionMap.BadErrorMapFormatException ex) {
                             LOGGER.log(Level.SEVERE, "", ex);
                         }
@@ -9989,30 +9994,16 @@ public class ExecutorJPanel extends javax.swing.JPanel implements ExecutorDispla
         }
     }
 
-    //    private static final String ENABLE_OPTA_PLANNER = "enableOptaPlanner";
-    private void loadComboModels(Properties props) {
+    @UIEffect
+    private void loadComboModelsOnDisplay(Properties props) {
+        assert SwingUtilities.isEventDispatchThread();
         String manualPartNames = props.getProperty(MANUAL_PART_NAMES, "");
         String pna[] = manualPartNames.split("[ \t,\\[\\]\\{\\}]+");
-        manualObjectCachedComboBox.setItems(pna);
-//        manualObjectCachedComboBox.removeAllElements();
-//        for (String aPna : pna) {
-//            if (null != aPna && aPna.length() > 0
-//                    && !aPna.equals("null")) {
-//                manualObjectCachedComboBox.addElement(aPna);
-//            }
-//        }
+        manualObjectCachedComboBox.setItemsOnDisplay(pna);
 
         String manualSlotNames = props.getProperty(MANUAL_SLOT_NAMES, "");
         String sna[] = manualSlotNames.split("[ \t,\\[\\]\\{\\}]+");
-        manualSlotCachedComboBox.setItems(sna);
-
-//        manualSlotCachedComboBox.removeAllElements();
-//        for (String aSna : sna) {
-//            if (null != aSna && aSna.length() > 0
-//                    && !aSna.equals("null")) {
-//                manualSlotCachedComboBox.addElement(aSna);
-//            }
-//        }
+        manualSlotCachedComboBox.setItemsOnDisplay(sna);
     }
 
     public @Nullable

@@ -5233,7 +5233,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 return;
             }
             if (null != parentExecutorJPanel) {
-                parentExecutorJPanel.setSelectedToolName(currentToolName);
+                parentExecutorJPanel.setSelectedToolNameOnDisplay(currentToolName);
             }
         }
     }

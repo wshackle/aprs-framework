@@ -505,7 +505,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     private void consumeItemList(List<PhysicalItem> items) {
-        setItemsInternal(items);
+        setItemsOnDisplay(items);
         settingItems = false;
     }
 
@@ -611,7 +611,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 } else {
                     List<PhysicalItem> newOutputItems = computeNewOutputList(filteredItems2);
                     future = future
-                            .thenComposeAsyncToVoid(() -> setOutputItems(newOutputItems),Utils.getDispatchThreadExecutorService());
+                            .thenComposeAsyncToVoid(() -> setOutputItems(newOutputItems), Utils.getDispatchThreadExecutorService());
                     return future.thenSupply(() -> new SetItemsResult("visionSocketServer==null", false));
                 }
             }
@@ -680,7 +680,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     }
 
     @UIEffect
-    private void setItemsInternal(List<PhysicalItem> items) {
+    private void setItemsOnDisplay(List<PhysicalItem> items) {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
                 double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
@@ -691,7 +692,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
             object2DJPanel1.setItems(items);
             updateItemsTableOnDisplay(items);
-            loadTraySlotInfo(items);
+            loadTraySlotInfoOnDisplay(items);
             lastSetItemsInternalTime = System.currentTimeMillis();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -774,14 +775,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 .orElse(Double.POSITIVE_INFINITY);
     }
 
-//    private boolean slotFilled(double sx, double sy, List<PhysicalItem> items) {
-//        return minDist(sx, sy, items) < 20.0;
-//    }
     private final DefaultTableModel nonEditableTraySlotsTableModel;
     private final DefaultTableModel origTraySlotsTableModel;
 
     @UIEffect
-    private void loadTraySlotInfo(List<PhysicalItem> items) {
+    private void loadTraySlotInfoOnDisplay(List<PhysicalItem> items) {
+        assert SwingUtilities.isEventDispatchThread();
         DefaultTableModel tm = (DefaultTableModel) jTableTraySlots.getModel();
         if (jTableItems.getRowCount() < 1) {
             if (tm != nonEditableTraySlotsTableModel) {
@@ -860,7 +859,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     break;
             }
         }
-        Utils.autoResizeTableColWidths(jTableTraySlots);
+        Utils.autoResizeTableColWidthsOnDisplay(jTableTraySlots);
     }
 
     @UIEffect
@@ -946,9 +945,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
      * Creates new form Object2DOuterJPanel
      */
     @SuppressWarnings({"initialization", "rawtypes", "unchecked"})
-    @UIEffect
     public Object2DOuterJPanel() {
-
         initComponents();
         construtorTrace = Thread.currentThread().getStackTrace();
         jTableItems.getModel().addTableModelListener(itemsTableModelListener);
@@ -1229,7 +1226,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 return false;
             }
         };
-        this.setItemsInternal(object2DJPanel1.getItems());
+        final List<PhysicalItem> initItems = object2DJPanel1.getItems();
+        if (SwingUtilities.isEventDispatchThread()) {
+            this.setItemsOnDisplay(initItems);
+        } else {
+            Utils.runOnDispatchThread(() -> setItemsOnDisplay(initItems));
+        }
     }
 
     private final TableModelListener itemsTableModelListener = new TableModelListener() {
@@ -1388,7 +1390,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 }
                 if (newItemsList.size() != origItems.size()) {
                     runOnDispatchThread(() -> {
-                        setItemsInternal(newItemsList);
+                        setItemsOnDisplay(newItemsList);
                         notifySetItemsListeners(newItemsList);
                     });
                 } else {
@@ -1412,7 +1414,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 }
                 object2DJPanel1.setSelectedItemIndex((int) (itemValue0));
                 if (!object2DJPanel1.isShowOutputItems()) {
-                    loadTraySlotInfo(getItems());
+                    loadTraySlotInfoOnDisplay(getItems());
                 }
             }
         }
@@ -3903,9 +3905,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         }
         return XFutureVoid.allOf(futuresList)
                 .thenRunAsync(() -> {
-                        this.repaint();
-                        object2DJPanel1.repaint();
-                },Utils.getDispatchThreadExecutorService());
+                    this.repaint();
+                    object2DJPanel1.repaint();
+                }, Utils.getDispatchThreadExecutorService());
     }
 
     @UIEffect
@@ -4164,7 +4166,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
             List<PhysicalItem> items = getItems();
-            setItemsInternal(items);
+            setItemsOnDisplay(items);
             notifySetItemsListeners(items);
         } else {
             final List<PhysicalItem> outputItems = getOutputItems();

@@ -50,6 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import aprs.cachedcomponents.CachedTable;
 import aprs.misc.Utils;
 import aprs.system.AprsSystem;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -279,7 +280,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMaps.get(index);
     }
 
-    private void setPositionMap(int index, PositionMap positionMap) throws IOException {
+    @UIEffect
+    private void setPositionMapOnDisplay(int index, PositionMap positionMap) throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         reversePositionMaps = null;
         while (positionMaps.size() < index) {
             positionMaps.add(new PositionMap(Collections.emptyList()));
@@ -294,7 +297,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
                 loadPositionMapToTable(positionMap);
             }
         }
-        aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
+        this.updatePositionMapInfoOnDisplay();
     }
 
     @UIEffect
@@ -303,7 +306,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         jLabelSize.setText("/" + positionMaps.size() + "   ");
     }
 
-    public void addPositionMap(PositionMap positionMap) throws IOException {
+    @UIEffect
+    public void addPositionMapOnDisplay(PositionMap positionMap) throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         reversePositionMaps = null;
         for (int i = positionMaps.size() - 1; i >= 0; i--) {
             PositionMap pm = positionMaps.get(i);
@@ -315,14 +320,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             int spinVal = spinnerIndexValue;
             if (spinVal >= positionMaps.size()) {
                 spinnerIndexValue = Math.max(0, positionMaps.size() - 1);
-                aprsSystem.runOnDispatchThread(() -> jSpinnerIndex.setValue(spinnerIndexValue));
+                jSpinnerIndex.setValue(spinnerIndexValue);
             }
         }
         this.positionMaps.add(positionMap);
         if (positionMaps.size() == 1) {
             loadPositionMapToTable(positionMap);
         }
-        aprsSystem.runOnDispatchThread(this::updatePositionMapInfoOnDisplay);
+        this.updatePositionMapInfoOnDisplay();
     }
 
     public void removePositionMap(PositionMap positionMap) throws IOException {
@@ -343,7 +348,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
             spinVal = 0;
         }
         if (positionMaps.size() < 1) {
-            addPositionMap(PositionMap.emptyPositionMap());
+            addPositionMapOnDisplay(PositionMap.emptyPositionMap());
         }
         PositionMap spinValPositionMap = getPositionMap(spinVal);
         if (null != spinValPositionMap) {
@@ -451,8 +456,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
     }
 
-    public void addPositionMapFile(File f) throws IOException, PositionMap.BadErrorMapFormatException {
-        addPositionMap(new PositionMap(f));
+    @UIEffect
+    public void addPositionMapFileOnDisplay(File f) throws IOException, PositionMap.BadErrorMapFormatException {
+        assert SwingUtilities.isEventDispatchThread();
+        addPositionMapOnDisplay(new PositionMap(f));
     }
 
     private File startingDirectory;
@@ -487,7 +494,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                setPositionMap((int) jSpinnerIndex.getValue(), new PositionMap(chooser.getSelectedFile()));
+                setPositionMapOnDisplay((int) jSpinnerIndex.getValue(), new PositionMap(chooser.getSelectedFile()));
             } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                 Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -529,7 +536,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 	    spinnerIndexValue = (int) spinnerIndexValueObject;
 	    final int spinVal = (int) spinnerIndexValueObject;
 	    if (getPositionMaps().size() == spinVal) {
-	        setPositionMap(spinVal, PositionMap.emptyPositionMap());
+	        setPositionMapOnDisplay(spinVal, PositionMap.emptyPositionMap());
 	    }
 	    PositionMap spinValPositionMap = getPositionMap(spinVal);
 	    if (null != spinValPositionMap) {
@@ -546,7 +553,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @UIEffect
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
         try {
-	    clearCurrentMap();
+	    clearCurrentMapOnDisplay();
 	} catch (Exception ex) {
 	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
 	    throw new RuntimeException(ex);
@@ -559,9 +566,11 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         getPositionMap(spinnerIndexValue).plot();
     }//GEN-LAST:event_jButtonPlotActionPerformed
 
-    public void clearCurrentMap() throws IOException {
+    @UIEffect
+    public void clearCurrentMapOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         final int spinVal = spinnerIndexValue;
-        setPositionMap(spinVal, PositionMap.emptyPositionMap());
+        setPositionMapOnDisplay(spinVal, PositionMap.emptyPositionMap());
         PositionMap spinValPositionMap = getPositionMap(spinVal);
         if (null != spinValPositionMap) {
             loadPositionMapToTable(spinValPositionMap);
@@ -577,7 +586,7 @@ public class PositionMapJPanel extends javax.swing.JPanel {
 	    if (null != reversePositionMaps) {
 	        reversePositionMaps.clear();
 	    }
-	    clearCurrentMap();
+	    clearCurrentMapOnDisplay();
 	    aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
 	} catch (Exception ex) {
 	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);

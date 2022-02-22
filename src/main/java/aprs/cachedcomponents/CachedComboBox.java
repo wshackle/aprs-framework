@@ -104,6 +104,19 @@ public class CachedComboBox<E> {
         }
         Utils.runOnDispatchThread(() -> combobBoxSetItems(inItems));
     }
+    
+    @UIEffect
+    public void setItemsOnDisplay(E[] inItems) {
+        assert SwingUtilities.isEventDispatchThread();
+        E newItems[] = (E[]) Array.newInstance(eClass, inItems.length);
+        System.arraycopy(inItems, 0, newItems, 0, inItems.length);
+        synchronized (this) {
+            this.items = newItems;
+            this.selectedIndex = -1;
+        }
+        combobBoxSetItems(inItems);
+    }
+    
 
     @UIEffect
     private void combobBoxSetItems(E[] inItems) {

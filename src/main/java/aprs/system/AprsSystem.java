@@ -631,7 +631,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        this.executorJInternalFrame1.reloadErrorMaps();
+        this.executorJInternalFrame1.reloadErrorMapsOnDisplay();
     }
 
     private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable []  = null;
@@ -1345,9 +1345,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      * @param pm position map to be added
      */
-    public void addPositionMap(PositionMap pm) {
+    public XFutureVoid startAddPositionMap(PositionMap pm) {
         if (null != executorJInternalFrame1) {
-            executorJInternalFrame1.addPositionMap(pm);
+            return executorJInternalFrame1.startAddPositionMap(pm);
+        } else {
+            final XFutureVoid ret = new XFutureVoid("executorJInternalFrame1 ==null");
+            ret.completeExceptionally(new NullPointerException("executorJInternalFrame1"));
+            return ret;
         }
 
     }
@@ -5672,7 +5676,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
             this.executorJInternalFrame1 = newExecFrame;
             ExecutorJInternalFrame newExecFrameCopy = newExecFrame;
-            newExecFrameCopy.loadProperties();
+            newExecFrameCopy.loadPropertiesOnDisplay();
             syncPauseRecoverCheckboxOnDisplay();
             if (null != aprsSystemDisplayJFrame) {
                 aprsSystemDisplayJFrame.addMenu(newExecFrameCopy.getToolMenu());
@@ -10006,7 +10010,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //            }
         if (null != this.executorJInternalFrame1) {
             if (null != this.executorJInternalFrame1) {
-                this.executorJInternalFrame1.loadProperties();
+                this.executorJInternalFrame1.loadPropertiesOnDisplay();
             }
             String alertLimitsString = props.getProperty(ALERT_LIMITS);
             if (null != alertLimitsString) {
