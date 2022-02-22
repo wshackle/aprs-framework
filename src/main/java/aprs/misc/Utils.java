@@ -701,7 +701,7 @@ public class Utils {
         }
     }
 
-    private final  static ExecutorService dispatchThreadExecutorService = new ExecutorService() {
+    private final static ExecutorService dispatchThreadExecutorService = new ExecutorService() {
         @Override
         public void shutdown() {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
@@ -729,17 +729,17 @@ public class Utils {
 
         @Override
         public <T> Future<T> submit(Callable<T> task) {
-        CompletableFuture<T> cf = new CompletableFuture();
+            CompletableFuture<T> cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
-            try {
-                cf.complete(task.call());
-            } catch (Exception ex) {
-                cf.completeExceptionally(ex);
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
-                throw new RuntimeException(ex);
-            }
+                try {
+                    cf.complete(task.call());
+                } catch (Exception ex) {
+                    cf.completeExceptionally(ex);
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
+                    throw new RuntimeException(ex);
+                }
             });
-            return cf;   
+            return cf;
         }
 
         @Override
@@ -788,7 +788,7 @@ public class Utils {
         }
 
     };
-    
+
     public static ExecutorService getDispatchThreadExecutorService() {
         return dispatchThreadExecutorService;
     }
@@ -960,12 +960,17 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
-        XFuture<XFutureVoid> ret = new SwingFuture<>("composeOnDispatchThread");
         if (isEventDispatchThread()) {
             return s.get();
         } else {
-            javax.swing.SwingUtilities.invokeLater(() -> ret.complete(s.get()));
-            return ret.toXFutureVoid(x -> x);
+            XFutureVoid ret = new XFutureVoid("composeOnDispatchThread");
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                XFutureVoid sret = s.get();
+                sret.thenRun(() -> {
+                    ret.complete();
+                });
+            });
+            return ret;
         }
     }
 
