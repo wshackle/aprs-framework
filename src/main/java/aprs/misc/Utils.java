@@ -464,7 +464,7 @@ public class Utils {
      * @param id new id for command.
      */
     public static void setCommandID(CRCLCommandType cmd, long id) {
-        assert cmd.getCommandID() <= id : createAssertErrorString(cmd, id);
+//        assert cmd.getCommandID() <= id : createAssertErrorString(cmd, id);
         cmd.setCommandID(id);
     }
 
@@ -940,7 +940,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static <R> XFuture<R> composeOnDispatchThread(final UiSupplier<? extends XFuture<R>> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         if (isEventDispatchThread()) {
             return s.get();
         } else {
@@ -964,7 +964,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         if (isEventDispatchThread()) {
             return s.get();
         } else {

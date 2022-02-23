@@ -241,9 +241,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
 //            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
             final File csvFileFinal = csvFile;
-            runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal, callerTrace);
-            });
+            if (!SwingUtilities.isEventDispatchThread()) {
+                runOnDispatchThread(() -> {
+                    updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
+                });
+            } else {
+                updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
+            }
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
                 File xmlDir = Utils.file(f.getParentFile(), "crclStatusXml");
@@ -266,7 +270,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private final AtomicInteger snapshotsCount = new AtomicInteger();
 
     @UIEffect
-    private void updateSnapshotsTable(File f, File csvFile, StackTraceElement callerTrace[]) {
+    private void updateSnapshotsTableOnDisplay(File f, File csvFile, StackTraceElement callerTrace[]) {
+        assert SwingUtilities.isEventDispatchThread();
         if (null != f && null != csvFile) {
             try {
                 DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
@@ -286,7 +291,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 model.addRow(new Object[]{count, Utils.getTimeString(), name, f.getCanonicalPath(),
                     csvFile.getCanonicalPath()});
                 if (count % 20 < 2) {
-                    Utils.autoResizeTableColWidths(jTableSnapshotFiles);
+                    Utils.autoResizeTableColWidthsOnDisplay(jTableSnapshotFiles);
                 }
             } catch (IOException ex) {
                 System.err.println("updateSnapshotsTable(" + f + "," + csvFile + ",...): callerTrace=\n"
@@ -330,7 +335,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
             runOnDispatchThread(() -> {
-                updateSnapshotsTable(f, csvFileFinal, callerTrace);
+                updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
             });
             File xmlDir = Utils.file(f.getParentFile(), "crclStatusXml");
             xmlDir.mkdirs();
@@ -580,14 +585,22 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             notifySetItemsListeners(filteredItems2);
         }
         long now = System.currentTimeMillis();
-        XFutureVoid future = XFutureVoid.completedFuture();
+        XFutureVoid future;
         if (null == lastSetItemsInternalFuture
                 || lastSetItemsInternalFuture.isDone()
                 || (now - lastSetItemsInternalTime) > 500) {
             settingItems = true;
             lastSetItemsInternalTime = now;
-            future = submitDisplayConsumer(this::consumeItemList, filteredItems2);
+            if (SwingUtilities.isEventDispatchThread()) {
+                setItemsOnDisplay(filteredItems2);
+                settingItems = false;
+                future = XFutureVoid.completedFuture();
+            } else {
+                future = submitDisplayConsumer(this::consumeItemList, filteredItems2);
+            }
             lastSetItemsInternalFuture = future;
+        } else {
+             future = XFutureVoid.completedFuture();
         }
         if (captured_item_index > 0 && !ignoreMissedDropOffs && !ignoreMissedPickups) {
             return future.thenSupply(() -> new SetItemsResult("captured_item_index=" + captured_item_index, false));
@@ -2963,7 +2976,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     private void setSimulatedInternalOnDisplay(boolean simulated) {
-
+        assert SwingUtilities.isEventDispatchThread();
         jButtonAdd.setEnabled(simulated);
         jButtonDelete.setEnabled(simulated);
         jButtonReset.setEnabled(simulated);
@@ -5316,7 +5329,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         if (null != simulatedString && simulatedString.length() > 0) {
             boolean simulated = Boolean.parseBoolean(simulatedString);
             simulatedCachedCheckBox.setSelected(simulated);
-            setSimulatedInternal(simulated);
+            setSimulatedInternalOnDisplay(simulated);
         }
 
         String autoscaleString = props.getProperty("autoscale");
@@ -5359,7 +5372,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             if (simulatedCachedCheckBox.isSelected() || !connectedCachedCheckBox.isSelected()) {
                 if (needReloadDataFile()) {
                     try {
-                        reloadDataFile();
+                        reloadDataFileOnDisplay();
                     } catch (IOException ex) {
                         LOGGER.log(Level.SEVERE, "", ex);
                     }
@@ -5545,7 +5558,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         return !Objects.equals(currentDataFileString, loadedDataFileString);
     }
 
-    public void reloadDataFile() throws IOException {
+    @UIEffect
+    public void reloadDataFileOnDisplay() throws IOException {
+        assert SwingUtilities.isEventDispatchThread();
         String currentDataFileString = getCurrentDataFileString();
         if (null != currentDataFileString && currentDataFileString.length() > 0) {
             File f = Utils.file(currentDataFileString);
@@ -5795,7 +5810,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque, StackTraceElement callerTrace[]) {
         File fa[] = this.fileArrayDeque.pollFirst();
         while (null != fa) {
-            updateSnapshotsTable(fa[0], fa[1], callerTrace);
+            updateSnapshotsTableOnDisplay(fa[0], fa[1], callerTrace);
             fa = this.fileArrayDeque.pollFirst();
         }
     }
@@ -5852,7 +5867,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         File csvFile = imageFileToCsvFile(f);
         this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
         runOnDispatchThread(() -> {
-            updateSnapshotsTable(f, csvFile, callerTrace);
+            updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
         });
         return new File[]{f, csvFile};
     }

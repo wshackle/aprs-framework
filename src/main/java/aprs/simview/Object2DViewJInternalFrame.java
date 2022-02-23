@@ -99,7 +99,7 @@ public class Object2DViewJInternalFrame extends javax.swing.JInternalFrame imple
     }
 
     public void reloadDataFile() throws IOException {
-        this.object2DOuterJPanel1.reloadDataFile();
+        this.object2DOuterJPanel1.reloadDataFileOnDisplay();
     }
 
     public void stopSimUpdateTimer() {
