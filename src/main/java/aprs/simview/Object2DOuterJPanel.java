@@ -5180,7 +5180,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     handleRotationEnum == HandleRotationEnum.IGNORE,
                     false/* dont lock trays */);
             if (null != l && l.size() > 0) {
-                setItems(l);
+                setItemsOnDisplay(l);
             }
         }
         String alternativeRotationString = props.getProperty("alternativeRotation");
