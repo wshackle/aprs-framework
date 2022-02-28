@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.SwingUtilities;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -112,14 +113,30 @@ public class CachedCheckBox extends CachedComponentBase {
             } else {
                 falseTrace = Thread.currentThread().getStackTrace();
             }
-            return runOnDispatchThread(() -> setSelectedOnDisplay(newSelectedVal));
+            return runOnDispatchThread(() -> setSelectedInternal(newSelectedVal));
         } else {
             return XFutureVoid.completedFuture();
         }
     }
+    
+    @UIEffect
+    public void setSelectedOnDisplay(boolean newSelectedVal) {
+        assert SwingUtilities.isEventDispatchThread();
+        boolean oldSelectedVal = this.selected;
+        this.selected = newSelectedVal;
+        if (null != abstractButton && newSelectedVal != oldSelectedVal) {
+            if (newSelectedVal) {
+                trueTrace = Thread.currentThread().getStackTrace();
+            } else {
+                falseTrace = Thread.currentThread().getStackTrace();
+            }
+            setSelectedInternal(newSelectedVal);
+        } 
+    }
+    
 
     @UIEffect
-    private void setSelectedOnDisplay(boolean selected) {
+    private void setSelectedInternal(boolean selected) {
         if (selected != this.selected) {
             int dc = getDispatchCount();
             int sc = getStartCount();

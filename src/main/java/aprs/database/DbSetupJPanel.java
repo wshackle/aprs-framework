@@ -79,6 +79,7 @@ import aprs.database.vision.VisionToDBJPanel;
 import aprs.misc.Utils;
 import aprs.system.AprsSystem;
 import crcl.utils.XFutureVoid;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -87,19 +88,21 @@ import crcl.utils.XFutureVoid;
 @SuppressWarnings("serial")
 public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublisher {
 
-     /**
+    /**
      * Creates new form DbSetupJPanel
      */
-    @SuppressWarnings({"initialization","nullness"})
+    @SuppressWarnings({"initialization", "nullness"})
     @UIEffect
     public DbSetupJPanel() {
         this(null);
     }
+
     /**
      * Creates new form DbSetupJPanel
+     *
      * @param aprsSystem1 system panel will be connected to
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public DbSetupJPanel(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
@@ -115,10 +118,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         queriesDirectoryCachedTextField = new CachedTextField(jTextFieldQueriesDirectory);
         queriesMap = getQueriesMapInternal();
         queriesDir = getQueriesDirInternal();
-        jRadioButtonResourceDir.addActionListener(e -> updateQueriesDirInternal());
-        jRadioButtonResourceDir.addItemListener(e -> updateQueriesDirInternal());
-        jComboBoxResourceDir.addActionListener(e -> updateQueriesDirInternal());
-        jTextFieldQueriesDirectory.addActionListener(e -> updateQueriesDirInternal());
+        jRadioButtonResourceDir.addActionListener(e -> updateQueriesDirOnDisplay());
+        jRadioButtonResourceDir.addItemListener(e -> updateQueriesDirOnDisplay());
+        jComboBoxResourceDir.addActionListener(e -> updateQueriesDirOnDisplay());
+        jTextFieldQueriesDirectory.addActionListener(e -> updateQueriesDirOnDisplay());
         passwd = jPasswordFieldDBPassword.getPassword();
         jPasswordFieldDBPassword.addActionListener(e -> passwd = jPasswordFieldDBPassword.getPassword());
         resourceDirSelected = jRadioButtonResourceDir.isSelected();
@@ -132,7 +135,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     }
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     private final TableModelListener queriesTableModelListener = this::handleQueriesTableEvent;
 
     @UIEffect
@@ -473,7 +476,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         );
     }// </editor-fold>//GEN-END:initComponents
 
-
     @UIEffect
     private void jComboBoxDbTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxDbTypeActionPerformed
         if (!updatingFromDbSetup) {
@@ -488,10 +490,9 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return the value of aprsSystemInterface
      */
-     public AprsSystem getAprsSystem() {
+    public AprsSystem getAprsSystem() {
         return aprsSystem;
     }
-
 
     @UIEffect
     private void jButtonConnectDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonConnectDBActionPerformed
@@ -562,7 +563,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         chooser.setSelectedFile(propertiesFile);
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            this.setPropertiesFile(chooser.getSelectedFile());
+            this.setPropertiesFileOnDisplay(chooser.getSelectedFile());
         }
         DbSetupBuilder.savePropertiesFile(propertiesFile, getDbSetup());
         this.notifyAllDbSetupListeners(null);
@@ -571,23 +572,23 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @UIEffect
     private void jButtonLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadActionPerformed
         try {
-	    if (null == propertiesFile) {
-	        throw new IllegalStateException("null == propertiesFile");
-	    }
-	    this.setPropertiesFile(Utils.file(jComboBoxPropertiesFiles.getSelectedItem().toString()));
-	    DbSetup newSetup;
-	    try {
-	        newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        return;
-	    }
-	    this.setDbSetup(newSetup);
-	    this.notifyAllDbSetupListeners(null);
-	} catch (Exception e) {
-	    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
-	    throw new RuntimeException(e);
-	}
+            if (null == propertiesFile) {
+                throw new IllegalStateException("null == propertiesFile");
+            }
+            this.setPropertiesFileOnDisplay(Utils.file(jComboBoxPropertiesFiles.getSelectedItem().toString()));
+            DbSetup newSetup;
+            try {
+                newSetup = DbSetupBuilder.loadFromPropertiesFile(propertiesFile).build();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+            this.setDbSetup(newSetup);
+            this.notifyAllDbSetupListeners(null);
+        } catch (Exception e) {
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
+            throw new RuntimeException(e);
+        }
     }//GEN-LAST:event_jButtonLoadActionPerformed
 
     @UIEffect
@@ -604,11 +605,11 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             chooser.setCurrentDirectory(parentFile);
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            this.setPropertiesFile(chooser.getSelectedFile());
+            this.setPropertiesFileOnDisplay(chooser.getSelectedFile());
         }
     }//GEN-LAST:event_jButtonBrowseActionPerformed
 
-     private volatile @MonotonicNonNull  String lastResourceDirSet = null;
+    private volatile @MonotonicNonNull String lastResourceDirSet = null;
 
     @UIEffect
     private void jComboBoxResourceDirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxResourceDirActionPerformed
@@ -676,21 +677,21 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @UIEffect
     private void jButtonLoadExternalDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLoadExternalDirectoryActionPerformed
         try {
-	    loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
-	} catch (IOException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+            loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_jButtonLoadExternalDirectoryActionPerformed
 
     @UIEffect
     private void jTextFieldQueriesDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextFieldQueriesDirectoryActionPerformed
         try {
-	    loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
-	} catch (IOException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+            loadExternalQueriesDirectory(Utils.file(jTextFieldQueriesDirectory.getText()));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_jTextFieldQueriesDirectoryActionPerformed
 
     private XFutureVoid loadExternalQueriesDirectory(File f) {
@@ -699,6 +700,20 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             queriesMap
                     = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
             return loadQueriesMap(queriesMap, true, filename);
+        } catch (IOException ex) {
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @UIEffect
+    private void loadExternalQueriesDirectoryOnDisplay(File f) {
+        assert SwingUtilities.isEventDispatchThread();
+        try {
+            String filename = f.getCanonicalPath();
+            queriesMap
+                    = DbSetupBuilder.readQueriesDirectory(f.getAbsolutePath());
+            loadQueriesMapOnDisplay(queriesMap, true, filename);
         } catch (IOException ex) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -721,7 +736,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     @SuppressWarnings("WeakerAccess")
     @Override
     public XFutureVoid setDbSetup(DbSetup setup) {
-        List<XFutureVoid> localFutures = new ArrayList<>();
         try {
             if (null == setup) {
                 throw new IllegalArgumentException("setup == null");
@@ -730,55 +744,108 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 this.connected = false;
                 throw new IllegalArgumentException("setup.getDbType() == " + setup.getDbType());
             }
-            localFutures.add(debugCachedCheckBox.setSelected(setup.isDebug()));
             updatingFromDbSetup = true;
             DbType dbtype = setup.getDbType();
-            if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
-                localFutures.add(dbTypeCachedComboBox.setSelectedItem(dbtype));
-            }
             String host = setup.getHost();
-            if (!Objects.equals(host, dbHostCachedTextField.getText())) {
-                localFutures.add(dbHostCachedTextField.setText(setup.getHost()));
-            }
             int port = setup.getPort();
-            localFutures.add(dbPortCachedTextField.setText(Integer.toString(port)));
             int loginTimeout = setup.getLoginTimeout();
-            localFutures.add(setLoginTimeout(loginTimeout));
             char newpasswd[] = setup.getDbPassword();
-            localFutures.add(setDbPassword(newpasswd));
+
             String user = setup.getDbUser();
-            localFutures.add(dbUserCachedTextField.setText(user));
             String dbname = setup.getDbName();
-            localFutures.add(dbNameCachedTextField.setText(dbname));
             boolean newConnectedState = setup.isConnected();
             this.connected = newConnectedState;
-
-            localFutures.add(setDbConnectedState(newConnectedState));
             boolean internal = setup.isInternalQueriesResourceDir();
-            localFutures.add(setInternalQueriesDir(internal));
             String queryDir = setup.getQueriesDir();
             boolean queriesMapReloaded = false;
-            if (null != queryDir) {
-                if (internal) {
-                    lastResourceDirSet = queryDir;
-                    localFutures.add(resourceDirCachedComboBox.setSelectedItem(queryDir));
-                    updateResDirSuffix(queryDir);
-                    localFutures.add(updateQueriesDir());
-                    queriesMapReloaded = true;
-                } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
-                    localFutures.add(loadExternalQueriesDirectory(Utils.file(queryDir)));
-                    queriesMapReloaded = true;
-                }
-            }
+
             String startScript = setup.getStartScript();
-            if (startScript != null && startScript.length() > 0) {
-                localFutures.add(startScriptCachedTextField.setText(startScript));
-            }
-            if (!queriesMapReloaded) {
-                Map<DbQueryEnum, DbQueryInfo> localQueriesMap = setup.getQueriesMap();
-                if (null != localQueriesMap) {
-                    localFutures.add(loadQueriesMap(localQueriesMap, false, ""));
+
+            final boolean debug = setup.isDebug();
+            if (SwingUtilities.isEventDispatchThread()) {
+                if (!queriesMapReloaded) {
+                    Map<DbQueryEnum, DbQueryInfo> localQueriesMap = setup.getQueriesMap();
+                    if (null != localQueriesMap) {
+                        loadQueriesMapOnDisplay(localQueriesMap, false, "");
+                    }
                 }
+                setInternalQueriesDirOnDisplay(internal);
+                debugCachedCheckBox.setSelectedOnDisplay(debug);
+                if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
+                    dbTypeCachedComboBox.setSelectedItemOnDisplay(dbtype);
+                }
+                if (!Objects.equals(host, dbHostCachedTextField.getText())) {
+                    dbHostCachedTextField.setTextOnDisplay(setup.getHost());
+                }
+                if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
+                    dbTypeCachedComboBox.setSelectedItemOnDisplay(dbtype);
+                }
+                dbPortCachedTextField.setTextOnDisplay(Integer.toString(port));
+                setDbPasswordOnDisplay(newpasswd);
+                setLoginTimeoutOnDisplay(loginTimeout);
+                dbUserCachedTextField.setTextOnDisplay(user);
+                dbNameCachedTextField.setTextOnDisplay(dbname);
+                setDbConnectedStateOnDisplay(newConnectedState);
+                if (startScript != null && startScript.length() > 0) {
+                    startScriptCachedTextField.setTextOnDisplay(startScript);
+                }
+                if (null != queryDir) {
+                    if (internal) {
+                        lastResourceDirSet = queryDir;
+                        resourceDirCachedComboBox.setSelectedItemOnDisplay(queryDir);
+                        updateResDirSuffixOnDisplay(queryDir);
+                        updateQueriesDirOnDisplay();
+                        queriesMapReloaded = true;
+                    } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
+                        final File queryDirFile = Utils.file(queryDir);
+                        loadExternalQueriesDirectoryOnDisplay(queryDirFile);
+                        queriesMapReloaded = true;
+                    }
+                }
+                return XFutureVoid.completedFuture();
+            } else {
+                List<XFutureVoid> localFutures = new ArrayList<>();
+
+                if (!queriesMapReloaded) {
+                    Map<DbQueryEnum, DbQueryInfo> localQueriesMap = setup.getQueriesMap();
+                    if (null != localQueriesMap) {
+                        localFutures.add(loadQueriesMap(localQueriesMap, false, ""));
+                    }
+                }
+                localFutures.add(setInternalQueriesDir(internal));
+                localFutures.add(debugCachedCheckBox.setSelected(debug));
+                if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
+                    localFutures.add(dbTypeCachedComboBox.setSelectedItem(dbtype));
+                }
+                if (!Objects.equals(host, dbHostCachedTextField.getText())) {
+                    localFutures.add(dbHostCachedTextField.setText(setup.getHost()));
+                }
+                if (!Objects.equals(dbtype, dbTypeCachedComboBox.getSelectedItem())) {
+                    localFutures.add(dbTypeCachedComboBox.setSelectedItem(dbtype));
+                }
+                localFutures.add(dbPortCachedTextField.setText(Integer.toString(port)));
+                localFutures.add(setDbPassword(newpasswd));
+                localFutures.add(setLoginTimeout(loginTimeout));
+                localFutures.add(dbUserCachedTextField.setText(user));
+                localFutures.add(dbNameCachedTextField.setText(dbname));
+                localFutures.add(setDbConnectedState(newConnectedState));
+                if (startScript != null && startScript.length() > 0) {
+                    localFutures.add(startScriptCachedTextField.setText(startScript));
+                }
+                if (null != queryDir) {
+                    if (internal) {
+                        lastResourceDirSet = queryDir;
+                        localFutures.add(resourceDirCachedComboBox.setSelectedItem(queryDir));
+                        localFutures.add(updateResDirSuffix(queryDir));
+                        localFutures.add(updateQueriesDir());
+                        queriesMapReloaded = true;
+                    } else if (!Objects.equals(queryDir, queriesDirectoryCachedTextField.getText())) {
+                        final File queryDirFile = Utils.file(queryDir);
+                        localFutures.add(loadExternalQueriesDirectory(queryDirFile));
+                        queriesMapReloaded = true;
+                    }
+                }
+                return XFutureVoid.allOf(localFutures);
             }
         } catch (IOException ex) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -786,7 +853,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         } finally {
             updatingFromDbSetup = false;
         }
-        return XFutureVoid.allOf(localFutures);
     }
 
     @SafeEffect
@@ -797,6 +863,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void setInternalQueriesDirOnDisplay(boolean internal) {
+        assert SwingUtilities.isEventDispatchThread();
+        resourceDirSelected = internal;
         if (internal != this.jRadioButtonResourceDir.isSelected()) {
             jRadioButtonResourceDir.setSelected(internal);
         }
@@ -812,7 +880,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void setDbConnectedStateOnDisplay(boolean newConnectedState) {
-        //noinspection DoubleNegation
+        assert SwingUtilities.isEventDispatchThread();
         if (jButtonConnectDB.isEnabled() != (!newConnectedState)) {
             this.jButtonConnectDB.setEnabled(!newConnectedState);
         }
@@ -829,6 +897,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void setDbPasswordOnDisplay(char[] newpasswd) {
+        assert SwingUtilities.isEventDispatchThread();
+        passwd = newpasswd;
         char curpasswd[] = jPasswordFieldDBPassword.getPassword();
         if (!Arrays.equals(curpasswd, newpasswd)) {
             this.jPasswordFieldDBPassword.setText(new String(newpasswd));
@@ -842,6 +912,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void setLoginTimeoutOnDisplay(int loginTimeout) {
+        assert SwingUtilities.isEventDispatchThread();
         int curLoginTimeout = -99;
         try {
             curLoginTimeout = Integer.parseInt(jTextFieldDBLoginTimeout.getText());
@@ -855,6 +926,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void loadQueriesMapOnDisplay(Map<DbQueryEnum, DbQueryInfo> queriesMap, boolean externDir, String filename) {
+        assert SwingUtilities.isEventDispatchThread();
         if (!queriesDirectoryCachedTextField.getText().equals(filename)) {
             queriesDirectoryCachedTextField.setText(filename);
         }
@@ -864,8 +936,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         for (Map.Entry<DbQueryEnum, DbQueryInfo> entry : queriesMap.entrySet()) {
             model.addRow(new Object[]{entry.getKey(), entry.getValue().getOrigText()});
         }
-        autoResizeTableColWidths(jTableQueries);
-        autoResizeTableRowHeights(jTableQueries);
+        Utils.autoResizeTableColWidthsOnDisplay(jTableQueries);
+        Utils.autoResizeTableRowHeightsOnDisplay(jTableQueries);
     }
 
     private XFutureVoid loadQueriesMap(Map<DbQueryEnum, DbQueryInfo> queriesMap, boolean externDir, String filename) {
@@ -960,7 +1032,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     public XFutureVoid disconnect() {
         boolean was_disconnecting = disconnecting;
         disconnecting = true;
-        if(!this.connected) {
+        if (!this.connected) {
             return XFutureVoid.completedFuture();
         }
         return setDbSetup(new DbSetupBuilder().setup(this.getDbSetup()).connected(false).build())
@@ -1009,7 +1081,6 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 //    private XFutureVoid updateQueriesMap() {
 //        return aprsSystem.runOnDispatchThread(this::updateQueriesMapInternal);
 //    }
-
     @UIEffect
     private void updateQueriesMapInternal() {
         queriesMap = getQueriesMapInternal();
@@ -1032,7 +1103,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                 throw new IllegalStateException("Null queryObject in table on row " + i);
             }
             newMap.put((DbQueryEnum) keyObject,
-                    DbQueryInfo.parse(Objects.toString(queryObject),"jTableQueries.getValueAt("+i+",1)"));
+                    DbQueryInfo.parse(Objects.toString(queryObject), "jTableQueries.getValueAt(" + i + ",1)"));
         }
         return newMap;
     }
@@ -1051,11 +1122,12 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @SafeEffect
     private XFutureVoid updateQueriesDir() {
-        return aprsSystem.runOnDispatchThread(this::updateQueriesDirInternal);
+        return aprsSystem.runOnDispatchThread(this::updateQueriesDirOnDisplay);
     }
 
     @UIEffect
-    private void updateQueriesDirInternal() {
+    private void updateQueriesDirOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         queriesDir = getQueriesDirInternal();
         resourceDirSelected = jRadioButtonResourceDir.isSelected();
     }
@@ -1185,19 +1257,21 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
 
     @UIEffect
     private void addComboItemUniqueOnDisplay(String item) {
+        assert SwingUtilities.isEventDispatchThread();
         for (int i = 0; i < propertiesFilesCachedComboBox.getItemCount(); i++) {
             if (Objects.equals(propertiesFilesCachedComboBox.getItemAt(i), item)) {
                 return;
             }
         }
-        propertiesFilesCachedComboBox.addItem(item);
+        propertiesFilesCachedComboBox.addElementOnDisplay(item);
     }
 
     /**
      * Load the most recent settings file.
      */
     @UIEffect
-    public void loadRecentSettings() {
+    public void loadRecentSettingsOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             if (null != recentSettingsFile && recentSettingsFile.exists()) {
                 TreeSet<String> set = new TreeSet<>();
@@ -1207,7 +1281,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
                         set.add(line.trim());
                     }
                 }
-                propertiesFilesCachedComboBox.removeAllItems();
+                propertiesFilesCachedComboBox.removeAllElementsOnDisplay();
                 List<File> files = set.stream()
                         .map(File::new)
                         .filter(File::exists)
@@ -1228,26 +1302,28 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
     }
     private final File recentSettingsFile = initRecentSettingsFile();
 
-    private File initRecentSettingsFile()  {
-	try {
-	    return Utils.file(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
-	} catch (Exception e) {
-	    // TODO Auto-generated catch block
-	    Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
-	    throw new RuntimeException(e);
-	}
+    private File initRecentSettingsFile() {
+        try {
+            return Utils.file(Utils.getAprsUserHomeDir(), ".dbsetup_recent.txt");
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", e);
+            throw new RuntimeException(e);
+        }
     }
-    
+
     private @MonotonicNonNull File propertiesFile = null;
 
     private final CachedComboBox<String> propertiesFilesCachedComboBox;
 
-    public void setPropertiesFile(File f) {
+    @UIEffect
+    public void setPropertiesFileOnDisplay(File f) {
+        assert SwingUtilities.isEventDispatchThread();
         try {
             propertiesFile = f;
             String newPath = f.getCanonicalPath();
-            addComboItemUnique(newPath);
-            propertiesFilesCachedComboBox.setSelectedItem(newPath);
+            addComboItemUniqueOnDisplay(newPath);
+            propertiesFilesCachedComboBox.setSelectedItemOnDisplay(newPath);
             saveRecent(newPath);
         } catch (IOException iOException) {
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", iOException);
@@ -1272,7 +1348,8 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
      *
      * @return properties file
      */
-     public  @Nullable  File getPropertiesFile() {
+    public @Nullable
+    File getPropertiesFile() {
         return propertiesFile;
     }
     private volatile boolean savingProperties = false;

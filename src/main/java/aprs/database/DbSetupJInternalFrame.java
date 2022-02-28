@@ -26,6 +26,7 @@ import aprs.system.AprsSystem;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
+import javax.swing.SwingUtilities;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 
 /**
@@ -65,8 +66,9 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
      * Load the most recent settings file.
      */
     @UIEffect
-    public void loadRecentSettings() {
-        dbSetupJPanel1.loadRecentSettings();
+    public void loadRecentSettingsOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        dbSetupJPanel1.loadRecentSettingsOnDisplay();
     }
 
    
@@ -94,8 +96,10 @@ public class DbSetupJInternalFrame extends javax.swing.JInternalFrame {
      *
      * @param f new value of propertiesFile
      */
-    public void setPropertiesFile(File f) {
-        dbSetupJPanel1.setPropertiesFile(f);
+    @UIEffect
+    public void setPropertiesFileOnDisplay(File f) {
+        assert SwingUtilities.isEventDispatchThread();
+        dbSetupJPanel1.setPropertiesFileOnDisplay(f);
     }
 
     /**

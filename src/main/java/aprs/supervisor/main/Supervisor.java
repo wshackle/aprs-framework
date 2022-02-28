@@ -2699,24 +2699,24 @@ public class Supervisor {
                         logEvent("transfer : " + stealFor + " connectRobot(" + stealFromRobotName + ","
                                 + stealFromOrigCrclHost + "," + stealFromOrigCrclPort + ")" + " : srn=" + srn);
                         return stealFor.startAddPositionMap(pm);
-                        }, supervisorExecutorService)
+                    }, supervisorExecutorService)
                     .thenComposeAsyncToVoid("showSwitching" + " : srn=" + srn,
                             (Void ignore2) -> {
-                        for (String optString : transferrableOptions) {
-                            final ExecutorOption exOptOf = ExecutorOption.of(optString);
-                            if (stealFromOptionsCopy.containsKey(exOptOf)) {
-                                stealFor.setExecutorOption(exOptOf, stealFromOptionsCopy.get(exOptOf));
-                            }
-                        }
-                        stealFor.setToolHolderOperationEnabled(false);
-                        String stealForRpy = ExecutorOption.ForString
-                                .map(stealFor.getExecutorOptions())
-                                .get(ExecutorOption.ForString.RPY);
-                        logEvent("stealForRpy=" + stealForRpy);
-                        robotTaskMapPut(stealFromRobotName, stealFor);
-                        return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort)
-                                .thenCompose(() -> refreshRobotsTable());
-                    }, supervisorExecutorService)
+                                for (String optString : transferrableOptions) {
+                                    final ExecutorOption exOptOf = ExecutorOption.of(optString);
+                                    if (stealFromOptionsCopy.containsKey(exOptOf)) {
+                                        stealFor.setExecutorOption(exOptOf, stealFromOptionsCopy.get(exOptOf));
+                                    }
+                                }
+                                stealFor.setToolHolderOperationEnabled(false);
+                                String stealForRpy = ExecutorOption.ForString
+                                        .map(stealFor.getExecutorOptions())
+                                        .get(ExecutorOption.ForString.RPY);
+                                logEvent("stealForRpy=" + stealForRpy);
+                                robotTaskMapPut(stealFromRobotName, stealFor);
+                                return stealFor.connectRobot(stealFromRobotName, stealFromOrigCrclHost, stealFromOrigCrclPort)
+                                        .thenCompose(() -> refreshRobotsTable());
+                            }, supervisorExecutorService)
                     .thenComposeAsyncToVoid("showSwitching" + " : srn=" + srn,
                             (Void ignore2) -> {
                                 return showMessageFullScreen("Switching to \n" + stealFromRobotName, 80.0f,
@@ -3290,7 +3290,11 @@ public class Supervisor {
         }
         if (firstEventTime > 0) {
             updateRunningTime();
-            startUpdateRunningTimeTimer();
+            if (SwingUtilities.isEventDispatchThread()) {
+                startUpdateRunningTimeTimerOnDisplay();
+            } else {
+                startUpdateRunningTimeTimer();
+            }
         }
         String timeString = getTimeString(time);
         if (null == logPrintStream) {
@@ -3319,18 +3323,29 @@ public class Supervisor {
         }
     }
 
-    private void startUpdateRunningTimeTimer() {
+    private XFutureVoid startUpdateRunningTimeTimer() {
+        if (closing) {
+            return XFutureVoid.completedFuture();
+        }
+        if (runTimeTimer == null) {
+            return runOnDispatchThread(() -> {
+                startUpdateRunningTimeTimerOnDisplay();
+            });
+        } else {
+            return XFutureVoid.completedFuture();
+        }
+    }
+
+    @UIEffect
+    private void startUpdateRunningTimeTimerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         if (closing) {
             return;
         }
         if (runTimeTimer == null) {
-            runOnDispatchThread(() -> {
-                if (runTimeTimer == null) {
-                    Timer newRunTimeTimer = new Timer(2000, x -> updateRunningTime());
-                    newRunTimeTimer.start();
-                    runTimeTimer = newRunTimeTimer;
-                }
-            });
+            Timer newRunTimeTimer = new Timer(2000, x -> updateRunningTime());
+            newRunTimeTimer.start();
+            runTimeTimer = newRunTimeTimer;
         }
     }
 
@@ -3425,7 +3440,12 @@ public class Supervisor {
             return XFutureVoid.completedFuture();
         }
         logEvents.add(eventInfo);
-        return submitDisplayConsumer(logEventsConsumer, logEvents);
+        if (SwingUtilities.isEventDispatchThread()) {
+            logEventsConsumer.accept(logEvents);
+            return XFutureVoid.completedFuture();
+        } else {
+            return submitDisplayConsumer(logEventsConsumer, logEvents);
+        }
     }
 
     private int getToggleBlockerMapSize() {
@@ -4284,7 +4304,7 @@ public class Supervisor {
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
         }
-        stopRunTimTimer();
+        stopRunTimeTimer();
         stopColorTextReader();
         closeAllAprsSystems();
         if (null != aprsSystems) {
@@ -6821,7 +6841,7 @@ public class Supervisor {
                             MultiLineStringJPanel.showText(err);
                         }
                     }
-                    setIconImage(IconImages.ERROR_IMAGE);
+                    setIconImageOnDisplay(IconImages.ERROR_IMAGE);
                 });
             } else if (count < 5) {
                 System.err.println("displayJFrame = " + displayJFrame);
@@ -6859,7 +6879,7 @@ public class Supervisor {
                             MultiLineStringJPanel.showException(throwable, trace);
                         }
                     }
-                    setIconImage(IconImages.ERROR_IMAGE);
+                    setIconImageOnDisplay(IconImages.ERROR_IMAGE);
                     if (pauseOnError) {
                         System.err.println("pauseOnError = " + pauseOnError);
                         pause();
@@ -7111,7 +7131,7 @@ public class Supervisor {
         }
         runOnDispatchThread(() -> {
             if (logEventErrCount.get() == 0) {
-                setIconImage(IconImages.DISCONNECTED_IMAGE);
+                setIconImageOnDisplay(IconImages.DISCONNECTED_IMAGE);
             }
         });
     }
@@ -8157,7 +8177,7 @@ public class Supervisor {
             Thread.dumpStack();
         }
         logEvent("pause");
-        stopRunTimTimer();
+        stopRunTimeTimer();
         completeResumeFuture();
         int count = pauseCount.incrementAndGet();
         setPauseCount(count);
@@ -8168,19 +8188,21 @@ public class Supervisor {
         setTitleMessage("Paused");
         if (logEventErrCount.get() == 0) {
             runOnDispatchThread(() -> {
-                setIconImage(IconImages.DISCONNECTED_IMAGE);
+                setIconImageOnDisplay(IconImages.DISCONNECTED_IMAGE);
             });
         }
     }
 
-    private void stopRunTimTimer() {
+    private XFutureVoid stopRunTimeTimer() {
         if (null != runTimeTimer) {
-            runOnDispatchThread(this::stopRunTimTimerOnDisplay);
+            return runOnDispatchThread(this::stopRunTimeTimerOnDisplay);
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
     @UIEffect
-    private void stopRunTimTimerOnDisplay() {
+    private void stopRunTimeTimerOnDisplay() {
         if (null != runTimeTimer) {
             runTimeTimer.stop();
             runTimeTimer = null;
@@ -8674,7 +8696,13 @@ public class Supervisor {
         if (!keepDisabled) {
             clearStealingRobotsFlag();
         }
-        stopRunTimTimer();
+        final XFutureVoid initFuture;
+        if(SwingUtilities.isEventDispatchThread()) {
+            stopRunTimeTimerOnDisplay();
+            initFuture = XFutureVoid.completedFuture();
+        } else {
+            initFuture = stopRunTimeTimer();
+        }
         final StackTraceElement immediateAbortAllTrace[] = Thread.currentThread().getStackTrace();
         this.lastImmediateAbortAllTrace = immediateAbortAllTrace;
         final XFuture<?> lastFutureReturnedFinal = lastFutureReturned;
@@ -8689,9 +8717,13 @@ public class Supervisor {
             cancelAll(true);
         }
         XFutureVoid abortFutures[] = new XFutureVoid[aprsSystems.size()];
+        XFutureVoid xfv = initFuture;
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystem = aprsSystems.get(i);
-            abortFutures[i] = aprsSystem.immediateAbort();
+            XFutureVoid nextXfv = 
+                     xfv.thenComposeAsyncToVoid(() -> aprsSystem.immediateAbort(),supervisorExecutorService);
+            abortFutures[i] = nextXfv;
+            xfv = nextXfv;
         }
         XFutureVoid allImmediateAbortFutures = XFutureVoid
                 .allOfWithName("immediateAbortAll(" + comment + ").allOf(abortFutures)", abortFutures);
@@ -8707,7 +8739,7 @@ public class Supervisor {
     synchronized XFutureVoid publicReturnRobotStep2(String comment, boolean skipLog) {
         incrementAndGetAbortCount();
         clearStealingRobotsFlag();
-        stopRunTimTimer();
+        stopRunTimeTimer();
         final StackTraceElement immediateAbortAllTrace[] = Thread.currentThread().getStackTrace();
         this.lastImmediateAbortAllTrace = immediateAbortAllTrace;
         final XFuture<?> lastFutureReturnedFinal = lastFutureReturned;
@@ -8750,7 +8782,7 @@ public class Supervisor {
                     logEvent("immediateAbort : " + comment);
                 }
                 setAbortTimeCurrent();
-                stopRunTimTimer();
+                stopRunTimeTimer();
             });
         } else {
             checkAllUniques();
@@ -8758,7 +8790,7 @@ public class Supervisor {
                 logEvent("immediateAbort: " + comment);
             }
             setAbortTimeCurrent();
-            stopRunTimTimer();
+            stopRunTimeTimer();
             return XFutureVoid.completedFuture();
         }
     }
@@ -8930,7 +8962,7 @@ public class Supervisor {
         }
         return runOnDispatchThread(() -> {
             if (logEventErrCount.get() == 0) {
-                setIconImage(IconImages.BASE_IMAGE);
+                setIconImageOnDisplay(IconImages.BASE_IMAGE);
             }
         });
     }
@@ -9007,12 +9039,22 @@ public class Supervisor {
 
     private @Nullable File setupFile;
 
-    public void setTitleMessage(String message) {
+    public XFutureVoid setTitleMessage(String message) {
         if (null != displayJFrame) {
-            displayJFrame.setTitleMessage(message, this.setupFile);
+            return displayJFrame.setTitleMessage(message, this.setupFile);
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
+    @UIEffect
+    public void setTitleMessageOnDisplay(String message) {
+        assert  SwingUtilities.isEventDispatchThread();
+        if (null != displayJFrame) {
+            displayJFrame.setTitleMessageOnDisplay(message, this.setupFile);
+        } 
+    }
+    
     /**
      * Set the value of setupFile
      *
@@ -9660,7 +9702,7 @@ public class Supervisor {
             String blockerName = "showSafeAbortComplete" + showSafeAbortCount.incrementAndGet();
             AprsSystem systems[] = aprsSystems.toArray(new AprsSystem[0]);
             XFuture<LockInfo> f = disallowToggles(blockerName, systems);
-            return f.thenComposeAsyncToVoid(x -> displayJFrameLocal.showSafeAbortComplete(),supervisorExecutorService)
+            return f.thenComposeAsyncToVoid(x -> displayJFrameLocal.showSafeAbortComplete(), supervisorExecutorService)
                     .alwaysComposeToVoid(() -> allowTogglesInternal(blockerName, false, systems));
         } else {
             return XFutureVoid.completedFuture();
@@ -10022,7 +10064,7 @@ public class Supervisor {
                             supervisorExecutorService);
         }
         return lastFuture
-                .thenComposeAsyncToVoid("completeLoadSetup(" + f + ")", () -> completeLoadSetupFile(f),supervisorExecutorService);
+                .thenComposeAsyncToVoid("completeLoadSetup(" + f + ")", () -> completeLoadSetupFile(f), supervisorExecutorService);
     }
 
     private XFutureVoid completeLoadSetupFile(File f) {
@@ -10042,7 +10084,7 @@ public class Supervisor {
                     throw new RuntimeException(exception);
                 }
                 return runOnDispatchThread(this::syncToolsFromRobots);
-            },supervisorExecutorService);
+            }, supervisorExecutorService);
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
             throw new RuntimeException(ex);
@@ -10104,7 +10146,7 @@ public class Supervisor {
             }
         }
         return XFutureVoid.allOfWithName("allof" + name, l.toArray(new XFutureVoid[0]))
-                .thenComposeAsyncToVoid(() -> clearWayToHoldersStep2(requester, holderName),supervisorExecutorService)
+                .thenComposeAsyncToVoid(() -> clearWayToHoldersStep2(requester, holderName), supervisorExecutorService)
                 .peekException((Throwable throwable) -> {
                     if (null != throwable) {
                         System.out.println("throwable = " + throwable);
@@ -10284,7 +10326,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                   @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                     @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
@@ -10634,7 +10676,8 @@ public class Supervisor {
     }
 
     @UIEffect
-    public void setIconImage(Image image) {
+    public void setIconImageOnDisplay(Image image) {
+        assert SwingUtilities.isEventDispatchThread();
         if (null != displayJFrame) {
             displayJFrame.setIconImage(image);
         }

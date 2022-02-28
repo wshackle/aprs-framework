@@ -79,7 +79,7 @@ public class CachedComboBox<E> {
     }
 
     @UIEffect
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public CachedComboBox(Class<E> eClass, JComboBox<E> comboBox) {
         this.comboBox = comboBox;
         this.eClass = eClass;
@@ -104,7 +104,7 @@ public class CachedComboBox<E> {
         }
         Utils.runOnDispatchThread(() -> combobBoxSetItems(inItems));
     }
-    
+
     @UIEffect
     public void setItemsOnDisplay(E[] inItems) {
         assert SwingUtilities.isEventDispatchThread();
@@ -116,7 +116,6 @@ public class CachedComboBox<E> {
         }
         combobBoxSetItems(inItems);
     }
-    
 
     @UIEffect
     private void combobBoxSetItems(E[] inItems) {
@@ -142,6 +141,24 @@ public class CachedComboBox<E> {
         return Utils.runOnDispatchThread(() -> comboBoxSetSelectedItem(item));
     }
 
+    @UIEffect
+    public void setSelectedItemOnDisplay(@Nullable E item) {
+        assert SwingUtilities.isEventDispatchThread();
+        if (null == item) {
+            selectedIndex = -1;
+        } else {
+            synchronized (this) {
+                for (int i = 0; i < items.length; i++) {
+                    if (Objects.equals(items[i], item)) {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+        comboBoxSetSelectedItem(item);
+    }
+
     public E getElementAt(int index) {
         return items[index];
     }
@@ -161,8 +178,9 @@ public class CachedComboBox<E> {
                 newItems[i] = items[i];
             }
             newItems[index] = element;
-            if (newItems.length - (index + 1) >= 0)
+            if (newItems.length - (index + 1) >= 0) {
                 System.arraycopy(items, index + 1 - 1, newItems, index + 1, newItems.length - (index + 1));
+            }
             if (selectedIndex > index) {
                 selectedIndex++;
             }
@@ -180,6 +198,19 @@ public class CachedComboBox<E> {
             this.items = newItems;
         }
         Utils.runOnDispatchThread(() -> comboBoxAddElment(element));
+    }
+
+    @SuppressWarnings("unchecked")
+    @UIEffect
+    public void addElementOnDisplay(E element) {
+        assert SwingUtilities.isEventDispatchThread();
+        synchronized (this) {
+            E newItems[] = (E[]) Array.newInstance(eClass, items.length + 1);
+            System.arraycopy(items, 0, newItems, 0, items.length);
+            newItems[items.length] = element;
+            this.items = newItems;
+        }
+        comboBoxAddElment(element);
     }
 
     @UIEffect
@@ -208,6 +239,17 @@ public class CachedComboBox<E> {
             this.selectedIndex = -1;
         }
         Utils.runOnDispatchThread(this::comboBoxRemoveAllElements);
+    }
+
+    @UIEffect
+    public void removeAllElementsOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        E newItems[] = (E[]) Array.newInstance(eClass, 0);
+        synchronized (this) {
+            this.items = newItems;
+            this.selectedIndex = -1;
+        }
+        comboBoxRemoveAllElements();
     }
 
     @UIEffect

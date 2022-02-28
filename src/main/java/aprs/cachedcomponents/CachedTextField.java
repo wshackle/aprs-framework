@@ -65,6 +65,13 @@ public class CachedTextField extends CachedComponentBase {
         this.text = newText;
         return runOnDispatchThread(() -> setTextComponentText(newText));
     }
+    
+    @UIEffect
+    public void setTextOnDisplay(String newText) {
+        assert SwingUtilities.isEventDispatchThread();
+        this.text = newText;
+        setTextComponentText(newText);
+    }
 
     private static final Logger LOGGER = Logger.getLogger(CachedTextField.class.getName());
 

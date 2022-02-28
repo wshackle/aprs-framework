@@ -8261,7 +8261,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
     private final CachedTable positionCacheCachedTable;
 
+    @UIEffect
     private void updatePositionCacheTableOnDisplay(Map<String, PoseType> map) {
+        assert SwingUtilities.isEventDispatchThread();
         positionCacheCachedTable.setRowCount(0);
         for (Map.Entry<String, PoseType> entry : map.entrySet()) {
             PoseType pose = entry.getValue();
@@ -8282,7 +8284,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 }
             }
         }
-        Utils.autoResizeTableColWidths(positionCacheCachedTable);
+        Utils.autoResizeTableColWidthsOnDisplay(positionCacheCachedTable.getjTable());
     }
 
     private boolean lastReplanAfterCrclBlock = false;

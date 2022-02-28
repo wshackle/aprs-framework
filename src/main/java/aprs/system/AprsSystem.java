@@ -4630,7 +4630,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 startForceTorqueSimOnDisplay();
             }
             if (isShowDatabaseSetupStartupSelected() && (!skipCreateDbSetupFrame)) {
-                createDbSetupFrame();
+                createDbSetupFrameOnDisplay();
             }
             if (isShowDatabaseSetupStartupSelected()) {
                 showDatabaseSetupWindowOnDisplay();
@@ -4888,7 +4888,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         createDbSetupFrame();
         DbSetupJInternalFrame dbSetupFrame = this.dbSetupJInternalFrame;
         if (null != dbSetupFrame) {
-            dbSetupFrame.setPropertiesFile(propertiesFile);
+            dbSetupFrame.setPropertiesFileOnDisplay(propertiesFile);
         }
     }
 
@@ -5578,7 +5578,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null == dbSetupJInternalFrame) {
             DbSetupJInternalFrame newDbSetupJInternalFrame = new DbSetupJInternalFrame(this);
             addInternalFrame(newDbSetupJInternalFrame);
-            newDbSetupJInternalFrame.loadRecentSettings();
+            newDbSetupJInternalFrame.loadRecentSettingsOnDisplay();
             newDbSetupJInternalFrame.getDbSetupPublisher().addDbSetupListener(dbSetupListener);
             DbSetup dbs = this.dbSetup;
             if (null != dbs) {
@@ -5705,7 +5705,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //            if (newPddlPlannerJInternalFrame == null) {
 //                newPddlPlannerJInternalFrame = new PddlPlannerJInternalFrame();
 //            }
-//            newPddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile());
+//            newPddlPlannerJInternalFrame.setPropertiesFileOnDisplay(pddlPlannerPropertiesFile());
 //            newPddlPlannerJInternalFrame.loadPropertiesOnDisplay();
 //            newPddlPlannerJInternalFrame.setActionsToCrclJInternalFrame1(executorJInternalFrame1);
 //            addInternalFrame(newPddlPlannerJInternalFrame);
@@ -10333,7 +10333,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != dbSetup) {
             File dbPropsFile = Utils.file(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
             if (null != dbSetupJInternalFrame) {
-                dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
+                dbSetupJInternalFrame.setPropertiesFileOnDisplay(dbPropsFile);
             }
             DbSetupBuilder.savePropertiesFile(dbPropsFile, dbSetup);
         }
@@ -10498,7 +10498,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
         propertiesFileBaseString = base;
 //        if (null != this.pddlPlannerJInternalFrame) {
-//            this.pddlPlannerJInternalFrame.setPropertiesFile(pddlPlannerPropertiesFile(propertiesDirectory, base));
+//            this.pddlPlannerJInternalFrame.setPropertiesFileOnDisplay(pddlPlannerPropertiesFile(propertiesDirectory, base));
 //        }
         if (null != this.forceTorqueSimJInternalFrame) {
             this.forceTorqueSimJInternalFrame
@@ -10537,7 +10537,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
         if (null != dbSetupJInternalFrame) {
             File dbPropsFile = Utils.file(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
-            dbSetupJInternalFrame.setPropertiesFile(dbPropsFile);
+            dbSetupJInternalFrame.setPropertiesFileOnDisplay(dbPropsFile);
         }
         if (null != fanucServerProvider) {
             fanucServerProvider

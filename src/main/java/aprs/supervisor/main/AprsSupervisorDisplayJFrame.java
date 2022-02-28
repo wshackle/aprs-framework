@@ -4204,11 +4204,25 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
             interactivStartFuture = null;
         }
-        supervisorLocal.setIconImage(IconImages.BASE_IMAGE);
-        supervisorLocal.setTitleMessage("starting action ...");
+
         MultiLineStringJPanel.setIgnoreForceShow(true);
         MultiLineStringJPanel.closeAllPanels();
-        XFutureVoid fullAbortFuture = fullAbortAll();
+        final XFutureVoid fullAbortFuture;
+        if (SwingUtilities.isEventDispatchThread()) {
+            supervisorLocal.setIconImageOnDisplay(IconImages.BASE_IMAGE);
+            supervisorLocal.setTitleMessageOnDisplay("starting action ...");
+            fullAbortFuture = fullAbortAll();
+        } else {
+            final XFutureVoid setTitleMessageFuture
+                    = Utils.runOnDispatchThread(() -> {
+                        supervisorLocal.setIconImageOnDisplay(IconImages.BASE_IMAGE);
+                        supervisorLocal.setTitleMessageOnDisplay("starting action ...");
+                    });
+            fullAbortFuture
+                    = setTitleMessageFuture
+                            .thenComposeAsyncToVoid(() -> fullAbortAll(),
+                                    supervisorLocal.getSupervisorExecutorService());
+        }
         XFuture<LockInfo> disallowTogglesFuture
                 = fullAbortFuture
                         .alwaysComposeAsyncToOutput("interactiveStart.disableToggles",
@@ -5505,7 +5519,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         if (null != supervisor) {
             return supervisor.enableAllRobotsOnSupervisorService()
-                    .thenComposeAsyncToVoid(this::completeEnableAllRobots,supervisor.getSupervisorExecutorService());
+                    .thenComposeAsyncToVoid(this::completeEnableAllRobots, supervisor.getSupervisorExecutorService());
         }
         return completeEnableAllRobots();
     }
@@ -5666,7 +5680,13 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         this.jMenuItemSaveSetup.setEnabled(enabled);
     }
 
-    public void setTitleMessage(String message, @Nullable File currentSetupFile) {
+    public XFutureVoid setTitleMessage(String message, @Nullable File currentSetupFile) {
+        return Utils.runOnDispatchThread(() -> setTitleMessageOnDisplay(message, currentSetupFile));
+    }
+
+    @UIEffect
+    public void setTitleMessageOnDisplay(String message, @Nullable File currentSetupFile) {
+        assert SwingUtilities.isEventDispatchThread();
         if (null != currentSetupFile) {
             String path;
             try {
@@ -5679,9 +5699,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 path = currentSetupFile.getName();
             }
             final String finalPath = path;
-            Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor : " + message + " :  setupFile=" + finalPath));
+            setTitle("Multi Aprs Supervisor : " + message + " :  setupFile=" + finalPath);
         } else {
-            Utils.runOnDispatchThread(() -> setTitle("Multi Aprs Supervisor : : " + message));
+            setTitle("Multi Aprs Supervisor : : " + message);
         }
     }
 

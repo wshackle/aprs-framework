@@ -683,7 +683,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 || lastSetOutputItemsInternalFuture.isDone()
                 || (now - lastSetOutputItemsInternalTime) > 500) {
             lastSetOutputItemsInternalTime = now;
-            XFutureVoid ret = submitDisplayConsumer(this::outputItemsListConsumer, items);
+            final XFutureVoid ret;
+            if(SwingUtilities.isEventDispatchThread()) {
+                this.outputItemsListConsumer(items);
+                ret = XFutureVoid.completedFuture();
+            } else {
+                ret = submitDisplayConsumer(this::outputItemsListConsumer, items);
+            }
             lastSetOutputItemsInternalFuture = ret;
             return ret;
         } else {
@@ -3016,7 +3022,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         if (simulated) {
             jTextFieldHost.setEditable(false);
             jTextFieldHost.setEnabled(false);
-            setupSimUpdateTimer();
+            setupSimUpdateTimerOnDisplay();
         } else {
             jTextFieldHost.setEditable(true);
             jTextFieldHost.setEnabled(true);
@@ -3844,7 +3850,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             if (null != visionSocketServer) {
                 publishCurrentItems();
                 if (jCheckBoxSimulated.isSelected() && !jCheckBoxSimulationUpdateAsNeeded.isSelected()) {
-                    setupSimUpdateTimer();
+                    setupSimUpdateTimerOnDisplay();
                 }
             }
         } else {
@@ -4134,7 +4140,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     @UIEffect
     private void jTextFieldSimulationUpdateTimeActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jTextFieldSimulationUpdateTimeActionPerformed
         setSimRefreshMillis(Integer.parseInt(jTextFieldSimulationUpdateTime.getText().trim()));
-        setupSimUpdateTimer();
+        setupSimUpdateTimerOnDisplay();
     }// GEN-LAST:event_jTextFieldSimulationUpdateTimeActionPerformed
 
     @UIEffect
@@ -4143,7 +4149,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         boolean simulated = jCheckBoxSimulated.isSelected();
         jTextFieldSimulationUpdateTime.setEditable(simulated && !simulationUpdateAsNeeded);
         jTextFieldSimulationUpdateTime.setEnabled(simulated && !simulationUpdateAsNeeded);
-        setupSimUpdateTimer();
+        setupSimUpdateTimerOnDisplay();
     }// GEN-LAST:event_jCheckBoxSimulationUpdateAsNeededActionPerformed
 
     @UIEffect
@@ -4634,11 +4640,24 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         if (simulationUpdateAsNeededCachedCheckBox.isSelected() || pauseCachedCheckBox.isSelected()) {
             return;
         }
-        runOnDispatchThread(this::setupSimUpdateTimerOnDisplay);
+        runOnDispatchThread(this::setupSimUpdateTimerInternal);
+    }
+    
+    @UIEffect
+    private void setupSimUpdateTimerOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
+        if (forceOutputFlag) {
+            return;
+        }
+        stopSimUpdateTimer();
+        if (simulationUpdateAsNeededCachedCheckBox.isSelected() || pauseCachedCheckBox.isSelected()) {
+            return;
+        }
+        setupSimUpdateTimerInternal();
     }
 
     @UIEffect
-    private void setupSimUpdateTimerOnDisplay() {
+    private void setupSimUpdateTimerInternal() {
         simUpdateTimer = new javax.swing.Timer(simRefreshMillis, this::simUpdateAction);
         simUpdateTimer.start();
     }

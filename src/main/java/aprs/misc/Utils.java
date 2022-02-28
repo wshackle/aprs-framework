@@ -464,7 +464,7 @@ public class Utils {
      * @param id new id for command.
      */
     public static void setCommandID(CRCLCommandType cmd, long id) {
-//        assert cmd.getCommandID() <= id : createAssertErrorString(cmd, id);
+        assert cmd.getCommandID() <= id : createAssertErrorString(cmd, id);
         cmd.setCommandID(id);
     }
 
