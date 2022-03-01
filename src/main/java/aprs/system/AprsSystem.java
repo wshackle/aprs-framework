@@ -5591,6 +5591,17 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
     }
 
+//    /**
+//     * Set the menu checkbox item to reflect the val of the whether the vision
+//     * system is connected. This will not cause the system to connect/disconnect
+//     * only to show the state the caller already knows.
+//     *
+//     * @param val of vision systems connected status to show
+//     */
+//    public XFutureVoid setShowVisionConnected(boolean val) {
+//        return connectVisionCheckBox.setSelected(val);
+//    }
+    
     /**
      * Set the menu checkbox item to reflect the val of the whether the vision
      * system is connected. This will not cause the system to connect/disconnect
@@ -5598,8 +5609,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      * @param val of vision systems connected status to show
      */
-    public void setShowVisionConnected(boolean val) {
-        connectVisionCheckBox.setSelected(val);
+    @UIEffect
+    public void setShowVisionConnectedOnDisplay(boolean val) {
+        assert SwingUtilities.isEventDispatchThread();
+        connectVisionCheckBox.setSelectedOnDisplay(val);
     }
 
     /**

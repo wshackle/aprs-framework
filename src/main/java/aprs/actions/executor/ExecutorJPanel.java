@@ -8024,17 +8024,17 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }
 
     @SuppressWarnings({"nullness", "guieffect"})
-    private void appendGenerateAbortLog(String type, int actionsSize, boolean reverse, int startingIndex,
+    private XFutureVoid appendGenerateAbortLog(String type, int actionsSize, boolean reverse, int startingIndex,
             int startSafeAbortRequestCount, int sectionNumber) {
         try {
             int count = appendGenerateAbortLogCount.incrementAndGet();
             if (null == aprsSystem || aprsSystem.isClosing()) {
-                return;
+                return XFutureVoid.completedFuture();
             }
             initGenerateAbortLogFile();
             File logFile = generateAbortLogFile;
             if (logFile == null) {
-                return;
+                return XFutureVoid.completedFuture();
             }
             String actionsFileName = getActionsFileString(reverse);
             final boolean initialRunningProgram = isRunningProgram();
@@ -8047,7 +8047,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
-            aprsSystem.runOnDispatchThread(() -> {
+            aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));
+            return aprsSystem.runOnDispatchThread(() -> {
                 try {
                     DefaultTableModel defaultTableLogModel = ((DefaultTableModel) jTableLog.getModel());
                     while (jTableLog.getRowCount() > maxAbortLogSize) {
@@ -8055,18 +8056,20 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     }
                     defaultTableLogModel.addRow(rowValues);
                     if (count % 50 == 1) {
-                        Utils.autoResizeTableColWidths(jTableLog);
+                        Utils.autoResizeTableColWidthsOnDisplay(jTableLog);
                     }
                 } catch (Exception e) {
                     Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", e);
+                    throw new RuntimeException(e);
                 }
             });
 
 //            println("rowValues = " + Arrays.toString(rowValues));
 //            println("generateAbortLogFile = " + generateAbortLogFile);
-            aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));
-        } catch (IOException ex) {
+            
+        } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -8221,7 +8224,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         setPddlLabelss(labelsCopy);
         setPddlTakenParts(takenPartNamesCopy);
         reloadPddlActions(readOnlyActionsList);
-        autoResizeTableColWidths(jTablePddlOutput);
+        autoResizeTableColWidthsOnDisplay(jTablePddlOutput);
     }
 
     private void logDebug(String string) {

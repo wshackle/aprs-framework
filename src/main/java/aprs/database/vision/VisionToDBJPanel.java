@@ -1229,7 +1229,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (isDebug()) {
             appendLogDisplay("\nupdateInfo(\n\t_list=" + visionList + ",\n\tline =" + line + "\n\t)\r\n");
         }
-        autoResizeTableColWidths(jTableFromVision);
+        Utils.autoResizeTableColWidthsOnDisplay(jTableFromVision);
     }
 
     @Override
@@ -1244,7 +1244,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         this.jLabelVisionStatus.setText(_val ? "CONNECTED" : "DISCONNECTED");
         this.jLabelVisionStatus.setBackground(_val ? Color.GREEN : Color.RED);
         if (null != aprsSystem) {
-            aprsSystem.setShowVisionConnected(_val);
+            aprsSystem.setShowVisionConnectedOnDisplay(_val);
         }
     }
 
@@ -2117,7 +2117,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         visionClientUpdateSingleUpdateListenersEmptyCount.incrementAndGet();
                     }
                     lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
-                    aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
+                    return aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 } else {
                     List<PhysicalItem> l = dpu.updateVisionList(visionListWithEmptySlots, addRepeatCounts, false);
                     List<PhysicalItem> trays
@@ -2132,8 +2132,10 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                     }
                     notifySingleUpdateListeners(l);
                     lastVisItemsData = Collections.unmodifiableList(new ArrayList<>(l));
-                    aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
+                    return aprsSystem.runOnDispatchThread(() -> this.updateInfoOnDisplay(l, line));
                 }
+            } else {
+                return XFutureVoid.completedFuture();
             }
         } catch (Exception exception) {
             println("line = " + line);
@@ -2152,7 +2154,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             lastUpdateTime = System.currentTimeMillis();
             updating = false;
         }
-        return XFutureVoid.completedFuture();
     }
 
     private void initDpuIfUsingCsvFiles() throws SQLException, NumberFormatException, IOException {
@@ -2184,7 +2185,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             visionClientLocal.addCountListener(l);
         }
         visionClientLocal.start(argsMap);
-        aprsSystem.runOnDispatchThread(this::finishConnectVision);
+        aprsSystem.runOnDispatchThread(this::finishConnectVisionOnDisplay);
     }
 
     private boolean ignoreLosingItemsLists = false;
@@ -2263,15 +2264,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         return aprsSystem;
     }
 
-    private void finishConnectVision() {
+    @UIEffect
+    private void finishConnectVisionOnDisplay() {
+        assert SwingUtilities.isEventDispatchThread();
         if (null != visionClient) {
             visionClient.setDebug(isDebug());
 //            visionClient.setAddRepeatCountsToDatabaseNames(this.jCheckBoxAddRepeatCountsToDatabaseNames.isSelected());
-            setVisionConnected(visionClient.isConnected());
+            setVisionConnectedOnDisplay(visionClient.isConnected());
         }
         updateTransformFromTable();
         if (null != aprsSystem && null != visionClient) {
-            aprsSystem.setShowVisionConnected(visionClient.isConnected());
+            aprsSystem.setShowVisionConnectedOnDisplay(visionClient.isConnected());
         }
     }
 

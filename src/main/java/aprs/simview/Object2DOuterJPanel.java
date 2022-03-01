@@ -5845,7 +5845,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             File csvFile = imageFileToCsvFile(f);
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
-            if (null != aprsSystem) {
+            if(SwingUtilities.isEventDispatchThread()) {
+                fileArrayDequeConsumer(fileArrayDeque, callerTrace);
+            } else if (null != aprsSystem) {
                 aprsSystem.submitDisplayConsumer(
                         (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,
                                 callerTrace),

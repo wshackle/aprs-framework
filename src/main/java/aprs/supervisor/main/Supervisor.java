@@ -6864,6 +6864,15 @@ public class Supervisor {
             return;
         }
         int count = logEventErrCount.incrementAndGet();
+        System.out.println("");
+        System.err.println("");
+        System.out.flush();
+        System.err.flush();
+        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "",throwable);
+        System.out.println("");
+        System.err.println("");
+        System.out.flush();
+        System.err.flush();
         Thread.dumpStack();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String err = throwable.toString();
