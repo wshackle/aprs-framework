@@ -114,10 +114,13 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         executorJPanel1.setPauseInsteadOfRecover(val);
     }
 
-    public void showPaused(boolean state) {
-        executorJPanel1.showPaused(state);
+    public XFutureVoid showPaused(boolean state) {
+        return executorJPanel1.showPaused(state);
     }
 
+    public void showPausedOnDisplay(boolean state) {
+        executorJPanel1.showPausedOnDisplay(state);
+    }
     public JMenu getToolMenu() {
         return executorJPanel1.getToolMenu();
     }

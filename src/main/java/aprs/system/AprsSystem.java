@@ -7991,28 +7991,31 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * Pause any actions currently being performed and set a state that will
      * cause future actions to wait until resume is called.
      */
-    public void pause() {
+    public XFutureVoid pause() {
         checkResuming();
         boolean badState = checkResuming();
 
-        privatInternalPause();
+        XFutureVoid ret = privatInternalPause();
         badState = badState || checkResuming();
         submitUpdateTitle();
         badState = badState || checkResuming();
+        
         if (Utils.arePlayAlertsEnabled()) {
-            runOnDispatchThread(Utils::PlayAlert2);
+            ret = ret.thenRunAsync(Utils::PlayAlert2,Utils.getDispatchThreadExecutorService());
         }
         badState = badState || checkResuming();
         if (badState) {
             throw new IllegalStateException("Attempt to pause while resuming:");
         }
+        return ret;
     }
 
     private volatile boolean pausing = false;
     private volatile @Nullable Thread pauseThread = null;
     private volatile StackTraceElement pauseTrace @Nullable []  = null;
 
-    private void privatInternalPause() {
+    private XFutureVoid privatInternalPause() {
+        XFutureVoid ret = XFutureVoid.completedFuture();
         logEvent("pause");
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPaused(true);
@@ -8049,13 +8052,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             }
             badState = badState || checkResuming();
             if (null != executorJInternalFrame1) {
-                executorJInternalFrame1.showPaused(true);
+               ret = ret.thenRunAsync(()-> executorJInternalFrame1.showPausedOnDisplay(true),Utils.getDispatchThreadExecutorService());
             }
             this.pauseCrclProgram();
             badState = badState || checkResuming();
             if (badState) {
                 throw new IllegalStateException("Attempt to pause while resuming");
             }
+            return ret;
         } finally {
             pausing = false;
             resuming = false;

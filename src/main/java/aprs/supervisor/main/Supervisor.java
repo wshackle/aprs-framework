@@ -6869,7 +6869,7 @@ public class Supervisor {
         System.err.println("");
         System.out.flush();
         System.err.flush();
-        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "",throwable);
+        Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", throwable);
         System.out.println("");
         System.err.println("");
         System.out.flush();
@@ -8177,10 +8177,11 @@ public class Supervisor {
         }
     }
 
-    public void pause() {
+    public XFutureVoid pause() {
+        XFutureVoid ret = new XFutureVoid(("Supervisor.pause"));
         for (AprsSystem aprsSys : aprsSystems) {
             if (aprsSys.isConnected() && !aprsSys.isPaused()) {
-                aprsSys.pause();
+                ret = XFutureVoid.allOf(ret, aprsSys.pause());
             }
         }
         if (debug) {
@@ -8197,10 +8198,11 @@ public class Supervisor {
         resumeFuture.set(new XFutureVoid("resume"));
         setTitleMessage("Paused");
         if (logEventErrCount.get() == 0) {
-            runOnDispatchThread(() -> {
-                setIconImageOnDisplay(IconImages.DISCONNECTED_IMAGE);
-            });
+            return ret = ret
+                    .thenRunAsync(() -> setIconImageOnDisplay(IconImages.DISCONNECTED_IMAGE),
+                        Utils.getDispatchThreadExecutorService());
         }
+        return ret;
     }
 
     private XFutureVoid stopRunTimeTimer() {
@@ -8707,7 +8709,7 @@ public class Supervisor {
             clearStealingRobotsFlag();
         }
         final XFutureVoid initFuture;
-        if(SwingUtilities.isEventDispatchThread()) {
+        if (SwingUtilities.isEventDispatchThread()) {
             stopRunTimeTimerOnDisplay();
             initFuture = XFutureVoid.completedFuture();
         } else {
@@ -8730,8 +8732,8 @@ public class Supervisor {
         XFutureVoid xfv = initFuture;
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystem = aprsSystems.get(i);
-            XFutureVoid nextXfv = 
-                     xfv.thenComposeAsyncToVoid(() -> aprsSystem.immediateAbort(),supervisorExecutorService);
+            XFutureVoid nextXfv
+                    = xfv.thenComposeAsyncToVoid(() -> aprsSystem.immediateAbort(), supervisorExecutorService);
             abortFutures[i] = nextXfv;
             xfv = nextXfv;
         }
@@ -9059,12 +9061,12 @@ public class Supervisor {
 
     @UIEffect
     public void setTitleMessageOnDisplay(String message) {
-        assert  SwingUtilities.isEventDispatchThread();
+        assert SwingUtilities.isEventDispatchThread();
         if (null != displayJFrame) {
             displayJFrame.setTitleMessageOnDisplay(message, this.setupFile);
-        } 
+        }
     }
-    
+
     /**
      * Set the value of setupFile
      *
@@ -9770,7 +9772,6 @@ public class Supervisor {
      */
     private void preCloseAllAprsSystems() {
         preClosing = true;
-        debugAction();
         System.out.println("preClosing = " + preClosing);
         List<AprsSystem> aprsSystemsCopy = new ArrayList<>(aprsSystems);
         for (AprsSystem aprsSystemInterface : aprsSystemsCopy) {
@@ -10337,7 +10338,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                     @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                       @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

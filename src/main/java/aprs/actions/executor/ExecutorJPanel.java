@@ -5405,12 +5405,18 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         aprsSystem.pauseCrclProgram();
     }
 
-    public void showPaused(boolean paused) {
-        aprsSystem.runOnDispatchThread(() -> showPausedOnDisplay(paused));
+    public XFutureVoid  showPaused(boolean paused) {
+        if(SwingUtilities.isEventDispatchThread()) {
+            showPausedOnDisplay(paused);
+            return XFutureVoid.completedFuture();
+        } else {
+            return aprsSystem.runOnDispatchThread(() -> showPausedOnDisplay(paused));
+        }
     }
 
     @UIEffect
-    private void showPausedOnDisplay(boolean paused) {
+    public void showPausedOnDisplay(boolean paused) {
+        assert SwingUtilities.isEventDispatchThread();
         jButtonDropTool.setEnabled(!paused);
         jButtonLookFor.setEnabled(!paused);
         jButtonPickupTool.setEnabled(!paused);

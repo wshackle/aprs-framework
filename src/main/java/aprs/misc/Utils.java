@@ -633,7 +633,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static SwingFuture<Void> runOnDispatchThreadWithCatch(final RunnableWithThrow r) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<Void> ret = new SwingFuture<>("runOnDispatchThreadWithCatch");
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String callerString = trace[1].toString();
@@ -803,7 +803,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static XFutureVoid runOnDispatchThread(String name, final @UI Runnable r) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         XFutureVoid ret = new XFutureVoid(name);
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         String callerString = trace[2].toString();
@@ -887,7 +887,7 @@ public class Utils {
      */
     @SuppressWarnings("guieffect")
     public static <R> SwingFuture<R> supplyOnDispatchThread(final UiSupplier<R> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         SwingFuture<R> ret = new SwingFuture<>("supplyOnDispatchThread");
         if (isEventDispatchThread() || !CRCLUtils.isGraphicsEnvironmentHeadless()) {
             try {
@@ -940,7 +940,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static <R> XFuture<R> composeOnDispatchThread(final UiSupplier<? extends XFuture<R>> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         if (isEventDispatchThread()) {
             return s.get();
         } else {
@@ -964,7 +964,7 @@ public class Utils {
      */
     @SuppressWarnings({"nullness", "guieffect"})
     public static XFutureVoid composeToVoidOnDispatchThread(final UiSupplier<? extends XFutureVoid> s) {
-        assert !SwingUtilities.isEventDispatchThread();
+//        assert !SwingUtilities.isEventDispatchThread();
         if (isEventDispatchThread()) {
             return s.get();
         } else {
