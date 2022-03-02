@@ -6541,6 +6541,7 @@ public class Supervisor {
                             logEvent("checkMaxCycles hit in allowTogglesInternal " + blockerName);
                         });
                     } else if (((sys.getRobotName() == null || !sysConnected) && !keepDisabled) || sysAborting) {
+                        debugAction();
                         System.err.println("sys.isConnected() = " + sysConnected);
                         System.err.println("sys.isAborting() = " + sysAborting);
                         System.err.println("sys.getRobotName()=" + sys.getRobotName());
@@ -9769,6 +9770,7 @@ public class Supervisor {
      */
     private void preCloseAllAprsSystems() {
         preClosing = true;
+        debugAction();
         System.out.println("preClosing = " + preClosing);
         List<AprsSystem> aprsSystemsCopy = new ArrayList<>(aprsSystems);
         for (AprsSystem aprsSystemInterface : aprsSystemsCopy) {

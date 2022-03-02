@@ -1321,15 +1321,6 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-//    private void startUpdateRunningTimeTimer() {
-//        if (closing) {
-//            return;
-//        }
-//        if (runTimeTimer == null) {
-//            runTimeTimer = new Timer(2000, x -> updateRunningTime());
-//            runTimeTimer.start();
-//        }
-//    }
     public void updateRunningTime() {
         try {
             if (getFirstEventTime() > 0 && !jCheckBoxMenuItemPause.isSelected()) {
@@ -3225,6 +3216,16 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public void close() {
         try {
             closing = true;
+            try {
+                final File supervisorEventsCsvFile = Utils.createTempFile("supervisorEventsTable", ".csv");
+                System.out.println("Closing "+this);
+                System.out.println("Saving events table in "+supervisorEventsCsvFile);
+                System.out.println("");
+                Utils.saveJTable(supervisorEventsCsvFile, jTableEvents);
+            } catch (IOException iOException) {
+                 Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", iOException);
+            }
+            
             if (null != runTimeTimer) {
                 runTimeTimer.stop();
                 runTimeTimer = null;

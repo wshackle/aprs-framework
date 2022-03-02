@@ -900,6 +900,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 //            }
 //        }
 //    }
+    
+    static private volatile @Nullable Supervisor multiCycleTestSupervisor = null;
+
+    public static Supervisor getMultiCycleTestSupervisor() {
+        return multiCycleTestSupervisor;
+    }
+    
+    
     /**
      * Test multiple cycles of filling and emptying kit trays. The test is
      * performed asynchronously in another thread.
@@ -924,8 +932,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             File teachPropsFile,
             int numCycles,
             boolean useConveyor) {
+        multiCycleTestSupervisor=null;
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
+        multiCycleTestSupervisor = supervisor;
         if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
             supervisor.startColorTextReader();
             supervisor.setVisible(true);
@@ -972,7 +982,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             }
         } else {
             try {
-                return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor);
+                return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor)
+                        .thenApply(x -> { 
+                            multiCycleTestSupervisor = null;
+                            return x;
+                        });
             } catch (Exception ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                 if (ex instanceof RuntimeException) {

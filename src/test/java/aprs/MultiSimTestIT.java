@@ -63,7 +63,7 @@ public class MultiSimTestIT {
                             Utils.file(SYSFILE_PATH),
                             Utils.file(POSMAPPINGS_PATH),
                             Utils.file(TEACHFILE_PATH), SLOW_TEST_CYCLES, false);
-            final Supervisor.MultiCycleResults completedResults = results.get(5, TimeUnit.MINUTES);
+            final Supervisor.MultiCycleResults completedResults = results.get(6, TimeUnit.MINUTES);
             System.out.println("results.get().stepsDone = " + completedResults.stepsDone);
             long tend = System.currentTimeMillis();
             long tdiff = tend - tstart;
@@ -84,6 +84,10 @@ public class MultiSimTestIT {
 
         } catch (Throwable ex) {
             ex.printStackTrace();
+            Supervisor supervisor = LauncherAprsJFrame.getMultiCycleTestSupervisor();
+            if(null != supervisor) {
+                supervisor.debugAction();
+            }
             throw new RuntimeException(ex);
         } finally {
             logger.severe("finished  multiCycleTest");
