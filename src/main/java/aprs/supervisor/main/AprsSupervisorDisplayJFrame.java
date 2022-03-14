@@ -5003,7 +5003,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     public void setConveyorClonedViewSystemTaskName(String taskName) {
         if (null != conveyorVisJPanel1) {
-            AprsSystem sys = supervisor.getSysByTask(taskName);
+            AprsSystem sys = supervisor.getSysByTaskOrThrow(taskName);
             conveyorVisJPanel1.setClonedSystem(sys);
         }
     }

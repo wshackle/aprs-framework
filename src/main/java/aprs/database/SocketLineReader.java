@@ -92,6 +92,7 @@ public class SocketLineReader {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         protected void finalize() {
             close();
         }
@@ -446,6 +447,7 @@ public class SocketLineReader {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() {
         close();
     }

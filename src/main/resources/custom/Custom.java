@@ -14,8 +14,8 @@ public class Custom implements Consumer<AprsSupervisorDisplayJFrame> {
 
         // For example
         try {
-            final AprsSystem fanucSys = supervisor.getSysByTask("Fanuc Cart");
-            final AprsSystem motomanSys = supervisor.getSysByTask("Shared Table");
+            final AprsSystem fanucSys = supervisor.getSysByTaskOrThrow("Fanuc Cart");
+            final AprsSystem motomanSys = supervisor.getSysByTaskOrThrow("Shared Table");
             System.out.println("fanucSys = " + fanucSys);
             System.out.println("motomanSys = " + motomanSys);
             fanucSys.loadActionsFile(File.file("example_pddl/fanuc_move_one_large_gear.txt"));
@@ -24,8 +24,8 @@ public class Custom implements Consumer<AprsSupervisorDisplayJFrame> {
                     .thenCompose(x -> fanucSys.startActions("firstStep", false))
                     .thenCompose(x -> motomanSys.connectRobot())
                     .thenCompose(x -> motomanSys.startActions("secondStep", false));
-        } catch (IOException iOException) {
-            iOException.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }

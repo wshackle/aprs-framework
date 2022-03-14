@@ -850,6 +850,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() {
         close();
         try {

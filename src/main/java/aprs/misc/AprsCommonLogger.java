@@ -114,10 +114,11 @@ public class AprsCommonLogger {
             java.lang.System.setErr(errStream);
         }
         try {
-            logFile = Utils.createTempFile("aprsPrintLogs_", ".txt");
-            origSystemOut.println("logging to " + logFile);
-            origSystemErr.println("logging to " + logFile);
-            auxPrintStream = new PrintStream(logFile);
+            File newLogFile = Utils.createTempFile("aprsPrintLogs_", ".txt");
+            this.logFile = newLogFile;
+            origSystemOut.println("logging to " + newLogFile);
+            origSystemErr.println("logging to " + newLogFile);
+            auxPrintStream = new PrintStream(newLogFile);
             stringConsumers.add(auxConsumer);
         } catch (Exception ex) {
             Logger.getLogger(AprsCommonLogger.class.getName()).log(Level.SEVERE, "", ex);

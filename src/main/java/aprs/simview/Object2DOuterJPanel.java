@@ -80,6 +80,7 @@ import java.util.stream.Collectors;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
+import crcl.utils.CRCLUtils;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Double.parseDouble;
 import static java.lang.Math.toDegrees;
@@ -195,7 +196,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         return object2DJPanel1.createSnapshot(opts, itemsToPaint);
     }
 
-    public List<PhysicalItem> getItems() {
+    final public List<PhysicalItem> getItems() {
         return object2DJPanel1.getItems();
     }
 
@@ -234,7 +235,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         File csvFile = null;
         try {
             StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
-            File csvDir = Utils.file(f.getParentFile(), "csv");
+            final File parentFile = f.getParentFile();
+            if (null == parentFile) {
+                return new File[0];
+            }
+            File csvDir = Utils.file(parentFile, "csv");
             csvDir.mkdirs();
             csvFile = Utils.file(csvDir, f.getName() + ".csv");
             this.object2DJPanel1.takeSnapshot(f, csvFile, point, label);
@@ -250,7 +255,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
-                File xmlDir = Utils.file(f.getParentFile(), "crclStatusXml");
+                File xmlDir = Utils.file(parentFile, "crclStatusXml");
                 xmlDir.mkdirs();
                 CRCLStatusType status = aprsSystemLocal.getCurrentStatus();
                 if (null != status) {
@@ -329,7 +334,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         File csvFile = null;
         try {
             StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
-            File csvDir = Utils.file(f.getParentFile(), "csv");
+            final File parentFile = f.getParentFile();
+            if (null == parentFile) {
+                return new File[0];
+            }
+            File csvDir = Utils.file(parentFile, "csv");
             csvDir.mkdirs();
             csvFile = Utils.file(csvDir, f.getName() + ".csv");
             this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
@@ -337,7 +346,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             runOnDispatchThread(() -> {
                 updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
             });
-            File xmlDir = Utils.file(f.getParentFile(), "crclStatusXml");
+            File xmlDir = Utils.file(parentFile, "crclStatusXml");
             xmlDir.mkdirs();
             AprsSystem aprsSystemLocal = this.aprsSystem;
             if (null != aprsSystemLocal) {
@@ -600,7 +609,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
             lastSetItemsInternalFuture = future;
         } else {
-             future = XFutureVoid.completedFuture();
+            future = XFutureVoid.completedFuture();
         }
         if (captured_item_index > 0 && !ignoreMissedDropOffs && !ignoreMissedPickups) {
             return future.thenSupply(() -> new SetItemsResult("captured_item_index=" + captured_item_index, false));
@@ -684,7 +693,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 || (now - lastSetOutputItemsInternalTime) > 500) {
             lastSetOutputItemsInternalTime = now;
             final XFutureVoid ret;
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 this.outputItemsListConsumer(items);
                 ret = XFutureVoid.completedFuture();
             } else {
@@ -963,7 +972,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     /**
      * Creates new form Object2DOuterJPanel
      */
-    @SuppressWarnings({"initialization", "rawtypes", "unchecked"})
+    @SuppressWarnings({"initialization", "rawtypes", "unchecked", "nullness"})
     public Object2DOuterJPanel() {
         initComponents();
         construtorTrace = Thread.currentThread().getStackTrace();
@@ -1256,10 +1265,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private final TableModelListener itemsTableModelListener = new TableModelListener() {
         @Override
         @UIEffect
+        @SuppressWarnings({"nullness", "initialization"})
         public void tableChanged(TableModelEvent e) {
             try {
                 boolean changeFound = false;
-
+                if (null == object2DJPanel1) {
+                    throw new NullPointerException("object2DJPanel1");
+                }
                 if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
                     List<PhysicalItem> l = new ArrayList<>(getItems());
                     PhysicalItem item;
@@ -1356,7 +1368,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     };
 
     private final TableModelListener traySlotsTableModelListener = new TableModelListener() {
+
         @Override
+        @SuppressWarnings({"nullness", "initialization"})
         public void tableChanged(TableModelEvent e) {
             if (!jCheckBoxSimulated.isSelected()) {
                 return;
@@ -1424,6 +1438,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     private final ListSelectionListener itemsTableListSelectionListener = new ListSelectionListener() {
         @Override
+        @UIEffect
+        @SuppressWarnings({"initialization", "nullness"})
         public void valueChanged(ListSelectionEvent event) {
             int selectedRow = jTableItems.getSelectedRow();
             if (selectedRow >= 0 && selectedRow < jTableItems.getRowCount()) {
@@ -3694,8 +3710,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 break;
 
                 case COMMAND_MOVE: {
-                    final PM_CARTESIAN draggedItemStartingPointLocal = Objects.requireNonNull(draggedItemStartingPoint,
-                            "draggedItemStartingPoint");
+                    final PM_CARTESIAN draggedItemStartingPointLocal
+                            = CRCLUtils.requireNonNull(draggedItemStartingPoint,
+                                    "draggedItemStartingPoint");
                     List<Action> actions = new ArrayList<>();
                     actions.add(Action.newDisableOptimization());
                     actions.add(Action.newTakePartByTypeAndPostion(draggedItemLocal.getName(),
@@ -3703,7 +3720,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     actions.add(Action.newPlacePartByPosition(draggedItemLocal.x, draggedItemLocal.y,
                             draggedItemLocal.getName()));
                     actions.add(Action.newLookForParts());
-                    final AprsSystem aprsSystemLocal = Objects.requireNonNull(aprsSystem, "aprsSystem");
+                    final AprsSystem aprsSystemLocal = CRCLUtils.requireNonNull(aprsSystem, "aprsSystem");
                     draggedItemLocal.x = draggedItemStartingPointLocal.x;
                     draggedItemLocal.y = draggedItemStartingPointLocal.y;
                     aprsSystemLocal.startActionsList("inteactive move part", actions)
@@ -3965,8 +3982,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
                 try {
                     Object selectedItemHandleRotations = jComboBoxHandleRotationsEnum.getSelectedItem();
-                    loadFile(chooser.getSelectedFile(), selectedItemHandleRotations == HandleRotationEnum.DEGREES,
-                            selectedItemHandleRotations == HandleRotationEnum.IGNORE);
+                    final File selectedFile = chooser.getSelectedFile();
+                    if (null != selectedFile) {
+                        loadFile(selectedFile,
+                                selectedItemHandleRotations == HandleRotationEnum.DEGREES,
+                                selectedItemHandleRotations == HandleRotationEnum.IGNORE);
+                    }
                 } catch (IOException ex) {
                     LOGGER.log(Level.SEVERE, "", ex);
                 }
@@ -3999,8 +4020,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
             if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this)) {
                 File newFile = chooser.getSelectedFile();
-                Object2DJPanel.saveCsvItemsFile(newFile, getItems());
-                filenameCachedTextField.setText(newFile.getCanonicalPath());
+                if (null != newFile) {
+                    Object2DJPanel.saveCsvItemsFile(newFile, getItems());
+                    filenameCachedTextField.setText(newFile.getCanonicalPath());
+                }
             }
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
@@ -4642,7 +4665,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         }
         runOnDispatchThread(this::setupSimUpdateTimerInternal);
     }
-    
+
     @UIEffect
     private void setupSimUpdateTimerOnDisplay() {
         assert SwingUtilities.isEventDispatchThread();
@@ -5066,7 +5089,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private volatile boolean updatingDisplayFromProperties = false;
 
     private final TableModelListener propertiesTableModelListener = new TableModelListener() {
+        
         @Override
+        @UIEffect
+        @SuppressWarnings({"initialization","nullness"})
         public void tableChanged(TableModelEvent e) {
             if (loadingProperties) {
                 return;
@@ -5845,7 +5871,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             File csvFile = imageFileToCsvFile(f);
             final File[] fileArray = new File[]{f, csvFile};
             fileArrayDeque.add(fileArray);
-            if(SwingUtilities.isEventDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 fileArrayDequeConsumer(fileArrayDeque, callerTrace);
             } else if (null != aprsSystem) {
                 aprsSystem.submitDisplayConsumer(

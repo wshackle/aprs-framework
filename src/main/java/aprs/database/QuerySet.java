@@ -1055,6 +1055,7 @@ public class QuerySet implements QuerySetInterface {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() throws Throwable {
         try {
             this.close();

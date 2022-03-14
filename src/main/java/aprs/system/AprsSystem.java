@@ -170,6 +170,7 @@ import crcl.utils.server.ServerJInternalFrameProviderFinderInterface;
 import crcl.utils.server.ServerJInternalFrameProviderInterface;
 import javax.naming.NamingException;
 import javax.naming.spi.NamingManager;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import rcs.posemath.PmCartesian;
 
 /**
@@ -187,11 +188,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     /**
      * Creates new AprsSystem using a default properties file.
      */
-    @SuppressWarnings({"initialization", "guieffect"})
+    @SuppressWarnings({"initialization", "guieffect", "nullness"})
     private AprsSystem(boolean immediate) {
         this(null, AprsSystemPropDefaults.getSINGLE_PROPERTY_DEFAULTS());
         if (immediate) {
-            headlessEmptyInit();
+            skipCreateDbSetupFrame = true;
+            clearStartCheckBoxes();
+            headlessEmptyCommonInit();
         }
     }
 
@@ -407,7 +410,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @param aprsSystemDisplayJFrame1 swing gui to show edit properties
      */
     @UIEffect
-    @SuppressWarnings({"initialization"})
+    @SuppressWarnings({"initialization", "nullness"})
     private AprsSystem(@Nullable AprsSystemDisplayJFrame aprsSystemDisplayJFrame1,
             AprsSystemPropDefaults propDefaults) {
         this.aprsSystemDisplayJFrame = aprsSystemDisplayJFrame1;
@@ -3420,12 +3423,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "fanucServerProvider=" + fanucServerProvider);
-            Class<? extends @Nullable ServerJInternalFrameProviderInterface> fsPClass = fanucServerProvider.getClass();
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "fsPClass=" + fsPClass);
-            ProtectionDomain protectionDomain = fsPClass.getProtectionDomain();
-            Logger.getLogger(AprsSystem.class
-                    .getName()).log(Level.SEVERE, "protectionDomain=" + protectionDomain);
+            if (null != fanucServerProvider) {
+                Class<? extends @Nullable ServerJInternalFrameProviderInterface> fsPClass = fanucServerProvider.getClass();
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "fsPClass=" + fsPClass);
+                ProtectionDomain protectionDomain = fsPClass.getProtectionDomain();
+                Logger.getLogger(AprsSystem.class
+                        .getName()).log(Level.SEVERE, "protectionDomain=" + protectionDomain);
+            }
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
             setTitleErrorString(ex.getMessage());
@@ -3823,6 +3828,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private final ExecutorService runProgramService = Executors.newSingleThreadExecutor(new ThreadFactory() {
 
         @Override
+        @SuppressWarnings({"nullness", "initialization"})
         public Thread newThread(Runnable r) {
             Thread thread = new Thread(r, getThreadName());
             runProgramServiceThread = thread;
@@ -4045,8 +4051,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != object2DViewJInternalFrame) {
             if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 runOnDispatchThread(() -> {
-                    object2DViewJInternalFrame.disconnect();
-                    object2DViewJInternalFrame.disconnectCurrentPosition();
+                    if (null != object2DViewJInternalFrame) {
+                        object2DViewJInternalFrame.disconnect();
+                        object2DViewJInternalFrame.disconnectCurrentPosition();
+                    }
                 });
             } else {
                 object2DViewJInternalFrame.disconnect();
@@ -4093,11 +4101,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         });
         return commonInitStep2(displayInit);
     }
-    
+
     @UIEffect
     private XFutureVoid defaultInitOnDisplay() {
         initLoggerWindowOnDisplay();
-            startWindowsFromMenuCheckBoxesOnDisplay();
+        startWindowsFromMenuCheckBoxesOnDisplay();
         return commonInitStep2(XFutureVoid.completedFuture());
     }
 
@@ -4123,12 +4131,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         clearStartCheckBoxes();
         return initLoggerWindow()
                 .thenComposeAsyncToVoid(this::commonInit, runProgramService);
-    }
-
-    private void headlessEmptyInit() {
-        skipCreateDbSetupFrame = true;
-        clearStartCheckBoxes();
-        headlessEmptyCommonInit();
     }
 
     @SuppressWarnings("guieffect")
@@ -4284,7 +4286,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != propertiesFile) {
             system.setPropertiesFile(propertiesFile);
             return system.loadProperties()
-                    .thenComposeAsyncToVoid(() -> system.defaultInitOnDisplay(),Utils.getDispatchThreadExecutorService())
+                    .thenComposeAsyncToVoid(() -> system.defaultInitOnDisplay(), Utils.getDispatchThreadExecutorService())
                     .thenSupply(() -> {
                         return system;
                     });
@@ -4483,6 +4485,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public List<Action> getActionsList() {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         return executorJInternalFrame1.getActionsList();
     }
 
@@ -4493,20 +4498,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public void addAction(Action action) {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         executorJInternalFrame1.addAction(action);
     }
 
-//    /**
-//     * Process the current list of actions.
-//     */
-//    @Override
-//    public void processActions() {
-//        executorJInternalFrame1.processActions();
-//    }
-//    @Override
-//    public AprsSystem getAprsSystem() {
-//        return this;
-//    }
     /**
      * Sets the current tool that is assumed to be attached to the robot. The
      * robot will not move to get the tool. This may change the tool offset
@@ -4517,6 +4514,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public void setSelectedToolName(String newToolName) {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         executorJInternalFrame1.setSelectedToolName(newToolName);
     }
 
@@ -4527,6 +4527,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public XFutureVoid abortProgram() {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         return this.executorJInternalFrame1.abortProgram();
     }
 
@@ -4540,6 +4543,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public XFuture<Boolean> cartesianMoveToRecordedPosition(String recordedPoseName) {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         return this.executorJInternalFrame1.cartesianMoveToRecordedPosition(recordedPoseName);
     }
 
@@ -4554,6 +4560,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     @Override
     public XFuture<Boolean> jointMoveToNamedPosition(String recordedJointsName) {
+        if (null == executorJInternalFrame1) {
+            throw new NullPointerException("executorJInternalFrame1");
+        }
         return this.executorJInternalFrame1.jointMoveToNamedPosition(recordedJointsName);
     }
 
@@ -4660,12 +4669,21 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         line = br.readLine();
                         continue;
                     }
-                    loadWindowFile(Utils.file(fileToLoad.getParentFile(), line));
+                    final File parentFile = fileToLoad.getParentFile();
+                    if (null == parentFile) {
+                        throw new IOException("fileToLoad=" + fileToLoad + " has null parentFile");
+                    }
+                    loadWindowFile(Utils.file(parentFile, line));
                     line = br.readLine();
                 }
             } catch (Exception ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, "customWindowsFile=" + fileToLoad, ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                } else {
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }
@@ -5536,6 +5554,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private final Callable<DbSetupPublisher> dbSetupPublisherSupplier = new Callable<DbSetupPublisher>() {
 
         @Override
+        @SuppressWarnings({"nullness", "initialization"})
         public DbSetupPublisher call() throws IOException {
 
             if (useCsvFilesInsteadOfDatabase) {
@@ -5601,7 +5620,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //    public XFutureVoid setShowVisionConnected(boolean val) {
 //        return connectVisionCheckBox.setSelected(val);
 //    }
-    
     /**
      * Set the menu checkbox item to reflect the val of the whether the vision
      * system is connected. This will not cause the system to connect/disconnect
@@ -7999,9 +8017,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         badState = badState || checkResuming();
         submitUpdateTitle();
         badState = badState || checkResuming();
-        
+
         if (Utils.arePlayAlertsEnabled()) {
-            ret = ret.thenRunAsync(Utils::PlayAlert2,Utils.getDispatchThreadExecutorService());
+            ret = ret.thenRunAsync(Utils::PlayAlert2, Utils.getDispatchThreadExecutorService());
         }
         badState = badState || checkResuming();
         if (badState) {
@@ -8020,8 +8038,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != aprsSystemDisplayJFrame) {
             aprsSystemDisplayJFrame.setPaused(true);
         }
-        if (null != executorJInternalFrame1) {
-            executorJInternalFrame1.setPaused(true);
+        final ExecutorJInternalFrame executorJInternalFrame1Local = executorJInternalFrame1;
+        if (null != executorJInternalFrame1Local) {
+            executorJInternalFrame1Local.setPaused(true);
         }
         pauseThread = Thread.currentThread();
         pauseTrace = pauseThread.getStackTrace();
@@ -8051,8 +8070,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 }
             }
             badState = badState || checkResuming();
-            if (null != executorJInternalFrame1) {
-               ret = ret.thenRunAsync(()-> executorJInternalFrame1.showPausedOnDisplay(true),Utils.getDispatchThreadExecutorService());
+            if (null != executorJInternalFrame1Local) {
+                ret = ret.thenRunAsync(() -> executorJInternalFrame1Local.showPausedOnDisplay(true), Utils.getDispatchThreadExecutorService());
             }
             this.pauseCrclProgram();
             badState = badState || checkResuming();
@@ -9317,7 +9336,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
         static AprsSystemPropDefaults getEmptyTemp() throws IOException {
             File base = File.createTempFile("empty_aprs_props", ".base");
-            File dir = Utils.file(base.getParentFile(), base.getName().replace('.', '_') + "_dir");
+            final File baseParentFile = base.getParentFile();
+            if (null == baseParentFile) {
+                throw new IOException("base=" + base + " has null parentFile");
+            }
+            File dir = Utils.file(baseParentFile, base.getName().replace('.', '_') + "_dir");
             dir.mkdirs();
             return new AprsSystemPropDefaults(dir, Utils.file(dir, "empty_aprs_props.txt"),
                     Utils.file(dir, "lastAprsPropertiesFileFile.txt"));
@@ -9342,7 +9365,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         private AprsSystemPropDefaults() {
             try {
                 String aprsPropsDir = System.getProperty("aprs.properties.dir");
-                File tempPropDir;
+                @NonNull File tempPropDir;
                 if (null != aprsPropsDir) {
                     tempPropDir = Utils.file(aprsPropsDir);
                 } else {
@@ -9359,8 +9382,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         if (fname != null && fname.length() > 0) {
                             File f = Utils.file(fname);
                             if (f.exists()) {
-                                tempPropFile = f;
-                                tempPropDir = f.getParentFile();
+                                File fParent = f.getParentFile();
+                                if (null != fParent) {
+                                    tempPropFile = f;
+                                    tempPropDir = fParent;
+                                }
                             }
                         }
                     } catch (IOException ex) {
@@ -9922,8 +9948,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     @UIEffect
     private void completeLoadPropertiesOnDisplay(Properties props) throws IOException {
         assert SwingUtilities.isEventDispatchThread();
+        final File propertiesFileLocal = propertiesFile;
 
-        if (null == propertiesFile) {
+        if (null == propertiesFileLocal) {
             throw new NullPointerException("propertiesFile");
         }
         if (null != this.executorJInternalFrame1) {
@@ -10000,7 +10027,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
         String customWindowsFileString = props.getProperty(CUSTOM_WINDOWS_FILE);
         if (null != customWindowsFileString) {
-            setCustomWindowsFile(Utils.file(propertiesDirectory, customWindowsFileString));
+            if (null == propertiesDirectory) {
+                throw new NullPointerException("propertiesDirectory");
+            }
+            final File customWindowsFile
+                    = Utils.file(propertiesDirectory, customWindowsFileString);
+            setCustomWindowsFile(customWindowsFile);
         }
         String crclWebAppPortString = props.getProperty(CRCLWEBAPPPORT);
         if (null != crclWebAppPortString) {
@@ -10039,8 +10071,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (null != this.object2DViewJInternalFrame) {
             this.object2DViewJInternalFrame.loadPropertiesOnDisplay();
         }
+        if (null == propertiesDirectory) {
+            throw new NullPointerException("propertiesDirectory");
+        }
+        final File dbSetupFile
+                = Utils.file(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt");
         dbSetup = DbSetupBuilder
-                .loadFromPropertiesFile(Utils.file(propertiesDirectory, propertiesFileBaseString + "_dbsetup.txt"))
+                .loadFromPropertiesFile(dbSetupFile)
                 .build();
 
         if (null != dbSetupJInternalFrame && null != dbSetup) {
@@ -10115,8 +10152,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
 
         String sysQueriesDirString = props.getProperty(SYS_QUERIES_DIR_PROP_NAME);
+        final File parentFile = propertiesFileLocal.getParentFile();
+        if(null == parentFile) {
+            throw new IOException("propertiesFile="+propertiesFileLocal+" has null parentFile");
+        }
         if (null != sysQueriesDirString && sysQueriesDirString.length() > 2) {
-            setSysQueriesDir(Utils.file(propertiesFile.getParentFile(), sysQueriesDirString));
+            setSysQueriesDir(Utils.file(parentFile, sysQueriesDirString));
         } else if (this.isUseCsvFilesInsteadOfDatabase()) {
             File homeDir = Utils.file(System.getProperty("user.home"));
             File queriesDir = Utils.file(homeDir, "aprsQueries");
@@ -10124,7 +10165,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             if (sysQueriesDir0.exists() && sysQueriesDir0.canRead() && sysQueriesDir0.isDirectory()) {
                 setSysQueriesDir(sysQueriesDir0);
             } else {
-                final File newAprsQueriesDir = Utils.file(propertiesFile.getParentFile(), "aprsQueries");
+                final File newAprsQueriesDir = Utils.file(parentFile, "aprsQueries");
                 newAprsQueriesDir.mkdirs();
                 setSysQueriesDir(newAprsQueriesDir);
             }
@@ -10235,13 +10276,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     public XFutureVoid saveProperties() throws IOException {
         newPropertiesFile = false;
-        if (null == propertiesFile) {
+        final File propertiesFileLocal = propertiesFile;
+        if (null == propertiesFileLocal) {
             throw new NullPointerException("propertiesFile");
         }
-        File propsParent = propertiesFile.getParentFile();
+        final File propertiesDirectoryLocal = propertiesDirectory;
+        if (null == propertiesDirectoryLocal) {
+            throw new NullPointerException("propertiesDirectory");
+        }
+        File propsParent = propertiesFileLocal.getParentFile();
         List<XFutureVoid> futures = new ArrayList<>();
         if (propsParent == null) {
-            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFile);
+            System.err.println("propertiesFile.getParentFile() returned null : propertiesFile=" + propertiesFileLocal);
             return XFutureVoid.completedFuture();
         }
         if (!propsParent.exists()) {
@@ -10311,11 +10357,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
         Properties props = new Properties();
         props.putAll(propsMap);
-        println("AprsSystem saving properties to " + propertiesFile.getCanonicalPath());
+        println("AprsSystem saving properties to " + propertiesFileLocal.getCanonicalPath());
 //        try (FileWriter fw = new FileWriter(propertiesFile)) {
 //            props.store(fw, "");
 //        }
-        Utils.saveProperties(propertiesFile, props);
+        Utils.saveProperties(propertiesFileLocal, props);
         updateSubPropertiesFiles();
         if (null != this.kitInspectionJInternalFrame) {
             this.kitInspectionJInternalFrame.saveProperties();
@@ -10348,7 +10394,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             forceTorqueSimJInternalFrame.saveProperties();
         }
         if (null != dbSetup) {
-            File dbPropsFile = Utils.file(propertiesDirectory, this.propertiesFileBaseString + "_dbsetup.txt");
+            File dbPropsFile = Utils.file(propertiesDirectoryLocal, this.propertiesFileBaseString + "_dbsetup.txt");
             if (null != dbSetupJInternalFrame) {
                 dbSetupJInternalFrame.setPropertiesFileOnDisplay(dbPropsFile);
             }

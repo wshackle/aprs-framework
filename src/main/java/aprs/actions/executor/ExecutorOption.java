@@ -41,11 +41,13 @@ public interface ExecutorOption {
         Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (int i = 0; i < optionpairs.length; i++) {
             Map.Entry<?, ?> optionpair = optionpairs[i];
-            if (keyClass.isInstance(optionpair.getKey())) {
-                if (!valueClass.isInstance(optionpair.getValue())) {
+            final Object key = optionpair.getKey();
+            if (keyClass.isInstance(key)) {
+                final Object value = optionpair.getValue();
+                if (!valueClass.isInstance(value)) {
                     throw new RuntimeException("MisMatched value type for " + optionpair);
                 }
-                map.put(keyClass.cast(optionpair.getKey()), valueClass.cast(optionpair.getValue()));
+                map.put(keyClass.cast(key), valueClass.cast(value));
             }
         }
         return map;
@@ -57,11 +59,13 @@ public interface ExecutorOption {
             Collection<ExecutorOption.WithValue<?, ?>> optionpairs) {
         Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (Map.Entry<?, ?> optionpair : optionpairs) {
-            if (keyClass.isInstance(optionpair.getKey())) {
-                if (!valueClass.isInstance(optionpair.getValue())) {
+            final Object key = optionpair.getKey();
+            if (keyClass.isInstance(key)) {
+                final Object value = optionpair.getValue();
+                if (!valueClass.isInstance(value)) {
                     throw new RuntimeException("MisMatched value type for " + optionpair);
                 }
-                map.put(keyClass.cast(optionpair.getKey()), valueClass.cast(optionpair.getValue()));
+                map.put(keyClass.cast(key), valueClass.cast(value));
             }
         }
         return map;
@@ -73,11 +77,13 @@ public interface ExecutorOption {
             Map<? extends ExecutorOption, ?> optionpairs) {
         Map<K, V> map = new EnumMap<K,V>(keyClass);
         for (Map.Entry<?, ?> optionpair : optionpairs.entrySet()) {
-            if (keyClass.isInstance(optionpair.getKey())) {
-                if (!valueClass.isInstance(optionpair.getValue())) {
+            final Object key = optionpair.getKey();
+            if (keyClass.isInstance(key)) {
+                final Object value = optionpair.getValue();
+                if (!valueClass.isInstance(value)) {
                     throw new RuntimeException("MisMatched value type for " + optionpair);
                 }
-                map.put(keyClass.cast(optionpair.getKey()), valueClass.cast(optionpair.getValue()));
+                map.put(keyClass.cast(key), valueClass.cast(value));
             }
         }
         return map;

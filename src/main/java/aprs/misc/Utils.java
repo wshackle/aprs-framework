@@ -146,30 +146,21 @@ public class Utils {
         if (append.isEmpty()) {
             throw new IllegalArgumentException("append.isEmpty()");
         }
-//        if (!parent.exists()) {
-//            File parentFile = parent.getParentFile();
-//            if (null != parentFile && parentFile.exists() && parentFile.canWrite()) {
-//                parent.mkdir();
-//            }
-//        }
-//        if (!parent.exists()) {
-//            throw new IllegalArgumentException("parent=" + parent);
-//        } else if (!parent.isDirectory()) {
-//            throw new IllegalArgumentException("!parent.isDirectory()");
-//        }
         append = swapFileSeparators(append);
         String parentDirPrefix = ".." + File.separator;
         File lastParentFile = parent;
         while (append.startsWith(parentDirPrefix)) {
             lastParentFile = parent;
-            parent = parent.getParentFile();
+            File nextParent = parent.getParentFile();
             append = append.substring(parentDirPrefix.length());
-            if (parent == null) {
+            if (nextParent == null) {
                 if (append.startsWith(parentDirPrefix)) {
                     throw new RuntimeException("parent=null : append=" + append + ", origParent=" + origParent + ", origParent.getCanonicalPath()=" + origParent.getCanonicalPath() + ", lastParentFile=" + lastParentFile + ", lastParentFile.getCanonicalPath()=" + lastParentFile.getCanonicalPath() + ", origAppend=" + origAppend);
                 } else {
                     return new File(append);
                 }
+            } else {
+                parent = nextParent;
             }
         }
         return new File(parent, append);
@@ -728,6 +719,7 @@ public class Utils {
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> Future<T> submit(Callable<T> task) {
             CompletableFuture<T> cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -743,6 +735,7 @@ public class Utils {
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> Future<T> submit(Runnable task, T result) {
             CompletableFuture<T> cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -753,6 +746,7 @@ public class Utils {
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public Future<?> submit(Runnable task) {
             CompletableFuture cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -763,21 +757,25 @@ public class Utils {
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
+        @SuppressWarnings({"nullness","keyfor"})
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }

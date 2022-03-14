@@ -59,6 +59,7 @@ public class CachedTable extends CachedComponentBase {
     private final TableModelListener tableModelListener = new TableModelListener() {
         @Override
         @UIEffect
+        @SuppressWarnings({"initialization","nullness"})
         public void tableChanged(TableModelEvent e) {
             syncUiToCache();
         }
@@ -102,7 +103,7 @@ public class CachedTable extends CachedComponentBase {
     }
 
     @UIEffect
-    @SuppressWarnings({"rawtypes", "unchecked", "initialization"})
+    @SuppressWarnings({"rawtypes", "unchecked", "initialization","nullness"})
     public CachedTable(DefaultTableModel model, JTable jTable) {
         this.jTable = jTable;
         this.model = model;

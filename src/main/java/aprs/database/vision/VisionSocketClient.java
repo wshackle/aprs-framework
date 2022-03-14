@@ -783,6 +783,7 @@ public class VisionSocketClient implements AutoCloseable {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     protected void finalize() throws Throwable {
         close();
         super.finalize();

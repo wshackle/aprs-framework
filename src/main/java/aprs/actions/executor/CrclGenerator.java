@@ -1373,7 +1373,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             boolean skipCheckHeldPart)
             throws Exception {
         final AprsSystem localAprsSystem = requireNonNull(this.aprsSystem, "aprsSystem");
-        GenerateParams gparams = new GenerateParams(actions,options);
+        GenerateParams gparams = new GenerateParams(actions, options);
         gparams.startingIndex = startingIndex;
         gparams.startSafeAbortRequestCount = startSafeAbortRequestCount;
         gparams.replan = !localAprsSystem.isCorrectionMode() && !lastProgramAborted;
@@ -1501,7 +1501,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             this(Collections.emptyList(), Collections.emptyMap());
         }
 
-        private GenerateParams(List<Action> actions,Map<ExecutorOption, ?> options) {
+        private GenerateParams(List<Action> actions, Map<ExecutorOption, ?> options) {
             this.actions = actions;
             this.options = options;
             this.startingVisionUpdateCount = visionUpdateCount.get();
@@ -1514,7 +1514,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             this.startSafeAbortRequestCount = ssarc0;
         }
-        
+
         @Override
         public String toString() {
             return "GenerateParams{" + "actions.size()=" + ((null != actions) ? actions.size() : -1) + ", startingIndex=" + startingIndex + ",\n options=" + options + ",\n startSafeAbortRequestCount=" + startSafeAbortRequestCount + ",\n  replan=" + replan + ", optiplannerUsed=" + optiplannerUsed + ",\n origActions=" + origActions + ",\n runOptoToGenerateReturn=" + runOptoToGenerateReturn + ",\n newItemsReceived=" + newItemsReceived + ",\n startingVisionUpdateCount=" + startingVisionUpdateCount + '}';
@@ -3650,8 +3650,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     if (null != failedClosestItem) {
                         takeSimViewSnapshot("checkKitsFailed: failedItemInfo.failedClosestItem", failedClosestItem, failedClosestItem.getFullName());
                     }
-                    String fiString = " " + kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName) + " instead of " + failedItemInfo.itemHaveName + " in " + failedItemInfo.failedAbsSlotPrpName;
-                    errMsgSb.append(fiString);
+                    if (null != failedItemInfo.failedAbsSlotPrpName) {
+                        final String kitSlotMapFailedSlotValue = kit.slotMap.get(failedItemInfo.failedAbsSlotPrpName);
+                        String fiString = " " + kitSlotMapFailedSlotValue + " instead of " + failedItemInfo.itemHaveName + " in " + failedItemInfo.failedAbsSlotPrpName;
+                        errMsgSb.append(fiString);
+                    }
                     if (i < info.failedItems.size() - 1) {
                         errMsgSb.append(", \n");
                     }
@@ -3978,7 +3981,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private volatile @Nullable String currentHeldPart = null;
 
-    public void setCurrentHeldPart(String part) {
+    public void setCurrentHeldPart(@Nullable String part) {
         this.currentHeldPart = part;
         this.setCurrentHeldPartTrace = Thread.currentThread().getStackTrace();
     }
@@ -6956,7 +6959,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 loadNewItemsIntoPoseCache(filteredList);
                 return filteredList;
             }
-            
+
         } catch (Exception exception) {
             LOGGER.log(Level.SEVERE, "", exception);
             throw new RuntimeException(exception);
@@ -6964,14 +6967,15 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void checkRefreshSimView(final long maxFutureGetTime) throws Exception {
-        if (aprsSystem.isObjectViewSimulated()) {
-            final XFuture<Object2DOuterJPanel.SetItemsResult> future = aprsSystem.refreshSimView();
+        final AprsSystem aprsSystem1 = CRCLUtils.requireNonNull(aprsSystem, "aprsSystem");
+        if (aprsSystem1.isObjectViewSimulated()) {
+            final XFuture<Object2DOuterJPanel.SetItemsResult> future = aprsSystem1.refreshSimView();
             Object2DOuterJPanel.SetItemsResult setItemsResult = future.get(maxFutureGetTime, TimeUnit.MILLISECONDS);
             if (null == setItemsResult) {
                 throw new RuntimeException("Can't refresh simview : setItemsResult == null");
             } else if (!setItemsResult.isPublished()) {
                 throw new RuntimeException("Can't refresh simview : " + setItemsResult.getComment());
-            } 
+            }
         }
     }
 
@@ -7169,7 +7173,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             recordSkipPlacePart(slotName, pose);
             return;
         }
-        if (null == lastTakenPartLocal && !getBooleanOpt(ExecutorOption.ForBoolean.skipCheckHeldPart, false)) {
+        final Boolean skipCheckHeldPart = getBooleanOpt(ExecutorOption.ForBoolean.skipCheckHeldPart, false);
+        if (null == lastTakenPartLocal && !skipCheckHeldPart) {
             throw new IllegalStateException("null == lastTakenPart");
         }
         final String msg = "placed part " + getPlannedHeldPart() + " in " + slotName;
@@ -7178,6 +7183,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
         if (pose == null) {
             if (skipMissingParts) {
+                if (null == lastTakenPartLocal) {
+                    throw new IllegalStateException("null == lastTakenPart");
+                }
                 PoseType origPose = poseCache.get(lastTakenPartLocal);
                 if (null != origPose) {
                     origPose = visionToRobotPose(origPose);
@@ -7208,7 +7216,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 startSafeAbortRequestCount,
                 parentAction,
                 parentActionIndex,
-                (null == lastTakenPartLocal && getBooleanOpt(ExecutorOption.ForBoolean.skipCheckHeldPart, false)) ? "dummyPart" : lastTakenPartLocal,
+                (null == lastTakenPartLocal) ? "dummyPart" : lastTakenPartLocal,
                 slotName);
         placePartByPose(out, pose);
         addMarkerCommand(out, msg,

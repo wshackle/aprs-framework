@@ -89,7 +89,6 @@ import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
 
-import aprs.actions.executor.ExecutorOption.ForBoolean;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -146,10 +145,7 @@ public class Supervisor {
             startScanAllFuture = completePrevMultiFuture
                     .thenComposeAsyncToVoid(x -> {
                         String convTaskName = getConveyorClonedViewSystemTaskName();
-                        AprsSystem sys = getSysByTask(convTaskName);
-                        if (null == sys) {
-                            throw new RuntimeException("getSysByTask(" + convTaskName + ") returned null");
-                        }
+                        AprsSystem sys = getSysByTaskOrThrow(convTaskName);
                         sys.setAlertLimitsCheckBoxSelected(false);
                         setupSystemForConveyorTest(sys);
                         setEnableTestRandomDelayMillis(60000);
@@ -340,7 +336,7 @@ public class Supervisor {
         XFutureVoid f2 = f1.thenRun(() -> {
             try {
                 loadPositionMappingsFilesFile(positionMappingsFile);
-                AprsSystem fanucSys = getSysByTask("Fanuc Cart");
+                AprsSystem fanucSys = getSysByTask(FANUC__CART_TASK_NAME);
                 if (null != fanucSys) {
                     if (fanucSys.isObjectViewSimulated()) {
                         final Object2DOuterJPanel objectViewPanel = fanucSys.getObjectViewPanel();
@@ -416,7 +412,7 @@ public class Supervisor {
         public int stepsDone = 0;
         public int cyclesComplete;
         public long timeDiff;
-        public String msg;
+        public String msg = "";
 
     }
 
@@ -436,10 +432,7 @@ public class Supervisor {
             if (null != convTaskName && convTaskName.length() > 0 && null != displayJFrame) {
                 displayJFrame.setConveyorClonedViewSystemTaskName(convTaskName);
             }
-            AprsSystem sys = getSysByTask(convTaskName);
-            if (null == sys) {
-                throw new RuntimeException("getSysByTask(" + convTaskName + ") returned null");
-            }
+            AprsSystem sys = getSysByTaskOrThrow(convTaskName);
             sys.setAlertLimitsCheckBoxSelected(false);
             setupSystemForConveyorTest(sys);
             setEnableTestRandomDelayMillis(60000);
@@ -957,7 +950,11 @@ public class Supervisor {
         if (fileFile.exists()) {
             String firstLine = readFirstLine(fileFile);
             if (null != firstLine && firstLine.length() > 0) {
-                return Utils.file(fileFile.getParentFile(), firstLine.trim());
+                final File parentFile = fileFile.getParentFile();
+                if (null != parentFile) {
+                    final String trimmedLine = firstLine.trim();
+                    return Utils.file(parentFile, trimmedLine);
+                }
             }
         }
         return null;
@@ -5151,13 +5148,15 @@ public class Supervisor {
     public XFuture<Boolean> startFlipFM() {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
-        AprsSystem fanucCartSys = getSysByTask("Fanuc Cart");
+        AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
         logEvent("fanucCartSys = " + fanucCartSys);
-        AprsSystem sharedTableSys = getSysByTask("Shared Table");
+        AprsSystem sharedTableSys = getSysByTaskOrThrow(SHARED__TABLE_TASK_NAME);
         logEvent("sharedTableSys = " + sharedTableSys);
 
-        if (fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
-                || fanucCartSys.isEnforceMinMaxLimits() || sharedTableSys.isEnforceMinMaxLimits()) {
+        if (fanucCartSys.isAlertLimitsCheckBoxSelected() 
+                || sharedTableSys.isAlertLimitsCheckBoxSelected()
+                || fanucCartSys.isEnforceMinMaxLimits() 
+                || sharedTableSys.isEnforceMinMaxLimits()) {
             final int confirm;
             if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
                 confirm = JOptionPane.showConfirmDialog(this.displayJFrame,
@@ -5284,9 +5283,9 @@ public class Supervisor {
     public XFuture<Boolean> startFlipMF() {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
-        AprsSystem fanucCartSys = getSysByTask("Fanuc Cart");
+        AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
         logEvent("fanucCartSys = " + fanucCartSys);
-        AprsSystem sharedTableSys = getSysByTask("Shared Table");
+        AprsSystem sharedTableSys = getSysByTaskOrThrow(SHARED__TABLE_TASK_NAME);
         logEvent("sharedTableSys = " + sharedTableSys);
         if (fanucCartSys.isAlertLimitsCheckBoxSelected() || sharedTableSys.isAlertLimitsCheckBoxSelected()
                 || fanucCartSys.isEnforceMinMaxLimits() || sharedTableSys.isEnforceMinMaxLimits()) {
@@ -5398,6 +5397,14 @@ public class Supervisor {
                                     ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
                         });
         return xf9;
+    }
+    private static final String SHARED__TABLE_TASK_NAME = "Shared Table";
+    private static final String FANUC__CART_TASK_NAME = "Fanuc Cart";
+
+    public AprsSystem getSysByTaskOrThrow(final String sysName) throws NullPointerException {
+        final String thowMessage = "getSysByTask(\""+sysName+"\")";
+        AprsSystem fanucCartSys = CRCLUtils.requireNonNull(getSysByTask(sysName), thowMessage);
+        return fanucCartSys;
     }
 
     /**
@@ -7511,11 +7518,20 @@ public class Supervisor {
         }
     }
 
-    private XFutureVoid continueContinuousScanAndRunInternal(int startingAbortCount, String part1BlockerName, String prevBlockerName, String part2BlockerName, String part3BlockerName, final int cdcCount) {
+    private XFutureVoid continueContinuousScanAndRunInternal(int startingAbortCount, String part1BlockerName, @Nullable String prevBlockerName, String part2BlockerName, String part3BlockerName, final int cdcCount) {
         final XFuture<?> lfr = this.getLastFutureReturned();
-        XFutureVoid ret = startCheckAndEnableAllRobots(startingAbortCount)
+        final XFuture<Boolean> f1 = startCheckAndEnableAllRobots(startingAbortCount);
+        final XFuture<XFuture.ComposedPair<Boolean, Void>> f2;
+        if(null != prevBlockerName) {
+            f2 = f1
                 .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName, prevBlockerName),
-                        supervisorExecutorService)
+                        supervisorExecutorService);
+        } else {
+            f2 = f1
+                .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName),
+                        supervisorExecutorService);
+        }
+        XFutureVoid ret = f2
                 .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal",
                         x -> scanTillNewInternal(), supervisorExecutorService)
                 .thenComposeAsync("continueContinuousScanAndRun.checkLastReturnedFuture2",
@@ -8200,7 +8216,7 @@ public class Supervisor {
         if (logEventErrCount.get() == 0) {
             return ret = ret
                     .thenRunAsync(() -> setIconImageOnDisplay(IconImages.DISCONNECTED_IMAGE),
-                        Utils.getDispatchThreadExecutorService());
+                            Utils.getDispatchThreadExecutorService());
         }
         return ret;
     }
@@ -9113,7 +9129,11 @@ public class Supervisor {
      */
     public void saveSetupFile(File f) throws IOException {
         if (null == propertiesFile) {
-            propertiesFile = Utils.file(f.getParentFile(), "supervisor_properties.txt");
+            final File parentFile = f.getParentFile();
+            if(null == parentFile) {
+                throw new IOException("f="+f +" has null parentFile");
+            }
+            propertiesFile = Utils.file(parentFile, "supervisor_properties.txt");
         }
         saveProperties(this.propertiesFile);
         saveCachedTable(f, tasksCachedTable,
@@ -9997,7 +10017,11 @@ public class Supervisor {
                     if (File.separatorChar == '/' && pathname.contains("//")) {
                         pathname = pathname.replace('\\', '/');
                     }
-                    File f4 = Utils.file(setupFile.getParentFile(), pathname);
+                    final File setupParentFile = setupFile.getParentFile();
+                    if(null == setupParentFile) {
+                        throw new IOException("setupFile="+setupFile+" has null parentFile");
+                    }
+                    File f4 = Utils.file(setupParentFile, pathname);
                     if (f4.exists()) {
                         this.propertiesFile = f4;
                     } else {
@@ -10338,7 +10362,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                       @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                        @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {
