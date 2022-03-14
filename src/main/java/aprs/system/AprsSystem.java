@@ -630,11 +630,29 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         this.executorJInternalFrame1.setExternalPoseProvider(externalPoseProvider);
     }
 
-    public void reloadErrorMaps() throws IOException {
+    public XFutureVoid reloadErrorMaps() throws IOException {
         if (null == executorJInternalFrame1) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
         }
-        this.executorJInternalFrame1.reloadErrorMapsOnDisplay();
+        return Utils.runOnDispatchThread(() -> {
+            reloadErrorMapsOnDisplay();
+        });
+    }
+
+    public void reloadErrorMapsOnDisplay() throws RuntimeException {
+        if (null == executorJInternalFrame1) {
+            throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
+        }
+        try {
+            executorJInternalFrame1.reloadErrorMapsOnDisplay();
+        } catch (Exception ex) {
+            Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
+        }
     }
 
     private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable []  = null;
@@ -672,7 +690,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                             }
                         },
                         runProgramService)
-                .thenRun(
+                .thenRunAsync(
                         "restoreOrigRobotInfo" + getTaskName(),
                         () -> {
                             try {
@@ -681,7 +699,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                                 if (null != limitsCsv && limitsCsv.exists()) {
                                     readLimitsFromCsv(limitsCsv);
                                 }
-                                reloadErrorMaps();
+                                reloadErrorMapsOnDisplay();
                                 updateRobotLimits();
                                 resume();
                                 clearErrors();
@@ -693,7 +711,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                                     throw new RuntimeException(ex);
                                 }
                             }
-                        })
+                        },Utils.getDispatchThreadExecutorService())
                 .thenRunAsync(
                         "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
                         () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0,
@@ -10153,8 +10171,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
         String sysQueriesDirString = props.getProperty(SYS_QUERIES_DIR_PROP_NAME);
         final File parentFile = propertiesFileLocal.getParentFile();
-        if(null == parentFile) {
-            throw new IOException("propertiesFile="+propertiesFileLocal+" has null parentFile");
+        if (null == parentFile) {
+            throw new IOException("propertiesFile=" + propertiesFileLocal + " has null parentFile");
         }
         if (null != sysQueriesDirString && sysQueriesDirString.length() > 2) {
             setSysQueriesDir(Utils.file(parentFile, sysQueriesDirString));

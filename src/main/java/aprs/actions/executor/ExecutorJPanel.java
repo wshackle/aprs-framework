@@ -396,38 +396,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             if (null == newToolName) {
                 return;
             }
-            String currentToolName = crclGenerator.getCurrentToolName();
-            if (!Objects.equals(currentToolName, newToolName)) {
-                crclGenerator.setCurrentToolName(newToolName);
-            }
             PoseType newPose = crclGenerator.getToolOffsetPose();
-            String offsetText;
-            if (null != newPose) {
-                PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
-                PointType newPosePoint = requireNonNull(newPose.getPoint(), "newPose.getPoint()");
-                PmCartesian tran = CRCLPosemath.toPmCartesian(newPosePoint);
-
-                offsetText = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
-                        tran.x, tran.y, tran.z,
-                        Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
-
-            } else {
-                offsetText = "X=0,Y=0,Z=0,roll=0,pitch=0,yaw=0";
-            }
-            String filename = getSelectedToolNameFileName();
-            if (null == filename) {
-                filename = getDefaultSelectedToolNameFile();
-                setSelectedToolNameFileName(filename);
-            }
-            String curSavedToolName = readSelectedToolNameFile(filename);
-            if (!Objects.equals(curSavedToolName, newToolName)) {
-                try (PrintWriter pw = new PrintWriter(
-                        new FileWriter(Utils.file(propertiesFile.getParentFile(), filename)))) {
-                    pw.println(newToolName);
-                } catch (IOException ex) {
-                    Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
-                }
-            }
+            String offsetText = computeOffsetText(newPose);
+            setSelectedToolNameCommon(newToolName);
             setCurrentToolNamOnDisplay(newToolName, offsetText);
             for (Consumer<String> listener : selectedToolNameListeners) {
                 listener.accept(newToolName);
@@ -440,6 +411,77 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 throw new RuntimeException(exception);
             }
         }
+    }
+
+    /**
+     * Sets the current tool that is assumed to be attached to the robot. The
+     * robot will not move to get the tool. This may change the tool offset
+     * pose.
+     *
+     * @param newToolName new tool to be associated with the robot and key for
+     * tool offset map
+     */
+    public XFutureVoid setSelectedToolName(String newToolName) {
+        try {
+            if (null == newToolName) {
+                return XFutureVoid.completedFuture();
+            }
+            PoseType newPose = crclGenerator.getToolOffsetPose();
+            String offsetText = computeOffsetText(newPose);
+            setSelectedToolNameCommon(newToolName);
+            return Utils.runOnDispatchThread(() -> {
+                setCurrentToolNamOnDisplay(newToolName, offsetText);
+                for (Consumer<String> listener : selectedToolNameListeners) {
+                    listener.accept(newToolName);
+                }
+            });
+        } catch (Exception exception) {
+            LOGGER.log(Level.SEVERE, "", exception);
+            if (exception instanceof RuntimeException) {
+                throw (RuntimeException) exception;
+            } else {
+                throw new RuntimeException(exception);
+            }
+        }
+    }
+
+    private void setSelectedToolNameCommon(String newToolName) throws IOException {
+        String currentToolName = crclGenerator.getCurrentToolName();
+        if (!Objects.equals(currentToolName, newToolName)) {
+            crclGenerator.setCurrentToolName(newToolName);
+        }
+
+        String filename = getSelectedToolNameFileName();
+        if (null == filename) {
+            filename = getDefaultSelectedToolNameFile();
+            setSelectedToolNameFileName(filename);
+        }
+        String curSavedToolName = readSelectedToolNameFile(filename);
+        if (!Objects.equals(curSavedToolName, newToolName)) {
+            try (PrintWriter pw = new PrintWriter(
+                    new FileWriter(Utils.file(propertiesFile.getParentFile(), filename)))) {
+                pw.println(newToolName);
+            } catch (IOException ex) {
+                Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            }
+        }
+    }
+
+    private String computeOffsetText(PoseType newPose) throws NullPointerException, PmException {
+        String offsetText;
+        if (null != newPose) {
+            PmRpy rpy = CRCLPosemath.toPmRpy(newPose);
+            PointType newPosePoint = requireNonNull(newPose.getPoint(), "newPose.getPoint()");
+            PmCartesian tran = CRCLPosemath.toPmCartesian(newPosePoint);
+
+            offsetText = String.format("X=%.3f,Y=%.3f,Z=%.3f,roll=%.3f,pitch=%.3f,yaw=%.3f",
+                    tran.x, tran.y, tran.z,
+                    Math.toDegrees(rpy.r), Math.toDegrees(rpy.p), Math.toDegrees(rpy.y));
+
+        } else {
+            offsetText = "X=0,Y=0,Z=0,roll=0,pitch=0,yaw=0";
+        }
+        return offsetText;
     }
 
     @UIEffect
@@ -803,7 +845,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "UnnecessaryBoxing","deprecation"})
+    @SuppressWarnings({"unchecked", "rawtypes", "nullness", "UnnecessaryBoxing", "deprecation"})
     @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated
     // Code">//GEN-BEGIN:initComponents
@@ -5405,8 +5447,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         aprsSystem.pauseCrclProgram();
     }
 
-    public XFutureVoid  showPaused(boolean paused) {
-        if(SwingUtilities.isEventDispatchThread()) {
+    public XFutureVoid showPaused(boolean paused) {
+        if (SwingUtilities.isEventDispatchThread()) {
             showPausedOnDisplay(paused);
             return XFutureVoid.completedFuture();
         } else {
@@ -8072,7 +8114,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
 //            println("rowValues = " + Arrays.toString(rowValues));
 //            println("generateAbortLogFile = " + generateAbortLogFile);
-            
         } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
@@ -9126,6 +9167,15 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 .thenComposeAsync("executeActions", x -> executeActionsInternal(actionsList, options),
                         generateCrclService)
                 .peekException((Throwable t) -> {
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.err.flush();
+                    LOGGER.log(Level.SEVERE, "", t);
+                    System.out.println("");
+                    System.err.println("");
+                    System.out.flush();
+                    System.err.flush();
                     final long now = System.currentTimeMillis();
                     System.out.println("lastExecuteActionsTime = " + lastExecuteActionsTime);
                     System.out.println("now = " + now);

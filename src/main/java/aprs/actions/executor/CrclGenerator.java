@@ -5228,16 +5228,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      *
      * @param currentToolName new value of currentToolName
      */
-    public void setCurrentToolName(String currentToolName) {
+    public XFutureVoid setCurrentToolName(String currentToolName) {
         String oldCurrentToolName = this.currentToolName;
         this.currentToolName = currentToolName;
         if (null != currentToolName && currentToolName.length() > 0) {
             if (Objects.equals(currentToolName, oldCurrentToolName)) {
-                return;
+                return XFutureVoid.completedFuture();
             }
             if (null != parentExecutorJPanel) {
-                parentExecutorJPanel.setSelectedToolNameOnDisplay(currentToolName);
+                return parentExecutorJPanel.setSelectedToolName(currentToolName);
+            } else {
+                return XFutureVoid.completedFuture();
             }
+        } else {
+            return XFutureVoid.completedFuture();
         }
     }
 
