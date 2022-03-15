@@ -647,7 +647,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             executorJInternalFrame1.reloadErrorMapsOnDisplay();
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "", ex);
-            if(ex instanceof RuntimeException) {
+            if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
             } else {
                 throw new RuntimeException(ex);
@@ -711,7 +711,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                                     throw new RuntimeException(ex);
                                 }
                             }
-                        },Utils.getDispatchThreadExecutorService())
+                        }, Utils.getDispatchThreadExecutorService())
                 .thenRunAsync(
                         "restoreOrigRobotInfo.connectRobotPrivate" + origRobotName1,
                         () -> connectRobotPrivate(origRobotName1, origCrclRobotHost1, origCrclRobotPort1, wasConnected0,
@@ -3021,6 +3021,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 });
     }
 
+    private volatile StackTraceElement lastImmediateAbortTrace @Nullable []  = null;
+
     /**
      * Immediately abort the currently running CRCL program and PDDL action
      * list.
@@ -3031,6 +3033,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return a future object for determining when the abort is completed.
      */
     public XFutureVoid immediateAbort() {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        lastImmediateAbortTrace = trace;
         if (null != this.continuousDemoFuture) {
             this.continuousDemoFuture.cancelAll(true);
             this.continuousDemoFuture = null;
@@ -3045,19 +3049,19 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 .thenRun(() -> {
                     cancelPauseFutures();
                     if (null != lastResumeFuture) {
-                        lastResumeFuture.cancelAll(true);
+                        logAndCloseFuture("lastResumeFuture", lastResumeFuture, trace);
                         lastResumeFuture = null;
                     }
                     if (null != lastPauseFuture) {
-                        lastPauseFuture.cancelAll(true);
+                        logAndCloseFuture("lastPauseFuture", lastPauseFuture, trace);
                         lastPauseFuture = null;
                     }
                     if (null != lastRunProgramFuture) {
-                        lastRunProgramFuture.cancelAll(true);
+                        logAndCloseFuture("lastRunProgramFuture", lastRunProgramFuture, trace);
                         lastRunProgramFuture = null;
                     }
                     if (null != lastStartActionsFuture) {
-                        lastStartActionsFuture.cancelAll(true);
+                        logAndCloseFuture("lastStartActionsFuture", lastStartActionsFuture, trace);
                         lastStartActionsFuture = null;
                     }
                     final XFuture<Boolean> lastContinueActionListFutureFinal = lastContinueActionListFuture;
@@ -3068,39 +3072,39 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                             System.err.println(
                                     "continueActionListTrace = " + Utils.traceToString(continueActionListTrace));
                         }
-                        lastContinueActionListFutureFinal.cancelAll(true);
+                        logAndCloseFuture("lastContinueActionListFutureFinal", lastContinueActionListFutureFinal, trace);
                         lastContinueActionListFuture = null;
                     }
                     if (null != disconnectRobotFuture) {
-                        disconnectRobotFuture.cancelAll(true);
+                        logAndCloseFuture("disconnectRobotFuture", disconnectRobotFuture, trace);
                         disconnectRobotFuture = null;
                     }
                     if (null != safeAbortAndDisconnectFuture) {
-                        safeAbortAndDisconnectFuture.cancelAll(true);
+                        logAndCloseFuture("safeAbortAndDisconnectFuture", safeAbortAndDisconnectFuture, trace);
                         safeAbortAndDisconnectFuture = null;
                     }
                     if (null != safeAbortFuture) {
-                        safeAbortFuture.cancelAll(true);
+                        logAndCloseFuture("safeAbortFuture", safeAbortFuture, trace);
                         safeAbortFuture = null;
                     }
                     if (null != lastStartCheckEnabledFuture1) {
-                        lastStartCheckEnabledFuture1.cancelAll(true);
+                        logAndCloseFuture("lastStartCheckEnabledFuture1", lastStartCheckEnabledFuture1, trace);
                         lastStartCheckEnabledFuture1 = null;
                     }
                     if (null != lastStartCheckEnabledFuture2) {
-                        lastStartCheckEnabledFuture2.cancelAll(true);
+                        logAndCloseFuture("lastStartCheckEnabledFuture2", lastStartCheckEnabledFuture2, trace);
                         lastStartCheckEnabledFuture2 = null;
                     }
                     if (null != lastPrivateStartActionsFuture) {
-                        lastPrivateStartActionsFuture.cancelAll(false);
+                        logAndCloseFuture("lastPrivateStartActionsFuture", lastPrivateStartActionsFuture, trace);
                         lastPrivateStartActionsFuture = null;
                     }
                     if (null != startLookForPartsFuture) {
-                        startLookForPartsFuture.cancelAll(false);
+                        logAndCloseFuture("startLookForPartsFuture", startLookForPartsFuture, trace);
                         startLookForPartsFuture = null;
                     }
                     if (null != lastPrivateContinueActionListFuture) {
-                        lastPrivateContinueActionListFuture.cancelAll(false);
+                        logAndCloseFuture("lastPrivateContinueActionListFuture", lastPrivateContinueActionListFuture, trace);
                         lastPrivateContinueActionListFuture = null;
                     }
                     continousDemoCheckBox.setSelected(false);
@@ -3108,6 +3112,22 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     runningPrivateContinueActionList = false;
                     runningPrivateStartActions = false;
                 });
+    }
+
+    private void logAndCloseFuture(String futName, XFuture<?> f, StackTraceElement[] trace) {
+        if(f.isDone()) {
+            return;
+        }
+        if (!XFuture.isClosingMode()) {
+            final Logger logger = Logger.getLogger(AprsSystem.class.getName());
+            logger.log(Level.SEVERE, "Cancelling " + futName + "=" + f);
+            logger.log(Level.SEVERE, "trace=" + XFuture.traceToString(trace));
+            final StackTraceElement[] createTrace = f.getCreateTrace();
+            if (null != createTrace) {
+                logger.log(Level.SEVERE, "createTrace=" + XFuture.traceToString(createTrace));
+            }
+        }
+        f.cancelAll(true);
     }
 
     private volatile String detailsString = "";
