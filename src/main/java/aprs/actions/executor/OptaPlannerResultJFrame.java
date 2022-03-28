@@ -256,7 +256,9 @@ public class OptaPlannerResultJFrame extends javax.swing.JFrame {
             chooser.addChoosableFileFilter(CSV_SWING_FILENAME_FILTER);
             chooser.setFileFilter(CSV_SWING_FILENAME_FILTER);
             if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                loadResultsCsvFile(chooser.getSelectedFile());
+                final File selectedFile = chooser.getSelectedFile();
+                assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                loadResultsCsvFile(selectedFile);
             }
         } catch (IOException ex) {
             Logger.getLogger(OptaPlannerResultJFrame.class.getName()).log(Level.SEVERE, null, ex);

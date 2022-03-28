@@ -410,7 +410,8 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 final OpActionPlan opActionPlan = outerOptiplannerJPanelInput.getOpActionPlan();
                 if (null != opActionPlan) {
                     final File selectedFile = chooser.getSelectedFile();
-                    opActionPlan.saveActionList(selectedFile);
+                    assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+	            opActionPlan.saveActionList(selectedFile);
                     addRecentActionListFile(selectedFile);
                 }
             } catch (IOException ex) {
@@ -424,7 +425,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                setInputOpActionPlan(OpActionPlan.loadActionList(chooser.getSelectedFile()));
+                final File selectedFile = chooser.getSelectedFile();
+                assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                setInputOpActionPlan(OpActionPlan.loadActionList(selectedFile));
             } catch (IOException ex) {
                 Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -450,6 +453,7 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
                 final OpActionPlan opActionPlan = outerOptiplannerJPanelOutput.getOpActionPlan();
                 if (null != opActionPlan) {
                     final File selectedFile = chooser.getSelectedFile();
+                    assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";	            
                     opActionPlan.saveActionList(selectedFile);
                     addRecentActionListFile(selectedFile);
                 }
@@ -520,7 +524,9 @@ public class OptiplannerDisplayJFrame extends javax.swing.JFrame {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                setOutputOpActionPlan(OpActionPlan.loadActionList(chooser.getSelectedFile()));
+                final File selectedFile = chooser.getSelectedFile();
+                assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                setOutputOpActionPlan(OpActionPlan.loadActionList(selectedFile));
             } catch (IOException ex) {
                 Logger.getLogger(OptiplannerDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -51,6 +51,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author will
  */
+@SuppressWarnings("nullness")
 public class DbCsvBackupResultSet implements ResultSet {
 
     private int index = 0;
@@ -598,7 +599,7 @@ public class DbCsvBackupResultSet implements ResultSet {
     }
 
     @Override
-    public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
+    public void updateBigDecimal(int columnIndex, @Nullable BigDecimal x) throws SQLException {
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -608,17 +609,17 @@ public class DbCsvBackupResultSet implements ResultSet {
     }
 
     @Override
-    public void updateBytes(int columnIndex, byte[] x) throws SQLException {
+    public void updateBytes(int columnIndex, byte @Nullable [] x) throws SQLException {
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void updateDate(int columnIndex, Date x) throws SQLException {
+    public void updateDate(int columnIndex, @Nullable Date x) throws SQLException {
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void updateTime(int columnIndex, Time x) throws SQLException {
+    public void updateTime(int columnIndex, @Nullable Time x) throws SQLException {
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -141,59 +141,6 @@ public class OpDisplayJPanel extends JPanel {
         actionsModifiedListeners.remove(r);
     }
 
-    private final MouseMotionListener mml = new MouseMotionListener() {
-        @Override
-        public void mouseDragged(MouseEvent e) {
-            final Point mouseDownPointFinal = OpDisplayJPanel.this.mouseDownPoint;
-            if (null != mouseDownPointFinal) {
-                Dimension dim = getSize();
-                int h = dim.height;
-                int w = keyVisible ? (dim.width - keyWidth) : dim.width;
-                final List<OpAction> closeActionsFinal = OpDisplayJPanel.this.closeActions;
-                if (null != closeActionsFinal && !closeActionsFinal.isEmpty()) {
-                    for (OpAction action : closeActionsFinal) {
-                        action.getLocation().x += (maxX - minX) * ((e.getPoint().x - mouseDownPointFinal.x) / ((double) w));
-                        action.getLocation().y += (maxY - minY) * ((e.getPoint().y - mouseDownPointFinal.y) / ((double) h));
-                    }
-                    notifyActionsModifiedListeners();
-                }
-                mouseDownPoint = e.getPoint();
-            }
-            repaint();
-        }
-
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            mouseDownPoint = null;
-        }
-    };
-    private final MouseListener mouseListener = new MouseAdapter() {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
-                setCloseActionsFromMouseEvent(e);
-            } else {
-                checkPopup(e);
-            }
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-            if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
-                mouseDownPoint = e.getPoint();
-                setCloseActionsFromMouseEvent(e);
-            } else {
-                checkPopup(e);
-                mouseDownPoint = null;
-            }
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            checkPopup(e);
-        }
-    };
-
     private @MonotonicNonNull
     JPopupMenu popupMenu = null;
 
@@ -350,7 +297,59 @@ public class OpDisplayJPanel extends JPanel {
     private OpDisplayJPanel(OpActionPlan opActionPlan) {
         this.opActionPlan = opActionPlan;
         super.setBackground(Color.white);
-        super.addMouseMotionListener(mml);
+        final MouseListener mouseListener = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
+                    setCloseActionsFromMouseEvent(e);
+                } else {
+                    checkPopup(e);
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (!e.isPopupTrigger() && (popupMenu == null || !popupMenu.isVisible())) {
+                    mouseDownPoint = e.getPoint();
+                    setCloseActionsFromMouseEvent(e);
+                } else {
+                    checkPopup(e);
+                    mouseDownPoint = null;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+        };
+        final MouseMotionListener mouseMotionListener = new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                final Point mouseDownPointFinal = OpDisplayJPanel.this.mouseDownPoint;
+                if (null != mouseDownPointFinal) {
+                    Dimension dim = getSize();
+                    int h = dim.height;
+                    int w = keyVisible ? (dim.width - keyWidth) : dim.width;
+                    final List<OpAction> closeActionsFinal = OpDisplayJPanel.this.closeActions;
+                    if (null != closeActionsFinal && !closeActionsFinal.isEmpty()) {
+                        for (OpAction action : closeActionsFinal) {
+                            action.getLocation().x += (maxX - minX) * ((e.getPoint().x - mouseDownPointFinal.x) / ((double) w));
+                            action.getLocation().y += (maxY - minY) * ((e.getPoint().y - mouseDownPointFinal.y) / ((double) h));
+                        }
+                        notifyActionsModifiedListeners();
+                    }
+                    mouseDownPoint = e.getPoint();
+                }
+                repaint();
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                mouseDownPoint = null;
+            }
+        };
+        super.addMouseMotionListener(mouseMotionListener);
         super.addMouseListener(mouseListener);
 //        ToolTipManager.sharedInstance().registerComponent(this);
     }
@@ -640,7 +639,10 @@ public class OpDisplayJPanel extends JPanel {
                     g2d.fill(selectedCircleLetterShape);
                     g2d.setTransform(origTransform);
                     g2d.translate(x - 3, y - 12);
-                    g2d.setColor(this.getBackground());
+                    final Color background = this.getBackground();
+                    if(null != background) {
+                        g2d.setColor(background);
+                    }
                     g2d.translate(x - 7, y - 15);
                     g2d.fill(requiredCircleLetterShape);
                     g2d.setTransform(origTransform);

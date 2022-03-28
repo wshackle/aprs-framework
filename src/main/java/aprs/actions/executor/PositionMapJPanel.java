@@ -62,34 +62,34 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     /**
      * Creates new form PositionMapJPanel
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public PositionMapJPanel() {
         try {
-	    initComponents();
-	    defaultBackgroundColor = this.getBackground();
-	    defaultForegroundColor = this.getForeground();
-	    Object spinnerIndexValueObject = jSpinnerIndex.getValue();
-	    if (!(spinnerIndexValueObject instanceof Integer)) {
-	        throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
-	    }
-	    spinnerIndexValue = (int) spinnerIndexValueObject;
-	    handleErrorMapFilenameAction();
-	    jTextFieldErrorMapFilename.addActionListener(e -> handleErrorMapFilenameAction());
-	    posMapCachedTable = new CachedTable(jTablePosMap);
-	} catch (Exception ex) {
-	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
-	    throw new RuntimeException(ex);
-	}
+            initComponents();
+            defaultBackgroundColor = this.getBackground();
+            defaultForegroundColor = this.getForeground();
+            Object spinnerIndexValueObject = jSpinnerIndex.getValue();
+            if (!(spinnerIndexValueObject instanceof Integer)) {
+                throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
+            }
+            spinnerIndexValue = (int) spinnerIndexValueObject;
+            handleErrorMapFilenameAction();
+            jTextFieldErrorMapFilename.addActionListener(e -> handleErrorMapFilenameAction());
+            posMapCachedTable = new CachedTable(jTablePosMap);
+        } catch (Exception ex) {
+            Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
-    private File handleErrorMapFilenameAction()  {
-	try {
-	    return positionMapFile = Utils.file(jTextFieldErrorMapFilename.getText());
-	} catch (Exception ex) {
-	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
-	    throw new RuntimeException(ex);
-	}
+    private File handleErrorMapFilenameAction() {
+        try {
+            return positionMapFile = Utils.file(jTextFieldErrorMapFilename.getText());
+        } catch (Exception ex) {
+            Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     private final Color defaultBackgroundColor;
@@ -395,8 +395,9 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         return positionMapFile;
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
-    public @Nullable Object @Nullable [] getSelectedRowData() {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public @Nullable
+    Object @Nullable [] getSelectedRowData() {
         TableModel model = jTablePosMap.getModel();
         if (model instanceof DefaultTableModel) {
             DefaultTableModel dtm = (DefaultTableModel) model;
@@ -413,11 +414,11 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     public void setSelectedRowData(Object[] data) throws IOException {
         int selectedRow = jTablePosMap.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < jTablePosMap.getRowCount()) {
-            PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
-            if(null == positionMap) {
+            PositionMap positionMap = getPositionMap(jSpinnerIndexValue());
+            if (null == positionMap) {
                 return;
             }
-            final PositionMapEntry newPointPairLabelEntry 
+            final PositionMapEntry newPointPairLabelEntry
                     = PositionMapEntry.pointPairLabelEntry((double) data[0], (double) data[1], (double) data[2], (double) data[3], (double) data[4], (double) data[5], (String) data[9]);
             positionMap.getErrmapList().set(selectedRow, newPointPairLabelEntry);
             reversePositionMaps = null;
@@ -483,6 +484,11 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         this.startingDirectory = startingDirectory;
     }
 
+    @SuppressWarnings("nullness")
+    private int jSpinnerIndexValue() {
+        return (int) jSpinnerIndex.getValue();
+    }
+
     @UIEffect
     private void jButtonErrorMapFileBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonErrorMapFileBrowseActionPerformed
         JFileChooser chooser = new JFileChooser();
@@ -494,7 +500,10 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                setPositionMapOnDisplay((int) jSpinnerIndex.getValue(), new PositionMap(chooser.getSelectedFile()));
+                File selectedFile = chooser.getSelectedFile();
+                if (null != selectedFile) {
+                    setPositionMapOnDisplay(jSpinnerIndexValue(), new PositionMap(selectedFile));
+                }
             } catch (IOException | PositionMap.BadErrorMapFormatException ex) {
                 Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -512,12 +521,14 @@ public class PositionMapJPanel extends javax.swing.JPanel {
         }
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                PositionMap positionMap = getPositionMap((int) jSpinnerIndex.getValue());
-                File f = chooser.getSelectedFile();
-                if (null == positionMap) {
-                    positionMap = PositionMap.emptyPositionMap();
+                File selectedFile = chooser.getSelectedFile();
+                if (null != selectedFile) {
+                    PositionMap positionMap = getPositionMap(jSpinnerIndexValue());
+                    if (null == positionMap) {
+                        positionMap = PositionMap.emptyPositionMap();
+                    }
+                    positionMap.saveFile(selectedFile);
                 }
-                positionMap.saveFile(f);
             } catch (IOException ex) {
                 Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -529,35 +540,35 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @UIEffect
     private void jSpinnerIndexStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSpinnerIndexStateChanged
         try {
-	    Object spinnerIndexValueObject = jSpinnerIndex.getValue();
-	    if (!(spinnerIndexValueObject instanceof Integer)) {
-	        throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
-	    }
-	    spinnerIndexValue = (int) spinnerIndexValueObject;
-	    final int spinVal = (int) spinnerIndexValueObject;
-	    if (getPositionMaps().size() == spinVal) {
-	        setPositionMapOnDisplay(spinVal, PositionMap.emptyPositionMap());
-	    }
-	    PositionMap spinValPositionMap = getPositionMap(spinVal);
-	    if (null != spinValPositionMap) {
-	        loadPositionMapToTable(spinValPositionMap);
-	    } else {
-	        loadPositionMapToTable(PositionMap.emptyPositionMap());
-	    }
-	} catch (IOException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+            Object spinnerIndexValueObject = jSpinnerIndex.getValue();
+            if (!(spinnerIndexValueObject instanceof Integer)) {
+                throw new IllegalStateException("jSpinnerIndex.getValue() returned " + spinnerIndexValueObject);
+            }
+            spinnerIndexValue = (int) spinnerIndexValueObject;
+            final int spinVal = (int) spinnerIndexValueObject;
+            if (getPositionMaps().size() == spinVal) {
+                setPositionMapOnDisplay(spinVal, PositionMap.emptyPositionMap());
+            }
+            PositionMap spinValPositionMap = getPositionMap(spinVal);
+            if (null != spinValPositionMap) {
+                loadPositionMapToTable(spinValPositionMap);
+            } else {
+                loadPositionMapToTable(PositionMap.emptyPositionMap());
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }//GEN-LAST:event_jSpinnerIndexStateChanged
 
     @UIEffect
     private void jButtonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonClearActionPerformed
         try {
-	    clearCurrentMapOnDisplay();
-	} catch (Exception ex) {
-	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
-	    throw new RuntimeException(ex);
-	}
+            clearCurrentMapOnDisplay();
+        } catch (Exception ex) {
+            Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }//GEN-LAST:event_jButtonClearActionPerformed
 
     @UIEffect
@@ -582,16 +593,16 @@ public class PositionMapJPanel extends javax.swing.JPanel {
     @SafeEffect
     public void clearAllMaps() {
         try {
-	    positionMaps.clear();
-	    if (null != reversePositionMaps) {
-	        reversePositionMaps.clear();
-	    }
-	    clearCurrentMapOnDisplay();
-	    aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
-	} catch (Exception ex) {
-	    Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
-	    throw new RuntimeException(ex);
-	}
+            positionMaps.clear();
+            if (null != reversePositionMaps) {
+                reversePositionMaps.clear();
+            }
+            clearCurrentMapOnDisplay();
+            aprsSystem.runOnDispatchThread(this::clearAllMapsOnDisplay);
+        } catch (Exception ex) {
+            Logger.getLogger(PositionMapJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            throw new RuntimeException(ex);
+        }
     }
 
     @UIEffect

@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextArea;
 import javax.swing.TransferHandler;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
@@ -49,11 +50,12 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
     /**
      * Creates new form LogDisplayJPanel
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public LogDisplayJPanel() {
         initComponents();
         jSpinnerMaxLines.setValue(250);
+        popMenu = createPopupMenu();
     }
 
     private Process process;
@@ -199,7 +201,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_jButtonToExternalActionPerformed
 
-    private final JPopupMenu popMenu = createPopupMenu();
+    private final JPopupMenu popMenu;
 
     @UIEffect
     private JPopupMenu createPopupMenu() {
@@ -212,10 +214,20 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
 
     @UIEffect
     private void copyText() {
-        this.jTextArea1.getTransferHandler().exportToClipboard(this.jTextArea1,
-                Toolkit.getDefaultToolkit().getSystemClipboard(),
-                TransferHandler.COPY);
+        JTextArea thisTextArea = this.jTextArea1;
+        if (null != thisTextArea) {
+            final TransferHandler transferHandler
+                    = thisTextArea
+                            .getTransferHandler();
+            if (null != transferHandler) {
+                transferHandler
+                        .exportToClipboard(thisTextArea,
+                                Toolkit.getDefaultToolkit().getSystemClipboard(),
+                                TransferHandler.COPY);
+            }
+        }
         popMenu.setVisible(false);
+
     }
 
     @UIEffect
@@ -249,7 +261,7 @@ public class LogDisplayJPanel extends javax.swing.JPanel {
         System.out.println("process = " + process.isAlive());
         jTextArea1.append("\nprocess = " + process
                 + "\nprocess = " + process.isAlive() + "\n");
-        jTextArea1.setCaretPosition(jTextArea1.getText().length()-1);
+        jTextArea1.setCaretPosition(jTextArea1.getText().length() - 1);
     }//GEN-LAST:event_jButtonProcessInfoActionPerformed
 
     private final List<String> logLines = new ArrayList<>();

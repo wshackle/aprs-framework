@@ -190,8 +190,10 @@ public class MultiFileDialogJPanel extends javax.swing.JPanel {
 	    if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
 	        DefaultTableModel model = (DefaultTableModel) jTableFiles.getModel();
 	        try {
-	            model.setValueAt(chooser.getSelectedFile().exists(), row, 1);
-	            model.setValueAt(chooser.getSelectedFile().getCanonicalPath(), row, 2);
+                    final File selectedFile = chooser.getSelectedFile();
+                    assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+	            model.setValueAt(selectedFile.exists(), row, 1);
+	            model.setValueAt(selectedFile.getCanonicalPath(), row, 2);
 	        } catch (IOException ex) {
 	            model.setValueAt(false, row, 1);
 	            Logger.getLogger(MultiFileDialogJPanel.class.getName()).log(Level.SEVERE, "", ex);

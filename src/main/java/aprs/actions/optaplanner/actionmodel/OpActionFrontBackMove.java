@@ -177,7 +177,9 @@ public class OpActionFrontBackMove extends AbstractMove<OpActionPlan> {
             return false;
         }
         final OpActionInterface currentStartNext = start.getNext();
-
+        if(null == currentStartNext) {
+            throw new IllegalStateException("start="+start+" has null getNext()");
+        }
         if (currentStartNext == splitter) {
             return false;
         }

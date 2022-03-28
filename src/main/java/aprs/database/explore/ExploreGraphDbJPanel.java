@@ -74,7 +74,7 @@ import crcl.utils.CRCLUtils;
  *
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
-@SuppressWarnings({"guieffect","serial"})
+@SuppressWarnings({"guieffect", "serial"})
 class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener {
 
     private final TableModelListener nodeTableModelListener;
@@ -82,7 +82,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
     /**
      * Creates new form ExplorteGraphDbJPanel
      */
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     @UIEffect
     public ExploreGraphDbJPanel() {
         initComponents();
@@ -94,7 +94,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         });
         nodeTableModelListener = new TableModelListener() {
             @SuppressWarnings("rawtypes")
-			@Override
+            @Override
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() != TableModelEvent.UPDATE) {
                     return;
@@ -795,7 +795,10 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         JFileChooser chooser = new JFileChooser();
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                saveDump(chooser.getSelectedFile());
+                final File selectedFile = chooser.getSelectedFile();
+                if (null != selectedFile) {
+                    saveDump(selectedFile);
+                }
             } catch (FileNotFoundException | SQLException ex) {
                 Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -916,7 +919,10 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
-                loadDump(chooser.getSelectedFile());
+                final File selectedFile = chooser.getSelectedFile();
+                if (null != selectedFile) {
+                    loadDump(selectedFile);
+                }
             } catch (IOException | SQLException ex) {
                 Logger.getLogger(ExploreGraphDbJPanel.class.getName()).log(Level.SEVERE, "", ex);
             }
@@ -1021,7 +1027,7 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
             }
         }
         String sbString = sb.toString();
-        if(sbString.length()> 10000) {
+        if (sbString.length() > 10000) {
             jTextAreaErrors.setText(sbString.substring(0, 9999));
         } else {
             jTextAreaErrors.setText(sbString);
@@ -1053,9 +1059,9 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
         return result;
     }
 
+    @SuppressWarnings({"unchecked", "nullness"})
     private List<String> getListFromResultSet(ResultSet rs, int index) {
         try {
-            @SuppressWarnings("unchecked")
             List<String> result = (List<String>) rs.getObject(index, List.class);//stringToList(str);
             return result;
         } catch (Exception ex) {
@@ -1156,10 +1162,10 @@ class ExploreGraphDbJPanel extends javax.swing.JPanel implements DbSetupListener
                     final String listElement = sublist.get(tableIndex);
                     final Object mapValue = map.get(listElement);
                     final int tableOffsetIndex = tableOffset + tableIndex;
-                    if(mapValue != null) {
+                    if (mapValue != null) {
                         model.setValueAt(mapValue, rowIndex, tableOffsetIndex);
                     } else {
-                         clearModelValue(model, rowIndex, tableOffsetIndex);
+                        clearModelValue(model, rowIndex, tableOffsetIndex);
                     }
                 }
                 tableOffset += listOfLabelsLists.get(rsIndex - 1).size();

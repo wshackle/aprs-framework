@@ -27,6 +27,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  *
@@ -193,12 +194,12 @@ public interface ExecutorOption {
                 "No ExecutorOption named " + name);
     }
 
-    static public class WithValue<K extends Enum<?> & ExecutorOption, V> implements Map.Entry<K, V> {
+    static public class WithValue<K extends Enum<?> & ExecutorOption, @NonNull V> implements Map.Entry<K, V> {
 
         protected final K key;
-        protected V value;
+        protected @NonNull V value;
 
-        public WithValue(K key, V value) {
+        public WithValue(K key, @NonNull  V value) {
             this.key = key;
             this.value = value;
         }
@@ -209,12 +210,15 @@ public interface ExecutorOption {
         }
 
         @Override
-        public V getValue() {
+        public @NonNull V getValue() {
             return value;
         }
 
         @Override
         public V setValue(V value) {
+            if(null == value) {
+                throw new NullPointerException("value");
+            }
             this.value = value;
             return value;
         }

@@ -18,30 +18,13 @@ public class CachedComboBox<E> {
     private final JComboBox<E> comboBox;
     private final Class<E> eClass;
 
-    private final ListDataListener listDataListener = new ListDataListener() {
-        @Override
-        @UIEffect
-        public void intervalAdded(ListDataEvent e) {
-            syncUiToCache(comboBox.getModel());
-        }
-
-        @Override
-        @UIEffect
-        public void intervalRemoved(ListDataEvent e) {
-            syncUiToCache(comboBox.getModel());
-        }
-
-        @Override
-        @UIEffect
-        public void contentsChanged(ListDataEvent e) {
-            syncUiToCache(comboBox.getModel());
-        }
-    };
+    private final ListDataListener listDataListener;
 
     private final ItemListener itemListener = new ItemListener() {
 
         @Override
         @UIEffect
+        @SuppressWarnings("nullness")
         public void itemStateChanged(ItemEvent e) {
             switch (e.getStateChange()) {
                 case ItemEvent.SELECTED:
@@ -66,7 +49,7 @@ public class CachedComboBox<E> {
     }
 
     @UIEffect
-    @SuppressWarnings({"unchecked", "initialization"})
+    @SuppressWarnings({"unchecked", "initialization","nullness"})
     private synchronized void syncUiToCache(@Nullable ComboBoxModel<E> model) {
         assert model != null;
         int size = model.getSize();
@@ -86,8 +69,28 @@ public class CachedComboBox<E> {
         ComboBoxModel<E> model = comboBox.getModel();
         assert model != null;
         syncUiToCache(model);
+        listDataListener = new ListDataListener() {
+            @Override
+            @UIEffect
+            public void intervalAdded(ListDataEvent e) {
+                syncUiToCache(comboBox.getModel());
+            }
+
+            @Override
+            @UIEffect
+            public void intervalRemoved(ListDataEvent e) {
+                syncUiToCache(comboBox.getModel());
+            }
+
+            @Override
+            @UIEffect
+            public void contentsChanged(ListDataEvent e) {
+                syncUiToCache(comboBox.getModel());
+            }
+        };
         model.addListDataListener(listDataListener);
         comboBox.addItemListener(itemListener);
+
     }
 
     public E[] getItems() {

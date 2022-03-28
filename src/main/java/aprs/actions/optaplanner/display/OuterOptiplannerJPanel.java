@@ -29,6 +29,7 @@ import aprs.actions.optaplanner.actionmodel.OpActionPlanCloner;
 import aprs.actions.optaplanner.actionmodel.OpEndAction;
 import aprs.actions.optaplanner.actionmodel.score.EasyOpActionPlanScoreCalculator;
 import aprs.misc.Utils;
+import crcl.utils.CRCLUtils;
 import crcl.utils.XFutureVoid;
 import java.awt.Container;
 import java.awt.Point;
@@ -37,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
@@ -59,7 +59,7 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
     /**
      * Creates new form OuterOptiplannerJPanel
      */
-    @SuppressWarnings({"initialization"})
+    @SuppressWarnings({"initialization","nullness"})
     @UIEffect
     public OuterOptiplannerJPanel() {
         initComponents();
@@ -256,7 +256,7 @@ public class OuterOptiplannerJPanel extends javax.swing.JPanel {
     @UIEffect
     private void jButtonUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonUpActionPerformed
         int selectedIndex = jTable1.getSelectedRow();
-        OpActionPlan opActionPlan = Objects.requireNonNull(opDisplayJPanel1.getOpActionPlan(), "opDisplayJPanel1.getOpActionPlan()");
+        OpActionPlan opActionPlan = CRCLUtils.requireNonNull(opDisplayJPanel1.getOpActionPlan(), "opDisplayJPanel1.getOpActionPlan()");
         List<OpAction> actions = opActionPlan.getOrderedList(true);
         int modelIndex = jTable1.convertRowIndexToModel(selectedIndex);
         System.out.println("modelIndex = " + modelIndex);

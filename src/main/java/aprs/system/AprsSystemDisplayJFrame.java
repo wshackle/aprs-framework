@@ -2143,7 +2143,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         return aprsSystemFinal.connectRobot(name, host, port)
                 .thenCompose(x -> startCheckEnabled())
                 .thenApply((Boolean success) -> {
-                    if (!success || !aprsSystem.isConnected()) {
+                    if (!success || !aprsSystemFinal.isConnected()) {
                         clearRobotConnectedCheckBox();
                     }
                     return success;
@@ -2384,6 +2384,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             final File selectedFile = chooser.getSelectedFile();
+            if(null == selectedFile) {
+                return;
+            }
             AutomaticPropertyFileUtils.saveObjectProperties(selectedFile, holder.getInternalFrame());
             File customWindowsFile = aprsSystem.getCustomWindowsFile();
             if (customWindowsFile == null || !customWindowsFile.exists()) {

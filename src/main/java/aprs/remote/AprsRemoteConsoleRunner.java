@@ -199,7 +199,11 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
                                         lastVar = varToSet;
                                     } else {
                                         pw.print("Null value returned by " + fields[1] + "\r\n");
-                                        pw.print("LastVar: " + lastVar + " = " + this.scriptablesMap.get(lastVar) + "\r\n");
+                                        if (null != lastVar) {
+                                            pw.print("LastVar: " + lastVar + " = " + this.scriptablesMap.get(lastVar) + "\r\n");
+                                        } else {
+                                            pw.print("LastVar: null"); 
+                                        }
                                     }
                                 }
                             }
@@ -222,7 +226,7 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
 
     @SuppressWarnings("nullness")
     private static String[] removeFields(String[] fields, int feilds_to_remove) {
-        return (fields.length < (feilds_to_remove+1))
+        return (fields.length < (feilds_to_remove + 1))
                 ? new String[]{}
                 : Arrays.copyOfRange(fields, feilds_to_remove, fields.length);
     }
@@ -243,8 +247,8 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
             }
         } else {
             int port = Integer.parseInt(args[0]);
-            try(AprsRemoteConsoleServerSocket socket = new AprsRemoteConsoleServerSocket(port)){
-            	socket.run();
+            try (AprsRemoteConsoleServerSocket socket = new AprsRemoteConsoleServerSocket(port)) {
+                socket.run();
             }
         }
     }

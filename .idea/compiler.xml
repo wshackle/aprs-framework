@@ -34,7 +34,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ATINetFT_proxy" options="-parameters" />
       <module name="aprs-framework" options="-parameters" />
-      <module name="crcl4java" options="-parameters" />
+      <module name="crcl4java" options="" />
       <module name="crcl4java-base" options="-parameters" />
       <module name="crcl4java-motoman" options="-parameters" />
       <module name="crcl4java-ui" options="-parameters" />

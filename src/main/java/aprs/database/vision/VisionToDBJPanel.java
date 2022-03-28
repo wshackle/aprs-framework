@@ -1034,7 +1034,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //            startVisionThread = null;
 //        }
 //    }
-
     private volatile boolean updatingFromArgs = false;
     private final CachedCheckBox addRepeatCountsToDatabaseNamesCachedCheckBox;
 
@@ -1125,7 +1124,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 //            fld.setText(argsMap.get(key));
 //        }
 //    }
-
     private int update_info_count = 0;
 
     private final CachedTable fromDatabaseCachedTable;
@@ -1645,7 +1643,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                             + " : failures = " + failures + " out of " + maxRequiredPartFailures + "_ : list.siz()=" + list.size() + ", namesList=" + namesList;
                     if (null != aprsSystem && aprsSystem.snapshotsEnabled()) {
                         try {
-                            takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG",aprsSystem.getLogImageDir()), list);
+                            takeSimViewSnapshot(createTempFile("checkRequiredParts_" + msg, ".PNG", aprsSystem.getLogImageDir()), list);
                         } catch (IOException ex) {
                             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
                         }
@@ -1890,9 +1888,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             if (item instanceof Tray) {
                 Tray tray = (Tray) item;
                 if (tray.getAbsSlotList().isEmpty()) {
-                    System.err.println("tray.getName()="+tray.getName());
-                    System.err.println("tray ="+tray);
-                    throw new IllegalStateException("tray.getAbsSlotList().isEmpty() tray="+tray);
+                    System.err.println("tray.getName()=" + tray.getName());
+                    System.err.println("tray =" + tray);
+                    throw new IllegalStateException("tray.getAbsSlotList().isEmpty() tray=" + tray);
                 }
             }
         }
@@ -2074,8 +2072,8 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                         boolean chkAgain = checkRequiredParts("visionList", visionList, true);
                         boolean chkAgain2 = checkRequiredParts("visionList", visionList, true);
                         System.err.println("checkRequiredPart(" + visionList + ") false");
-                        System.err.println("checkAgain="+chkAgain);
-                        System.err.println("checkAgain2="+chkAgain2);
+                        System.err.println("checkAgain=" + chkAgain);
+                        System.err.println("checkAgain2=" + chkAgain2);
                         System.err.println("checkRequiredPart(" + visionList + ") false");
                         visionClientUpdateNoCheckRequiredPartsCount.incrementAndGet();
                         return XFutureVoid.completedFuture();
@@ -2215,8 +2213,6 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         }
         this.ignoreLosingItemsLists = ignoreLosingItemsLists;
     }
-    
-    
 
     @Override
     public void connectVision() {
@@ -2232,17 +2228,17 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             argsMap.put("ignoreLosingItemsLists", Boolean.toString(ignoreLosingItemsLists));
 //            stopVisionStartThread();
 //            startVisionThread = new Thread(() -> {
-                try {
-                    startVisionInternal(argsMap);
-                } catch (Exception e) {
-                    System.err.println("connectThread = " + connectThread);
-                    System.err.println("connectTrace = " + Arrays.toString(connectTrace));
-                    System.err.println("argsMap = " + argsMap);
-                    println("aprsSystemInterface = " + aprsSystem);
-                    Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", e);
+            try {
+                startVisionInternal(argsMap);
+            } catch (Exception e) {
+                System.err.println("connectThread = " + connectThread);
+                System.err.println("connectTrace = " + Arrays.toString(connectTrace));
+                System.err.println("argsMap = " + argsMap);
+                println("aprsSystemInterface = " + aprsSystem);
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", e);
 //                    ret.completeExceptionally(e);
-                    throw new RuntimeException(e);
-                }
+                throw new RuntimeException(e);
+            }
 //            }, "startVisionThread");
 //            startVisionThread.setDaemon(true);
 //            startVisionThread.start();
@@ -2457,9 +2453,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != dpu) {
             return dpu.queryDatabase()
                     .thenAcceptAsync("VisionToDB.queryDatabase.updataPoseQueryInfo",
-                            l -> { 
+                            l -> {
                                 updataPoseQueryInfo(l);
-                                        },
+                            },
                             Utils.getDispatchThreadExecutorService());
         }
         return XFutureVoid.completedFutureWithName("queryDatabase.null==dpu");
@@ -2469,7 +2465,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         if (null != dpu) {
             return dpu.queryDatabaseNew()
                     .thenAcceptAsync("VisionToDB.startQueryDatabaseNew.updataPoseQueryInfo",
-                            l ->  updataPoseQueryInfo(l),Utils.getDispatchThreadExecutorService());
+                            l -> updataPoseQueryInfo(l), Utils.getDispatchThreadExecutorService());
         }
         return XFutureVoid.completedFutureWithName("startQueryDatabaseNew.null==dpu");
     }
@@ -2562,9 +2558,13 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void copyText() {
         JTextArea area = jTextAreaLog;
         if (area != null) {
-            area.getTransferHandler().exportToClipboard(area,
-                    Toolkit.getDefaultToolkit().getSystemClipboard(),
-                    TransferHandler.COPY);
+            final TransferHandler transferHandler = area.getTransferHandler();
+            if (null != transferHandler) {
+                transferHandler
+                        .exportToClipboard(area,
+                                Toolkit.getDefaultToolkit().getSystemClipboard(),
+                                TransferHandler.COPY);
+            }
         }
         if (null != popMenu) {
             popMenu.setVisible(false);
@@ -2695,7 +2695,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
 
     private void showDatabaseTableImage() {
         try {
-            File f = createTempFile("newDataBaseItems_", ".png",aprsSystem.getLogImageDir());
+            File f = createTempFile("newDataBaseItems_", ".png", aprsSystem.getLogImageDir());
             takeSnapshot(f);
             Desktop.getDesktop().open(f);
         } catch (IOException ex) {
@@ -2736,7 +2736,12 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
                 System.err.println("takeSnapshot(" + f + ") called when table is empty");
                 return;
             }
-            File dbLogDir = Utils.file(f.getParentFile(), "db_log_dir");
+            final File parentFile = f.getParentFile();
+            if(null == parentFile) {
+                Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "f="+f+" has null parentFile");
+                return;
+            }
+            File dbLogDir = Utils.file(parentFile, "db_log_dir");
             dbLogDir.mkdirs();
             String csvFnameBase = f.getName();
             File csvFile = createTempFile(csvFnameBase + "_db", ".csv", dbLogDir);
@@ -2755,7 +2760,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
         List<PhysicalItem> lastInput = dpu.getLastEnabledUpdateList();
         if (null != lastInput && !lastInput.isEmpty()) {
             try {
-                File dbInputLogDir = Utils.file(f.getParentFile(), "visionToDb_input_dir");
+                final File parentFile = f.getParentFile();
+                if(null == parentFile) {
+                    throw new IllegalArgumentException("f="+f+ " has null parentFile");
+                }
+                File dbInputLogDir = Utils.file(parentFile, "visionToDb_input_dir");
                 dbInputLogDir.mkdirs();
                 File csvInputFile = Utils.createTempFile(f.getName() + "_visiontToDb", ".csv", dbInputLogDir);
                 try (PrintWriter pw = new PrintWriter(new FileWriter(csvInputFile))) {
@@ -2870,7 +2879,9 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
     private void jMenuItemSetPropertiesFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSetPropertiesFileActionPerformed
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            this.setPropertiesFile(chooser.getSelectedFile());
+            final File selectedFile = chooser.getSelectedFile();
+            assert selectedFile != null : "@AssumeAssertion(nullness): showOpenDialog returned APPROVE_OPTION so selected file shoule not be null";
+            this.setPropertiesFile(selectedFile);
         }
     }//GEN-LAST:event_jMenuItemSetPropertiesFileActionPerformed
 

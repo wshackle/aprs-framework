@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
  *
  * @author shackle
  */
+@SuppressWarnings({"nullness"})
 public class LauncherAprsJFrameIT {
     
     public LauncherAprsJFrameIT() {

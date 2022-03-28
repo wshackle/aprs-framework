@@ -49,6 +49,7 @@ import static aprs.database.DbSetupBuilder.DEFAULT_LOGIN_TIMEOUT;
 import static aprs.misc.AprsCommonLogger.println;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.util.Comparator.*;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  *
@@ -289,7 +290,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
     private final boolean sharedConnection;
     private final DbSetup dbsetup;
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public DatabasePoseUpdater(
             @Nullable Connection con,
             DbType dbtype,
@@ -942,19 +943,20 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
         return l;
     }
 
-    private static class CheckedStringMap<K> {
+    private static class CheckedStringMap<@NonNull K> {
 
-        private final Map<K, String> map;
+        private final Map<@NonNull K, @NonNull String> map;
 
-        Map<K, String> getMap() {
+        Map<@NonNull K, @NonNull String> getMap() {
             return map;
         }
 
-        CheckedStringMap(Map<K, String> map) {
+        CheckedStringMap(Map<@NonNull K, @NonNull String> map) {
             this.map = map;
         }
 
-        String get(K key) {
+        String get(@NonNull K key) {
+            assert key != null : "@AssumeAssertion(nullness) key type should be nonnull";
             String value = map.get(key);
             if (value == null) {
                 throw new IllegalStateException("no entry for " + key + " in " + map.toString());
@@ -962,7 +964,9 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
             return value;
         }
 
-        void put(K key, String value) {
+        void put(@NonNull K key, @NonNull String value) {
+            assert key != null : "@AssumeAssertion(nullness) key type should be nonnull";
+            assert value != null : "@AssumeAssertion(nullness) value type should be nonnull";
             map.put(key, value);
         }
     }
@@ -1708,7 +1712,7 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                         List<Object> paramsList = poseParamsToStatement(ci, updateParamTypes, stmnt);
                         updateStringFilled = fillQueryString(statementString, paramsList);
                     } else {
-                        updateStringFilled="useCsv";
+                        updateStringFilled = "useCsv";
                     }
                     ci.setSetQuery(updateStringFilled);
                     returnedList.add(ci);
@@ -2040,16 +2044,19 @@ public class DatabasePoseUpdater implements AutoCloseable, SlotOffsetProvider {
                             }
                             for (int j = 1; j <= meta.getColumnCount(); j++) {
                                 String name = meta.getColumnName(j);
-                                String value = rs.getObject(name, Object.class).toString();
-                                if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
-                                    try {
-                                        updatedCount = Integer.parseInt(value);
-                                    } catch (NumberFormatException nfe) {
-                                        Logger.getLogger(DatabasePoseUpdater.class
-                                                .getName()).log(Level.SEVERE, "", nfe);
+                                final Object object = rs.getObject(name, Object.class);
+                                if (null != object) {
+                                    String value = object.toString();
+                                    if (j == 1 && updatedCount < 0 && name.startsWith("count")) {
+                                        try {
+                                            updatedCount = Integer.parseInt(value);
+                                        } catch (NumberFormatException nfe) {
+                                            Logger.getLogger(DatabasePoseUpdater.class
+                                                    .getName()).log(Level.SEVERE, "", nfe);
+                                        }
                                     }
+                                    resultMap.put(name, value);
                                 }
-                                resultMap.put(name, value);
                             }
                             resultSetMapList.add(resultMap);
                             if (null != displayInterface

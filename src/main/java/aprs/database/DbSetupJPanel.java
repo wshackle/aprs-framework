@@ -132,7 +132,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         startScriptCachedTextField = new CachedTextField(jTextFieldStartScript);
         propertiesFilesCachedComboBox = new CachedComboBox<>(String.class, jComboBoxPropertiesFiles);
         resourceDirCachedComboBox = new CachedComboBox<>(String.class, jComboBoxResourceDir);
-
+        recentSettingsFile = initRecentSettingsFile();
     }
 
     @SuppressWarnings({"nullness", "initialization"})
@@ -563,7 +563,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         }
         chooser.setSelectedFile(propertiesFile);
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            this.setPropertiesFileOnDisplay(chooser.getSelectedFile());
+            final File selectedFile = chooser.getSelectedFile();
+            if (null != selectedFile) {
+                this.setPropertiesFileOnDisplay(selectedFile);
+            }
         }
         DbSetupBuilder.savePropertiesFile(propertiesFile, getDbSetup());
         this.notifyAllDbSetupListeners(null);
@@ -605,7 +608,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             chooser.setCurrentDirectory(parentFile);
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            this.setPropertiesFileOnDisplay(chooser.getSelectedFile());
+            final File selectedFile = chooser.getSelectedFile();
+            if (null != selectedFile) {
+                this.setPropertiesFileOnDisplay(selectedFile);
+            }
         }
     }//GEN-LAST:event_jButtonBrowseActionPerformed
 
@@ -669,8 +675,10 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            loadExternalQueriesDirectory(f);
+            File selectedFile = chooser.getSelectedFile();
+            if (null != selectedFile) {
+                loadExternalQueriesDirectory(selectedFile);
+            }
         }
     }//GEN-LAST:event_jButtonBrowseExternalDirectoryActionPerformed
 
@@ -1300,7 +1308,7 @@ public class DbSetupJPanel extends javax.swing.JPanel implements DbSetupPublishe
             Logger.getLogger(DbSetupJPanel.class.getName()).log(Level.SEVERE, "", iOException);
         }
     }
-    private final File recentSettingsFile = initRecentSettingsFile();
+    private final File recentSettingsFile;
 
     private File initRecentSettingsFile() {
         try {

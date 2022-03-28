@@ -23,10 +23,12 @@
 package aprs.supervisor.screensplash;
 
 import aprs.misc.Utils;
+import crcl.utils.CRCLUtils;
 import crcl.utils.XFutureVoid;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -185,72 +187,84 @@ public class SplashScreen extends JFrame {
     }
 
     public static XFutureVoid showMessageFullScreen(String message, float fontSize, @Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
+        if(CRCLUtils.isGraphicsEnvironmentHeadless()) {
+            return XFutureVoid.completedFuture();
+        }
         XFutureVoid returnFuture = new XFutureVoid("showMessageFullScreen(" + message + ")");
         XFutureVoid step1Future = Utils.runOnDispatchThread("showMessageFullScreen(" + message + ").start", () -> {
-            SplashScreen ss = new SplashScreen(message, fontSize, image);
-            ss.setVisible(true);
-            GraphicsDevice gd0 = graphicsDevice;
-            if (null == gd0) {
-                gd0 = ss.getGraphicsConfiguration().getDevice();
-            }
-            gd0.setFullScreenWindow(ss);
-
-            final GraphicsDevice gd = gd0;
-            javax.swing.Timer ssTimer
-                    = new javax.swing.Timer(500, new ActionListener() {
-                        int colorIndex = 0;
-
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            try {
-                                if (colorIndex < colors.size()) {
-                                    Color color = colors.get(colorIndex);
-                                    ss.setBackground(color);
-                                    ss.panel.setBackground(color);
-                                    ss.repaint();
-                                    colorIndex++;
-                                } else {
-                                    ss.close(gd, returnFuture);
-                                }
-                            } catch (Exception exception) {
-                                returnFuture.completeExceptionally(exception);
-                                Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "", exception);
-                            }
-                        }
-                    });
-
-            KeyListener kl = new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent e) {
-                    ssTimer.stop();
-                    ss.close(gd, returnFuture);
-                }
-
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    ssTimer.stop();
-                    ss.close(gd, returnFuture);
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                }
-            };
-            ss.addKeyListener(kl);
-            MouseListener ml = new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    super.mouseClicked(e);
-                    ssTimer.stop();
-                    ss.close(gd, returnFuture);
-                }
-            };
-            ss.timer = ssTimer;
-            ss.addMouseListener(ml);
-            ssTimer.start();
+            showMessageFullScreenOnDisplay(returnFuture,message, fontSize, image, colors, graphicsDevice);
         });
+        return step1Future.thenComposeAsyncToVoid(() -> returnFuture,Utils.getDispatchThreadExecutorService());
+    }
 
-        return returnFuture;
+    private static void showMessageFullScreenOnDisplay(XFutureVoid returnFuture, String message, float fontSize,@Nullable Image image, List<Color> colors, @Nullable GraphicsDevice graphicsDevice) {
+        SplashScreen ss = new SplashScreen(message, fontSize, image);
+        ss.setVisible(true);
+        GraphicsDevice gd0 = graphicsDevice;
+        if (null == gd0) {
+            final GraphicsConfiguration graphicsConfiguration = ss.getGraphicsConfiguration();
+            if(null == graphicsConfiguration) {
+                returnFuture.complete();
+                return;
+            }
+            gd0 = graphicsConfiguration.getDevice();
+        }
+        gd0.setFullScreenWindow(ss);
+        
+        final GraphicsDevice gd = gd0;
+        javax.swing.Timer ssTimer
+                = new javax.swing.Timer(500, new ActionListener() {
+                    int colorIndex = 0;
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        try {
+                            if (colorIndex < colors.size()) {
+                                Color color = colors.get(colorIndex);
+                                ss.setBackground(color);
+                                ss.panel.setBackground(color);
+                                ss.repaint();
+                                colorIndex++;
+                            } else {
+                                ss.close(gd, returnFuture);
+                            }
+                        } catch (Exception exception) {
+                            returnFuture.completeExceptionally(exception);
+                            Logger.getLogger(SplashScreen.class.getName()).log(Level.WARNING, "", exception);
+                        }
+                    }
+                });
+        
+        KeyListener kl = new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                ssTimer.stop();
+                ss.close(gd, returnFuture);
+            }
+            
+            @Override
+            public void keyPressed(KeyEvent e) {
+                ssTimer.stop();
+                ss.close(gd, returnFuture);
+            }
+            
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
+        };
+        ss.addKeyListener(kl);
+        MouseListener ml = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                ssTimer.stop();
+                ss.close(gd, returnFuture);
+            }
+        };
+        ss.timer = ssTimer;
+        ss.addMouseListener(ml);
+        ssTimer.start();
+        
     }
 
     public static void main(String[] args) {

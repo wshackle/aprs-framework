@@ -541,9 +541,10 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 launcherFileChooser.setFileFilter(txtExtensionFilter);
                 launcherFileChooser.setDialogTitle("Choose launch text file for Aprs.");
                 if (launcherFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                    launcherFile = launcherFileChooser.getSelectedFile();
-                    saveLastLaunchFile(launcherFile);
-                    openMultiWithLaunchFile(launcherFile, null, this);
+                    final File selectedFile = launcherFileChooser.getSelectedFile();
+                    assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                    saveLastLaunchFile(selectedFile);
+                    openMultiWithLaunchFile(selectedFile, null, this);
                 } else {
                     openMultiWithoutLaunchFile(null, this, null);
                 }
@@ -839,75 +840,12 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         }
     }
 
-//    public static XFuture<Boolean> flipFMTest(@Nullable File launchFile,
-//            File setupFile,
-//            File positionMappingsFile,
-//            File fanucSimItemsFile) {
-//        long startTime = System.currentTimeMillis();
-//        Supervisor supervisor = Supervisor.createSupervisor();
-////        if(!CRCLUtils.isGraphicsEnvironmentHeadless()) {
-////            supervisor.startColorTextReader();
-////            supervisor.setVisible(true);
-////        }
-//        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
-//
-//        if (null != launchFile) {
-//            try {
-//                XFutureVoid launchFuture;
-//                ProcessLauncherJFrame processLauncher;
-//                if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
-//                    processLauncher = new ProcessLauncherJFrame();
-//                    processLauncher.setVisible(true);
-//                    launchFuture = processLauncher.run(launchFile);
-//                } else {
-//                    processLauncher = null;
-//                    LaunchFileRunner runner = new LaunchFileRunner();
-//                    launchFuture = runner.run(launchFile, -1, true);
-//                }
-//                return launchFuture
-//                        .thenRun(() -> {
-//                            if (null != processLauncher) {
-//                                supervisor.setProcessLauncher(processLauncher);
-//                            }
-//                        }).thenCompose(() -> {
-//                    return Utils.supplyOnDispatchThread(() -> {
-//                        try {
-//                            return supervisor.flipFMTest(setupFile, positionMappingsFile, startTime, fanucSimItemsFile);
-//                        } catch (Exception ex) {
-//                            Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
-//                            if (ex instanceof RuntimeException) {
-//                                throw (RuntimeException) ex;
-//                            } else {
-//                                throw new RuntimeException(ex);
-//                            }
-//                        }
-//                    });
-//                }).thenCompose(x -> x);
-//            } catch (Exception ex) {
-//                Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
-//                throw new RuntimeException(ex);
-//            }
-//        } else {
-//            try {
-//                return supervisor.flipFMTest(setupFile, positionMappingsFile, startTime, fanucSimItemsFile);
-//            } catch (Exception ex) {
-//                Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
-//                if (ex instanceof RuntimeException) {
-//                    throw (RuntimeException) ex;
-//                } else {
-//                    throw new RuntimeException(ex);
-//                }
-//            }
-//        }
-//    }
-    
     static private volatile @Nullable Supervisor multiCycleTestSupervisor = null;
 
-    public static Supervisor getMultiCycleTestSupervisor() {
+    public static @Nullable Supervisor getMultiCycleTestSupervisor() {
         return multiCycleTestSupervisor;
     }
-    
-    
+
     /**
      * Test multiple cycles of filling and emptying kit trays. The test is
      * performed asynchronously in another thread.
@@ -932,7 +870,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             File teachPropsFile,
             int numCycles,
             boolean useConveyor) {
-        multiCycleTestSupervisor=null;
+        multiCycleTestSupervisor = null;
         long startTime = System.currentTimeMillis();
         Supervisor supervisor = Supervisor.createSupervisor();
         multiCycleTestSupervisor = supervisor;
@@ -983,7 +921,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         } else {
             try {
                 return supervisor.multiCycleTest(sysFile, posMapsFile, teachPropsFile, startTime, numCycles, useConveyor)
-                        .thenApply(x -> { 
+                        .thenApply(x -> {
                             multiCycleTestSupervisor = null;
                             return x;
                         });
@@ -999,7 +937,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     }
 
     public static XFuture<Boolean> flipFMTest(
-            File launchFile,
+            @Nullable File launchFile,
             File sysFile,
             File posMapsFile,
             File fanucSimItemsFile) {
@@ -1153,7 +1091,9 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 }
             }
             if (JFileChooser.APPROVE_OPTION == chooser.showOpenDialog(this)) {
-                saveLastLaunchFile(chooser.getSelectedFile());
+                final File selectedFile = chooser.getSelectedFile();
+                assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                saveLastLaunchFile(selectedFile);
             }
         } catch (IOException iOException) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", iOException);
@@ -1167,13 +1107,16 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
         this.setVisible(false);
     }//GEN-LAST:event_jMenuItemReviewLastOptaPlannerResultsActionPerformed
 
-    private File chooseFile(File dir, String dialogTitle, String extension) {
+    private @Nullable
+    File chooseFile(@Nullable File dir, String dialogTitle, String extension) {
         try {
-            JFileChooser chooser = new JFileChooser(dir);
+            JFileChooser chooser = (dir != null) ? new JFileChooser(dir) : new JFileChooser();
             chooser.setDialogTitle(dialogTitle);
             chooser.setFileFilter(new FileNameExtensionFilter(extension, extension));
             if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                return chooser.getSelectedFile();
+                final File selectedFile = chooser.getSelectedFile();
+                assert selectedFile != null : "@AssumeAssertion(nullness) : selectedFile should not be null after showOpenFile returned APPROVE_OPTION";
+                return selectedFile;
             }
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -1184,32 +1127,44 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
     private void jMenuItemFlipFMTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFlipFMTestActionPerformed
 
         try {
+            final File lastLaunchFile1 = getLastLaunchFile();
+            final File lastLaunchParentFile = lastLaunchFile1 != null ? lastLaunchFile1.getParentFile() : null;
             if (jCheckBoxMenuItemLaunchExternal.isSelected()) {
                 try {
-                    File launchFile = chooseFile(getLastLaunchFile().getParentFile(), "Launch File", "txt");
+                    File launchFile = chooseFile(lastLaunchParentFile, "Launch File", "txt");
                     if (launchFile == null) {
                         return;
                     }
-                    File supervisorSetupFile = chooseFile(launchFile.getParentFile(), "Supervisor Setup File", "csv");
+                    final File parentFile = launchFile.getParentFile();
+                    if (null == parentFile) {
+                        throw new IllegalStateException("launchFile=" + launchFile + " has null parentFile");
+                    }
+                    File supervisorSetupFile = chooseFile(parentFile, "Supervisor Setup File", "csv");
                     if (null == supervisorSetupFile) {
                         return;
                     }
-                    File positionMappingsFile = chooseFile(launchFile.getParentFile(), "Position Mappings File", "csv");
+                    File positionMappingsFile = chooseFile(parentFile, "Position Mappings File", "csv");
                     if (null == positionMappingsFile) {
                         return;
                     }
-                    File fanucSimItemsFile = chooseFile(launchFile.getParentFile(), "Fanuc Sim Items File", "csv");
+                    File fanucSimItemsFile = chooseFile(parentFile, "Fanuc Sim Items File", "csv");
                     if (null == fanucSimItemsFile) {
                         return;
                     }
                     this.setVisible(false);
 
                     flipFMTest(launchFile, supervisorSetupFile, positionMappingsFile, fanucSimItemsFile);
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+                    JOptionPane.showMessageDialog(this, ex.toString());
+                    if (ex instanceof RuntimeException) {
+                        throw (RuntimeException) ex;
+                    } else {
+                        throw new RuntimeException(ex);
+                    }
                 }
             } else {
-                File supervisorSetupFile = chooseFile(getLastLaunchFile().getParentFile(), "Supervisor Setup File", "csv");
+                File supervisorSetupFile = chooseFile(lastLaunchParentFile, "Supervisor Setup File", "csv");
                 if (null == supervisorSetupFile) {
                     return;
                 }
@@ -1224,9 +1179,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 this.setVisible(false);
                 flipFMTest(null, supervisorSetupFile, positionMappingsFile, fanucSimItemsFile);
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            JOptionPane.showMessageDialog(this, exception.toString());
+        } catch (Exception ex) {
+            Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
+            JOptionPane.showMessageDialog(this, ex.toString());
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }//GEN-LAST:event_jMenuItemFlipFMTestActionPerformed
 

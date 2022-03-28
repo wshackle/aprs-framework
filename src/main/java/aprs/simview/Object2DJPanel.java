@@ -79,6 +79,7 @@ import aprs.system.AprsSystem;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
+import crcl.utils.CRCLUtils;
 import java.util.concurrent.ExecutorService;
 import rcs.posemath.PmCartesian;
 
@@ -461,7 +462,11 @@ public class Object2DJPanel extends JPanel {
 
     public static File imageFileToCsvFile(File f) {
         try {
-            File csvDir = Utils.file(f.getParentFile(), "csv");
+            final File parentFile
+                    = CRCLUtils.requireNonNull(
+                            f.getParentFile(),
+                            "f.getParentFile()");
+            File csvDir = Utils.file(parentFile, "csv");
             csvDir.mkdirs();
             File csvFile = Utils.file(csvDir, f.getName() + ".csv");
             return csvFile;
@@ -649,7 +654,7 @@ public class Object2DJPanel extends JPanel {
             return imageIOWriterService;
         }
         imageIOWriterService = null;
-        imageIOWriterThread=null;
+        imageIOWriterThread = null;
         ExecutorService service = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
@@ -664,11 +669,12 @@ public class Object2DJPanel extends JPanel {
     }
 
     public static void shutdownImageIOWriterService() throws InterruptedException {
-        if(null != imageIOWriterService) {
+        if (null != imageIOWriterService) {
             imageIOWriterService.shutdown();
         }
-        if(null != imageIOWriterThread && Thread.currentThread() != imageIOWriterThread) {
-            imageIOWriterThread.join();
+        final Thread thread = imageIOWriterThread;
+        if (null != thread && Thread.currentThread() != thread) {
+            thread.join();
         }
         imageIOWriterThread = null;
         imageIOWriterService = null;

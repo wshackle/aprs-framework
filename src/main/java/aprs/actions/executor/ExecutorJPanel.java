@@ -286,6 +286,37 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 throw new RuntimeException(e);
             }
         }
+        dbSetupListener = new DbSetupListener() {
+            @Override
+            public void accept(DbSetup setup) {
+                handleNewDbSetup(setup);
+            }
+        };
+        defaultReplanRunnable = new Runnable() {
+            @Override
+            @SuppressWarnings("guieffect")
+            public void run() {
+                replanActionTimer = new javax.swing.Timer(200, (ActionEvent e) -> {
+                    generateCrclAsyncWithCatch();
+                });
+                replanActionTimer.setRepeats(false);
+                replanActionTimer.start();
+            }
+        };
+        replanRunnable = defaultReplanRunnable;
+        customReplanRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (null != customRunnables
+                        && customRunnablesIndex >= 0
+                        && customRunnables.size() > 0
+                        && customRunnablesIndex < customRunnables.size()
+                        && null != aprsSystem) {
+                    aprsSystem.runOnDispatchThread(ExecutorJPanel.this::runAllCustomRunnables);
+                }
+            }
+        };
+        programLineListener = this::programLineListenerAccept;
     }
 
     public JMenu getToolMenu() {
@@ -338,7 +369,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (null == filename) {
             throw new IllegalArgumentException("filename == null");
         }
-        File file = Utils.file(propertiesFile.getParentFile(), filename);
+        final File parentFile = propertiesFile.getParentFile();
+        if (null == parentFile) {
+            throw new NullPointerException("parentFile");
+        }
+        File file = Utils.file(parentFile, filename);
         if (!file.exists() || !file.canRead()) {
             return null;
         }
@@ -458,8 +493,12 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
         String curSavedToolName = readSelectedToolNameFile(filename);
         if (!Objects.equals(curSavedToolName, newToolName)) {
+            final File parentFile = propertiesFile.getParentFile();
+            if (null == parentFile) {
+                throw new NullPointerException("parentFile");
+            }
             try (PrintWriter pw = new PrintWriter(
-                    new FileWriter(Utils.file(propertiesFile.getParentFile(), filename)))) {
+                    new FileWriter(Utils.file(parentFile, filename)))) {
                 pw.println(newToolName);
             } catch (IOException ex) {
                 Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "", ex);
@@ -2783,9 +2822,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            setPddlOutputActionsText(f.getCanonicalPath());
-            saveProperties();
+            File selectedFile = chooser.getSelectedFile();
+            if (null != selectedFile) {
+                setPddlOutputActionsText(selectedFile.getCanonicalPath());
+                saveProperties();
+            }
         }
     }
 
@@ -3228,8 +3269,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 if (null != entry.getKey() && null != entry.getValue()) {
                     if (entry.getKey() instanceof ExecutorOption.ForString && entry.getValue() instanceof String) {
                         String value = (String) entry.getValue();
-                        if (value.startsWith(propertiesFile.getParent())) {
-                            value = makeShortPath(propertiesFile, value);
+                        final String parent = propertiesFile.getParent();
+                        if (null != parent) {
+                            if (value.startsWith(parent)) {
+                                value = makeShortPath(propertiesFile, value);
+                            }
                         }
                         props.put(entry.getKey().toString(), value);
                     } else {
@@ -3714,12 +3758,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         return dbSetupSupplier;
     }
 
-    private final DbSetupListener dbSetupListener = new DbSetupListener() {
-        @Override
-        public void accept(DbSetup setup) {
-            handleNewDbSetup(setup);
-        }
-    };
+    private final DbSetupListener dbSetupListener;
 
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         this.dbSetupSupplier = dbSetupSupplier;
@@ -5744,9 +5783,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return f;
             }
         }
-        String toolChangerPoseMapFileName = propertiesFile.getName() + ".toolChangerPoses.csv";
-        File f = Utils.file(propertiesFile.getParent(), toolChangerPoseMapFileName);
-        if (f.exists()) {
+        File f = getSpecialPropertiesFile(".toolChangerPoses.csv");
+        if (f != null && f.exists()) {
             final String canonicalPath = f.getCanonicalPath();
             setToolChangePoseFileCanonicalPath(canonicalPath);
         }
@@ -5772,9 +5810,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return f;
             }
         }
-        String recordedPosesFileName = propertiesFile.getName() + ".recoredPoses.csv";
-        File f = Utils.file(propertiesFile.getParent(), recordedPosesFileName);
-        if (f.exists()) {
+        File f = getSpecialPropertiesFile(".recoredPoses.csv");
+        if (f != null && f.exists()) {
             final String canonicalPath = f.getCanonicalPath();
             setRecordedPosesFileCanonicalPath(canonicalPath);
         }
@@ -5812,9 +5849,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return f;
             }
         }
-        String partToolFileName = propertiesFile.getName() + ".partTool.csv";
-        File f = Utils.file(propertiesFile.getParent(), partToolFileName);
-        if (f.exists()) {
+        File f = getSpecialPropertiesFile(".partTool.csv");
+        if (f != null && f.exists()) {
             final String canonicalPath = f.getCanonicalPath();
             setPartToolFileCanonnicalPath(canonicalPath);
         }
@@ -5823,8 +5859,12 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
     public void setPartToolFileCanonnicalPath(final String canonicalPath) throws IOException {
         String relPath = canonicalPath;
-        if (relPath.startsWith(propertiesFile.getParentFile().getCanonicalPath())) {
-            relPath = canonicalPath.substring(propertiesFile.getParentFile().getCanonicalPath().length());
+        final File parentFile = propertiesFile.getParentFile();
+        if (null == parentFile) {
+            throw new NullPointerException("propertiesFile=" + propertiesFile + " has null parentFile.");
+        }
+        if (relPath.startsWith(parentFile.getCanonicalPath())) {
+            relPath = canonicalPath.substring(parentFile.getCanonicalPath().length());
             if (relPath.startsWith("/") || relPath.startsWith("\\")) {
                 relPath = relPath.substring(1);
             }
@@ -5844,9 +5884,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 setToolHolderContentsTableModelListenerOnDisplay();
                 return;
             }
-            String filename = propertiesFile.getName() + TOOL_HOLDER_CONTENTS_CSV_EXTENSION;
-            File f = Utils.file(propertiesFile.getParent(), filename);
-            if (!f.exists()) {
+            File f = getSpecialPropertiesFile(TOOL_HOLDER_CONTENTS_CSV_EXTENSION);
+            if (f == null || !f.exists()) {
                 setToolHolderContentsTableModelListenerOnDisplay();
                 return;
             }
@@ -5865,12 +5904,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     @UIEffect
     private void loadToolOffsetMapOnDisplay() throws IOException {
         assert SwingUtilities.isEventDispatchThread();
-        if (null == propertiesFile || !propertiesFile.exists()) {
-            return;
-        }
-        String filename = propertiesFile.getName() + ".toolOffsets.csv";
-        File f = Utils.file(propertiesFile.getParent(), filename);
-        if (!f.exists()) {
+
+        File f = getSpecialPropertiesFile(".toolOffsets.csv");
+        if (f == null || !f.exists()) {
             return;
         }
         Map<String, PoseType> toolOffsetMap = crclGenerator.getToolOffsetMap();
@@ -5882,6 +5918,22 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         setToolOffsetTableModelListenerOnDisplay();
     }
 
+    private File getSpecialPropertiesFile(final String propertiesSpecialExtension) throws NullPointerException, IOException, IllegalStateException {
+        if (null == propertiesFile) {
+            throw new NullPointerException("propertiesFile is null.");
+        }
+        if (!propertiesFile.exists()) {
+            throw new IllegalStateException("propertiesFile=" + propertiesFile + "  does not exist.");
+        }
+        String filename = propertiesFile.getName() + propertiesSpecialExtension;
+        final String parent = propertiesFile.getParent();
+        if (null == parent) {
+            throw new IllegalStateException("propertiesFile=" + propertiesFile + " has null parent.");
+        }
+        File f = Utils.file(parent, filename);
+        return f;
+    }
+
     private final CachedTable trayAttachOffsetsCachedTable;
 
     @UIEffect
@@ -5890,9 +5942,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (null == propertiesFile || !propertiesFile.exists()) {
             return;
         }
-        String filename = propertiesFile.getName() + ".trayAttachOffsets.csv";
-        File f = Utils.file(propertiesFile.getParent(), filename);
-        if (!f.exists()) {
+        File f = getSpecialPropertiesFile(".trayAttachOffsets.csv");
+        if (f == null || !f.exists()) {
             return;
         }
         clearTrayAttachOffsetTableModelListenerOnDisplay();
@@ -5973,8 +6024,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             if (null == propertiesFile || !propertiesFile.exists() || holderContentsCachedTable.getRowCount() < 1) {
                 return;
             }
-            String fileName = propertiesFile.getName() + TOOL_HOLDER_CONTENTS_CSV_EXTENSION;
-            Utils.saveCachedTable(Utils.file(propertiesFile.getParentFile(), fileName), holderContentsCachedTable);
+            File f = getSpecialPropertiesFile(TOOL_HOLDER_CONTENTS_CSV_EXTENSION);
+            if (null != f) {
+                Utils.saveCachedTable(f, holderContentsCachedTable);
+            }
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -5988,7 +6041,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return;
             }
             String fileName = propertiesFile.getName() + ".toolOffsets.csv";
-            Utils.saveCachedTable(Utils.file(propertiesFile.getParentFile(), fileName), toolOffsetsCachedTable);
+            File f = getSpecialPropertiesFile(".toolOffsets.csv");
+            if (f != null) {
+                Utils.saveCachedTable(f, toolOffsetsCachedTable);
+            }
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -5999,8 +6055,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             if (null == propertiesFile || !propertiesFile.exists()) {
                 return;
             }
-            String fileName = propertiesFile.getName() + ".trayAttachOffsets.csv";
-            Utils.saveCachedTable(Utils.file(propertiesFile.getParentFile(), fileName), trayAttachOffsetsCachedTable);
+            File f = getSpecialPropertiesFile(".trayAttachOffsets.csv");
+            if (null != f) {
+                Utils.saveCachedTable(f, trayAttachOffsetsCachedTable);
+            }
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
@@ -6359,7 +6417,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (name == null || name.length() < 1) {
             return;
         }
-        setPoseInTable(table, name, pose, tableRowIndex, rpy, approach, jointString);
+        setPoseInTable(table, name, pose, tableRowIndex, rpy, approach, (jointString != null) ? jointString : "");
         addHolderContentsRowIfNameNotFound(name);
     }
 
@@ -6369,7 +6427,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (name == null || name.length() < 1) {
             return;
         }
-        setPoseInTable(table, name, pose, tableRowIndex, rpy, false, jointString);
+        setPoseInTable(table, name, pose, tableRowIndex, rpy, false, (jointString != null) ? jointString : "");
     }
 
     private void setPoseInTable(final CachedTable table, String name, PoseType pose, int tableRowIndex, PmRpy rpy,
@@ -7104,7 +7162,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                         return;
                     }
                     String jointString = getJointValsString(newStatus);
-                    storeNamedPoseAndJointString(recordedPoseNameFinal, pose, jointString);
+                    storeNamedPoseAndJointString(recordedPoseNameFinal, pose, (jointString != null) ? jointString : "");
                 } catch (Exception ex) {
                     showExceptionMessage(ex);
                 }
@@ -7593,6 +7651,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 File f = chooser.getSelectedFile();
+                assert f != null : "@AssumeAssertion(nullness) chooser.showSaveDialog returned APPROVE_OPTION means getSelectedFile should not be null";
                 recordCsvName = f.getCanonicalPath();
                 if (!recordCsvName.endsWith(".csv")) {
                     recordCsvName += ".csv";
@@ -8281,9 +8340,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }
 
     private void setEndCanonCmdId(CRCLProgramType program) {
-        final EndCanonType endCmd = Objects.requireNonNull(program.getEndCanon(), "program.getEndCanon()");
+        final EndCanonType endCmd = CRCLUtils.requireNonNull(program.getEndCanon(), "program.getEndCanon()");
         setCommandId(endCmd);
-        final InitCanonType initCmd = Objects.requireNonNull(program.getInitCanon(), "program.getEndCanon()");
+        final InitCanonType initCmd = CRCLUtils.requireNonNull(program.getInitCanon(), "program.getEndCanon()");
         long initCmdId = initCmd.getCommandID();
         long endCmdId = endCmd.getCommandID();
         int midSize = CRCLUtils.middleCommands(program).size();
@@ -9382,9 +9441,27 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
     <K extends ExecutorOption, V> void setOptions(Map<K, V> options) {
         for (Map.Entry<K, V> entry : options.entrySet()) {
-            privateSetOption(entry.getKey(), entry.getValue());
+            final V value = entry.getValue();
+            final K key = entry.getKey();
+            if (value == null) {
+                removeOption(key);
+            } else {
+                privateSetOption(key, value);
+            }
         }
         crclGenerator.setOptions(getOptions());
+    }
+
+    private void removeOption(ExecutorOption key) {
+        int matchingRow = -1;
+        for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
+            Object keyCheck = optionsCachedTable.getValueAt(i, 0);
+            if (Objects.equals(keyCheck, key)) {
+                optionsCachedTable.removeRow(i);
+                matchingRow = i;
+                return;
+            }
+        }
     }
 
     private void privateSetOption(ExecutorOption key, Object val) {
@@ -9748,12 +9825,16 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                         ExecutorOption exOptOf = ExecutorOption.of(name);
                         if (null != propertyValue) {
                             if (exOptOf instanceof ExecutorOption.ForString) {
-                                String s1 = "/" + propertiesFile.getParentFile().getName() + "/";
+                                final File parentFile = propertiesFile.getParentFile();
+                                if (null == parentFile) {
+                                    throw new IllegalStateException("propertiesFile=" + propertiesFile + " has null parentFile");
+                                }
+                                String s1 = "/" + parentFile.getName() + "/";
                                 int i1 = propertyValue.indexOf(s1);
                                 if (i1 > 0 && i1 < propertyValue.length() - s1.length()) {
                                     propertyValue = propertyValue.substring(i1 + s1.length());
                                 }
-                                String s2 = "\\" + propertiesFile.getParentFile().getName() + "\\";
+                                String s2 = "\\" + parentFile.getName() + "\\";
                                 int i2 = propertyValue.indexOf(s2);
                                 if (i2 > 0 && i1 < propertyValue.length() - s2.length()) {
                                     propertyValue = propertyValue.substring(i2 + s2.length());
@@ -10160,17 +10241,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private final AtomicBoolean replanStarted = new AtomicBoolean();
 
     private javax.swing.@Nullable Timer replanActionTimer = null;
-    private final Runnable defaultReplanRunnable = new Runnable() {
-        @Override
-        @SuppressWarnings("guieffect")
-        public void run() {
-            replanActionTimer = new javax.swing.Timer(200, (ActionEvent e) -> {
-                generateCrclAsyncWithCatch();
-            });
-            replanActionTimer.setRepeats(false);
-            replanActionTimer.start();
-        }
-    };
+    private final Runnable defaultReplanRunnable;
 
     final private List<RunnableWithThrow> customRunnables = new ArrayList<>();
     private int customRunnablesIndex = -1;
@@ -10195,19 +10266,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
     }
 
-    private final Runnable customReplanRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (null != customRunnables
-                    && customRunnablesIndex >= 0
-                    && customRunnables.size() > 0
-                    && customRunnablesIndex < customRunnables.size()) {
-                aprsSystem.runOnDispatchThread(ExecutorJPanel.this::runAllCustomRunnables);
-            }
-        }
-    };
+    private final Runnable customReplanRunnable;
 
-    private Runnable replanRunnable = defaultReplanRunnable;
+    private Runnable replanRunnable;
     private static final boolean DEFAULT_DEBUG = Boolean.getBoolean("ExecutorJPanel.debug");
 
     private boolean debug = DEFAULT_DEBUG;
@@ -10239,7 +10300,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         return currentActionIndex;
     }
 
-    private final ProgramLineListener programLineListener = this::programLineListenerAccept;
+    private final ProgramLineListener programLineListener;
 
     /**
      * Called by CRCL Swing client to nofify another object of a change of
