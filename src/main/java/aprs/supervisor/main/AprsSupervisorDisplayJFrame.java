@@ -4139,7 +4139,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     )
                     .thenRun(() -> {
                         logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn);
-                        JOptionPane.showMessageDialog(AprsSupervisorDisplayJFrame.this, actionName + " completed.");
+                        if(!actionName.toLowerCase().startsWith("start")) {
+                            JOptionPane.showMessageDialog(AprsSupervisorDisplayJFrame.this, actionName + " completed.");
+                        }
                     });
             interactivStartFuture = ret;
             return ret;

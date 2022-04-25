@@ -4504,7 +4504,7 @@ public class Supervisor {
             conveyorTestFuture = null;
         }
 
-        immediateAbortAll("resetAll");
+//        immediateAbortAll("resetAll");
         clearCheckBoxes();
         @SuppressWarnings("unchecked")
         XFutureVoid allResetFutures[] = new XFutureVoid[aprsSystems.size()];
@@ -8746,10 +8746,13 @@ public class Supervisor {
         }
         XFutureVoid abortFutures[] = new XFutureVoid[aprsSystems.size()];
         XFutureVoid xfv = initFuture;
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystem = aprsSystems.get(i);
             XFutureVoid nextXfv
-                    = xfv.thenComposeAsyncToVoid(() -> aprsSystem.immediateAbort(), supervisorExecutorService);
+                    = xfv.thenComposeAsyncToVoid(
+                            () -> aprsSystem.immediateAbort(trace), 
+                            supervisorExecutorService);
             abortFutures[i] = nextXfv;
             xfv = nextXfv;
         }
@@ -8780,9 +8783,10 @@ public class Supervisor {
         }
         cancelAll(true);
         XFutureVoid abortFutures[] = new XFutureVoid[aprsSystems.size()];
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         for (int i = 0; i < aprsSystems.size(); i++) {
             AprsSystem aprsSystem = aprsSystems.get(i);
-            abortFutures[i] = aprsSystem.immediateAbort();
+            abortFutures[i] = aprsSystem.immediateAbort(trace);
         }
         XFutureVoid allImmediateAbortFutures = XFutureVoid
                 .allOfWithName("immediateAbortAll(" + comment + ").allOf(abortFutures)", abortFutures);
@@ -8918,8 +8922,9 @@ public class Supervisor {
         enableChangeCount.incrementAndGet();
         disconnectAllNoLog();
         List<XFutureVoid> futuresList = new ArrayList<>();
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         for (AprsSystem aprsSys : aprsSystems) {
-            XFutureVoid restoreFuture = aprsSys.restoreOrigRobotInfo().thenRun(() -> {
+            XFutureVoid restoreFuture = aprsSys.restoreOrigRobotInfo(trace).thenRun(() -> {
                 logEvent("restoreOrigRobotInfo : aprsSys=" + aprsSys);
             });
             futuresList.add(restoreFuture);

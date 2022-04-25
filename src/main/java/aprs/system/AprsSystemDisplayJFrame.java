@@ -1658,15 +1658,15 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         }
     }
 
-    private void immediateAbort() {
+    private void immediateAbort(StackTraceElement callerTrace[]) {
         if (null != aprsSystem) {
-            aprsSystem.immediateAbort();
+            aprsSystem.immediateAbort(callerTrace);
         }
     }
 
     @UIEffect
     private void jMenuItemImmediateAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemImmediateAbortActionPerformed
-        this.immediateAbort();
+        this.immediateAbort(Thread.currentThread().getStackTrace());
     }//GEN-LAST:event_jMenuItemImmediateAbortActionPerformed
 
     private void setTitleErrorString(@Nullable String titleError) {
@@ -1815,14 +1815,14 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         boolean start = jCheckBoxMenuItemContinuousDemo.isSelected();
         boolean reverseFlag = jCheckBoxMenuItemReverse.isSelected();
         setTitleErrorString(null);
-        immediateAbort();
+        immediateAbort(Thread.currentThread().getStackTrace());
         if (start) {
             if (!jCheckBoxMenuItemContinuousDemo.isSelected()) {
                 jCheckBoxMenuItemContinuousDemo.setSelected(true);
             }
             XFuture<Boolean> future = startContinuousDemo("user", reverseFlag);
         } else {
-            immediateAbort();
+            immediateAbort(Thread.currentThread().getStackTrace());
         }
     }//GEN-LAST:event_jCheckBoxMenuItemContinuousDemoActionPerformed
 
@@ -2041,7 +2041,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemLookForActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemLookForActionPerformed
-        immediateAbort();
+        immediateAbort(Thread.currentThread().getStackTrace());
         clearErrors();
         reset();
         resume();

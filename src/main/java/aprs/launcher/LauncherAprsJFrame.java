@@ -483,11 +483,11 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 processLauncher.setVisible(true);
                 return processLauncher
                         .run(launchFile)
-                        .thenCompose((x) -> {
+                        .thenComposeAsync((x) -> {
                             Supervisor supervisor = createAprsSupervisorWithSwingDisplay(false);
                             supervisor.setProcessLauncher(processLauncher);
-                            return Utils.composeOnDispatchThread(() -> supervisor.completePrevMulti());
-                        });
+                            return supervisor.completePrevMulti();
+                        },Utils.getDispatchThreadExecutorService());
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);

@@ -657,7 +657,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private volatile StackTraceElement restorOrigRobotInfoTrace @Nullable []  = null;
 
-    public XFutureVoid restoreOrigRobotInfo() {
+    public XFutureVoid restoreOrigRobotInfo(StackTraceElement callerTrace[]) {
         String origRobotName1 = this.getOrigRobotName();
         if (null == origRobotName1 || origRobotName1.length() < 1) {
             throw new IllegalStateException("origRobotName=" + origRobotName1);
@@ -672,7 +672,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         this.restorOrigRobotInfoTrace = trace;
-        XFutureVoid immediateAbortFuture = this.immediateAbort();
+        XFutureVoid immediateAbortFuture = this.immediateAbort(callerTrace);
         boolean wasConnected0 = isConnected();
         return immediateAbortFuture
                 .thenRunAsync("disconnectRobot(" + getRobotName() + ")",
@@ -3012,8 +3012,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
     }
 
-    public XFutureVoid prepGuiCmd() {
-        return immediateAbort()
+    public XFutureVoid prepGuiCmd(StackTraceElement callerTrace[]) {
+        return immediateAbort(callerTrace)
                 .thenRun(() -> {
                     clearErrors();
                     reset();
@@ -3022,6 +3022,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     private volatile StackTraceElement lastImmediateAbortTrace @Nullable []  = null;
+    private volatile StackTraceElement lastImmediateAbortCallerTrace @Nullable []  = null;
 
     /**
      * Immediately abort the currently running CRCL program and PDDL action
@@ -3032,8 +3033,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      * @return a future object for determining when the abort is completed.
      */
-    public XFutureVoid immediateAbort() {
+    public XFutureVoid immediateAbort(StackTraceElement callerTrace[]) {
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        lastImmediateAbortCallerTrace = callerTrace;
         lastImmediateAbortTrace = trace;
         if (null != this.continuousDemoFuture) {
             this.continuousDemoFuture.cancelAll(true);
@@ -3049,19 +3051,19 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 .thenRun(() -> {
                     cancelPauseFutures();
                     if (null != lastResumeFuture) {
-                        logAndCloseFuture("lastResumeFuture", lastResumeFuture, trace);
+                        logAndCloseFuture("lastResumeFuture", lastResumeFuture, trace, callerTrace);
                         lastResumeFuture = null;
                     }
                     if (null != lastPauseFuture) {
-                        logAndCloseFuture("lastPauseFuture", lastPauseFuture, trace);
+                        logAndCloseFuture("lastPauseFuture", lastPauseFuture, trace, callerTrace);
                         lastPauseFuture = null;
                     }
                     if (null != lastRunProgramFuture) {
-                        logAndCloseFuture("lastRunProgramFuture", lastRunProgramFuture, trace);
+                        logAndCloseFuture("lastRunProgramFuture", lastRunProgramFuture, trace, callerTrace);
                         lastRunProgramFuture = null;
                     }
                     if (null != lastStartActionsFuture) {
-                        logAndCloseFuture("lastStartActionsFuture", lastStartActionsFuture, trace);
+                        logAndCloseFuture("lastStartActionsFuture", lastStartActionsFuture, trace, callerTrace);
                         lastStartActionsFuture = null;
                     }
                     final XFuture<Boolean> lastContinueActionListFutureFinal = lastContinueActionListFuture;
@@ -3072,39 +3074,39 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                             System.err.println(
                                     "continueActionListTrace = " + Utils.traceToString(continueActionListTrace));
                         }
-                        logAndCloseFuture("lastContinueActionListFutureFinal", lastContinueActionListFutureFinal, trace);
+                        logAndCloseFuture("lastContinueActionListFutureFinal", lastContinueActionListFutureFinal, trace, callerTrace);
                         lastContinueActionListFuture = null;
                     }
                     if (null != disconnectRobotFuture) {
-                        logAndCloseFuture("disconnectRobotFuture", disconnectRobotFuture, trace);
+                        logAndCloseFuture("disconnectRobotFuture", disconnectRobotFuture, trace, callerTrace);
                         disconnectRobotFuture = null;
                     }
                     if (null != safeAbortAndDisconnectFuture) {
-                        logAndCloseFuture("safeAbortAndDisconnectFuture", safeAbortAndDisconnectFuture, trace);
+                        logAndCloseFuture("safeAbortAndDisconnectFuture", safeAbortAndDisconnectFuture, trace, callerTrace);
                         safeAbortAndDisconnectFuture = null;
                     }
                     if (null != safeAbortFuture) {
-                        logAndCloseFuture("safeAbortFuture", safeAbortFuture, trace);
+                        logAndCloseFuture("safeAbortFuture", safeAbortFuture, trace, callerTrace);
                         safeAbortFuture = null;
                     }
                     if (null != lastStartCheckEnabledFuture1) {
-                        logAndCloseFuture("lastStartCheckEnabledFuture1", lastStartCheckEnabledFuture1, trace);
+                        logAndCloseFuture("lastStartCheckEnabledFuture1", lastStartCheckEnabledFuture1, trace, callerTrace);
                         lastStartCheckEnabledFuture1 = null;
                     }
                     if (null != lastStartCheckEnabledFuture2) {
-                        logAndCloseFuture("lastStartCheckEnabledFuture2", lastStartCheckEnabledFuture2, trace);
+                        logAndCloseFuture("lastStartCheckEnabledFuture2", lastStartCheckEnabledFuture2, trace, callerTrace);
                         lastStartCheckEnabledFuture2 = null;
                     }
                     if (null != lastPrivateStartActionsFuture) {
-                        logAndCloseFuture("lastPrivateStartActionsFuture", lastPrivateStartActionsFuture, trace);
+                        logAndCloseFuture("lastPrivateStartActionsFuture", lastPrivateStartActionsFuture, trace, callerTrace);
                         lastPrivateStartActionsFuture = null;
                     }
                     if (null != startLookForPartsFuture) {
-                        logAndCloseFuture("startLookForPartsFuture", startLookForPartsFuture, trace);
+                        logAndCloseFuture("startLookForPartsFuture", startLookForPartsFuture, trace, callerTrace);
                         startLookForPartsFuture = null;
                     }
                     if (null != lastPrivateContinueActionListFuture) {
-                        logAndCloseFuture("lastPrivateContinueActionListFuture", lastPrivateContinueActionListFuture, trace);
+                        logAndCloseFuture("lastPrivateContinueActionListFuture", lastPrivateContinueActionListFuture, trace, callerTrace);
                         lastPrivateContinueActionListFuture = null;
                     }
                     continousDemoCheckBox.setSelected(false);
@@ -3114,14 +3116,15 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 });
     }
 
-    private void logAndCloseFuture(String futName, XFuture<?> f, StackTraceElement[] trace) {
-        if(f.isDone()) {
+    private void logAndCloseFuture(String futName, XFuture<?> f, StackTraceElement[] trace , StackTraceElement[] callerTrace) {
+        if (f.isDone()) {
             return;
         }
         if (!XFuture.isClosingMode()) {
             final Logger logger = Logger.getLogger(AprsSystem.class.getName());
             logger.log(Level.SEVERE, "Cancelling " + futName + "=" + f);
             logger.log(Level.SEVERE, "trace=" + XFuture.traceToString(trace));
+            logger.log(Level.SEVERE, "callerTrace=" + XFuture.traceToString(callerTrace));
             final StackTraceElement[] createTrace = f.getCreateTrace();
             if (null != createTrace) {
                 logger.log(Level.SEVERE, "createTrace=" + XFuture.traceToString(createTrace));
@@ -4831,7 +4834,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
 
         try {
-            immediateAbort();
+            immediateAbort(Thread.currentThread().getStackTrace());
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
@@ -5971,7 +5974,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         closing = true;
         startingCheckEnabled = false;
         try {
-            immediateAbort();
+            immediateAbort(Thread.currentThread().getStackTrace());
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);

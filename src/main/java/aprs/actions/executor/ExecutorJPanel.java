@@ -4632,7 +4632,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             setSelectedManualObjectName();
             setReplanFromIndex(0);
             final ExecutorService generateCrclService = aprsSystem.getRunProgramService();
-            aprsSystem.immediateAbort()
+            aprsSystem.immediateAbort(Thread.currentThread().getStackTrace())
                     .thenCompose(() -> {
                         aprsSystem.clearErrors();
                         return aprsSystem.reset();
