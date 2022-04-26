@@ -7,6 +7,15 @@
         <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/pom.xml" />
       </list>
     </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/pom.xml" />
+        <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/pom.xml" />
+        <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/pom.xml" />
+        <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/pom.xml" />
+        <option value="$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/pom.xml" />
+      </set>
+    </option>
   </component>
   <component name="NullableNotNullManager">
     <option name="myDefaultNullable" value="org.checkerframework.checker.nullness.qual.Nullable" />

@@ -6974,12 +6974,38 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final AprsSystem aprsSystem1 = CRCLUtils.requireNonNull(aprsSystem, "aprsSystem");
         if (aprsSystem1.isObjectViewSimulated()) {
             final XFuture<Object2DOuterJPanel.SetItemsResult> future = aprsSystem1.refreshSimView();
-            Object2DOuterJPanel.SetItemsResult setItemsResult = future.get(maxFutureGetTime, TimeUnit.MILLISECONDS);
-            if (null == setItemsResult) {
-                throw new RuntimeException("Can't refresh simview : setItemsResult == null");
-            } else if (!setItemsResult.isPublished()) {
-                throw new RuntimeException("Can't refresh simview : " + setItemsResult.getComment());
+            try {
+                Object2DOuterJPanel.SetItemsResult setItemsResult = future.get(maxFutureGetTime, TimeUnit.MILLISECONDS);
+                if (null == setItemsResult) {
+                    throw new RuntimeException("Can't refresh simview : setItemsResult == null");
+                } else if (!setItemsResult.isPublished()) {
+                    throw new RuntimeException("Can't refresh simview : " + setItemsResult.getComment());
+                }
+            } catch (InterruptedException | ExecutionException | TimeoutException ex2) {
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                future.printStatus();
+                future.printProfile();
+                System.out.println("");
+                System.out.flush();
+                System.err.println("");
+                System.err.flush();
+                LOGGER.log(Level.SEVERE,"checkRefreshSimView("+maxFutureGetTime+") future="+future,ex2);
+                final Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
+                for(Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
+                    Thread k = entry.getKey();
+                    StackTraceElement[] v = entry.getValue();
+                    LOGGER.log(Level.SEVERE,"thread="+k+" : "+XFuture.traceToString(v));
+                }
+                if(ex2 instanceof RuntimeException) {
+                    throw ex2;
+                } else {
+                    throw new RuntimeException("can not get result for future="+future, ex2);
+                }
             }
+
         }
     }
 

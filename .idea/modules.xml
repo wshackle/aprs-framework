@@ -4,11 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/aprs-framework.iml" filepath="$PROJECT_DIR$/aprs-framework.iml" />
       <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/crcl4java-base.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/crcl4java-base.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/crcl4java-ui.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/crcl4java-ui.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/crcl4java-utils.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/crcl4java-utils.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/crclcopier.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/crclcopier.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/generate-copier-maven-plugin.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/generate-copier-maven-plugin.iml" />
     </modules>
   </component>
 </project>

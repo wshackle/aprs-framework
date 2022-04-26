@@ -7,27 +7,22 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="crcl4java-ui" />
         <module name="aprs-framework" />
-        <module name="generate-copier-maven-plugin" />
-        <module name="crcl4java-utils" />
-        <module name="crcl4java-base" />
-        <module name="crclcopier" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="aprs-framework" target="1.8" />
       <module name="ATINetFT_proxy" target="${maven.compiler.release}" />
-      <module name="crcl4java" target="${maven.compiler.release}" />
-      <module name="crcl4java-base" target="${maven.compiler.release}" />
+      <module name="crcl4java" target="1.8" />
+      <module name="crcl4java-base" target="1.8" />
       <module name="crcl4java-fanuc" target="${maven.compiler.release}" />
       <module name="crcl4java-motoman" target="${maven.compiler.release}" />
-      <module name="crcl4java-ui" target="${maven.compiler.release}" />
-      <module name="crcl4java-utils" target="${maven.compiler.release}" />
-      <module name="crclcopier" target="${maven.compiler.release}" />
+      <module name="crcl4java-ui" target="1.8" />
+      <module name="crcl4java-utils" target="1.8" />
+      <module name="crclcopier" target="1.8" />
       <module name="fanucCom4JBase" target="${maven.compiler.release}" />
       <module name="fanucCRCLServer" target="${maven.compiler.release}" />
-      <module name="generate-copier-maven-plugin" target="${maven.compiler.release}" />
+      <module name="generate-copier-maven-plugin" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

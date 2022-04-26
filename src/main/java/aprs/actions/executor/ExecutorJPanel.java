@@ -193,6 +193,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
     }
 
+//    private final AtomicInteger optionsTableEventsHandled = new AtomicInteger();
+//    private final AtomicInteger optionsTableEventsCaused = new AtomicInteger();
+
     /**
      * Creates new form ActionsToCrclJPanel
      *
@@ -227,27 +230,34 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         toolMenu.add(toolPickupByToolMenu);
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
-        jTableOptions.getModel().addTableModelListener((TableModelEvent e) -> {
-            if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
-                crclGenerator.setOptions(getOptions());
-            }
-        });
-        jTableRequiredTools.getModel().addTableModelListener((TableModelEvent e) -> {
-            if (e.getType() == TableModelEvent.UPDATE) {
-                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
-                    for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
-                        Object partObject = jTableRequiredTools.getValueAt(i, 0);
-                        if (partObject instanceof String) {
-                            Object toolObject = jTableRequiredTools.getValueAt(i, 1);
-                            if (toolObject instanceof String && ((String) toolObject).length() > 0) {
-                                crclGenerator.getPartToolMap().put((String) partObject, (String) toolObject);
-                            }
-                        }
-                    }
-                    savePartToolMapOnDisplay();
-                }
-            }
-        });
+//        final TableModelListener optionsTableEventListener = (TableModelEvent e) -> {
+//            if (e.getType() == TableModelEvent.UPDATE) {
+////                optionsTableEventsHandled.incrementAndGet();
+//                System.out.println("optionsTableEventsHandled = " + optionsTableEventsHandled);
+//                System.out.println("optionsTableEventsCaused = " + optionsTableEventsCaused);
+//                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
+//                    crclGenerator.setOptions(getOptions());
+//                }
+//            }
+//        };
+//        jTableOptions.getModel().addTableModelListener(optionsTableEventListener);
+//        final TableModelListener requiredToolsTableModelListener = (TableModelEvent e) -> {
+//            if (e.getType() == TableModelEvent.UPDATE) {
+//                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
+//                    for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
+//                        Object partObject = jTableRequiredTools.getValueAt(i, 0);
+//                        if (partObject instanceof String) {
+//                            Object toolObject = jTableRequiredTools.getValueAt(i, 1);
+//                            if (toolObject instanceof String && ((String) toolObject).length() > 0) {
+//                                crclGenerator.getPartToolMap().put((String) partObject, (String) toolObject);
+//                            }
+//                        }
+//                    }
+//                    savePartToolMapOnDisplay();
+//                }
+//            }
+//        };
+//        jTableRequiredTools.getModel().addTableModelListener(requiredToolsTableModelListener);
         optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
         enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
         pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);
@@ -534,6 +544,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
             Object keyFromTable = optionsCachedTable.getValueAt(i, 0);
             if (Objects.equals(keyFromTable, key)) {
+//                optionsTableEventsCaused.incrementAndGet();
                 optionsCachedTable.setValueAt(value, i, 1);
                 return;
             }
@@ -5522,6 +5533,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 boolean keyFound = false;
                 for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
                     if (Objects.equals("lookForJoints", optionsCachedTable.getValueAt(i, 0))) {
+//                        optionsTableEventsCaused.incrementAndGet();
                         optionsCachedTable.setValueAt(jointVals, i, 1);
                         keyFound = true;
                     }
@@ -5538,6 +5550,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 boolean keyFound = false;
                 for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
                     if (Objects.equals("lookForXYZ", optionsCachedTable.getValueAt(i, 0))) {
+//                        optionsTableEventsCaused.incrementAndGet();
                         optionsCachedTable.setValueAt(xyzString, i, 1);
                         keyFound = true;
                     }
@@ -9469,6 +9482,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
             Object keyCheck = optionsCachedTable.getValueAt(i, 0);
             if (Objects.equals(keyCheck, key)) {
+//                optionsTableEventsCaused.incrementAndGet();
                 optionsCachedTable.setValueAt(val, i, 1);
                 matchingRow = i;
                 return;
@@ -9923,6 +9937,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             if (optFromTable.equals(opt)) {
                 Object tableValue1 = optionsCachedTable.getValueAt(i, 1);
                 if (!Objects.equals(tableValue1, propertyValue)) {
+//                    optionsTableEventsCaused.incrementAndGet();
                     optionsCachedTable.setValueAt(propertyValue, i, 1);
                 }
                 foundit = true;
