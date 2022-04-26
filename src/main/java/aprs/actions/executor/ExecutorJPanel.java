@@ -98,6 +98,7 @@ import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Integer.max;
 
 import java.util.concurrent.ConcurrentMap;
+import javax.swing.table.TableModel;
 
 /**
  * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
@@ -898,7 +899,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     @SuppressWarnings({"unchecked", "rawtypes", "nullness", "UnnecessaryBoxing", "deprecation"})
     @UIEffect
     // <editor-fold defaultstate="collapsed" desc="Generated
-    // Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jLabel6 = new javax.swing.JLabel();
@@ -914,8 +915,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jLabel2 = new javax.swing.JLabel();
         jCheckBoxReplan = new javax.swing.JCheckBox();
         jTabbedPaneRecordedPoses = new javax.swing.JTabbedPane();
-        jScrollPaneOptions = new javax.swing.JScrollPane();
-        jTableOptions = new javax.swing.JTable();
         jPanelOuterManualControl = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jPanelInnerManualControl = new javax.swing.JPanel();
@@ -1045,6 +1044,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jTextFieldRecordedPosesFile = new javax.swing.JTextField();
         jButtonOpenGripper = new javax.swing.JButton();
         jButtonCloseGripper = new javax.swing.JButton();
+        jPanelOptionsOuter = new javax.swing.JPanel();
+        jScrollPaneOptions = new javax.swing.JScrollPane();
+        jTableOptions = new javax.swing.JTable();
+        jCheckBoxEditOptionsTable = new javax.swing.JCheckBox();
         jButtonClear = new javax.swing.JButton();
         jCheckBoxDebug = new javax.swing.JCheckBox();
         jButtonAbort = new javax.swing.JButton();
@@ -1060,29 +1063,29 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jLabel6.setText("Pddl Output Actions");
 
         jTablePddlOutput.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null}
-                },
-                new String[]{
-                        "#", "CRCLIndex", "Label", "Type", "Args", "Time/Cost", "TakenPart"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class,
-                    java.lang.String.class, java.lang.Double.class, java.lang.String.class
+            new Object [][] {
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
+            },
+            new String [] {
+                "#", "CRCLIndex", "Label", "Type", "Args", "Time/Cost", "TakenPart"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false, false, false, false
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPane4.setViewportView(jTablePddlOutput);
@@ -1134,73 +1137,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jLabel2.setText("Index");
 
         jCheckBoxReplan.setText("Continue");
-
-        jTableOptions.setAutoCreateRowSorter(true);
-        jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {"rpy", "175.0,0.0,0.0"},
-                        {"lookForXYZ", "0.0,0.0,0.0"},
-                        {"approachZOffset", "50.0"},
-                        {"placeZOffset", "5.0"},
-                        {"takeZOffset", "0.0"},
-                        {"testTransSpeed", "50.0"},
-                        {"fastTransSpeed", "200.0"},
-                        {"slowTransSpeed", "75"},
-                        {"verySlowTransSpeed", "25"},
-                        {"lookDwellTime", "5.0"},
-                        {"firstLookDwellTime", "5.0"},
-                        {"lastLookDwellTime", "1.0"},
-                        {"skipLookDwellTime", "5.0"},
-                        {"afterMoveToLookForDwellTime", "5.0"},
-                        {"rotSpeed", "30.0"},
-                        {"placePartSlotArgIndex", "0"},
-                        {"takePartArgIndex", "0"},
-                        {"settleDwellTime", "0.1"},
-                        {"toolChangerDwellTime", "0.25"},
-                        {"useJointLookFor", "false"},
-                        {"jointSpeed", "5.0"},
-                        {"jointAccel", "100.0"},
-                        {"takeSnapshots", "false"},
-                        {"doInspectKit", "false"},
-                        {"kitInspectDistThreshold", "20.0"},
-                        {"requireNewPoses", "false"},
-                        {"visionCycleNewDiffThreshold", "3"},
-                        {"pauseInsteadOfRecover", "false"},
-                        {"skipMissingParts", "false"},
-                        {"useJointMovesForToolHolderApproach", "true"},
-                        {"saveProgramRunData", "false"},
-                        {"jointTolerances", "2,2,2,2,2,2,2,2"},
-                        {"joint0DiffTolerance", "20.0"},
-                        {"useEndPoseTolerance", "false"},
-                        {"endPoseXPointTolerance", "10.0"},
-                        {"endPoseYPointTolerance", "10.0"},
-                        {"endPoseZPointTolerance", "10.0"},
-                        {"endPoseXAxisTolerance", "10.0"},
-                        {"endPoseXAxisTolerance", "10.0"},
-                        {"useMessageCommands", "false"},
-                        {"toolChangerPoseFile", null}
-                },
-                new String[]{
-                        "Name", "Value"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean[]{
-                    false, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
-            }
-        });
-        jScrollPaneOptions.setViewportView(jTableOptions);
-
-        jTabbedPaneRecordedPoses.addTab("Options", jScrollPaneOptions);
 
         jLabel1.setText("Object:");
 
@@ -1395,264 +1331,188 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelInnerManualControlLayout = new javax.swing.GroupLayout(jPanelInnerManualControl);
         jPanelInnerManualControl.setLayout(jPanelInnerManualControlLayout);
         jPanelInnerManualControlLayout.setHorizontalGroup(
-                jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                                .addComponent(jButtonReset)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonRecordFail)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldRecordFailCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonRecordSuccess)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldRecordSuccessCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel11)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldLogFilename,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 323,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonNewLogFile))
-                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                                .addComponent(jButtonRandDropOff)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldRandomDropoffCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonTestPickup)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldRandomPickupCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 40,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel10)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestPose,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 141,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel14)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        64, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel15)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                                .addComponent(jLabel1)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jComboBoxManualObjectName,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 208,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonTake)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonLookFor)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonTest)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonReturn)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonRecord)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonPlacePart)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel20)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jComboBoxManualSlotName,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 240,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                                .addComponent(jLabel3)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestXMin,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel4)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestXMax,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 53,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel5)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestYMin,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel8)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestYMax,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel9)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonStopRandomTest)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonRecordLookForJoints))
-                                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                                .addComponent(jLabel12)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldGridSize,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 62,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonGridTest)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonUpdatePoseCacheFromManual)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonQuickCalib)))
-                                .addContainerGap(299, Short.MAX_VALUE)));
+            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jButtonReset)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecordFail)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecordSuccess)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel11)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, 323, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonNewLogFile))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jButtonRandDropOff)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTestPickup)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel14)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel15)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonLookFor)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonReturn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecord)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPlacePart)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel20)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, 240, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonStopRandomTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonRecordLookForJoints))
+                    .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                        .addComponent(jLabel12)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGridTest)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonUpdatePoseCacheFromManual)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonQuickCalib)))
+                .addContainerGap(299, Short.MAX_VALUE))
+        );
 
-        jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL,
-                new java.awt.Component[]{jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
+        jPanelInnerManualControlLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextFieldAdjPose, jTextFieldOffset, jTextFieldTestPose});
 
         jPanelInnerManualControlLayout.setVerticalGroup(
-                jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel1)
-                                        .addComponent(jButtonTake)
-                                        .addComponent(jButtonLookFor)
-                                        .addComponent(jButtonReturn)
-                                        .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonTest)
-                                        .addComponent(jButtonPlacePart)
-                                        .addComponent(jLabel20)
-                                        .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonRecord))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addGroup(jPanelInnerManualControlLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jLabel3)
-                                                .addComponent(jTextFieldTestXMin,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel4)
-                                                .addComponent(jTextFieldTestXMax,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel5)
-                                                .addComponent(jTextFieldTestYMin,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel8)
-                                                .addComponent(jTextFieldTestYMax,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(jPanelInnerManualControlLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jButtonStopRandomTest)
-                                                .addComponent(jLabel9)
-                                                .addComponent(jButtonRecordLookForJoints)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanelInnerManualControlLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jButtonRandDropOff)
-                                                .addComponent(jButtonTestPickup)
-                                                .addComponent(jTextFieldRandomPickupCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel10)
-                                                .addComponent(jTextFieldTestPose,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jTextFieldRandomDropoffCount,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(jPanelInnerManualControlLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel15)
-                                                .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addComponent(jLabel14)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonReset)
-                                        .addComponent(jButtonRecordFail)
-                                        .addComponent(jButtonRecordSuccess)
-                                        .addComponent(jLabel11)
-                                        .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonNewLogFile)
-                                        .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jTextFieldRecordSuccessCount,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelInnerManualControlLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel12)
-                                        .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonGridTest)
-                                        .addComponent(jButtonUpdatePoseCacheFromManual)
-                                        .addComponent(jButtonQuickCalib))
-                                .addContainerGap(264, Short.MAX_VALUE)));
+            jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInnerManualControlLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jButtonTake)
+                    .addComponent(jButtonLookFor)
+                    .addComponent(jButtonReturn)
+                    .addComponent(jComboBoxManualObjectName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonTest)
+                    .addComponent(jButtonPlacePart)
+                    .addComponent(jLabel20)
+                    .addComponent(jComboBoxManualSlotName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonRecord))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel3)
+                        .addComponent(jTextFieldTestXMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel4)
+                        .addComponent(jTextFieldTestXMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel5)
+                        .addComponent(jTextFieldTestYMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel8)
+                        .addComponent(jTextFieldTestYMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jTextFieldTestZ, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonStopRandomTest)
+                        .addComponent(jLabel9)
+                        .addComponent(jButtonRecordLookForJoints)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jButtonRandDropOff)
+                        .addComponent(jButtonTestPickup)
+                        .addComponent(jTextFieldRandomPickupCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel10)
+                        .addComponent(jTextFieldTestPose, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jTextFieldRandomDropoffCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jTextFieldOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel15)
+                        .addComponent(jTextFieldAdjPose, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel14)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonReset)
+                    .addComponent(jButtonRecordFail)
+                    .addComponent(jButtonRecordSuccess)
+                    .addComponent(jLabel11)
+                    .addComponent(jTextFieldLogFilename, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonNewLogFile)
+                    .addComponent(jTextFieldRecordFailCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jTextFieldRecordSuccessCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInnerManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel12)
+                    .addComponent(jTextFieldGridSize, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonGridTest)
+                    .addComponent(jButtonUpdatePoseCacheFromManual)
+                    .addComponent(jButtonQuickCalib))
+                .addContainerGap(264, Short.MAX_VALUE))
+        );
 
         jScrollPane2.setViewportView(jPanelInnerManualControl);
 
         javax.swing.GroupLayout jPanelOuterManualControlLayout = new javax.swing.GroupLayout(jPanelOuterManualControl);
         jPanelOuterManualControl.setLayout(jPanelOuterManualControlLayout);
         jPanelOuterManualControlLayout.setHorizontalGroup(
-                jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
+                .addContainerGap())
+        );
         jPanelOuterManualControlLayout.setVerticalGroup(
-                jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelOuterManualControlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOuterManualControlLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("Manual Pickup Return", jPanelOuterManualControl);
 
@@ -1695,18 +1555,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
         jTableHolderContents.setAutoCreateRowSorter(true);
         jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Holder Position Name", "Contents", "Possible Contents", "Comment"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            },
+            new String [] {
+                "Holder Position Name", "Contents", "Possible Contents", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPaneHolderContents.setViewportView(jTableHolderContents);
@@ -1729,19 +1590,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
         jTableToolOffsets.setAutoCreateRowSorter(true);
         jTableToolOffsets.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class,
-                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            },
+            new String [] {
+                "ToolName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPaneToolOffsets.setViewportView(jTableToolOffsets);
@@ -1749,35 +1610,33 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelToolOffsetsLayout = new javax.swing.GroupLayout(jPanelToolOffsets);
         jPanelToolOffsets.setLayout(jPanelToolOffsetsLayout);
         jPanelToolOffsetsLayout.setHorizontalGroup(
-                jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jButtonAddToolOffset)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonDeleteToolOffset)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                                        .addContainerGap()
-                                        .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 696,
-                                                Short.MAX_VALUE)
-                                        .addContainerGap())));
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonAddToolOffset)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDeleteToolOffset)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
         jPanelToolOffsetsLayout.setVerticalGroup(
-                jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolOffsetsLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonAddToolOffset)
-                                        .addComponent(jButtonDeleteToolOffset))
-                                .addContainerGap())
-                        .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                        jPanelToolOffsetsLayout.createSequentialGroup()
-                                                .addGap(42, 42, 42)
-                                                .addComponent(jScrollPaneToolOffsets,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
-                                                .addContainerGap())));
+            jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolOffsetsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddToolOffset)
+                    .addComponent(jButtonDeleteToolOffset))
+                .addContainerGap())
+            .addGroup(jPanelToolOffsetsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolOffsetsLayout.createSequentialGroup()
+                    .addGap(42, 42, 42)
+                    .addComponent(jScrollPaneToolOffsets, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
 
         jTabbedPaneToolChangeInner.addTab("Tool Offsets", jPanelToolOffsets);
 
@@ -1792,19 +1651,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
         jTableTrayAttachOffsets.setAutoCreateRowSorter(true);
         jTableTrayAttachOffsets.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class,
-                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            },
+            new String [] {
+                "TrayName", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPaneToolOffsets1.setViewportView(jTableTrayAttachOffsets);
@@ -1812,48 +1671,47 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                696, Short.MAX_VALUE)
-                                        .addGroup(jPanel1Layout.createSequentialGroup()
-                                                .addComponent(jButtonAddTrayAttach)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonDeleteTrayAttach)
-                                                .addGap(0, 0, Short.MAX_VALUE)))
-                                .addContainerGap()));
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jButtonAddTrayAttach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDeleteTrayAttach)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
         jPanel1Layout.setVerticalGroup(
-                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonAddTrayAttach)
-                                        .addComponent(jButtonDeleteTrayAttach))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 251,
-                                        Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddTrayAttach)
+                    .addComponent(jButtonDeleteTrayAttach))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanel1);
 
         jTableToolHolderPositions.setAutoCreateRowSorter(true);
         jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class,
-                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class,
-                    java.lang.String.class
+            },
+            new String [] {
+                "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPaneToolHolderPositions.setViewportView(jTableToolHolderPositions);
@@ -1895,86 +1753,71 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
         jLabel18.setText("FileName: ");
 
-        javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(
-                jPanelToolHolderPositions);
+        javax.swing.GroupLayout jPanelToolHolderPositionsLayout = new javax.swing.GroupLayout(jPanelToolHolderPositions);
         jPanelToolHolderPositions.setLayout(jPanelToolHolderPositionsLayout);
         jPanelToolHolderPositionsLayout.setHorizontalGroup(
-                jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolHolderPositionsLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jScrollPaneToolHolderPositions)
-                                        .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                                                .addGroup(jPanelToolHolderPositionsLayout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addGroup(jPanelToolHolderPositionsLayout
-                                                                .createSequentialGroup()
-                                                                .addComponent(jButtonRecordToolHolderPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonRecordToolHolderApproach)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonAddToolHolderPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonDeleteToolHolderPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonRenameToolHolderPose))
-                                                        .addGroup(jPanelToolHolderPositionsLayout
-                                                                .createSequentialGroup()
-                                                                .addComponent(jLabel18)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jTextFieldToolChangerPoseFile,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 575,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                                .addGap(0, 0, Short.MAX_VALUE)))
-                                .addContainerGap()));
+            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneToolHolderPositions)
+                    .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                        .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addComponent(jButtonRecordToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRecordToolHolderApproach)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonAddToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonDeleteToolHolderPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRenameToolHolderPose))
+                            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                                .addComponent(jLabel18)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldToolChangerPoseFile, javax.swing.GroupLayout.PREFERRED_SIZE, 575, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
         jPanelToolHolderPositionsLayout.setVerticalGroup(
-                jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolHolderPositionsLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonRecordToolHolderPose)
-                                        .addComponent(jButtonRecordToolHolderApproach)
-                                        .addComponent(jButtonDeleteToolHolderPose)
-                                        .addComponent(jButtonAddToolHolderPose)
-                                        .addComponent(jButtonRenameToolHolderPose))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 145,
-                                        Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelToolHolderPositionsLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel18)
-                                        .addComponent(jTextFieldToolChangerPoseFile,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addContainerGap()));
+            jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolHolderPositionsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRecordToolHolderPose)
+                    .addComponent(jButtonRecordToolHolderApproach)
+                    .addComponent(jButtonDeleteToolHolderPose)
+                    .addComponent(jButtonAddToolHolderPose)
+                    .addComponent(jButtonRenameToolHolderPose))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneToolHolderPositions, javax.swing.GroupLayout.DEFAULT_SIZE, 145, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelToolHolderPositionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel18)
+                    .addComponent(jTextFieldToolChangerPoseFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
         jTabbedPaneToolChangeInner.addTab("Holder Positions", jPanelToolHolderPositions);
 
         jTableRequiredTools.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {null, null},
-                        {null, null},
-                        {null, null},
-                        {null, null}
-                },
-                new String[]{
-                        "Part", "Tool"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.String.class
+            new Object [][] {
+                {null, null},
+                {null, null},
+                {null, null},
+                {null, null}
+            },
+            new String [] {
+                "Part", "Tool"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPane3.setViewportView(jTableRequiredTools);
@@ -1998,44 +1841,37 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelPartToolMapLayout = new javax.swing.GroupLayout(jPanelPartToolMap);
         jPanelPartToolMap.setLayout(jPanelPartToolMapLayout);
         jPanelPartToolMapLayout.setHorizontalGroup(
-                jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelPartToolMapLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 696,
-                                                Short.MAX_VALUE)
-                                        .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
-                                                .addComponent(jLabel16)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldPartToolFile))
-                                        .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
-                                                .addComponent(jButtonAddPartToToolEntry)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonDeletePartToToolEntry)
-                                                .addGap(0, 0, Short.MAX_VALUE)))
-                                .addContainerGap()));
+            jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
+                    .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldPartToolFile))
+                    .addGroup(jPanelPartToolMapLayout.createSequentialGroup()
+                        .addComponent(jButtonAddPartToToolEntry)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDeletePartToToolEntry)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
         jPanelPartToolMapLayout.setVerticalGroup(
-                jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                jPanelPartToolMapLayout.createSequentialGroup()
-                                        .addContainerGap()
-                                        .addGroup(jPanelPartToolMapLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jButtonAddPartToToolEntry)
-                                                .addComponent(jButtonDeletePartToToolEntry))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 216,
-                                                Short.MAX_VALUE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addGroup(jPanelPartToolMapLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jLabel16)
-                                                .addComponent(jTextFieldPartToolFile,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addContainerGap()));
+            jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelPartToolMapLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddPartToToolEntry)
+                    .addComponent(jButtonDeletePartToToolEntry))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelPartToolMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel16)
+                    .addComponent(jTextFieldPartToolFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
         jTabbedPaneToolChangeInner.addTab("Part To Tool Map", jPanelPartToolMap);
 
@@ -2058,72 +1894,58 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelToolChangeLayout = new javax.swing.GroupLayout(jPanelToolChange);
         jPanelToolChange.setLayout(jPanelToolChangeLayout);
         jPanelToolChangeLayout.setHorizontalGroup(
-                jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolChangeLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jTabbedPaneToolChangeInner)
-                                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                                                .addComponent(jButtonGotoToolChangerPose)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel13)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldToolChangerApproachZOffset,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 84,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonGotoToolChangerApproach)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonDropTool)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonPickupTool)
-                                                .addGap(0, 0, Short.MAX_VALUE))
-                                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                                                .addComponent(jLabel7)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldCurrentToolName,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 199,
-                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonSetCurrentTool)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jLabel21)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldCurrentToolOffset)))
-                                .addContainerGap()));
+            jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTabbedPaneToolChangeInner)
+                    .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                        .addComponent(jButtonGotoToolChangerPose)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel13)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGotoToolChangerApproach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonDropTool)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonPickupTool)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonSetCurrentTool)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel21)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldCurrentToolOffset)))
+                .addContainerGap())
+        );
         jPanelToolChangeLayout.setVerticalGroup(
-                jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolChangeLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolChangeLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonGotoToolChangerApproach)
-                                        .addComponent(jLabel13)
-                                        .addComponent(jTextFieldToolChangerApproachZOffset,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonGotoToolChangerPose)
-                                        .addComponent(jButtonDropTool)
-                                        .addComponent(jButtonPickupTool))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelToolChangeLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel7)
-                                        .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonSetCurrentTool)
-                                        .addComponent(jLabel21)
-                                        .addComponent(jTextFieldCurrentToolOffset,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 349,
-                                        Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolChangeLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonGotoToolChangerApproach)
+                    .addComponent(jLabel13)
+                    .addComponent(jTextFieldToolChangerApproachZOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonGotoToolChangerPose)
+                    .addComponent(jButtonDropTool)
+                    .addComponent(jButtonPickupTool))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelToolChangeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(jTextFieldCurrentToolName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonSetCurrentTool)
+                    .addComponent(jLabel21)
+                    .addComponent(jTextFieldCurrentToolOffset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTabbedPaneToolChangeInner, javax.swing.GroupLayout.DEFAULT_SIZE, 349, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("Tool Change", jPanelToolChange);
 
@@ -2160,87 +1982,84 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
-                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addGroup(jPanel2Layout.createSequentialGroup()
-                                                .addContainerGap()
-                                                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                        .addGroup(jPanel2Layout.createSequentialGroup()
-                                                .addGap(20, 20, 20)
-                                                .addComponent(jButtonErrMapGoIn)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonErrMapSetInputFromCachedVisionDb)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jTextFieldErrMapPartInfo,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, 17, Short.MAX_VALUE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonErrMapSetInputFromCurrent)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonErrMapGoOut)
-                                                .addGap(0, 181, Short.MAX_VALUE)))
-                                .addContainerGap()));
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jButtonErrMapGoIn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapSetInputFromCachedVisionDb)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.PREFERRED_SIZE, 17, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapSetInputFromCurrent)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonErrMapGoOut)
+                        .addGap(0, 181, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
         jPanel2Layout.setVerticalGroup(
-                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 232,
-                                        Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonErrMapGoIn)
-                                        .addComponent(jButtonErrMapSetInputFromCurrent)
-                                        .addComponent(jButtonErrMapGoOut)
-                                        .addComponent(jButtonErrMapSetInputFromCachedVisionDb)
-                                        .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addContainerGap()));
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(positionMapJPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonErrMapGoIn)
+                    .addComponent(jButtonErrMapSetInputFromCurrent)
+                    .addComponent(jButtonErrMapGoOut)
+                    .addComponent(jButtonErrMapSetInputFromCachedVisionDb)
+                    .addComponent(jTextFieldErrMapPartInfo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
-        javax.swing.GroupLayout jPanelContainerPositionMapLayout = new javax.swing.GroupLayout(
-                jPanelContainerPositionMap);
+        javax.swing.GroupLayout jPanelContainerPositionMapLayout = new javax.swing.GroupLayout(jPanelContainerPositionMap);
         jPanelContainerPositionMap.setLayout(jPanelContainerPositionMapLayout);
         jPanelContainerPositionMapLayout.setHorizontalGroup(
-                jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
         jPanelContainerPositionMapLayout.setVerticalGroup(
-                jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelContainerPositionMapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelContainerPositionMapLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("Error Map", jPanelContainerPositionMap);
 
         jTableCrclProgram.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                        {new Integer(1), null},
-                        {new Integer(2), null},
-                        {new Integer(3), null},
-                        {new Integer(4), null}
-                },
-                new String[]{
-                        "ID", "Text"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.Integer.class, java.lang.String.class
+            new Object [][] {
+                { new Integer(1), null},
+                { new Integer(2), null},
+                { new Integer(3), null},
+                { new Integer(4), null}
+            },
+            new String [] {
+                "ID", "Text"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean[]{
-                    false, true
+            boolean[] canEdit = new boolean [] {
+                false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPane1.setViewportView(jTableCrclProgram);
@@ -2248,42 +2067,44 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelCrclLayout = new javax.swing.GroupLayout(jPanelCrcl);
         jPanelCrcl.setLayout(jPanelCrclLayout);
         jPanelCrclLayout.setHorizontalGroup(
-                jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelCrclLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jScrollPane1)
-                                .addContainerGap()));
+            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCrclLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1)
+                .addContainerGap())
+        );
         jPanelCrclLayout.setVerticalGroup(
-                jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelCrclLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelCrclLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelCrclLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("CRCL", jPanelCrcl);
 
         jTablePositionCache.setAutoCreateRowSorter(true);
         jTablePositionCache.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Name", "X", "Y", "Z", "Roll", "Pitch", "Yaw", "Comment"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class,
-                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
+            },
+            new String [] {
+                "Name", "X", "Y", "Z", "Roll", "Pitch", "Yaw", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false, false, false, false, true
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPanePositionTable.setViewportView(jTablePositionCache);
@@ -2305,38 +2126,33 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelContainerPoseCacheLayout = new javax.swing.GroupLayout(jPanelContainerPoseCache);
         jPanelContainerPoseCache.setLayout(jPanelContainerPoseCacheLayout);
         jPanelContainerPoseCacheLayout.setHorizontalGroup(
-                jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(jButtonClearPoseCache)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButtonUpdatePoseCache)
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGroup(jPanelContainerPoseCacheLayout
-                                .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
-                                        .addContainerGap()
-                                        .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                740, Short.MAX_VALUE)
-                                        .addContainerGap())));
+            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButtonClearPoseCache)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonUpdatePoseCache)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelContainerPoseCacheLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 740, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
         jPanelContainerPoseCacheLayout.setVerticalGroup(
-                jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                jPanelContainerPoseCacheLayout.createSequentialGroup()
-                                        .addContainerGap(274, Short.MAX_VALUE)
-                                        .addGroup(jPanelContainerPoseCacheLayout
-                                                .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                                .addComponent(jButtonClearPoseCache)
-                                                .addComponent(jButtonUpdatePoseCache))
-                                        .addContainerGap())
-                        .addGroup(jPanelContainerPoseCacheLayout
-                                .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
-                                        jPanelContainerPoseCacheLayout.createSequentialGroup()
-                                                .addContainerGap()
-                                                .addComponent(jScrollPanePositionTable,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
-                                                .addGap(38, 38, 38))));
+            jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                .addContainerGap(274, Short.MAX_VALUE)
+                .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonClearPoseCache)
+                    .addComponent(jButtonUpdatePoseCache))
+                .addContainerGap())
+            .addGroup(jPanelContainerPoseCacheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelContainerPoseCacheLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPanePositionTable, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
+                    .addGap(38, 38, 38)))
+        );
 
         jTabbedPaneRecordedPoses.addTab("Pose Cache", jPanelContainerPoseCache);
 
@@ -2347,11 +2163,13 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout opDisplayJPanelInputLayout = new javax.swing.GroupLayout(opDisplayJPanelInput);
         opDisplayJPanelInput.setLayout(opDisplayJPanelInputLayout);
         opDisplayJPanelInputLayout.setHorizontalGroup(
-                opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 364, Short.MAX_VALUE));
+            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 364, Short.MAX_VALUE)
+        );
         opDisplayJPanelInputLayout.setVerticalGroup(
-                opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 0, Short.MAX_VALUE));
+            opDisplayJPanelInputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
 
         opDisplayJPanelSolution.setLabel("Output");
         opDisplayJPanelSolution.setLabelFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
@@ -2360,62 +2178,58 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout opDisplayJPanelSolutionLayout = new javax.swing.GroupLayout(opDisplayJPanelSolution);
         opDisplayJPanelSolution.setLayout(opDisplayJPanelSolutionLayout);
         opDisplayJPanelSolutionLayout.setHorizontalGroup(
-                opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 364, Short.MAX_VALUE));
+            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 364, Short.MAX_VALUE)
+        );
         opDisplayJPanelSolutionLayout.setVerticalGroup(
-                opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 293, Short.MAX_VALUE));
+            opDisplayJPanelSolutionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 293, Short.MAX_VALUE)
+        );
 
         javax.swing.GroupLayout jPanelOpOuterLayout = new javax.swing.GroupLayout(jPanelOpOuter);
         jPanelOpOuter.setLayout(jPanelOpOuterLayout);
         jPanelOpOuterLayout.setHorizontalGroup(
-                jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelOpOuterLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addContainerGap()));
+            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOpOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
         jPanelOpOuterLayout.setVerticalGroup(
-                jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOpOuterLayout
-                                .createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelOpOuterLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addContainerGap()));
+            jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelOpOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelOpOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(opDisplayJPanelSolution, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(opDisplayJPanelInput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("OptaPlanner", jPanelOpOuter);
 
         jTableLog.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run Number", "Is Running Program",
-                        "Robot", "Actions File"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class,
-                    java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.Boolean.class,
-                    java.lang.String.class, java.lang.String.class
+            },
+            new String [] {
+                "Type", "Reverse", "Size", "Index", "Abort", "Section", "Run Number", "Is Running Program", "Robot", "Actions File"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Boolean.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Integer.class, java.lang.Long.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false, false, false, true, false, false, true
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, true, false, false, true
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPaneLog.setViewportView(jTableLog);
@@ -2423,26 +2237,26 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jTabbedPaneRecordedPoses.addTab("Log", jScrollPaneLog);
 
         jTableKitCompare.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "kitToCheckIndex", "Name", "Instance", "Slot", "Have", "Need", "Match"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class,
-                    java.lang.String.class, java.lang.String.class, java.lang.Boolean.class
+            },
+            new String [] {
+                "kitToCheckIndex", "Name", "Instance", "Slot", "Have", "Need", "Match"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Boolean.class
             };
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false, false, false, false
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPaneKitCompareTable.setViewportView(jTableKitCompare);
@@ -2450,18 +2264,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jTabbedPaneRecordedPoses.addTab("Kit Compare", jScrollPaneKitCompareTable);
 
         jTableCorrectiveActions.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Type", "arg0", "arg1", "arg2"
-                }) {
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false
+            },
+            new String [] {
+                "Type", "arg0", "arg1", "arg2"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPaneCorrectiveActionsTable.setViewportView(jTableCorrectiveActions);
@@ -2469,18 +2284,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jTabbedPaneRecordedPoses.addTab("Corrective Actions", jScrollPaneCorrectiveActionsTable);
 
         jTableOptimizedCorrectiveActions.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Type", "arg0", "arg1", "arg2"
-                }) {
-            boolean[] canEdit = new boolean[]{
-                    false, false, false, false
+            },
+            new String [] {
+                "Type", "arg0", "arg1", "arg2"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
+                return canEdit [columnIndex];
             }
         });
         jScrollPaneOptimizedCorrectiveActionsTable.setViewportView(jTableOptimizedCorrectiveActions);
@@ -2489,20 +2305,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
         jTableRecordedPoses.setAutoCreateRowSorter(true);
         jTableRecordedPoses.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
+            new Object [][] {
 
-                },
-                new String[]{
-                        "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
-                }) {
-            Class[] types = new Class[]{
-                    java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class,
-                    java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class,
-                    java.lang.String.class
+            },
+            new String [] {
+                "Name", "X (mm)", "Y (mm)", "Z (mm)", "Rx (deg)", "Ry (deg)", "Rz (deg)", "Approach", "Joints"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
+                return types [columnIndex];
             }
         });
         jScrollPaneRecordedPoses.setViewportView(jTableRecordedPoses);
@@ -2562,70 +2377,153 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout jPanelToolSavedPosesLayout = new javax.swing.GroupLayout(jPanelToolSavedPoses);
         jPanelToolSavedPoses.setLayout(jPanelToolSavedPosesLayout);
         jPanelToolSavedPosesLayout.setHorizontalGroup(
-                jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolSavedPosesLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
-                                                .addGroup(jPanelToolSavedPosesLayout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
-                                                                .addComponent(jButtonRecordPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonMoveCartesianRecordedPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonMoveRecordedJoints)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonDeleteRecordedPose)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonRenameToolHolderPose1)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonOpenGripper)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonCloseGripper))
-                                                        .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
-                                                                .addComponent(jLabel19)
-                                                                .addGap(18, 18, 18)
-                                                                .addComponent(jTextFieldRecordedPosesFile,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 575,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                                .addGap(0, 0, Short.MAX_VALUE))
-                                        .addComponent(jScrollPaneRecordedPoses))
-                                .addContainerGap()));
-        jPanelToolSavedPosesLayout.setVerticalGroup(
-                jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(jPanelToolSavedPosesLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonRecordPose)
-                                        .addComponent(jButtonMoveCartesianRecordedPose)
-                                        .addComponent(jButtonDeleteRecordedPose)
-                                        .addComponent(jButtonMoveRecordedJoints)
-                                        .addComponent(jButtonRenameToolHolderPose1)
-                                        .addComponent(jButtonOpenGripper)
-                                        .addComponent(jButtonCloseGripper))
-                                .addGap(11, 11, 11)
-                                .addComponent(jScrollPaneRecordedPoses, javax.swing.GroupLayout.DEFAULT_SIZE, 216,
-                                        Short.MAX_VALUE)
+            jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
+                        .addGroup(jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
+                                .addComponent(jButtonRecordPose)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(jPanelToolSavedPosesLayout
-                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel19)
-                                        .addComponent(jTextFieldRecordedPosesFile,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addContainerGap()));
+                                .addComponent(jButtonMoveCartesianRecordedPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonMoveRecordedJoints)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonDeleteRecordedPose)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonRenameToolHolderPose1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonOpenGripper)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonCloseGripper))
+                            .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
+                                .addComponent(jLabel19)
+                                .addGap(18, 18, 18)
+                                .addComponent(jTextFieldRecordedPosesFile, javax.swing.GroupLayout.PREFERRED_SIZE, 575, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneRecordedPoses))
+                .addContainerGap())
+        );
+        jPanelToolSavedPosesLayout.setVerticalGroup(
+            jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolSavedPosesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRecordPose)
+                    .addComponent(jButtonMoveCartesianRecordedPose)
+                    .addComponent(jButtonDeleteRecordedPose)
+                    .addComponent(jButtonMoveRecordedJoints)
+                    .addComponent(jButtonRenameToolHolderPose1)
+                    .addComponent(jButtonOpenGripper)
+                    .addComponent(jButtonCloseGripper))
+                .addGap(11, 11, 11)
+                .addComponent(jScrollPaneRecordedPoses, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelToolSavedPosesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel19)
+                    .addComponent(jTextFieldRecordedPosesFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
 
         jTabbedPaneRecordedPoses.addTab("Recorded Poses", jPanelToolSavedPoses);
+
+        jTableOptions.setAutoCreateRowSorter(true);
+        jTableOptions.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {"rpy", "175.0,0.0,0.0"},
+                {"lookForXYZ", "0.0,0.0,0.0"},
+                {"approachZOffset", "50.0"},
+                {"placeZOffset", "5.0"},
+                {"takeZOffset", "0.0"},
+                {"testTransSpeed", "50.0"},
+                {"fastTransSpeed", "200.0"},
+                {"slowTransSpeed", "75"},
+                {"verySlowTransSpeed", "25"},
+                {"lookDwellTime", "5.0"},
+                {"firstLookDwellTime", "5.0"},
+                {"lastLookDwellTime", "1.0"},
+                {"skipLookDwellTime", "5.0"},
+                {"afterMoveToLookForDwellTime", "5.0"},
+                {"rotSpeed", "30.0"},
+                {"placePartSlotArgIndex", "0"},
+                {"takePartArgIndex", "0"},
+                {"settleDwellTime", "0.1"},
+                {"toolChangerDwellTime", "0.25"},
+                {"useJointLookFor", "false"},
+                {"jointSpeed", "5.0"},
+                {"jointAccel", "100.0"},
+                {"takeSnapshots", "false"},
+                {"doInspectKit", "false"},
+                {"kitInspectDistThreshold", "20.0"},
+                {"requireNewPoses", "false"},
+                {"visionCycleNewDiffThreshold", "3"},
+                {"pauseInsteadOfRecover", "false"},
+                {"skipMissingParts", "false"},
+                {"useJointMovesForToolHolderApproach", "true"},
+                {"saveProgramRunData", "false"},
+                {"jointTolerances", "2,2,2,2,2,2,2,2"},
+                {"joint0DiffTolerance", "20.0"},
+                {"useEndPoseTolerance", "false"},
+                {"endPoseXPointTolerance", "10.0"},
+                {"endPoseYPointTolerance", "10.0"},
+                {"endPoseZPointTolerance", "10.0"},
+                {"endPoseXAxisTolerance", "10.0"},
+                {"endPoseXAxisTolerance", "10.0"},
+                {"useMessageCommands", "false"},
+                {"toolChangerPoseFile", null}
+            },
+            new String [] {
+                "Name", "Value"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPaneOptions.setViewportView(jTableOptions);
+
+        jCheckBoxEditOptionsTable.setText("Edit");
+        jCheckBoxEditOptionsTable.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxEditOptionsTableActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelOptionsOuterLayout = new javax.swing.GroupLayout(jPanelOptionsOuter);
+        jPanelOptionsOuter.setLayout(jPanelOptionsOuterLayout);
+        jPanelOptionsOuterLayout.setHorizontalGroup(
+            jPanelOptionsOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOptionsOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelOptionsOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelOptionsOuterLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxEditOptionsTable)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPaneOptions, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 849, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanelOptionsOuterLayout.setVerticalGroup(
+            jPanelOptionsOuterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelOptionsOuterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jCheckBoxEditOptionsTable)
+                .addGap(10, 10, 10)
+                .addComponent(jScrollPaneOptions, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE))
+        );
+
+        jTabbedPaneRecordedPoses.addTab("Options", jPanelOptionsOuter);
 
         jButtonClear.setText("Clear");
         jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -2693,123 +2591,135 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(jScrollPane4)
-                                        .addComponent(jTabbedPaneRecordedPoses)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout
-                                                .createSequentialGroup()
-                                                .addComponent(jButtonPause)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonStep)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonContinue)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonGenerateAndRun)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonGenerateCRCL)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jCheckBoxForceFakeTake)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jCheckBoxEnableOptaPlanner)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                        javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                .addComponent(jCheckBoxDebug)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(jButtonAbort)
-                                                .addGap(11, 11, 11))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout
-                                                .createSequentialGroup()
-                                                .addGroup(layout
-                                                        .createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                        .addGroup(layout.createSequentialGroup()
-                                                                .addComponent(jLabel6)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jTextFieldPddlOutputActions,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 325,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonLoad)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonLoadPddlActionsFromFile)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonPddlOutputViewEdit)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jButtonClear))
-                                                        .addGroup(layout.createSequentialGroup()
-                                                                .addComponent(jCheckBoxReplan)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jLabel2)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jTextFieldIndex,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 42,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jCheckBoxNeedLookFor)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jLabel17)
-                                                                .addPreferredGap(
-                                                                        javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                .addComponent(jTextFieldCurrentPart,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE, 89,
-                                                                        javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                                .addGap(0, 0, Short.MAX_VALUE)))
-                                .addContainerGap()));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane4)
+                    .addComponent(jTabbedPaneRecordedPoses)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(jButtonPause)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonStep)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonContinue)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGenerateAndRun)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonGenerateCRCL)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxForceFakeTake)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBoxEnableOptaPlanner)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxDebug)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButtonAbort)
+                        .addGap(11, 11, 11))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel6)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, 325, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLoad)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonLoadPddlActionsFromFile)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonPddlOutputViewEdit)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonClear))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jCheckBoxReplan)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jCheckBoxNeedLookFor)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel17)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jLabel6)
-                                        .addComponent(jButtonLoadPddlActionsFromFile)
-                                        .addComponent(jTextFieldPddlOutputActions,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jButtonLoad)
-                                        .addComponent(jButtonPddlOutputViewEdit)
-                                        .addComponent(jButtonClear))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 122,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jTabbedPaneRecordedPoses, javax.swing.GroupLayout.PREFERRED_SIZE, 381,
-                                        javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jCheckBoxNeedLookFor)
-                                        .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jLabel17)
-                                        .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(jLabel2)
-                                        .addComponent(jCheckBoxReplan))
-                                .addGap(1, 1, 1)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(jButtonPause)
-                                        .addComponent(jButtonStep)
-                                        .addComponent(jButtonContinue)
-                                        .addComponent(jButtonGenerateAndRun)
-                                        .addComponent(jButtonGenerateCRCL)
-                                        .addComponent(jCheckBoxForceFakeTake)
-                                        .addComponent(jCheckBoxDebug)
-                                        .addComponent(jButtonAbort)
-                                        .addComponent(jCheckBoxEnableOptaPlanner))
-                                .addContainerGap()));
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jButtonLoadPddlActionsFromFile)
+                    .addComponent(jTextFieldPddlOutputActions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButtonLoad)
+                    .addComponent(jButtonPddlOutputViewEdit)
+                    .addComponent(jButtonClear))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jTabbedPaneRecordedPoses, javax.swing.GroupLayout.PREFERRED_SIZE, 381, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jCheckBoxNeedLookFor)
+                    .addComponent(jTextFieldIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel17)
+                    .addComponent(jTextFieldCurrentPart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jCheckBoxReplan))
+                .addGap(1, 1, 1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonPause)
+                    .addComponent(jButtonStep)
+                    .addComponent(jButtonContinue)
+                    .addComponent(jButtonGenerateAndRun)
+                    .addComponent(jButtonGenerateCRCL)
+                    .addComponent(jCheckBoxForceFakeTake)
+                    .addComponent(jCheckBoxDebug)
+                    .addComponent(jButtonAbort)
+                    .addComponent(jCheckBoxEnableOptaPlanner))
+                .addContainerGap())
+        );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jCheckBoxEditOptionsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEditOptionsTableActionPerformed
+        boolean edit = jCheckBoxEditOptionsTable.isSelected();
+        final TableModel oldModel = jTableOptions.getModel();
+        final Object[][] data = new Object[oldModel.getRowCount()][];
+        for (int i = 0; i < data.length; i++) {
+            data[i] =  new Object[]{
+                oldModel.getValueAt(i, 0),
+                oldModel.getValueAt(i, 1)};
+        }
+        final TableModel newModel = new javax.swing.table.DefaultTableModel(
+            data,
+            new String [] {
+                "Name", "Value"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                edit, edit
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        };
+        jTableOptions.setModel(newModel);
+        optionsCachedTable.setData(data);
+        if(!edit) {
+            final Map<ExecutorOption, ?> options = getOptions();
+            System.out.println("options = " + options);
+            crclGenerator.setOptions(options);
+        }
+    }//GEN-LAST:event_jCheckBoxEditOptionsTableActionPerformed
 
     @UIEffect
     private void browseActionsFile() throws IOException {
@@ -9609,6 +9519,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private javax.swing.JButton jButtonUpdatePoseCache;
     private javax.swing.JButton jButtonUpdatePoseCacheFromManual;
     private javax.swing.JCheckBox jCheckBoxDebug;
+    private javax.swing.JCheckBox jCheckBoxEditOptionsTable;
     private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;
     private javax.swing.JCheckBox jCheckBoxForceFakeTake;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
@@ -9643,6 +9554,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private javax.swing.JPanel jPanelCrcl;
     private javax.swing.JPanel jPanelInnerManualControl;
     private javax.swing.JPanel jPanelOpOuter;
+    private javax.swing.JPanel jPanelOptionsOuter;
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JPanel jPanelPartToolMap;
     private javax.swing.JPanel jPanelToolChange;

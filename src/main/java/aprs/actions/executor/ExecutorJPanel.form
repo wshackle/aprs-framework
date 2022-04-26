@@ -218,117 +218,6 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
       <SubComponents>
-        <Container class="javax.swing.JScrollPane" name="jScrollPaneOptions">
-          <AuxValues>
-            <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
-          </AuxValues>
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="Options">
-                <Property name="tabTitle" type="java.lang.String" value="Options"/>
-              </JTabbedPaneConstraints>
-            </Constraint>
-          </Constraints>
-
-          <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
-          <SubComponents>
-            <Component class="javax.swing.JTable" name="jTableOptions">
-              <Properties>
-                <Property name="autoCreateRowSorter" type="boolean" value="true"/>
-                <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                  <Table columnCount="2" rowCount="41">
-                    <Column editable="false" title="Name" type="java.lang.String">
-                      <Data value="rpy"/>
-                      <Data value="lookForXYZ"/>
-                      <Data value="approachZOffset"/>
-                      <Data value="placeZOffset"/>
-                      <Data value="takeZOffset"/>
-                      <Data value="testTransSpeed"/>
-                      <Data value="fastTransSpeed"/>
-                      <Data value="slowTransSpeed"/>
-                      <Data value="verySlowTransSpeed"/>
-                      <Data value="lookDwellTime"/>
-                      <Data value="firstLookDwellTime"/>
-                      <Data value="lastLookDwellTime"/>
-                      <Data value="skipLookDwellTime"/>
-                      <Data value="afterMoveToLookForDwellTime"/>
-                      <Data value="rotSpeed"/>
-                      <Data value="placePartSlotArgIndex"/>
-                      <Data value="takePartArgIndex"/>
-                      <Data value="settleDwellTime"/>
-                      <Data value="toolChangerDwellTime"/>
-                      <Data value="useJointLookFor"/>
-                      <Data value="jointSpeed"/>
-                      <Data value="jointAccel"/>
-                      <Data value="takeSnapshots"/>
-                      <Data value="doInspectKit"/>
-                      <Data value="kitInspectDistThreshold"/>
-                      <Data value="requireNewPoses"/>
-                      <Data value="visionCycleNewDiffThreshold"/>
-                      <Data value="pauseInsteadOfRecover"/>
-                      <Data value="skipMissingParts"/>
-                      <Data value="useJointMovesForToolHolderApproach"/>
-                      <Data value="saveProgramRunData"/>
-                      <Data value="jointTolerances"/>
-                      <Data value="joint0DiffTolerance"/>
-                      <Data value="useEndPoseTolerance"/>
-                      <Data value="endPoseXPointTolerance"/>
-                      <Data value="endPoseYPointTolerance"/>
-                      <Data value="endPoseZPointTolerance"/>
-                      <Data value="endPoseXAxisTolerance"/>
-                      <Data value="endPoseXAxisTolerance"/>
-                      <Data value="useMessageCommands"/>
-                      <Data value="toolChangerPoseFile"/>
-                    </Column>
-                    <Column editable="true" title="Value" type="java.lang.String">
-                      <Data value="175.0,0.0,0.0"/>
-                      <Data value="0.0,0.0,0.0"/>
-                      <Data value="50.0"/>
-                      <Data value="5.0"/>
-                      <Data value="0.0"/>
-                      <Data value="50.0"/>
-                      <Data value="200.0"/>
-                      <Data value="75"/>
-                      <Data value="25"/>
-                      <Data value="5.0"/>
-                      <Data value="5.0"/>
-                      <Data value="1.0"/>
-                      <Data value="5.0"/>
-                      <Data value="5.0"/>
-                      <Data value="30.0"/>
-                      <Data value="0"/>
-                      <Data value="0"/>
-                      <Data value="0.1"/>
-                      <Data value="0.25"/>
-                      <Data value="false"/>
-                      <Data value="5.0"/>
-                      <Data value="100.0"/>
-                      <Data value="false"/>
-                      <Data value="false"/>
-                      <Data value="20.0"/>
-                      <Data value="false"/>
-                      <Data value="3"/>
-                      <Data value="false"/>
-                      <Data value="false"/>
-                      <Data value="true"/>
-                      <Data value="false"/>
-                      <Data value="2,2,2,2,2,2,2,2"/>
-                      <Data value="20.0"/>
-                      <Data value="false"/>
-                      <Data value="10.0"/>
-                      <Data value="10.0"/>
-                      <Data value="10.0"/>
-                      <Data value="10.0"/>
-                      <Data value="10.0"/>
-                      <Data value="false"/>
-                      <Data value="null"/>
-                    </Column>
-                  </Table>
-                </Property>
-              </Properties>
-            </Component>
-          </SubComponents>
-        </Container>
         <Container class="javax.swing.JPanel" name="jPanelOuterManualControl">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
@@ -2083,6 +1972,157 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonCloseGripperActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="jPanelOptionsOuter">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
+              <JTabbedPaneConstraints tabName="Options">
+                <Property name="tabTitle" type="java.lang.String" value="Options"/>
+              </JTabbedPaneConstraints>
+            </Constraint>
+          </Constraints>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="jCheckBoxEditOptionsTable" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          </Group>
+                          <Component id="jScrollPaneOptions" alignment="1" pref="849" max="32767" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <Component id="jCheckBoxEditOptionsTable" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                      <Component id="jScrollPaneOptions" pref="279" max="32767" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="jScrollPaneOptions">
+              <AuxValues>
+                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+              </AuxValues>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JTable" name="jTableOptions">
+                  <Properties>
+                    <Property name="autoCreateRowSorter" type="boolean" value="true"/>
+                    <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
+                      <Table columnCount="2" rowCount="41">
+                        <Column editable="false" title="Name" type="java.lang.String">
+                          <Data value="rpy"/>
+                          <Data value="lookForXYZ"/>
+                          <Data value="approachZOffset"/>
+                          <Data value="placeZOffset"/>
+                          <Data value="takeZOffset"/>
+                          <Data value="testTransSpeed"/>
+                          <Data value="fastTransSpeed"/>
+                          <Data value="slowTransSpeed"/>
+                          <Data value="verySlowTransSpeed"/>
+                          <Data value="lookDwellTime"/>
+                          <Data value="firstLookDwellTime"/>
+                          <Data value="lastLookDwellTime"/>
+                          <Data value="skipLookDwellTime"/>
+                          <Data value="afterMoveToLookForDwellTime"/>
+                          <Data value="rotSpeed"/>
+                          <Data value="placePartSlotArgIndex"/>
+                          <Data value="takePartArgIndex"/>
+                          <Data value="settleDwellTime"/>
+                          <Data value="toolChangerDwellTime"/>
+                          <Data value="useJointLookFor"/>
+                          <Data value="jointSpeed"/>
+                          <Data value="jointAccel"/>
+                          <Data value="takeSnapshots"/>
+                          <Data value="doInspectKit"/>
+                          <Data value="kitInspectDistThreshold"/>
+                          <Data value="requireNewPoses"/>
+                          <Data value="visionCycleNewDiffThreshold"/>
+                          <Data value="pauseInsteadOfRecover"/>
+                          <Data value="skipMissingParts"/>
+                          <Data value="useJointMovesForToolHolderApproach"/>
+                          <Data value="saveProgramRunData"/>
+                          <Data value="jointTolerances"/>
+                          <Data value="joint0DiffTolerance"/>
+                          <Data value="useEndPoseTolerance"/>
+                          <Data value="endPoseXPointTolerance"/>
+                          <Data value="endPoseYPointTolerance"/>
+                          <Data value="endPoseZPointTolerance"/>
+                          <Data value="endPoseXAxisTolerance"/>
+                          <Data value="endPoseXAxisTolerance"/>
+                          <Data value="useMessageCommands"/>
+                          <Data value="toolChangerPoseFile"/>
+                        </Column>
+                        <Column editable="false" title="Value" type="java.lang.String">
+                          <Data value="175.0,0.0,0.0"/>
+                          <Data value="0.0,0.0,0.0"/>
+                          <Data value="50.0"/>
+                          <Data value="5.0"/>
+                          <Data value="0.0"/>
+                          <Data value="50.0"/>
+                          <Data value="200.0"/>
+                          <Data value="75"/>
+                          <Data value="25"/>
+                          <Data value="5.0"/>
+                          <Data value="5.0"/>
+                          <Data value="1.0"/>
+                          <Data value="5.0"/>
+                          <Data value="5.0"/>
+                          <Data value="30.0"/>
+                          <Data value="0"/>
+                          <Data value="0"/>
+                          <Data value="0.1"/>
+                          <Data value="0.25"/>
+                          <Data value="false"/>
+                          <Data value="5.0"/>
+                          <Data value="100.0"/>
+                          <Data value="false"/>
+                          <Data value="false"/>
+                          <Data value="20.0"/>
+                          <Data value="false"/>
+                          <Data value="3"/>
+                          <Data value="false"/>
+                          <Data value="false"/>
+                          <Data value="true"/>
+                          <Data value="false"/>
+                          <Data value="2,2,2,2,2,2,2,2"/>
+                          <Data value="20.0"/>
+                          <Data value="false"/>
+                          <Data value="10.0"/>
+                          <Data value="10.0"/>
+                          <Data value="10.0"/>
+                          <Data value="10.0"/>
+                          <Data value="10.0"/>
+                          <Data value="false"/>
+                          <Data value="null"/>
+                        </Column>
+                      </Table>
+                    </Property>
+                  </Properties>
+                </Component>
+              </SubComponents>
+            </Container>
+            <Component class="javax.swing.JCheckBox" name="jCheckBoxEditOptionsTable">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Edit"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxEditOptionsTableActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
