@@ -231,34 +231,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         toolMenu.add(toolPickupByToolMenu);
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
-//        final TableModelListener optionsTableEventListener = (TableModelEvent e) -> {
-//            if (e.getType() == TableModelEvent.UPDATE) {
-////                optionsTableEventsHandled.incrementAndGet();
-//                System.out.println("optionsTableEventsHandled = " + optionsTableEventsHandled);
-//                System.out.println("optionsTableEventsCaused = " + optionsTableEventsCaused);
-//                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
-//                    crclGenerator.setOptions(getOptions());
-//                }
-//            }
-//        };
-//        jTableOptions.getModel().addTableModelListener(optionsTableEventListener);
-//        final TableModelListener requiredToolsTableModelListener = (TableModelEvent e) -> {
-//            if (e.getType() == TableModelEvent.UPDATE) {
-//                if (null != crclGenerator && !isRunningProgram() && !isContinuingActions()) {
-//                    for (int i = e.getFirstRow(); i <= e.getLastRow(); i++) {
-//                        Object partObject = jTableRequiredTools.getValueAt(i, 0);
-//                        if (partObject instanceof String) {
-//                            Object toolObject = jTableRequiredTools.getValueAt(i, 1);
-//                            if (toolObject instanceof String && ((String) toolObject).length() > 0) {
-//                                crclGenerator.getPartToolMap().put((String) partObject, (String) toolObject);
-//                            }
-//                        }
-//                    }
-//                    savePartToolMapOnDisplay();
-//                }
-//            }
-//        };
-//        jTableRequiredTools.getModel().addTableModelListener(requiredToolsTableModelListener);
         optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
         enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
         pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);

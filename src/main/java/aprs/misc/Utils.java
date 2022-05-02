@@ -719,7 +719,7 @@ public class Utils {
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> Future<T> submit(Callable<T> task) {
             CompletableFuture<T> cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -735,7 +735,7 @@ public class Utils {
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> Future<T> submit(Runnable task, T result) {
             CompletableFuture<T> cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -746,7 +746,7 @@ public class Utils {
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public Future<?> submit(Runnable task) {
             CompletableFuture cf = new CompletableFuture();
             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -757,25 +757,25 @@ public class Utils {
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
 
         @Override
-        @SuppressWarnings({"nullness","keyfor"})
+        @SuppressWarnings({"nullness", "keyfor"})
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
@@ -1053,17 +1053,25 @@ public class Utils {
                     }
                     Object tableValue = table.getValueAt(r, i);
                     if (null != tableValue) {
-                        Component comp = renderer.getTableCellRendererComponent(table,
-                                tableValue,
-                                false, false, r, i);
-                        if (null != comp && null != comp.getPreferredSize()) {
-                            width = Math.max(width, comp.getPreferredSize().width);
-                        } else {
-                            System.err.println("table has invalid renderer for cell (" + r + "," + i
-                                    + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                        try {
+
+                            Component comp = renderer.getTableCellRendererComponent(table,
+                                    tableValue,
+                                    false, false, r, i);
+                            if (null != comp && null != comp.getPreferredSize()) {
+                                width = Math.max(width, comp.getPreferredSize().width);
+                            } else {
+                                System.err.println("table has invalid renderer for cell (" + r + "," + i
+                                        + ")  colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.log(Level.SEVERE, "", e);
+                            throw new RuntimeException("colHeaderVal=" + colHeaderVal +", tableValue="+tableValue+", r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount()
+                                    + ",table.getColumnCount()=" + table.getColumnCount(), e);
                         }
                     }
                 } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "", e);
                     throw new RuntimeException("r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount()
                             + ",table.getColumnCount()=" + table.getColumnCount(), e);
                 }

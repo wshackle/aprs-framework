@@ -106,6 +106,66 @@ public class PhysicalItem extends PM_CARTESIAN {
     private @Nullable
     String prpName;
 
+    private boolean stackable = false;
+
+    /**
+     * Get the value of stackable
+     *
+     * @return the value of stackable
+     */
+    public boolean isStackable() {
+        return stackable;
+    }
+
+    /**
+     * Set the value of stackable
+     *
+     * @param stackable new value of stackable
+     */
+    public void setStackable(boolean stackable) {
+        this.stackable = stackable;
+    }
+
+    private double height = java.lang.Double.NaN;
+
+    /**
+     * Get the value of height
+     *
+     * @return the value of height
+     */
+    public double getHeight() {
+        return height;
+    }
+
+    /**
+     * Set the value of height
+     *
+     * @param height new value of height
+     */
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    private int count = 1;
+
+    /**
+     * Get the value of count
+     *
+     * @return the value of count
+     */
+    public int getCount() {
+        return count;
+    }
+
+    /**
+     * Set the value of count
+     *
+     * @param count new value of count
+     */
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     public PoseType getPose() {
         return pose(point(x, y, z), vector(vxi, vxj, vxk), vector(vzi, vzj, vzk));
     }

@@ -903,10 +903,12 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="jScrollPane1" max="32767" attributes="0"/>
+                              <Component id="jScrollPane1" pref="456" max="32767" attributes="0"/>
                               <Group type="102" attributes="0">
                                   <Component id="jPanelItemsButtons" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="32767" attributes="0"/>
+                                  <Component id="jCheckBoxEditItemsTable" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jCheckBoxViewOutput" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -918,12 +920,15 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane1" pref="376" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" pref="390" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="jPanelItemsButtons" min="-2" max="-2" attributes="0"/>
                               <Group type="102" alignment="1" attributes="0">
-                                  <Component id="jCheckBoxViewOutput" min="-2" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="jCheckBoxViewOutput" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="jCheckBoxEditItemsTable" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
                                   <EmptySpace max="-2" attributes="0"/>
                               </Group>
                           </Group>
@@ -943,14 +948,18 @@
                       <Properties>
                         <Property name="autoCreateRowSorter" type="boolean" value="true"/>
                         <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="7" rowCount="0">
+                          <Table columnCount="11" rowCount="0">
                             <Column editable="false" title="Index" type="java.lang.Integer"/>
-                            <Column editable="true" title="Name" type="java.lang.String"/>
-                            <Column editable="true" title="X" type="java.lang.Double"/>
-                            <Column editable="true" title="Y" type="java.lang.Double"/>
-                            <Column editable="true" title="Rotation" type="java.lang.Double"/>
-                            <Column editable="true" title="Type" type="java.lang.String"/>
-                            <Column editable="true" title="Score" type="java.lang.Double"/>
+                            <Column editable="false" title="Name" type="java.lang.String"/>
+                            <Column editable="false" title="X" type="java.lang.Double"/>
+                            <Column editable="false" title="Y" type="java.lang.Double"/>
+                            <Column editable="false" title="Z" type="java.lang.Double"/>
+                            <Column editable="false" title="Rotation" type="java.lang.Double"/>
+                            <Column editable="false" title="Type" type="java.lang.String"/>
+                            <Column editable="false" title="Score" type="java.lang.Double"/>
+                            <Column editable="false" title="Count" type="java.lang.Integer"/>
+                            <Column editable="false" title="Height" type="java.lang.Double"/>
+                            <Column editable="false" title="Stackable" type="java.lang.Boolean"/>
                           </Table>
                         </Property>
                         <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -1024,6 +1033,15 @@
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxViewOutputActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="jCheckBoxEditItemsTable">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Edit"/>
+                    <Property name="enabled" type="boolean" value="false"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxEditItemsTableActionPerformed"/>
                   </Events>
                 </Component>
               </SubComponents>

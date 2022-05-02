@@ -477,6 +477,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     }
 
     public void setViewingOutput(boolean viewingOutput) {
+        if (viewingOutput) {
+            setItemsTableEditable(false);
+            jCheckBoxEditItemsTable.setSelected(false);
+            jCheckBoxEditItemsTable.setEnabled(false);
+        }
         viewOutputCachedCheckBox.setSelected(viewingOutput);
     }
 
@@ -840,7 +845,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         tm.setRowCount(0);
         for (int row = 0; row < jTableItems.getRowCount(); row++) {
 
-            String type = (String) jTableItems.getValueAt(row, 5);
+            String type = (String) jTableItems.getValueAt(row, 6);
             Object nameObject = jTableItems.getValueAt(row, 1);
             if (null == type) {
                 continue;
@@ -851,7 +856,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
                     Object xObject = jTableItems.getValueAt(row, 2);
                     Object yObject = jTableItems.getValueAt(row, 3);
-                    Object rotObject = jTableItems.getValueAt(row, 4);
+//                    Object zObject = jTableItems.getValueAt(row, 4);
+                    Object rotObject = jTableItems.getValueAt(row, 5);
                     if (null != nameObject
                             && null != xObject
                             && null != yObject
@@ -927,8 +933,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         model.setRowCount(0);
         for (int i = 0; i < items.size(); i++) {
             PhysicalItem item = items.get(i);
-            Object rowObjects[] = new Object[]{i, item.getName(), item.x, item.y, toDegrees(item.getRotation()),
-                item.getType(), item.getScore()};
+            final double rotDegrees = toDegrees(item.getRotation());
+            Object rowObjects[] = new Object[]{
+                i, item.getName(),
+                item.x, item.y, item.z, rotDegrees,
+                item.getType(), item.getScore(),
+                item.getCount(), item.getHeight()
+            };
             model.addRow(rowObjects);
         }
         autoResizeTableColWidthsOnDisplay(jtable);
@@ -976,7 +987,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     public Object2DOuterJPanel() {
         initComponents();
         construtorTrace = Thread.currentThread().getStackTrace();
-        jTableItems.getModel().addTableModelListener(itemsTableModelListener);
+//        jTableItems.getModel().addTableModelListener(itemsTableModelListener);
         jTableItems.getSelectionModel().addListSelectionListener(itemsTableListSelectionListener);
         jTableTraySlots.getModel().addTableModelListener(traySlotsTableModelListener);
         setMaxXMaxYText(jTextFieldMaxXMaxY.getText().trim());
@@ -1262,31 +1273,53 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         }
     }
 
-    private final TableModelListener itemsTableModelListener = new TableModelListener() {
+    private int getColumnIndex(JTable jtable, String name) throws Exception {
+        List<String> columnNames = new ArrayList<>();
+        for (int i = 0; i < jtable.getColumnCount(); i++) {
+            String nameI = jtable.getColumnName(i);
+            columnNames.add(nameI);
+            if (nameI.equalsIgnoreCase(name)) {
+                return i;
+            }
+        }
+        throw new Exception("Column " + name + " not found in " + jtable + " columns = " + columnNames);
+    }
+
+    private class ItemsTableModelListener implements TableModelListener {
+
         @Override
         @UIEffect
         @SuppressWarnings({"nullness", "initialization"})
         public void tableChanged(TableModelEvent e) {
             try {
                 boolean changeFound = false;
+                System.out.println("e = " + e);
                 if (null == object2DJPanel1) {
                     throw new NullPointerException("object2DJPanel1");
                 }
+                final int indexColumnIndex = getColumnIndex(jTableItems, "Index");
+                final int nameColumnIndex = getColumnIndex(jTableItems, "Name");
+                final int xColumnIndex = getColumnIndex(jTableItems, "X");
+                final int yColumnIndex = getColumnIndex(jTableItems, "Y");
+                final int zColumnIndex = getColumnIndex(jTableItems, "Z");
+                final int rotationColumnIndex = getColumnIndex(jTableItems, "Rotation");
+                final int typeColumnIndex = getColumnIndex(jTableItems, "Type");
+                final int scoreColumnIndex = getColumnIndex(jTableItems, "Score");
                 if (!settingItems && !object2DJPanel1.isShowOutputItems()) {
                     List<PhysicalItem> l = new ArrayList<>(getItems());
                     PhysicalItem item;
                     for (int i = 0; i < jTableItems.getRowCount(); i++) {
-                        Object listIndexObject = jTableItems.getValueAt(i, 0);
+                        Object listIndexObject = jTableItems.getValueAt(i, indexColumnIndex);
                         if (!(listIndexObject instanceof Integer)) {
                             throw new IllegalStateException(
                                     "bad listIndexObject in table at(" + i + ",0) :" + listIndexObject);
                         }
                         int listIndex = (int) listIndexObject;
-                        Object valueAtI1 = jTableItems.getValueAt(i, 1);
-                        if (!(valueAtI1 instanceof String)) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",1) :" + valueAtI1);
+                        Object valueAtIName = jTableItems.getValueAt(i, nameColumnIndex);
+                        if (!(valueAtIName instanceof String)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",1) :" + valueAtIName);
                         }
-                        String nameValue = (String) valueAtI1;
+                        String nameValue = (String) valueAtIName;
                         if (nameValue.length() < 1) {
                             continue;
                         }
@@ -1295,40 +1328,47 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                         } else {
                             item = null;
                         }
-                        Object valueAtI2 = jTableItems.getValueAt(i, 2);
-                        if (valueAtI2 instanceof String) {
-                            valueAtI2 = Double.valueOf((String) valueAtI2);
-                        } else if (!(valueAtI2 instanceof Double)) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",2) :" + valueAtI2);
+                        Object valueAtIX = jTableItems.getValueAt(i, xColumnIndex);
+                        if (valueAtIX instanceof String) {
+                            valueAtIX = Double.valueOf((String) valueAtIX);
+                        } else if (!(valueAtIX instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",2) :" + valueAtIX);
                         }
-                        Double xValue = (Double) valueAtI2;
-                        Object valueAtI3 = jTableItems.getValueAt(i, 3);
-                        if (valueAtI3 instanceof String) {
-                            valueAtI3 = Double.valueOf((String) valueAtI3);
-                        } else if (!(valueAtI3 instanceof Double)) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",3) :" + valueAtI3);
+                        Double xValue = (Double) valueAtIX;
+                        Object valueAtIY = jTableItems.getValueAt(i, yColumnIndex);
+                        if (valueAtIY instanceof String) {
+                            valueAtIY = Double.valueOf((String) valueAtIY);
+                        } else if (!(valueAtIY instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",3) :" + valueAtIY);
                         }
-                        Double yValue = (Double) valueAtI3;
-                        Object valueAtI4 = jTableItems.getValueAt(i, 4);
-                        if (valueAtI4 instanceof String) {
-                            valueAtI4 = Double.valueOf((String) valueAtI4);
-                        } else if (!(valueAtI4 instanceof Double)) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",4) :" + valueAtI4);
+                        Double yValue = (Double) valueAtIY;
+                        Object valueAtIZ = jTableItems.getValueAt(i, zColumnIndex);
+                        if (valueAtIZ instanceof String) {
+                            valueAtIZ = Double.valueOf((String) valueAtIZ);
+                        } else if (!(valueAtIZ instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",3) :" + valueAtIZ);
                         }
-                        double rotationValue = (Double) valueAtI4;
-                        Object valueAtI5 = jTableItems.getValueAt(i, 5);
-                        if (null == valueAtI5) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",5) :" + valueAtI5);
+                        Double zValue = (Double) valueAtIZ;
+                        Object valueAtIRotation = jTableItems.getValueAt(i, rotationColumnIndex);
+                        if (valueAtIRotation instanceof String) {
+                            valueAtIRotation = Double.valueOf((String) valueAtIRotation);
+                        } else if (!(valueAtIRotation instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",4) :" + valueAtIRotation);
                         }
-                        Object valueAtI6 = jTableItems.getValueAt(i, 6);
-                        if (valueAtI6 instanceof String) {
-                            valueAtI6 = Double.valueOf((String) valueAtI6);
-                        } else if (!(valueAtI6 instanceof Double)) {
-                            throw new IllegalStateException("bad value in table at(" + i + ",6) :" + valueAtI6);
+                        double rotationValue = (Double) valueAtIRotation;
+                        Object valueAtIType = jTableItems.getValueAt(i, typeColumnIndex);
+                        if (null == valueAtIType) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",5) :" + valueAtIType);
                         }
-                        Double scoreValue = (Double) valueAtI6;
+                        Object valueAtIScore = jTableItems.getValueAt(i, scoreColumnIndex);
+                        if (valueAtIScore instanceof String) {
+                            valueAtIScore = Double.valueOf((String) valueAtIScore);
+                        } else if (!(valueAtIScore instanceof Double)) {
+                            throw new IllegalStateException("bad value in table at(" + i + ",6) :" + valueAtIScore);
+                        }
+                        Double scoreValue = (Double) valueAtIScore;
                         if (item == null || item.getName() == null
-                                || !Objects.equals(item.getType(), valueAtI5)
+                                || !Objects.equals(item.getType(), valueAtIType)
                                 || !Objects.equals(item.getName(), nameValue)
                                 || Math.abs(item.x - xValue) > 0.001
                                 || Math.abs(item.y - yValue) > 0.001
@@ -1343,15 +1383,16 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                             double x = xValue;
                             double y = yValue;
                             double rotation = rotationValue;
-                            String type = Objects.toString(valueAtI5);
+                            String type = Objects.toString(valueAtIType);
                             double score = scoreValue;
                             item = newPhysicalItemNameRotXYScoreType(name, rotation, x, y, score, type);
                         }
-                        item.x = parseDouble(xValue.toString());
-                        item.y = parseDouble(yValue.toString());
+                        item.x = xValue;
+                        item.y = yValue;
+                        item.z = zValue;
                         item.setRotation(toRadians(rotationValue));
-                        item.setType(Objects.toString(valueAtI5));
-                        item.setScore(parseDouble(scoreValue.toString()));
+                        item.setType(Objects.toString(valueAtIType));
+                        item.setScore(scoreValue);
                         while (l.size() < listIndex) {
                             l.add(new Part("placeHolder" + l.size()));
                         }
@@ -1365,7 +1406,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 exception.printStackTrace();
             }
         }
-    };
+    }
+    private final TableModelListener itemsTableModelListener = new ItemsTableModelListener();
 
     private final TableModelListener traySlotsTableModelListener = new TableModelListener() {
 
@@ -1537,6 +1579,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         jButtonCurrent = new javax.swing.JButton();
         jButtonDelete = new javax.swing.JButton();
         jCheckBoxViewOutput = new javax.swing.JCheckBox();
+        jCheckBoxEditItemsTable = new javax.swing.JCheckBox();
         jPanelOptionsTab = new javax.swing.JPanel();
         jTextFieldCurrentXY = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -2213,14 +2256,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
             },
             new String [] {
-                "Index", "Name", "X", "Y", "Rotation", "Type", "Score"
+                "Index", "Name", "X", "Y", "Z", "Rotation", "Type", "Score", "Count", "Height", "Stackable"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true
+                false, false, false, false, false, false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -2289,6 +2332,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
         });
 
+        jCheckBoxEditItemsTable.setText("Edit");
+        jCheckBoxEditItemsTable.setEnabled(false);
+        jCheckBoxEditItemsTable.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxEditItemsTableActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelItemsLayout = new javax.swing.GroupLayout(jPanelItems);
         jPanelItems.setLayout(jPanelItemsLayout);
         jPanelItemsLayout.setHorizontalGroup(
@@ -2296,10 +2347,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             .addGroup(jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 456, Short.MAX_VALUE)
                     .addGroup(jPanelItemsLayout.createSequentialGroup()
                         .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBoxEditItemsTable)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBoxViewOutput)))
                 .addContainerGap())
         );
@@ -2307,12 +2360,14 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanelItemsButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelItemsLayout.createSequentialGroup()
-                        .addComponent(jCheckBoxViewOutput)
+                        .addGroup(jPanelItemsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jCheckBoxViewOutput)
+                            .addComponent(jCheckBoxEditItemsTable))
                         .addContainerGap())))
         );
 
@@ -2840,6 +2895,60 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         setIgnoreMissedPickups(jCheckBoxIgnoreMissedPickups.isSelected());
     }//GEN-LAST:event_jCheckBoxIgnoreMissedPickupsActionPerformed
 
+    private void jCheckBoxEditItemsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEditItemsTableActionPerformed
+        boolean edit = jCheckBoxEditItemsTable.isSelected();
+        setItemsTableEditable(edit);
+    }//GEN-LAST:event_jCheckBoxEditItemsTableActionPerformed
+
+    private void setItemsTableEditable(boolean edit) {
+        final TableModel oldModel = jTableItems.getModel();
+        oldModel.removeTableModelListener(itemsTableModelListener);
+        Object[][] data = new Object[oldModel.getRowCount()][];
+        assert oldModel.getColumnCount() == 11;
+        for (int i = 0; i < data.length; i++) {
+            data[i] = new Object[]{
+                oldModel.getValueAt(i, 0),
+                oldModel.getValueAt(i, 1),
+                oldModel.getValueAt(i, 2),
+                oldModel.getValueAt(i, 3),
+                oldModel.getValueAt(i, 4),
+                oldModel.getValueAt(i, 5),
+                oldModel.getValueAt(i, 6),
+                oldModel.getValueAt(i, 7),
+                oldModel.getValueAt(i, 8),
+                oldModel.getValueAt(i, 9),
+                oldModel.getValueAt(i, 10)
+            };
+
+        }
+        final DefaultTableModel newModel = new javax.swing.table.DefaultTableModel(
+                data,
+                new String[]{
+                    "Index", "Name", "X", "Y", "Z", "Rotation", "Type", "Score", "Count", "Height", "Stackable"
+                }
+        ) {
+            Class[] types = new Class[]{
+                java.lang.Integer.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.String.class, java.lang.Double.class, java.lang.Integer.class, java.lang.Double.class, java.lang.Boolean.class
+            };
+            boolean[] canEdit = new boolean[]{
+                false, edit, edit, edit, edit, edit, edit, edit, edit, edit, edit
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types[columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit[columnIndex];
+            }
+        };
+
+        jTableItems.setModel(newModel);
+        if (edit) {
+            newModel.addTableModelListener(itemsTableModelListener);
+        }
+    }
+
     private double posNoise = 1.0;
 
     /**
@@ -3014,6 +3123,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         shuffleSimulatedUpdatesCachedCheckBox.setEnabled(simulated);
         addPosNoiseCachedCheckBox.setEnabled(simulated);
         enforceSensorLimitsCachedCheckBox.setEnabled(simulated);
+        jCheckBoxEditItemsTable.setEnabled(simulated);
         jCheckBoxViewOutput.setEnabled(simulated);
         jCheckBoxHideItemsNearMouse.setEnabled(simulated);
         jCheckBoxHideItemsNearRobot.setEnabled(simulated);
@@ -4205,6 +4315,11 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     public void setShowOutputItemsOnDisplay(boolean showOutputItems) {
+        if (showOutputItems) {
+            setItemsTableEditable(false);
+            jCheckBoxEditItemsTable.setSelected(false);
+        }
+        jCheckBoxEditItemsTable.setEnabled(!showOutputItems);
         object2DJPanel1.setShowOutputItems(showOutputItems);
         if (!showOutputItems) {
             List<PhysicalItem> items = getItems();
@@ -4775,6 +4890,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxDetails;
+    private javax.swing.JCheckBox jCheckBoxEditItemsTable;
     private javax.swing.JCheckBox jCheckBoxEnforceSensorLimits;
     private javax.swing.JCheckBox jCheckBoxHideItemsNearMouse;
     private javax.swing.JCheckBox jCheckBoxHideItemsNearRobot;
@@ -5089,10 +5205,10 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private volatile boolean updatingDisplayFromProperties = false;
 
     private final TableModelListener propertiesTableModelListener = new TableModelListener() {
-        
+
         @Override
         @UIEffect
-        @SuppressWarnings({"initialization","nullness"})
+        @SuppressWarnings({"initialization", "nullness"})
         public void tableChanged(TableModelEvent e) {
             if (loadingProperties) {
                 return;
@@ -5166,6 +5282,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         tableLoadedProperties = props;
         loadingTableProperties = false;
         model.addTableModelListener(propertiesTableModelListener);
+
     }
 
     public static enum HandleRotationEnum {
@@ -6012,6 +6129,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private void setDropOffThreshold(double dropOffThreshold) {
         updateTextFieldDouble(pickupDist, dropOffThresholdCachedTextField, 0.005);
         this.dropOffThreshold = dropOffThreshold;
+
     }
 
     static class DistIndex {
@@ -6102,6 +6220,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         this.lastClosestDistanceIndexRet = ret;
         lastClosestDistanceIndexList = l;
         return ret;
+
     }
 
     private class PoseUpdateHistoryItem {
@@ -6310,6 +6429,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         this.lastConveyorPosition = newConveyorPosition;
         if (objectPanelToClone != null) {
             objectPanelToClone.handleConveyorPositionUpdate(newConveyorPosition);
+
         }
     }
 
@@ -6635,6 +6755,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             if (null != cmd) {
                 println("cmd = " + CRCLSocket.commandToSimpleString(cmd));
                 println("cmdFile = " + aprsSystem.logCrclCommand(infoMsg, cmd));
+
             }
         }
     }
