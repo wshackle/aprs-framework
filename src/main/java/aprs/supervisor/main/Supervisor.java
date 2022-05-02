@@ -4582,7 +4582,7 @@ public class Supervisor {
     }
 
     private XFutureVoid startContinuousDemoRevFirstFinish() {
-        immediateAbortAll("startContinuousDemoRevFirst");
+//        immediateAbortAll("startContinuousDemoRevFirst");
         clearEventLog();
         clearAllErrors();
         connectAll();
