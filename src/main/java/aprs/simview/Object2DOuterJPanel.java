@@ -80,6 +80,9 @@ import java.util.stream.Collectors;
 import static aprs.database.PhysicalItem.newPhysicalItemNameRotXYScoreType;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
+import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame;
+import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJPanel;
+import crcl.ui.forcetorquesensorsimulator.TrayStack;
 import crcl.utils.CRCLUtils;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Double.parseDouble;
@@ -108,6 +111,49 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         diag.pack();
         diag.setVisible(true);
         return panel.getItems();
+    }
+
+    private @Nullable ForceTorqueSimJPanel forceTorqueSimJPanel = null;
+
+    /**
+     * Get the value of forceTorqueSimJPanel
+     *
+     * @return the value of forceTorqueSimJPanel
+     */
+    public @Nullable
+    ForceTorqueSimJPanel getForceTorqueSimJPanel() {
+        return forceTorqueSimJPanel;
+    }
+
+    /**
+     * Set the value of forceTorqueSimJPanel
+     *
+     * @param forceTorqueSimJPanel new value of forceTorqueSimJPanel
+     */
+    public void setForceTorqueSimJPanel(@Nullable ForceTorqueSimJPanel forceTorqueSimJPanel) {
+        this.forceTorqueSimJPanel = forceTorqueSimJPanel;
+    }
+
+    static private PhysicalItem trayStackToPhysicalItem(TrayStack trayStack) {
+        PhysicalItem item
+                = PhysicalItem.newPhysicalItemNameRotXY(trayStack.name, trayStack.rotationRadians, trayStack.x, trayStack.y);
+        item.setHeight(trayStack.height);
+        item.setCount(trayStack.count);
+        item.setStackable(true);
+        item.z = trayStack.z;
+        item.setTrayStack(trayStack);
+        return item;
+    }
+
+    static private PhysicalItem physicalItemToTrayStack(TrayStack trayStack) {
+        PhysicalItem item
+                = PhysicalItem.newPhysicalItemNameRotXY(trayStack.name, trayStack.rotationRadians, trayStack.x, trayStack.y);
+        item.setHeight(trayStack.height);
+        item.setCount(trayStack.count);
+        item.setStackable(true);
+        item.z = trayStack.z;
+        item.setTrayStack(trayStack);
+        return item;
     }
 
     private final List<Consumer<List<PhysicalItem>>> setItemsListeners = Collections
@@ -1563,6 +1609,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         jTextFieldHideNearRobotDist = new javax.swing.JTextField();
         jCheckBoxIgnoreMissedDropoffs = new javax.swing.JCheckBox();
         jCheckBoxIgnoreMissedPickups = new javax.swing.JCheckBox();
+        jCheckBoxConnectForceTorque = new javax.swing.JCheckBox();
         jPanelTrays = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableTraySlots = new javax.swing.JTable();
@@ -2042,6 +2089,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             }
         });
 
+        jCheckBoxConnectForceTorque.setText("Connect to Force-Torque Sim");
+        jCheckBoxConnectForceTorque.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxConnectForceTorqueActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanelSimulationTabLayout = new javax.swing.GroupLayout(jPanelSimulationTab);
         jPanelSimulationTab.setLayout(jPanelSimulationTabLayout);
         jPanelSimulationTabLayout.setHorizontalGroup(
@@ -2094,12 +2148,15 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                                 .addComponent(jLabel14)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jTextFieldHideNearRobotDist, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap(33, Short.MAX_VALUE))
                     .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
                         .addComponent(jCheckBoxHideItemsNearMouse)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jCheckBoxHideItemsNearRobot)
-                        .addGap(54, 54, 54))))
+                        .addGap(54, 54, 54))
+                    .addGroup(jPanelSimulationTabLayout.createSequentialGroup()
+                        .addComponent(jCheckBoxConnectForceTorque)
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         jPanelSimulationTabLayout.setVerticalGroup(
             jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2152,7 +2209,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     .addGroup(jPanelSimulationTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel11)
                         .addComponent(jTextFieldHideNearMouseDist, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(39, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jCheckBoxConnectForceTorque)
+                .addContainerGap(64, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Simulation", jPanelSimulationTab);
@@ -2899,6 +2958,48 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         boolean edit = jCheckBoxEditItemsTable.isSelected();
         setItemsTableEditable(edit);
     }//GEN-LAST:event_jCheckBoxEditItemsTableActionPerformed
+
+    private final Consumer<List<TrayStack>> trayStacksListener = new Consumer<List<TrayStack>>() {
+        @Override
+        public void accept(List<TrayStack> list) {
+            if (jCheckBoxConnectForceTorque.isSelected()) {
+                object2DJPanel1.setForceTorqueItems(convertTrayStackListToPhysicalItems(list));
+                object2DJPanel1.repaint();
+            }
+        }
+    };
+
+    private List<PhysicalItem> convertTrayStackListToPhysicalItems(List<TrayStack> list) {
+        List<PhysicalItem> ret = new ArrayList<>();
+        if (list != null) {
+            for (TrayStack ts : list) {
+                ret.add(trayStackToPhysicalItem(ts));
+            }
+        }
+        return ret;
+    }
+
+    private void jCheckBoxConnectForceTorqueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectForceTorqueActionPerformed
+
+        ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = aprsSystem.getForceTorqueSimJInternalFrame();
+        if (null == forceTorqueSimJInternalFrame) {
+            object2DJPanel1.setShowForceTorqueItems(false);
+            jCheckBoxConnectForceTorque.setSelected(false);
+            jCheckBoxConnectForceTorque.setEnabled(false);
+            object2DJPanel1.setForceTorqueItems(null);
+            return;
+        }
+        final boolean selected = jCheckBoxConnectForceTorque.isSelected();
+        object2DJPanel1.setShowForceTorqueItems(selected);
+        if (selected) {
+            object2DJPanel1.setForceTorqueItems(convertTrayStackListToPhysicalItems(forceTorqueSimJInternalFrame.getStacks()));
+            forceTorqueSimJInternalFrame.addTrayStacksListListener(trayStacksListener);
+        } else {
+            object2DJPanel1.setForceTorqueItems(null);
+            forceTorqueSimJInternalFrame.removeTrayStacksListListener(trayStacksListener);
+        }
+        object2DJPanel1.repaint();
+    }//GEN-LAST:event_jCheckBoxConnectForceTorqueActionPerformed
 
     private void setItemsTableEditable(boolean edit) {
         final TableModel oldModel = jTableItems.getModel();
@@ -4886,6 +4987,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxCloning;
+    private javax.swing.JCheckBox jCheckBoxConnectForceTorque;
     private javax.swing.JCheckBox jCheckBoxConnectTimeout;
     private javax.swing.JCheckBox jCheckBoxConnected;
     private javax.swing.JCheckBox jCheckBoxDebug;

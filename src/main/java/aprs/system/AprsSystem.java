@@ -523,6 +523,14 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 //    PddlPlannerJInternalFrame pddlPlannerJInternalFrame = null;
     private @MonotonicNonNull DbSetupJInternalFrame dbSetupJInternalFrame = null;
     private @MonotonicNonNull ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = null;
+
+    public ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
+        return forceTorqueSimJInternalFrame;
+    }
+    
+    
+    
+    
     private volatile @MonotonicNonNull CrclSwingClientJInternalFrame crclClientJInternalFrame = null;
     private @MonotonicNonNull SimServerJInternalFrame simServerJInternalFrame = null;
     private volatile @MonotonicNonNull LogDisplayJInternalFrame logDisplayJInternalFrame = null;

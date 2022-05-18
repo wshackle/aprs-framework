@@ -617,9 +617,30 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
+    private boolean showForceTorqueItems;
+
+    /**
+     * Get the value of showForceTorqueItems
+     *
+     * @return the value of showForceTorqueItems
+     */
+    public boolean isShowForceTorqueItems() {
+        return showForceTorqueItems;
+    }
+
+    /**
+     * Set the value of showForceTorqueItems
+     *
+     * @param showForceTorqueItems new value of showForceTorqueItems
+     */
+    public void setShowForceTorqueItems(boolean showForceTorqueItems) {
+        this.showForceTorqueItems = showForceTorqueItems;
+    }
+
     private List<PhysicalItem> getItemsToPaint() {
         List<PhysicalItem> itemsToPaint = this.items;
-        if ((showAddedSlotPositions || showAddedToolsAndToolHolders) && null != this.itemsWithAddedExtras) {
+        if ((showAddedSlotPositions || showAddedToolsAndToolHolders || showForceTorqueItems)
+                && null != this.itemsWithAddedExtras) {
             itemsToPaint = this.itemsWithAddedExtras;
         }
         if (showOutputItems && null != outputItems) {
@@ -1810,6 +1831,26 @@ public class Object2DJPanel extends JPanel {
         return l;
     }
 
+    private List<PhysicalItem> forceTorqueItems;
+
+    /**
+     * Get the value of forceTorqueItems
+     *
+     * @return the value of forceTorqueItems
+     */
+    public List<PhysicalItem> getForceTorqueItems() {
+        return forceTorqueItems;
+    }
+
+    /**
+     * Set the value of forceTorqueItems
+     *
+     * @param forceTorqueItems new value of forceTorqueItems
+     */
+    public void setForceTorqueItems(List<PhysicalItem> forceTorqueItems) {
+        this.forceTorqueItems = forceTorqueItems;
+    }
+
     private void updateAddedExtras() {
         if (showAddedSlotPositions || showAddedToolsAndToolHolders) {
             if (showAddedToolsAndToolHolders && null != this.aprsSystem) {
@@ -1837,6 +1878,9 @@ public class Object2DJPanel extends JPanel {
                     if (null == addedOutputSlots || !addedOutputSlots.isEmpty()) {
                         this.addedOutputSlots = Collections.emptyList();
                     }
+                }
+                if (showForceTorqueItems && null != forceTorqueItems) {
+                    this.itemsWithAddedExtras.addAll(this.forceTorqueItems);
                 }
             }
             if (null != outputItems) {

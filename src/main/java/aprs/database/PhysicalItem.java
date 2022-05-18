@@ -25,6 +25,7 @@ package aprs.database;
 import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.base.VectorType;
+import crcl.ui.forcetorquesensorsimulator.TrayStack;
 import static crcl.utils.CRCLPosemath.point;
 import static crcl.utils.CRCLPosemath.pose;
 import static crcl.utils.CRCLPosemath.vector;
@@ -105,6 +106,17 @@ public class PhysicalItem extends PM_CARTESIAN {
 
     private @Nullable
     String prpName;
+
+    private @Nullable TrayStack trayStack = null;
+
+    public @Nullable
+    TrayStack getTrayStack() {
+        return trayStack;
+    }
+
+    public void setTrayStack(@Nullable TrayStack trayStack) {
+        this.trayStack = trayStack;
+    }
 
     private boolean stackable = false;
 
