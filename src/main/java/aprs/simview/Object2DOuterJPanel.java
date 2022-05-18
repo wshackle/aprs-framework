@@ -2992,6 +2992,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         final boolean selected = jCheckBoxConnectForceTorque.isSelected();
         object2DJPanel1.setShowForceTorqueItems(selected);
         if (selected) {
+            // update crcl.ui to get getStacks()
             object2DJPanel1.setForceTorqueItems(convertTrayStackListToPhysicalItems(forceTorqueSimJInternalFrame.getStacks()));
             forceTorqueSimJInternalFrame.addTrayStacksListListener(trayStacksListener);
         } else {
