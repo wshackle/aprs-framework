@@ -3218,14 +3218,14 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             closing = true;
             try {
                 final File supervisorEventsCsvFile = Utils.createTempFile("supervisorEventsTable", ".csv");
-                System.out.println("Closing "+this);
-                System.out.println("Saving events table in "+supervisorEventsCsvFile);
+                System.out.println("Closing " + this);
+                System.out.println("Saving events table in " + supervisorEventsCsvFile);
                 System.out.println("");
                 Utils.saveJTable(supervisorEventsCsvFile, jTableEvents);
             } catch (IOException iOException) {
-                 Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", iOException);
+                Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", iOException);
             }
-            
+
             if (null != runTimeTimer) {
                 runTimeTimer.stop();
                 runTimeTimer = null;
@@ -4139,7 +4139,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     )
                     .thenRun(() -> {
                         logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn);
-                        if(!actionName.toLowerCase().startsWith("start")) {
+                        if (!actionName.toLowerCase().startsWith("start")) {
                             JOptionPane.showMessageDialog(AprsSupervisorDisplayJFrame.this, actionName + " completed.");
                         }
                     });
@@ -4370,9 +4370,22 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     @UIEffect
     private void jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
-        interactivStartRunnable(() -> setMainFuture(startScanAllThenContinuousDemoRevFirst()),
-                jMenuItemStartScanAllThenContinuousDemoRevFirst.getText());
+        interactiveStartScanAllThenContinuousDemoRevFirst();
     }//GEN-LAST:event_jMenuItemStartScanAllThenContinuousDemoRevFirstActionPerformed
+
+    @UIEffect
+    private XFutureVoid interactiveStartScanAllThenContinuousDemoRevFirst() {
+        return interactivStartRunnable(() -> setMainFuture(startScanAllThenContinuousDemoRevFirst()),
+                jMenuItemStartScanAllThenContinuousDemoRevFirst.getText());
+    }
+
+    public XFutureVoid dispatchStartScanAllThenContinuousDemoRevFirst() {
+        if (!Utils.isEventDispatchThread()) {
+            return Utils.composeToVoidOnDispatchThread(this::interactiveStartScanAllThenContinuousDemoRevFirst);
+        } else {
+            return interactiveStartScanAllThenContinuousDemoRevFirst();
+        }
+    }
 
     public boolean isRecordLiveImageMovieSelected() {
         return jCheckBoxMenuItemRecordLiveImageMovie.isSelected();

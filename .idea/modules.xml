@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/aprs-framework.iml" filepath="$PROJECT_DIR$/aprs-framework.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java.iml" filepath="$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java.iml" />
     </modules>
   </component>
 </project>

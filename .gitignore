@@ -52,6 +52,7 @@ linux_netbeans_run_user_home/.crcljava_ui_stat_schemas.txt
 linux_netbeans_run_user_home/.aprs/lastPropsFileName.txt
 linux_netbeans_run_user_home/.crcljava/clientsettingsref
 linux_netbeans_run_user_home/.dbsetup_recent.txt
+AprsKotlinComposeUT/build/*
 
 *.o.d
 *.VC.opendb
