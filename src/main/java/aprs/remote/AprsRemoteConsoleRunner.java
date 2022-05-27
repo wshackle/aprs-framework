@@ -62,18 +62,20 @@ public class AprsRemoteConsoleRunner implements AutoCloseable, Runnable {
     @Override
     public void run() {
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(in));
         PrintWriter pw = new PrintWriter(new OutputStreamWriter(out));
-        pw.print("\r\nRunning:  " + this.getClass() + "\r\n\r\n");
+        pw.print("\r\nRunning:  " + this.getClass() + " from "+ this.getClass().getProtectionDomain()+"\r\n\r\n");
         pw.print("Commands are of the form:\r\n");
         pw.print("newvariable = oldvariable method arg1 arg2  ...\r\n");
         pw.print("\r\nOR omit \"newvariable=\" and variable name will be automatically generated. :\r\n");
         pw.print("oldvariable method arg1 arg2  ...\r\n");
         pw.print("\r\nUse \".\" as an alias for the last variable set.\r\n");
         pw.print("\r\n");
+        pw.print("\r\n");
+        pw.print("!!END START PREFIX\r\n");
+        pw.print("----------------------------------------------------------\r\n");
         pw.flush();
         String line = null;
-        try {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(in))){
             int lineNo = 0;
             String lastVar = null;
             String origLine = "";

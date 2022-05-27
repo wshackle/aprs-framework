@@ -3,22 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/ATINetFT_proxy/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/ATINetFT_proxy/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-base/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCRCLServer/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-fanuc/fanucCRCLServer/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-motoman/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-motoman/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/src/main/command" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-ui/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crcl4java-utils/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/crclcopier/target/generated-sources/copier" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/generate-copier-maven-plugin/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../crcl/tools/java/crcl4java/src/main/resources" charset="UTF-8" />
