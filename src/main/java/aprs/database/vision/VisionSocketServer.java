@@ -110,48 +110,51 @@ public class VisionSocketServer implements AutoCloseable {
         }
     }
 
-    public static  void runNetStat(final Logger logger, int port) {
+    public static void runNetStat(final Logger logger, int port) {
         try {
-        ProcessBuilder pb = new ProcessBuilder("/usr/bin/netstat", "-naptee");
-        File errFile = File.createTempFile("netstat_err", ".txt");
-        File outFile = File.createTempFile("netstat_out", ".txt");
-        logger.log(Level.SEVERE, "outFile={0}", outFile);
-        pb.redirectError(errFile);
-        pb.redirectOutput(outFile);
-        logger.log(Level.SEVERE, "Running " + pb.command());
-        Process process = pb.start();
-        try {
-            int code = process.waitFor();
-            final String portString = Integer.toString(port);
-            try (BufferedReader br = new BufferedReader(new FileReader(outFile))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    if (line.contains(portString) || port < 1) {
-                        logger.log(Level.SEVERE, line);
+            if (new File(NETSTAT_CMD_PATH).exists()) {
+                ProcessBuilder pb = new ProcessBuilder(NETSTAT_CMD_PATH, "-naptee");
+                File errFile = File.createTempFile("netstat_err", ".txt");
+                File outFile = File.createTempFile("netstat_out", ".txt");
+                logger.log(Level.SEVERE, "outFile={0}", outFile);
+                pb.redirectError(errFile);
+                pb.redirectOutput(outFile);
+                logger.log(Level.SEVERE, "Running " + pb.command());
+                Process process = pb.start();
+                try {
+                    int code = process.waitFor();
+                    final String portString = Integer.toString(port);
+                    try ( BufferedReader br = new BufferedReader(new FileReader(outFile))) {
+                        String line;
+                        while (null != (line = br.readLine())) {
+                            if (line.contains(portString) || port < 1) {
+                                logger.log(Level.SEVERE, line);
+                            }
+                        }
                     }
+                    try ( BufferedReader br = new BufferedReader(new FileReader(errFile))) {
+                        String line;
+                        while (null != (line = br.readLine())) {
+                            if (line.contains(portString) || port < 1) {
+                                logger.log(Level.SEVERE, line);
+                            }
+                        }
+                    }
+                    logger.log(Level.SEVERE, " " + pb.command() + " exited with code = " + code);
+                } catch (InterruptedException interruptedException) {
+                    logger.log(Level.SEVERE, " " + pb.command() + " interrupted.", interruptedException);
                 }
             }
-            try (BufferedReader br = new BufferedReader(new FileReader(errFile))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    if (line.contains(portString)  || port < 1) {
-                        logger.log(Level.SEVERE, line);
-                    }
-                }
-            }
-            logger.log(Level.SEVERE, " " + pb.command() + " exited with code = " + code);
-        } catch (InterruptedException interruptedException) {
-            logger.log(Level.SEVERE, " " + pb.command() + " interrupted.", interruptedException);
-        }
-        } catch(Throwable throwable) {
+        } catch (Throwable throwable) {
             logger.log(Level.SEVERE, "", throwable);
-            if(throwable instanceof RuntimeException) {
+            if (throwable instanceof RuntimeException) {
                 throw (RuntimeException) throwable;
             } else {
                 throw new RuntimeException(throwable);
             }
         }
     }
+    private static final String NETSTAT_CMD_PATH = "/usr/bin/netstat";
 
     private final ConcurrentLinkedDeque<Socket> clients = new ConcurrentLinkedDeque<>();
 
