@@ -7081,13 +7081,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {
-        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent");
-        addSetSlowSpeed(out);
+        
         double limit = Double.POSITIVE_INFINITY;
         PointType pt = getLookForXYZ();
         if (null != pt) {
             limit = pt.getZ();
         }
+        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit="+limit+", approachZOffset="+approachZOffset+",  pt="+pt.getX()+","+pt.getY()+","+pt.getZ());
+        addSetSlowSpeed(out);
         addMoveUpFromCurrent(out, approachZOffset, limit);
     }
 

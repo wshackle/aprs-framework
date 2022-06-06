@@ -95,7 +95,7 @@
         <CommandID>20167</CommandID>
         <TransSpeed xsi:type="TransSpeedAbsoluteType">
             <Name>TransSpeedAbsoluteType.452544</Name>
-            <Setting>40.0</Setting>
+            <Setting>30.0</Setting>
         </TransSpeed>
     </MiddleCommand>
     <MiddleCommand xsi:type="EnableSensorType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
