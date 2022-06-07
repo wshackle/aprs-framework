@@ -1,4 +1,3 @@
 Holder Position Name,Contents,Possible Contents,Comment
-shared_gripper,,,"moved (no longer available) "
-toolChangerPose1,small_vacuum,"small_vacuum,pincher",contents changed from empty on Mon Jun 06 09:54:39 EDT 2022
-toolChangerPose2,empty,"small_vacuum,pincher",contents changed from pincher on Mon Jun 06 09:54:52 EDT 2022
+nearHolder,empty,"small_vacuum,pincher",contents changed from pincher on Tue Jun 07 16:50:37 EDT 2022
+farHolder,small_vacuum,"small_vacuum,pincher",contents changed from empty on Tue Jun 07 16:50:25 EDT 2022
