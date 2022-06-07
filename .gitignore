@@ -19,6 +19,17 @@ C:\\Users\\shackle\\Documents\\NetBeansProjects\\aprs-framework\\netbeans_run_us
 *.war
 *.ear
 .~lock.*
+AprsKotlinComposeUI/.gradle/7.4.2/checksums/checksums.lock
+AprsKotlinComposeUI/.gradle/buildOutputCleanup/cache.properties
+AprsKotlinComposeUI/.idea/gradle.xml
+AprsKotlinComposeUI/.idea/misc.xml
+AprsKotlinComposeUI/.idea/modules.xml
+AprsKotlinComposeUI/local.properties
+linux_netbeans_run_user_home/.dbsetup_recent.txt
+AprsKotlinComposeUI/.gradle/7.4.2/checksums/*
+AprsKotlinComposeUI/.gradle/buildOutputCleanup/*
+AprsKotlinComposeUI/.idea/*
+linux_netbeans_run_user_home/.dbsetup_recent.txt
 
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
