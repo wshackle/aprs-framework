@@ -196,7 +196,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
 //    private final AtomicInteger optionsTableEventsHandled = new AtomicInteger();
 //    private final AtomicInteger optionsTableEventsCaused = new AtomicInteger();
-
     /**
      * Creates new form ActionsToCrclJPanel
      *
@@ -2659,34 +2658,34 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         final TableModel oldModel = jTableOptions.getModel();
         final Object[][] data = new Object[oldModel.getRowCount()][];
         for (int i = 0; i < data.length; i++) {
-            data[i] =  new Object[]{
+            data[i] = new Object[]{
                 oldModel.getValueAt(i, 0),
                 oldModel.getValueAt(i, 1)};
         }
         final TableModel newModel = new javax.swing.table.DefaultTableModel(
-            data,
-            new String [] {
-                "Name", "Value"
-            }
+                data,
+                new String[]{
+                    "Name", "Value"
+                }
         ) {
-            Class[] types = new Class [] {
+            Class[] types = new Class[]{
                 java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            boolean[] canEdit = new boolean[]{
                 edit, edit
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         };
         jTableOptions.setModel(newModel);
         optionsCachedTable.setData(data);
-        if(!edit) {
+        if (!edit) {
             final Map<ExecutorOption, ?> options = getOptions();
             System.out.println("options = " + options);
             crclGenerator.setOptions(options);
@@ -2824,8 +2823,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             ExecutorOption.WithValue<?, ?> @Nullable [] options) {
 
         try {
-
-            checkReverse();
+            checkReverseWithOptions(options);
             boolean rev = isReverseFlag();
             appendGenerateAbortLog("doActionsStarting" + comment, actionsListSize, rev, 0, startAbortCount, -1);
             final int start = doingActionsStarted.incrementAndGet();
@@ -2867,6 +2865,19 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     "Exception in doActions(" + comment + "," + startAbortCount + "):" + ex.getMessage(), ex);
         } finally {
             doingActionsFinished.incrementAndGet();
+        }
+    }
+
+    private void checkReverseWithOptions(ExecutorOption.WithValue<?, ?> @Nullable [] options) throws IllegalStateException {
+        final boolean checkReverseDisabled;
+        if (null != options) {
+            Map<ExecutorOption.ForBoolean, Boolean> map = ExecutorOption.ForBoolean.map(options);
+            checkReverseDisabled = (boolean) map.getOrDefault(ExecutorOption.ForBoolean.reverseCheckDisabled, false);
+        } else {
+            checkReverseDisabled = false;
+        }
+        if (!checkReverseDisabled) {
+            checkReverse();
         }
     }
 
@@ -2988,7 +2999,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private volatile StackTraceElement resetReadOnlyActionsListTrace@Nullable []  = null;
     private volatile boolean resetReadOnlyActionsListReverseFlag = false;
 
-    private List<Action> resetReadOnlyActionsList(boolean newReverseFlag) {
+    private List<Action> resetReadOnlyActionsList(boolean newReverseFlag, ExecutorOption.WithValue<?, ?> @Nullable [] options) {
         final Thread curThread = Thread.currentThread();
 
         if (null == resetReadOnlyActionsListThread) {
@@ -3007,7 +3018,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
         this.readOnlyActionsList = newReadOnlyActionsList;
         resetReadOnlyActionsListReverseFlag = newReverseFlag;
-        checkReverse();
+        checkReverseWithOptions(options);
         return newReadOnlyActionsList;
     }
 
@@ -3038,7 +3049,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 actionsList.clear();
                 crclGenerator.partialReset();
                 this.reverseFlag = aprsSystem.isReverseFlag();
-                resetReadOnlyActionsList(revFlag);
+                resetReadOnlyActionsList(revFlag, null);
             }
             actionsListSize = actionsList.size();
         }
@@ -3349,7 +3360,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             for (Action action : newActions) {
                 addAction(action);
             }
-            ret = resetReadOnlyActionsList(newReverseFlag);
+            ret = resetReadOnlyActionsList(newReverseFlag, null);
             actionsListSize = actionsList.size();
         }
         finishLoadActionsList(pddlOutputActionsCachedText.getText(), forceNameChange);
@@ -3402,7 +3413,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 }
                 addAction(Action.parse(line));
             }
-            ret = resetReadOnlyActionsList(newReverseFlag);
+            ret = resetReadOnlyActionsList(newReverseFlag, options);
             actionsListSize = actionsList.size();
         }
         try {
@@ -3460,7 +3471,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     }
                 }
                 opActions = crclGenerator.pddlActionsToOpActions(actionsList, 0);
-                resetReadOnlyActionsList(newReverseFlag);
+                resetReadOnlyActionsList(newReverseFlag, null);
                 actionsListSize = actionsList.size();
             }
             if (null == opActions || opActions.size() < 2) {
@@ -8176,7 +8187,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             List<Action> actionListDebugCopy = new ArrayList<>();
             sarc2 = safeAbortRequestCount.get();
             cmds = generate(actionsList, startReplanFromIndex, options, sarc2, sectionNumber, false);
-            resetReadOnlyActionsList(reverseFlag);
+            resetReadOnlyActionsList(reverseFlag, null);
             actionsListSize = actionsList.size();
             for (int i = startReplanFromIndex; i < actionsListSize && i < crclGenerator.getLastIndex(); i++) {
                 actionListDebugCopy.add(actionsList.get(i));

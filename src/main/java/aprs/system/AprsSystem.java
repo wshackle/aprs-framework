@@ -8494,8 +8494,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         for (Action action : actions) {
             actionsCopy.add(action);
         }
-        Map<ExecutorOption.ForBoolean, Boolean> map = ExecutorOption.ForBoolean.map(options);
-        boolean newReverseFlag = (boolean) map.getOrDefault(ExecutorOption.ForBoolean.REVERSE, false);
+//        Map<ExecutorOption.ForBoolean, Boolean> map = ExecutorOption.ForBoolean.map(options);
+//        boolean newReverseFlag = (boolean) map.getOrDefault(ExecutorOption.ForBoolean.REVERSE, false);
 
         return privateStartActions(comment, actionsCopy, options);
     }
