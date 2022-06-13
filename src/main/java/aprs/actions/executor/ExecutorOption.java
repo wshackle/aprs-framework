@@ -222,7 +222,10 @@ public interface ExecutorOption {
             this.value = value;
             return value;
         }
-
+        
+        public ExecutorOption.WithValue<?, ?> [] asSingleArray() {
+            return new ExecutorOption.WithValue<?, ?> []{this};
+        }
     }
 
     static public enum ForBoolean implements ExecutorOption {
@@ -247,6 +250,7 @@ public interface ExecutorOption {
             return new WithValue<>(this, arg);
         }
 
+        
         public static Map<ForBoolean, Boolean> map(ExecutorOption.WithValue<?, ?> ... optionpairs) {
             return ExecutorOption.map(ForBoolean.class, Boolean.class, optionpairs);
         }

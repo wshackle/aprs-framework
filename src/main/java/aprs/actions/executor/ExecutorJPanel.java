@@ -3049,7 +3049,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 actionsList.clear();
                 crclGenerator.partialReset();
                 this.reverseFlag = aprsSystem.isReverseFlag();
-                resetReadOnlyActionsList(revFlag, null);
+                resetReadOnlyActionsList(revFlag, ExecutorOption.ForBoolean.reverseCheckDisabled.with(true).asSingleArray());
             }
             actionsListSize = actionsList.size();
         }
@@ -3346,7 +3346,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             System.err.println("crclGenerator.atLastIndex() = " + crclGenerator.atLastIndex());
             System.err.println("lastReadyReturnPos=" + lastReadyReturnPos);
             throw new IllegalStateException(
-                    "loading new actions when not ready ");
+                    "loading new actions when not ready "+executorReadyString);
         }
     }
 
@@ -9243,6 +9243,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             LOGGER.log(Level.SEVERE, "", ex);
             XFuture<Boolean> future = new XFuture<>("pickupToolByTool." + toolName);
             future.completeExceptionally(ex);
+            aprsSystem.showException(ex);
             return future;
         }
     }
@@ -9950,6 +9951,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         pickupToolByHolder(holderName);
     }
 
+    @UIEffect
     private boolean notReadyForToolOperation() throws HeadlessException {
         if (!aprsSystem.isConnected()) {
             JOptionPane.showMessageDialog(parentComponent, "Connect to robot first.");
@@ -9962,6 +9964,13 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (aprsSystem.isPaused()) {
             JOptionPane.showMessageDialog(parentComponent, "Check E-STOPs, errors, and unpause system first.");
             return true;
+        }
+        if(!readyForNewActionsList()) {
+            if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(parentComponent,  "Clear current actions list.")) {
+                noWarnClearActionsList(false);
+            } else {
+                 return true;
+            }
         }
         return false;
     }

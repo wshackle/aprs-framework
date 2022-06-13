@@ -5562,14 +5562,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             AprsSystem af = requireNonNull(aprsSystem, "aprsSystem");
             PoseType pose = requireNonNull(af.getCurrentPose(), "af.getCurrentPose()");
             PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
-            if (posePoint.getZ() >= (limit - 1e-6)) {
+            final double xyradius = Math.sqrt(posePoint.getX()*posePoint.getX()+posePoint.getY()-posePoint.getY());
+            final double limitAtRadius = limit - xyradius;
+            if (posePoint.getZ() >= limitAtRadius  || limitAtRadius <= 0) {
                 MessageType messageCommand = new MessageType();
                 messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
                 wrapper.setWrappedCommand(messageCommand);
             } else {
                 MoveToType moveToCmd = new MoveToType();
 //                moveToCmd.setName("addMoveUpFromCurrent offset=" + offset + ",limit=" + limit);
-                moveToCmd.setEndPosition(copyAndAddZ(pose, offset, limit));
+                moveToCmd.setEndPosition(copyAndAddZ(pose, offset, limitAtRadius));
                 moveToCmd.setMoveStraight(true);
                 wrapper.setWrappedCommand(moveToCmd);
             }
@@ -7085,7 +7087,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         double limit = Double.POSITIVE_INFINITY;
         PointType pt = getLookForXYZ();
         if (null != pt) {
-            limit = pt.getZ();
+            limit = pt.getZ() + -Math.sqrt(pt.getX()*pt.getX()+pt.getY()-pt.getY());
         }
         addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit="+limit+", approachZOffset="+approachZOffset+",  pt="+pt.getX()+","+pt.getY()+","+pt.getZ());
         addSetSlowSpeed(out);
