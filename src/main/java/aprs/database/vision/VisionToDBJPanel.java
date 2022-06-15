@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.autoResizeTableColWidths;
 import static aprs.misc.Utils.traceToString;
+import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLPosemath.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -2501,7 +2502,7 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             this.queryDatabase();
         } catch (Exception ex) {
             Logger.getLogger(VisionToDBJPanel.class.getName()).log(Level.SEVERE, "", ex);
-            MultiLineStringJPanel.showText(ex.toString());
+            NotificationsJPanel.showText(ex.toString());
         }
     }//GEN-LAST:event_jButtonAddItemActionPerformed
 
@@ -2543,11 +2544,11 @@ public class VisionToDBJPanel extends javax.swing.JPanel implements VisionToDBJF
             String name = (String) jTableUpdateResults.getValueAt(index, 0);
             UpdateResults ur = resultsMap.get(name);
             if (null == ur) {
-                MultiLineStringJPanel.showText("no results for " + name);
+                NotificationsJPanel.showText("no results for " + name);
                 return;
             }
             String value = ur.toString();
-            MultiLineStringJPanel.showText("Latest update attempt for " + name + ":\r\n" + value);
+            NotificationsJPanel.showText("Latest update attempt for " + name + ":\r\n" + value);
         }
     }//GEN-LAST:event_jButtonUpdateResultDetailsActionPerformed
 

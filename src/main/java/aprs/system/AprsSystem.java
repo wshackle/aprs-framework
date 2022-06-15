@@ -156,6 +156,7 @@ import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.client.ProgramLineListener;
 import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.ui.server.SimServerJInternalFrame;
 import crcl.utils.CRCLCommandWrapper;
 import crcl.utils.CRCLException;
@@ -527,10 +528,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     public ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
         return forceTorqueSimJInternalFrame;
     }
-    
-    
-    
-    
+
     private volatile @MonotonicNonNull CrclSwingClientJInternalFrame crclClientJInternalFrame = null;
     private @MonotonicNonNull SimServerJInternalFrame simServerJInternalFrame = null;
     private volatile @MonotonicNonNull LogDisplayJInternalFrame logDisplayJInternalFrame = null;
@@ -3124,7 +3122,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 });
     }
 
-    private void logAndCloseFuture(String futName, XFuture<?> f, StackTraceElement[] trace , StackTraceElement[] callerTrace) {
+    private void logAndCloseFuture(String futName, XFuture<?> f, StackTraceElement[] trace, StackTraceElement[] callerTrace) {
         if (f.isDone()) {
             return;
         }
@@ -3593,7 +3591,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         }
                         lastForceShowErrorTime = System.currentTimeMillis();
                         if (null != aprsSystemDisplayJFrame) {
-                            MultiLineStringJPanel.forceShowText(
+                            NotificationsJPanel.forceShowText(
                                     newTitleErrorString + "\n\n" + "count=" + count + "\n\ndetails=" + details,
                                     aprsSystemDisplayJFrame);
                         }
@@ -4305,7 +4303,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         } catch (Throwable e) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showException(e);
+            NotificationsJPanel.showException(e);
             throw new RuntimeException(e);
         }
     }
@@ -8119,10 +8117,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 }
             }
             badState = badState || checkResuming();
+            this.pauseCrclProgram();
             if (null != executorJInternalFrame1Local) {
                 ret = ret.thenRunAsync(() -> executorJInternalFrame1Local.showPausedOnDisplay(true), Utils.getDispatchThreadExecutorService());
             }
-            this.pauseCrclProgram();
             badState = badState || checkResuming();
             if (badState) {
                 throw new IllegalStateException("Attempt to pause while resuming");

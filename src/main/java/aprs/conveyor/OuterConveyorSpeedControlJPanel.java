@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
+import crcl.ui.misc.NotificationsJPanel;
 
 /**
  *
@@ -507,7 +508,7 @@ public class OuterConveyorSpeedControlJPanel extends javax.swing.JPanel {
             Logger.getLogger(OuterConveyorSpeedControlJPanel.class.getName()).log(Level.SEVERE, null, ex);
             String message = ex.getMessage();
             if (null != message) {
-                MultiLineStringJPanel.showText(message);
+                NotificationsJPanel.showText(message);
             }
         }
     }

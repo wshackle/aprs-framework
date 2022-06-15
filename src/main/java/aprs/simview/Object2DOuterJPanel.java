@@ -83,6 +83,7 @@ import static aprs.misc.Utils.autoResizeTableColWidthsOnDisplay;
 import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJInternalFrame;
 import crcl.ui.forcetorquesensorsimulator.ForceTorqueSimJPanel;
 import crcl.ui.forcetorquesensorsimulator.TrayStack;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Double.parseDouble;
@@ -3357,7 +3358,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             LOGGER.log(Level.SEVERE, "", exception);
             String message = exception.getMessage();
             if (null != message) {
-                MultiLineStringJPanel.showText(message);
+                NotificationsJPanel.showText(message);
             }
             if (null == visionSocketClient || !visionSocketClient.isConnected()) {
                 jCheckBoxConnected.setSelected(false);

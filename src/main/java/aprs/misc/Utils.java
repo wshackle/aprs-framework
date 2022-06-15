@@ -31,6 +31,7 @@ import crcl.utils.XFuture;
 import crcl.utils.XFuture.PrintedException;
 import crcl.utils.XFutureVoid;
 import crcl.ui.misc.MultiLineStringJPanel;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLSocket;
 import crcl.utils.CRCLUtils;
 import java.awt.Component;
@@ -1448,11 +1449,11 @@ public class Utils {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
         if (isEventDispatchThread()) {
-            MultiLineStringJPanel.showText(msgCopy);
+            NotificationsJPanel.showText(msgCopy);
         } else {
             try {
                 final String msgCopyFinal = msgCopy;
-                javax.swing.SwingUtilities.invokeLater(() -> MultiLineStringJPanel.showText(msgCopyFinal));
+                javax.swing.SwingUtilities.invokeLater(() -> NotificationsJPanel.showText(msgCopyFinal));
             } catch (Exception ex) {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
             }

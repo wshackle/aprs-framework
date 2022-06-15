@@ -61,6 +61,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 import javax.swing.JMenuItem;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.FileChooserUI;
@@ -390,7 +391,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             this.dispose();
         } catch (Exception e) {
             Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showText("Exception caught: " + e);
+            NotificationsJPanel.showText("Exception caught: " + e);
         }
     }//GEN-LAST:event_jButtonPrevMultiActionPerformed
 

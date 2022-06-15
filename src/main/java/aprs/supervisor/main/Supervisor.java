@@ -87,6 +87,7 @@ import java.util.stream.Stream;
 
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
+import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLUtils.requireNonNull;
 
 /**
@@ -121,7 +122,7 @@ public class Supervisor {
     }
 
     public XFutureVoid dispatchStartScanAllThenContinuousDemoRevFirst() {
-        if(null == displayJFrame) {
+        if (null == displayJFrame) {
             return XFutureVoid.completedExceptionally(new NullPointerException("displayJFrame"));
         } else {
             return displayJFrame.dispatchStartScanAllThenContinuousDemoRevFirst();
@@ -1482,7 +1483,7 @@ public class Supervisor {
                             log(Level.SEVERE, "", t);
                             setAbortTimeCurrent();
                             pause();
-                            MultiLineStringJPanel.showText(t.toString());
+                            NotificationsJPanel.showText(t.toString());
                         }
                         return t.toString();
                     }
@@ -1556,7 +1557,7 @@ public class Supervisor {
                             logEvent(t.toString());
                             setAbortTimeCurrent();
                             pause();
-                            MultiLineStringJPanel.showText(t.toString());
+                            NotificationsJPanel.showText(t.toString());
                         }
                         return t.toString();
                     } else {
@@ -4559,7 +4560,7 @@ public class Supervisor {
                                     return startRandomTestFirstActionReversed2();
                                 } catch (Exception e) {
                                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                                    MultiLineStringJPanel.showText("Exception occurred: " + e);
+                                    NotificationsJPanel.showText("Exception occurred: " + e);
                                     XFutureVoid ret = new XFutureVoid(
                                             "internal startRandomTestFirstActionReversed with exception " + e);
                                     ret.completeExceptionally(e);
@@ -4571,7 +4572,7 @@ public class Supervisor {
                             .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTestFirstActionReversed"), supervisorExecutorService);
                 } catch (Exception e) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-                    MultiLineStringJPanel.showText("Exception occurred: " + e);
+                    NotificationsJPanel.showText("Exception occurred: " + e);
                     XFutureVoid ret = new XFutureVoid(
                             "internal startRandomTestFirstActionReversed with exception " + e);
                     ret.completeExceptionally(e);
@@ -4580,7 +4581,7 @@ public class Supervisor {
             });
         } catch (Exception e) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showText("Exception occurred: " + e);
+            NotificationsJPanel.showText("Exception occurred: " + e);
             XFutureVoid ret = new XFutureVoid("startRandomTestFirstActionReversed with exception " + e);
             ret.completeExceptionally(e);
             return ret;
@@ -5849,10 +5850,12 @@ public class Supervisor {
                         return displayJFrame.showMessageFullScreen("ConveyorTest finished", 80.0f, null,
                                 SplashScreen.getBlueWhiteGreenColorList(), gd).thenApply(x -> true);
                     } else {
-                        return MultiLineStringJPanel.showText("ConveyorTest finished");
+                        NotificationsJPanel.showText("ConveyorTest finished");
+                        return XFuture.completedFuture(true);
                     }
                 } else {
-                    return MultiLineStringJPanel.showText("ConveyorTest finished");
+                    NotificationsJPanel.showText("ConveyorTest finished");
+                    return XFuture.completedFuture(true);
                 }
             });
             return future.thenRun(() -> {
@@ -6789,7 +6792,7 @@ public class Supervisor {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
                         } else {
-                            MultiLineStringJPanel.showText(err);
+                            NotificationsJPanel.showText(err);
                         }
                     }
                     setIconImageOnDisplay(IconImages.ERROR_IMAGE);
@@ -6836,7 +6839,7 @@ public class Supervisor {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
                         } else {
-                            MultiLineStringJPanel.showException(throwable, trace);
+                            NotificationsJPanel.showException(throwable, trace);
                         }
                     }
                     setIconImageOnDisplay(IconImages.ERROR_IMAGE);
@@ -10311,7 +10314,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                         @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                            @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

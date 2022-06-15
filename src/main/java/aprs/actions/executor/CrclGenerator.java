@@ -79,6 +79,7 @@ import static aprs.actions.optaplanner.actionmodel.OpActionType.PICKUP;
 import static aprs.misc.AprsCommonLogger.println;
 import aprs.simview.Object2DOuterJPanel;
 import static crcl.copier.CRCLCopier.copy;
+import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLPosemath.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
 
@@ -2062,6 +2063,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             LOGGER.log(Level.SEVERE, "", ex);
             System.err.println();
+            NotificationsJPanel.showException(ex);
             localAprsSystem.setTitleErrorString(ex.getMessage());
             if (ex instanceof RuntimeException) {
                 throw (RuntimeException) ex;
@@ -5562,9 +5564,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             AprsSystem af = requireNonNull(aprsSystem, "aprsSystem");
             PoseType pose = requireNonNull(af.getCurrentPose(), "af.getCurrentPose()");
             PointType posePoint = requireNonNull(pose.getPoint(), "pose.getPoint()");
-            final double xyradius = Math.sqrt(posePoint.getX()*posePoint.getX()+posePoint.getY()-posePoint.getY());
+            final double xyradius = Math.sqrt(posePoint.getX() * posePoint.getX() + posePoint.getY() - posePoint.getY());
             final double limitAtRadius = limit - xyradius;
-            if (posePoint.getZ() >= limitAtRadius  || limitAtRadius <= 0) {
+            if (posePoint.getZ() >= limitAtRadius || limitAtRadius <= 0) {
                 MessageType messageCommand = new MessageType();
                 messageCommand.setMessage("moveUpFromCurrent NOT needed." + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
                 wrapper.setWrappedCommand(messageCommand);
@@ -6351,6 +6353,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     System.err.println("");
                     System.out.flush();
                     System.out.flush();
+                    NotificationsJPanel.showException(ex);
                     if (ex instanceof RuntimeException) {
                         throw (RuntimeException) ex;
                     } else {
@@ -6994,17 +6997,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 System.out.flush();
                 System.err.println("");
                 System.err.flush();
-                LOGGER.log(Level.SEVERE,"checkRefreshSimView("+maxFutureGetTime+") future="+future,ex2);
+                LOGGER.log(Level.SEVERE, "checkRefreshSimView(" + maxFutureGetTime + ") future=" + future, ex2);
                 final Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
-                for(Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
+                for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces.entrySet()) {
                     Thread k = entry.getKey();
                     StackTraceElement[] v = entry.getValue();
-                    LOGGER.log(Level.SEVERE,"thread="+k+" : "+XFuture.traceToString(v));
+                    LOGGER.log(Level.SEVERE, "thread=" + k + " : " + XFuture.traceToString(v));
                 }
-                if(ex2 instanceof RuntimeException) {
+                if (ex2 instanceof RuntimeException) {
                     throw ex2;
                 } else {
-                    throw new RuntimeException("can not get result for future="+future, ex2);
+                    throw new RuntimeException("can not get result for future=" + future, ex2);
                 }
             }
 
@@ -7083,13 +7086,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private void addSlowLimitedMoveUpFromCurrent(List<MiddleCommandType> out) {
-        
+
         double limit = Double.POSITIVE_INFINITY;
         PointType pt = getLookForXYZ();
         if (null != pt) {
-            limit = pt.getZ() + -Math.sqrt(pt.getX()*pt.getX()+pt.getY()-pt.getY());
+            limit = pt.getZ() + -Math.sqrt(pt.getX() * pt.getX() + pt.getY() - pt.getY());
         }
-        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit="+limit+", approachZOffset="+approachZOffset+",  pt="+pt.getX()+","+pt.getY()+","+pt.getZ());
+        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit=" + limit + ", approachZOffset=" + approachZOffset + ",  pt=" + pt.getX() + "," + pt.getY() + "," + pt.getZ());
         addSetSlowSpeed(out);
         addMoveUpFromCurrent(out, approachZOffset, limit);
     }

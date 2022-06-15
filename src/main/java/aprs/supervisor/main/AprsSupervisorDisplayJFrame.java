@@ -102,6 +102,7 @@ import aprs.remote.Scriptable;
 import static aprs.remote.Scriptable.scriptableOf;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
 import crcl.utils.server.CRCLServerSocket;
 
@@ -1334,7 +1335,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             }
         } catch (Exception ex) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, null, ex);
-            MultiLineStringJPanel.showException(ex);
+            NotificationsJPanel.showException(ex);
             if (null != runTimeTimer) {
                 runTimeTimer.stop();
                 runTimeTimer = null;
@@ -3436,7 +3437,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } catch (Exception e) {
             logEvent("Exception occurred: " + e);
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showText("Exception occurred: " + e);
+            NotificationsJPanel.showText("Exception occurred: " + e);
         }
     }//GEN-LAST:event_jMenuItemResetAllActionPerformed
 
@@ -3481,7 +3482,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         } catch (Exception e) {
                             logEvent("Exception occurred: " + e);
                             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                            MultiLineStringJPanel.showText("Exception occurred: " + e);
+                            NotificationsJPanel.showText("Exception occurred: " + e);
                             throw e;
                         }
                     });
@@ -3708,7 +3709,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     } catch (Exception e) {
                         logEvent("Exception occurred: " + e);
                         Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                        MultiLineStringJPanel.showText("Exception occurred: " + e);
+                        NotificationsJPanel.showText("Exception occurred: " + e);
                         throw new RuntimeException(e);
                     }
                 });
@@ -3717,7 +3718,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         } catch (Exception e) {
             logEvent("Exception occurred: " + e);
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showText("Exception occurred: " + e);
+            NotificationsJPanel.showText("Exception occurred: " + e);
         }
     }//GEN-LAST:event_jMenuItemScanAllActionPerformed
 
@@ -3755,7 +3756,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                                                 return startRandomTestFirstActionReversed2();
                                                             } catch (Exception e) {
                                                                 Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                                                                MultiLineStringJPanel.showText("Exception occurred: " + e);
+                                                                NotificationsJPanel.showText("Exception occurred: " + e);
                                                                 XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
                                                                 ret.completeExceptionally(e);
                                                                 return ret;
@@ -3767,7 +3768,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     return outerRet;
                 } catch (Exception e) {
                     Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-                    MultiLineStringJPanel.showText("Exception occurred: " + e);
+                    NotificationsJPanel.showText("Exception occurred: " + e);
                     XFutureVoid ret = new XFutureVoid("internal startRandomTestFirstActionReversed with exception " + e);
                     ret.completeExceptionally(e);
                     return ret;
@@ -3775,7 +3776,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             });
         } catch (Exception e) {
             Logger.getLogger(AprsSupervisorDisplayJFrame.class.getName()).log(Level.SEVERE, "", e);
-            MultiLineStringJPanel.showText("Exception occurred: " + e);
+            NotificationsJPanel.showText("Exception occurred: " + e);
             XFutureVoid ret = new XFutureVoid("startRandomTestFirstActionReversed with exception " + e);
             ret.completeExceptionally(e);
             return ret;
@@ -5142,10 +5143,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 String fullErr = errBuilder.toString();
                 println("fullErr = " + fullErr);
-                boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
                 if (fullErr.length() > 0) {
-                    crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-                    MultiLineStringJPanel.showText(fullErr).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+                    NotificationsJPanel.showText(fullErr);
                     if (!customCode.contains("class Custom")) {
                         customCode = INIT_CUSTOM_CODE;
                     }
@@ -5183,12 +5182,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     System.setOut(origOut);
                     println("content = " + content);
                     if (content.length() > 0) {
-                        crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-                        MultiLineStringJPanel.showText(content).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
-
+                        NotificationsJPanel.showText(content);
                     }
                 } finally {
-                    crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText;
                     System.setOut(origOut);
                 }
             }
@@ -5197,9 +5193,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
             StringWriter sw = new StringWriter();
             exception.printStackTrace(new PrintWriter(sw));
             String trace = sw.toString();
-            boolean origDisableShowText = crcl.ui.misc.MultiLineStringJPanel.disableShowText;
-            crcl.ui.misc.MultiLineStringJPanel.disableShowText = false;
-            MultiLineStringJPanel.showText(trace).thenRun(() -> crcl.ui.misc.MultiLineStringJPanel.disableShowText = origDisableShowText);
+            NotificationsJPanel.showText(trace);
             if (!customCode.contains("class Custom")) {
                 customCode = INIT_CUSTOM_CODE;
             }

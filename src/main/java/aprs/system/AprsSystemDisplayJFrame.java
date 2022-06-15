@@ -49,6 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
 
 /**
@@ -116,10 +117,9 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         String exText = sw.toString();
         boolean forceShow = exceptionCount.incrementAndGet() < 2;
         String dialogTitle = "Exception from " + this.getTitle() + " : " + ex.getMessage();
-        XFuture<Boolean> showTextFuture
-                = MultiLineStringJPanel.showText(exText, this, dialogTitle, false, forceShow);
-        return showTextFuture
-                .thenRun(() -> showingException = false);
+        NotificationsJPanel.addNotification(dialogTitle,exText);
+        showingException = false;
+        return XFutureVoid.completedFuture();
     }
 
     CachedCheckBox logCrclProgramsCheckBox() {

@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static aprs.misc.AprsCommonLogger.println;
+import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
 
 /**
@@ -225,7 +226,7 @@ public class LaunchFileRunner {
                                 String timeoutMsg = "timedout after " + (System.currentTimeMillis() - timeoutStartLocal);
                                 println(timeoutMsg);
                                 if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
-                                    MultiLineStringJPanel.showText(timeoutMsg);
+                                    NotificationsJPanel.showText(timeoutMsg);
                                 }
                             }
                         });
