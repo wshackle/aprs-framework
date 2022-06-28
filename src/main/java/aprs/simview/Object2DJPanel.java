@@ -1831,14 +1831,14 @@ public class Object2DJPanel extends JPanel {
         return l;
     }
 
-    private List<PhysicalItem> forceTorqueItems;
+    private @Nullable List<PhysicalItem> forceTorqueItems;
 
     /**
      * Get the value of forceTorqueItems
      *
      * @return the value of forceTorqueItems
      */
-    public List<PhysicalItem> getForceTorqueItems() {
+    public @Nullable List<PhysicalItem> getForceTorqueItems() {
         return forceTorqueItems;
     }
 
@@ -1847,7 +1847,7 @@ public class Object2DJPanel extends JPanel {
      *
      * @param forceTorqueItems new value of forceTorqueItems
      */
-    public void setForceTorqueItems(List<PhysicalItem> forceTorqueItems) {
+    public void setForceTorqueItems(@Nullable List<PhysicalItem> forceTorqueItems) {
         this.forceTorqueItems = forceTorqueItems;
     }
 

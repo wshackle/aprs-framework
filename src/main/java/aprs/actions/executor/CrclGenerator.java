@@ -765,7 +765,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     <V> void saveComplexValueList(String label, String listPrefix, List<V> list, Printer<V> printer) throws IOException {
         final AprsSystem aprsSystem1 = requireNonNull(this.aprsSystem, "aprsSystem");
-        try (PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
+        try ( PrintWriter pw = new PrintWriter(aprsSystem1.createTempFile(label, ".txt"))) {
             saveComplexValueList(pw, listPrefix, list, printer);
         }
     }
@@ -2662,7 +2662,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 format = format.withHeader(OptiplannerLogEntry.HEADERS);
             }
             final List<Object> logEntryList = Arrays.asList(logEntry.toArray());
-            try (CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
+            try ( CSVPrinter printer = new CSVPrinter(new FileWriter(resultsFile, !newFile), format)) {
                 printer.printRecord(logEntryList);
             }
             optiplannerLogEntrys.add(logEntry);
@@ -2697,7 +2697,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             File actionsInFile = aprsSystemLocal.createTempFile("actionsIn", ".txt");
             aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
             int sizeIn = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeIn++;
@@ -2910,7 +2910,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     lastOptimizeLaterPddlActions = laterPddlActions;
                     File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
                     int sizeOut = 0;
-                    try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+                    try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                         for (int i = startingIndex; i < fullReplanPddlActions.size(); i++) {
                             ps.println(fullReplanPddlActions.get(i).asPddlLine());
                             sizeOut++;
@@ -2933,7 +2933,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             File actionsOutFile = aprsSystemLocal.createTempFile("actionsOut", ".txt");
             int sizeOut = 0;
-            try (PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
+            try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsOutFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
                     ps.println(actions.get(i).asPddlLine());
                     sizeOut++;
@@ -6850,7 +6850,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             throw new IllegalStateException("genThread != curThread : genThread=" + genThread + ",curThread=" + curThread);
         }
 
-        try (WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
+        try ( WaitForCompleteVisionUpdatesStartInfo startInfo = new WaitForCompleteVisionUpdatesStartInfo(aprsSystem);) {
             if (startAbortCount != aprsSystem.getSafeAbortRequestCount()) {
                 takeSimViewSnapshot("waitForCompleteVisionUpdates.aborting_" + startAbortCount + "_" + aprsSystem.getSafeAbortRequestCount(), this.physicalItems);
                 aprsSystem.logEvent("waitForCompleteVisionUpdates:aborting" + prefix, startAbortCount, aprsSystem.getSafeAbortRequestCount(), requiredPartsMap);
@@ -7091,8 +7091,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PointType pt = getLookForXYZ();
         if (null != pt) {
             limit = pt.getZ() + -Math.sqrt(pt.getX() * pt.getX() + pt.getY() - pt.getY());
+            addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit=" + limit + ", approachZOffset=" + approachZOffset + ",  pt=" + pt.getX() + "," + pt.getY() + "," + pt.getZ());
+        } else {
+            addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent approachZOffset=" + approachZOffset + ",  pt=null" );    
         }
-        addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit=" + limit + ", approachZOffset=" + approachZOffset + ",  pt=" + pt.getX() + "," + pt.getY() + "," + pt.getZ());
         addSetSlowSpeed(out);
         addMoveUpFromCurrent(out, approachZOffset, limit);
     }

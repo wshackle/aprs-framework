@@ -308,7 +308,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = Utils.file(xmlDir, f.getName() + "-status.xml");
-                    try (FileWriter fw = new FileWriter(xmlFile)) {
+                    try ( FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
                     }
                 }
@@ -401,7 +401,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 if (null != status) {
                     String xmlString = CRCLSocket.statusToPrettyString(status);
                     File xmlFile = Utils.file(xmlDir, f.getName() + "-status.xml");
-                    try (FileWriter fw = new FileWriter(xmlFile)) {
+                    try ( FileWriter fw = new FileWriter(xmlFile)) {
                         fw.write(xmlString);
                     }
                 }
@@ -2963,14 +2963,17 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private final Consumer<List<TrayStack>> trayStacksListener = new Consumer<List<TrayStack>>() {
         @Override
         public void accept(List<TrayStack> list) {
+            assert jCheckBoxConnectForceTorque != null : "@AssumeAssertion(nullness)";
             if (jCheckBoxConnectForceTorque.isSelected()) {
-                object2DJPanel1.setForceTorqueItems(convertTrayStackListToPhysicalItems(list));
+                final List<PhysicalItem> physicalItems = convertTrayStackListToPhysicalItems(list);
+                assert object2DJPanel1 != null : "@AssumeAssertion(nullness)";
+                object2DJPanel1.setForceTorqueItems(physicalItems);
                 object2DJPanel1.repaint();
             }
         }
     };
 
-    private List<PhysicalItem> convertTrayStackListToPhysicalItems(List<TrayStack> list) {
+    private static List<PhysicalItem> convertTrayStackListToPhysicalItems(List<TrayStack> list) {
         List<PhysicalItem> ret = new ArrayList<>();
         if (list != null) {
             for (TrayStack ts : list) {
@@ -2982,9 +2985,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     private void jCheckBoxConnectForceTorqueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxConnectForceTorqueActionPerformed
 
+        assert aprsSystem != null : "@AssumeAssertion(nullness)";
         ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = aprsSystem.getForceTorqueSimJInternalFrame();
         if (null == forceTorqueSimJInternalFrame) {
+            assert object2DJPanel1 != null : "@AssumeAssertion(nullness)";
             object2DJPanel1.setShowForceTorqueItems(false);
+            assert jCheckBoxConnectForceTorque != null : "@AssumeAssertion(nullness)";
             jCheckBoxConnectForceTorque.setSelected(false);
             jCheckBoxConnectForceTorque.setEnabled(false);
             object2DJPanel1.setForceTorqueItems(null);
@@ -5273,7 +5279,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         if (null != propertiesFile && propertiesFile.exists()) {
             loadingProperties = true;
             Properties props = new Properties();
-            try (FileReader fr = new FileReader(propertiesFile)) {
+            try ( FileReader fr = new FileReader(propertiesFile)) {
                 props.load(fr);
             }
             loadPropertiesOnDisplay(props);
@@ -5919,7 +5925,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @SuppressWarnings("guieffect")
     public void loadLogFile(File f) {
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line = br.readLine();
             while (line != null && line.trim().length() < 2) {
                 line = br.readLine();
@@ -6479,7 +6485,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     private File printPoseUpdateHistory(String err) throws IOException {
         File f = createTempFile("puh_" + err, ".csv");
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(f),
+        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(f),
                 CSVFormat.DEFAULT.withHeader(POSE_UPDATE_HISTORY_HEADER))) {
             for (PoseUpdateHistoryItem item : poseUpdateHistory) {
                 printPoseUpdateHistoryRecordItem(item, printer);

@@ -138,5 +138,16 @@
                 <activatedProfile>jar-with-depends</activatedProfile>
             </activatedProfiles>
         </action>
+    <action>
+            <actionName>CUSTOM-checkerframework_jdk11</actionName>
+            <displayName>checkerframework_jdk11</displayName>
+            <goals>
+                <goal>clean</goal>
+                <goal>compile</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>checkerframework_jdk11</activatedProfile>
+            </activatedProfiles>
+        </action>
     
 </actions>

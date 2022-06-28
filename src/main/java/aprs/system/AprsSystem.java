@@ -525,7 +525,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private @MonotonicNonNull DbSetupJInternalFrame dbSetupJInternalFrame = null;
     private @MonotonicNonNull ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = null;
 
-    public ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
+    public @Nullable ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
         return forceTorqueSimJInternalFrame;
     }
 
