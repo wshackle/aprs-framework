@@ -3217,6 +3217,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public void close() {
         try {
             closing = true;
+            // force github actions after CRCL deploy
             NotificationsJPanel.closeNotifications();
             try {
                 final File supervisorEventsCsvFile = Utils.createTempFile("supervisorEventsTable", ".csv");
