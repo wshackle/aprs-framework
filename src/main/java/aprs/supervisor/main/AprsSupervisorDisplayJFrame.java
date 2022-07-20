@@ -3217,6 +3217,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     public void close() {
         try {
             closing = true;
+            NotificationsJPanel.closeNotifications();
             try {
                 final File supervisorEventsCsvFile = Utils.createTempFile("supervisorEventsTable", ".csv");
                 System.out.println("Closing " + this);
