@@ -4142,7 +4142,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                     )
                     .thenRun(() -> {
                         logEvent("Completed interactiveStart actionName=" + actionName + ",isn=" + isn);
-                        if (!actionName.toLowerCase().startsWith("start")) {
+                        if (null != actionName && !actionName.toLowerCase().startsWith("start")) {
                             JOptionPane.showMessageDialog(AprsSupervisorDisplayJFrame.this, actionName + " completed.");
                         }
                     });
@@ -4605,8 +4605,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double z = (Double) jTableSelectedPosMapFile.getValueAt(row, 5);
 
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
-                        interactivStartRunnable(() -> lookForPartsAll(), null)
-                                .thenCompose(() -> posMapOutSys.gotoPose(newPose));
+                        interactivStartRunnable(() -> lookForPartsAll(), "Position Maps: Go Out")
+                                .thenCompose(() -> posMapOutSys.gotoPose(newPose,"Out"));
                     }
                 }
             }
@@ -4633,8 +4633,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double othery = (double) otherYObject;
                         double otherz = (double) otherZObject;
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
-                        interactivStartRunnable(() -> lookForPartsAll(), null)
-                                .thenCompose(() -> posMapInSys.gotoPose(newPose));
+                        interactivStartRunnable(() -> lookForPartsAll(), "PositionMaps: Go In")
+                                .thenCompose(() -> posMapInSys.gotoPose(newPose,"In"));
                     }
                 }
             }

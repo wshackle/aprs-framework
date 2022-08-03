@@ -4491,7 +4491,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         returnPosesByName.put(partName, pose);
         pose.setXAxis(xAxis);
         pose.setZAxis(zAxis);
-        testPartPositionByPose(out, pose);
+        testPartPositionByPose(out, pose, partName);
 //        setPlannedHeldPart(partName);
     }
 
@@ -4894,44 +4894,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
     }
 
-//    private void takePartRecovery(String partName, List<MiddleCommandType> out) throws SQLException, CRCLException, PmException {
-//        checkDbReady();
-//
-//        if (partName.indexOf('_') < 0) {
-//            throw new IllegalArgumentException("partName must contain an underscore: partName=" + partName);
-//        }
-//        checkSettings();
-//        addMessageCommand(out, "take-part-recovery " + partName + " action=" + lastIndex + " crclNumber=" + crclNumber.get());
-//
-//        PoseType pose = getPose(partName);
-//        if (takeSnapshots) {
-//            takeSnapshots("plan", "take-part-recovery-" + partName + "", pose, partName);
-//        }
-//        if (null == pose) {
-//            if (skipMissingParts) {
-//                setLastTakenPart(null);
-//                return;
-//            } else {
-//                throw new IllegalStateException("getPose(" + partName + ") returned null");
-//            }
-//        }
-//
-//        pose = visionToRobotPose(pose);
-//        returnPosesByName.put(partName, pose);
-//        pose.setXAxis(xAxis);
-//        pose.setZAxis(zAxis);
-//        takePartByPose(out, pose, partName);
-//
-//        String markerMsg = "took part " + partName;
-//        addMarkerCommand(out, markerMsg, x -> {
-//            logDebug(markerMsg + " at " + new Date());
-//            addToInspectionResultJTextPane("&nbsp;&nbsp;" + markerMsg + " at " + new Date() + "<br>");
-//        });
-//        setLastTakenPart(partName);
-//        if (partName.indexOf('_') > 0) {
-//            TakenPartList.add(partName);
-//        }
-//    }
     private volatile boolean getPoseFailedOnce = false;
 
     private volatile @Nullable
@@ -4949,55 +4911,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     public ConcurrentMap<String, String> getRecordedPosesJointValsMap() {
         return recordedPosesJointValsMap;
-    }
-
-    /**
-     * Add commands to the list that will test a given part position by opening
-     * the gripper and moving to that position but not actually taking the part.
-     *
-     * @param cmds list of commands to append to
-     * @param pose pose to test
-     */
-    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) {
-
-        if (null == pose) {
-            throw new IllegalArgumentException("null == pose");
-        }
-        addOpenGripper(cmds);
-
-        checkSettings();
-
-        PoseType lastApproachPose = this.lastTestApproachPose;
-        if (null != lastApproachPose) {
-            addSetSlowSpeed(cmds);
-            addMoveTo(cmds, lastApproachPose, false, "testPartPositionByPose.lastApproachPose");
-            lastTestApproachPose = null;
-        } else {
-            addSlowLimitedMoveUpFromCurrent(cmds);
-        }
-        PoseType approachPose = addZToPose(pose, approachZOffset);
-
-        PoseType approachPose2 = addZToPose(pose, approachZOffset / 5.0);
-
-        lastTestApproachPose = approachPose;
-
-        final PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
-        final PointType posePoint = requireNonNull(pose.getPoint(), "posePoint");
-        final PointType takePosePoint = requireNonNull(takePose.getPoint(), "takePosePoint");
-        takePosePoint.setZ(posePoint.getZ() + takeZOffset);
-
-        addSetFastTestSpeed(cmds);
-
-        addMoveTo(cmds, approachPose, false, "testPartPositionByPose.approachPose");
-
-        addSettleDwell(cmds);
-
-        addSetSlowTestSpeed(cmds);
-
-        addMoveTo(cmds, approachPose2, true, "testPartPositionByPose.approachPose2");
-
-        addSettleDwell(cmds);
-
     }
 
     private static PoseType addZToPose(PoseType pose, double zOffset) {
@@ -5244,6 +5157,65 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
         } else {
             return XFutureVoid.completedFuture();
+        }
+    }
+
+    /**
+     * Add commands to the list that will test a given part position by opening
+     * the gripper and moving to that position but not actually taking the part.
+     *
+     * @param cmds list of commands to append to
+     * @param pose pose to test
+     */
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose, @Nullable String name) {
+
+        if (null == pose) {
+            throw new IllegalArgumentException("null == pose");
+        }
+        try {
+
+            addOpenGripper(cmds);
+
+            checkSettings();
+
+            PoseType lastApproachPose = this.lastTestApproachPose;
+            if (null != lastApproachPose) {
+                addSetSlowSpeed(cmds);
+                addMoveTo(cmds, lastApproachPose, false, "testPartPositionByPose.lastApproachPose");
+                lastTestApproachPose = null;
+            } else {
+                addSlowLimitedMoveUpFromCurrent(cmds);
+            }
+            PoseType approachPose = addZToPose(pose, approachZOffset);
+
+            lastTestApproachPose = approachPose;
+
+            final PoseType takePose = requireNonNull(copy(pose), "copy(pose)");
+            final PointType posePoint = requireNonNull(pose.getPoint(), "posePoint");
+            final PointType takePosePoint = requireNonNull(takePose.getPoint(), "takePosePoint");
+            takePosePoint.setZ(posePoint.getZ() + takeZOffset);
+
+            addSetFastTestSpeed(cmds);
+
+            addMoveTo(cmds, approachPose, false, "testPartPositionByPose.approachPose");
+
+            addSettleDwell(cmds);
+
+            addDwell(cmds, 1.0);
+
+            addSetSlowTestSpeed(cmds);
+
+            addMoveTo(cmds, takePose, true, "testPartPositionByPose.takePose");
+
+            addSettleDwell(cmds);
+
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "pose=" + CRCLPosemath.poseToString(pose) + ",name=" + name, ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -5555,7 +5527,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private void addMoveUpFromCurrent(List<MiddleCommandType> cmds, double offset, double limit) {
 
-        assert (aprsSystem != null) : "aprsSystemInterface == null : @AssumeAssertion(nullness)";
+        assert (aprsSystem != null) : "aprsSystem == null : @AssumeAssertion(nullness)";
 
         MessageType origMessageCmd = new MessageType();
         origMessageCmd.setMessage("moveUpFromCurrent" + " action=" + lastIndex + " crclNumber=" + crclNumber.get() + ",offset=" + offset + ",limit=" + limit);
@@ -6131,6 +6103,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 //    }
     private void addJointMove(List<MiddleCommandType> out, double jointVals[], double speedScale, int start, int end) {
         checkJointToleranceSetting(out);
+        ActuateJointsType ajCmd = createActuateJointsCommand(jointVals, start, end, speedScale);
+        out.add(ajCmd);
+        atLookForPosition = false;
+        if (toolHolderOperationEnabled) {
+            expectedJoint0Val = jointVals[0];
+            logDebug("addJointMove: expectedJoint0Val = " + expectedJoint0Val);
+        }
+    }
+
+    private ActuateJointsType createActuateJointsCommand(double[] jointVals, int start, int end, double speedScale) throws IllegalArgumentException {
         ActuateJointsType ajCmd = new ActuateJointsType();
         setCommandId(ajCmd);
         if (start < 0 || start > jointVals.length || start >= end) {
@@ -6153,12 +6135,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         final List<ActuateJointType> ajCmdActuateJoint = ajCmd.getActuateJoint();
         ajCmdActuateJoint.clear();
         ajCmdActuateJoint.addAll(newActuateJointsList);
-        out.add(ajCmd);
-        atLookForPosition = false;
-        if (toolHolderOperationEnabled) {
-            expectedJoint0Val = jointVals[0];
-            logDebug("addJointMove: expectedJoint0Val = " + expectedJoint0Val);
-        }
+        return ajCmd;
     }
 
     private volatile @Nullable
@@ -6419,7 +6396,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     }
 
     private double expectedJoint0Val = Double.NaN;
-    private double joint0DiffTolerance = 20.0;
+    private double joint0DiffTolerance = 25.0;
 
     public double getJoint0DiffTolerance() {
         return joint0DiffTolerance;
@@ -6429,18 +6406,41 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.joint0DiffTolerance = joint0DiffTolerance;
     }
 
+    
     private void addGotoToolChangerApproachByName(List<MiddleCommandType> out, String toolChangerPosName) throws PmException, CRCLException, IllegalStateException {
         clearWayToHolder(out, toolChangerPosName);
         addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName);
         addSlowLimitedMoveUpFromCurrent(out);
         String jointValsString = toolChangerJointValsMap.get(toolChangerPosName);
+
         if (useJointMovesForToolHolderApproach && null != jointValsString && jointValsString.length() > 0) {
             String lookForJointsString = getStringOpt(ExecutorOption.ForString.lookForJoints, "");
+            double jointVals[] = jointValStringToArray(jointValsString);
+
             if (null != lookForJointsString && lookForJointsString.length() > 0) {
                 double lookForJointVals[] = jointValStringToArray(lookForJointsString);
-                addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
+
+                assert (aprsSystem != null) : "aprsSystem == null : @AssumeAssertion(nullness)";
+
+                MessageType origMessageCmd = new MessageType();
+                origMessageCmd.setMessage("addGotoToolChangerApproachByName. joint move to lookFor - action=" + lastIndex + " crclNumber=" + crclNumber.get());
+                addOptionalCommand(origMessageCmd, out, (CRCLCommandWrapper wrapper) -> {
+                    MiddleCommandType cmd = wrapper.getWrappedCommand();
+                    AprsSystem af = aprsSystem;
+                    double js0 = getCurrentJoint0(af);
+                    boolean js0Set = Double.isFinite(js0);
+                    final double js0diff = js0Set ? Math.abs(js0 - jointVals[0]) : Double.NaN;
+                    if (!js0Set || js0diff < joint0DiffTolerance) {
+                        MessageType messageCommand = new MessageType();
+                        messageCommand.setMessage("addGotoToolChangerApproachByName js0=" + js0 + ", js0diff=" + js0diff);
+                        wrapper.setWrappedCommand(messageCommand);
+                    } else {
+                        ActuateJointsType ajCmd = createActuateJointsCommand(lookForJointVals, 1, lookForJointVals.length, rotSpeed);
+                        wrapper.setWrappedCommand(ajCmd);
+                    }
+                });
+//                addJointMove(out, lookForJointVals, 1.0, 1, lookForJointVals.length);
             }
-            double jointVals[] = jointValStringToArray(jointValsString);
             addJointMove(out, jointVals, 1.0, 0, 1);
             addJointMove(out, jointVals, 1.0, 1, jointVals.length);
         } else {
@@ -6451,6 +6451,29 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             gotoToolChangerApproachByPose(pose, out);
         }
         addDwell(out, 1.5);
+    }
+
+    private double getCurrentJoint0(AprsSystem af) {
+        double js0 = Double.NaN;
+        if (null != af) {
+            CRCLStatusType stat = af.getCurrentStatus();
+            if (null != stat) {
+                JointStatusesType jsst = stat.getJointStatuses();
+                if (null != jsst) {
+                    List<JointStatusType> l = jsst.getJointStatus();
+                    for (JointStatusType jst : l) {
+                        if (jst.getJointNumber() == 1) {
+                            if (null == jst.getJointPosition()) {
+                                break;
+                            }
+                            js0 = jst.getJointPosition();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return js0;
     }
 
     private void gotoToolChangerApproachByPose(PoseType pose, List<MiddleCommandType> out) throws CRCLException, PmException {
@@ -7093,7 +7116,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             limit = pt.getZ() + -Math.sqrt(pt.getX() * pt.getX() + pt.getY() - pt.getY());
             addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent limit=" + limit + ", approachZOffset=" + approachZOffset + ",  pt=" + pt.getX() + "," + pt.getY() + "," + pt.getZ());
         } else {
-            addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent approachZOffset=" + approachZOffset + ",  pt=null" );    
+            addMessageCommand(out, "addSlowLimitedMoveUpFromCurrent approachZOffset=" + approachZOffset + ",  pt=null");
         }
         addSetSlowSpeed(out);
         addMoveUpFromCurrent(out, approachZOffset, limit);

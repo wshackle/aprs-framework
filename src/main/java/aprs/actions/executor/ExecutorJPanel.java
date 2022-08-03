@@ -93,6 +93,7 @@ import static aprs.actions.executor.ActionType.*;
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
 import static crcl.copier.CRCLCopier.copy;
+import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLPosemath.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Integer.max;
@@ -366,7 +367,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }
 
     private String readSelectedToolNameFile(File file) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while (null != (line = br.readLine())) {
                 line = line.trim();
@@ -479,7 +480,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             if (null == parentFile) {
                 throw new NullPointerException("parentFile");
             }
-            try (PrintWriter pw = new PrintWriter(
+            try ( PrintWriter pw = new PrintWriter(
                     new FileWriter(Utils.file(parentFile, filename)))) {
                 pw.println(newToolName);
             } catch (IOException ex) {
@@ -3346,7 +3347,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             System.err.println("crclGenerator.atLastIndex() = " + crclGenerator.atLastIndex());
             System.err.println("lastReadyReturnPos=" + lastReadyReturnPos);
             throw new IllegalStateException(
-                    "loading new actions when not ready "+executorReadyString);
+                    "loading new actions when not ready " + executorReadyString);
         }
     }
 
@@ -3398,7 +3399,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
 
         List<String> lines = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while (null != (line = br.readLine())) {
                 lines.add(line);
@@ -4655,7 +4656,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         logDebug("f.getCanonicalPath() = " + f.getCanonicalPath());
         boolean newFile = !f.exists();
         logDebug("newFile = " + newFile);
-        try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
             if (newFile) {
                 pw.println(
                         "Time,PartName,Input_X,Input_Y,Input_Z,Output_X,Output_Y,Output_Z,Offset_X,Offset_Y,Offset_Z");
@@ -4838,7 +4839,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
     private void addFailLogCsvHeader(File f) throws IOException {
         if (!f.exists()) {
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, false))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, false))) {
                 pw.println("time,status,object,x,y");
             }
         }
@@ -4872,7 +4873,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
             String poseFromDbString = poseFromDbPoint.getX()
                     + "," + poseFromDbPoint.getY();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",FAIL," + partName + "," + poseFromDbString);
             }
         } catch (Exception ex) {
@@ -4909,7 +4910,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             PointType poseFromDbPoint = requireNonNull(poseFromDb.getPoint(), "poseFromDb.getPoint()");
             String poseFromDbString = poseFromDbPoint.getX()
                     + "," + poseFromDbPoint.getY();
-            try (PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
+            try ( PrintWriter pw = new PrintWriter(new FileWriter(f, true))) {
                 pw.println(System.currentTimeMillis() + ",SUCCESS," + partName + "," + poseFromDbString);
             }
         } catch (Exception ex) {
@@ -5516,7 +5517,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         final Map<String, String> partToolMap = crclGenerator.getPartToolMap();
         partToolMap.clear();
         partToolCachedTable.setRowCount(0);
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
@@ -5587,7 +5588,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             Map<String, String> jointsMap, boolean toolHolderMode) {
         table.setRowCount(0);
 
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(f.getCanonicalPath() + " does not have header");
@@ -6214,7 +6215,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
             final String toolHolderPoseNameFinal = toolHolderPoseName;
             XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
-            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+            newStatusFuture.thenAcceptAsync((CRCLStatusType newStatus) -> {
                 try {
                     Map<String, PoseType> toolHolderPoseMap = crclGenerator.getToolHolderPoseMap();
                     PoseType pose = CRCLPosemath.pose(newStatus);
@@ -6222,7 +6223,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                         warnDialog("Can not read current pose.");
                         return;
                     }
-//            toolChangerPose = pose;
                     PmRpy rpy = CRCLPosemath.toPmRpy(pose);
                     String jointString = getJointValsString(newStatus);
                     updateToolChangePose(toolHolderPoseNameFinal, false, pose, rpy, jointString);
@@ -6231,12 +6231,15 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     updateToolChangePose(toolHolderPoseNameFinal, true, approachPose, rpy, null);
                     crclGenerator.getToolChangerJointValsMap().get(toolHolderPoseNameFinal);
                     saveToolChangerPoseMap();
-                } catch (Exception ex) {
-                    LOGGER.log(Level.SEVERE, "", ex);
+                } catch (Throwable ex) {
+                    showExceptionMessage(ex);
                 }
-            });
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "", ex);
+            }, Utils.getDispatchThreadExecutorService())
+                    .peekException((Throwable ex) -> {
+                        showExceptionMessage(ex);
+                    });
+        } catch (Throwable ex) {
+            showExceptionMessage(ex);
         }
     }// GEN-LAST:event_jButtonRecordToolHolderPoseActionPerformed
 
@@ -6244,7 +6247,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 
     @UIEffect
     private void clearEmptyTableRowsOnDisplay(final CachedTable table) {
-        assert SwingUtilities.isEventDispatchThread();
+        assert SwingUtilities.isEventDispatchThread() : "SwingUtilities.isEventDispatchThread()";
         for (int i = 0; i < table.getRowCount(); i++) {
             Object val = table.getValueAt(i, 0);
             if (val == null) {
@@ -6467,11 +6470,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             LOGGER.log(Level.SEVERE, "", e);
             showExceptionInProgram(e);
         }
-    }// GEN-LAST:event_jButtonDropToolActionPerformed
-
-    //    private void syncPanelToGeneratorToolData() {
-//        aprsSystem.runOnDispatchThread(this::syncPanelToGeneratorToolDataOnDisplay);
-//    }
+    }
+    
     @UIEffect
     private void syncPanelToGeneratorToolDataOnDisplay() {
         crclGenerator.setApproachToolChangerZOffset(Double.parseDouble(jTextFieldToolChangerApproachZOffset.getText()));
@@ -6523,11 +6523,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return;
             }
             syncPanelToGeneratorToolDataOnDisplay();
-//            String newToolName = queryUserForToolName("What tool will be in the robot?");
-//            if (null == newToolName || newToolName.length() < 1) {
-//                return;
-//            }
-//            toolChangerPoseName = holderPosName;
             Map<String, PoseType> toolHolderPoseMap = crclGenerator.getToolHolderPoseMap();
             PoseType pose = toolHolderPoseMap.get(holderPosName);
             if (null == pose) {
@@ -6633,35 +6628,39 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             checkDbSupplierPublisher();
             String nameToAdd = JOptionPane.showInputDialog("New tool changer position name");
             XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
-            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
-                try {
-                    PoseType pose = CRCLPosemath.pose(newStatus);
-                    if (null == pose || null == pose.getPoint()) {
-                        warnDialog("Can not read current pose.");
-                        return;
-                    }
-                    Map<String, PoseType> toolHolderPoseMap = crclGenerator.getToolHolderPoseMap();
-                    if (nameToAdd != null && nameToAdd.length() > 0) {
-                        if (toolHolderPoseMap.containsKey(nameToAdd)
-                                || Arrays.asList(getToolChangerNames()).contains(nameToAdd)) {
-                            warnDialog(nameToAdd + " already added.");
-                            return;
+            newStatusFuture
+                    .thenAcceptAsync((CRCLStatusType newStatus) -> {
+                        try {
+                            PoseType pose = CRCLPosemath.pose(newStatus);
+                            if (null == pose || null == pose.getPoint()) {
+                                warnDialog("Can not read current pose.");
+                                return;
+                            }
+                            Map<String, PoseType> toolHolderPoseMap = crclGenerator.getToolHolderPoseMap();
+                            if (nameToAdd != null && nameToAdd.length() > 0) {
+                                if (toolHolderPoseMap.containsKey(nameToAdd)
+                                        || Arrays.asList(getToolChangerNames()).contains(nameToAdd)) {
+                                    warnDialog(nameToAdd + " already added.");
+                                    return;
+                                }
+                                PmRpy rpy = CRCLPosemath.toPmRpy(pose);
+                                String jointString = getJointValsString(newStatus);
+                                updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
+                                toolHolderPoseMap.put(nameToAdd, pose);
+                                PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
+                                updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
+                                clearEmptyToolChangerPoseRows();
+                                Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
+                                saveToolChangerPoseMap();
+                            }
+                        } catch (Throwable ex) {
+                            LOGGER.log(Level.SEVERE, "", ex);
                         }
-                        PmRpy rpy = CRCLPosemath.toPmRpy(pose);
-                        String jointString = getJointValsString(newStatus);
-                        updateToolChangePose(nameToAdd, false, pose, rpy, jointString);
-                        toolHolderPoseMap.put(nameToAdd, pose);
-                        PoseType approachPose = crclGenerator.approachPoseFromToolChangerPose(pose);
-                        updateToolChangePose(nameToAdd, true, approachPose, rpy, null);
-                        clearEmptyToolChangerPoseRows();
-                        Utils.autoResizeTableColWidths(toolHolderPositionsCachedTable);
-                        saveToolChangerPoseMap();
-                    }
-                } catch (Exception ex) {
-                    LOGGER.log(Level.SEVERE, "", ex);
-                }
-            });
-        } catch (Exception ex) {
+                    }, Utils.getDispatchThreadExecutorService())
+                    .peekException((Throwable throwable) -> {
+                        LOGGER.log(Level.SEVERE, "", throwable);
+                    });
+        } catch (Throwable ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
     }// GEN-LAST:event_jButtonAddToolHolderPoseActionPerformed
@@ -6680,7 +6679,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
             final String toolHolderPoseNameFinal = toolHolderPoseName;
             XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
-            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+            newStatusFuture.thenAcceptAsync((CRCLStatusType newStatus) -> {
                 try {
                     PoseType pose = CRCLPosemath.pose(newStatus);
                     if (null == pose) {
@@ -6695,11 +6694,14 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                         crclGenerator.getToolChangerJointValsMap().put(toolHolderPoseNameFinal, jointString);
                     }
                     saveToolChangerPoseMap();
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     showExceptionMessage(ex);
                 }
-            });
-        } catch (Exception ex) {
+            }, Utils.getDispatchThreadExecutorService())
+                    .peekException((Throwable ex) -> {
+                        showExceptionMessage(ex);
+                    });
+        } catch (Throwable ex) {
             showExceptionMessage(ex);
         }
     }// GEN-LAST:event_jButtonRecordToolHolderApproachActionPerformed
@@ -6957,9 +6959,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
     }// GEN-LAST:event_jButtonQuickCalibActionPerformed
 
-    private void showExceptionMessage(Exception ex) throws HeadlessException {
+    private void showExceptionMessage(Throwable ex) throws HeadlessException {
         LOGGER.log(Level.SEVERE, "", ex);
         JOptionPane.showMessageDialog(parentComponent, ex.getMessage());
+        NotificationsJPanel.showException(ex);
     }
 
     private void jComboBoxManualObjectNameItemStateChanged(java.awt.event.ItemEvent evt) {// GEN-FIRST:event_jComboBoxManualObjectNameItemStateChanged
@@ -7060,7 +7063,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
             final String recordedPoseNameFinal = recordedPoseName;
             XFuture<CRCLStatusType> newStatusFuture = aprsSystem.getNewStatus();
-            newStatusFuture.thenAccept((CRCLStatusType newStatus) -> {
+            newStatusFuture.thenAcceptAsync((CRCLStatusType newStatus) -> {
                 try {
                     PoseType pose = CRCLPosemath.pose(newStatus);
                     if (null == pose) {
@@ -7069,11 +7072,14 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     }
                     String jointString = getJointValsString(newStatus);
                     storeNamedPoseAndJointString(recordedPoseNameFinal, pose, (jointString != null) ? jointString : "");
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     showExceptionMessage(ex);
                 }
-            });
-        } catch (Exception ex) {
+            }, Utils.getDispatchThreadExecutorService())
+                    .peekException((Throwable ex) -> {
+                        showExceptionMessage(ex);
+                    });
+        } catch (Throwable ex) {
             showExceptionMessage(ex);
         }
     }// GEN-LAST:event_jButtonRecordPoseActionPerformed
@@ -8056,8 +8062,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 actionsFileName};
             aprsSystem.logEvent("appendGenerateAbortLog." + type, rowValues);
             try (
-                    FileWriter fw = new FileWriter(logFile, true);
-                    CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
+                     FileWriter fw = new FileWriter(logFile, true);  CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT)) {
                 csvp.printRecord(rowValues);
             }
             aprsSystem.logEvent("appendGenerateAbortLog", Arrays.toString(rowValues));
@@ -8384,8 +8389,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         return ret;
     }
 
-    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
-        crclGenerator.testPartPositionByPose(cmds, pose);
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose, String name) throws CRCLException, PmException {
+        crclGenerator.testPartPositionByPose(cmds, pose, name);
     }
 
     private XFuture<Boolean> testPartPosition(String part) throws Exception {
@@ -9679,7 +9684,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     return;
                 }
                 Properties props = new Properties();
-                try (FileReader fr = new FileReader(propertiesFile)) {
+                try ( FileReader fr = new FileReader(propertiesFile)) {
                     props.load(fr);
                 }
                 loadComboModelsOnDisplay(props);
@@ -9850,8 +9855,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (null == generateAbortLogFile && !aprsSystem.isClosing()) {
             generateAbortLogFile = Utils.createTempFile("generateAbortLog" + aprsSystem.getTaskName(), ".csv");
             try (
-                    FileWriter fw = new FileWriter(generateAbortLogFile);
-                    CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
+                     FileWriter fw = new FileWriter(generateAbortLogFile);  CSVPrinter csvp = new CSVPrinter(fw, CSVFormat.DEFAULT.withHeader(Utils.tableHeaders(jTableLog)))) {
                 csvp.getOut(); // use it for nothing to avoid warning
             }
             println("generateAbortLogFile = " + generateAbortLogFile);
@@ -9965,11 +9969,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(parentComponent, "Check E-STOPs, errors, and unpause system first.");
             return true;
         }
-        if(!readyForNewActionsList()) {
-            if(JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(parentComponent,  "Clear current actions list.")) {
+        if (!readyForNewActionsList()) {
+            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(parentComponent, "Clear current actions list.")) {
                 noWarnClearActionsList(false);
             } else {
-                 return true;
+                return true;
             }
         }
         return false;

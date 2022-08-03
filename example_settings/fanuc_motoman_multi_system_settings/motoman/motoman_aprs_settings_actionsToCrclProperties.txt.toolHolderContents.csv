@@ -1,4 +1,5 @@
 Holder Position Name,Contents,Possible Contents,Comment
-big_gripper_holder,empty,big_gripper,contents changed from big_gripper on Wed Jun 15 15:15:09 EDT 2022
+big_gripper_holder,empty,big_gripper,contents changed from big_gripper on Tue Aug 02 15:26:11 EDT 2022
 toolChangerPose9,empty,,
-smallvac_holder,small_vacuum,small_vacuum,contents changed from empty on Wed Jun 15 15:14:56 EDT 2022
+smallvac_holder,small_vacuum,"small_vacuum,pincher",contents changed from empty on Wed Jun 15 15:14:56 EDT 2022
+sharedHolder,empty,"small_vacuum,pincher",contents changed from small_vacuum on Wed Aug 03 11:39:39 EDT 2022

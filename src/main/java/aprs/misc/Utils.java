@@ -397,7 +397,7 @@ public class Utils {
 
     static public @Nullable
     String readFirstLine(File f) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(f))) {
             return br.readLine();
         }
     }
@@ -1044,12 +1044,21 @@ public class Utils {
             for (int r = 0; r < table.getRowCount(); r++) {
                 try {
                     renderer = table.getCellRenderer(r, i);
+                    TableModel model = table.getModel();
                     if (r >= table.getRowCount()) {
-                        System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed.");
+                        System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed : r=" + r + ", model.getRowCount()=" + model.getRowCount() + ", table.getRowCount()=" + table.getRowCount());
                         return;
                     }
                     if (i >= table.getColumnCount()) {
-                        System.err.println("autoResizeTableColWidthsOnDisplay colCount changed.");
+                        System.err.println("autoResizeTableColWidthsOnDisplay colCount changed : i=" + i + ", model.getColumnCount()=" + model.getColumnCount() + ", table.getColumnCount()=" + table.getColumnCount());
+                        return;
+                    }
+                    if (r >= model.getRowCount()) {
+                        System.err.println("autoResizeTableColWidthsOnDisplay rowCount changed : r=" + r + ", model.getRowCount()=" + model.getRowCount() + ", table.getRowCount()=" + table.getRowCount());
+                        return;
+                    }
+                    if (i >= model.getColumnCount()) {
+                        System.err.println("autoResizeTableColWidthsOnDisplay colCount changed : r=" + r + ", model.getRowCount()=" + model.getColumnCount() + ", table.getRowCount()=" + table.getColumnCount());
                         return;
                     }
                     Object tableValue = table.getValueAt(r, i);
@@ -1067,7 +1076,7 @@ public class Utils {
                             }
                         } catch (Exception e) {
                             LOGGER.log(Level.SEVERE, "", e);
-                            throw new RuntimeException("colHeaderVal=" + colHeaderVal +", tableValue="+tableValue+", r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount()
+                            throw new RuntimeException("colHeaderVal=" + colHeaderVal + ", tableValue=" + tableValue + ", r=" + r + ",i=" + i + ",table.getRowCount()=" + table.getRowCount()
                                     + ",table.getColumnCount()=" + table.getColumnCount(), e);
                         }
                     }
@@ -1160,7 +1169,7 @@ public class Utils {
             }
         });
         StackTraceElement ste[] = Thread.currentThread().getStackTrace();
-        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             if (ste.length > 2) {
                 pw.println("#  Automatically saved ");
             }
@@ -1270,7 +1279,7 @@ public class Utils {
      * @throws IOException file could not be written
      */
     public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
                 CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
             List<String> colNameList = new ArrayList<>();
             for (int i = 0; i < cachedTable.getColumnCount(); i++) {
@@ -1326,7 +1335,7 @@ public class Utils {
      */
     @UIEffect
     public static void saveTableModel(File f, TableModel tm) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
                 CSVFormat.DEFAULT.withHeader(tableHeaders(tm)))) {
 
             List<String> colNameList = new ArrayList<>();
@@ -1477,7 +1486,7 @@ public class Utils {
         if (null != dtm) {
             dtm.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (forceColumns && null != dtm) {
                 dtm.setRowCount(0);
@@ -1586,7 +1595,7 @@ public class Utils {
                     "totalRandomDelays",
                     "ignoredToggles");
         }
-        try (CSVPrinter printer = new CSVPrinter(
+        try ( CSVPrinter printer = new CSVPrinter(
                 new FileWriter(f, alreadyExists), format)) {
             printer.printRecord(
                     Utils.getDateTimeString(),
@@ -1608,7 +1617,7 @@ public class Utils {
         if (null != cachedTable) {
             cachedTable.setRowCount(0);
         }
-        try (CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(f), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             List<CSVRecord> records = parser.getRecords();
             int skipRows = 0;

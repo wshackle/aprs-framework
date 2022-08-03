@@ -75,8 +75,8 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         super.pack();
     }
 
-    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose) throws CRCLException, PmException {
-        executorJPanel1.testPartPositionByPose(cmds, pose);
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose,String name) throws CRCLException, PmException {
+        executorJPanel1.testPartPositionByPose(cmds, pose,name);
     }
 
     public boolean recheckKitsOnly() {

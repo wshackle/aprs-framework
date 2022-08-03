@@ -209,7 +209,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
     }
 
-    public XFuture<Boolean> gotoPose(PoseType pose) {
+    public XFuture<Boolean> gotoPose(PoseType pose, String name) {
         if (null == executorJInternalFrame1) {
             throw new NullPointerException("pddlExecutorJInternalFrame1");
         }
@@ -235,7 +235,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
         try {
             CRCLProgramType program = createEmptyProgram();
-            executorJInternalFrame1.testPartPositionByPose(CRCLUtils.middleCommands(program), pose);
+            executorJInternalFrame1.testPartPositionByPose(CRCLUtils.middleCommands(program), pose,name);
             return startCRCLProgram(program);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
