@@ -5317,13 +5317,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     public void showTogglesEnabled(boolean enabled) {
-//        for(JCheckBox chkbox : robotsEnableCelEditorCheckBoxList) {
-//            chkbox.setEnabled(enabled);
-//        }
         for (JCheckBox chkbox : robotsEnableCelRendererComponentList) {
             chkbox.setEnabled(enabled);
         }
-//        jTableRobots.getColumnModel().getColumn(1).getCellEditor().
         jTableRobots.repaint();
     }
 
@@ -6012,6 +6008,15 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 if (!ignoreRobotTableChanges && !resetting && col == 1) {
                     throw new IllegalStateException("ignoreRobotTableChanges=" + ignoreRobotTableChanges);
+                }
+                if (col == 1 && val instanceof Boolean) {
+                    Boolean bval = (Boolean) val;
+                    Object oldVal = jTableRobots.getValueAt( row, col);
+                    if(jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled()) {
+                        if(bval && oldVal!= null && !bval.equals(oldVal)) {
+                            throw new RuntimeException("Enabling robot when keep disabled set. row="+row+",col="+col+",oldVal="+oldVal+",bval="+bval);
+                        }
+                    }
                 }
                 jTableRobots.setValueAt(val, row, col);
                 Object chkVal = jTableRobots.getValueAt(row, col);

@@ -2906,6 +2906,9 @@ public class Supervisor {
                                     .map(stealFor.getExecutorOptions())
                                     .get(ExecutorOption.ForString.RPY);
                             logEvent("stealForRpy=" + stealForRpy);
+                            if(keepDisabled) {
+                                return XFutureVoid.completedFutureWithName("keepDisabled");
+                            }
                             final String stealForTaskName = stealFor.getTaskName();
                             logEvent("start returnRobot." + stealForTaskName + " connect to " + stealForRobotName
                                     + " at "
@@ -7726,7 +7729,9 @@ public class Supervisor {
                 }
             }, supervisorExecutorService).thenRunAsync(() -> {
                 checkAllUniques();
-                connectAll();
+                if(!keepDisabled) {
+                    connectAll();
+                }
             }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException)
                     .alwaysComposeToVoid(() -> allowToggles(blocker, sysArray));
         } catch (Exception exception) {
@@ -7976,6 +7981,9 @@ public class Supervisor {
             checkAllRunningOrDoingActions(-1, "startCheckAndEnableAllRobots");
             return XFuture.completedFutureWithName("allSystemsAlreadyChecked", true);
         }
+        if(keepDisabled) {
+            return XFuture.completedFutureWithName("keepDisabled", true);
+        }
         int currentAbortCount = getAbortCount();
         if (startingAbortCount != currentAbortCount) {
             String msg = "startCheckAndEnableAllRobots quiting : startingAbortCount=" + startingAbortCount
@@ -8061,7 +8069,10 @@ public class Supervisor {
     }
 
     /*public*/ void robotTaskMapPut(String key, AprsSystem sys) {
-        logEvent("putting sys = " + sys + " int robotTaskMap for " + key + ", robotTaskMap=" + robotTaskMap);
+        logEvent("putting sys = " + sys + " into robotTaskMap for " + key + ", robotTaskMap=" + robotTaskMap);
+        if(keepDisabled && !robotTaskMap.containsKey(key)) {
+            throw new RuntimeException("Adding "+key +" to robotTaskMap when keep disabled set.");
+        }
         robotTaskMap.put(key, sys.getTaskName());
         refreshRobotsTable();
     }
@@ -8899,6 +8910,9 @@ public class Supervisor {
         Map<String, String> sysRobotMap = new HashMap<>();
         Map<String, Integer> sysRobotPortMap = new HashMap<>();
         for (AprsSystem aprsSys : aprsSystems) {
+            if(keepDisabled && (!aprsSys.isConnected() || null== aprsSys.getRobotName())) {
+                continue;
+            }
             final String taskName = aprsSys.getTaskName();
             wasConnectedMap.put(taskName, aprsSys.isConnected());
             final String robotName = requireNonNull(aprsSys.getRobotName(), "aprsSys.getRobotName()");
@@ -8911,6 +8925,9 @@ public class Supervisor {
         logEvent("connectAll: robotTaskMap=" + robotTaskMap + ", wasConnectedMap=" + wasConnectedMap
                 + ", sysRobotPortMap=" + sysRobotPortMap);
         for (AprsSystem aprsSys : aprsSystems) {
+            if(keepDisabled && (!aprsSys.isConnected() || null== aprsSys.getRobotName())) {
+                continue;
+            }
             final String robotName = requireNonNull(aprsSys.getRobotName(), "aprsSys.getRobotName()");
             final String robotTaskName = robotTaskMap.get(robotName);
             final boolean canConnect = (!keepDisabled)
@@ -9209,7 +9226,7 @@ public class Supervisor {
         }
         File f = subMap.get(sys2);
         if (null == f) {
-            throw new IllegalStateException("no entry  for system " + sys2 + " in " + subMap);
+            throw new IllegalStateException("no entry  for system sys2=" + sys2 + " in  submap=" + subMap +" for sys1="+sys1 +" in  posMaps="+posMaps);
         }
         if (!f.exists()) {
             throw new FileNotFoundException(f + " does not exist. failing for getPosMapFile " + sys1 + " to " + sys2);
