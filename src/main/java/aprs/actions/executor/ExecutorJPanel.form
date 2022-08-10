@@ -1377,7 +1377,7 @@
                           <Group type="103" groupAlignment="1" attributes="0">
                               <Group type="102" attributes="0">
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="positionMapJPanel1" max="32767" attributes="0"/>
+                                  <Component id="positionMapJPanel1" pref="837" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="1" attributes="0">
                                   <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
@@ -1385,12 +1385,11 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapSetInputFromCachedVisionDb" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jTextFieldErrMapPartInfo" pref="17" max="32767" attributes="0"/>
+                                  <Component id="jTextFieldErrMapPartInfo" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapSetInputFromCurrent" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButtonErrMapGoOut" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="0" pref="181" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -1401,7 +1400,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="positionMapJPanel1" pref="232" max="32767" attributes="0"/>
+                          <Component id="positionMapJPanel1" pref="264" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jButtonErrMapGoIn" alignment="3" min="-2" max="-2" attributes="0"/>
