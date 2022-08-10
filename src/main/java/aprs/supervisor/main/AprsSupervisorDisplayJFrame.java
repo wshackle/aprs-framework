@@ -175,6 +175,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     private final AtomicInteger tableChangeDisableCount = new AtomicInteger();
     private final AtomicInteger tableChangeEnableCount = new AtomicInteger();
 
+    private volatile boolean lastTableChangeEnabledRobot = false;
+    private volatile int lastTableChangeEnabledRobotRow = -1;
+
     @UIEffect
     private void handleRobotTableChange(int firstRow, int lastRow, int col, int type, Object source) {
 
@@ -184,6 +187,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == robotTaskMap) {
             throw new IllegalStateException("null == robotEnableMap");
         }
+        lastTableChangeEnabledRobot = false;
+        lastTableChangeEnabledRobotRow = -1;
         if (type != TableModelEvent.UPDATE) {
             boolean enabled0 = getEnableFromRobotsTable(0);
             String rname = (String) jTableRobots.getValueAt(0, 0);
@@ -249,6 +254,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (togglesAllowed) {
                     XFuture.runAsync(() -> {
                         if (isTogglesAllowed()) {
+                            lastTableChangeEnabledRobot = enabled;
+                            lastTableChangeEnabledRobotRow = fi;
                             setRobotEnabled(checkedRobotName, enabled);
                         } else {
                             javax.swing.SwingUtilities.invokeLater(() -> {
@@ -4049,9 +4056,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
     private static String getCustomCodeInitDefault() {
         StringBuilder sb = new StringBuilder();
-        try (InputStream systemResourceAsStream = getResourceStream("custom/Custom.java")) {
+        try ( InputStream systemResourceAsStream = getResourceStream("custom/Custom.java")) {
             if (null != systemResourceAsStream) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(systemResourceAsStream))) {
+                try ( BufferedReader br = new BufferedReader(new InputStreamReader(systemResourceAsStream))) {
                     String line = null;
                     while (null != (line = br.readLine())) {
                         sb.append(line);
@@ -4251,6 +4258,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         x -> {
                             List<AprsSystem> aprsSystemsToReEnableLimits = new ArrayList<>();
                             List<AprsSystem> aprsSystems = supervisorLocal.systems();
+                            List<XFutureVoid> sysFuturesList = new ArrayList<>();
                             for (int i = 0; i < aprsSystems.size(); i++) {
                                 AprsSystem sys = aprsSystems.get(i);
                                 boolean limitsEnforced = sys.isEnforceMinMaxLimits();
@@ -4258,30 +4266,42 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                                 if (!limitsEnforced) {
                                     continue;
                                 }
-                                if (!sys.isConnected() && !supervisorLocal.isKeepDisabled()) {
-                                    sys.connectRobot();
+                                final XFutureVoid sysConnectFuture;
+                                if (!sys.isConnected()) {
+                                    if (supervisorLocal.isRobotEnabled(sys.getRobotName())
+                                    || !supervisorLocal.isKeepDisabled()) {
+                                        sysConnectFuture = sys.connectRobot();
+                                    } else {
+                                        continue;
+                                    }
+                                } else {
+                                    sysConnectFuture = XFutureVoid.completedFuture();
                                 }
-                                PointType currentPoint = sys.getCurrentPosePoint();
-                                if (null == currentPoint && supervisorLocal.isKeepDisabled()) {
-                                    continue;
-                                }
-                                if (null == currentPoint) {
-                                    JOptionPane.showMessageDialog(this, "Can't get current position for " + sys);
-                                    continue;
-                                }
-                                boolean inLimits = sys.checkLimitsNoAlert(CRCLPosemath.toPmCartesian(currentPoint));
-                                if (inLimits) {
-                                    continue;
-                                }
-                                int confirmRet
-                                = JOptionPane.showConfirmDialog(this, "Disable cartesian limits on " + sys);
-                                if (confirmRet == JOptionPane.YES_OPTION) {
-                                    sys.setEnforceMinMaxLimits(false);
-                                    sys.updateRobotLimits();
-                                    aprsSystemsToReEnableLimits.add(sys);
-                                }
+                                XFutureVoid checkPointFuture = sysConnectFuture.thenRun(() -> {
+                                    PointType currentPoint = sys.getCurrentPosePoint();
+//                                if (null == currentPoint && supervisorLocal.isKeepDisabled()) {
+//                                    continue;
+//                                }
+                                    if (null == currentPoint) {
+                                        JOptionPane.showMessageDialog(this, "Can't get current position for " + sys);
+                                        throw new RuntimeException("Can't get current position for " + sys);
+                                    }
+                                    boolean inLimits = sys.checkLimitsNoAlert(CRCLPosemath.toPmCartesian(currentPoint));
+                                    if (inLimits) {
+                                        return;
+                                    }
+                                    int confirmRet
+                                            = JOptionPane.showConfirmDialog(this, "Disable cartesian limits on " + sys);
+                                    if (confirmRet == JOptionPane.YES_OPTION) {
+                                        sys.setEnforceMinMaxLimits(false);
+                                        sys.updateRobotLimits();
+                                        aprsSystemsToReEnableLimits.add(sys);
+                                    }
+                                });
+                                sysFuturesList.add(checkPointFuture);
                             }
-                            return lookForPartsAll()
+                            return XFutureVoid.allOf(sysFuturesList)
+                                    .thenComposeAsyncToVoid(() -> lookForPartsAll(), supervisorLocal.getSupervisorExecutorService())
                                     .thenRun(() -> {
                                         for (int i = 0; i < aprsSystemsToReEnableLimits.size(); i++) {
                                             AprsSystem sys = aprsSystemsToReEnableLimits.get(i);
@@ -4606,7 +4626,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
 
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
                         interactivStartRunnable(() -> lookForPartsAll(), "Position Maps: Go Out")
-                                .thenCompose(() -> posMapOutSys.gotoPose(newPose,"Out"));
+                                .thenCompose(() -> posMapOutSys.gotoPose(newPose, "Out"));
                     }
                 }
             }
@@ -4634,7 +4654,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                         double otherz = (double) otherZObject;
                         PoseType newPose = CRCLPosemath.pose(CRCLPosemath.point(x, y, z), pose.getXAxis(), pose.getZAxis());
                         interactivStartRunnable(() -> lookForPartsAll(), "PositionMaps: Go In")
-                                .thenCompose(() -> posMapInSys.gotoPose(newPose,"In"));
+                                .thenCompose(() -> posMapInSys.gotoPose(newPose, "In"));
                     }
                 }
             }
@@ -4819,7 +4839,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         setEventsDisplayMax(-1);
         long minTime = Long.MAX_VALUE;
         long maxTime = Long.MIN_VALUE;
-        try (CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(eventsFile), CSVFormat.TDF.withAllowMissingColumnNames().withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             for (CSVRecord record : parser) {
                 String timeString = getRecordString(record, headerMap, "timeString");
@@ -5168,7 +5188,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 //tmpFile.getAbsoluteFile().getParentFile().getParentFile().toURI().toURL()};
                 println("urls = " + Arrays.toString(urls));
                 Class<?> clss;
-                try (URLClassLoader loader = new URLClassLoader(urls)) {
+                try ( URLClassLoader loader = new URLClassLoader(urls)) {
                     clss = loader.loadClass("custom.Custom");
                 }
                 @SuppressWarnings("deprecation")
@@ -5177,7 +5197,7 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 PrintStream origOut = System.out;
 
-                try (PrintStream ps = new PrintStream(baos)) {
+                try ( PrintStream ps = new PrintStream(baos)) {
                     System.setOut(ps);
                     acceptMethod.invoke(obj, this);
                     String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
@@ -5231,8 +5251,10 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
     }
 
     private XFutureVoid lookForPartsAll() {
-        final boolean keepDisabled = supervisor.isKeepDisabled() || jCheckBoxMenuItemKeepDisabled.isSelected();
-        return supervisor.lookForPartsAll(keepDisabled);
+        if (jCheckBoxMenuItemKeepDisabled.isSelected() != supervisor.isKeepDisabled()) {
+            supervisor.setKeepDisabled(jCheckBoxMenuItemKeepDisabled.isSelected());
+        }
+        return supervisor.lookForPartsAll();
     }
 
     public XFutureVoid showScanCompleteDisplay() {
@@ -6011,13 +6033,23 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 }
                 if (col == 1 && val instanceof Boolean) {
                     Boolean bval = (Boolean) val;
-                    Object oldVal = jTableRobots.getValueAt( row, col);
-                    if(jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled()) {
-                        if(bval && oldVal!= null && !bval.equals(oldVal)) {
-                            throw new RuntimeException("Enabling robot when keep disabled set. row="+row+",col="+col+",oldVal="+oldVal+",bval="+bval);
+                    Object oldVal = jTableRobots.getValueAt(row, col);
+                    final boolean keepDisabled = jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled();
+                    if (keepDisabled) {
+                        if (bval && oldVal != null && !bval.equals(oldVal)) {
+                            if (!lastTableChangeEnabledRobot || lastTableChangeEnabledRobotRow != row) {
+                                lastTableChangeEnabledRobot = false;
+                                lastTableChangeEnabledRobotRow = -1;
+                                throw new RuntimeException("Enabling robot when keep disabled set. row=" + row + ",col=" + col + ",oldVal=" + oldVal + ",bval=" + bval);
+                            }
                         }
                     }
+                    if (lastTableChangeEnabledRobotRow == row) {
+                        lastTableChangeEnabledRobot = false;
+                        lastTableChangeEnabledRobotRow = -1;
+                    }
                 }
+
                 jTableRobots.setValueAt(val, row, col);
                 Object chkVal = jTableRobots.getValueAt(row, col);
                 if (val != chkVal) {

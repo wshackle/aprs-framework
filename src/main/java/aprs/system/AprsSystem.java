@@ -8629,7 +8629,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         String executorReadyString = pddlExecutorJInternalFrame1Final.readyForNewActionsListInfoString();
         if (!pddlExecutorJInternalFrame1Final.readyForNewActionsList()) {
             logEvent("executorReadyString", executorReadyString);
-            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList() with comment=\"" + comment
+            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList() with taskName="+taskName+",comment=\"" + comment
                     + "\" ";
             logToSuper(this.toString() + " throwing " + errmsg);
             throw new IllegalStateException(errmsg);
