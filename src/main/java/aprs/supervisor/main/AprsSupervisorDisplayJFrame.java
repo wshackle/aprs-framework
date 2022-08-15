@@ -6034,7 +6034,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (col == 1 && val instanceof Boolean) {
                     Boolean bval = (Boolean) val;
                     Object oldVal = jTableRobots.getValueAt(row, col);
-                    final boolean keepDisabled = jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled();
+                    final boolean keepDisabled =
+                            !jCheckBoxMenuItemRandomTest.isSelected() 
+                            && (jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled());
                     if (keepDisabled) {
                         if (bval && oldVal != null && !bval.equals(oldVal)) {
                             if (!lastTableChangeEnabledRobot || lastTableChangeEnabledRobotRow != row) {
