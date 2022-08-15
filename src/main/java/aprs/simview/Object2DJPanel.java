@@ -2480,7 +2480,7 @@ public class Object2DJPanel extends JPanel {
                     g2d.fillArc(-5, -5, 10, 10, 0, 360);
                 } else {
                     g2d.setColor(Color.white);
-                    g2d.drawArc(-10, -10, 10, 10, 0, 360);
+                    g2d.drawArc(-10, -10, 20, 20, 0, 360);
                 }
                 g2d.setColor(Color.red);
                 g2d.drawLine(-20, 0, TO_SCREEN_X_OFFSET, 0);
