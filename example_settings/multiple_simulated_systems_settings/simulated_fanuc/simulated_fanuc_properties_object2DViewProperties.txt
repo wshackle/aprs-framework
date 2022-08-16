@@ -50,4 +50,4 @@ viewDetails=false
 viewOutput=true
 visionToDBRotationOffset=0.0
 xmaxymax=+800.0, +300.0
-xminymin=0.0, -300.0
+xminymin=-300.0, -300.0

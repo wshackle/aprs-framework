@@ -8,8 +8,8 @@ boolean debugShowProgram=false
 boolean toolChangerOpen=false
 boolean preClosing=false
 int port=64444
-rcs.posemath.PmCartesian minLimit= { x=+100.000, y=-275.000, z=-1000.000 } 
-rcs.posemath.PmCartesian maxLimit= { x=+700.000, y=+275.000, z=+1000.000 } 
+rcs.posemath.PmCartesian minLimit= { x=-400.000, y=-400.000, z=-1000.000 } 
+rcs.posemath.PmCartesian maxLimit= { x=+700.000, y=+650.000, z=+1000.000 } 
 int maxRecordCommandsCount=1000
 double rpyJogIncrement=3.0
 boolean internal.stepMode=false
@@ -25,8 +25,8 @@ boolean internal.quitOnTestCommandFailure=true
 boolean internal.printDetailedCommandFailureInfo=false
 boolean internal.preClosing=false
 java.lang.String internal.lastMessage=addMoveToLookForPosition
-rcs.posemath.PmCartesian internal.minLimit= { x=+100.000, y=-275.000, z=-1000.000 } 
-rcs.posemath.PmCartesian internal.maxLimit= { x=+700.000, y=+275.000, z=+1000.000 } 
+rcs.posemath.PmCartesian internal.minLimit= { x=-400.000, y=-400.000, z=-1000.000 } 
+rcs.posemath.PmCartesian internal.maxLimit= { x=+700.000, y=+650.000, z=+1000.000 } 
 int internal.maxRecordCommandsCount=1000
 double internal.xyzJogIncrement=3.0
 int internal.poll_ms=25

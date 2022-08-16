@@ -3,6 +3,6 @@ int cRCLSensorOutPort=8888
 int poseCRCLPort=64444
 java.lang.String poseCRCLHost=localhost
 java.lang.String objectsFileName=
+double inOutJPanel1.heightViewAngle=30.0
 double inOutJPanel1.xoffset=0.0
 double inOutJPanel1.yoffset=0.0
-double inOutJPanel1.heightViewAngle=30.0

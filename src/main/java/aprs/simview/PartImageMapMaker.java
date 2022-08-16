@@ -45,14 +45,16 @@ public class PartImageMapMaker {
     
     private static void initializePartImageMap(Map<String, PartImageInfo> partImageMap) {
         try {
-            BufferedImage fanucToolHolder2Image = getImageFromResourceName("aprs/partImages/fanuc_tool_holder2.png");
-            addPartImage(partImageMap, "private", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
-            addPartImage(partImageMap, "fanucBackLeftHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage(partImageMap, "shared_gripper", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
-            addPartImage(partImageMap, "sharedBackCenterHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage(partImageMap, "small_private_holder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage(partImageMap, "motomanBackCenterRightHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
-            addPartImage(partImageMap, "shared_with_fanuc_holder", fanucToolHolder2Image, 115.0, true, false, 10.0, -60.0);
+            BufferedImage fanucToolHolderRLImage = getImageFromResourceName("aprs/partImages/fanuc_tool_holderRL.png");
+//            addPartImage(partImageMap, "private", fanucToolHolder2Image, 115.0, true, false, -60.0, 10.0);
+//            addPartImage(partImageMap, "fanucBackLeftHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage(partImageMap, "sharedHolder", fanucToolHolderRLImage, 115.0, true, false, -60.0, 10.0);
+            addPartImage(partImageMap, "farLeftHolder", fanucToolHolderRLImage, 115.0, true, false, -60.0, 10.0);
+            addPartImage(partImageMap, "nearLeftHolder", fanucToolHolderRLImage, 115.0, true, false, -60.0, 10.0);
+//            addPartImage(partImageMap, "sharedBackCenterHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+//            addPartImage(partImageMap, "small_private_holder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+//            addPartImage(partImageMap, "motomanBackCenterRightHolder", fanucToolHolder2Image, 115.0, true, false, 0.0, -60.0);
+            addPartImage(partImageMap, "shared_with_fanuc_holder", fanucToolHolderRLImage, 115.0, true, false, 10.0, -60.0);
             BufferedImage pincherSmallVacTopImage = getImageFromResourceName("aprs/partImages/pincher_small_vac_top.png");
 
             addPartImage(partImageMap, "pincher", pincherSmallVacTopImage, 115.0, true, false, -4.0, 10.0);
