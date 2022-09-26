@@ -43,27 +43,27 @@ interface Object2DJFrameInterface {
     public XFuture<Object2DOuterJPanel.SetItemsResult> setItems(List<PhysicalItem> items);
 
     public @Nullable
-    File[] takeSnapshot(File f, PointType point, String label);
+    XFuture<File @Nullable []> takeSnapshot(File f, PointType point, String label);
 
     public @Nullable
-    File[] takeSnapshot(File f, PmCartesian point, String label);
+    XFuture<File @Nullable []> takeSnapshot(File f, PmCartesian point, String label);
 
     public @Nullable
-    File[] takeSnapshot(File f, PoseType pose, String label);
+    XFuture<File @Nullable []> takeSnapshot(File f, PoseType pose, String label);
 
     public @Nullable
-    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint);
+    XFuture<File @Nullable []> takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint);
 
     public @Nullable
-    File[] takeSnapshot(File f, PointType point, String label, int w, int h);
+    XFuture<File @Nullable []> takeSnapshot(File f, PointType point, String label, int w, int h);
 
     public @Nullable
-    File[] takeSnapshot(File f, PmCartesian point, String label, int w, int h);
+    XFuture<File @Nullable []> takeSnapshot(File f, PmCartesian point, String label, int w, int h);
 
     public @Nullable
-    File[] takeSnapshot(File f, PoseType pose, String label, int w, int h);
+    XFuture<File @Nullable []> takeSnapshot(File f, PoseType pose, String label, int w, int h);
 
     public @Nullable
-    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h);
+    XFuture<File @Nullable []> takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h);
 
 }

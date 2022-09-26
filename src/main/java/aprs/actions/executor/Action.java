@@ -24,6 +24,7 @@ package aprs.actions.executor;
 
 import static aprs.actions.executor.ActionType.CLOSE_GRIPPER;
 import static aprs.actions.executor.ActionType.DISABLE_OPTIMIZATION;
+import static aprs.actions.executor.ActionType.FLIP_PART;
 import static aprs.actions.executor.ActionType.LOOK_FOR_PARTS;
 import static aprs.actions.executor.ActionType.MOVE_RECORDED_JOINTS;
 import static aprs.actions.executor.ActionType.MOVE_RECORDED_POSE;
@@ -59,6 +60,13 @@ public class Action {
                 .build();
     }
 
+    public static Action newFlipPartAction(String part) {
+        return new Action.ActionBuilder()
+                .type(FLIP_PART)
+                .args(new String[]{part})
+                .build();
+    }
+    
     public static Action newDisableOptimization() {
         return new Action.ActionBuilder()
                 .type(DISABLE_OPTIMIZATION)

@@ -54,6 +54,7 @@ public enum ActionType {
     MOVE_RECORDED_POSE,
     OPEN_GRIPPER,
     CLOSE_GRIPPER,
+    FLIP_PART,
     END_PROGRAM;
 
 }

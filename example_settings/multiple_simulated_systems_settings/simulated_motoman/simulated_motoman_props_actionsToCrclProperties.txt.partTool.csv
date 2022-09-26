@@ -1,2 +1,4 @@
 Part,Tool
-large_gear_in_pt,big_gripper
+large_gear,big_gripper
+small_gear,big_gripper
+black_gear,small_vacuum

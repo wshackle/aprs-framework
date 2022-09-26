@@ -36,7 +36,6 @@ import crcl.base.*;
 import crcl.ui.client.CrclSwingClientJPanel;
 import crcl.ui.client.CurrentPoseListener;
 import crcl.ui.client.CurrentPoseListenerUpdateInfo;
-import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLSocket;
 import crcl.utils.XFuture;
@@ -258,7 +257,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, PoseType pose, String label) {
+    XFuture<File @Nullable []> takeSnapshot(File f, PoseType pose, String label) {
         if (null != pose) {
             return takeSnapshot(f, pose.getPoint(), label);
         } else {
@@ -268,7 +267,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, @Nullable PointType point, String label) {
+    XFuture<File @Nullable []> takeSnapshot(File f, @Nullable PointType point, String label) {
         if (null != point) {
             return takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label);
         } else {
@@ -278,28 +277,20 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     @Nullable
-    public File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
+    public XFuture<File @Nullable []> takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         File csvFile = null;
         try {
             StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
             final File parentFile = f.getParentFile();
             if (null == parentFile) {
-                return new File[0];
+                return XFuture.completedFuture(null);
             }
             File csvDir = Utils.file(parentFile, "csv");
             csvDir.mkdirs();
             csvFile = Utils.file(csvDir, f.getName() + ".csv");
-            this.object2DJPanel1.takeSnapshot(f, csvFile, point, label);
+            XFuture<Boolean> takeSnapShotRet
+                    = this.object2DJPanel1.takeSnapshot(f, csvFile, point, label);
 
-//            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
-            final File csvFileFinal = csvFile;
-            if (!SwingUtilities.isEventDispatchThread()) {
-                runOnDispatchThread(() -> {
-                    updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
-                });
-            } else {
-                updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
-            }
             AprsSystem aprsSystemLocal = aprsSystem;
             if (null != aprsSystemLocal) {
                 File xmlDir = Utils.file(parentFile, "crclStatusXml");
@@ -313,10 +304,23 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     }
                 }
             }
+
+//            Object2DOuterJPanel.this.saveCsvItemsFile(csvFile);
+            final File csvFileFinal = csvFile;
+            return takeSnapShotRet
+                    .thenApplyAsync("ts", (Boolean x) -> {
+                        if (x) {
+                            updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
+                            return new File[]{f, csvFileFinal};
+                        } else {
+                            return null;
+                        }
+                    }, Utils.getDispatchThreadExecutorService());
+
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
         }
-        return new File[]{f, csvFile};
+        return XFuture.completedFuture(null);
     }
 
     private final AtomicInteger snapshotsCount = new AtomicInteger();
@@ -324,7 +328,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     @UIEffect
     private void updateSnapshotsTableOnDisplay(File f, File csvFile, StackTraceElement callerTrace[]) {
         assert SwingUtilities.isEventDispatchThread();
-        if (null != f && null != csvFile) {
+        if (null != f && null != csvFile && f.exists() && csvFile.exists()) {
             try {
                 DefaultTableModel model = (DefaultTableModel) jTableSnapshotFiles.getModel();
                 while (model.getRowCount() > 200) {
@@ -345,10 +349,18 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 if (count % 20 < 2) {
                     Utils.autoResizeTableColWidthsOnDisplay(jTableSnapshotFiles);
                 }
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 System.err.println("updateSnapshotsTable(" + f + "," + csvFile + ",...): callerTrace=\n"
                         + Utils.traceToString(callerTrace));
                 LOGGER.log(Level.SEVERE, "f=" + f + ",csvFile=" + csvFile, ex);
+            }
+        } else {
+            if (null == f || null == csvFile) {
+                throw new RuntimeException("imagefile or csvfile does not exist updateSnapshotsTable(" + f + "," + csvFile + ",...): \r\n   callerTrace=\r\n   \n"
+                        + Utils.traceToString(callerTrace) + "\r\n");
+            } else {
+                throw new RuntimeException("imagefile or csvfile does not exist updateSnapshotsTable(" + f + " ( " + f.exists() + " exists)," + csvFile + "(" + csvFile.exists() + " exists),...): \r\n   callerTrace=\r\n   \n"
+                        + Utils.traceToString(callerTrace) + "\r\n");
             }
         }
     }
@@ -357,7 +369,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
+    XFuture<File @Nullable []> takeSnapshot(File f, @Nullable PoseType pose, @Nullable String label, int w, int h) {
         if (null != pose) {
             return takeSnapshot(f, pose.getPoint(), label, w, h);
         } else {
@@ -367,7 +379,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, @Nullable PointType point, @Nullable String label, int w, int h) {
+    XFuture<File @Nullable []> takeSnapshot(File f, @Nullable PointType point, @Nullable String label, int w, int h) {
         if (null != point) {
             return takeSnapshot(f, CRCLPosemath.toPmCartesian(point), label, w, h);
         } else {
@@ -377,22 +389,26 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, @Nullable PmCartesian point, @Nullable String label, int w, int h) {
+    XFuture<File @Nullable []> takeSnapshot(
+            File f,
+            @Nullable PmCartesian point,
+            @Nullable String label,
+            int w,
+            int h) {
         File csvFile = null;
         try {
             StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
             final File parentFile = f.getParentFile();
             if (null == parentFile) {
-                return new File[0];
+                return XFuture.completedFuture(null);
             }
             File csvDir = Utils.file(parentFile, "csv");
             csvDir.mkdirs();
             csvFile = Utils.file(csvDir, f.getName() + ".csv");
-            this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
+            XFuture<Boolean> takeSnapShotFuture
+                    = this.object2DJPanel1.takeSnapshot(f, csvFile, point, label, w, h);
             final File csvFileFinal = csvFile;
-            runOnDispatchThread(() -> {
-                updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
-            });
+
             File xmlDir = Utils.file(parentFile, "crclStatusXml");
             xmlDir.mkdirs();
             AprsSystem aprsSystemLocal = this.aprsSystem;
@@ -406,10 +422,19 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                     }
                 }
             }
+            return takeSnapShotFuture
+                    .thenApplyAsync((Boolean x) -> {
+                        if (x) {
+                            updateSnapshotsTableOnDisplay(f, csvFileFinal, callerTrace);
+                            return new File[]{f, csvFileFinal};
+                        } else {
+                            return null;
+                        }
+                    }, Utils.getDispatchThreadExecutorService());
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "", ex);
+            return XFuture.completedFuture(null);
         }
-        return new File[]{f, csvFile};
     }
 
     private boolean forceOutputFlag;
@@ -825,6 +850,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     private void updateItemsTableOnDisplay(List<PhysicalItem> items) {
+        if (jCheckBoxEditItemsTable.isSelected()) {
+            return;
+        }
         long start = System.currentTimeMillis();
         updateItemsTableOnDisplayCount++;
         if (!object2DJPanel1.isShowOutputItems()) {
@@ -960,6 +988,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
     @UIEffect
     private void loadItemsToTable(List<PhysicalItem> items, JTable jtable) {
+        if (jCheckBoxEditItemsTable.isSelected()) {
+            return;
+        }
         boolean origSettingItems = settingItems;
         settingItems = true;
         int origSelectedRow = jtable.getSelectedRow();
@@ -1530,6 +1561,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         @UIEffect
         @SuppressWarnings({"initialization", "nullness"})
         public void valueChanged(ListSelectionEvent event) {
+            if (jCheckBoxEditItemsTable.isSelected()) {
+                return;
+            }
             int selectedRow = jTableItems.getSelectedRow();
             if (selectedRow >= 0 && selectedRow < jTableItems.getRowCount()) {
                 Object itemValue0 = jTableItems.getValueAt(selectedRow, 0);
@@ -4599,8 +4633,12 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 if (null == filename) {
                     throw new NullPointerException("jTableSnapshotFiles.getValueAt(" + selectedRow + ", 3)");
                 }
-                Desktop.getDesktop().open(Utils.file(filename));
-            } catch (IOException ex) {
+                final File file = Utils.file(filename);
+                if (!file.exists()) {
+                    throw new FileNotFoundException("file=" + file.getCanonicalPath() + ", filename=" + filename + ", selectedRow=" + selectedRow);
+                }
+                Desktop.getDesktop().open(file);
+            } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         }
@@ -6076,50 +6114,81 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private volatile boolean lastIsHoldingObjectExpected = false;
     private volatile int captured_item_index = -1;
 
-    private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
-
-    @UIEffect
-    private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque, StackTraceElement callerTrace[]) {
-        File fa[] = this.fileArrayDeque.pollFirst();
-        while (null != fa) {
-            updateSnapshotsTableOnDisplay(fa[0], fa[1], callerTrace);
-            fa = this.fileArrayDeque.pollFirst();
-        }
-    }
-
+//    private final ConcurrentLinkedDeque<File[]> fileArrayDeque = new ConcurrentLinkedDeque<>();
+//
+//    @UIEffect
+//    private void fileArrayDequeConsumer(ConcurrentLinkedDeque<File[]> fileArrayDeque, StackTraceElement callerTrace[]) {
+//        File fa[] = this.fileArrayDeque.pollFirst();
+//        while (null != fa) {
+//            updateSnapshotsTableOnDisplay(fa[0], fa[1], callerTrace);
+//            fa = this.fileArrayDeque.pollFirst();
+//        }
+//    }
     @Override
     public @Nullable
-    File[] takeSnapshot(File f, @Nullable Collection<? extends PhysicalItem> itemsToPaint, int w,
+    XFuture<File @Nullable []> takeSnapshot(
+            File f,
+            @Nullable Collection<? extends PhysicalItem> itemsToPaint,
+            int w,
             int h) {
 
         StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
         if (null != itemsToPaint && !itemsToPaint.isEmpty()) {
-            this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
+            final XFuture<Boolean> takeSnapshotFutur
+                    = this.object2DJPanel1.takeSnapshot(f, itemsToPaint, w, h);
             File csvFile = imageFileToCsvFile(f);
             final File[] fileArray = new File[]{f, csvFile};
-            fileArrayDeque.add(fileArray);
-            if (SwingUtilities.isEventDispatchThread()) {
-                fileArrayDequeConsumer(fileArrayDeque, callerTrace);
-            } else if (null != aprsSystem) {
-                aprsSystem.submitDisplayConsumer(
-                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,
-                                callerTrace),
-                        fileArrayDeque);
-            }
-            return fileArray;
+//            fileArrayDeque.add(fileArray);
+//            if (SwingUtilities.isEventDispatchThread() || aprsSystem == null) {
+//                
+//                fileArrayDequeConsumer(fileArrayDeque, callerTrace);
+//                return takeSnapshotFutur.thenApply(x -> x ? fileArray : null);
+//            } else {
+            return takeSnapshotFutur.thenCompose((Boolean x) -> {
+                if (x) {
+                    if (!f.exists()) {
+                        throw new RuntimeException("f = " + f + " does not exist! \r\n  takeSnapshotFutur=" + takeSnapshotFutur);
+                    }
+                    if (SwingUtilities.isEventDispatchThread() || aprsSystem == null) {
+                        updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
+                        return XFuture.completedFuture(fileArray);
+                    }
+                    return aprsSystem
+                            .runOnDispatchThread(() -> {
+                                updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
+                            })
+                            .thenApply(x2 -> fileArray);
+                } else {
+                    return XFuture.completedFuture(null);
+                }
+            });
+//            }
         } else {
             List<PhysicalItem> items = getItems();
             File csvFile = imageFileToCsvFile(f);
-            this.object2DJPanel1.takeSnapshot(f, items, w, h);
+            XFuture<Boolean> takeSnapshotFutur
+                    = this.object2DJPanel1.takeSnapshot(f, items, w, h);
             final File[] fileArray = new File[]{f, csvFile};
-            fileArrayDeque.add(fileArray);
-            if (null != aprsSystem) {
-                aprsSystem.submitDisplayConsumer(
-                        (ConcurrentLinkedDeque<File[]> fileArrayDeque) -> fileArrayDequeConsumer(fileArrayDeque,
-                                callerTrace),
-                        fileArrayDeque);
+//            fileArrayDeque.add(fileArray);
+            if (null != aprsSystem && !CRCLUtils.isGraphicsEnvironmentHeadless()) {
+                return takeSnapshotFutur
+                        .thenCompose((Boolean x) -> {
+                            if (x) {
+                                if (!f.exists()) {
+                                    throw new RuntimeException("f = " + f + " does not exist! \r\n  takeSnapshotFutur=" + takeSnapshotFutur);
+                                }
+                                return aprsSystem
+                                        .runOnDispatchThread(() ->{
+                                            updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
+                                        })
+                                        .thenApply(x2 -> fileArray);
+                            } else {
+                                return XFuture.completedFuture(null);
+                            }
+                        });
+            } else {
+                return takeSnapshotFutur.thenApply(x -> x ? fileArray : null);
             }
-            return fileArray;
         }
     }
 
@@ -6136,14 +6205,21 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     }
 
     public @Nullable
-    File[] takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    XFuture<File @Nullable []> takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         StackTraceElement callerTrace[] = Thread.currentThread().getStackTrace();
         File csvFile = imageFileToCsvFile(f);
-        this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
-        runOnDispatchThread(() -> {
-            updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
-        });
-        return new File[]{f, csvFile};
+        XFuture<Boolean> takeShapshotRet
+                = this.object2DJPanel1.takeSnapshot(f, csvFile, itemsToPaint);
+        return takeShapshotRet
+                .thenApplyAsync((Boolean x) -> {
+                    if (x) {
+                        updateSnapshotsTableOnDisplay(f, csvFile, callerTrace);
+                        return new File[]{f, csvFile};
+                    } else {
+                        return null;
+                    }
+
+                }, Utils.getDispatchThreadExecutorService());
     }
 
     private volatile long lastIsHoldingObjectExpectedTime = -1;

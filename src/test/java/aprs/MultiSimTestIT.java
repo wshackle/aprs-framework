@@ -106,77 +106,77 @@ public class MultiSimTestIT {
 
     }
 
-    @Test(groups = {"slow"})
-    public void flipFMTest() {
-        try {
-            long tstart = System.currentTimeMillis();
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            logger.severe("starting  flipFMTest");
-            VisionSocketServer.runNetStat(logger, 4001);
-            CRCLUtils.setAllowExit(false);
-            CRCLUtils.setForceHeadless(true);
-            MultiLineStringJPanel.disableShowText = true;
-            MultiLineStringJPanel.setIgnoreForceShow(true);
-            System.out.println("Slow test");
-            XFuture<Boolean> results
-                    = LauncherAprsJFrame.flipFMTest(
-                            Utils.file(LAUNCHER_PATH), // launchFile 
-                            Utils.file(SYSFILE_PATH), // sysFile 
-                            Utils.file(POSMAPPINGS_PATH), // posMapsFile
-                            Utils.file(FLIPFM_SIM_ITEMS_FILE) // fanucSimItemsFile
-                    );
-            final Boolean completedResults = results.get(5, TimeUnit.MINUTES);
-            System.out.println("completedResults = " + completedResults);
-            long tend = System.currentTimeMillis();
-            long tdiff = tend - tstart;
-            System.out.println("tdiff = " + tdiff);
-            int minutes = (int) (((double) tdiff) / 60000.0);
-            int seconds = (int) (((double) tdiff) / 1000.0)%60;
-            System.out.printf("flipFMTest took %d minutes and %d seconds", minutes, seconds);
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            Assert.assertEquals(completedResults, Boolean.TRUE);
-
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-            throw new RuntimeException(ex);
-        } finally {
-            logger.severe("finished  flipFMTest");
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            System.out.println("");
-            System.out.flush();
-            System.err.println("");
-            System.err.flush();
-            
-//            VisionSocketServer.runNetStat(logger, -1);
+//    @Test(groups = {"slow"})
+//    public void flipFMTest() {
+//        try {
+//            long tstart = System.currentTimeMillis();
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
+//            logger.severe("starting  flipFMTest");
+//            VisionSocketServer.runNetStat(logger, 4001);
+//            CRCLUtils.setAllowExit(false);
+//            CRCLUtils.setForceHeadless(true);
+//            MultiLineStringJPanel.disableShowText = true;
+//            MultiLineStringJPanel.setIgnoreForceShow(true);
+//            System.out.println("Slow test");
+//            XFuture<Boolean> results
+//                    = LauncherAprsJFrame.flipFMTest(
+//                            Utils.file(LAUNCHER_PATH), // launchFile 
+//                            Utils.file(SYSFILE_PATH), // sysFile 
+//                            Utils.file(POSMAPPINGS_PATH), // posMapsFile
+//                            Utils.file(FLIPFM_SIM_ITEMS_FILE) // fanucSimItemsFile
+//                    );
+//            final Boolean completedResults = results.get(5, TimeUnit.MINUTES);
+//            System.out.println("completedResults = " + completedResults);
+//            long tend = System.currentTimeMillis();
+//            long tdiff = tend - tstart;
+//            System.out.println("tdiff = " + tdiff);
+//            int minutes = (int) (((double) tdiff) / 60000.0);
+//            int seconds = (int) (((double) tdiff) / 1000.0)%60;
+//            System.out.printf("flipFMTest took %d minutes and %d seconds", minutes, seconds);
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
+//            Assert.assertEquals(completedResults, Boolean.TRUE);
+//
+//        } catch (Throwable ex) {
+//            ex.printStackTrace();
+//            throw new RuntimeException(ex);
+//        } finally {
+//            logger.severe("finished  flipFMTest");
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
+//            System.out.println("");
+//            System.out.flush();
+//            System.err.println("");
+//            System.err.flush();
 //            
-//            System.out.println("");
-//            System.out.flush();
-//            System.err.println("");
-//            System.err.flush();
-//            System.out.println("");
-//            System.out.flush();
-//            System.err.println("");
-//            System.err.flush();
-//            printThreads();
-        }
-    }
+////            VisionSocketServer.runNetStat(logger, -1);
+////            
+////            System.out.println("");
+////            System.out.flush();
+////            System.err.println("");
+////            System.err.flush();
+////            System.out.println("");
+////            System.out.flush();
+////            System.err.println("");
+////            System.err.flush();
+////            printThreads();
+//        }
+//    }
 
     private void printThreads() {
         final Map<Thread, StackTraceElement[]> allStackTracesMap = Thread.getAllStackTraces();

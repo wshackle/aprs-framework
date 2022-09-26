@@ -2207,6 +2207,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Enable OptaPlanner"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jCheckBoxEnableOptaPlannerActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

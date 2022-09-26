@@ -16,9 +16,6 @@ import java.util.Vector;
 public class CachedTable extends CachedComponentBase {
 
     private final @Nullable
-    DefaultTableModel model;
-
-    private final @Nullable
     JTable jTable;
 
     private volatile @Nullable
@@ -33,7 +30,6 @@ public class CachedTable extends CachedComponentBase {
         this.data = data;
         this.columnClasses = columnClasses;
         this.columnNames = columnNames;
-        model = null;
         jTable = null;
         selectedRow = -1;
         columnCount = columnNames.length;
@@ -42,7 +38,7 @@ public class CachedTable extends CachedComponentBase {
     @UIEffect
     @SuppressWarnings({"rawtypes", "unchecked"})
     synchronized private void syncUiToCache() {
-        DefaultTableModel model = this.model;
+        DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
         if (null != model) {
             Object newData[][] = new Object[model.getRowCount()][];
             Vector v = model.getDataVector();
@@ -59,7 +55,7 @@ public class CachedTable extends CachedComponentBase {
     private final TableModelListener tableModelListener = new TableModelListener() {
         @Override
         @UIEffect
-        @SuppressWarnings({"initialization","nullness"})
+        @SuppressWarnings({"initialization", "nullness"})
         public void tableChanged(TableModelEvent e) {
             syncUiToCache();
         }
@@ -103,10 +99,9 @@ public class CachedTable extends CachedComponentBase {
     }
 
     @UIEffect
-    @SuppressWarnings({"rawtypes", "unchecked", "initialization","nullness"})
+    @SuppressWarnings({"rawtypes", "unchecked", "initialization", "nullness"})
     public CachedTable(DefaultTableModel model, JTable jTable) {
         this.jTable = jTable;
-        this.model = model;
         selectedRow = jTable.getSelectedRow();
 
         jTable.getSelectionModel().addListSelectionListener(listSelectionListener);
@@ -148,7 +143,7 @@ public class CachedTable extends CachedComponentBase {
 
     synchronized public void setData(Object[][] newData) {
         this.data = checkNewData(newData);
-        if (null != model) {
+        if (null != jTable) {
             runOnDispatchThread(() -> loadData(newData));
         }
     }
@@ -161,7 +156,7 @@ public class CachedTable extends CachedComponentBase {
     public XFutureVoid setValueAt(@Nullable Object value, int row, int col) {
         if (!Objects.equals(value, getValueAt(row, col))) {
             data[row][col] = value;
-            if (null != model) {
+            if (null != jTable) {
                 return runOnDispatchThread(() -> setModelValueAt(value, row, col));
             }
         }
@@ -170,21 +165,23 @@ public class CachedTable extends CachedComponentBase {
 
     @UIEffect
     synchronized private void setModelValueAt(@Nullable Object value, int row, int col) {
-        if (null != model) {
-            model.removeTableModelListener(tableModelListener);
+        DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+        if (null != jTable) {
+//            model.removeTableModelListener(tableModelListener);
+            int modelIndex = jTable.convertRowIndexToView(row);
             if (null != value) {
-                model.setValueAt(value, row, col);
+                jTable.setValueAt(value, modelIndex, col);
             } else {
-                clearModelValueAt(row, col);
+                clearModelValueAt(modelIndex, col);
             }
-            model.addTableModelListener(tableModelListener);
+//            model.addTableModelListener(tableModelListener);
         }
         //syncDataUiToCache();
     }
 
     @SuppressWarnings("nullness")
     private void clearModelValueAt(int row, int col) {
-        model.setValueAt(null, row, col);
+        jTable.setValueAt(null, row, col);
     }
 
     synchronized public void setRowCount(int newCount) {
@@ -198,7 +195,7 @@ public class CachedTable extends CachedComponentBase {
                 newData[i] = new Object[columnCount];
             }
             this.data = checkNewData(newData);
-            if (null != model) {
+            if (null != jTable) {
                 runOnDispatchThread(() -> setModelRowCount(newCount));
             }
         }
@@ -228,7 +225,7 @@ public class CachedTable extends CachedComponentBase {
             this.columnNames = newColumnNames;
             this.columnCount = newColumnCount;
             this.data = checkNewData(newData);
-            if (null != model) {
+            if (null != jTable) {
                 runOnDispatchThread(() -> setModelRowColumnCount(newRowCount, newColumnCount));
             }
         }
@@ -256,7 +253,7 @@ public class CachedTable extends CachedComponentBase {
         this.columnNames = newColumnNames;
         this.columnCount = newColumnCount;
         this.data = checkNewData(newData);
-        if (null != model) {
+        if (null != jTable) {
             runOnDispatchThread(() -> modelAddColumn(columnName));
         }
     }
@@ -288,7 +285,7 @@ public class CachedTable extends CachedComponentBase {
         newData[data.length] = new Object[columnCount];
         System.arraycopy(rowData, 0, newData[data.length], 0, columnCount);
         this.data = checkNewData(newData);
-        if (null != model) {
+        if (null != jTable) {
             runOnDispatchThread(() -> addRowToModel(rowData));
         }
     }
@@ -305,43 +302,52 @@ public class CachedTable extends CachedComponentBase {
             System.arraycopy(data[i + 1], 0, newData[i], 0, columnCount);
         }
         this.data = checkNewData(newData);
-        if (null != model) {
+        if (null != jTable) {
             runOnDispatchThread(() -> removeRowFromModel(index));
         }
     }
 
     @UIEffect
     synchronized private void setModelRowCount(int newRowCount) {
-        if (null != model) {
-            model.removeTableModelListener(tableModelListener);
-            model.setRowCount(newRowCount);
-            model.addTableModelListener(tableModelListener);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                model.removeTableModelListener(tableModelListener);
+                model.setRowCount(newRowCount);
+                model.addTableModelListener(tableModelListener);
+            }
         }
         //syncDataUiToCache();
     }
 
     @UIEffect
     synchronized private void setModelRowColumnCount(int newRowCount, int newColumnCount) {
-        if (null != model) {
-            model.removeTableModelListener(tableModelListener);
-            model.setRowCount(newRowCount);
-            model.setColumnCount(newColumnCount);
-            syncColumnNamesClasses(model);
-            model.addTableModelListener(tableModelListener);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                model.removeTableModelListener(tableModelListener);
+                model.setRowCount(newRowCount);
+                model.setColumnCount(newColumnCount);
+                syncColumnNamesClasses(model);
+                model.addTableModelListener(tableModelListener);
+            }
         }
         //syncDataUiToCache();
     }
 
     @UIEffect
     synchronized private void modelAddColumn(String columnName) {
-        if (null != model) {
-            if (null != tableModelListener) {
-                model.removeTableModelListener(tableModelListener);
-            }
-            model.addColumn(columnName);
-            syncColumnNamesClasses(model);
-            if (null != tableModelListener) {
-                model.addTableModelListener(tableModelListener);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                if (null != tableModelListener) {
+                    model.removeTableModelListener(tableModelListener);
+                }
+                model.addColumn(columnName);
+                syncColumnNamesClasses(model);
+                if (null != tableModelListener) {
+                    model.addTableModelListener(tableModelListener);
+                }
             }
         }
         //syncDataUiToCache();
@@ -350,13 +356,16 @@ public class CachedTable extends CachedComponentBase {
     @UIEffect
     @SuppressWarnings("nullness")
     synchronized private void addRowToModel(@Nullable Object[] data) {
-        if (null != model) {
-            if (null != tableModelListener) {
-                model.removeTableModelListener(tableModelListener);
-            }
-            model.addRow(data);
-            if (null != tableModelListener) {
-                model.addTableModelListener(tableModelListener);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                if (null != tableModelListener) {
+                    model.removeTableModelListener(tableModelListener);
+                }
+                model.addRow(data);
+                if (null != tableModelListener) {
+                    model.addTableModelListener(tableModelListener);
+                }
             }
         }
         //syncDataUiToCache();
@@ -364,13 +373,16 @@ public class CachedTable extends CachedComponentBase {
 
     @UIEffect
     synchronized private void removeRowFromModel(int index) {
-        if (null != model) {
-            if (null != tableModelListener) {
-                model.removeTableModelListener(tableModelListener);
-            }
-            model.removeRow(index);
-            if (null != tableModelListener) {
-                model.addTableModelListener(tableModelListener);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                if (null != tableModelListener) {
+                    model.removeTableModelListener(tableModelListener);
+                }
+                model.removeRow(index);
+                if (null != tableModelListener) {
+                    model.addTableModelListener(tableModelListener);
+                }
             }
         }
         //syncDataUiToCache();
@@ -378,26 +390,29 @@ public class CachedTable extends CachedComponentBase {
 
     @UIEffect
     synchronized private void loadData(Object[][] newData) {
-        if (null != model) {
-            if (null != tableModelListener) {
-                model.removeTableModelListener(tableModelListener);
-            }
-            if (newData.length == model.getRowCount()) {
-                for (int i = 0; i < newData.length; i++) {
-                    Object[] objects = newData[i];
-                    for (int j = 0; j < objects.length; j++) {
-                        Object object = objects[j];
-                        model.setValueAt(object, i, j);
+        if (null != this.jTable) {
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                if (null != tableModelListener) {
+                    model.removeTableModelListener(tableModelListener);
+                }
+                if (newData.length == model.getRowCount()) {
+                    for (int i = 0; i < newData.length; i++) {
+                        Object[] objects = newData[i];
+                        for (int j = 0; j < objects.length; j++) {
+                            Object object = objects[j];
+                            model.setValueAt(object, i, j);
+                        }
+                    }
+                } else {
+                    model.setRowCount(0);
+                    for (int i = 0; i < newData.length; i++) {
+                        model.addRow(newData[i]);
                     }
                 }
-            } else {
-                model.setRowCount(0);
-                for (int i = 0; i < newData.length; i++) {
-                    model.addRow(newData[i]);
+                if (null != tableModelListener) {
+                    model.addTableModelListener(tableModelListener);
                 }
-            }
-            if (null != tableModelListener) {
-                model.addTableModelListener(tableModelListener);
             }
         }
         //syncDataUiToCache();

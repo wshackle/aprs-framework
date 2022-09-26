@@ -318,6 +318,7 @@ public interface ExecutorOption {
         lookForXYZ,
         lookForJoints,
         jointTolerances,
+        shortSkuToEmptySlotPrefixMapCsvFile,
         INVALID_STRING_OPT;
 
         public WithValue<ForString, String> with(String arg) {

@@ -55,7 +55,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,6 +79,7 @@ import crcl.base.PointType;
 import crcl.base.PoseType;
 import crcl.utils.CRCLPosemath;
 import crcl.utils.CRCLUtils;
+import crcl.utils.XFuture;
 import java.util.concurrent.ExecutorService;
 import rcs.posemath.PmCartesian;
 
@@ -543,14 +543,14 @@ public class Object2DJPanel extends JPanel {
 //	}
 //	takeSnapshot(f, imageFileToCsvFile(f), point, label, w, h);
 //    }
-    public void takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label) {
+    public XFuture<Boolean> takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label) {
         final int w = snapW();
         final int h = snapH();
         if (w < 1 || h < 1) {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
-            return;
+            return XFuture.completedFuture(false);
         }
-        takeSnapshot(f, csvFile, point, label, w, h);
+        return takeSnapshot(f, csvFile, point, label, w, h);
     }
 
     private void takeSnapshot(File f, File csvFile, PoseType pose, String label, final int w, final int h) {
@@ -575,7 +575,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     public static void saveCsvItemsFile(File csvFile, Collection<? extends PhysicalItem> items) throws IOException {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(csvFile))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(csvFile))) {
             pw.println("name,rotation,x,y,score,type");
             for (PhysicalItem item : items) {
                 if (null != item) {
@@ -598,7 +598,7 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    public void takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label, final int w,
+    public XFuture<Boolean> takeSnapshot(File f, File csvFile, @Nullable PmCartesian point, @Nullable String label, final int w,
             final int h) {
         try {
             String type = "JPEG";
@@ -610,11 +610,12 @@ public class Object2DJPanel extends JPanel {
             opts.w = w;
             opts.h = h;
             List<PhysicalItem> itemsToPaint = getItemsToPaint();
-            writeImageFile(opts, type, f, csvFile, itemsToPaint, point, label);
+            return writeImageFile(opts, type, f, csvFile, itemsToPaint, point, label);
 //            println("Saved snapshot to " + f.getCanonicalPath());
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
+        return XFuture.completedFuture(false);
     }
 
     private boolean showForceTorqueItems;
@@ -653,14 +654,14 @@ public class Object2DJPanel extends JPanel {
     }
 
     @SuppressWarnings("guieffect")
-    public void takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint) {
+    public XFuture<Boolean> takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint) {
         final int w = this.getWidth();
         final int h = this.getHeight();
         if (w < 1 || h < 1) {
             System.err.println("Can not take snapshot with sized to " + w + " x " + h);
-            return;
+            return XFuture.completedFuture(false);
         }
-        takeSnapshot(f, csvFile, itemsToPaint, w, h);
+        return takeSnapshot(f, csvFile, itemsToPaint, w, h);
     }
 
     private static volatile @Nullable Thread imageIOWriterThread = null;
@@ -796,38 +797,40 @@ public class Object2DJPanel extends JPanel {
         opts.senseMaxY = this.senseMaxY;
     }
 
-    public void takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint, final int w,
+    public XFuture<Boolean> takeSnapshot(File f, File csvFile, Collection<? extends PhysicalItem> itemsToPaint, final int w,
             final int h) {
         try {
             ViewOptions opts = currentViewOptions();
             opts.h = h;
             opts.w = w;
             String type = "JPEG";
-            writeImageFile(opts, type, f, csvFile, itemsToPaint);
+            return writeImageFile(opts, type, f, csvFile, itemsToPaint);
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+            return XFuture.completedFuture(false);
         }
     }
 
-    public void takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
+    public XFuture<Boolean> takeSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, final int w, final int h) {
         try {
             ViewOptions opts = currentViewOptions();
             opts.h = h;
             opts.w = w;
             String type = "JPEG";
-            writeImageFile(opts, type, f, imageFileToCsvFile(f), itemsToPaint);
+            return writeImageFile(opts, type, f, imageFileToCsvFile(f), itemsToPaint);
         } catch (Exception ex) {
             Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         }
+        return XFuture.completedFuture(false);
     }
 
     private static final AtomicInteger imageIOWriterServiceSubmittedCount = new AtomicInteger();
     private static final AtomicInteger imageIOWriterServiceFinishCount = new AtomicInteger();
     private static final AtomicInteger imageIOWriterServiceSkipCount = new AtomicInteger();
 
-    private static void writeImageFile(ViewOptions opts, String type, File f, File csvFile,
+    private static XFuture<Boolean> writeImageFile(ViewOptions opts, String type, File f, File csvFile,
             Collection<? extends PhysicalItem> items) {
-        writeImageFile(opts, type, f, csvFile, items, null, null);
+        return writeImageFile(opts, type, f, csvFile, items, null, null);
     }
 
     private static volatile @Nullable List<PhysicalItem> lastItemsCopy = null;
@@ -877,7 +880,7 @@ public class Object2DJPanel extends JPanel {
         }
     }
 
-    private static void writeImageFile(
+    private static XFuture<Boolean> writeImageFile(
             ViewOptions opts,
             String type,
             File f,
@@ -903,7 +906,7 @@ public class Object2DJPanel extends JPanel {
             }
         }
         if (null == items || items.isEmpty()) {
-            return;
+            return XFuture.completedFuture(false);
         }
         List<@Nullable PhysicalItem> l1a = new ArrayList<>();
         List<@Nullable PhysicalItem> l2b = new ArrayList<>();
@@ -916,10 +919,10 @@ public class Object2DJPanel extends JPanel {
         Collections.sort(itemsCopy, java.util.Comparator.comparing(PhysicalItem::getName));
         if (point == null || (Objects.equals(lastLabel, label) && Objects.equals(lastPoint, point))) {
             if (itemListEquals(lastItemsCopy, itemsCopy)) {
-                return;
+                return XFuture.completedFuture(false);
             }
             if (itemListEquals(secondToLastItemsCopy, itemsCopy)) {
-                return;
+                return XFuture.completedFuture(false);
             }
         }
         secondToLastItemsCopy = lastItemsCopy;
@@ -934,12 +937,24 @@ public class Object2DJPanel extends JPanel {
             System.err.println("writeImageFile: finishCount = " + finishCount);
             System.err.println("writeImageFile: skipCount = " + skipCount);
             System.err.println("writeImageFile: skipping " + f);
-            return;
+            return XFuture.completedFuture(false);
         }
         // noinspection UnusedAssignment
         int newSubmitCount = imageIOWriterServiceSubmittedCount.incrementAndGet();
         final ExecutorService imageIOWriterService1 = getImageIOWriterService();
-        imageIOWriterService1.execute(() -> writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label));
+        XFuture<Boolean> ret = new XFuture<>("writeImageFile.ret");
+        imageIOWriterService1.execute(() -> {
+            try {
+                writeImageFileOnService(opts, type, f, csvFile, itemsCopy, point, label);
+            } catch (Exception ex) {
+                Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
+                ret.complete(false);
+                return;
+            }
+            final boolean bothFilesExist = f.exists() && csvFile.exists();
+            ret.complete(bothFilesExist);
+        });
+        return ret;
     }
 
     private static void writeImageFileOnService(
@@ -949,7 +964,7 @@ public class Object2DJPanel extends JPanel {
             File csvFile,
             Collection<? extends PhysicalItem> itemsToPaint,
             @Nullable PmCartesian point,
-            @Nullable String label) {
+            @Nullable String label) throws Exception {
         try {
 
             saveCsvItemsFile(csvFile, itemsToPaint);
@@ -967,8 +982,6 @@ public class Object2DJPanel extends JPanel {
             } else {
                 println("Can't take snapshot. ImageIO.write: No approriate writer found for type=" + type + ", f=" + f);
             }
-        } catch (Exception ex) {
-            Logger.getLogger(Object2DJPanel.class.getName()).log(Level.SEVERE, "", ex);
         } finally {
             int finishCount = imageIOWriterServiceFinishCount.incrementAndGet();
             int skipCount = imageIOWriterServiceSkipCount.get();
@@ -1838,7 +1851,8 @@ public class Object2DJPanel extends JPanel {
      *
      * @return the value of forceTorqueItems
      */
-    public @Nullable List<PhysicalItem> getForceTorqueItems() {
+    public @Nullable
+    List<PhysicalItem> getForceTorqueItems() {
         return forceTorqueItems;
     }
 

@@ -197,7 +197,8 @@ public class OpAction implements OpActionInterface {
             "small_gear",
             "medium_gear",
             "large_gear",
-            "black_gear"
+            "black_gear",
+            "blue_gear"
     ));
 
     public static void setAllowedPartTypes(Collection<String> newPartTypes) {

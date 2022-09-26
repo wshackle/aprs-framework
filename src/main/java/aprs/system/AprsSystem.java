@@ -235,7 +235,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         }
         try {
             CRCLProgramType program = createEmptyProgram();
-            executorJInternalFrame1.testPartPositionByPose(CRCLUtils.middleCommands(program), pose,name);
+            executorJInternalFrame1.testPartPositionByPose(CRCLUtils.middleCommands(program), pose, name);
             return startCRCLProgram(program);
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, null, ex);
@@ -525,7 +525,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private @MonotonicNonNull DbSetupJInternalFrame dbSetupJInternalFrame = null;
     private @MonotonicNonNull ForceTorqueSimJInternalFrame forceTorqueSimJInternalFrame = null;
 
-    public @Nullable ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
+    public @Nullable
+    ForceTorqueSimJInternalFrame getForceTorqueSimJInternalFrame() {
         return forceTorqueSimJInternalFrame;
     }
 
@@ -1613,12 +1614,21 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         if (isStandAlone()) {
             return XFutureVoid.completedFutureWithName("standAlondeSkipClearWayToHolders(" + holderName + ")");
         }
-        if (null == supervisor) {
-            throw new IllegalStateException("null == supervisor");
+        try {
+            if (null == supervisor) {
+                throw new IllegalStateException("null == supervisor");
+            }
+            XFutureVoid ret = supervisor.clearWayToHolders(this, holderName);
+            lastClearWayToHoldersFuture = ret;
+            return ret;
+        } catch (Throwable throwable) {
+            logException(throwable);
+            if (throwable instanceof RuntimeException) {
+                throw (RuntimeException) throwable;
+            } else {
+                throw new RuntimeException(throwable);
+            }
         }
-        XFutureVoid ret = supervisor.clearWayToHolders(this, holderName);
-        lastClearWayToHoldersFuture = ret;
-        return ret;
     }
 
     /**
@@ -2334,10 +2344,34 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             setTitleErrorString(e.getMessage());
             Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE,
                     "logException:" + getTaskName() + ":" + e.getMessage(), e);
+            passExceptionToFuture("lastPrivateContinueActionListFuture = ", lastPrivateContinueActionListFuture, e);
+            passExceptionToFuture("lastContinueActionListFuture = ", lastContinueActionListFuture, e);
+            passExceptionToFuture("lastPrivateStartActionsFuture = ", lastPrivateStartActionsFuture, e);
+            passExceptionToFuture("lastResumeFuture = ", lastResumeFuture, e);
+            passExceptionToFuture("lastRunProgramFuture = ", lastRunProgramFuture, e);
+            passExceptionToFuture("lastStartActionsFuture = ", lastStartActionsFuture, e);
+            passExceptionToFuture("lastStartCheckEnabledFuture1 = ", lastStartCheckEnabledFuture1, e);
+            passExceptionToFuture("lastStartCheckEnabledFuture2 = ", lastStartCheckEnabledFuture2, e);
             if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
             } else {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void passExceptionToFuture(final String futureName, final XFuture<Boolean> future, Throwable e) {
+        Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, futureName + future);
+        if (null != future) {
+            future.printStatus(System.err);
+            future.printProfile(System.err);
+
+            if (!future.isDone()
+                    && !future.isCompletedExceptionally()
+                    && !future.isCancelled()) {
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "future.getCreateTrace() " + XFuture.traceToString(future.getCreateTrace()));
+                Logger.getLogger(AprsSystem.class.getName()).log(Level.SEVERE, "calling  completeExceptionally on " + future + " with " + e);
+                future.completeExceptionally(e);
             }
         }
     }
@@ -2798,7 +2832,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void readLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+        try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
             Map<String, Integer> headerMap = parser.getHeaderMap();
             if (null == headerMap) {
                 throw new IllegalArgumentException(csvFile.getCanonicalPath() + " does not have header");
@@ -2821,7 +2855,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public void writeLimitsFromCsv(File csvFile) throws IOException {
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
+        try ( CSVPrinter printer = new CSVPrinter(new FileWriter(csvFile),
                 CSVFormat.DEFAULT.withHeader(PmCartesianMinMaxLimit.getHeaders()))) {
             for (int i = 0; i < limits.size(); i++) {
                 PmCartesianMinMaxLimit minMax = limits.get(i);
@@ -2925,7 +2959,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             if (null != programString) {
                 programFile = Utils.createTempFile("CRCLProgram", ".xml");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(programFile))) {
                     pw.println(programString);
                 }
             }
@@ -3248,8 +3282,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             if (null != currentTitleErrorString && currentTitleErrorString.length() > 0) {
                 sb.append("titleErrorString=").append(currentTitleErrorString).append("\r\n");
             }
-//        sb.append("1111111111222222222233333333334444444444555555555566666666667777777777788888888899999999990000000000111111111122222222223333333333\r\n");
-//        sb.append("0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\r\n");
             String ret = sb.toString().trim();
             detailsString = ret;
             return ret;
@@ -3559,6 +3591,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private final AtomicInteger setTitleErrorStringCount = new AtomicInteger();
     private static volatile long lastForceShowErrorTime = -1;
 
+    private final AtomicBoolean settingTitleErrorString  = new AtomicBoolean(false);
     /**
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
@@ -3569,6 +3602,19 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     public void setTitleErrorString(@Nullable String newTitleErrorString) {
 
         try {
+            if(!settingTitleErrorString.compareAndSet(false, true)) {
+                return;
+            }
+            
+            if (null != newTitleErrorString) {
+                final int ellipsIndex = newTitleErrorString.indexOf(" ...");
+                if(ellipsIndex > 0) {
+                    newTitleErrorString = newTitleErrorString.substring(0, ellipsIndex);
+                }
+                if (newTitleErrorString.length() > 160) {
+                    newTitleErrorString = newTitleErrorString.substring(0, 150) + " ... ";
+                }
+            }
             if (!Objects.equals(lastNewTitleErrorString, newTitleErrorString)) {
                 if (!Objects.equals(this.titleErrorString, newTitleErrorString)) {
                     int count = setTitleErrorStringCount.incrementAndGet();
@@ -3636,6 +3682,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
+        } finally {
+            settingTitleErrorString.set(false);
         }
     }
 
@@ -4708,7 +4756,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private void loadCustomWindowsFile() {
         final File fileToLoad = customWindowsFile;
         if (null != fileToLoad) {
-            try (BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
+            try ( BufferedReader br = new BufferedReader(new FileReader(fileToLoad))) {
                 String line = br.readLine();
                 while (line != null) {
                     line = line.trim();
@@ -4739,7 +4787,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private void loadWindowFile(File winFile) throws Exception {
         Properties props = new Properties();
-        try (BufferedReader br = new BufferedReader(new FileReader(winFile))) {
+        try ( BufferedReader br = new BufferedReader(new FileReader(winFile))) {
             props.load(br);
         }
         String classnameString = props.getProperty("classname");
@@ -7281,7 +7329,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public static void saveActionsListToFile(File f, List<Action> actions) throws FileNotFoundException {
-        try (PrintStream ps = new PrintStream(new FileOutputStream(f))) {
+        try ( PrintStream ps = new PrintStream(new FileOutputStream(f))) {
             for (Action act : actions) {
                 ps.println(act.asPddlLine());
             }
@@ -8421,7 +8469,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             try {
                 String progString = CRCLSocket.getUtilSocket().programToPrettyString(program, false);
                 File progFile = createTempFile("prog", ".xml", getLogCrclProgramDir());
-                try (PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
+                try ( PrintWriter writer = new PrintWriter(new FileWriter(progFile))) {
                     writer.print(progString);
                 }
             } catch (Exception ex) {
@@ -8629,7 +8677,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         String executorReadyString = pddlExecutorJInternalFrame1Final.readyForNewActionsListInfoString();
         if (!pddlExecutorJInternalFrame1Final.readyForNewActionsList()) {
             logEvent("executorReadyString", executorReadyString);
-            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList() with taskName="+taskName+",comment=\"" + comment
+            final String errmsg = "!pddlExecutorJInternalFrame1.readyForNewActionsList() with taskName=" + taskName + ",comment=\"" + comment
                     + "\" ";
             logToSuper(this.toString() + " throwing " + errmsg);
             throw new IllegalStateException(errmsg);
@@ -9035,7 +9083,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             updateRobotLimits();
             if (null != actionsToLoad) {
                 File f = createTempFile("actionsList_" + comment, ".txt");
-                try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+                try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
                     for (Action action : actionsToLoad) {
                         pw.println(action.asPddlLine());
                     }
@@ -9517,11 +9565,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9536,11 +9584,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PointType point, String label) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9554,11 +9602,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9573,12 +9621,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pose, poseLabel, snapShotWidth,
                     snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9593,13 +9641,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel)
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel)
             throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth,
                     snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9615,12 +9663,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth,
                     snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9633,12 +9681,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9651,7 +9699,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel,
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel,
             @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             if (null == itemsToPaint) {
@@ -9661,7 +9709,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
-                    return new File[2];
+                    return XFuture.completedFuture(null);
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth,
                         snapShotHeight);
@@ -9672,7 +9720,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
-                    return new File[2];
+                    return XFuture.completedFuture(null);
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth,
                         snapShotHeight);
@@ -9683,13 +9731,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 } catch (IOException ex) {
                     Logger.getLogger(AprsSystem.class
                             .getName()).log(Level.SEVERE, null, ex);
-                    return new File[2];
+                    return XFuture.completedFuture(null);
                 }
                 return this.object2DViewJInternalFrame.takeSnapshot(imgFile, itemsToPaint, snapShotWidth,
                         snapShotHeight);
             }
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9706,11 +9754,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9727,11 +9775,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
+    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9748,11 +9796,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9768,7 +9816,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9776,11 +9824,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
-                return new File[2];
+                return XFuture.completedFuture(null);
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pose, poseLabel, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9796,7 +9844,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9804,11 +9852,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
-                return new File[2];
+                return XFuture.completedFuture(null);
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9824,7 +9872,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9832,11 +9880,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             } catch (IOException ex) {
                 Logger.getLogger(AprsSystem.class
                         .getName()).log(Level.SEVERE, null, ex);
-                return new File[2];
+                return XFuture.completedFuture(null);
             }
             return object2DViewJInternalFrame.takeSnapshot(imgFile, pt, pointLabel, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9852,12 +9900,12 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of files if they were created.
      */
     public @Nullable
-    File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
             return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9874,13 +9922,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws java.io.IOException problem writing to the file
      */
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w,
+   XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w,
             int h) throws IOException {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
             return this.object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), itemsToPaint, w, h);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -9915,7 +9963,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-        try (FileReader fr = new FileReader(propertiesFile)) {
+        try ( FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         XFutureVoid ret = Utils.runOnDispatchThread(
@@ -9945,7 +9993,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         Properties props = new Properties();
         newPropertiesFile = false;
         println("AprsSystem loading properties from " + propertiesFile.getCanonicalPath());
-        try (FileReader fr = new FileReader(propertiesFile)) {
+        try ( FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         completeLoadPropertiesOnDisplay(props);
@@ -10827,7 +10875,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                 System.out.println("commandStatusLogFile = " + commandStatusLogFile);
                 File tmpPerfFile = Utils.createTempFile(task + "crcLClientPerfInfo", ".txt");
                 System.out.println("Saving Perf info for " + task + "  to " + tmpPerfFile);
-                try (PrintStream ps = new PrintStream(
+                try ( PrintStream ps = new PrintStream(
                         new FileOutputStream(tmpPerfFile))) {
                     crclClientJInternalFrame.printPerfInfo(ps, task);
                 }
@@ -11008,7 +11056,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.getUtilSocket().commandToPrettyString(cmd);
             f = createTempFile(prefix, ".xml", getLogCrclCommandDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {
@@ -11024,7 +11072,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         try {
             String xmlString = CRCLSocket.statusToPrettyString(stat);
             f = createTempFile(prefix, ".xml", getLogCrclStatusDir());
-            try (PrintWriter printer = new PrintWriter(new FileWriter(f))) {
+            try ( PrintWriter printer = new PrintWriter(new FileWriter(f))) {
                 printer.print(xmlString);
             }
         } catch (Exception ex) {

@@ -82,6 +82,8 @@ import static crcl.copier.CRCLCopier.copy;
 import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLPosemath.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 /**
  * This class is responsible for generating CRCL Commands and Programs from PDDL
@@ -94,6 +96,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     public CrclGenerator(ExecutorJPanel parentExecutorJPanel) {
         this.parentExecutorJPanel = parentExecutorJPanel;
         this.aprsSystem = parentExecutorJPanel.getAprsSystem();
+        this.shortSkuToEmptySlotPrefixMap = new TreeMap<>();
     }
 
     /**
@@ -241,12 +244,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
     private final AtomicInteger skippedActions = new AtomicInteger();
 
-//    private boolean getReverseFlag() {
-//        if (aprsSystem != null) {
-//            return aprsSystem.isReverseFlag();
-//        }
-//        return false;
-//    }
     private List<OpAction> pddlActionsToOpActions(
             List<? extends Action> listIn,
             int start,
@@ -273,11 +270,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         setPlannedHeldPartTrace = Thread.currentThread().getStackTrace();
     }
 
-//    private interface GetPoseFunction {
-//
-//        @Nullable
-//        PoseType apply(String name, boolean ignoreNull) throws SQLException;
-//    }
     private boolean inKitTrayByName(String name) {
         return !name.endsWith("_in_pt") && !name.contains("_in_pt_")
                 && (name.contains("_in_kit_") || name.contains("_in_kt_") || name.endsWith("in_kt"));
@@ -388,7 +380,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Action pa,
             int start,
             int i,
-            @Nullable List<OpAction> skippedOpActionsList) throws RuntimeException {
+            @Nullable List<OpAction> skippedOpActionsList) {
         List<OpAction> ret = new ArrayList<>();
         if (null == takePartOpAction
                 || null == takePartPddlAction) {
@@ -2609,7 +2601,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             long solveTime,
             File actionsInFile,
             File actionsOutFile,
-            @Nullable File[] snapsFiles,
+            @Nullable XFuture<File @Nullable []> snapsFiles,
             double inScore,
             double outScore,
             OpActionPlan inPlan,
@@ -2647,13 +2639,21 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             if (null == propertiesFile) {
                 return;
             }
+            File[] snapsFileArray;
+            try {
+                snapsFileArray = snapsFiles.isDone() ? snapsFiles.get() : null;
+            } catch (Exception ex) {
+                // throwing it away
+                snapsFileArray = null;
+            }
             final OptiplannerLogEntry logEntry
                     = new OptiplannerLogEntry(
                             solveCount, startingIndex, runName, aprsSystem.isReverseFlag(),
                             sizeIn, sizeOut,
                             solveTime,
                             actionsInFile, actionsOutFile,
-                            snapsFiles[0], snapsFiles[1],
+                            snapsFileArray != null && snapsFileArray.length == 2 ? snapsFileArray[0] : null,
+                            snapsFileArray != null && snapsFileArray.length == 2 ? snapsFileArray[1] : null,
                             logLinesFile, propertiesFile,
                             inPlanFile, outPlanFile,
                             inScore, outScore);
@@ -2689,13 +2689,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 return actions;
             }
             @Nullable
-            File[] takeSnapsPhysicalItemsFiles
+            XFuture<File @Nullable []> takeSnapsPhysicalItemsFiles
                     = takeSimViewSnapshot(
                             "optimizePddlActionsWithOptaPlanner.physicalItemsLocal",
                             physicalItemsLocal);
 
             File actionsInFile = aprsSystemLocal.createTempFile("actionsIn", ".txt");
-            aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + Arrays.toString(takeSnapsPhysicalItemsFiles) + ", actionsInFile=" + actionsInFile);
+            if (null != takeSnapsPhysicalItemsFiles) {
+                takeSnapsPhysicalItemsFiles.thenAccept((File @Nullable [] files) -> {
+                    aprsSystemLocal.logEvent("optimizePddlActionsWithOptaPlanner", "takeSnapsPhysicalItemsFiles=" + (files != null ? Arrays.toString(files) : null) + ", actionsInFile=" + actionsInFile);
+                });
+            }
             int sizeIn = 0;
             try ( PrintStream ps = new PrintStream(new FileOutputStream(actionsInFile))) {
                 for (int i = startingIndex; i < actions.size(); i++) {
@@ -3255,6 +3259,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return lastCheckKitsOptimizedCorrectiveActions;
     }
 
+    private final ConcurrentMap<String, String> flippedGearNames = new ConcurrentHashMap<>();
+
+    {
+        flippedGearNames.put("black_gear", "blue_gear");
+        flippedGearNames.put("blue_gear", "black_gear");
+    }
+
     private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex, int lastLookForIndex, GenerateParams gparams) {
 
         lastCheckKitsLookForIndex = lastLookForIndex;
@@ -3388,16 +3399,31 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                         if (null != itemNeededInSlotSkuName && !itemNeededInSlotSkuName.equals(itemNowInSlotSkuName)) {
 
                                             brokenAbsSlotsChecked++;
+                                            final String itemNeededInSlotShortName = Utils.shortenItemPartName(itemNeededInSlotSkuName);
+                                            final String flippedShortItemNeededInSlot = flippedGearNames.get(itemNeededInSlotShortName);
+                                            final String flippedItemNeededInSlotSkuName;
+                                            if (null != flippedShortItemNeededInSlot) {
+                                                flippedItemNeededInSlotSkuName = itemNeededInSlotSkuName.replace(itemNeededInSlotShortName, flippedShortItemNeededInSlot);
+                                                if (flippedItemNeededInSlotSkuName.equals(itemNowInSlotSkuName)) {
+                                                    correctivedItems.add(closestItem);
+                                                    correctiveActions.add(Action.newFlipPartAction(closestItem.getFullName()));
+                                                    correctivedItems.add(absSlot);
+                                                    breakActionsSetNeeded = true;
+                                                    break;
+                                                }
+                                            } else {
+                                                flippedItemNeededInSlotSkuName = null;
+                                            }
                                             if (!itemNowInSlotSkuName.equals("empty")) {
                                                 String shortNowInSlotSkuName = Utils.shortenItemPartName(itemNowInSlotSkuName);
-                                                String slotPrefix = "empty_slot_for_" + shortNowInSlotSkuName + "_in_" + shortNowInSlotSkuName + "_vessel";
-                                                int count = prefixCountMap.compute(slotPrefix,
+                                                String emptySlotPrefix = makeEmptySlotPrefix(shortNowInSlotSkuName);
+                                                int count = prefixCountMap.compute(emptySlotPrefix,
                                                         (String prefix, Integer c) -> (c == null) ? 1 : (c + 1));
 //                                                setPlannedHeldPart( closestItem.getName());
                                                 correctivedItems.add(closestItem);
                                                 correctiveActions.add(Action.newTakePartAction(closestItem.getFullName()));
                                                 correctivedItems.add(absSlot);
-                                                correctiveActions.add(Action.newPlacePartAction(slotPrefix + "_" + count, shortNowInSlotSkuName));
+                                                correctiveActions.add(Action.newPlacePartAction(emptySlotPrefix + "_" + count, shortNowInSlotSkuName));
                                             }
                                             if (!itemNeededInSlotSkuName.equals("empty")) {
                                                 if (!itemNowInSlotSkuName.equals("empty")) {
@@ -3406,20 +3432,30 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 if (breakActionsSetNeeded) {
                                                     break;
                                                 }
-                                                final String shortItemNeededInSlotSkuName = Utils.shortenItemPartName(itemNeededInSlotSkuName);
+
                                                 List<String> partNames
-                                                        = itemsNameMap.computeIfAbsent(shortItemNeededInSlotSkuName,
+                                                        = itemsNameMap.computeIfAbsent(itemNeededInSlotShortName,
                                                                 k -> listFilter(
                                                                         partsInPartsTrayFullNames,
                                                                         name2 -> name2.contains(k)));
                                                 logDebug("checkKits: partNames = " + partNames);
+                                                if (partNames.isEmpty() && flippedShortItemNeededInSlot != null) {
+                                                    partNames
+                                                            = itemsNameMap.computeIfAbsent(flippedShortItemNeededInSlot,
+                                                                    k -> listFilter(
+                                                                            partsInPartsTrayFullNames,
+                                                                            name2 -> name2.contains(k)));
+                                                }
                                                 if (partNames.isEmpty()) {
                                                     if (!correctiveActions.isEmpty() || infoListIndex < infoList.size() - 1 || brokenAbsSlotsChecked < info.getFailedSlots()) {
                                                         breakActionsSetNeeded = true;
                                                         continue;
                                                     }
-                                                    logError("No partnames for shortItemNeededInSlotSkuName=" + shortItemNeededInSlotSkuName);
-                                                    logDebug("checkKits: partNames = " + partNames);
+                                                    logError("No partnames for shortItemNeededInSlotSkuName=" + itemNeededInSlotShortName);
+                                                    logError("flippedShortItemNeededInSlotSkuName=" + flippedShortItemNeededInSlot);
+                                                    logError("flippedItemNeededInSlotSkuName=" + flippedItemNeededInSlotSkuName);
+                                                    logError("this.aprsSystem=" + this.aprsSystem);
+                                                    logError("partNames = " + partNames);
                                                     logError("fixLogList=" + fixLogList);
                                                     logError("correctiveActions.isEmpty()=" + correctiveActions.isEmpty());
                                                     logError("infoListIndex=" + infoListIndex);
@@ -3437,17 +3473,17 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                     List<String> recalcPartNames
                                                             = listFilter(
                                                                     partsInPartsTrayFullNames,
-                                                                    name2 -> name2.contains(shortItemNeededInSlotSkuName));
+                                                                    name2 -> name2.contains(itemNeededInSlotShortName));
                                                     logError("recalcPartNames = " + recalcPartNames);
                                                     localAprsSystem.setSnapshotsSelected(true);
                                                     takeSimViewSnapshot("checkKits : no partnames ", physicalItemsLocal);
-                                                    throw new IllegalStateException("No partnames for finalShortSkuName=" + shortItemNeededInSlotSkuName
+                                                    throw new IllegalStateException("No partnames for finalShortSkuName=" + itemNeededInSlotShortName
                                                             + ", absSlotPrpName=" + absSlotPrpName
-                                                            + ", slotItemSkuName=" + itemNeededInSlotSkuName
-                                                            + ", itemSkuName=" + itemNowInSlotSkuName);
+                                                            + ", itemNeededInSlotSkuName=" + itemNeededInSlotSkuName
+                                                            + ", itemNowInSlotSkuName=" + itemNowInSlotSkuName);
                                                 }
                                                 String partName = partNames.remove(0);
-                                                removedItemsNameMap.compute(shortItemNeededInSlotSkuName, (k, v) -> {
+                                                removedItemsNameMap.compute(itemNeededInSlotShortName, (k, v) -> {
                                                     if (v == null) {
                                                         v = new ArrayList<>();
                                                     }
@@ -3472,7 +3508,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                         break;
                                                     }
                                                     poseCache.put(slotName, absSlotPose);
-                                                    correctiveActions.add(Action.newPlacePartAction(slotName, shortItemNeededInSlotSkuName));
+                                                    correctiveActions.add(Action.newPlacePartAction(slotName, itemNeededInSlotShortName));
                                                 } else {
 
                                                     PoseType slotPose = visionToRobotPose(absSlotPose);
@@ -3512,7 +3548,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                         takeSimViewSnapshot("checkKits : kitPose", pose, kitInstanceName);
                                                         throw new IllegalStateException("absSlotPose for " + slotName + " not in poseCache min_dist=" + min_dist + ", closestKet=" + closestKey + ", keys=" + poseCache.keySet());
                                                     }
-                                                    correctiveActions.add(Action.newPlacePartAction(closestKey, shortItemNeededInSlotSkuName));
+                                                    correctiveActions.add(Action.newPlacePartAction(closestKey, itemNeededInSlotShortName));
                                                 }
                                             }
                                         }
@@ -3598,6 +3634,70 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         }
 
         return false;
+    }
+
+    private final Map<String, String> shortSkuToEmptySlotPrefixMap;
+
+    private volatile @Nullable File lastLoadShortSkuToEmptySlotPrefixMapCsvFile = null;
+
+    public void loadShortSkuToEmptySlotPrefixMap(File csvFile) throws IOException {
+        if (null != lastLoadShortSkuToEmptySlotPrefixMapCsvFile && null != csvFile) {
+            if (Objects.equals(csvFile, lastLoadShortSkuToEmptySlotPrefixMapCsvFile)
+                    || Objects.equals(csvFile.getCanonicalPath(), lastLoadShortSkuToEmptySlotPrefixMapCsvFile.getCanonicalPath())) {
+                return;
+            }
+        }
+        lastLoadShortSkuToEmptySlotPrefixMapCsvFile = csvFile;
+        if (null != csvFile) {
+            try ( CSVParser parser = new CSVParser(new FileReader(csvFile), CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+                List<CSVRecord> records = parser.getRecords();
+                for (CSVRecord rec : records) {
+                    String key = rec.get(0);
+                    if (null == key) {
+                        continue;
+                    }
+                    key = key.trim();
+                    if (key.length() < 2) {
+                        continue;
+                    }
+                    if (key.startsWith("\"") && key.endsWith("\"")) {
+                        key = key.substring(1, key.length() - 1);
+                    }
+                    if (key.length() < 2) {
+                        continue;
+                    }
+                    String prefix = rec.get(1);
+                    if (null == prefix) {
+                        continue;
+                    }
+                    prefix = prefix.trim();
+                    if (prefix.length() < 2) {
+                        continue;
+                    }
+                    if (prefix.startsWith("\"") && prefix.endsWith("\"")) {
+                        prefix = key.substring(1, prefix.length() - 1);
+                    }
+                    if (prefix.length() < 2) {
+                        continue;
+                    }
+                    shortSkuToEmptySlotPrefixMap.put(key, prefix);
+                }
+            }
+        }
+    }
+
+//    static {
+//        
+//        shortSkuToEmptySlotPrefixMap.put("black_gear", "empty_slot_for_large_gear_in_large_gear_vessel");
+//    }
+    private String makeEmptySlotPrefix(String shortNowInSlotSkuName) {
+        if (null != shortSkuToEmptySlotPrefixMap) {
+            String mapValue = shortSkuToEmptySlotPrefixMap.get(shortNowInSlotSkuName);
+            if (null != mapValue) {
+                return mapValue;
+            }
+        }
+        return "empty_slot_for_" + shortNowInSlotSkuName + "_in_" + shortNowInSlotSkuName + "_vessel";
     }
 
     private String
@@ -4263,56 +4363,56 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param label optional label for pose or null
      */
     private @Nullable
-    File[] takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, pose, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PointType point, String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, point, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     public @Nullable
-    File[] takeSimViewSnapshot(File f, PmCartesian pt, String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PmCartesian pt, String label) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, pt, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PoseType pose, String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, pose, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     public @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PointType point, String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, point, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     private @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String label) throws IOException {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, pt, label);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -4324,20 +4424,20 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
      * @param itemsToPaint items to paint in the snapshot image
      */
     private @Nullable
-    File[] takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(f, itemsToPaint);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
     private @Nullable
-    File[] takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != aprsSystem) {
             return aprsSystem.takeSimViewSnapshot(imgLabel, itemsToPaint);
         } else {
-            return new File[2];
+            return XFuture.completedFuture(null);
         }
     }
 
@@ -4803,7 +4903,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 partTool = null;
             }
         }
-        if (null != partTool && !Objects.equals(partTool, getExpectedToolName())) {
+        final String expectedToolName = getExpectedToolName();
+        if (null != partTool && !Objects.equals(partTool, expectedToolName)) {
+//            throw new RuntimeException("why switching tool for "+partName+", partTool="+partTool+", expectedToolName="+expectedToolName);
             switchTool(Action.newSingleArgAction(
                     SWITCH_TOOL,
                     partTool
@@ -5382,12 +5484,16 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             return;
         }
         settingsChecked = true;
-        loadOptionsMap(this.stringOptionsMap, this.booleanOptionsMap, this.doubleOptionsMap, this.intOptionsMap, true);
+        try {
+            loadOptionsMap(this.stringOptionsMap, this.booleanOptionsMap, this.doubleOptionsMap, this.intOptionsMap, true);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void loadOptionsMap(
             Map<ExecutorOption, ?> optionsMap,
-            boolean doCheckPose) throws NumberFormatException {
+            boolean doCheckPose) throws NumberFormatException, IOException {
         loadOptionsMap(
                 ExecutorOption.ForString.map(optionsMap),
                 ExecutorOption.ForBoolean.map(optionsMap),
@@ -5401,7 +5507,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             Map<ExecutorOption.ForBoolean, Boolean> bOptMap,
             Map<ExecutorOption.ForDouble, Double> dOptMap,
             Map<ExecutorOption.ForInt, Integer> iOptMap,
-            boolean doCheckPose) throws NumberFormatException {
+            boolean doCheckPose) throws NumberFormatException, IOException {
         String rpyString = stringOptionsMap.get(ExecutorOption.ForString.RPY);
         if (null != rpyString && rpyString.length() > 0) {
             try {
@@ -5437,6 +5543,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         if (xAxis == null) {
             xAxis = vector(1.0, 0.0, 0.0);
             zAxis = vector(0.0, 0.0, -1.0);
+        }
+        String optionPath = stringOptionsMap.get(ExecutorOption.ForString.shortSkuToEmptySlotPrefixMapCsvFile);
+        if (optionPath != null && optionPath.trim().length() > 0) {
+            File f = Utils.file(optionPath);
+            if (f.exists() && f.canRead()) {
+                loadShortSkuToEmptySlotPrefixMap(f);
+            }
         }
 
         // doubles
@@ -6406,7 +6519,6 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         this.joint0DiffTolerance = joint0DiffTolerance;
     }
 
-    
     private void addGotoToolChangerApproachByName(List<MiddleCommandType> out, String toolChangerPosName) throws PmException, CRCLException, IllegalStateException {
         clearWayToHolder(out, toolChangerPosName);
         addMessageCommand(out, "Goto Tool Changer Approach By Name " + toolChangerPosName);
@@ -7406,9 +7518,11 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private class CRCLCommandWrapperConsumerChecker implements CRCLCommandWrapperConsumer {
 
         private final CRCLCommandWrapperConsumer consumer;
+        private final StackTraceElement trace[];
 
         public CRCLCommandWrapperConsumerChecker(CRCLCommandWrapperConsumer consumer) {
             this.consumer = consumer;
+            trace = Thread.currentThread().getStackTrace();
         }
 
         @Override
@@ -7423,6 +7537,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             try {
                 consumer.accept(wrapper);
             } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "CRCLCommandWrapperConsumerChecker trace=" + XFuture.traceToString(trace));
                 LOGGER.log(Level.SEVERE, "wrapper=" + wrapper, e);
                 if (e instanceof RuntimeException) {
                     throw (RuntimeException) e;

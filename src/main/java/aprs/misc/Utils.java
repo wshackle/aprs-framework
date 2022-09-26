@@ -1279,6 +1279,7 @@ public class Utils {
      * @throws IOException file could not be written
      */
     public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
+        
         try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
                 CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
             List<String> colNameList = new ArrayList<>();
@@ -1289,6 +1290,10 @@ public class Utils {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < cachedTable.getColumnCount(); j++) {
                     Object o = cachedTable.getValueAt(i, j);
+                    Object o2 = cachedTable.getjTable().getValueAt(i, j);
+                    if(!Objects.equals(o, o2)) {
+                        throw new RuntimeException("cachedTable.getValueAt(i, j) "+o+" != "+o2 +"  cachedTable.getjTable().getValueAt(i, j)");
+                    }
                     if (o == null) {
                         l.add("");
                     } else if (o instanceof File) {
