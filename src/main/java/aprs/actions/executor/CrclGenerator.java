@@ -1147,6 +1147,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile int lastAtLastIndexRepPos = -1;
 
     public boolean atLastIndex() {
+        if(null != aprsSystem.getFlipFinalEmptySlot() && null != aprsSystem.getPartToFlip()) {
+            lastIndex.set(null != lastActionsList?lastActionsList.size():0 );
+            return true;
+        }
         final int idx = getLastIndex();
         if (idx == 0 && lastActionsList == null) {
             lastAtLastIndexIdx = idx;
@@ -3406,7 +3410,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 flippedItemNeededInSlotSkuName = itemNeededInSlotSkuName.replace(itemNeededInSlotShortName, flippedShortItemNeededInSlot);
                                                 if (flippedItemNeededInSlotSkuName.equals(itemNowInSlotSkuName)) {
                                                     correctivedItems.add(closestItem);
-                                                    correctiveActions.add(Action.newFlipPartAction(closestItem.getFullName()));
+                                                    correctiveActions.add(Action.newFlipPartAction(closestItem.getFullName(),
+                                                            "empty_slot_for_"+itemNeededInSlotShortName+"_in_"+kitInstanceName));
                                                     correctivedItems.add(absSlot);
                                                     breakActionsSetNeeded = true;
                                                     break;
@@ -3595,6 +3600,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                             String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
                                             placePartBySlotName(slotName, cmds, correctiveAction, action, lastLookForIndex);  //ByName(slotName, null, cmds);
                                             break;
+
+                                        case FLIP_PART:
+                                            String flipPartName = correctiveAction.getArgs()[takePartArgIndex];
+                                            String flipflipFinalEmptySlot = correctiveAction.getArgs()[1];
+                                            flipPart(flipPartName,flipflipFinalEmptySlot, cmds);
+                                            placedPart = true;
+                                            break;
                                     }
                                 }
                                 if (placedPart) {
@@ -3607,7 +3619,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                     logError("checkKits : !placedPart  kitsToFix = " + kitsToFix);
                                     lastIndex.set(lastLookForIndex);
                                     String errMsg = showKitToFixErrors(physicalItemsLocal, kitInstanceAbsSlotMap, parts, matchedKitInstanceNames, kitsToFix, prePubs, preVis, preTimeDiff, postPubs, postVis, postTimeDiff, checkKitsTimeDiff, cmds);
-                                    throw new IllegalStateException(errMsg);
+                                    throw new IllegalStateException(errMsg
+                                            + "\r\n        correctiveActions = " + correctiveActions
+                                            + "\r\n        optimizedCorrectiveActions = " + optimizedCorrectiveActions
+                                    );
                                 }
                             }
                         }
@@ -4859,6 +4874,13 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             lastChar = baseName.charAt(lastCharIndex);
         }
         return baseName.substring(0, lastCharIndex + 1);
+    }
+
+    
+
+    private void flipPart(String partName, String finalEmptySlot, List<MiddleCommandType> out) {
+        aprsSystem.setPartToFlip(partName);
+        aprsSystem.setFlipFinalEmptySlot(finalEmptySlot);
     }
 
     private void takePartByName(String partName, @Nullable Action nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {

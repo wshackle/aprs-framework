@@ -337,7 +337,9 @@ public class Supervisor {
             File setupFile,
             File positionMappingsFile,
             long startTime,
-            File fanucSimItemsFile) throws IOException {
+            File fanucSimItemsFile,
+            String partToFlip, 
+            String finalEmptySlot) throws IOException {
 
         String dir = setupFile.getParent();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
@@ -370,7 +372,7 @@ public class Supervisor {
 
         XFuture<Boolean> ret = f2
                 .thenComposeAsync(x -> connectAll(), supervisorExecutorService)
-                .thenComposeAsync(x -> startFlipFM(), supervisorExecutorService);
+                .thenComposeAsync(x -> startFlipFM( partToFlip, finalEmptySlot), supervisorExecutorService);
         lastCompletePrevFlipFMFuture = ret;
         return ret;
     }
@@ -1921,7 +1923,16 @@ public class Supervisor {
                 }
                 if (null == stealFrom || null == stealFor) {
                     for (int i = 0; i < this.aprsSystems.size(); i++) {
+                        try { 
                         checkRunningOrDoingActions(this.aprsSystems.get(i), srn, "returnRobots(" + comment + ")");
+                        } catch(Throwable throwable) {
+                            Logger.getLogger(Supervisor.class.getCanonicalName()).log(Level.SEVERE, "returnRobots1Trace="+XFuture.traceToString(returnRobots1Trace), throwable);
+                            if(throwable instanceof RuntimeException) {
+                                throw (RuntimeException) throwable;
+                            } else {
+                                throw new RuntimeException("returnRobots1Trace="+XFuture.traceToString(returnRobots1Trace),throwable);
+                            }
+                        }
                     }
                 }
                 final NamedFunction<Integer, XFutureVoid> oldReturnRobotVal 
@@ -3013,7 +3024,7 @@ public class Supervisor {
             logEventErr(msg);
             throw new IllegalStateException(msg);
         }
-        if (sys.isDoingActions()) {
+        if (sys.isDoingActions() && !sys.isRequestingFlip()) {
             String msg = sys.getTaskName() + " is doing actions when " + whenString + " : srn=" + srn
                     + ", toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet();
             printSysDoingError(sys, msg);
@@ -5139,10 +5150,10 @@ public class Supervisor {
                 .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
-    /*public*/ XFuture<Boolean> startFlipFMOnSupervisorService() {
+    public XFuture<Boolean> startFlipFMOnSupervisorService(String partToFlip, String finalEmptySlot) {
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
-                        this::startFlipFM, supervisorExecutorService)
+                        () -> this.startFlipFM( partToFlip, finalEmptySlot), supervisorExecutorService)
                 .thenCompose(x -> x);
     }
 
@@ -5183,7 +5194,7 @@ public class Supervisor {
 //        return XFuture.allOfWithName("lookForPartsAll", futures);
 //    }
 
-    /*public*/ XFuture<Boolean> startFlipFM() {
+    public XFuture<Boolean> startFlipFM(String partToFlip, String finalEmptySlot ) {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
         AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
@@ -5223,7 +5234,7 @@ public class Supervisor {
             logEvent("startFlip.step2 : xf2=" + xf2);
             return fanucCartSys.startActionsList("flip2",
                     Arrays.asList(new Action[]{
-                Action.newTakePartAction("part_black_gear_in_pt_1"),
+                Action.newTakePartAction(partToFlip /* "part_black_gear_in_pt_1" */ ),
                 Action.newMoveRecordedJoints("present_gear")
             }),
                     //		    ExecutorOption.ForBoolean.REVERSE.with(true),
@@ -5301,7 +5312,7 @@ public class Supervisor {
                 Action.newDisableOptimization(),
                 Action.newMoveRecordedJoints("returning"),
                 Action.newLookForParts(),
-                Action.newPlacePartAction("empty_slot_for_large_gear_in_large_gear_vessel_1", "black_gear"),
+                Action.newPlacePartAction(finalEmptySlot /* "empty_slot_for_large_gear_in_large_gear_vessel_1" */ , "black_gear"),
                 Action.newLookForParts()
             }));
         });

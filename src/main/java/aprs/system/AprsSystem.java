@@ -1683,6 +1683,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     public XFutureVoid startSafeAbort(String comment) {
 
+        if(this.isRequestingFlip()) {
+            return XFutureVoid.completedFuture();
+        }
         if (isAborting()) {
             String errMsg = "startSafeAbort(" + comment + ") called when already aborting";
             setTitleErrorString(errMsg);
@@ -3591,7 +3594,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     private final AtomicInteger setTitleErrorStringCount = new AtomicInteger();
     private static volatile long lastForceShowErrorTime = -1;
 
-    private final AtomicBoolean settingTitleErrorString  = new AtomicBoolean(false);
+    private final AtomicBoolean settingTitleErrorString = new AtomicBoolean(false);
+
     /**
      * Set the title error string, which should be a short string identifying
      * the most critical problem if there is one appropriate for displaying in
@@ -3602,13 +3606,13 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     public void setTitleErrorString(@Nullable String newTitleErrorString) {
 
         try {
-            if(!settingTitleErrorString.compareAndSet(false, true)) {
+            if (!settingTitleErrorString.compareAndSet(false, true)) {
                 return;
             }
-            
+
             if (null != newTitleErrorString) {
                 final int ellipsIndex = newTitleErrorString.indexOf(" ...");
-                if(ellipsIndex > 0) {
+                if (ellipsIndex > 0) {
                     newTitleErrorString = newTitleErrorString.substring(0, ellipsIndex);
                 }
                 if (newTitleErrorString.length() > 160) {
@@ -8728,6 +8732,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public synchronized void checkFutures() throws IllegalStateException {
+        if(isRequestingFlip()) {
+            return;
+        }
         final XFuture<Boolean> startLookForPartsFutureFinal = startLookForPartsFuture;
         if (doingLookForParts) {
             debugDumpStack();
@@ -8931,6 +8938,48 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         return lastContinueActionListFutureComment;
     }
 
+    private @Nullable String partToFlip = null;
+
+    /**
+     * Get the value of partToFlip
+     *
+     * @return the value of partToFlip
+     */
+    public @Nullable
+    String getPartToFlip() {
+        return partToFlip;
+    }
+
+    /**
+     * Set the value of partToFlip
+     *
+     * @param partToFlip new value of partToFlip
+     */
+    public void setPartToFlip(@Nullable String partToFlip) {
+        this.partToFlip = partToFlip;
+    }
+
+    private @Nullable String flipFinalEmptySlot = null;
+
+    /**
+     * Get the value of flipFinalEmptySlot
+     *
+     * @return the value of flipFinalEmptySlot
+     */
+    public @Nullable
+    String getFlipFinalEmptySlot() {
+        return flipFinalEmptySlot;
+    }
+
+    /**
+     * Set the value of flipFinalEmptySlot
+     *
+     * @param flipFinalEmptySlot new value of flipFinalEmptySlot
+     */
+    public void setFlipFinalEmptySlot(@Nullable String flipFinalEmptySlot) {
+        this.flipFinalEmptySlot = flipFinalEmptySlot;
+    }
+
     private volatile boolean runningPrivateStartActions = false;
 
     private synchronized XFuture<Boolean> privateStartActions(
@@ -8939,6 +8988,8 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             ExecutorOption.WithValue<?, ?> @Nullable [] options) {
         StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
 
+        setPartToFlip(null);
+        setFlipFinalEmptySlot(null);
         final ExecutorJInternalFrame pddlExecutorJInternalFrame1Final = executorJInternalFrame1;
         if (null == pddlExecutorJInternalFrame1Final) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
@@ -9016,16 +9067,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
                         return startActionsInternalRet;
                     } catch (Exception exception) {
+                        final String errAdd = 
+                                "privateStartActions : comment=" + comment +"\r\n"
+                                +"privateStartActions : options=" + Arrays.toString(options) +"\r\n"
+                                +"privateStartActions : trace1=" + Utils.traceToString(trace1)+"\r\n";
                         Logger.getLogger(AprsSystem.class
-                                .getName()).log(Level.SEVERE, "", exception);
-                        System.err.println("privateStartActions : comment=" + comment);
-                        System.err.println("privateStartActions : trace1=" + Utils.traceToString(trace1));
+                                .getName()).log(Level.SEVERE, errAdd, exception);
                         setTitleErrorString(exception.getMessage());
                         showException(exception);
                         if (exception instanceof RuntimeException) {
                             throw (RuntimeException) exception;
                         } else {
-                            throw new RuntimeException(exception);
+                            throw new RuntimeException(errAdd,exception);
                         }
                     }
                 }, runProgramService)
@@ -9046,7 +9099,15 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
                         runningPrivateStartActions = false;
                     }
-                }, runProgramService);
+                }, runProgramService)
+                .thenCompose((Boolean x) -> {
+                    if (x && isRequestingFlip()) {
+                        lastPrivateStartActionsFuture = null;
+                        return supervisor.startFlipFMOnSupervisorService(partToFlip,flipFinalEmptySlot);
+                    } else {
+                        return XFuture.completedFuture(x);
+                    }
+                });
         lastPrivateStartActionsFuture = ret;
         return ret;
     }
@@ -9161,6 +9222,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private volatile StackTraceElement lastIsDoingActionsTrueTrace @Nullable []  = null;
 
+    
+    public boolean isRequestingFlip() {
+        return null != this.partToFlip && null != this.flipFinalEmptySlot;
+    }
+    
     /**
      * Get the state of whether the PDDL executor is currently doing actions.
      *
@@ -9565,7 +9631,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, @Nullable PoseType pose, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, pose, label, snapShotWidth, snapShotHeight);
         } else {
@@ -9584,7 +9650,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PointType point, String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PointType point, String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         } else {
@@ -9602,7 +9668,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, @Nullable PmCartesian point, @Nullable String label) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, snapShotWidth, snapShotHeight);
         } else {
@@ -9621,7 +9687,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pose, poseLabel, snapShotWidth,
                     snapShotHeight);
@@ -9641,7 +9707,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel)
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, @Nullable PmCartesian pt, @Nullable String pointLabel)
             throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth,
@@ -9663,7 +9729,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws IOException if writing the file fails
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel) throws IOException {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(snapshotImageFile(imgLabel), pt, pointLabel, snapShotWidth,
                     snapShotHeight);
@@ -9681,7 +9747,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, snapShotWidth, snapShotHeight);
@@ -9699,7 +9765,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(String imgLabel,
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel,
             @Nullable Collection<? extends PhysicalItem> itemsToPaint) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             if (null == itemsToPaint) {
@@ -9754,7 +9820,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PoseType pose, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, pose, label, w, h);
         } else {
@@ -9775,7 +9841,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    XFuture<File @Nullable[]>  takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PointType point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         } else {
@@ -9796,7 +9862,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      *
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, PmCartesian point, String label, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             return object2DViewJInternalFrame.takeSnapshot(f, point, label, w, h);
         } else {
@@ -9816,7 +9882,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PoseType pose, String poseLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9844,7 +9910,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PmCartesian pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9872,7 +9938,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of filenames logged first image file, then csv file
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, PointType pt, String pointLabel, int w, int h) {
         if (null != object2DViewJInternalFrame && isSnapshotsSelected()) {
             final File imgFile;
             try {
@@ -9900,7 +9966,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @return array of files if they were created.
      */
     public @Nullable
-    XFuture<File @Nullable[]> takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
+    XFuture<File @Nullable []> takeSimViewSnapshot(File f, Collection<? extends PhysicalItem> itemsToPaint, int w, int h) {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {
             return this.object2DViewJInternalFrame.takeSnapshot(f, itemsToPaint, w, h);
@@ -9922,7 +9988,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      * @throws java.io.IOException problem writing to the file
      */
     public @Nullable
-   XFuture<File @Nullable[]> takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w,
+    XFuture<File @Nullable []> takeSimViewSnapshot(String imgLabel, Collection<? extends PhysicalItem> itemsToPaint, int w,
             int h) throws IOException {
         checkPhysicalItemCollectionNames(itemsToPaint);
         if (null != object2DViewJInternalFrame) {

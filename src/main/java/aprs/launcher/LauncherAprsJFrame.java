@@ -471,7 +471,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     private void saveLastLaunchFile(File f) throws IOException {
         lastLaunchFile = f;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(LAST_LAUNCH_FILE_FILE))) {
             pw.println(f.getCanonicalPath());
         }
     }
@@ -488,7 +488,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                             Supervisor supervisor = createAprsSupervisorWithSwingDisplay(false);
                             supervisor.setProcessLauncher(processLauncher);
                             return supervisor.completePrevMulti();
-                        },Utils.getDispatchThreadExecutorService());
+                        }, Utils.getDispatchThreadExecutorService());
             } catch (IOException ex) {
                 Logger.getLogger(LauncherAprsJFrame.class.getName()).log(Level.SEVERE, "", ex);
                 throw new RuntimeException(ex);
@@ -843,7 +843,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
 
     static private volatile @Nullable Supervisor multiCycleTestSupervisor = null;
 
-    public static @Nullable Supervisor getMultiCycleTestSupervisor() {
+    public static @Nullable
+    Supervisor getMultiCycleTestSupervisor() {
         return multiCycleTestSupervisor;
     }
 
@@ -967,7 +968,14 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         })
                         .thenCompose(() -> {
                             try {
-                                return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
+                                return supervisor.flipFMTest(
+                                        sysFile,
+                                        posMapsFile,
+                                        startTime,
+                                        fanucSimItemsFile,
+                                        "part_black_gear_in_pt_1" /* partToFlip */,
+                                        "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */
+                                );
                             } catch (Exception ex) {
                                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                                 if (ex instanceof RuntimeException) {
@@ -984,7 +992,13 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
             }
         } else {
             try {
-                return supervisor.flipFMTest(sysFile, posMapsFile, startTime, fanucSimItemsFile);
+                return supervisor.flipFMTest(
+                        sysFile,
+                        posMapsFile,
+                        startTime,
+                        fanucSimItemsFile,
+                        "part_black_gear_in_pt_1" /* partToFlip */,
+                        "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */);
             } catch (Exception ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                 if (ex instanceof RuntimeException) {
@@ -1293,7 +1307,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                 scriptablesMap.put("launcher", scriptableOfStatic(LauncherAprsJFrame.class));
                 scriptablesMap.put("CRCLPosemath", scriptableOfStatic(CRCLPosemath.class));
                 scriptablesMap.put("Utils", scriptableOfStatic(Utils.class));
-                try (AprsRemoteConsoleServerSocket serverSocket
+                try ( AprsRemoteConsoleServerSocket serverSocket
                         = new AprsRemoteConsoleServerSocket(port, scriptablesMap)) {
                     serverSocket.run();
                 }

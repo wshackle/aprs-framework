@@ -60,10 +60,10 @@ public class Action {
                 .build();
     }
 
-    public static Action newFlipPartAction(String part) {
+    public static Action newFlipPartAction(String part, String slot) {
         return new Action.ActionBuilder()
                 .type(FLIP_PART)
-                .args(new String[]{part})
+                .args(new String[]{part,slot})
                 .build();
     }
     

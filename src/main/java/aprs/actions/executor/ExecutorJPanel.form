@@ -2063,7 +2063,7 @@
                           <Data value="endPoseYPointTolerance"/>
                           <Data value="endPoseZPointTolerance"/>
                           <Data value="endPoseXAxisTolerance"/>
-                          <Data value="endPoseXAxisTolerance"/>
+                          <Data value="endPoseZAxisTolerance"/>
                           <Data value="useMessageCommands"/>
                           <Data value="toolChangerPoseFile"/>
                         </Column>

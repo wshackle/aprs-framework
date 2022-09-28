@@ -5297,7 +5297,9 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         if (null == supervisor) {
             throw new IllegalStateException("null == supervisor");
         }
-        return supervisor.startFlipFMOnSupervisorService();
+        return supervisor.startFlipFMOnSupervisorService(
+                "part_black_gear_in_pt_1" /* partToFlip */,
+                "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */);
     }
 
     /**
@@ -6034,8 +6036,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
                 if (col == 1 && val instanceof Boolean) {
                     Boolean bval = (Boolean) val;
                     Object oldVal = jTableRobots.getValueAt(row, col);
-                    final boolean keepDisabled =
-                            !jCheckBoxMenuItemRandomTest.isSelected() 
+                    final boolean keepDisabled
+                            = !jCheckBoxMenuItemRandomTest.isSelected()
                             && (jCheckBoxMenuItemKeepDisabled.isSelected() || supervisor.isKeepDisabled());
                     if (keepDisabled) {
                         if (bval && oldVal != null && !bval.equals(oldVal)) {
