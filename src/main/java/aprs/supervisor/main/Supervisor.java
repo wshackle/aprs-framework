@@ -37,7 +37,6 @@ import aprs.system.AprsSystem;
 import crcl.base.CRCLStatusType;
 import crcl.base.CommandStateEnumType;
 import crcl.base.CommandStatusType;
-import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLUtils;
 import crcl.utils.XFuture;
 import crcl.utils.XFutureVoid;
@@ -87,6 +86,7 @@ import java.util.stream.Stream;
 
 import static aprs.misc.AprsCommonLogger.println;
 import static aprs.misc.Utils.*;
+import crcl.base.PointType;
 import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLUtils.requireNonNull;
 
@@ -338,8 +338,8 @@ public class Supervisor {
             File positionMappingsFile,
             long startTime,
             File fanucSimItemsFile,
-            String partToFlip, 
-            String finalEmptySlot) throws IOException {
+            String partToFlip,
+            PointType flipReturnPoint) throws IOException {
 
         String dir = setupFile.getParent();
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
@@ -372,7 +372,7 @@ public class Supervisor {
 
         XFuture<Boolean> ret = f2
                 .thenComposeAsync(x -> connectAll(), supervisorExecutorService)
-                .thenComposeAsync(x -> startFlipFM( partToFlip, finalEmptySlot), supervisorExecutorService);
+                .thenComposeAsync(x -> startFlipFM(partToFlip, flipReturnPoint), supervisorExecutorService);
         lastCompletePrevFlipFMFuture = ret;
         return ret;
     }
@@ -1426,7 +1426,7 @@ public class Supervisor {
                         + totalTimeString + ",prevLFR=" + prevLFR + ", toggleBlockerMap.keySet()="
                         + toggleBlockerMap.keySet());
                 if (enabled) {
-                    if(null == stealUnstealFuture || stealUnstealFuture.isDone() || stealUnstealFuture.isCancelled()) {
+                    if (null == stealUnstealFuture || stealUnstealFuture.isDone() || stealUnstealFuture.isCancelled()) {
                         enablingRobots.remove(robotName);
                     } else {
                         stealUnstealFuture.thenRun(() -> {
@@ -1923,19 +1923,19 @@ public class Supervisor {
                 }
                 if (null == stealFrom || null == stealFor) {
                     for (int i = 0; i < this.aprsSystems.size(); i++) {
-                        try { 
-                        checkRunningOrDoingActions(this.aprsSystems.get(i), srn, "returnRobots(" + comment + ")");
-                        } catch(Throwable throwable) {
-                            Logger.getLogger(Supervisor.class.getCanonicalName()).log(Level.SEVERE, "returnRobots1Trace="+XFuture.traceToString(returnRobots1Trace), throwable);
-                            if(throwable instanceof RuntimeException) {
+                        try {
+                            checkRunningOrDoingActions(this.aprsSystems.get(i), srn, "returnRobots(" + comment + ")");
+                        } catch (Throwable throwable) {
+                            Logger.getLogger(Supervisor.class.getCanonicalName()).log(Level.SEVERE, "returnRobots1Trace=" + XFuture.traceToString(returnRobots1Trace), throwable);
+                            if (throwable instanceof RuntimeException) {
                                 throw (RuntimeException) throwable;
                             } else {
-                                throw new RuntimeException("returnRobots1Trace="+XFuture.traceToString(returnRobots1Trace),throwable);
+                                throw new RuntimeException("returnRobots1Trace=" + XFuture.traceToString(returnRobots1Trace), throwable);
                             }
                         }
                     }
                 }
-                final NamedFunction<Integer, XFutureVoid> oldReturnRobotVal 
+                final NamedFunction<Integer, XFutureVoid> oldReturnRobotVal
                         = returnRobotFunction.getAndSet(null);
                 return returnRobots2(oldReturnRobotVal, comment, ecc)
                         .peekException((Throwable throwable) -> {
@@ -5150,10 +5150,10 @@ public class Supervisor {
                 .thenComposeAsyncToVoid(x -> x, supervisorExecutorService);
     }
 
-    public XFuture<Boolean> startFlipFMOnSupervisorService(String partToFlip, String finalEmptySlot) {
+    public XFuture<Boolean> startFlipFMOnSupervisorService(String partToFlip, PointType flipReturnPoint) {
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
-                        () -> this.startFlipFM( partToFlip, finalEmptySlot), supervisorExecutorService)
+                        () -> this.startFlipFM(partToFlip, flipReturnPoint), supervisorExecutorService)
                 .thenCompose(x -> x);
     }
 
@@ -5193,8 +5193,7 @@ public class Supervisor {
 //        }
 //        return XFuture.allOfWithName("lookForPartsAll", futures);
 //    }
-
-    public XFuture<Boolean> startFlipFM(String partToFlip, String finalEmptySlot ) {
+    public XFuture<Boolean> startFlipFM(String partToFlip, PointType flipReturnPoint) {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
         AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
@@ -5228,13 +5227,20 @@ public class Supervisor {
         XFutureVoid xf2 = xf1.thenComposeAsyncToVoid("startFlip.step2",
                 x -> {
                     logEvent("startFlip.step2 : xf1=" + xf1);
+                    if (fanucCartSys.isObjectViewSimulated()) {
+                        final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
+                        if (null != objectViewPanel) {
+                            objectViewPanel.setIgnoreMissedDropOffs(true);
+                            objectViewPanel.setIgnoreMissedPickups(true);
+                        }
+                    }
                     return lookForPartsAll();
                 }, supervisorExecutorService);
         XFuture<Boolean> xf3 = xf2.thenCompose("startFlip.step3", x -> {
             logEvent("startFlip.step2 : xf2=" + xf2);
             return fanucCartSys.startActionsList("flip2",
                     Arrays.asList(new Action[]{
-                Action.newTakePartAction(partToFlip /* "part_black_gear_in_pt_1" */ ),
+                Action.newTakePartAction(partToFlip /* "part_black_gear_in_pt_1" */),
                 Action.newMoveRecordedJoints("present_gear")
             }),
                     //		    ExecutorOption.ForBoolean.REVERSE.with(true),
@@ -5311,12 +5317,55 @@ public class Supervisor {
                     Arrays.asList(new Action[]{
                 Action.newDisableOptimization(),
                 Action.newMoveRecordedJoints("returning"),
-                Action.newLookForParts(),
-                Action.newPlacePartAction(finalEmptySlot /* "empty_slot_for_large_gear_in_large_gear_vessel_1" */ , "black_gear"),
                 Action.newLookForParts()
             }));
+//                Action.newPlacePartAction(finalEmptySlot /* "empty_slot_for_large_gear_in_large_gear_vessel_1" */ , "black_gear"),
+//                Action.newLookForParts()
+//            }));
         });
-        return xf9.thenApply(x -> {
+        XFuture<Boolean> xf10 = xf9.thenCompose("startFlip.step9", x -> {
+            if (fanucCartSys.isObjectViewSimulated()) {
+                final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
+                if (null != objectViewPanel) {
+                    objectViewPanel.setIgnoreMissedDropOffs(true);
+                    objectViewPanel.setIgnoreMissedPickups(true);
+                }
+            }
+            if (null != displayJFrame) {
+                displayJFrame.setTitle("Flip FM 9");
+            }
+            return lookForPartsAll().thenApply(x1 -> x);
+        });
+        XFuture<Boolean> xf11 = xf10.thenCompose("startFlip.step10", x -> {
+            if (fanucCartSys.isObjectViewSimulated()) {
+                final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
+                if (null != objectViewPanel) {
+                    objectViewPanel.setIgnoreMissedDropOffs(true);
+                    objectViewPanel.setIgnoreMissedPickups(true);
+                }
+            }
+            if (null != displayJFrame) {
+                displayJFrame.setTitle("Flip FM 10");
+            }
+            return fanucCartSys.startActionsList("flip10",
+                    Arrays.asList(new Action[]{
+                Action.newPlacePartByPosition(flipReturnPoint.getX(),flipReturnPoint.getY(), "black_gear")
+            }));
+        });
+        XFuture<Boolean> xf12 = xf11.thenCompose("startFlip.step11", x -> {
+            if (fanucCartSys.isObjectViewSimulated()) {
+                final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
+                if (null != objectViewPanel) {
+                    objectViewPanel.setIgnoreMissedDropOffs(true);
+                    objectViewPanel.setIgnoreMissedPickups(true);
+                }
+            }
+            if (null != displayJFrame) {
+                displayJFrame.setTitle("Flip FM 9");
+            }
+            return lookForPartsAll().thenApply(x1 -> x);
+        });
+        return xf12.thenCompose(x -> {
             if (fanucCartSys.isObjectViewSimulated()) {
                 final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
                 if (null != objectViewPanel) {
@@ -5324,11 +5373,16 @@ public class Supervisor {
                     objectViewPanel.setIgnoreMissedPickups(false);
                 }
             }
-            logEvent("startFlipFM completed.");
-            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
-                showMesssage("startFlipFM completed.");
+            if (null != displayJFrame) {
+                displayJFrame.setTitle("Flip FM 11 success="+x);
             }
-            return x;
+            fanucCartSys.clearIsRequestingFlip();
+            logEvent("startFlipFM completed.  success="+x);
+            if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
+                return showMesssage("startFlipFM completed.  success="+x)
+                        .thenApply(x3 -> x);
+            }
+            return XFuture.completedFuture(x);
         });
     }
 
@@ -8253,11 +8307,11 @@ public class Supervisor {
     }
 
     /*public*/ void robotTaskMapPut(String key, AprsSystem sys) {
-        robotTaskMapPutWithoutTableRefresh( key,sys);
+        robotTaskMapPutWithoutTableRefresh(key, sys);
         refreshRobotsTable();
     }
 
-    private void robotTaskMapPutWithoutTableRefresh( String key, AprsSystem sys) throws RuntimeException {
+    private void robotTaskMapPutWithoutTableRefresh(String key, AprsSystem sys) throws RuntimeException {
         logEvent("putting sys = " + sys + " into robotTaskMap for " + key + ", robotTaskMap=" + robotTaskMap);
         if (isKeepDisabled() && !robotTaskMap.containsKey(key) && !enablingRobots.contains(key)) {
             throw new RuntimeException("Adding " + key + " to robotTaskMap when keep disabled set.");
@@ -10537,7 +10591,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                                               @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                                                    @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

@@ -5299,7 +5299,8 @@ public class AprsSupervisorDisplayJFrame extends javax.swing.JFrame {
         }
         return supervisor.startFlipFMOnSupervisorService(
                 "part_black_gear_in_pt_1" /* partToFlip */,
-                "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */);
+                (PointType) null // "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */
+                );
     }
 
     /**

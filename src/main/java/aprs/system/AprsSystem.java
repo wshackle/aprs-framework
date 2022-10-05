@@ -1683,7 +1683,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
      */
     public XFutureVoid startSafeAbort(String comment) {
 
-        if(this.isRequestingFlip()) {
+        if (this.isRequestingFlip()) {
             return XFutureVoid.completedFuture();
         }
         if (isAborting()) {
@@ -8732,7 +8732,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
     }
 
     public synchronized void checkFutures() throws IllegalStateException {
-        if(isRequestingFlip()) {
+        if (isRequestingFlip()) {
             return;
         }
         final XFuture<Boolean> startLookForPartsFutureFinal = startLookForPartsFuture;
@@ -8959,25 +8959,25 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         this.partToFlip = partToFlip;
     }
 
-    private @Nullable String flipFinalEmptySlot = null;
+    private volatile @Nullable PointType flipReturnPoint = null;
 
     /**
-     * Get the value of flipFinalEmptySlot
+     * Get the value of flipReturnPoint
      *
-     * @return the value of flipFinalEmptySlot
+     * @return the value of flipReturnPoint
      */
     public @Nullable
-    String getFlipFinalEmptySlot() {
-        return flipFinalEmptySlot;
+    PointType getFlipReturnPoint() {
+        return flipReturnPoint;
     }
 
     /**
-     * Set the value of flipFinalEmptySlot
+     * Set the value of flipReturnPoint
      *
-     * @param flipFinalEmptySlot new value of flipFinalEmptySlot
+     * @param flipReturnPoint new value of flipReturnPoint
      */
-    public void setFlipFinalEmptySlot(@Nullable String flipFinalEmptySlot) {
-        this.flipFinalEmptySlot = flipFinalEmptySlot;
+    public void setFlipReturnPoint(@Nullable PointType flipReturnPoint) {
+        this.flipReturnPoint = flipReturnPoint;
     }
 
     private volatile boolean runningPrivateStartActions = false;
@@ -8988,8 +8988,6 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             ExecutorOption.WithValue<?, ?> @Nullable [] options) {
         StackTraceElement trace1[] = Thread.currentThread().getStackTrace();
 
-        setPartToFlip(null);
-        setFlipFinalEmptySlot(null);
         final ExecutorJInternalFrame pddlExecutorJInternalFrame1Final = executorJInternalFrame1;
         if (null == pddlExecutorJInternalFrame1Final) {
             throw new IllegalStateException("PDDL Exectutor View must be open to use this function.");
@@ -9067,10 +9065,10 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
                         return startActionsInternalRet;
                     } catch (Exception exception) {
-                        final String errAdd = 
-                                "privateStartActions : comment=" + comment +"\r\n"
-                                +"privateStartActions : options=" + Arrays.toString(options) +"\r\n"
-                                +"privateStartActions : trace1=" + Utils.traceToString(trace1)+"\r\n";
+                        final String errAdd
+                                = "privateStartActions : comment=" + comment + "\r\n"
+                                + "privateStartActions : options=" + Arrays.toString(options) + "\r\n"
+                                + "privateStartActions : trace1=" + Utils.traceToString(trace1) + "\r\n";
                         Logger.getLogger(AprsSystem.class
                                 .getName()).log(Level.SEVERE, errAdd, exception);
                         setTitleErrorString(exception.getMessage());
@@ -9078,7 +9076,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         if (exception instanceof RuntimeException) {
                             throw (RuntimeException) exception;
                         } else {
-                            throw new RuntimeException(errAdd,exception);
+                            throw new RuntimeException(errAdd, exception);
                         }
                     }
                 }, runProgramService)
@@ -9101,9 +9099,11 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                     }
                 }, runProgramService)
                 .thenCompose((Boolean x) -> {
-                    if (x && isRequestingFlip()) {
+                    if (x && isRequestingFlip() && !flipRequestStarted) {
                         lastPrivateStartActionsFuture = null;
-                        return supervisor.startFlipFMOnSupervisorService(partToFlip,flipFinalEmptySlot);
+                        lastStartActionsFuture = null;
+                        flipRequestStarted = true;
+                        return supervisor.startFlipFMOnSupervisorService(partToFlip, flipReturnPoint);
                     } else {
                         return XFuture.completedFuture(x);
                     }
@@ -9222,11 +9222,18 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
 
     private volatile StackTraceElement lastIsDoingActionsTrueTrace @Nullable []  = null;
 
-    
+    private volatile boolean flipRequestStarted = false;
+
     public boolean isRequestingFlip() {
-        return null != this.partToFlip && null != this.flipFinalEmptySlot;
+        return null != this.partToFlip && null != this.flipReturnPoint;
     }
-    
+
+    public void clearIsRequestingFlip() {
+        setPartToFlip(null);
+        setFlipReturnPoint(null);
+        flipRequestStarted = false;
+    }
+
     /**
      * Get the state of whether the PDDL executor is currently doing actions.
      *

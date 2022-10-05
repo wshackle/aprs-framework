@@ -34,6 +34,8 @@ import static aprs.actions.executor.ActionType.TAKE_PART;
 import static aprs.actions.executor.ActionType.TAKE_PART_BY_TYPE_AND_POSITION;
 import static aprs.actions.executor.ActionType.UNINITIALIZED;
 import static aprs.actions.optaplanner.actionmodel.OpAction.allowedPartTypes;
+import crcl.base.PointType;
+import crcl.utils.CRCLPosemath;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -60,10 +62,10 @@ public class Action {
                 .build();
     }
 
-    public static Action newFlipPartAction(String part, String slot) {
+    public static Action newFlipPartAction(String part, PointType flipReturnPoint) {
         return new Action.ActionBuilder()
                 .type(FLIP_PART)
-                .args(new String[]{part,slot})
+                .args(new String[]{part,CRCLPosemath.pointToString(flipReturnPoint)})
                 .build();
     }
     

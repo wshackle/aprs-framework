@@ -99,6 +99,7 @@ import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Integer.max;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.table.TableModel;
 
 /**
@@ -231,13 +232,13 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         toolMenu.add(toolPickupByToolMenu);
         toolMenu.add(toolSwitchToolMenu);
         toolMenu.add(toolSetToolMenu);
-        optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions);
+        optionsCachedTable = new CachedTable((DefaultTableModel) jTableOptions.getModel(), jTableOptions, false);
         enableOptaplannerCachedCheckBox = new CachedCheckBox(jCheckBoxEnableOptaPlanner);
         pddlOutputActionsCachedText = new CachedTextField(jTextFieldPddlOutputActions);
-        pddlOutputCachedTableModel = new CachedTable((DefaultTableModel) jTablePddlOutput.getModel(), jTablePddlOutput);
+        pddlOutputCachedTableModel = new CachedTable((DefaultTableModel) jTablePddlOutput.getModel(), jTablePddlOutput, false);
         replanCachedCheckBox = new CachedCheckBox(jCheckBoxReplan);
         forceFakeTakeFlagCachedCheckBox = new CachedCheckBox(jCheckBoxForceFakeTake);
-        crclProgramCachedTable = new CachedTable((DefaultTableModel) jTableCrclProgram.getModel(), jTableCrclProgram);
+        crclProgramCachedTable = new CachedTable((DefaultTableModel) jTableCrclProgram.getModel(), jTableCrclProgram, false);
         manualObjectCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualObjectName);
         manualSlotCachedComboBox = new CachedComboBox<>(String.class, jComboBoxManualSlotName);
         toolHolderPositionsCachedTable = new CachedTable(jTableToolHolderPositions);
@@ -2761,6 +2762,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jCheckBoxEditOptionsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEditOptionsTableActionPerformed
+        this.booleanOptions = null;
+        this.options = null;
         boolean edit = jCheckBoxEditOptionsTable.isSelected();
         jTableOptions.getModel().removeTableModelListener(optionsTableModelListener);
         final TableModel oldModel = jTableOptions.getModel();
@@ -2792,8 +2795,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
         };
         jTableOptions.setModel(newModel);
+        optionsCachedTable.setEditable(edit);
         optionsCachedTable.setData(data);
         if (!edit) {
+            this.booleanOptions = null;
+            this.options = null;
             final Map<ExecutorOption, ?> options = getOptions();
             System.out.println("options = " + options);
             crclGenerator.setOptions(options);
@@ -3044,7 +3050,18 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 .getOrDefault(ExecutorOption.ForBoolean.reverseCheckDisabled, Boolean.FALSE);
     }
 
+    private volatile @Nullable Map<ExecutorOption.ForBoolean, Boolean> booleanOptions = null;
+
     public Map<ExecutorOption.ForBoolean, Boolean> getBooleanOptionsMap() {
+        if (booleanOptions == null) {
+            Map<ExecutorOption.ForBoolean, Boolean> fresh = getFreshBooleanOptionsMap();
+            this.booleanOptions = fresh;
+            return fresh;
+        }
+        return booleanOptions;
+    }
+
+    public Map<ExecutorOption.ForBoolean, Boolean> getFreshBooleanOptionsMap() {
         final Map<ExecutorOption, ?> optionsLocal = getOptions();
         return ExecutorOption.ForBoolean.map(optionsLocal);
     }
@@ -7984,13 +8001,13 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             filteredOrigOptionsMap = null;
         }
         final boolean checkReverse2 = isReverseCheckDisabled();
-        
+
         try {
             boolean programGenerated = false;
             lastGenerateCrclGeneratedProgram = programGenerated;
             boolean programRan = false;
             lastGenerateCrclRanProgram = programRan;
-            checkReverse();
+            checkReverseWithOptions(options);
             boolean doSafeAbort = checkSafeAbort(startSafeAbortRequestCount);
             if (doSafeAbort) {
                 if (!programRan) {
@@ -8119,7 +8136,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 this.setOptions(filteredOrigOptionsMap);
             }
             final boolean checkReverse3 = isReverseCheckDisabled();
-            
+
         }
         return true;
     }
@@ -9488,16 +9505,20 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }
 
     void setOptions(ExecutorOption.WithValue<?, ?>... options) {
-        final boolean checkReverse1 = isReverseCheckDisabled();
+        this.booleanOptions = null;
+        this.options = null;
+//        final boolean checkReverse1 = isReverseCheckDisabled();
+//        this.booleanOptions = null;
+//        this.options = null;
         for (ExecutorOption.WithValue<?, ?> opt : options) {
             privateSetOption(opt.getKey(), opt.getValue());
         }
         crclGenerator.setOptions(getOptions());
-        final boolean checkReverse2 = isReverseCheckDisabled();
-        if(checkReverse2 != checkReverse1) {
-            LOGGER.log(Level.SEVERE, "checkReverse1="+checkReverse1+", checkReverse2="+checkReverse2);
-            Thread.dumpStack();
-        }
+//        final boolean checkReverse2 = isReverseCheckDisabled();
+//        if (checkReverse2 != checkReverse1) {
+//            LOGGER.log(Level.SEVERE, "checkReverse1=" + checkReverse1 + ", checkReverse2=" + checkReverse2);
+//            Thread.dumpStack();
+//        }
     }
 
 //    void setOptions(Iterable<? extends ExecutorOption.WithValue<?, ?>> options) {
@@ -9506,7 +9527,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 //        }
 //        crclGenerator.setOptions(getOptions());
 //    }
-
     <K extends ExecutorOption, V> void setOptions(Map<K, V> options) {
         final boolean checkReverse1 = isReverseCheckDisabled();
         for (Map.Entry<K, V> entry : options.entrySet()) {
@@ -9520,8 +9540,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         }
         crclGenerator.setOptions(getOptions());
         final boolean checkReverse2 = isReverseCheckDisabled();
-        if(checkReverse2 != checkReverse1) {
-            LOGGER.log(Level.SEVERE, "checkReverse1="+checkReverse1+", checkReverse2="+checkReverse2);
+        if (checkReverse2 != checkReverse1) {
+            LOGGER.log(Level.SEVERE, "checkReverse1=" + checkReverse1 + ", checkReverse2=" + checkReverse2);
             Thread.dumpStack();
         }
     }
@@ -9538,14 +9558,16 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
         }
         final boolean checkReverse2 = isReverseCheckDisabled();
-        if(checkReverse2 != checkReverse1) {
-            LOGGER.log(Level.SEVERE, "checkReverse1="+checkReverse1+", checkReverse2="+checkReverse2);
+        if (checkReverse2 != checkReverse1) {
+            LOGGER.log(Level.SEVERE, "checkReverse1=" + checkReverse1 + ", checkReverse2=" + checkReverse2);
             Thread.dumpStack();
         }
     }
 
     private void privateSetOption(ExecutorOption key, Object val) {
-        final boolean checkReverse1 = isReverseCheckDisabled();
+        this.options = null;
+        this.booleanOptions = null;
+//        final boolean checkReverse1 = isReverseCheckDisabled();
         int matchingRow = -1;
         for (int i = 0; i < optionsCachedTable.getRowCount(); i++) {
             Object keyCheck = optionsCachedTable.getValueAt(i, 0);
@@ -9569,19 +9591,21 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     enableOptaplannerCachedCheckBox.setSelected(newb);
                 }
             }
-        } else if(key == ExecutorOption.ForBoolean.reverseCheckDisabled) {
+        } else if (key == ExecutorOption.ForBoolean.reverseCheckDisabled) {
             if (val instanceof Boolean) {
                 boolean newBVal = (boolean) val;
-                if(newBVal != isReverseCheckDisabled()) {
-                   logDebug("newBVal="+newBVal);
+                if (newBVal != isReverseCheckDisabled()) {
+                    logDebug("newBVal=" + newBVal);
                 }
             }
         }
-        final boolean checkReverse2 = isReverseCheckDisabled();
-        if(checkReverse2 != checkReverse1) {
-            LOGGER.log(Level.SEVERE, "checkReverse1="+checkReverse1+", checkReverse2="+checkReverse2);
-            Thread.dumpStack();
-        }
+        this.options = null;
+        this.booleanOptions = null;
+//        final boolean checkReverse2 = isReverseCheckDisabled();
+//        if (checkReverse2 != checkReverse1) {
+//            LOGGER.log(Level.SEVERE, "checkReverse1=" + checkReverse1 + ", checkReverse2=" + checkReverse2);
+//            Thread.dumpStack();
+//        }
     }
 
     public void setOption(ExecutorOption key, Object val) {
@@ -9589,8 +9613,8 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         privateSetOption(key, val);
         crclGenerator.setOptions(getOptions());
         final boolean checkReverse2 = isReverseCheckDisabled();
-        if(checkReverse2 != checkReverse1) {
-            LOGGER.log(Level.SEVERE, "checkReverse1="+checkReverse1+", checkReverse2="+checkReverse2);
+        if (checkReverse2 != checkReverse1) {
+            LOGGER.log(Level.SEVERE, "checkReverse1=" + checkReverse1 + ", checkReverse2=" + checkReverse2);
             Thread.dumpStack();
         }
     }
@@ -9604,8 +9628,18 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }
 
     private final CachedTable optionsCachedTable;
+    private volatile @Nullable Map<ExecutorOption, ?> options = null;
 
     public Map<ExecutorOption, ?> getOptions() {
+        if (options == null) {
+            Map<ExecutorOption, ?> ret = getOptionsFromCachedTable();
+            this.options = ret;
+            return ret;
+        }
+        return this.options;
+    }
+
+    public Map<ExecutorOption, ?> getOptionsFromCachedTable() {
         Map<ExecutorOption, Object> options = new HashMap<>();
         @Nullable
         Object[][] optionsData = optionsCachedTable.getData();

@@ -1147,8 +1147,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     private volatile int lastAtLastIndexRepPos = -1;
 
     public boolean atLastIndex() {
-        if(null != aprsSystem.getFlipFinalEmptySlot() && null != aprsSystem.getPartToFlip()) {
-            lastIndex.set(null != lastActionsList?lastActionsList.size():0 );
+        if (aprsSystem.isRequestingFlip()) {
+            lastIndex.set(null != lastActionsList ? lastActionsList.size() : 0);
             return true;
         }
         final int idx = getLastIndex();
@@ -3410,8 +3410,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                                 flippedItemNeededInSlotSkuName = itemNeededInSlotSkuName.replace(itemNeededInSlotShortName, flippedShortItemNeededInSlot);
                                                 if (flippedItemNeededInSlotSkuName.equals(itemNowInSlotSkuName)) {
                                                     correctivedItems.add(closestItem);
-                                                    correctiveActions.add(Action.newFlipPartAction(closestItem.getFullName(),
-                                                            "empty_slot_for_"+itemNeededInSlotShortName+"_in_"+kitInstanceName));
+                                                    final aprs.actions.executor.Action newFlipPartAction
+                                                            = Action.newFlipPartAction(
+                                                                    closestItem.getFullName(),
+                                                                    absSlot.getPose().getPoint());
+                                                    correctiveActions.add(newFlipPartAction);
+                                                    //        "empty_slot_for_"+ Utils.shortenItemPartName(absSlot.getSlotForSkuName())+"_in_"+kitInstanceName));
+                                                    // empty_slot_for_medium_gear_in_kit_m2l1_vessel_2
+                                                    // empty_slot_2_for_medium_gear_in_kit_m2l1_vessel_1
                                                     correctivedItems.add(absSlot);
                                                     breakActionsSetNeeded = true;
                                                     break;
@@ -3578,9 +3584,10 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 boolean placedPart = false;
                                 for (int caIndex = 0; caIndex < optimizedCorrectiveActions.size(); caIndex++) {
                                     Action correctiveAction = optimizedCorrectiveActions.get(caIndex);
+                                    final String[] actionArgs = correctiveAction.getArgs();
                                     switch (correctiveAction.getType()) {
                                         case TAKE_PART:
-                                            String partName = correctiveAction.getArgs()[takePartArgIndex];
+                                            String partName = actionArgs[takePartArgIndex];
                                             if (partName.contains("in_pt")) {
                                                 if (caIndex < optimizedCorrectiveActions.size() - 1) {
                                                     Action nextAction = optimizedCorrectiveActions.get(caIndex + 1);
@@ -3597,14 +3604,14 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
 
                                         case PLACE_PART:
                                             placedPart = true;
-                                            String slotName = correctiveAction.getArgs()[placePartSlotArgIndex];
+                                            String slotName = actionArgs[placePartSlotArgIndex];
                                             placePartBySlotName(slotName, cmds, correctiveAction, action, lastLookForIndex);  //ByName(slotName, null, cmds);
                                             break;
 
                                         case FLIP_PART:
-                                            String flipPartName = correctiveAction.getArgs()[takePartArgIndex];
-                                            String flipflipFinalEmptySlot = correctiveAction.getArgs()[1];
-                                            flipPart(flipPartName,flipflipFinalEmptySlot, cmds);
+                                            String flipPartName = actionArgs[takePartArgIndex];
+                                            PointType flipReturnPoint = CRCLPosemath.stringToPoint(actionArgs[1]);
+                                            flipPart(flipPartName, flipReturnPoint, cmds);
                                             placedPart = true;
                                             break;
                                     }
@@ -4876,11 +4883,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         return baseName.substring(0, lastCharIndex + 1);
     }
 
-    
-
-    private void flipPart(String partName, String finalEmptySlot, List<MiddleCommandType> out) {
+    private void flipPart(String partName, PointType flipReturnPoint, List<MiddleCommandType> out) {
         aprsSystem.setPartToFlip(partName);
-        aprsSystem.setFlipFinalEmptySlot(finalEmptySlot);
+        aprsSystem.setFlipReturnPoint(flipReturnPoint);
     }
 
     private void takePartByName(String partName, @Nullable Action nextPlacePartAction, List<MiddleCommandType> out) throws IllegalStateException, SQLException, CRCLException, PmException {
@@ -4904,7 +4909,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                 recordSkipTakePart(partName, pose);
                 return;
             } else {
-                throw new IllegalStateException("Missing part or part in wrong tray : getPose(" + partName + ") returned null");
+                throw new IllegalStateException("Missing part or part in wrong tray : getPose(" + partName + ") returned null  \r\n        poseCache.keySet()=" + poseCache.keySet() + "\r\n");
             }
         }
         final String partTool;
@@ -7399,7 +7404,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     return;
                 }
             }
-            throw new IllegalStateException("getPose(" + slotName + ") returned null");
+            throw new IllegalStateException("getPose(" + slotName + ") returned null. \r\n    poseCache.keySet()=" + poseCache.keySet() + "\r\n");
         }
         pose = visionToRobotPose(pose);
         pose.setXAxis(xAxis);

@@ -53,7 +53,6 @@ import static aprs.supervisor.main.Supervisor.createAprsSupervisorWithSwingDispl
 import static aprs.misc.Utils.PlayAlert;
 import aprs.remote.AprsRemoteConsoleServerSocket;
 import aprs.remote.Scriptable;
-import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLPosemath;
 import java.awt.HeadlessException;
 import java.io.FileReader;
@@ -61,10 +60,9 @@ import java.util.Properties;
 import java.util.TreeMap;
 import javax.swing.JMenuItem;
 import static aprs.remote.Scriptable.scriptableOfStatic;
+import crcl.base.PointType;
 import crcl.ui.misc.NotificationsJPanel;
 import crcl.utils.CRCLUtils;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.plaf.FileChooserUI;
 
 /**
  *
@@ -974,7 +972,7 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                                         startTime,
                                         fanucSimItemsFile,
                                         "part_black_gear_in_pt_1" /* partToFlip */,
-                                        "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */
+                                        (PointType) null // "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */
                                 );
                             } catch (Exception ex) {
                                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
@@ -998,7 +996,8 @@ public class LauncherAprsJFrame extends javax.swing.JFrame {
                         startTime,
                         fanucSimItemsFile,
                         "part_black_gear_in_pt_1" /* partToFlip */,
-                        "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */);
+                        (PointType) null // "empty_slot_for_large_gear_in_large_gear_vessel_1" /* finalEmptySlot */
+                );
             } catch (Exception ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "trace=" + trace, ex);
                 if (ex instanceof RuntimeException) {

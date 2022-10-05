@@ -57,7 +57,9 @@ public class CachedTable extends CachedComponentBase {
         @UIEffect
         @SuppressWarnings({"initialization", "nullness"})
         public void tableChanged(TableModelEvent e) {
-            syncUiToCache();
+            if(CachedTable.this.editable) {
+                syncUiToCache();
+            }
         }
     };
 
@@ -85,9 +87,15 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
+    
     @UIEffect
     public CachedTable(JTable jTable) {
-        this((DefaultTableModel) jTable.getModel(), jTable);
+        this((DefaultTableModel) jTable.getModel(), jTable, false);
+    }
+    
+    @UIEffect
+    public CachedTable(JTable jTable, boolean editable) {
+        this((DefaultTableModel) jTable.getModel(), jTable, editable);
     }
 
     public String getColumnName(int index) {
@@ -100,8 +108,9 @@ public class CachedTable extends CachedComponentBase {
 
     @UIEffect
     @SuppressWarnings({"rawtypes", "unchecked", "initialization", "nullness"})
-    public CachedTable(DefaultTableModel model, JTable jTable) {
+    public CachedTable(DefaultTableModel model, JTable jTable, boolean editable) {
         this.jTable = jTable;
+        this.editable = editable;
         selectedRow = jTable.getSelectedRow();
 
         jTable.getSelectionModel().addListSelectionListener(listSelectionListener);
@@ -115,7 +124,9 @@ public class CachedTable extends CachedComponentBase {
             System.arraycopy(rowVector.toArray(), 0, newData[i], 0, columnCount);
         }
         this.data = newData;
-        model.addTableModelListener(tableModelListener);
+        if(editable) {
+            model.addTableModelListener(tableModelListener);
+        }
     }
 
     @SuppressWarnings({"rawtypes", "unchecked", "initialization"})
@@ -307,6 +318,36 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
+    private boolean editable;
+
+    /**
+     * Get the value of editable
+     *
+     * @return the value of editable
+     */
+    public boolean isEditable() {
+        return editable;
+    }
+
+    /**
+     * Set the value of editable
+     *
+     * @param editable new value of editable
+     */
+    public void setEditable(boolean editable) {
+        if (editable != this.editable) {
+            this.editable = editable;
+            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
+            if (null != model) {
+                if (editable) {
+                    model.addTableModelListener(tableModelListener);
+                } else {
+                    model.removeTableModelListener(tableModelListener);
+                }
+            }
+        }
+    }
+
     @UIEffect
     synchronized private void setModelRowCount(int newRowCount) {
         if (null != this.jTable) {
@@ -314,7 +355,9 @@ public class CachedTable extends CachedComponentBase {
             if (null != model) {
                 model.removeTableModelListener(tableModelListener);
                 model.setRowCount(newRowCount);
-                model.addTableModelListener(tableModelListener);
+                if (this.editable) {
+                    model.addTableModelListener(tableModelListener);
+                }
             }
         }
         //syncDataUiToCache();
@@ -329,7 +372,9 @@ public class CachedTable extends CachedComponentBase {
                 model.setRowCount(newRowCount);
                 model.setColumnCount(newColumnCount);
                 syncColumnNamesClasses(model);
-                model.addTableModelListener(tableModelListener);
+                if (editable) {
+                    model.addTableModelListener(tableModelListener);
+                }
             }
         }
         //syncDataUiToCache();
@@ -345,7 +390,7 @@ public class CachedTable extends CachedComponentBase {
                 }
                 model.addColumn(columnName);
                 syncColumnNamesClasses(model);
-                if (null != tableModelListener) {
+                if (null != tableModelListener && this.editable) {
                     model.addTableModelListener(tableModelListener);
                 }
             }
@@ -363,7 +408,7 @@ public class CachedTable extends CachedComponentBase {
                     model.removeTableModelListener(tableModelListener);
                 }
                 model.addRow(data);
-                if (null != tableModelListener) {
+                if (null != tableModelListener && editable) {
                     model.addTableModelListener(tableModelListener);
                 }
             }
@@ -380,7 +425,7 @@ public class CachedTable extends CachedComponentBase {
                     model.removeTableModelListener(tableModelListener);
                 }
                 model.removeRow(index);
-                if (null != tableModelListener) {
+                if (null != tableModelListener && this.editable) {
                     model.addTableModelListener(tableModelListener);
                 }
             }
@@ -410,7 +455,7 @@ public class CachedTable extends CachedComponentBase {
                         model.addRow(newData[i]);
                     }
                 }
-                if (null != tableModelListener) {
+                if (null != tableModelListener && this.editable) {
                     model.addTableModelListener(tableModelListener);
                 }
             }
