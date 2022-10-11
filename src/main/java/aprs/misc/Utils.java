@@ -831,6 +831,7 @@ public class Utils {
             if (RECORD_DISPATCH_CALLERS) {
                 offDispatchCallerMap.putIfAbsent(callerString, 1);
             }
+            final StackTraceElement[] callerTrace = Thread.currentThread().getStackTrace();
             javax.swing.SwingUtilities.invokeLater(() -> {
                 try {
                     r.run();
@@ -840,7 +841,17 @@ public class Utils {
                     if (!(e instanceof PrintedException)) {
                         if (count < 2) {
                             LOGGER.log(Level.SEVERE, name, e);
-                            showMessageDialog(null, "Exception " + count + " : " + e.getMessage());
+                            List<StackTraceElement[]> traceList2 = new ArrayList<>();
+                            traceList2.add(callerTrace);
+                            Throwable ecause = e.getCause();
+                            Throwable ecausePreve = null;
+                            while(null != ecause && ecause != ecausePreve && null != ecause.getStackTrace() && ecause.getStackTrace().length > 1) {
+                                traceList2.add(1,ecause.getStackTrace());
+                                ecausePreve = ecause;
+                                ecause = ecause.getCause();
+                            }
+                            traceList2.add(e.getStackTrace());
+                            showMessageDialog(null, "Exception " + count + " : " + e.getMessage(),traceList2);
                         }
                     }
                     ret.completeExceptionally(e);
@@ -1451,6 +1462,30 @@ public class Utils {
     }
 
     @SuppressWarnings({"guieffect", "nullness"})
+    public static void showMessageDialog(@Nullable Component component, String message, List<StackTraceElement []> traceList) {
+        if (null == message || message.trim().length() < 1) {
+            throw new IllegalArgumentException("message=" + message);
+        }
+        String msgCopy = message;
+        if (msgCopy.length() > 400) {
+            msgCopy = msgCopy.substring(0, 396) + " ...";
+        }
+        for (int i = 80; i < msgCopy.length(); i += 80) {
+            msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
+        }
+        if (isEventDispatchThread()) {
+            NotificationsJPanel.showText(msgCopy,traceList);
+        } else {
+            try {
+                final String msgCopyFinal = msgCopy;
+                javax.swing.SwingUtilities.invokeLater(() -> NotificationsJPanel.showText(msgCopyFinal,traceList));
+            } catch (Exception ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
+            }
+        }
+    }
+    
+    @SuppressWarnings({"guieffect", "nullness"})
     public static void showMessageDialog(@Nullable Component component, String message) {
         if (null == message || message.trim().length() < 1) {
             throw new IllegalArgumentException("message=" + message);
@@ -1473,6 +1508,7 @@ public class Utils {
             }
         }
     }
+    
 
     @UIEffect
     public static void readCsvFileToTable(boolean forceColumns, JTable jtable, File f) {

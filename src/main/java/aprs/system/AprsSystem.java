@@ -4753,6 +4753,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
             throw new RuntimeException(ex);
         }
     }
@@ -5243,6 +5246,9 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         } catch (Exception ex) {
             Logger.getLogger(AprsSystem.class
                     .getName()).log(Level.SEVERE, "", ex);
+            if(ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
             throw new RuntimeException(ex);
         }
     }
