@@ -117,7 +117,7 @@ class AprsSystemDisplayJFrame extends javax.swing.JFrame {
         String exText = sw.toString();
         boolean forceShow = exceptionCount.incrementAndGet() < 2;
         String dialogTitle = "Exception from " + this.getTitle() + " : " + ex.getMessage();
-        NotificationsJPanel.addNotification(dialogTitle,exText);
+        NotificationsJPanel.addNotification(dialogTitle,exText,null);
         showingException = false;
         return XFutureVoid.completedFuture();
     }
