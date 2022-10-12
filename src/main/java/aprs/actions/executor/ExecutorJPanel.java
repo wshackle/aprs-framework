@@ -97,6 +97,7 @@ import crcl.ui.misc.NotificationsJPanel;
 import static crcl.utils.CRCLPosemath.*;
 import static crcl.utils.CRCLUtils.requireNonNull;
 import static java.lang.Integer.max;
+import java.lang.reflect.InvocationTargetException;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1046,14 +1047,12 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jButtonDropTool = new javax.swing.JButton();
         jButtonPickupTool = new javax.swing.JButton();
         jTabbedPaneToolChangeInner = new javax.swing.JTabbedPane();
-        jScrollPaneHolderContents = new javax.swing.JScrollPane();
-        jTableHolderContents = new javax.swing.JTable();
         jPanelToolOffsets = new javax.swing.JPanel();
         jButtonAddToolOffset = new javax.swing.JButton();
         jButtonDeleteToolOffset = new javax.swing.JButton();
         jScrollPaneToolOffsets = new javax.swing.JScrollPane();
         jTableToolOffsets = new javax.swing.JTable();
-        jPanel1 = new javax.swing.JPanel();
+        jPanelTrayAttachLocations = new javax.swing.JPanel();
         jButtonAddTrayAttach = new javax.swing.JButton();
         jButtonDeleteTrayAttach = new javax.swing.JButton();
         jScrollPaneToolOffsets1 = new javax.swing.JScrollPane();
@@ -1075,6 +1074,10 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         jTextFieldPartToolFile = new javax.swing.JTextField();
         jButtonAddPartToToolEntry = new javax.swing.JButton();
         jButtonDeletePartToToolEntry = new javax.swing.JButton();
+        jPanelToolHolderContents = new javax.swing.JPanel();
+        jScrollPaneHolderContents = new javax.swing.JScrollPane();
+        jTableHolderContents = new javax.swing.JTable();
+        jCheckBoxEditToolHolderContentsTable = new javax.swing.JCheckBox();
         jLabel7 = new javax.swing.JLabel();
         jTextFieldCurrentToolName = new javax.swing.JTextField();
         jButtonSetCurrentTool = new javax.swing.JButton();
@@ -1628,27 +1631,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
             }
         });
 
-        jTableHolderContents.setAutoCreateRowSorter(true);
-        jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Holder Position Name", "Contents", "Possible Contents", "Comment"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPaneHolderContents.setViewportView(jTableHolderContents);
-
-        jTabbedPaneToolChangeInner.addTab("Holder Contents", jScrollPaneHolderContents);
-
         jButtonAddToolOffset.setText("Add Tool");
         jButtonAddToolOffset.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1743,26 +1725,26 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         });
         jScrollPaneToolOffsets1.setViewportView(jTableTrayAttachOffsets);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        javax.swing.GroupLayout jPanelTrayAttachLocationsLayout = new javax.swing.GroupLayout(jPanelTrayAttachLocations);
+        jPanelTrayAttachLocations.setLayout(jPanelTrayAttachLocationsLayout);
+        jPanelTrayAttachLocationsLayout.setHorizontalGroup(
+            jPanelTrayAttachLocationsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTrayAttachLocationsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelTrayAttachLocationsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPaneToolOffsets1, javax.swing.GroupLayout.DEFAULT_SIZE, 696, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanelTrayAttachLocationsLayout.createSequentialGroup()
                         .addComponent(jButtonAddTrayAttach)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButtonDeleteTrayAttach)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        jPanelTrayAttachLocationsLayout.setVerticalGroup(
+            jPanelTrayAttachLocationsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTrayAttachLocationsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelTrayAttachLocationsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonAddTrayAttach)
                     .addComponent(jButtonDeleteTrayAttach))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1770,7 +1752,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanel1);
+        jTabbedPaneToolChangeInner.addTab("Tray Attach Locations", jPanelTrayAttachLocations);
 
         jTableToolHolderPositions.setAutoCreateRowSorter(true);
         jTableToolHolderPositions.setModel(new javax.swing.table.DefaultTableModel(
@@ -1949,6 +1931,59 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         );
 
         jTabbedPaneToolChangeInner.addTab("Part To Tool Map", jPanelPartToolMap);
+
+        jTableHolderContents.setAutoCreateRowSorter(true);
+        jTableHolderContents.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Holder Position Name", "Contents", "Possible Contents", "Comment"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        jScrollPaneHolderContents.setViewportView(jTableHolderContents);
+
+        jCheckBoxEditToolHolderContentsTable.setText("Edit Tool Holder ContentsTable");
+        jCheckBoxEditToolHolderContentsTable.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jCheckBoxEditToolHolderContentsTableActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelToolHolderContentsLayout = new javax.swing.GroupLayout(jPanelToolHolderContents);
+        jPanelToolHolderContents.setLayout(jPanelToolHolderContentsLayout);
+        jPanelToolHolderContentsLayout.setHorizontalGroup(
+            jPanelToolHolderContentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelToolHolderContentsLayout.createSequentialGroup()
+                .addComponent(jCheckBoxEditToolHolderContentsTable)
+                .addGap(0, 647, Short.MAX_VALUE))
+            .addGroup(jPanelToolHolderContentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanelToolHolderContentsLayout.createSequentialGroup()
+                    .addComponent(jScrollPaneHolderContents, javax.swing.GroupLayout.DEFAULT_SIZE, 849, Short.MAX_VALUE)
+                    .addGap(0, 0, 0)))
+        );
+        jPanelToolHolderContentsLayout.setVerticalGroup(
+            jPanelToolHolderContentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderContentsLayout.createSequentialGroup()
+                .addContainerGap(186, Short.MAX_VALUE)
+                .addComponent(jCheckBoxEditToolHolderContentsTable)
+                .addContainerGap())
+            .addGroup(jPanelToolHolderContentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelToolHolderContentsLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPaneHolderContents, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                    .addGap(35, 35, 35)))
+        );
+
+        jTabbedPaneToolChangeInner.addTab("Holder Contents", jPanelToolHolderContents);
 
         jLabel7.setText("Current Tool Name: ");
 
@@ -2762,54 +2797,47 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jCheckBoxEditOptionsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEditOptionsTableActionPerformed
-        this.booleanOptions = null;
-        this.options = null;
-        boolean edit = jCheckBoxEditOptionsTable.isSelected();
-        jTableOptions.getModel().removeTableModelListener(optionsTableModelListener);
-        final TableModel oldModel = jTableOptions.getModel();
-        final Object[][] data = new Object[oldModel.getRowCount()][];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = new Object[]{
-                oldModel.getValueAt(i, 0),
-                oldModel.getValueAt(i, 1)};
-        }
-        final TableModel newModel = new javax.swing.table.DefaultTableModel(
-                data,
-                new String[]{
-                    "Name", "Value"
-                }
-        ) {
-            Class[] types = new Class[]{
-                java.lang.String.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean[]{
-                edit, edit
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types[columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit[columnIndex];
-            }
-        };
-        jTableOptions.setModel(newModel);
-        optionsCachedTable.setEditable(edit);
-        optionsCachedTable.setData(data);
-        if (!edit) {
+        try {
             this.booleanOptions = null;
             this.options = null;
-            final Map<ExecutorOption, ?> options = getOptions();
-            System.out.println("options = " + options);
-            crclGenerator.setOptions(options);
+            boolean edit = jCheckBoxEditOptionsTable.isSelected();
+            jTableOptions.getModel().removeTableModelListener(optionsTableModelListener);
+            optionsCachedTable.setEditable(edit);
+            if (!edit) {
+                this.booleanOptions = null;
+                this.options = null;
+                final Map<ExecutorOption, ?> options = getOptions();
+                System.out.println("options = " + options);
+                crclGenerator.setOptions(options);
+            }
+            jTableOptions.getModel().addTableModelListener(optionsTableModelListener);
+        } catch (Exception ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "evt=" + evt, ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException( "evt=" + evt,ex);
+            }
         }
-        jTableOptions.getModel().addTableModelListener(optionsTableModelListener);
     }//GEN-LAST:event_jCheckBoxEditOptionsTableActionPerformed
 
     private void jCheckBoxEnableOptaPlannerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEnableOptaPlannerActionPerformed
         setOption(ExecutorOption.ForBoolean.enableOptaPlanner, jCheckBoxEnableOptaPlanner.isSelected());
     }//GEN-LAST:event_jCheckBoxEnableOptaPlannerActionPerformed
+
+    private void jCheckBoxEditToolHolderContentsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxEditToolHolderContentsTableActionPerformed
+        try {
+            boolean edit = jCheckBoxEditToolHolderContentsTable.isSelected();
+            holderContentsCachedTable.setEditable(edit);
+        } catch (Exception ex) {
+            Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "evt=" + evt, ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            } else {
+                throw new RuntimeException( "evt=" + evt,ex);
+            }
+        }
+    }//GEN-LAST:event_jCheckBoxEditToolHolderContentsTableActionPerformed
 
     @UIEffect
     private void browseActionsFile() throws IOException {
@@ -9777,6 +9805,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private javax.swing.JButton jButtonUpdatePoseCacheFromManual;
     private javax.swing.JCheckBox jCheckBoxDebug;
     private javax.swing.JCheckBox jCheckBoxEditOptionsTable;
+    private javax.swing.JCheckBox jCheckBoxEditToolHolderContentsTable;
     private javax.swing.JCheckBox jCheckBoxEnableOptaPlanner;
     private javax.swing.JCheckBox jCheckBoxForceFakeTake;
     private javax.swing.JCheckBox jCheckBoxNeedLookFor;
@@ -9804,7 +9833,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanelContainerPoseCache;
     private javax.swing.JPanel jPanelContainerPositionMap;
@@ -9815,9 +9843,11 @@ public class ExecutorJPanel extends javax.swing.JPanel {
     private javax.swing.JPanel jPanelOuterManualControl;
     private javax.swing.JPanel jPanelPartToolMap;
     private javax.swing.JPanel jPanelToolChange;
+    private javax.swing.JPanel jPanelToolHolderContents;
     private javax.swing.JPanel jPanelToolHolderPositions;
     private javax.swing.JPanel jPanelToolOffsets;
     private javax.swing.JPanel jPanelToolSavedPoses;
+    private javax.swing.JPanel jPanelTrayAttachLocations;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

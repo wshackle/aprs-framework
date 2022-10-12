@@ -845,13 +845,13 @@ public class Utils {
                             traceList2.add(callerTrace);
                             Throwable ecause = e.getCause();
                             Throwable ecausePreve = null;
-                            while(null != ecause && ecause != ecausePreve && null != ecause.getStackTrace() && ecause.getStackTrace().length > 1) {
-                                traceList2.add(1,ecause.getStackTrace());
+                            while (null != ecause && ecause != ecausePreve && null != ecause.getStackTrace() && ecause.getStackTrace().length > 1) {
+                                traceList2.add(1, ecause.getStackTrace());
                                 ecausePreve = ecause;
                                 ecause = ecause.getCause();
                             }
                             traceList2.add(e.getStackTrace());
-                            showMessageDialog(null, "Exception " + count + " : " + e.getMessage(),traceList2);
+                            showMessageDialog(null, "Exception " + count + " : " + e.getMessage(), traceList2);
                         }
                     }
                     ret.completeExceptionally(e);
@@ -1282,6 +1282,13 @@ public class Utils {
         return colNameList.toArray(new String[0]);
     }
 
+    static public class CachedTableData {
+
+        public final List<String> colNameList = new ArrayList<>();
+        public final List<List<Object>> tableDataList = new ArrayList<>();
+
+    }
+
     /**
      * Save a JTable to a file.
      *
@@ -1290,43 +1297,56 @@ public class Utils {
      * @throws IOException file could not be written
      */
     public static void saveCachedTable(File f, CachedTable cachedTable) throws IOException {
-        
+        CachedTableData cachedTableData = getCachedTableData(cachedTable, f.getParentFile());
         try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
-                CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
-            List<String> colNameList = new ArrayList<>();
-            for (int i = 0; i < cachedTable.getColumnCount(); i++) {
-                colNameList.add(cachedTable.getColumnName(i));
+                CSVFormat.DEFAULT.withHeader(cachedTableData.colNameList.toArray(new String[0])))) {
+            for (int i = 0; i < cachedTableData.tableDataList.size(); i++) {
+                List<Object> l = cachedTableData.tableDataList.get(i);
+                printer.printRecord(l);
             }
-            for (int i = 0; i < cachedTable.getRowCount(); i++) {
-                List<Object> l = new ArrayList<>();
-                for (int j = 0; j < cachedTable.getColumnCount(); j++) {
-                    Object o = cachedTable.getValueAt(i, j);
-                    Object o2 = cachedTable.getjTable().getValueAt(i, j);
-                    if(!Objects.equals(o, o2)) {
-                        throw new RuntimeException("cachedTable.getValueAt(i, j) "+o+" != "+o2 +"  cachedTable.getjTable().getValueAt(i, j)");
-                    }
-                    if (o == null) {
-                        l.add("");
-                    } else if (o instanceof File) {
-                        File parentFile = f.getParentFile();
-                        if (null != parentFile) {
-                            Path rel = parentFile.toPath().toRealPath()
-                                    .relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
-                            if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
-                                l.add(rel);
-                            } else {
-                                l.add(o);
-                            }
+        }
+    }
+
+    public static CachedTableData getCachedTableData(CachedTable cachedTable, File parentFile) throws IOException {
+        //        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)),
+//                CSVFormat.DEFAULT.withHeader(tableHeaders(cachedTable)))) {
+        CachedTableData cachedTableData = new CachedTableData();
+//            List<String> cachedTableData.colNameList = new ArrayList<>();
+        for (int i = 0; i < cachedTable.getColumnCount(); i++) {
+            cachedTableData.colNameList.add(cachedTable.getColumnName(i));
+        }
+        for (int i = 0; i < cachedTable.getRowCount(); i++) {
+            List<Object> l = new ArrayList<>();
+            for (int j = 0; j < cachedTable.getColumnCount(); j++) {
+                Object o = cachedTable.getValueAt(i, j);
+                Object o2 = cachedTable.getjTable().getValueAt(i, j);
+                if (!Objects.equals(o, o2)) {
+                    throw new RuntimeException("cachedTable.getValueAt(i, j) " + o + " != " + o2 + "  cachedTable.getjTable().getValueAt(i, j)");
+                }
+                if (o == null) {
+                    l.add("");
+                } else if (o instanceof File) {
+//                    File parentFile = f.getParentFile();
+                    if (null != parentFile) {
+                        Path rel = parentFile.toPath().toRealPath()
+                                .relativize(Paths.get(((File) o).getCanonicalPath())).normalize();
+                        if (rel.toString().length() < ((File) o).getCanonicalPath().length()) {
+                            l.add(rel);
                         } else {
                             l.add(o);
                         }
                     } else {
                         l.add(o);
                     }
+                } else {
+                    l.add(o);
                 }
-                printer.printRecord(l);
             }
+            cachedTableData.tableDataList.add(l);
+//                printer.printRecord(l);
         }
+        return cachedTableData;
+//        }
     }
 
     /**
@@ -1462,7 +1482,7 @@ public class Utils {
     }
 
     @SuppressWarnings({"guieffect", "nullness"})
-    public static void showMessageDialog(@Nullable Component component, String message, List<StackTraceElement []> traceList) {
+    public static void showMessageDialog(@Nullable Component component, String message, List<StackTraceElement[]> traceList) {
         if (null == message || message.trim().length() < 1) {
             throw new IllegalArgumentException("message=" + message);
         }
@@ -1474,17 +1494,17 @@ public class Utils {
             msgCopy = msgCopy.substring(0, i) + "\r\n" + msgCopy.substring(i);
         }
         if (isEventDispatchThread()) {
-            NotificationsJPanel.showText(msgCopy,traceList);
+            NotificationsJPanel.showText(msgCopy, traceList);
         } else {
             try {
                 final String msgCopyFinal = msgCopy;
-                javax.swing.SwingUtilities.invokeLater(() -> NotificationsJPanel.showText(msgCopyFinal,traceList));
+                javax.swing.SwingUtilities.invokeLater(() -> NotificationsJPanel.showText(msgCopyFinal, traceList));
             } catch (Exception ex) {
                 Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, "", ex);
             }
         }
     }
-    
+
     @SuppressWarnings({"guieffect", "nullness"})
     public static void showMessageDialog(@Nullable Component component, String message) {
         if (null == message || message.trim().length() < 1) {
@@ -1508,7 +1528,6 @@ public class Utils {
             }
         }
     }
-    
 
     @UIEffect
     public static void readCsvFileToTable(boolean forceColumns, JTable jtable, File f) {

@@ -9,6 +9,7 @@ enableOptaPlanner=false
 endPoseXAxisTolerance=10.0
 endPoseXPointTolerance=3.0
 endPoseYPointTolerance=3.0
+endPoseZAxisTolerance=10.0
 endPoseZPointTolerance=2.0
 fastTransSpeed=400.0
 firstLookDwellTime=0.1

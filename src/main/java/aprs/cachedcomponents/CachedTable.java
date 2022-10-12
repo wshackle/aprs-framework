@@ -1,6 +1,9 @@
 package aprs.cachedcomponents;
 
+import aprs.actions.executor.ExecutorJPanel;
+import crcl.utils.CRCLUtils;
 import crcl.utils.XFutureVoid;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -12,6 +15,11 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 public class CachedTable extends CachedComponentBase {
 
@@ -33,6 +41,7 @@ public class CachedTable extends CachedComponentBase {
         jTable = null;
         selectedRow = -1;
         columnCount = columnNames.length;
+        this.editable = false;
     }
 
     @UIEffect
@@ -57,7 +66,7 @@ public class CachedTable extends CachedComponentBase {
         @UIEffect
         @SuppressWarnings({"initialization", "nullness"})
         public void tableChanged(TableModelEvent e) {
-            if(CachedTable.this.editable) {
+            if (CachedTable.this.editable) {
                 syncUiToCache();
             }
         }
@@ -87,12 +96,11 @@ public class CachedTable extends CachedComponentBase {
         }
     }
 
-    
     @UIEffect
     public CachedTable(JTable jTable) {
         this((DefaultTableModel) jTable.getModel(), jTable, false);
     }
-    
+
     @UIEffect
     public CachedTable(JTable jTable, boolean editable) {
         this((DefaultTableModel) jTable.getModel(), jTable, editable);
@@ -124,9 +132,10 @@ public class CachedTable extends CachedComponentBase {
             System.arraycopy(rowVector.toArray(), 0, newData[i], 0, columnCount);
         }
         this.data = newData;
-        if(editable) {
+        if (editable) {
             model.addTableModelListener(tableModelListener);
         }
+        setEditableInternal(editable);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked", "initialization"})
@@ -334,16 +343,104 @@ public class CachedTable extends CachedComponentBase {
      *
      * @param editable new value of editable
      */
-    public void setEditable(boolean editable) {
+    public void setEditable(boolean editable) throws InterruptedException, InvocationTargetException {
+        if (null == this.jTable) {
+            this.editable = false;
+            return;
+        }
         if (editable != this.editable) {
-            this.editable = editable;
-            DefaultTableModel model = (DefaultTableModel) this.jTable.getModel();
-            if (null != model) {
-                if (editable) {
-                    model.addTableModelListener(tableModelListener);
-                } else {
-                    model.removeTableModelListener(tableModelListener);
+            if (!SwingUtilities.isEventDispatchThread() && !CRCLUtils.isGraphicsEnvironmentHeadless()) {
+                javax.swing.SwingUtilities.invokeAndWait(() -> {
+                    setEditableInternal(editable);
+                });
+            } else {
+                setEditableInternal(editable);
+            }
+        }
+    }
+
+    private void setEditableInternal(boolean editable1) throws RuntimeException {
+        try {
+            if (null == this.jTable) {
+                this.editable = false;
+                return;
+            }
+            this.editable = editable1;
+            final TableModel oldModel = jTable.getModel();
+            final TableColumnModel oldColumnModel = jTable.getColumnModel();
+            oldModel.removeTableModelListener(tableModelListener);
+            
+            final Object[][] data = new Object[oldModel.getRowCount()][];
+            final int columnCount = oldModel.getColumnCount();
+            boolean newModelNeeded = false;
+            for (int i = 0; i < data.length; i++) {
+                for (int j = 0; j < columnCount; j++) {
+                    if(oldModel.isCellEditable(i, j) != editable1) {
+                        newModelNeeded = true;
+                        break;
+                    }
                 }
+            }
+            if(!newModelNeeded) {
+                return;
+            }
+            for (int i = 0; i < data.length; i++) {
+                data[i] = new Object[columnCount];
+                for (int j = 0; j < columnCount; j++) {
+                    data[i][j] = oldModel.getValueAt(i, j);
+                }
+            }
+            final String colNames[] = new String[columnCount];
+            final Class<?> colClasses[] = new Class[columnCount];
+            final boolean editables[] = new boolean[columnCount];
+            final TableColumn oldColumns[] = new TableColumn[columnCount];
+            for (int i = 0; i < colNames.length; i++) {
+                colNames[i] = oldModel.getColumnName(i);
+                colClasses[i] = oldModel.getColumnClass(i);
+                editables[i] = editable1;
+                oldColumns[i] = oldColumnModel.getColumn(i);
+                
+            }
+            final TableModel newModel = new javax.swing.table.DefaultTableModel(
+                    data,
+                    colNames
+            ) {
+                Class[] types = colClasses;
+                boolean[] canEdit = editables;
+
+                public Class getColumnClass(int columnIndex) {
+                    return types[columnIndex];
+                }
+
+                public boolean isCellEditable(int rowIndex, int columnIndex) {
+                    return canEdit[columnIndex];
+                }
+            };
+            
+            jTable.setModel(newModel);
+            for (int i = 0; i < oldColumns.length; i++) {
+                final TableColumn oldColumnI = oldColumns[i];
+                final TableColumn newColumnI = jTable.getColumnModel().getColumn(i);
+                newColumnI.setCellEditor(oldColumnI.getCellEditor());
+                newColumnI.setCellRenderer(oldColumnI.getCellRenderer());
+                newColumnI.setHeaderRenderer(oldColumnI.getHeaderRenderer());
+                newColumnI.setHeaderValue(oldColumnI.getHeaderValue());
+                newColumnI.setMaxWidth(oldColumnI.getMaxWidth());
+                newColumnI.setMinWidth(oldColumnI.getMinWidth());
+                newColumnI.setPreferredWidth(oldColumnI.getPreferredWidth());
+                newColumnI.setResizable(oldColumnI.getResizable());
+                newColumnI.setWidth(oldColumnI.getWidth());
+            }
+            this.data = data;
+            if (editable1) {
+                jTable.getModel().addTableModelListener(tableModelListener);
+            }
+        } catch (Exception e) {
+            Logger.getLogger(CachedTable.class.getName()).log(Level.SEVERE, "setEditable(" + editable1 + ")", e);
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
             }
         }
     }
