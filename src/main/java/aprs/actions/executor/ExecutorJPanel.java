@@ -748,7 +748,7 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         if (toolHolderContentsModelListenerEnabled) {
             syncPanelToGeneratorToolDataOnDisplay();
             Utils.autoResizeTableColWidthsOnDisplay(jTableHolderContents);
-            saveToolHolderContentsMap();
+//            saveToolHolderContentsMap();
             loadToolMenus();
         }
     }
@@ -2829,6 +2829,9 @@ public class ExecutorJPanel extends javax.swing.JPanel {
         try {
             boolean edit = jCheckBoxEditToolHolderContentsTable.isSelected();
             holderContentsCachedTable.setEditable(edit);
+            if(!edit) {
+                saveToolHolderContentsMap();
+            }
         } catch (Exception ex) {
             Logger.getLogger(ExecutorJPanel.class.getName()).log(Level.SEVERE, "evt=" + evt, ex);
             if (ex instanceof RuntimeException) {
