@@ -11,12 +11,12 @@ dropOffThreshold=25.00
 enableConnectTimeout=true
 enableReadSoTimeout=true
 enforceSensorLimits=false
-excludedObjectNames=
+excludedObjectNames=black_gear
 hideNearMouse=false
 hideNearMouseDist=100.0 
 hideNearRobot=false
 hideNearRobotDist=100.0 
-items=sku_part_large_gear,0.0,619.05,145.14,0.99,P,sku_part_large_gear,0.0,358.47,141.72,0.99,P,sku_part_medium_gear,0.0,579.16,-149.21,0.96,P,sku_part_medium_gear,0.0,391.08,-138.89,0.93,P,sku_part_medium_gear,0.0,471.52,-138.81,0.93,P,sku_part_medium_gear,0.0,473.38,-59.3,0.92,P,sku_large_gear_vessel,1.551592653589793,410.89,142.47,0.89,PT,sku_medium_gear_vessel,0.01,429.57,-96.53,0.59,PT,sku_kit_m2l1_vessel,-0.02,616.45,105.69,0.65,KT,sku_kit_m2l1_vessel,-0.01,618.51,-93.95,0.66,KT,sku_part_black_gear,-0.25,356.92,140.21,0.45,P,
+items=sku_part_large_gear,0.0,358.49,141.7,0.99,P,sku_part_large_gear,0.0,619.07,145.08,0.98,P,sku_part_medium_gear,0.0,391.98,-58.73,0.95,P,sku_part_medium_gear,0.0,391.12,-138.82,0.95,P,sku_part_medium_gear,0.0,578.26,50.44,0.92,P,sku_part_medium_gear,0.0,471.48,-138.93,0.9,P,sku_large_gear_vessel,1.551592653589793,410.81,142.42,0.88,PT,sku_medium_gear_vessel,0.02,429.4,-96.73,0.64,PT,sku_kit_m2l1_vessel,-0.03,616.55,106.0,0.6,KT,sku_kit_m2l1_vessel,-0.02,618.62,-93.92,0.7,KT,
 
 minimumScore=0.0
 pickupDist=5.00
