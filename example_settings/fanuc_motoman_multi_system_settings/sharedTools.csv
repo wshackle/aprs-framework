@@ -1,7 +1,8 @@
 System,Holder/Current,Contents,PossibleContents,Comment
 Shared Table,Current,big_gripper,"[pincher, big_gripper, big_vacuum, small_vacuum]",
 Shared Table,big_gripper_holder,empty,[big_gripper],
-Shared Table,big_vacuum_holder,big_vacuum,[big_vacuum],
-Shared Table,toolChangerPose9,empty,[],
+Shared Table,sharedHolder,small_vacuum,"[pincher, small_vacuum]",
 Fanuc Cart,Current,pincher,"[pincher, small_vacuum]",
-Fanuc Cart,shared_gripper,small_vacuum,"[pincher, small_vacuum]",
+Fanuc Cart,nearLeftHolder,empty,"[pincher, small_vacuum]",
+Fanuc Cart,farLeftHolder,empty,"[pincher, small_vacuum]",
+Fanuc Cart,sharedHolder,small_vacuum,"[pincher, small_vacuum]",

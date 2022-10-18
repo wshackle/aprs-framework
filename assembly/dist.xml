@@ -35,6 +35,11 @@ and any modified versions bear some notice that they have been modified.
             <includes>
                 <include>README*</include>
                 <include>*.bat</include>
+                <include>*.xml</include>
+                <include>*.sh</include>
+                <include>*.txt</include>
+                <include>*.csv</include>
+                <include>*.md</include>
             </includes>
             <lineEnding>dos</lineEnding>
         </fileSet>

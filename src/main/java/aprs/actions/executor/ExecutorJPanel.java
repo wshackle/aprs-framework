@@ -3279,9 +3279,6 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                 return str;
             }
             File strFile = Utils.file(str);
-            if (!strFile.exists()) {
-                return str;
-            }
             String canString = strFile.getCanonicalPath();
             File parentFile = f.getParentFile();
             if (null == parentFile) {
@@ -3329,6 +3326,17 @@ public class ExecutorJPanel extends javax.swing.JPanel {
                     File chkFile = Utils.file(relPath);
                     if (!chkFile.isDirectory()) {
                         propsMap.put(PDDLOUTPUT, relPath);
+                    }
+                }
+            }
+            final String slotPrefixName = shortSkuToEmptySlotPrefixMapCsvFileName;
+            if (slotPrefixName != null && slotPrefixName.length() > 0) {
+                if (!isTempDir(slotPrefixName)) {
+                    String relPath = makeShortPath(propertiesFile, slotPrefixName);
+                    logDebug("relPath = " + relPath);
+                    File chkFile = Utils.file(relPath);
+                    if (!chkFile.isDirectory()) {
+                        propsMap.put(ExecutorOption.ForString.shortSkuToEmptySlotPrefixMapCsvFile.toString(), relPath);
                     }
                 }
             }

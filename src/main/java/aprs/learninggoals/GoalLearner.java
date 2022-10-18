@@ -245,13 +245,17 @@ public class GoalLearner {
         if (null == localSlotOffsetProvider) {
             throw new IllegalStateException("null == slotOffsetProvider");
         }
+        final Integer black_gear_map_result = requiredItemsMap.get("black_gear");
 
-        String requiredItemsString
-                = requiredItemsMap
-                        .entrySet()
-                        .stream()
-                        .map(entry -> entry.getKey() + "=" + entry.getValue())
-                        .collect(Collectors.joining(" "));
+        if(null != black_gear_map_result && black_gear_map_result > 1) {
+            throw new RuntimeException("requiredItems="+requiredItems);
+        }
+//        String requiredItemsString
+//                = requiredItemsMap
+//                        .entrySet()
+//                        .stream()
+//                        .map(entry -> entry.getKey() + "=" + entry.getValue())
+//                        .collect(Collectors.joining(" "));
         List<PhysicalItem> kitTrays = filterForKitTrays(teachItems);
         if (!checkKitTrays(kitTrays)) {
             return Collections.emptyList();
