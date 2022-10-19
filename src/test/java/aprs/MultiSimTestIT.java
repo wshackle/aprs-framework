@@ -4,6 +4,7 @@ import aprs.database.vision.VisionSocketServer;
 import aprs.launcher.LauncherAprsJFrame;
 import aprs.misc.Utils;
 import aprs.supervisor.main.Supervisor;
+import aprs.system.AprsSystem;
 import crcl.ui.misc.MultiLineStringJPanel;
 import crcl.utils.CRCLUtils;
 import crcl.utils.XFuture;
@@ -57,6 +58,10 @@ public class MultiSimTestIT {
             MultiLineStringJPanel.disableShowText = true;
             MultiLineStringJPanel.setIgnoreForceShow(true);
             System.out.println("Slow test");
+            Supervisor.addCompleteLoadSysConsumer(Supervisor.FANUC__CART_TASK_NAME, 
+                    (AprsSystem aprsSystem) -> aprsSystem.overwriteCurrentToolName("pincher"));
+            Supervisor.addCompleteLoadSysConsumer(Supervisor.SHARED__TABLE_TASK_NAME, 
+                    (AprsSystem aprsSystem) -> aprsSystem.overwriteCurrentToolName("big_gripper"));
             XFuture<Supervisor.MultiCycleResults> results
                     = LauncherAprsJFrame.multiCycleTest(
                             Utils.file(LAUNCHER_PATH),

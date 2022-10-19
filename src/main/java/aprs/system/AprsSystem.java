@@ -2509,6 +2509,23 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
         return this.object2DViewJInternalFrame.getClosestRobotPart();
     }
 
+    public void overwriteCurrentToolName(String newToolName) {
+        if(null != this.executorJInternalFrame1) {
+            this.executorJInternalFrame1.overwriteCurrentToolName(newToolName);
+        }
+    }
+    
+    public boolean isRobotSimulated() {
+       if(null != this.fanucCRCLServerJInternalFrame) {
+           return false;
+       } else if(null != this.motomanCrclServerJInternalFrame) {
+           return false;
+       } else if(null != this.simServerJInternalFrame) {
+           return true;
+       } else {
+           throw new IllegalStateException("none of the robot server frames  are non-null");
+       }
+    }
     /**
      * Get the current setting for whether the object view is using simulation.
      *

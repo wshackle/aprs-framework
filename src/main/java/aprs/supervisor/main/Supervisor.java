@@ -5156,11 +5156,20 @@ public class Supervisor {
                         () -> this.startFlipFM(partToFlip, flipReturnPoint), supervisorExecutorService)
                 .thenCompose(x -> x);
     }
+    
+    public XFuture<Boolean> startFlipOnSupervisorService(AprsSystem system, String partToFlip, PointType flipReturnPoint) {
+        if(system.getTaskName().equals(FANUC__CART_TASK_NAME)) {
+            return startFlipFMOnSupervisorService(partToFlip, flipReturnPoint);
+        } else {
+            return startFlipMFOnSupervisorService(partToFlip, flipReturnPoint);    
+        }
+    }
+    
 
-    /*public*/ XFuture<Boolean> startFlipMFOnSupervisorService() {
+    /*public*/ XFuture<Boolean> startFlipMFOnSupervisorService(String partToFlip, PointType flipReturnPoint) {
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
-                        this::startFlipMF, supervisorExecutorService)
+                        () -> startFlipMF(partToFlip,flipReturnPoint), supervisorExecutorService)
                 .thenCompose(x -> x);
     }
 
@@ -5386,7 +5395,7 @@ public class Supervisor {
         });
     }
 
-    /*public*/ XFuture<Boolean> startFlipMF() {
+    /*public*/ XFuture<Boolean> startFlipMF(String partToFlip, PointType flipReturnPoint) {
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
         AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
@@ -5423,7 +5432,7 @@ public class Supervisor {
                             sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
                             return sharedTableSys.startActionsList("flip2",
                                     Arrays.asList(new Action[]{
-                                Action.newTakePartAction("part_black_gear_in_kt_1"),
+                                Action.newTakePartAction(partToFlip /* "part_black_gear_in_kt_1" */),
                                 Action.newMoveRecordedJoints("flipmf_present_gear_prep"),
                                 Action.newMoveRecordedPose("flipmf_present_gear")
                             }),
@@ -5500,7 +5509,7 @@ public class Supervisor {
                                     Arrays.asList(new Action[]{
                                 Action.newMoveRecordedPose("flipmf_present_gear_prep"),
                                 Action.newLookForParts(),
-                                Action.newPlacePartAction("empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1", "black_gear"),
+                                Action.newPlacePartByPosition(flipReturnPoint.getX(),flipReturnPoint.getY(), partToFlip),  // /* "empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1" */, "black_gear"),
                                 Action.newLookForParts()
                             }),
                                     ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
@@ -5508,8 +5517,8 @@ public class Supervisor {
                         });
         return xf9;
     }
-    private static final String SHARED__TABLE_TASK_NAME = "Shared Table";
-    private static final String FANUC__CART_TASK_NAME = "Fanuc Cart";
+    public static final String SHARED__TABLE_TASK_NAME = "Shared Table";
+    public static final String FANUC__CART_TASK_NAME = "Fanuc Cart";
 
     public AprsSystem getSysByTaskOrThrow(final String sysName) throws NullPointerException {
         final String thowMessage = "getSysByTask(\"" + sysName + "\")";
@@ -10352,6 +10361,11 @@ public class Supervisor {
         }
     }
 
+    private static final Map<String,Consumer<AprsSystem>> completeLoadSysConsumersMap = new ConcurrentHashMap<String, Consumer<AprsSystem>>();
+    
+    public static void addCompleteLoadSysConsumer(String taskName, Consumer<AprsSystem> consumer) {
+        completeLoadSysConsumersMap.put(taskName, consumer);
+    }
     private void completeLoadSys(AprsSystem aprsSys, int priority, String taskName, String robotName) {
 
         aprsSys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -10378,6 +10392,12 @@ public class Supervisor {
         });
         aprsSys.setSupervisorEventLogger(this::logEvent);
         aprsSys.setSupervisor(this);
+        if(aprsSys.isObjectViewSimulated() && aprsSys.isRobotSimulated()) {
+            Consumer<AprsSystem> c = completeLoadSysConsumersMap.remove(aprsSys.getTaskName());
+            if(c != null) {
+                c.accept(aprsSys);
+            }
+        }
         aprsSystems.add(aprsSys);
         aprsSys.setVisible(true);
     }

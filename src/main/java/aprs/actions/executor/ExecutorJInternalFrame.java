@@ -56,17 +56,23 @@ import rcs.posemath.PmException;
  */
 @SuppressWarnings("serial")
 public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implements ExecutorDisplayInterface {
-
+    
     public void setPaused(boolean paused) {
         executorJPanel1.setPaused(paused);
     }
-
+    
+    public void overwriteCurrentToolName(String newToolName) {
+        if (null != this.executorJPanel1) {
+            this.executorJPanel1.overwriteCurrentToolName(newToolName);
+        }
+    }
+    
     @UIEffect
     @SuppressWarnings({"nullness", "initialization"})
     public ExecutorJInternalFrame(AprsSystem aprsSystem1) {
         this.aprsSystem = aprsSystem1;
         executorJPanel1 = new ExecutorJPanel(aprsSystem, this);
-
+        
         super.setIconifiable(true);
         super.setMaximizable(true);
         super.setResizable(true);
@@ -74,62 +80,63 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
         super.add(executorJPanel1);
         super.pack();
     }
-
-    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose,String name) throws CRCLException, PmException {
-        executorJPanel1.testPartPositionByPose(cmds, pose,name);
+    
+    public void testPartPositionByPose(List<MiddleCommandType> cmds, PoseType pose, String name) throws CRCLException, PmException {
+        executorJPanel1.testPartPositionByPose(cmds, pose, name);
     }
-
+    
     public boolean recheckKitsOnly() {
         return executorJPanel1.recheckKitsOnly();
     }
-
+    
     public boolean isReverseFlag() {
         return executorJPanel1.isReverseFlag();
     }
-
+    
     public @Nullable
     String getActionsFileString(boolean newReverseFlag) {
         return executorJPanel1.getActionsFileString(newReverseFlag);
     }
-
+    
     public void setForceFakeTakeFlag(boolean val) {
         this.executorJPanel1.setForceFakeTakeFlag(val);
     }
-
+    
     public boolean getForceFakeTakeFlag() {
         return executorJPanel1.getForceFakeTakeFlag();
     }
 
     /**
      * Clear the collection of kits to check at the next check kits action.
-     * 
+     *
      * @param startAbortCount unused except for debugging
      */
     @Override
     public void clearKitsToCheck(int startAbortCount) {
         executorJPanel1.clearKitsToCheck(startAbortCount);
     }
-
+    
     public void setPauseInsteadOfRecover(boolean val) {
         executorJPanel1.setPauseInsteadOfRecover(val);
     }
-
+    
     public XFutureVoid showPaused(boolean state) {
         return executorJPanel1.showPaused(state);
     }
-
+    
     public void showPausedOnDisplay(boolean state) {
         executorJPanel1.showPausedOnDisplay(state);
     }
+
     public JMenu getToolMenu() {
         return executorJPanel1.getToolMenu();
     }
-
+    
     public @Nullable
     String getSelectedToolName() {
         return executorJPanel1.getSelectedToolName();
     }
-
+    
     public Set<String> getPossibleToolNames() {
         return executorJPanel1.getPossibleToolNames();
     }
@@ -152,11 +159,11 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void setExternalPoseProvider(PoseProvider externalGetPoseProvider) {
         this.executorJPanel1.setExternalPoseProvider(externalGetPoseProvider);
     }
-
+    
     public XFutureVoid setLookForXYZ(double x, double y, double z) {
         return executorJPanel1.setLookForXYZ(x, y, z);
     }
-
+    
     public CRCLProgramType createLookForPartsProgram() {
         return executorJPanel1.createLookForPartsProgram();
     }
@@ -171,11 +178,11 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public PoseType correctPose(PoseType poseIn) {
         return executorJPanel1.correctPose(poseIn);
     }
-
+    
     public PointType correctPoint(PointType pointIn) {
         return executorJPanel1.correctPoint(pointIn);
     }
-
+    
     public @Nullable
     List<Action> reloadActionsFile(boolean reverseFlag) throws IOException {
         return this.executorJPanel1.reloadActionsFile(reverseFlag, false);
@@ -190,31 +197,31 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public PointType reverseCorrectPoint(PointType ptIn) {
         return executorJPanel1.reverseCorrectPoint(ptIn);
     }
-
+    
     public XFutureVoid abortProgram() {
         return executorJPanel1.abortProgram();
     }
-
+    
     public XFutureVoid startSafeAbort(String name) {
         return this.executorJPanel1.startSafeAbort(name);
     }
-
+    
     public void completeSafeAbort() {
         this.executorJPanel1.completeSafeAbort();
     }
-
+    
     public int getCurrentActionIndex() {
         return this.executorJPanel1.getCurrentActionIndex();
     }
-
+    
     public int getSafeAbortRequestCount() {
         return executorJPanel1.getSafeAbortRequestCount();
     }
-
+    
     public int getActionSetsStarted() {
         return executorJPanel1.getActionSetsStarted();
     }
-
+    
     @Override
     public List<Action> getActionsList() {
         return this.executorJPanel1.getActionsList();
@@ -250,16 +257,14 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
 //    public boolean atLastAction() {
 //        return executorJPanel1.atLastAction();
 //    }
-    
-    
     public boolean completeActionList(String comment, int startAbortCount, StackTraceElement[] callerTrace) {
         return this.executorJPanel1.completeActionList(comment, startAbortCount, callerTrace);
     }
-
+    
     public int getActionSetsCompleted() {
         return executorJPanel1.getActionSetsCompleted();
     }
-
+    
     public void debugAction() {
         this.executorJPanel1.debugAction();
     }
@@ -276,19 +281,19 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void setSelectedToolName(String newToolName) {
         this.executorJPanel1.setSelectedToolNameOnDisplay(newToolName);
     }
-
+    
     public String getErrorString() {
         return this.executorJPanel1.getErrorString();
     }
-
+    
     public void setErrorString(@Nullable String errorString) {
         this.executorJPanel1.setErrorString(errorString);
     }
-
+    
     public long incrementAndGetCommandId() {
         return this.executorJPanel1.incrementAndGetCommandId();
     }
-
+    
     @UIEffect
     public void reloadErrorMapsOnDisplay() throws IOException {
         assert SwingUtilities.isEventDispatchThread();
@@ -315,17 +320,16 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
      * Remove a previously added position map.
      *
      * @param pm position map to be removed.
-     * @throws IOException 
+     * @throws IOException
      */
     public void removePositionMap(PositionMap pm) throws IOException {
         executorJPanel1.removePositionMap(pm);
     }
-
+    
     public Map<ExecutorOption, ?> getOptions() {
         return this.executorJPanel1.getOptions();
     }
-    
-    
+
 //    public void setOptions(ExecutorOption.WithValue<?,?> ... options) {
 //        this.executorJPanel1.setOptions(options);
 //    }
@@ -341,11 +345,11 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void setOption(ExecutorOption key, Object value) {
         this.executorJPanel1.setOption(key, value);
     }
-
+    
     public void setToolHolderOperationEnabled(boolean enable) {
         executorJPanel1.setToolHolderOperationEnabled(enable);
     }
-
+    
     public boolean isToolHolderOperationEnabled() {
         return executorJPanel1.isToolHolderOperationEnabled();
     }
@@ -369,27 +373,27 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void removeSelectedToolNameListener(Consumer<String> listener) {
         executorJPanel1.removeSelectedToolNameListener(listener);
     }
-
+    
     public void addToolHolderContentsListener(BiConsumer<String, String> listener) {
         executorJPanel1.addToolHolderContentsListener(listener);
     }
-
+    
     public void removeToolHolderContentsListener(BiConsumer<String, String> listener) {
         executorJPanel1.removeToolHolderContentsListener(listener);
     }
-
+    
     private final AprsSystem aprsSystem;
-
+    
     public List<Action> loadActionsFile(
             File f,
-            boolean showInOptaPlanner, 
+            boolean showInOptaPlanner,
             boolean newReverseFlag,
             boolean forceNameChange,
             ExecutorOption.WithValue<?, ?> @Nullable [] options) throws IOException {
-
-        return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange,options);
+        
+        return this.executorJPanel1.loadActionsFile(f, showInOptaPlanner, newReverseFlag, forceNameChange, options);
     }
-
+    
     @Override
     public void addAction(Action action) {
         this.executorJPanel1.addAction(action);
@@ -399,19 +403,18 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
 //    public void processActions() {
 //        this.executorJPanel1.processActions();
 //    }
-
     public File getPropertiesFile() {
         return this.executorJPanel1.getPropertiesFile();
     }
-
+    
     public void setPropertiesFile(File propertiesFile) {
         this.executorJPanel1.setPropertiesFile(propertiesFile);
     }
-
+    
     public void saveProperties() {
         this.executorJPanel1.saveProperties();
     }
-
+    
     public XFuture<Boolean> startActions() {
         return executorJPanel1.startActions()
                 .thenCompose(x -> {
@@ -424,44 +427,44 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
                     });
                 });
     }
-
+    
     public @Nullable
     String getIsDoingActionsInfo() {
         return executorJPanel1.getIsDoingActionsInfo();
     }
-
+    
     public boolean isDoingActions() {
         return executorJPanel1.isDoingActions();
     }
-
+    
     public boolean doActions(
-            String comment, 
-            int safeAbortCount, 
+            String comment,
+            int safeAbortCount,
             StackTraceElement[] callerTrace,
             ExecutorOption.WithValue<?, ?> @Nullable [] options) {
-        return executorJPanel1.doActions(comment, safeAbortCount, callerTrace,options);
+        return executorJPanel1.doActions(comment, safeAbortCount, callerTrace, options);
     }
-
+    
     private final aprs.actions.executor.ExecutorJPanel executorJPanel1;
-
+    
     @UIEffect
     public void loadPropertiesOnDisplay() throws IOException {
         assert SwingUtilities.isEventDispatchThread();
         this.executorJPanel1.loadPropertiesOnDisplay();
     }
-
+    
     public void autoResizeTableColWidthsPddlOutput() {
         this.executorJPanel1.autoResizeTableColWidthsPddlOutput();
     }
-
+    
     public void refresh() {
         executorJPanel1.refresh();
     }
-
+    
     public void close() {
         aprsSystem.runOnDispatchThread(() -> this.setVisible(false));
     }
-
+    
     public void setDbSetupSupplier(Callable<DbSetupPublisher> dbSetupSupplier) {
         executorJPanel1.setDbSetupSupplier(dbSetupSupplier);
     }
@@ -470,15 +473,14 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
 //    public AprsSystem getAprsSystem() {
 //        return executorJPanel1.getAprsSystem();
 //    }
-
     public boolean readyForNewActionsList() {
         return executorJPanel1.readyForNewActionsList();
     }
-
+    
     public String readyForNewActionsListInfoString() {
         return executorJPanel1.readyForNewActionsListInfoString();
     }
-
+    
     public void warnIfNewActionsNotReady() {
         executorJPanel1.warnIfNewActionsNotReady();
     }
@@ -490,27 +492,27 @@ public class ExecutorJInternalFrame extends javax.swing.JInternalFrame implement
     public void clearActionsList() {
         executorJPanel1.clearActionsList();
     }
-
+    
     public void noWarnClearActionsList(boolean revFlag) {
         executorJPanel1.noWarnClearActionsList(revFlag);
     }
-
+    
     public List<PhysicalItem> getAvailableToolHolders() {
         return executorJPanel1.getAvailableToolHolders();
     }
-
+    
     public List<PhysicalItem> getToolsInHolders() {
         return executorJPanel1.getToolsInHolders();
     }
-
+    
     public void putInToolHolderContentsMap(String holder, String contents) {
         executorJPanel1.putInToolHolderContentsMap(holder, contents);
     }
-
+    
     public Map<String, String> getCurrentToolHolderContentsMap() {
         return executorJPanel1.getCurrentToolHolderContentsMap();
     }
-
+    
     public Map<String, Set<String>> getPossibleToolHolderContentsMap() {
         return executorJPanel1.getPossibleToolHolderContentsMap();
     }

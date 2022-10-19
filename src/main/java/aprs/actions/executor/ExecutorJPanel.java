@@ -7067,6 +7067,12 @@ public class ExecutorJPanel extends javax.swing.JPanel {
 //                        },generateCrclService);
     }
 
+    public void overwriteCurrentToolName(String newToolName) {
+        crclGenerator.setCurrentToolName(newToolName);
+        crclGenerator.setExpectedToolName(newToolName);
+        jTextFieldCurrentToolName.setText(newToolName);
+    }
+    
     @UIEffect
     private void jButtonSetCurrentToolActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButtonSetCurrentToolActionPerformed
         try {
