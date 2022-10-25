@@ -5151,26 +5151,34 @@ public class Supervisor {
     }
 
     public XFuture<Boolean> startFlipFMOnSupervisorService(String partToFlip, PointType flipReturnPoint) {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
                         () -> this.startFlipFM(partToFlip, flipReturnPoint), supervisorExecutorService)
-                .thenCompose(x -> x);
+                .thenCompose(x -> x)
+                .peekException((Throwable throwable) -> {
+                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "partToFlip=" + partToFlip + ", flipReturnPoint=" + flipReturnPoint + ", \r\n     trace=" + XFuture.traceToString(trace) + "\r\n", throwable);
+                });
     }
-    
+
     public XFuture<Boolean> startFlipOnSupervisorService(AprsSystem system, String partToFlip, PointType flipReturnPoint) {
-        if(system.getTaskName().equals(FANUC__CART_TASK_NAME)) {
+        if (system.getTaskName().equals(FANUC__CART_TASK_NAME)) {
             return startFlipFMOnSupervisorService(partToFlip, flipReturnPoint);
         } else {
-            return startFlipMFOnSupervisorService(partToFlip, flipReturnPoint);    
+            return startFlipMFOnSupervisorService(partToFlip, flipReturnPoint);
         }
     }
-    
+
 
     /*public*/ XFuture<Boolean> startFlipMFOnSupervisorService(String partToFlip, PointType flipReturnPoint) {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         return XFuture
                 .supplyAsync("startFlipOnSupervisorService",
-                        () -> startFlipMF(partToFlip,flipReturnPoint), supervisorExecutorService)
-                .thenCompose(x -> x);
+                        () -> startFlipMF(partToFlip, flipReturnPoint), supervisorExecutorService)
+                .thenCompose(x -> x)
+                .peekException((Throwable throwable) -> {
+                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "partToFlip=" + partToFlip + ", flipReturnPoint=" + flipReturnPoint + ", \r\n     trace=" + XFuture.traceToString(trace) + "\r\n", throwable);
+                });
     }
 
     private XFutureVoid startScanAllThenContinuousDemoRevFirst() {
@@ -5203,6 +5211,7 @@ public class Supervisor {
 //        return XFuture.allOfWithName("lookForPartsAll", futures);
 //    }
     public XFuture<Boolean> startFlipFM(String partToFlip, PointType flipReturnPoint) {
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         logEvent("startFlip starting ...");
         XFutureVoid xf1 = this.safeAbortAll();
         AprsSystem fanucCartSys = getSysByTaskOrThrow(FANUC__CART_TASK_NAME);
@@ -5249,6 +5258,7 @@ public class Supervisor {
             logEvent("startFlip.step2 : xf2=" + xf2);
             return fanucCartSys.startActionsList("flip2",
                     Arrays.asList(new Action[]{
+                Action.newLookForParts(),
                 Action.newTakePartAction(partToFlip /* "part_black_gear_in_pt_1" */),
                 Action.newMoveRecordedJoints("present_gear")
             }),
@@ -5358,7 +5368,7 @@ public class Supervisor {
             }
             return fanucCartSys.startActionsList("flip10",
                     Arrays.asList(new Action[]{
-                Action.newPlacePartByPosition(flipReturnPoint.getX(),flipReturnPoint.getY(), "black_gear")
+                Action.newPlacePartByPosition(flipReturnPoint.getX(), flipReturnPoint.getY(), "black_gear")
             }));
         });
         XFuture<Boolean> xf12 = xf11.thenCompose("startFlip.step11", x -> {
@@ -5374,7 +5384,7 @@ public class Supervisor {
             }
             return lookForPartsAll().thenApply(x1 -> x);
         });
-        return xf12.thenCompose(x -> {
+        final XFuture<Boolean> xf13 = xf12.thenCompose(x -> {
             if (fanucCartSys.isObjectViewSimulated()) {
                 final Object2DOuterJPanel objectViewPanel = fanucCartSys.getObjectViewPanel();
                 if (null != objectViewPanel) {
@@ -5383,16 +5393,20 @@ public class Supervisor {
                 }
             }
             if (null != displayJFrame) {
-                displayJFrame.setTitle("Flip FM 11 success="+x);
+                displayJFrame.setTitle("Flip FM 11 success=" + x);
             }
             fanucCartSys.clearIsRequestingFlip();
-            logEvent("startFlipFM completed.  success="+x);
+            logEvent("startFlipFM completed.  success=" + x);
             if (!CRCLUtils.isGraphicsEnvironmentHeadless()) {
-                return showMesssage("startFlipFM completed.  success="+x)
+                return showMesssage("startFlipFM completed.  success=" + x)
                         .thenApply(x3 -> x);
             }
             return XFuture.completedFuture(x);
         });
+        return xf13
+                .peekException((Throwable throwable) -> {
+                    Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "partToFlip=" + partToFlip + ", flipReturnPoint=" + flipReturnPoint + ", \r\n     trace=" + XFuture.traceToString(trace) + "\r\n", throwable);
+                });
     }
 
     /*public*/ XFuture<Boolean> startFlipMF(String partToFlip, PointType flipReturnPoint) {
@@ -5508,14 +5522,18 @@ public class Supervisor {
                             return sharedTableSys.startActionsList("flip9",
                                     Arrays.asList(new Action[]{
                                 Action.newMoveRecordedPose("flipmf_present_gear_prep"),
-                                Action.newLookForParts(),
-                                Action.newPlacePartByPosition(flipReturnPoint.getX(),flipReturnPoint.getY(), partToFlip),  // /* "empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1" */, "black_gear"),
-                                Action.newLookForParts()
+                                Action.newPlacePartByPosition(flipReturnPoint.getX(), flipReturnPoint.getY(), "black_gear") // /* "empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1" */, "black_gear"),
                             }),
                                     ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
                                     ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
                         });
-        return xf9;
+        XFuture<Boolean> xf10= xf9
+                .thenComposeAsync("startFlipMF.step10", x -> {
+                    logEvent("startFlipMF.step10 : xf9=" + xf9);
+                    return lookForPartsAll().thenApply((x2 -> x));
+                }, supervisorExecutorService);
+
+        return xf10;
     }
     public static final String SHARED__TABLE_TASK_NAME = "Shared Table";
     public static final String FANUC__CART_TASK_NAME = "Fanuc Cart";
@@ -10361,11 +10379,12 @@ public class Supervisor {
         }
     }
 
-    private static final Map<String,Consumer<AprsSystem>> completeLoadSysConsumersMap = new ConcurrentHashMap<String, Consumer<AprsSystem>>();
-    
+    private static final Map<String, Consumer<AprsSystem>> completeLoadSysConsumersMap = new ConcurrentHashMap<String, Consumer<AprsSystem>>();
+
     public static void addCompleteLoadSysConsumer(String taskName, Consumer<AprsSystem> consumer) {
         completeLoadSysConsumersMap.put(taskName, consumer);
     }
+
     private void completeLoadSys(AprsSystem aprsSys, int priority, String taskName, String robotName) {
 
         aprsSys.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -10392,9 +10411,9 @@ public class Supervisor {
         });
         aprsSys.setSupervisorEventLogger(this::logEvent);
         aprsSys.setSupervisor(this);
-        if(aprsSys.isObjectViewSimulated() && aprsSys.isRobotSimulated()) {
+        if (aprsSys.isObjectViewSimulated() && aprsSys.isRobotSimulated()) {
             Consumer<AprsSystem> c = completeLoadSysConsumersMap.remove(aprsSys.getTaskName());
-            if(c != null) {
+            if (c != null) {
                 c.accept(aprsSys);
             }
         }
@@ -10611,7 +10630,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                                                    @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                                                      @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

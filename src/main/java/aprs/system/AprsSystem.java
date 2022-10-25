@@ -9126,7 +9126,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
                         lastPrivateStartActionsFuture = null;
                         lastStartActionsFuture = null;
                         flipRequestStarted = true;
-                        return supervisor.startFlipFMOnSupervisorService(partToFlip, flipReturnPoint);
+                        return supervisor.startFlipOnSupervisorService(this, partToFlip, flipReturnPoint);
                     } else {
                         return XFuture.completedFuture(x);
                     }

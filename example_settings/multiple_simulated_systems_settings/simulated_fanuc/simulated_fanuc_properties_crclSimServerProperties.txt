@@ -1,5 +1,5 @@
 #
-#Tue Oct 18 08:46:53 EDT 2022
+#Tue Oct 25 13:44:14 EDT 2022
 crcl.sim.robotType=SIMPLE
 crcl.port=64444
 crcl.sim.initStatus=simulatedInitialStatus.xml
