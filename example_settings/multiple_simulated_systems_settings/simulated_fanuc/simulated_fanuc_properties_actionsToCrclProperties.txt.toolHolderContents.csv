@@ -1,4 +1,4 @@
 Holder Position Name,Contents,Possible Contents,Comment
 farLeftHolder,empty,"small_vacuum,pincher",contents changed from empty on Wed Oct 12 13:53:36 EDT 2022
 nearLeftHolder,empty,"small_vacuum,pincher",
-sharedHolder,empty,"small_vacuum,pincher",contents changed from small_vacuum on Mon Oct 24 14:06:59 EDT 2022
+sharedHolder,small_vacuum,"small_vacuum,pincher",contents changed from small_vacuum on Mon Oct 24 14:06:59 EDT 2022
