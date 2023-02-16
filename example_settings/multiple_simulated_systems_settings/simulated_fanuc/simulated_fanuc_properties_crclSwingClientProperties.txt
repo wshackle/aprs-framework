@@ -18,11 +18,11 @@ boolean internal.validateXmlSchema=false
 boolean internal.debugInterrupts=false
 boolean internal.holdingObjectExpected=false
 boolean internal.useReadSoTimeout=false
+boolean internal.skipWrappedMessageCommands=true
 boolean internal.holdingErrorOccured=false
 boolean internal.debugConnectDisconnect=false
 boolean internal.quitOnTestCommandFailure=true
 boolean internal.printDetailedCommandFailureInfo=false
-boolean internal.skipWrappedMessageCommands=true
 boolean internal.preClosing=false
 java.lang.String internal.lastMessage=addMoveToLookForPosition
 rcs.posemath.PmCartesian internal.minLimit= { x=-400.000, y=-400.000, z=-1000.000 } 
@@ -40,6 +40,7 @@ int internal.lastProgramIndex=20
 # internal.getOutgoingProgramFile returned null or could not be invoked
 int internal.maxLogSize=500
 crcl.base.LengthUnitEnumType internal.lengthUnit=MILLIMETER
+double internal.jogRotSpeed=3.0
 int internal.maxPoseListLength=1000
 double internal.jointTol=15.0
 crcl.base.AngleUnitEnumType internal.angleType=DEGREE
@@ -47,5 +48,4 @@ java.lang.Integer internal.outgoingProgramIndex=-1
 java.lang.Integer internal.outgoingProgramLength=19
 double internal.jointMoveAccel=0.0
 double internal.jointMoveSpeed=0.0
-double internal.jogRotSpeed=3.0
-crcl.base.CommandStateEnumType internal.commandState=CRCL_WORKING
+crcl.base.CommandStateEnumType internal.commandState=CRCL_ERROR
