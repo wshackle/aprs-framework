@@ -157,6 +157,8 @@
                                                   <Component id="jCheckBoxConnected" min="-2" pref="93" max="-2" attributes="0"/>
                                                   <EmptySpace max="-2" attributes="0"/>
                                                   <Component id="jCheckBoxCloning" min="-2" max="-2" attributes="0"/>
+                                                  <EmptySpace max="-2" attributes="0"/>
+                                                  <Component id="jCheckBoxCombineLines" min="-2" max="-2" attributes="0"/>
                                               </Group>
                                               <Group type="102" alignment="0" attributes="0">
                                                   <Component id="jCheckBoxDebug" min="-2" max="-2" attributes="0"/>
@@ -199,6 +201,7 @@
                               <Component id="jCheckBoxSimulated" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jCheckBoxConnected" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jCheckBoxCloning" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jCheckBoxCombineLines" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
@@ -414,6 +417,11 @@
                 <Component class="javax.swing.JLabel" name="jLabel16">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Drag Action: "/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="jCheckBoxCombineLines">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Combine Lines"/>
                   </Properties>
                 </Component>
               </SubComponents>

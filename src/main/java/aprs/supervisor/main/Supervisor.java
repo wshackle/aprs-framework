@@ -5522,7 +5522,6 @@ public class Supervisor {
                             return sharedTableSys.startActionsList("flip9",
                                     Arrays.asList(new Action[]{
                                 Action.newMoveRecordedPose("flipmf_present_gear_prep"),
-                                Action.newPlacePartByPosition(flipReturnPoint.getX(), flipReturnPoint.getY(), "black_gear") // /* "empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1" */, "black_gear"),
                             }),
                                     ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
                                     ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
@@ -5532,8 +5531,24 @@ public class Supervisor {
                     logEvent("startFlipMF.step10 : xf9=" + xf9);
                     return lookForPartsAll().thenApply((x2 -> x));
                 }, supervisorExecutorService);
-
-        return xf10;
+        XFuture<Boolean> xf11 = xf10
+                .thenCompose("startFlipMF.step11",
+                        x -> {
+                            logEvent("startFlipMF.step11 : xf10=" + xf10);
+                            sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
+                            return sharedTableSys.startActionsList("flip9",
+                                    Arrays.asList(new Action[]{
+                                Action.newPlacePartByPosition(flipReturnPoint.getX(), flipReturnPoint.getY(), "black_gear") // /* "empty_slot_2_for_large_gear_in_kit_s2l2_vessel_1" */, "black_gear"),
+                            }),
+                                    ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
+                                    ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
+                        });
+         XFuture<Boolean> xf12= xf11
+                .thenComposeAsync("startFlipMF.step10", x -> {
+                    logEvent("startFlipMF.step12 : xf11=" + xf11);
+                    return lookForPartsAll().thenApply((x2 -> x));
+                }, supervisorExecutorService);
+        return xf12;
     }
     public static final String SHARED__TABLE_TASK_NAME = "Shared Table";
     public static final String FANUC__CART_TASK_NAME = "Fanuc Cart";

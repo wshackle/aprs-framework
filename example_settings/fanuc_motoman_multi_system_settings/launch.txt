@@ -11,8 +11,13 @@ plj-timeout 90000
 #cmd /C "set JAVA_HOME=C:\Users\Public\Documents\Downloaded_Tools\AdoptOpenJDK\jdk8u202-b08&& ..\..\..\neo4j-community-2.3.11-fanuc\bin\Neo4j.bat&& echo done"
 #endif
 
-if!connectOK localhost 6001
-cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
-cmd /V /K start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
+#if!connectOK localhost 6001
+#cd C:\Users\Public\Documents\APRS_AntVision_2018_05_30\
+#cmd /V /K start C:\Users\Public\Documents\APRS_AntVision_2018_05_30\AntVision.bat
+#endif
+
+if!connectOK localhost 6000
+cd C:\Users\Public\Documents\APRS_VideoTeachTable_2023_02_16
+cmd /V /K start C:\Users\Public\Documents\APRS_VideoTeachTable_2023_02_16\VideoTeachTable.exe
 endif
 

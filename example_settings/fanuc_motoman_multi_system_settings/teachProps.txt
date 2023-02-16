@@ -1,12 +1,13 @@
 #  Automatically saved 
 --visionhost=localhost
---visionport=6001
+--visionport=6000
 addPosNoise=false
 alternativeRotation=0.00
 autoscale=false
+combineNonBlankLines=false
 connectTimeout=2500
 connected=true
-datafile=simTeach_with_blue_part.csv
+datafile=simTeach_with_blue_part2.csv
 displayAxis=(X+,Y+)
 dropOffThreshold=25.00
 enableConnectTimeout=true
@@ -17,7 +18,7 @@ hideNearMouse=false
 hideNearMouseDist=100.0 
 hideNearRobot=false
 hideNearRobotDist=100.0 
-items=sku_part_large_gear,0.0,270.7,91.0,0.91,P,sku_part_large_gear,0.0,161.2,95.5,0.91,P,sku_part_large_gear,0.0,758.5,128.1,0.91,P,sku_part_large_gear,0.0,686.1,380.2,0.91,P,sku_part_large_gear,0.0,531.2,385.8,0.91,P,sku_part_large_gear,0.0,419.4,386.1,0.91,P,sku_part_medium_gear,0.0,215.6,428.8,0.91,P,sku_part_medium_gear,0.0,213.3,502.3,0.91,P,sku_part_medium_gear,0.0,288.3,506.5,0.91,P,sku_part_medium_gear,0.0,443.5,147.9,0.91,P,sku_part_small_gear,0.0,51.1,384.9,0.91,P,sku_part_small_gear,0.0,51.0,440.4,0.91,P,sku_part_small_gear,0.0,435.0,467.5,0.91,P,sku_part_small_gear,0.0,782.6,457.6,0.91,P,sku_kit_s2l2_vessel,0.0,739.0,406.0,0.91,KT,sku_kit_s2l2_vessel,0.0,473.0,412.0,0.91,KT,sku_large_gear_vessel,0.0,217.0,95.0,0.91,PT,sku_large_gear_vessel,0.0,206.0,231.0,0.91,PT,sku_small_gear_vessel,0.0,78.0,414.0,0.91,PT,sku_medium_gear_vessel,0.0,250.0,469.0,0.91,PT,sku_kit_m2l1_vessel,0.0,493.0,110.0,0.91,KT,sku_kit_m2l1_vessel,0.0,715.0,128.0,0.91,KT,
+items=sku_part_large_gear,0.0,52.8,39.0,0.9,P,sku_part_large_gear,0.0,47.7,146.0,0.9,P,sku_part_large_gear,0.0,152.5,231.8,0.9,P,sku_part_large_gear,0.0,46.3,267.6,0.9,P,sku_part_large_gear,0.0,438.2,411.1,0.9,P,sku_part_large_gear,0.0,533.8,179.2,0.9,P,sku_part_pink_gear,0.0,755.1,125.7,0.9,P,sku_part_pink_gear,0.0,263.1,233.1,0.9,P,sku_part_pink_gear,0.0,204.6,433.0,0.9,P,sku_part_pink_gear,0.0,264.9,100.3,0.9,P,sku_part_neonorange_gear,0.0,210.9,512.1,0.9,P,sku_part_neonorange_gear,0.0,283.1,436.4,0.9,P,sku_part_neonorange_gear,0.0,794.5,406.1,0.9,P,sku_part_neonorange_gear,0.0,683.4,406.9,0.9,P,sku_part_neonorange_gear,0.0,550.1,411.2,0.9,P,sku_part_medium_gear,0.0,286.6,507.4,0.9,P,sku_part_medium_gear,0.0,661.4,167.5,0.9,P,sku_part_medium_gear,0.0,439.1,137.9,0.9,P,sku_part_medium_gear,0.0,439.0,217.2,0.9,P,sku_part_small_gear,0.0,533.7,491.0,0.9,P,sku_part_small_gear,0.0,453.7,492.8,0.9,P,sku_part_small_gear,0.0,778.3,486.5,0.9,P,sku_part_small_gear,0.0,699.2,488.2,0.9,P,sku_kit_s2l2_vessel,0.0,736.0,435.0,0.9,KT,sku_kit_s2l2_vessel,0.0,492.0,436.0,0.9,KT,sku_large_gear_vessel,0.0,211.0,105.0,0.9,PT,sku_large_gear_vessel,0.0,206.0,234.0,0.9,PT,sku_small_gear_vessel,0.0,80.0,411.0,0.9,PT,sku_medium_gear_vessel,0.0,249.0,471.0,0.9,PT,sku_kit_m2l1_vessel,0.0,712.0,129.0,0.9,KT,sku_kit_m2l1_vessel,0.0,492.0,179.0,0.9,KT,
 
 minimumScore=0.0
 pickupDist=5.00

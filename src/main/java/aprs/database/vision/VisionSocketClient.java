@@ -145,6 +145,27 @@ public class VisionSocketClient implements AutoCloseable {
         return this.updateListeners(visionList, lineFinal, false);
     }
 
+    private boolean combineSuccessiveNonBlankLines = false;
+
+    /**
+     * Get the value of combineSuccessiveNonBlankLines
+     *
+     * @return the value of combineSuccessiveNonBlankLines
+     */
+    public boolean isCombineSuccessiveNonBlankLines() {
+        return combineSuccessiveNonBlankLines;
+    }
+
+    /**
+     * Set the value of combineSuccessiveNonBlankLines
+     *
+     * @param combineSuccessiveNonBlankLines new value of
+     * combineSuccessiveNonBlankLines
+     */
+    public void setCombineSuccessiveNonBlankLines(boolean combineSuccessiveNonBlankLines) {
+        this.combineSuccessiveNonBlankLines = combineSuccessiveNonBlankLines;
+    }
+
     public XFutureVoid updateListeners(@Nullable List<PhysicalItem> localVisionList, String localLineRecieved, boolean ignored) {
         List<XFutureVoid> futures = new ArrayList<>();
         if (null != localVisionList && null != localLineRecieved && localLineRecieved.length() > 0) {
@@ -313,13 +334,26 @@ public class VisionSocketClient implements AutoCloseable {
             final SocketLineReader.CallBack callBack = new SocketLineReader.CallBack() {
                 private volatile @Nullable
                 String lastSkippedLine = null;
+                private volatile StringBuffer lineCombinerSB = new StringBuffer();
 
                 @Override
-                public void call(final String line, @Nullable PrintStream os) {
-                    if (line.length() < 1 || line.trim().length() < 1) {
-                        //noinspection NonAtomicOperationOnVolatileField
-                        emptyLines++;
+                public void call(final String lineIn, @Nullable PrintStream os) {
+                    final boolean lineIsBlank = lineIn.length() < 1 || lineIn.trim().length() < 1;
+                    final String line;
+                    if (lineIsBlank) {
+                        if (!combineSuccessiveNonBlankLines) {
+                            //noinspection NonAtomicOperationOnVolatileField
+                            emptyLines++;
+                            return;
+                        } else {
+                            line = lineCombinerSB.toString();
+                            lineCombinerSB = new StringBuffer();
+                        }
+                    } else if(combineSuccessiveNonBlankLines) {
+                        lineCombinerSB.append(lineIn);
                         return;
+                    } else {
+                        line = lineIn;
                     }
                     incrementLineCount();
 //                    println("line = " + line+", parsing_line="+parsing_line);
@@ -357,7 +391,7 @@ public class VisionSocketClient implements AutoCloseable {
                                     parsing_line = null;
                                     Thread.currentThread().setName(origName);
                                 } catch (Exception exception) {
-                                    System.err.println("Failure in vision client for "+hostf+":"+portf+" with startTrace="+XFuture.traceToString(startTrace));
+                                    System.err.println("Failure in vision client for " + hostf + ":" + portf + " with startTrace=" + XFuture.traceToString(startTrace));
                                     Logger.getLogger(VisionSocketClient.class.getName()).log(Level.SEVERE, "", exception);
                                     System.err.println("Connect to vision on host " + hostf + " with port " + portf + " failed with message " + exception);
                                     throw new RuntimeException("Failed to run client to vision " + hostf + ":" + portf + " : " + exception.getMessage(), exception);

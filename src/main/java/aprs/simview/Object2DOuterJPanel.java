@@ -1618,6 +1618,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         jTextFieldReadTimeout = new javax.swing.JTextField();
         dragModeComboBox = new aprs.simview.DragModeComboBox();
         jLabel16 = new javax.swing.JLabel();
+        jCheckBoxCombineLines = new javax.swing.JCheckBox();
         jPanelSimulationTab = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
         jTextFieldSimulationUpdateTime = new javax.swing.JTextField();
@@ -1863,6 +1864,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
 
         jLabel16.setText("Drag Action: ");
 
+        jCheckBoxCombineLines.setText("Combine Lines");
+
         javax.swing.GroupLayout jPanelConnectionsTabLayout = new javax.swing.GroupLayout(jPanelConnectionsTab);
         jPanelConnectionsTab.setLayout(jPanelConnectionsTabLayout);
         jPanelConnectionsTabLayout.setHorizontalGroup(
@@ -1908,7 +1911,9 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(jCheckBoxConnected, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(jCheckBoxCloning))
+                                        .addComponent(jCheckBoxCloning)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jCheckBoxCombineLines))
                                     .addGroup(jPanelConnectionsTabLayout.createSequentialGroup()
                                         .addComponent(jCheckBoxDebug)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1939,7 +1944,8 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jCheckBoxSimulated)
                     .addComponent(jCheckBoxConnected)
-                    .addComponent(jCheckBoxCloning))
+                    .addComponent(jCheckBoxCloning)
+                    .addComponent(jCheckBoxCombineLines))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelConnectionsTabLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -3478,6 +3484,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
                 }
             }
             VisionSocketClient clnt = new VisionSocketClient();
+            clnt.setCombineSuccessiveNonBlankLines(jCheckBoxCombineLines.isSelected());
             clnt.setPrevListSizeDecrementInterval(prevListSizeDecrementInterval);
             clnt.setIgnoreLosingItemsLists(ignoreLosingItemsLists);
             this.visionSocketClient = clnt;
@@ -5033,6 +5040,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
     private javax.swing.JCheckBox jCheckBoxAddSlots;
     private javax.swing.JCheckBox jCheckBoxAutoscale;
     private javax.swing.JCheckBox jCheckBoxCloning;
+    private javax.swing.JCheckBox jCheckBoxCombineLines;
     private javax.swing.JCheckBox jCheckBoxConnectForceTorque;
     private javax.swing.JCheckBox jCheckBoxConnectTimeout;
     private javax.swing.JCheckBox jCheckBoxConnected;
@@ -5249,6 +5257,7 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
         props.setProperty("enforceSensorLimits", Boolean.toString(isEnforceSensorLimits()));
         props.setProperty("prevListSizeDecrementInterval", Integer.toString(getPrevListSizeDecrementInterval()));
         props.setProperty("repaintMinMillis", Long.toString(object2DJPanel1.getRepaintMinMillis()));
+        props.setProperty("combineNonBlankLines", Boolean.toString(jCheckBoxCombineLines.isSelected()));
         if (null != aprsSystem && aprsSystem.isVisionToDbConnected()) {
             double visionToDBRotationOffset = aprsSystem.getVisionToDBRotationOffset();
             props.setProperty("visionToDBRotationOffset", Double.toString(visionToDBRotationOffset));
@@ -5550,6 +5559,13 @@ public class Object2DOuterJPanel extends javax.swing.JPanel
             viewOutputCachedCheckBox.setSelected(viewOutput);
         }
 
+        
+        String combineNonBlankLinesString = props.getProperty("combineNonBlankLines");
+        if (null != combineNonBlankLinesString && combineNonBlankLinesString.length() > 0) {
+            boolean combineNonBlankLines = Boolean.parseBoolean(combineNonBlankLinesString);
+            jCheckBoxCombineLines.setSelected(combineNonBlankLines);
+        }
+        
         String addPosNoiseString = props.getProperty("addPosNoise");
         if (null != addPosNoiseString && addPosNoiseString.length() > 0) {
             boolean addPosNoise = Boolean.parseBoolean(addPosNoiseString);
