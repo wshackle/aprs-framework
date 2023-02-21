@@ -1,5 +1,5 @@
 System,Holder/Current,Contents,PossibleContents,Comment
-Shared Table,Current,empty,"[pincher, big_gripper, big_vacuum, small_vacuum]",
+Shared Table,Current,big_gripper,"[pincher, big_gripper, big_vacuum, small_vacuum]",
 Shared Table,big_gripper_holder,big_gripper,[big_gripper],
 Shared Table,sharedHolder,small_vacuum,"[pincher, small_vacuum]",
 Fanuc Cart,Current,pincher,"[pincher, small_vacuum]",
