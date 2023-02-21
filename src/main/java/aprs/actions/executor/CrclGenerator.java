@@ -3268,6 +3268,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
     {
         flippedGearNames.put("black_gear", "blue_gear");
         flippedGearNames.put("blue_gear", "black_gear");
+        flippedGearNames.put("neonorange_gear", "pink_gear");
+        flippedGearNames.put("pink_gear", "neonorange_gear");
     }
 
     private boolean checkKits(Action action, List<MiddleCommandType> cmds, int origIndex, int lastLookForIndex, GenerateParams gparams) {

@@ -245,11 +245,11 @@ public class GoalLearner {
         if (null == localSlotOffsetProvider) {
             throw new IllegalStateException("null == slotOffsetProvider");
         }
-        final Integer black_gear_map_result = requiredItemsMap.get("black_gear");
-
-        if(null != black_gear_map_result && black_gear_map_result > 1) {
-            throw new RuntimeException("requiredItems="+requiredItems);
-        }
+//        final Integer black_gear_map_result = requiredItemsMap.get("black_gear");
+//
+//        if(null != black_gear_map_result && black_gear_map_result > 1) {
+//            throw new RuntimeException("requiredItems="+requiredItems);
+//        }
 //        String requiredItemsString
 //                = requiredItemsMap
 //                        .entrySet()
