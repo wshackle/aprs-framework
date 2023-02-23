@@ -1389,7 +1389,9 @@ public class Supervisor {
                 }
             }
             addStealUnstealList(stealUnstealFuture);
-            XFuture<?> nextLFR = stealUnstealFuture.peekNoCancelException(this::handleXFutureException)
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
+            XFuture<?> nextLFR = stealUnstealFuture.peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .alwaysRun("END:ecc=" + ecc + ",enabled=" + enabled, () -> {
                         try {
                             takeAllSnapshots("END " + info);
@@ -1879,8 +1881,14 @@ public class Supervisor {
 
     private volatile StackTraceElement lastReturnRobots1Trace@Nullable []  = null;
 
-    private XFutureVoid returnRobots1(String comment, @Nullable AprsSystem stealFrom, @Nullable AprsSystem stealFor,
-            int srn, int ecc) {
+    private XFutureVoid returnRobots1(
+            String comment,
+            @Nullable AprsSystem stealFrom,
+            @Nullable AprsSystem stealFor,
+            int srn, int ecc,
+            List<StackTraceElement[]> traceList) {
+        StackTraceElement returnRobots1Trace[] = Thread.currentThread().getStackTrace();
+        traceList.add(returnRobots1Trace);
         try {
             if (this.keepDisabled
                     && lastStealForRobotName != null
@@ -1891,7 +1899,6 @@ public class Supervisor {
                 }
             }
             lastReturnRobots1Comment = comment;
-            StackTraceElement returnRobots1Trace[] = Thread.currentThread().getStackTrace();
             lastReturnRobots1Trace = returnRobots1Trace;
             if (ecc != -1 || srn != -1) {
                 if (checkEcc(ecc)) {
@@ -1956,16 +1963,16 @@ public class Supervisor {
                 return ret;
             }, supervisorExecutorService);
         } catch (Exception exception) {
-            logException(exception);
+            logException(exception, traceList);
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
             throw asRuntimeException(exception);
         }
     }
 
-    void handleXFutureException(Throwable throwable) {
+    void handleXFutureException(Throwable throwable, List<StackTraceElement[]> traceList) {
         if (null != throwable) {
             if (throwable != lastLoggedException && !closing && !preClosing) {
-                logException(throwable);
+                logException(throwable, traceList);
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE,
                         "Supervisor.handleXFutureException:" + throwable.getMessage(), throwable);
             }
@@ -2037,7 +2044,9 @@ public class Supervisor {
         try {
             logEvent("completeReturnRobots " + func.getName() + ", comment=" + comment + ",ecc=" + ecc);
             AprsSystem[] systems = func.getSystems();
-            return func.apply(ecc).peekNoCancelException(this::handleXFutureException)
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
+            return func.apply(ecc).peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, systems), supervisorExecutorService);
         } catch (Exception ex) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", ex);
@@ -2435,6 +2444,8 @@ public class Supervisor {
     private XFutureVoid stealRobotsInternal(AprsSystem stealFrom, AprsSystem stealFor, String stealFromOrigCrclHost,
             int ecc) throws IOException, PositionMap.BadErrorMapFormatException {
 
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         if (checkEcc(ecc)) {
             return cancelledEcc(ecc);
         }
@@ -2474,7 +2485,7 @@ public class Supervisor {
                 clearBlockConveryorMoves();
                 return cancelledEcc(ecc);
             }
-            return stealRobotsInternalBeforeAllowToggles(gd, srn, stealFrom, stealFor, stealFromOrigCrclHost, ecc);
+            return stealRobotsInternalBeforeAllowToggles(gd, srn, stealFrom, stealFor, stealFromOrigCrclHost, ecc, traceList);
         }, supervisorExecutorService);
         lastStealRobotsInternalBeforeAllowTogglesFuture = beforeAllowTogglesFuture;
         XFutureVoid withAllowTogglesFuture = beforeAllowTogglesFuture
@@ -2483,6 +2494,7 @@ public class Supervisor {
         if (!isContinuousDemoSelected() && !isContinuousDemoRevFirstSelected()) {
             return withAllowTogglesFuture;
         }
+
         XFuture<Boolean> part1 = withAllowTogglesFuture
                 .thenComposeAsync("continueAfterSwitch" + " : srn=" + srn, (Void ignore3) -> {
                     clearBlockConveryorMoves();
@@ -2540,7 +2552,8 @@ public class Supervisor {
                                 });
                             }, supervisorExecutorService);
                     return stealForCompletedContinueFuture;
-                }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException);
+                }, supervisorExecutorService)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList));
         lastStealRobotsInternalPart1 = part1;
         if (isIndContinuousDemoSelected() || isIndRandomToggleTestSelected()) {
             return part1.thenRunAsync("stealRobot :  Checking systemContinueMap " + " : srn=" + srn, () -> {
@@ -2591,7 +2604,7 @@ public class Supervisor {
         lastStealRobotsInternalPart4 = part4;
         XFutureVoid part5 = part4.thenComposeAsyncToVoid("returnRobots2" + " : srn=" + srn,
                 (Void ignored5) -> returnRobots1("returnRobots2" + " : srn=" + srn + ",ecc=" + ecc, stealFor, stealFrom,
-                        srn, ecc),
+                        srn, ecc, traceList),
                 supervisorExecutorService);
         lastStealRobotsInternalPart5 = part5;
         XFuture<Boolean> part6 = part5.thenComposeAsync("continueAfterReturn" + " : srn=" + srn, (Void ignored6) -> {
@@ -2694,8 +2707,15 @@ public class Supervisor {
     XFutureVoid lastStealRobotsInternalBeforeAllowToggles = null;
     private volatile StackTraceElement lastStealRobotsInternalBeforeAllowTogglesTrace@Nullable []  = null;
 
-    private XFutureVoid stealRobotsInternalBeforeAllowToggles(@Nullable GraphicsDevice gd, int srn,
-            AprsSystem stealFrom, AprsSystem stealFor, String stealFromOrigCrclHost, int ecc) {
+    private XFutureVoid stealRobotsInternalBeforeAllowToggles(
+            @Nullable GraphicsDevice gd,
+            int srn,
+            AprsSystem stealFrom,
+            AprsSystem stealFor,
+            String stealFromOrigCrclHost,
+            int ecc,
+            List<StackTraceElement[]> traceList) {
+
         try {
 
             String stealForRobotName = stealFor.getRobotName();
@@ -2803,7 +2823,7 @@ public class Supervisor {
             lastStealRobotsInternalBeforeAllowTogglesTrace = Thread.currentThread().getStackTrace();
             return beforeAllowTogglesFuture;
         } catch (Exception ex) {
-            logException(ex);
+            logException(ex, traceList);
             throw asRuntimeException(ex);
         }
     }
@@ -3196,9 +3216,11 @@ public class Supervisor {
         final XFutureVoid disconnectBothFuture = unstealAbortAndDisconnectBoth(stealFor, srn, ecc, stealForRobotName,
                 gd, stealFrom);
         this.unstealAbortFuture = disconnectBothFuture;
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFutureVoid part1Future = disconnectBothFuture
                 .thenComposeAsync("unsteal.returnRobots1" + " : srn=" + srn, x -> {
-                    return returnRobots1("unsteal.returnRobots1" + " : srn=" + srn, stealFor, stealFrom, srn, ecc);
+                    return returnRobots1("unsteal.returnRobots1" + " : srn=" + srn, stealFor, stealFrom, srn, ecc, traceList);
                 }, supervisorExecutorService)
                 .thenRun("unsteal.connectAll" + " : srn=" + srn, this::connectAll)
                 .alwaysComposeAsyncToVoid(() -> {
@@ -3296,21 +3318,24 @@ public class Supervisor {
                         return x2;
                     });
                 }, supervisorExecutorService);
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFuture<Boolean> stealForFinishFuture = stealFor
                 .continueActionList("unsteal.stealFor" + " : srn=" + srn + ",ecc=" + ecc)
-                .peekNoCancelException(this::handleXFutureException).thenComposeAsync(x3 -> {
-            logEvent("unsteal.stealFor " + stealFor.getRunName()
-                    + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn
-                    + ",ecc=" + ecc);
-            return finishAction(stealFrom).thenApply(x4 -> {
-                logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3
-                        + " : srn=" + srn);
-                if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
-                    completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag(), ecc);
-                }
-                return x3;
-            });
-        }, supervisorExecutorService);
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
+                .thenComposeAsync(x3 -> {
+                    logEvent("unsteal.stealFor " + stealFor.getRunName()
+                            + " completed action list after return after robot reenabled. " + x3 + " : srn=" + srn
+                            + ",ecc=" + ecc);
+                    return finishAction(stealFrom).thenApply(x4 -> {
+                        logEvent("finish unsteal.stealFor " + stealFor.getRunName() + " completed action list " + x3
+                                + " : srn=" + srn);
+                        if (x3 && !stealFor.isAborting() && srn == stealRobotNumber.get()) {
+                            completeSystemsContinueIndFuture(stealFor, !stealFor.isReverseFlag(), ecc);
+                        }
+                        return x3;
+                    });
+                }, supervisorExecutorService);
         return XFuture.allOf(stealFromFinishFuture, stealForFinishFuture);
     }
 
@@ -3983,6 +4008,8 @@ public class Supervisor {
         clearAllErrors();
         setPauseSelected(false);
         XFutureVoid immediateAbortAllFuture = immediateAbortAll("prepActions", true);
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return immediateAbortAllFuture.thenComposeAsyncToVoid(() -> {
             resumeForPrepOnly();
             if (!origIgnoreFlag) {
@@ -3992,7 +4019,7 @@ public class Supervisor {
             if (isKeepDisabled()) {
                 return XFutureVoid.completedFuture();
             }
-            return returnRobots1("prepActions", null, null, -1, -1);
+            return returnRobots1("prepActions", null, null, -1, -1, traceList);
         }, supervisorExecutorService);
     }
 
@@ -4563,8 +4590,10 @@ public class Supervisor {
         }
         abortEventTime = -1;
         firstEventTime = -1;
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return XFutureVoid.allOf(allResetFutures)
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("resetAll"), supervisorExecutorService);
     }
 
@@ -4671,8 +4700,10 @@ public class Supervisor {
                                     return ret;
                                 }
                             }, supervisorExecutorService);
+                    List<StackTraceElement[]> traceList = new ArrayList<>();
+                    traceList.add(Thread.currentThread().getStackTrace());
                     return outerRet
-                            .peekNoCancelException(this::handleXFutureException)
+                            .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                             .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTestFirstActionReversed"), supervisorExecutorService);
                 } catch (Exception e) {
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", e);
@@ -4974,7 +5005,10 @@ public class Supervisor {
                 futures[i] = aprsSys.startLookForParts();
             }
         }
-        return XFuture.allOfWithName("lookForPartsAll", futures).peekException(this::handleXFutureException);
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
+        return XFuture.allOfWithName("lookForPartsAll", futures)
+                .peekException((Throwable throwable) -> handleXFutureException(throwable, traceList));
     }
 
     private void completeScanAllInternal() {
@@ -5521,12 +5555,11 @@ public class Supervisor {
                             sharedTableSys.setExecutorOption(ExecutorOption.ForBoolean.skipMissingParts, false);
                             return sharedTableSys.startActionsList("flip9",
                                     Arrays.asList(new Action[]{
-                                Action.newMoveRecordedPose("flipmf_present_gear_prep"),
-                            }),
+                                Action.newMoveRecordedPose("flipmf_present_gear_prep"),}),
                                     ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
                                     ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
                         });
-        XFuture<Boolean> xf10= xf9
+        XFuture<Boolean> xf10 = xf9
                 .thenComposeAsync("startFlipMF.step10", x -> {
                     logEvent("startFlipMF.step10 : xf9=" + xf9);
                     return lookForPartsAll().thenApply((x2 -> x));
@@ -5543,7 +5576,7 @@ public class Supervisor {
                                     ExecutorOption.ForBoolean.reverseCheckDisabled.with(true),
                                     ExecutorOption.ForBoolean.skipCheckHeldPart.with(true));
                         });
-         XFuture<Boolean> xf12= xf11
+        XFuture<Boolean> xf12 = xf11
                 .thenComposeAsync("startFlipMF.step10", x -> {
                     logEvent("startFlipMF.step12 : xf11=" + xf11);
                     return lookForPartsAll().thenApply((x2 -> x));
@@ -5590,8 +5623,10 @@ public class Supervisor {
         }, supervisorExecutorService);
         xf[2] = step2Xf;
         lastStartScanAllFutures = xf;
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return step2Xf
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("startScanAll"), supervisorExecutorService);
     }
 
@@ -5609,12 +5644,14 @@ public class Supervisor {
         int c = srtCount.incrementAndGet();
         logEvent("Start Random Test : " + c);
         connectAll();
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return startCheckAndEnableAllRobots(startingAbortCount)
                 .thenComposeAsyncToVoid("startRandomTest.checkOk" + c,
                         ok -> checkOkElseToVoid(ok, () -> startRandomTestStep2(startingAbortCount),
                                 this::showCheckEnabledErrorSplash),
                         supervisorExecutorService)
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTest"),
                         supervisorExecutorService);
     }
@@ -6327,10 +6364,12 @@ public class Supervisor {
         conveyorVisNextStartPos = conveyorPos();
         int count = conveyorVisNextCount.incrementAndGet();
         logEvent("Conveyor Next Starting " + count);
-        XFutureVoid ret = this.waitResume()
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
+        XFutureVoid ret = this.waitResume(traceList)
                 .thenComposeAsyncToVoid(() -> displayJFrameFinal.conveyorVisNextTray(), supervisorExecutorService)
                 .thenRun(() -> conveyorVisNextFinish(count))
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("conveyorVisNext"), supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
@@ -6444,10 +6483,12 @@ public class Supervisor {
         conveyorVisPrevStartPos = conveyorPos();
         int count = conveyorVisPrevCount.incrementAndGet();
         logEvent("Conveyor Prev Starting " + count);
-        XFutureVoid ret = this.waitResume()
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
+        XFutureVoid ret = this.waitResume(traceList)
                 .thenComposeAsyncToVoid(() -> displayJFrameFinal.conveyorVisPrevTray(), supervisorExecutorService)
                 .thenRun(() -> conveyorVisPrevFinish(count))
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("conveyorVisPrev"), supervisorExecutorService);
         conveyorTestFuture = ret;
         return ret;
@@ -6484,8 +6525,10 @@ public class Supervisor {
         XFutureVoid f2 = continueRandomTest(startingAbortCount);
         randomTestFuture = f2;
         resetMainRandomTestFuture();
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return XFuture.allOfWithName("startRandomTestStep2.allOff" + c, f2, f1)
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("startRandomTestStep2"), supervisorExecutorService);
     }
 
@@ -6573,9 +6616,12 @@ public class Supervisor {
         int count = waitTogglesAllowedCount.incrementAndGet();
         if (null != xf && !xf.isDone() && !checkMaxCycles()) {
             logEvent("START waitTogglesAllowed " + count);
-            return xf.peekNoCancelException(this::handleXFutureException).alwaysRun(() -> {
-                logEvent("END waitTogglesAllowed " + count);
-            });
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
+            return xf.peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
+                    .alwaysRun(() -> {
+                        logEvent("END waitTogglesAllowed " + count);
+                    });
         } else {
             logEvent("SKIP waitTogglesAllowed " + count);
             return XFutureVoid.completedFutureWithName("completedWaitTogglesAllowed");
@@ -6894,9 +6940,10 @@ public class Supervisor {
             }
         }
         String blockerList = toggleBlockerMap.keySet().toString();
-
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFuture<LockInfo> ret = completeDisallowToggles(blockerName, blockerList, lockInfo)
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenCompose(x -> this.waitSingleStep("disallowToggles(" + blockerName + ")").thenSupply(() -> x));
         return ret;
     }
@@ -6953,7 +7000,7 @@ public class Supervisor {
         return robotTaskMap.get(robotName) != null;
     }
 
-    private XFuture<Boolean> toggleRobotEnabled() {
+    private XFuture<Boolean> toggleRobotEnabled(List<StackTraceElement[]> traceList) {
         if (closing || !checkMaxCycles()) {
             return XFuture.completedFuture(false);
         }
@@ -6963,7 +7010,8 @@ public class Supervisor {
                 + ",togglesCount=" + togglesCount.get() + ",igonredToggles=" + ignoredToggles.get());
         if (pauseSelectedLocal) {
             ignoredToggles.incrementAndGet();
-            return waitResume().thenApply(x -> false);
+            return waitResume(traceList)
+                    .thenApply(x -> false);
         }
         if (!togglesAllowedLocal) {
             ignoredToggles.incrementAndGet();
@@ -7085,7 +7133,7 @@ public class Supervisor {
     Throwable lastLoggedException = null;
     private volatile StackTraceElement lastLoggedExceptionTrace@Nullable []  = null;
 
-    private void logException(@Nullable Throwable throwable) {
+    private void logException(@Nullable Throwable throwable, List<StackTraceElement[]> traceList) {
         lastLoggedException = throwable;
         if (null == throwable) {
             return;
@@ -7112,7 +7160,8 @@ public class Supervisor {
                         if (displayJFrame.isShowSplashMessagesSelected()) {
                             displayJFrame.showErrorSplash(err);
                         } else {
-                            NotificationsJPanel.showException(throwable, trace);
+                            traceList.add(trace);
+                            NotificationsJPanel.showException(throwable, traceList);
                         }
                     }
                     setIconImageOnDisplay(IconImages.ERROR_IMAGE);
@@ -7284,10 +7333,12 @@ public class Supervisor {
                 printStatus(currentContinuousDemoFuture, System.out);
                 return quitRandomTest("ContinuousDemoCycle = " + ContinuousDemoCycle + " forcing quitRandomTest");
             }
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
             XFutureVoid ret = startRandomDelay("enableTest", enableTestRandomDelayMillis,
-                    enableTestMinRandomDelayMillis).thenCompose("checkForWaitResume1", x -> this.waitResume())
+                    enableTestMinRandomDelayMillis).thenCompose("checkForWaitResume1", x -> this.waitResume(traceList))
                     .thenCompose("waitTogglesAllowed", x -> this.waitTogglesAllowed())
-                    .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled())
+                    .thenCompose("toggleRobotEnabled", x -> this.toggleRobotEnabled(traceList))
                     .thenComposeAsyncToVoid("updateRandomTestCount" + randomTestCount.get(), x -> {
                         if (x) {
                             return this.updateRandomTestCount();
@@ -7463,11 +7514,13 @@ public class Supervisor {
         for (AprsSystem aprsSys : aprsSystems) {
             aprsSys.setLastCreateActionListFromVisionKitToCheckStrings(Collections.emptyList());
         }
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         ContinuousDemoFuture = XFuture
                 .supplyAsync("startCheckAndEnableAllRobots(" + startingAbortCount + ")",
                         () -> startCheckAndEnableAllRobots(startingAbortCount), supervisorExecutorService)
                 .thenCompose(x -> x).thenComposeAsyncToVoid("startContinuousScanAndRun",
-                ok -> checkOkElse(ok, () -> continueContinuousScanAndRun(null, startingAbortCount),
+                ok -> checkOkElse(ok, () -> continueContinuousScanAndRun(null, startingAbortCount, traceList),
                         this::showCheckEnabledErrorSplash),
                 supervisorExecutorService);
         return ContinuousDemoFuture;
@@ -7487,13 +7540,15 @@ public class Supervisor {
         connectAll();
         String blockerName = "startContinuousDemo" + cdcCount;
         AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFutureVoid ret = disallowToggles(blockerName, sysArray)
                 .thenCompose(x -> startCheckAndEnableAllRobots(startingAbortCount))
                 .thenComposeAsyncToVoid("startContinuousDemo" + cdcCount,
                         ok -> checkOkElse(ok, () -> continueContinuousDemo(blockerName, startingAbortCount),
                                 this::showCheckEnabledErrorSplash),
                         supervisorExecutorService)
-                .peekNoCancelException(this::handleXFutureException)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                 .thenComposeAsyncToVoid(() -> this.waitSingleStep("startContinuousDemo"), supervisorExecutorService);
         ContinuousDemoFuture = ret;
         return ret;
@@ -7703,7 +7758,7 @@ public class Supervisor {
 
     private final AtomicInteger continueContinuousScanAndRunCount = new AtomicInteger();
 
-    private XFutureVoid continueContinuousScanAndRun(@Nullable String prevBlockerName, int startingAbortCount) {
+    private XFutureVoid continueContinuousScanAndRun(@Nullable String prevBlockerName, int startingAbortCount, List<StackTraceElement[]> traceList) {
         try {
             final int cdcCount = ContinuousDemoCycle.get();
             if (!checkMaxCycles()) {
@@ -7735,7 +7790,7 @@ public class Supervisor {
                                 return continueContinuousScanAndRunInternal(startingAbortCount, part1BlockerName, prevBlockerName, part2BlockerName, part3BlockerName, cdcCount);
                             }, supervisorExecutorService);
         } catch (Exception exception) {
-            logException(exception);
+            logException(exception, traceList);
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
             throw asRuntimeException(exception);
         }
@@ -7754,6 +7809,8 @@ public class Supervisor {
                     .alwaysComposeAsync(() -> allowTogglesNoCheck(part1BlockerName),
                             supervisorExecutorService);
         }
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFutureVoid ret = f2
                 .thenComposeAsync("continueContinuousScanAndRun.scanAllInternal",
                         x -> scanTillNewInternal(), supervisorExecutorService)
@@ -7777,12 +7834,13 @@ public class Supervisor {
                 .thenComposeAsyncToVoid("continueContinuousScanAndRun.recurse" + cdcCount,
                         ok -> checkOkElseToVoid(ok,
                                 () -> continueContinuousScanAndRun(part3BlockerName,
-                                        startingAbortCount),
+                                        startingAbortCount, traceList),
                                 this::showCheckEnabledErrorSplash),
                         supervisorExecutorService)
-                .peekNoCancelException(this::handleXFutureException).alwaysComposeAsyncToVoid(
-                () -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName),
-                supervisorExecutorService);
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
+                .alwaysComposeAsyncToVoid(
+                        () -> allowTogglesNoCheck(part1BlockerName, part2BlockerName, part3BlockerName),
+                        supervisorExecutorService);
         ContinuousDemoFuture = ret;
         if (null != randomTestFuture) {
             if (isRandomTestSelected()) {
@@ -7818,8 +7876,10 @@ public class Supervisor {
             allowTogglesNoCheck(prevBlockerName);
             XFutureVoid ret2 = XFutureVoid.completedFutureWithName(msg);
             ContinuousDemoFuture = ret2;
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
             return ret2
-                    .peekNoCancelException(this::handleXFutureException)
+                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .thenComposeAsyncToVoid(
                             () -> this.waitSingleStep("continueContinuousDemo(" + prevBlockerName + "," + startingAbortCount + ")"),
                             supervisorExecutorService);
@@ -7869,6 +7929,8 @@ public class Supervisor {
                                 throw new IllegalStateException(
                                         "lastContinueContinuousDemoNoRecurseFuture=" + lastContinueContinuousDemoNoRecurseFuture);
                             }
+                            List<StackTraceElement[]> traceList = new ArrayList<>();
+                            traceList.add(Thread.currentThread().getStackTrace());
                             XFuture<Boolean> continueContinuousDemoNoRecursePart2Future = startCheckAndEnableAllRobots(
                                     startingAbortCount)
                                     .thenComposeAsync("continueContinuousDemo.checkLastReturnedFuture1",
@@ -7899,7 +7961,8 @@ public class Supervisor {
                                                 + ",toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
                                         return checkOkElse(ok, () -> continueContinuousDemo(part4BlockerName, startingAbortCount),
                                                 this::showCheckEnabledErrorSplash);
-                                    }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException)
+                                    }, supervisorExecutorService)
+                                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                                     .alwaysComposeAsyncToVoid(() -> allowTogglesNoCheck(prevBlockerName, part1BlockerName,
                                     part2BlockerName, part3BlockerName, part4BlockerName), supervisorExecutorService);
                             ContinuousDemoFuture = ret;
@@ -7977,8 +8040,11 @@ public class Supervisor {
 
     private XFutureVoid continuousDemoSetup(int cdcCount) {
 
+        StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(trace);
         try {
-            StackTraceElement trace[] = Thread.currentThread().getStackTrace();
+
             continuousDemoSetupTrace = trace;
             int cdscount = continousDemoSetupCount.incrementAndGet();
             String blocker = "continuousDemoSetup" + cdscount + "_" + cdcCount;
@@ -7998,7 +8064,7 @@ public class Supervisor {
                     logEventErr("stealingRobots flag set when starting continousDemoSetup : returnRobotRunnable.get()="
                             + returnRobotFunctionVal);
                     disconnectAll();
-                    return returnRobots1("contiousDemoSetup", null, null, -1, -1);
+                    return returnRobots1("contiousDemoSetup", null, null, -1, -1, traceList);
                 } else {
                     return XFutureVoid.completedFuture();
                 }
@@ -8013,15 +8079,15 @@ public class Supervisor {
 //                        return stealRobot(lastStealFrom, lastStealFor, ecc);
                     }
                 } catch (Throwable throwable) {
-                    logException(throwable);
+                    logException(throwable, traceList);
                     Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", throwable);
                     throw asRuntimeException(throwable);
                 }
             }, supervisorExecutorService)
-                    .peekNoCancelException(this::handleXFutureException)
+                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .alwaysComposeAsyncToVoid(() -> allowToggles(blocker, sysArray), supervisorExecutorService);
         } catch (Exception exception) {
-            logException(exception);
+            logException(exception, traceList);
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, "", exception);
             throw asRuntimeException(exception);
         }
@@ -8029,7 +8095,7 @@ public class Supervisor {
 
     private volatile boolean debug = false;
 
-    private synchronized void checkFutures() {
+    private synchronized void checkFutures(List<StackTraceElement[]> traceList) {
 
         try {
             XFuture<?> xfStealUnsteal = stealUnstealList.poll();
@@ -8096,7 +8162,7 @@ public class Supervisor {
             lastStealRobotsInternalBeforeAllowTogglesTrace = null;
         } catch (Exception exception) {
             Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, exception);
-            logException(exception);
+            logException(exception, traceList);
             logEventErr(exception.getMessage() + ", toggleBlockerMap.keySet()=" + toggleBlockerMap.keySet());
             throw new RuntimeException(exception);
         }
@@ -8118,7 +8184,8 @@ public class Supervisor {
 
         StackTraceElement trace[] = Thread.currentThread().getStackTrace();
         lastStartReverseActionsTrace = trace;
-
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(trace);
         int currentAbortCount = getAbortCount();
         if (startingAbortCount != currentAbortCount) {
             String msg = "startReverseActions quiting : startingAbortCount=" + startingAbortCount
@@ -8135,7 +8202,7 @@ public class Supervisor {
         String blockerName = "START startReverseActions_" + sraCount + "_" + continousDemoCycleCount;
         AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
-        checkFutures();
+        checkFutures(traceList);
         checkAllRunningOrDoingActions(-1, "startReverseActions");
         XFuture<Boolean> checkAndEnableFuture = disallowTogglesFuture
                 .thenComposeAsync("startReverseActions:startCheckAndEnableAllRobots ", (LockInfo ignored) -> {
@@ -8158,7 +8225,7 @@ public class Supervisor {
     }
 
     void savePosFile(File f) throws IOException {
-        try ( PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
             for (int i = 0; i < selectedPosMapFileCachedTable.getColumnCount(); i++) {
                 pw.print(selectedPosMapFileCachedTable.getColumnName(i));
                 pw.print(",");
@@ -8228,6 +8295,8 @@ public class Supervisor {
             AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
             String blockerName = "enableAllRobots";
             final XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(Thread.currentThread().getStackTrace());
             return disallowTogglesFuture
                     .thenComposeAsyncToVoid(
                             x -> {
@@ -8239,7 +8308,7 @@ public class Supervisor {
                                 }
                             }, supervisorExecutorService)
                     .alwaysComposeAsyncToVoid(() -> allowToggles(blockerName, sysArray), supervisorExecutorService)
-                    .peekNoCancelException(this::handleXFutureException)
+                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .thenComposeAsyncToVoid(() -> this.waitSingleStep("enableAllRobots"), supervisorExecutorService);
         } catch (Exception exception) {
             log(Level.SEVERE, "", exception);
@@ -8285,6 +8354,8 @@ public class Supervisor {
         AprsSystem sysArray[] = systems().toArray(new AprsSystem[0]);
         XFuture<LockInfo> disallowTogglesFuture = disallowToggles(blockerName, sysArray);
         checkAllRunningOrDoingActions(-1, "startCheckAndEnableAllRobots");
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         return disallowTogglesFuture.thenComposeAsync((LockInfo ignored) -> {
             XFutureVoid step1Future = updateRobotsTableFromMapsAndEnableAll();
             boolean KeepAndDisplayXFutureProfilesSelected = isKeepAndDisplayXFutureProfilesSelected();
@@ -8300,7 +8371,7 @@ public class Supervisor {
                     return XFutureVoid.completedFuture();
                 }
                 clearStealingRobotsFlag();
-                XFutureVoid rrF = returnRobots1("enableAndCheckAllRobots", null, null, -1, -1);
+                XFutureVoid rrF = returnRobots1("enableAndCheckAllRobots", null, null, -1, -1, traceList);
                 rrF.setKeepOldProfileStrings(KeepAndDisplayXFutureProfilesSelected);
                 return rrF;
             }, supervisorExecutorService).thenComposeAsync(x2 -> checkEnabledAll(), supervisorExecutorService);
@@ -8486,15 +8557,15 @@ public class Supervisor {
         }
     }
 
-    private XFutureVoid waitResume() {
+    private XFutureVoid waitResume(List<StackTraceElement[]> traceList) {
         XFutureVoid rf = resumeFuture.get();
         if (null != rf) {
             return rf
-                    .peekNoCancelException(this::handleXFutureException)
+                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .thenComposeAsyncToVoid(() -> this.waitSingleStep("waitResume"), supervisorExecutorService);
         } else {
             return XFutureVoid.completedFutureWithName("waitResume.rf==null")
-                    .peekNoCancelException(this::handleXFutureException)
+                    .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList))
                     .thenComposeAsyncToVoid(() -> this.waitSingleStep("waitResume"), supervisorExecutorService);
         }
     }
@@ -8692,6 +8763,8 @@ public class Supervisor {
         lastStartAllActionsArray = futures;
         String allOfName = "startAllActions(" + comment + "," + reverseFlag + ").allOf(" + tasksNames.toString()
                 + ") saaNumber=" + saaNumber;
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
         XFutureVoid ret = XFutureVoid.allOfWithName(allOfName, futures).thenRunAsync(() -> {
             logEvent(allOfName);
             try {
@@ -8699,7 +8772,8 @@ public class Supervisor {
             } catch (IOException ex) {
                 Logger.getLogger(Supervisor.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }, supervisorExecutorService).peekNoCancelException(this::handleXFutureException);
+        }, supervisorExecutorService)
+                .peekNoCancelException((Throwable throwable) -> handleXFutureException(throwable, traceList));
         startAllActionsFuture = ret;
         return ret;
     }
@@ -8926,7 +9000,9 @@ public class Supervisor {
      */
     synchronized private XFuture<?> startAll() {
         int startingAbortCount = getAbortCount();
-        checkFutures();
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
+        checkFutures(traceList);
         logEvent("Start All ");
         clearStealingRobotsFlag();
         return startCheckAndEnableAllRobots(startingAbortCount)
@@ -9046,7 +9122,9 @@ public class Supervisor {
             boolean skipLog) {
         if (this.stealingRobots || null != returnRobotFunction.get()) {
             disconnectAllNoLog();
-            return returnRobots1("immediateAbortAll." + comment, null, null, -1, -1)
+            List<StackTraceElement[]> traceList = new ArrayList<>();
+            traceList.add(outerClearStealingRobotsTrace);
+            return returnRobots1("immediateAbortAll." + comment, null, null, -1, -1, traceList)
                     .peekException((Throwable throwable) -> {
                         System.out.println("");
                         System.out.flush();
@@ -9280,10 +9358,13 @@ public class Supervisor {
             }
             return XFuture.allOfWithName("safeAbortAll", futures);
         }, supervisorExecutorService);
-        XFutureVoid f2 = abortAllFuture.thenComposeAsync((Function<Void, XFuture<@Nullable Void>>) x -> {
-            logEvent("safeAbortAll: all systems aborted. calling return robots: futures =" + Arrays.toString(futures));
-            return returnRobots1("safeAbortAll", null, null, -1, -1);
-        }, supervisorExecutorService).thenRunAsync(() -> {
+        List<StackTraceElement[]> traceList = new ArrayList<>();
+        traceList.add(Thread.currentThread().getStackTrace());
+        XFutureVoid f2 = abortAllFuture
+                .thenComposeAsync((Function<Void, XFuture<@Nullable Void>>) x -> {
+                    logEvent("safeAbortAll: all systems aborted. calling return robots: futures =" + Arrays.toString(futures));
+                    return returnRobots1("safeAbortAll", null, null, -1, -1, traceList);
+                }, supervisorExecutorService).thenRunAsync(() -> {
             XFutureVoid cancelSRF = this.cancelStealRobotFuture.get();
             if (null != cancelSRF) {
                 cancelSRF.complete();
@@ -9426,7 +9507,7 @@ public class Supervisor {
             Iterable<Integer> columnIndexes) throws IOException {
         String headers[] = tableHeaders(cachedTable, columnIndexes);
         CSVFormat format = CSVFormat.DEFAULT.withHeader(headers);
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), format)) {
             printer.printRecord(firstRecord);
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
@@ -9453,7 +9534,7 @@ public class Supervisor {
     }
 
     private void saveCachedTable(File f, CachedTable cachedTable, CSVFormat csvFormat) throws IOException {
-        try ( CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
+        try (CSVPrinter printer = new CSVPrinter(new PrintStream(new FileOutputStream(f)), csvFormat)) {
             for (int i = 0; i < cachedTable.getRowCount(); i++) {
                 List<Object> l = new ArrayList<>();
                 for (int j = 0; j < cachedTable.getColumnCount(); j++) {
@@ -9550,7 +9631,7 @@ public class Supervisor {
         positionMappingsFilesCachedTable.addColumn("System");
         List<String> columnNames = new ArrayList<>();
         columnNames.add("System");
-        try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
+        try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
             String line = null;
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
@@ -9563,7 +9644,7 @@ public class Supervisor {
                 columnNames.add(a[0]);
             }
         }
-        try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
+        try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.RFC4180)) {
             int linecount = 0;
             for (CSVRecord csvRecord : parser) {
                 linecount++;
@@ -9629,15 +9710,15 @@ public class Supervisor {
                     println("oldPath = " + oldPath);
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
-                    try ( FileWriter fileWriter = new FileWriter(
-                            Utils.file(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true);  PrintWriter pw = new PrintWriter(fileWriter, true)) {
+                    try (FileWriter fileWriter = new FileWriter(
+                            Utils.file(Utils.getAprsUserHomeDir(), ".lastFileChanges"), true); PrintWriter pw = new PrintWriter(fileWriter, true)) {
                         pw.println("date=" + new Date() + ", oldPath = " + oldPath + ", newFilePath = " + newFilePath
                                 + ", lastFileFile = " + lastFileFile);
 
                     }
                 } catch (Exception ignored) {
                 }
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
                     pw.println(newFilePath);
                 }
             }
@@ -9677,14 +9758,14 @@ public class Supervisor {
                     println("oldPath = " + oldPath);
                     println("newFilePath = " + newFilePath);
                     println("lastFileFile = " + lastFileFile);
-                    try ( PrintWriter pw = new PrintWriter(
+                    try (PrintWriter pw = new PrintWriter(
                             new FileWriter(Utils.file(Utils.getAprsUserHomeDir(), ".lastFileChanges")), true)) {
                         pw.println("date=" + new Date() + ", oldPath = " + oldPath + ", newFilePath = " + newFilePath
                                 + ", lastFileFile = " + lastFileFile);
                     }
                 } catch (Exception ignored) {
                 }
-                try ( PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
+                try (PrintWriter pw = new PrintWriter(new FileWriter(lastFileFile))) {
                     pw.println(relativeNewFilePath);
                 }
             }
@@ -9813,7 +9894,7 @@ public class Supervisor {
             try {
                 if (isKeepAndDisplayXFutureProfilesSelected()) {
                     File profileFile = Utils.createTempFile("startAll_profile_", ".csv");
-                    try ( PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
+                    try (PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
                         xf.printProfile(ps);
                     }
                 }
@@ -9841,7 +9922,7 @@ public class Supervisor {
             try {
                 if (isKeepAndDisplayXFutureProfilesSelected()) {
                     File profileFile = Utils.createTempFile("startAll_profile_", ".csv");
-                    try ( PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
+                    try (PrintStream ps = new PrintStream(new FileOutputStream(profileFile))) {
                         xf.printProfile(ps);
                     }
                 }
@@ -10134,7 +10215,7 @@ public class Supervisor {
         IOException exA[] = new IOException[1];
         final Properties props = new Properties();
         println("Supervisot loading properties from " + propertiesFile.getCanonicalPath());
-        try ( FileReader fr = new FileReader(propertiesFile)) {
+        try (FileReader fr = new FileReader(propertiesFile)) {
             props.load(fr);
         }
         try {
@@ -10310,7 +10391,7 @@ public class Supervisor {
 
         public SysSetupFileInfo(File f) throws IOException {
             File supervisorProperyFile = null;
-            try ( CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
+            try (CSVParser parser = CSVParser.parse(f, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader())) {
                 int linecount = 0;
                 for (CSVRecord csvRecord : parser) {
                     if (csvRecord.size() != 4) {
@@ -10645,7 +10726,7 @@ public class Supervisor {
                 supervisorExecutorService);
     }
 
-    private volatile Object lastTasksTableData                                                                                      @Nullable []  [] = null;
+    private volatile Object lastTasksTableData                                                                                                        @Nullable []  [] = null;
 
     @SuppressWarnings("nullness")
     private synchronized void updateTasksTable() {

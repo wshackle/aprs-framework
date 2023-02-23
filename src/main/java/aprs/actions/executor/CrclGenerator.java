@@ -7368,6 +7368,8 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
         PoseType pose = getPose(slotName);
         if (null != pose) {
             PlacePartSlotPoseList.add(pose);
+        } else {
+            NotificationsJPanel.showText("No pose  for slotName="+slotName);
         }
         String lastTakenPartLocal = plannedHeldPart;
 
@@ -7394,7 +7396,9 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                     origPose.setXAxis(xAxis);
                     origPose.setZAxis(zAxis);
                     placePartByPose(out, origPose);
-                    takeSnapshots("plan", "returning-" + getPlannedHeldPart() + "_no_pose_for_" + slotName, origPose, lastTakenPartLocal);
+                    final String notification = "returning-" + getPlannedHeldPart() + "_no_pose_for_" + slotName;
+                    takeSnapshots("plan", notification, origPose, lastTakenPartLocal);
+                    NotificationsJPanel.showText(notification);
                     final PlacePartInfo ppi = new PlacePartInfo(action, getLastIndex(), out.size(), startSafeAbortRequestCount, parentAction, parentActionIndex, "returned." + lastTakenPartLocal, "skipped." + slotName);
                     addMarkerCommand(out, msg,
                             ((CRCLCommandWrapper wrapper) -> {
@@ -7402,6 +7406,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
                                 logDebug(msg + " completed at " + new Date());
                                 ppi.setWrapper(wrapper);
                                 notifyPlacePartConsumers(ppi);
+                                throw new RuntimeException(notification);
                             }));
                     return;
                 }

@@ -47,7 +47,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  *
- *@author Will Shackleford {@literal <william.shackleford@nist.gov>}
+ * @author Will Shackleford {@literal <william.shackleford@nist.gov>}
  */
 public class TeachScanMonitor {
 
@@ -110,7 +110,7 @@ public class TeachScanMonitor {
 
     private final Map<String, List<String>> origStartingStringsMap = new HashMap<>();
 
-    @SuppressWarnings({"nullness","initialization"})
+    @SuppressWarnings({"nullness", "initialization"})
     public TeachScanMonitor(List<AprsSystem> aprsSystems,
             AtomicInteger abortCount,
             boolean continuousDemoSelected,
@@ -176,12 +176,14 @@ public class TeachScanMonitor {
             List<PhysicalItem> nonNullTeachItems = new ArrayList<>(teachItems);
             XFutureVoid lastHandleTeachItemsFuture = handleTeachItemsFuture;
             if (null == lastHandleTeachItemsFuture || lastHandleTeachItemsFuture.isDone()) {
+                List<StackTraceElement[]> traceList = new ArrayList<>();
+                traceList.add(Thread.currentThread().getStackTrace());
                 handleTeachItemsFuture
                         = XFutureVoid.runAsync(
                                 "handleTeachItems",
                                 () -> handleTeachItems(nonNullTeachItems),
                                 supervisorExecutorService
-                        ).peekNoCancelException(supervisor::handleXFutureException);
+                        ).peekNoCancelException((Throwable throwable) -> supervisor.handleXFutureException(throwable, traceList));
             }
         }
     }
@@ -225,7 +227,7 @@ public class TeachScanMonitor {
             max_kitTraySkips++;
             skips++;
             consecututiveSkips++;
-            if (consecututiveSkips ==  20) {
+            if (consecututiveSkips == 20) {
                 logEvent("TeachScanMonitor.handleTeachItems :  kitTrays=" + kitTrays + ", max_kitTrays=" + max_kitTrays + ", skips = " + skips + ", consecututiveSkips = " + consecututiveSkips + ", max_kitTraySkips=" + max_kitTraySkips);
                 logTeachItems(teachItems, "kitTraysLessThanMax");
             }
