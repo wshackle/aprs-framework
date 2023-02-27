@@ -8253,6 +8253,7 @@ public class AprsSystem implements SlotOffsetProvider, ExecutorDisplayInterface 
             executorJInternalFrame1.refresh();
         }
         clearErrors();
+        clearIsRequestingFlip();
     }
 
     /**

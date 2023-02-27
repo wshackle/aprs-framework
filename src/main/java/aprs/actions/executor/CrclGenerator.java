@@ -6692,7 +6692,7 @@ public class CrclGenerator implements DbSetupListener, AutoCloseable {
             }
             Set<String> possibleTools = getPossibleToolHolderContents(toolHolderName);
             if (!possibleTools.contains(toolInRobot)) {
-                throw new IllegalStateException("planning to drop tool when holder expected to be holding " + toolInHolder + " but " + toolHolderName + " may only store " + possibleTools);
+                throw new IllegalStateException("planning to drop tool when robot expected to be holding " + toolInRobot + " but " + toolHolderName + " may only store " + possibleTools);
             }
             addMarkerCommand(out,
                     "dropTool " + toolInRobot + " in " + toolHolderName,
